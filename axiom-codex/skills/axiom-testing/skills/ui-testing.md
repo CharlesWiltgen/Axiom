@@ -161,9 +161,12 @@ func testAnimatedTransition() {
     let destinationView = app.otherElements["DestinationView"]
     XCTAssertTrue(destinationView.waitForExistence(timeout: 2))
 
-    // Optional: Wait a bit more for animation to settle
-    // Only if absolutely necessary
-    RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.3))
+    // Do NOT add a fixed sleep to "let the animation settle." XCUITest
+    // auto-waits for an element to become hittable before interacting, so the
+    // next action already waits for the right condition. If you must assert
+    // mid-transition, wait on a real post-animation element, never a delay.
+    let primaryButton = app.buttons["Primary"]
+    XCTAssertTrue(primaryButton.waitForExistence(timeout: 2))
 }
 ```
 
@@ -381,8 +384,6 @@ Prompt: "Add accessibility identifiers to the relevant parts of this view"
 - Values set for stateful elements (checkboxes, toggles)
 - Identifiers set for elements with dynamic/localized content
 
-**Sample Code Reference**: [Delivering an exceptional accessibility experience](https://developer.apple.com/documentation/accessibility/delivering_an_exceptional_accessibility_experience)
-
 #### Step 3: Add UI Testing Target
 
 1. Open project settings in Xcode
@@ -496,20 +497,27 @@ XCTAssertTrue(landmark.waitForExistence(timeout: 5), "Landmark should appear in 
 #### Setup Device State
 
 ```swift
-override func setUpWithError() throws {
-    let app = XCUIApplication()
+import XCTest
+import CoreLocation  // XCUILocation wraps CLLocation
 
-    // Set device orientation
-    XCUIDevice.shared.orientation = .landscapeLeft
+final class DeviceStateUITests: XCTestCase {
+    private let app = XCUIApplication()  // instance property, shared across tests
 
-    // Set appearance mode
-    app.launchArguments += ["-UIUserInterfaceStyle", "dark"]
+    override func setUpWithError() throws {
+        // Device orientation
+        XCUIDevice.shared.orientation = .landscapeLeft
 
-    // Simulate location
-    let location = XCUILocation(location: CLLocation(latitude: 37.7749, longitude: -122.4194))
-    app.launchArguments += ["-SimulatedLocation", location.description]
+        // Force appearance mode (UIKit reads this from launch arguments)
+        app.launchArguments += ["-UIUserInterfaceStyle", "Dark"]
 
-    app.launch()
+        app.launch()
+
+        // Simulate location — a settable property on the running device,
+        // NOT a launch argument. There is no `-SimulatedLocation` argument.
+        XCUIDevice.shared.location = XCUILocation(
+            location: CLLocation(latitude: 37.7749, longitude: -122.4194)
+        )
+    }
 }
 ```
 
@@ -541,10 +549,10 @@ if ProcessInfo.processInfo.arguments.contains("-UI-Testing") {
 ```swift
 // Launch the target app to a specific URL (instance method, iOS 16.4+)
 let app = XCUIApplication()
-app.open(URL(string: "myapp://landmark/123")!)
+app.openURL(URL(string: "myapp://landmark/123")!)
 
 // Open a URL with the system's default app, via XCUISystem on XCUIDevice
-XCUIDevice.shared.system.open(URL(string: "https://example.com")!)
+XCUIDevice.shared.system.openURL(URL(string: "https://example.com")!)
 ```
 
 #### Accessibility Audits in Tests
@@ -558,8 +566,6 @@ func testAccessibility() throws {
     try app.performAccessibilityAudit()
 }
 ```
-
-**Reference**: [Perform accessibility audits for your app — WWDC23](https://developer.apple.com/videos/play/wwdc2023/10035/)
 
 ### Test Plans for Multiple Configurations
 
@@ -605,8 +611,6 @@ Configurations:
 - Tutorials
 - Marketing materials
 
-**Reference**: [Author fast and reliable tests for Xcode Cloud — WWDC22](https://developer.apple.com/videos/play/wwdc2022/110371/)
-
 ### Replaying Tests in Xcode Cloud
 
 **Xcode Cloud** = built-in service for:
@@ -626,8 +630,6 @@ Configurations:
 - See build info, logs, failure descriptions, video recordings
 
 **Team Access**: Entire team can see run history and download results/videos.
-
-**Reference**: [Create practical workflows in Xcode Cloud — WWDC23](https://developer.apple.com/videos/play/wwdc2023/10269/)
 
 ### Reviewing Test Results with Videos
 
@@ -672,8 +674,6 @@ let text = app.staticTexts["Max's Australian Adventure"] // ✅ Correct
 Click test diamond → Select configuration (e.g., Arabic) → Watch automation run in right-to-left layout.
 
 **Validates**: Same automation works across languages/layouts.
-
-**Reference**: [Fix failures faster with Xcode test reports — WWDC23](https://developer.apple.com/videos/play/wwdc2023/10175/)
 
 ### Recording UI Automation Checklist
 
@@ -721,52 +721,147 @@ UI tests can pass on fast networks but fail on 3G/LTE. **Network Link Conditione
 - ❌ iPad Pro over 3G (slow) → crash
 - ✅ Test both to catch device-specific failures
 
-### Setup Network Link Conditioner
+### How conditioning actually works
 
-**Install Network Link Conditioner**:
-1. Download from [Apple's Additional Tools for Xcode](https://developer.apple.com/download/all/)
-2. Search: "Network Link Conditioner"
-3. Install: `sudo open Network\ Link\ Conditioner.pkg`
+Network Link Conditioner (NLC) is a **host-level macOS System Settings pane**. There is **no `XCUIApplication` launch argument, launch environment, or `simctl`/`devicectl` subcommand** that selects a profile — you enable conditioning *around* the test run, not from inside the test. Treat any `launchArguments`/`launchEnvironment` "network profile" switch as fiction; it is silently ignored.
 
-**Verify Installation**:
+**Critical caveat** NLC throttles the **entire Mac**. The Simulator shares the host network stack, so it inherits whatever NLC is doing — but conditioning cannot be scoped to one simulator or one app. SSH, package fetches, and everything else are throttled too while it runs.
+
+```dot
+digraph nlc {
+  "Where do tests run?" [shape=diamond];
+  "Where do tests run?" -> "NLC pane or dnctl/pfctl" [label="simulator (whole Mac)"];
+  "Where do tests run?" -> "Settings > Developer > NLC" [label="physical device"];
+  "Where do tests run?" -> "RocketSim Network Speed Control" [label="need sim-only isolation"];
+}
+```
+
+**1. NLC pane (manual; simulator + host)** — install via *Xcode → Open Developer Tool → More Developer Tools* → download "Additional Tools for Xcode" → install the package from the **Hardware** folder. Then *System Settings → Network Link Conditioner*, pick a profile (3G, Edge, LTE, DSL, 100% Loss, High Latency DNS, Very Bad Network), Start, run tests, Stop.
+
+**2. `dnctl`/`pfctl` (scriptable; CI — what NLC drives under the hood)** — NLC is a GUI over BSD `dummynet`. For headless CI, drive it directly (needs `sudo`; conditions the whole host, same caveat):
 ```bash
-# Check if installed
-ls ~/Library/Application\ Support/Network\ Link\ Conditioner/
+# 3G-like: 1.6 Mbit/s, 150 ms latency, 1% packet loss
+sudo dnctl pipe 1 config bw 1600Kbit/s delay 150 plr 0.01
+printf 'dummynet-anchor "nlc"\nanchor "nlc"\n' | sudo pfctl -f -
+echo 'dummynet out proto tcp from any to any pipe 1' | sudo pfctl -a nlc -f -
+sudo pfctl -E
+
+xcodebuild test -scheme MyApp -destination 'platform=iOS Simulator,name=iPhone 16 Pro'
+
+# Teardown
+sudo pfctl -a nlc -F all && sudo pfctl -d && sudo dnctl -q flush
 ```
+`pfctl -f -` replaces the **active** pf ruleset — fine on an ephemeral CI runner, but on a dev Mac that already runs pf, back up `/etc/pf.conf` first (and restore with `sudo pfctl -f /etc/pf.conf`).
 
-**Enable in Tests**:
+**3. Physical device** — *Settings → Developer → Network Link Conditioner* (the Developer menu appears once the device has connected to Xcode). Built in, no install, and it conditions only that device.
+
+**4. Simulator-only isolation** — to throttle just the Simulator without touching the rest of the Mac, RocketSim's Network Speed Control (third-party) scopes throttling to the Simulator app.
+
+Because conditioning is external, the **test code itself stays normal** — it just needs realistic timeouts for the slow profile.
+
+### No-sudo, automatable conditioning (app-layer `URLProtocol`)
+
+Methods 1–4 condition the network *outside* the app (host kernel or a GUI). For **automated / CI / agent-driven** testing with **no sudo and no GUI**, condition *inside* the app: register a custom `URLProtocol` on the `URLSession` that returns a canned response with injected latency, a byte-rate cap (low bitrate), or a failure — deterministically.
+
+Trade-off: app-layer sees only this app's `URLSession` traffic (not third-party SDKs or raw sockets) and needs a test hook — but no sudo, no host change, fully deterministic. **It's the right default for unit/integration tests.** Mocker (WeTransfer) and OHHTTPStubs wrap this if you'd rather not hand-roll it.
+
 ```swift
-override func setUpWithError() throws {
-    let app = XCUIApplication()
+import Foundation
+import Synchronization
 
-    // Launch with network conditioning argument
-    app.launchArguments = ["-com.apple.CoreSimulator.CoreSimulatorService", "-networkShaping"]
-    app.launch()
+/// Returns a canned response with injected conditions — latency, a byte-rate
+/// cap (low bitrate), or failure. Deterministic, no sudo, in-process.
+final class ThrottlingURLProtocol: URLProtocol {
+    struct Conditions: Sendable {
+        var latency: TimeInterval = 0       // seconds before first byte
+        var bytesPerSecond: Int? = nil      // nil = unlimited
+        var failure: URLError.Code? = nil   // non-nil = fail the request
+        var body = Data()                   // canned response body (a whole, zero-based Data)
+        var statusCode = 200
+    }
+    // Set by the test before launch. startLoading runs off the main thread
+    // (an observed URLProtocol contract), so a lock keeps this Sendable-clean.
+    static let conditions = Mutex(Conditions())
+
+    override class func canInit(with request: URLRequest) -> Bool { true }
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+    override func stopLoading() {}
+
+    override func startLoading() {
+        guard let url = request.url else {
+            client?.urlProtocol(self, didFailWithError: URLError(.badURL)); return
+        }
+        let c = Self.conditions.withLock { $0 }
+
+        if c.latency > 0 { Thread.sleep(forTimeInterval: c.latency) }   // off-main loading thread
+
+        if let code = c.failure {
+            client?.urlProtocol(self, didFailWithError: URLError(code)); return
+        }
+
+        let response = HTTPURLResponse(url: url, statusCode: c.statusCode,
+                                       httpVersion: "HTTP/1.1", headerFields: nil)!
+        client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+
+        if let rate = c.bytesPerSecond, rate > 0 {        // drip to simulate low bitrate
+            let chunk = max(rate / 10, 1)
+            var offset = 0
+            while offset < c.body.count {
+                let end = min(offset + chunk, c.body.count)
+                client?.urlProtocol(self, didLoad: Data(c.body[offset..<end]))
+                Thread.sleep(forTimeInterval: Double(end - offset) / Double(rate))
+                offset = end
+            }
+        } else {
+            client?.urlProtocol(self, didLoad: c.body)
+        }
+        client?.urlProtocolDidFinishLoading(self)
+    }
 }
 ```
 
-### Common Network Profiles
-
-**3G Profile** (most failures occur here):
+**Unit / integration tests** — inject directly, no app hook:
 ```swift
-override func setUpWithError() throws {
-    let app = XCUIApplication()
+let config = URLSessionConfiguration.ephemeral
+config.protocolClasses = [ThrottlingURLProtocol.self]
+ThrottlingURLProtocol.conditions.withLock {
+    $0 = .init(latency: 0.8, bytesPerSecond: 20_000, body: Data(#"{"ok":true}"#.utf8))
+}
+let session = URLSession(configuration: config)   // inject into code under test
+```
 
-    // Simulate 3G (type in launch arguments)
-    app.launchEnvironment = [
-        "SIMULATOR_UDID": ProcessInfo.processInfo.environment["SIMULATOR_UDID"] ?? "",
-        "NETWORK_PROFILE": "3G"
-    ]
-    app.launch()
+**UI tests** — the harness lives in the app process, so gate it behind a launch argument the app reads at startup (works when UI tests stub the backend for determinism). To throttle a UI test's *real* backend traffic instead, use the OS-level paths (1–2) or the proxy below.
+```swift
+app.launchArguments += ["-NetworkProfile", "edge"]; app.launch()   // in the test
+
+// app startup, test builds only:
+let args = ProcessInfo.processInfo.arguments
+if let i = args.firstIndex(of: "-NetworkProfile"), i + 1 < args.count {
+    URLProtocol.registerClass(ThrottlingURLProtocol.self)
+    // map args[i+1] ("edge"/"3g"/"loss"/"offline") → Conditions, then set it:
+    ThrottlingURLProtocol.conditions.withLock { $0 = .init(latency: 0.4, bytesPerSecond: 30_000) }
 }
 ```
 
-**Manual Network Conditioning** (macOS System Preferences):
-1. Open System Preferences → Network
-2. Click "Network Link Conditioner" (installed above)
-3. Select profile: 3G, LTE, WiFi
-4. Click "Start"
-5. Run tests (they'll use throttled network)
+### Proxy-level conditioning (toxiproxy) — optional, not bundled
+
+When you must condition traffic the app's own `URLSession` doesn't own (third-party SDKs, raw sockets), or throttle a UI test's real backend, route it through [toxiproxy](https://github.com/Shopify/toxiproxy) — a TCP proxy whose "toxics" inject latency, bandwidth caps, and timeouts. **Axiom does not ship it; it is an optional dependency you install.** Skills/agents reaching for it MUST first check and, if absent, say the proxy path is unavailable and fall back to the `URLProtocol` harness above — never silently skip.
+
+```bash
+if command -v toxiproxy-server &> /dev/null && command -v toxiproxy-cli &> /dev/null; then
+  toxiproxy-server &                                              # control API on :8474
+  toxiproxy-cli create api --listen localhost:6443 --upstream api.example.com:443
+  toxiproxy-cli toxic add api -t latency   -a latency=400 -a jitter=100
+  toxiproxy-cli toxic add api -t bandwidth -a rate=30             # KB/s → low bitrate
+else
+  echo "toxiproxy NOT installed - proxy conditioning unavailable until you install it."
+  echo "  Install: brew install toxiproxy"
+  echo "  Docs:    https://github.com/Shopify/toxiproxy  ·  https://formulae.brew.sh/formula/toxiproxy"
+  echo "  Fallback: the in-process URLProtocol harness above needs no install."
+fi
+```
+
+**HTTPS caveat** toxiproxy forwards raw TCP, so it throttles encrypted bytes without MITM — but the app must connect to the proxy's `host:port`, which fails default TLS validation against a real public host (cert is for `api.example.com`, you connected to `localhost`). Clean only when the app's base URL is configurable to point at the proxy (a test backend, or a test-only trust override). No sudo either way. For app-traffic-only testing, prefer the `URLProtocol` path — no proxy, no cert wrinkle.
 
 ### Real-World Example: Photo Upload with Network Throttling
 
@@ -817,68 +912,61 @@ Tests can pass on device A but fail on device B due to layout differences + netw
 - ✅ iPhone 15 (compact, LTE)
 - ❌ iPhone 12 (older GPU, 3G) → timeout
 
-### Test Plan Configuration for Multiple Devices
+### Running the same tests across devices
 
-**Create Test Plan in Xcode**:
-1. File → New → Test Plan
-2. Select tests to include
-3. Click "Configurations" tab
-4. Add configurations for each device/network combo
+**Device is not a test-plan setting** — you select it with `-destination` at `xcodebuild` time (or in the scheme). Run one test plan against several destinations to cover the device matrix. **Network is not a test-plan setting either** — condition it externally (NLC or `dnctl`, above) for the run.
 
-**Example Configuration Matrix**:
-```
-Configurations:
-├─ iPhone 14 Pro + LTE
-├─ iPhone 14 Pro + 3G
-├─ iPad Pro 12.9 + LTE
-├─ iPad Pro 12.9 + 3G  (⚠️ Most failures here)
-└─ iPhone 12 + 3G      (⚠️ Older device)
+A test plan *configuration* varies launch arguments, environment variables, localization (language/region), simulated location, sanitizers, and code coverage — not device, not network.
+
+**Device matrix via destinations**:
+```bash
+# device names: xcrun simctl list devicetypes
+for dest in \
+  'platform=iOS Simulator,name=iPhone 16 Pro' \
+  'platform=iOS Simulator,name=iPad Pro 13-inch (M4)' ; do
+  xcodebuild test -scheme MyApp -testPlan UITests -destination "$dest"
+done
 ```
 
-**In Test Plan UI**:
-- Device: iPhone 14 Pro / iPad Pro 12.9
-- OS Version: Latest
-- Locale: English
-- Network Profile: LTE / 3G
+Pair this with NLC/`dnctl` started beforehand to add a slow-network dimension (⚠️ large device + slow network is where most failures surface).
 
 ### Programmatic Device-Specific Testing
 
 ```swift
 import XCTest
+import UIKit
 
 final class MultiFactorUITests: XCTestCase {
-    var deviceModel: String { UIDevice.current.model }
+    private let app = XCUIApplication()
 
-    override func setUpWithError() throws {
-        let app = XCUIApplication()
-        app.launch()
+    private var deviceModel: String { UIDevice.current.model }
 
-        // Adjust timeouts based on device
+    // Larger/slower devices need longer waits — scale the timeout, never sleep.
+    private var loadTimeout: TimeInterval {
         switch deviceModel {
-        case "iPad" where UIScreen.main.bounds.width > 1000:
-            // iPad Pro - larger layout, slower rendering
-            app.launchEnvironment["TEST_TIMEOUT"] = "30"
-        case "iPhone":
-            // iPhone - compact, standard timeout
-            app.launchEnvironment["TEST_TIMEOUT"] = "10"
-        default:
-            app.launchEnvironment["TEST_TIMEOUT"] = "15"
+        case "iPad" where UIScreen.main.bounds.width > 1000: return 30  // iPad Pro
+        case "iPhone": return 10
+        default: return 15
         }
     }
 
-    func testListLoadingAcrossDevices() {
-        let app = XCUIApplication()
-        let timeout = Double(app.launchEnvironment["TEST_TIMEOUT"] ?? "10") ?? 10
+    override func setUpWithError() throws {
+        continueAfterFailure = false
+        app.launch()
+    }
 
+    func testListLoadingAcrossDevices() {
         app.buttons["Refresh"].tap()
 
-        // Wait for list to load (timeout varies by device)
+        // Wait on a real condition with the device-scaled timeout. `count`
+        // alone is read eagerly and would race the load.
+        let firstCell = app.tables.cells.firstMatch
         XCTAssertTrue(
-            app.tables.cells.count > 0,
+            firstCell.waitForExistence(timeout: loadTimeout),
             "List should load on \(deviceModel)"
         )
 
-        // Verify no crashes
+        // No crash dialog
         XCTAssertFalse(app.alerts.element.exists)
     }
 }
@@ -923,22 +1011,23 @@ func testLargeLayoutOn3G() {
 
 ### Running Multi-Factor Tests in CI
 
-**In GitHub Actions or Xcode Cloud**:
+A single `xcodebuild test` runs on **one** destination with **whatever network the host currently has**. To cover the matrix, loop destinations and condition the network around the loop:
 ```yaml
-- name: Run tests across devices
+- name: Run tests across devices (3G-conditioned)
   run: |
-    xcodebuild -scheme MyApp \
-      -testPlan MultiDeviceTestPlan \
-      test
+    sudo dnctl pipe 1 config bw 1600Kbit/s delay 150 plr 0.01
+    printf 'dummynet-anchor "nlc"\nanchor "nlc"\n' | sudo pfctl -f -
+    echo 'dummynet out proto tcp from any to any pipe 1' | sudo pfctl -a nlc -f -
+    sudo pfctl -E
+    for dest in \
+      'platform=iOS Simulator,name=iPhone 16 Pro' \
+      'platform=iOS Simulator,name=iPad Pro 13-inch (M4)' ; do
+      xcodebuild test -scheme MyApp -testPlan UITests -destination "$dest"
+    done
+    sudo pfctl -a nlc -F all && sudo pfctl -d && sudo dnctl -q flush
 ```
 
-**Test Plan runs on**:
-- iPhone 14 Pro + LTE
-- iPhone 14 Pro + 3G
-- iPad Pro + LTE
-- iPad Pro + 3G
-
-**Result**: Catch device-specific crashes before App Store submission.
+**Result**: Catch device-specific + slow-network crashes before App Store submission. Hosted CI that disallows `sudo` (e.g. Xcode Cloud) can't shape the network this way — condition on a physical device or drop the network dimension there.
 
 ---
 
@@ -1012,8 +1101,10 @@ func testReproduceCrash() {
 
 **Locations**:
 1. Xcode Console (real-time, less detail)
-2. ~/Library/Logs/DiagnosticMessages/crash_*.log (full details)
-3. Device Settings → Privacy → Analytics → Analytics Data
+2. `~/Library/Logs/DiagnosticReports/*.ips` (full crash reports on current macOS)
+3. Device Settings → Privacy & Security → Analytics & Improvements → Analytics Data
+
+For parsing and symbolicating `.ips`/MetricKit/`.crash` reports, use Axiom's `xcsym` tool or the crash-analyzer agent instead of reading them by hand.
 
 **Look for**:
 - Thread that crashed
@@ -1055,20 +1146,21 @@ class PhotoViewController: UIViewController {
     }
 }
 
-// ✅ CORRECT: Ensure main thread
+// ✅ CORRECT: UIViewController is already @MainActor-isolated, so a Task
+// started in viewDidLoad runs on the main actor and resumes there after the
+// await — no per-property @MainActor and no MainActor.run hop needed. The
+// original bug wasn't the assignment; it was doing UI work without that
+// guarantee.
 class PhotoViewController: UIViewController {
-    @MainActor
     var photos: [Photo] = []
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
         Task {
-            let newPhotos = await fetchPhotos()
-            await MainActor.run { [weak self] in
-                self?.photos = newPhotos
-                self?.reloadPhotos()  // ✅ Safe
-            }
+            let newPhotos = await fetchPhotos()  // suspends, resumes on MainActor
+            self.photos = newPhotos
+            reloadPhotos()  // ✅ Safe — still on the main actor
         }
     }
 }
@@ -1117,8 +1209,9 @@ func testPhotosLoadUnderStress() {
         app.buttons["Refresh"].tap()
     }
 
-    // Completed without crash
-    XCTAssertTrue(true, "Stress test passed")
+    // Completed without crash — assert a real end state, not `true`
+    XCTAssertTrue(app.otherElements["photoGrid"].exists, "Grid should survive 10 navigation cycles")
+    XCTAssertFalse(app.alerts.element.exists, "No crash dialog after stress loop")
 }
 ```
 
@@ -1131,14 +1224,14 @@ func testPhotosLoadUnderStress() {
 - [ ] Record video of test runs (saves debugging time)
 - [ ] Check for crashes in logs
 - [ ] Run stress tests (10x repeated actions)
-- [ ] Verify @MainActor on UI properties
+- [ ] Verify UI-state mutations run on the main actor
 - [ ] Check for race conditions in async code
 
 ---
 
 ## Resources
 
-**WWDC**: 2025-344, 2024-10179, 2023-10175, 2023-10035
+**WWDC**: 2025-344, 2024-10179, 2023-10269, 2023-10175, 2023-10035, 2022-110371
 
 **Docs**: /xctest, /xcuiautomation/recording-ui-automation-for-testing, /xctest/xctwaiter, /accessibility/delivering_an_exceptional_accessibility_experience, /accessibility/performing_accessibility_testing_for_your_app
 
