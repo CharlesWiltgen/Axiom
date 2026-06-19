@@ -29,6 +29,8 @@ If you see ANY of these, suspect a networking misconfiguration, not framework br
 
 **Critical distinction** Simulator uses macOS networking stack (not iOS), hides cellular-specific issues (IPv6-only networks), and doesn't simulate network transitions. **MANDATORY: Test on real device with real network conditions.**
 
+To *condition* a slow/lossy network for tests without sudo (in-process `URLProtocol` harness, plus the optional toxiproxy escalation), see `axiom-testing (skills/ui-testing.md)` → "No-sudo, automatable conditioning".
+
 ## Mandatory First Steps
 
 **ALWAYS run these commands FIRST** (before changing code):

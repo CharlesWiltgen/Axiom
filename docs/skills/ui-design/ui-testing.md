@@ -30,6 +30,7 @@ Questions you can ask Claude that will draw from this skill:
 - "My test fails on iPad but passes on iPhone."
 - "How do I write tests that aren't flaky?"
 - "How do I test my app under slow network conditions?"
+- "How do I test slow-network or offline behavior in CI without sudo or the Network Link Conditioner GUI?"
 
 ## What This Skill Provides
 
@@ -58,10 +59,10 @@ Questions you can ask Claude that will draw from this skill:
 - Xcode Cloud integration
 
 ### Network Conditioning
-- Network Link Conditioner for slow network simulation
-- 3G profile for edge case failures
-- Longer timeouts for slow networks
-- Catch device + network combination failures
+- No-sudo, automatable conditioning via an in-process `URLProtocol` harness (latency, low bitrate, packet loss, offline) — deterministic and CI-friendly, no GUI
+- Network Link Conditioner / `dnctl` for whole-Mac OS-level conditioning, plus the on-device profile for real hardware
+- Optional toxiproxy proxy for conditioning traffic the app's `URLSession` doesn't own (gated — warns and points to install docs when it isn't installed)
+- Longer timeouts for slow networks; catch device + network combination failures
 
 ### Debugging Test Failures
 - Video review workflow

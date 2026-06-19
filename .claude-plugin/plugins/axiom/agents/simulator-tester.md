@@ -84,6 +84,18 @@ else
   echo "AXe not installed - run 'xcui doctor --install' to add it (or: brew install cameroncooke/axe/axe)"
   AXE_AVAILABLE=false
 fi
+
+# Optional: proxy-level network conditioning (conditions ALL of the app's proxied traffic)
+if command -v toxiproxy-server &> /dev/null && command -v toxiproxy-cli &> /dev/null; then
+  echo "toxiproxy available - proxy-level conditioning enabled (latency / bandwidth / loss)"
+  TOXIPROXY_AVAILABLE=true
+else
+  echo "toxiproxy NOT installed - proxy-level conditioning unavailable until you install it."
+  echo "  Install:  brew install toxiproxy"
+  echo "  Docs:     https://github.com/Shopify/toxiproxy  ·  https://formulae.brew.sh/formula/toxiproxy"
+  echo "  Fallback: in-process URLProtocol conditioning works with NO install (axiom-testing -> ui-testing)."
+  TOXIPROXY_AVAILABLE=false
+fi
 ```
 
 **Common fix**: "Unable to boot" → `xcrun simctl shutdown all && killall -9 Simulator`
@@ -280,6 +292,21 @@ xcui a11y set --toggle dynamic-type --value accessibility-extra-large
 ```
 
 Supported `a11y set` toggles: `dynamic-type`, `increase-contrast`, `reduce-motion`, `reduce-transparency`. For taps, use `axe tap --id <id>` directly (real HID touch). Full reference: `axiom-tools (skills/xcui-ref.md)`.
+
+### 15. Network Conditioning (low-bitrate / latency / loss)
+
+Two no-sudo paths — **never run `sudo dnctl`/`pfctl` on the user's machine unprompted.**
+
+- **In-process (default, no install)** — register a throttling `URLProtocol` on the app's `URLSession` to inject latency / byte-rate cap / failures deterministically. Full harness: `axiom-testing (skills/ui-testing.md)` → "No-sudo, automatable conditioning". Use this first; it is never unavailable.
+- **Proxy (optional, gated in preflight)** — if `TOXIPROXY_AVAILABLE=true`, route real traffic through toxiproxy. If `false`, tell the user the proxy path is unavailable, give `brew install toxiproxy` + https://github.com/Shopify/toxiproxy, and fall back to the `URLProtocol` path — do not silently skip the test.
+
+```bash
+# proxy path (only when TOXIPROXY_AVAILABLE=true)
+toxiproxy-cli create api --listen localhost:6443 --upstream api.example.com:443
+toxiproxy-cli toxic add api -t bandwidth -a rate=30      # KB/s low-bitrate
+toxiproxy-cli toxic add api -t latency   -a latency=400  # ms delay
+```
+**Use for**: slow-network UX, spinner/timeout/offline states, low-bitrate media. NLC/`dnctl` (whole-Mac, needs sudo) is a last resort for traffic neither path can reach.
 
 ## Test Workflow
 
