@@ -251,6 +251,8 @@ xcrun devicectl device info processes --device <udid>
 
 **When to use**: CLI device operations when an issue doesn't reproduce in Simulator (install, launch, inspect) — and `list devices` as the single command that inventories devices and simulators together.
 
+**Parsing `list devices --json-output`**: there is no literal `simulated` field — the human-readable `Reality` column is derived from `connectionProperties.transportType` (`sameMachine` = simulator; `localNetwork` / wired = physical device). Key off that, alongside `deviceProperties.bootState` (`booted` / `shutdown`) and `hardwareProperties.deviceType`, when enumerating devices and simulators in CI.
+
 ## Device Hub (OS27)
 
 Xcode 27 unifies simulators and physical devices in **Device Hub** — a standalone app that ships alongside Xcode and auto-launches when you build and run to a simulator (you don't need to open Xcode to use it). It offers the same toolset for simulators and physical devices, in a *compact* window (live screen plus a few essentials) that expands to a *full window* with canvas, sidebar inventory, and inspector. Bottom controls are contextual — home/screenshot/rotate on iPhone, play/pause and navigation on Apple TV, environment/camera on Vision Pro, side button and Digital Crown on Apple Watch.
