@@ -7,12 +7,12 @@ Welcome to Axiom — battle-tested AI skills, agents, and tools for modern xOS (
 Axiom provides comprehensive Apple platform development workflows:
 
 - **<!--ax:discipline-->151<!--/ax--> discipline skills** – Mandatory workflows (18 TDD-tested using ["red/green/refactor" methodology](https://en.wikipedia.org/wiki/Test-driven_development))
-- **<!--ax:reference-->78<!--/ax--> reference skills** – Comprehensive API guides with code examples
+- **<!--ax:reference-->79<!--/ax--> reference skills** – Comprehensive API guides with code examples
 - **<!--ax:diagnostic-->25<!--/ax--> diagnostic skills** – Systematic troubleshooting with decision trees
 - **<!--ax:commands-->15<!--/ax--> commands** – Quick automated scans for common issues
 - **<!--ax:agents-->41<!--/ax--> agents** – Autonomous code scanning and natural language automation
 
-#### Total: <!--ax:skills-->254<!--/ax--> skills + <!--ax:commands-->15<!--/ax--> commands + <!--ax:agents-->41<!--/ax--> agents
+#### Total: <!--ax:skills-->255<!--/ax--> skills + <!--ax:commands-->15<!--/ax--> commands + <!--ax:agents-->41<!--/ax--> agents
 
 ### 🤖 Apple Intelligence
 - **Foundation Models** -- Implement on-device AI with structured output and tool calling
