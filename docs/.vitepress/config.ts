@@ -601,6 +601,7 @@ export default withMermaid(defineConfig({
             { text: 'Apple Pay', link: '/reference/apple-pay-ref' },
             { text: 'Apple Pay for the Web', link: '/reference/apple-pay-web-ref' },
             { text: 'AVFoundation', link: '/reference/avfoundation-ref' },
+            { text: 'AVFoundation Video & Media Engine', link: '/reference/avfoundation-video-ref' },
             { text: 'Background Assets', link: '/reference/background-assets-ref' },
             { text: 'Background Processing API', link: '/reference/background-processing-ref' },
             { text: 'Camera Capture', link: '/reference/camera-capture-ref' },
@@ -717,7 +718,7 @@ export default withMermaid(defineConfig({
 
     footer: {
       message: 'Released under the MIT License',
-      copyright: 'Copyright © 2026 Charles Wiltgen • v27.0.0-beta.8'
+      copyright: 'Copyright © 2026 Charles Wiltgen • v27.0.0-beta.9'
     }
   }
 }))
