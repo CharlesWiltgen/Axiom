@@ -24,6 +24,7 @@ license: MIT
 | Condition-based waiting patterns | See `skills/ui-testing.md` |
 | Recording UI Automation (Xcode 26) | See `skills/ui-testing.md` |
 | Network conditioning, multi-factor testing | See `skills/ui-testing.md` |
+| Test Face ID/Touch ID, orientation, or simulator state from CI — devicectl | See `skills/ui-testing.md` |
 | XCUIElement queries, waiting strategies | See `skills/xctest-automation.md` |
 | Accessibility identifiers, test plans | See `skills/xctest-automation.md` |
 | CI/CD test execution | See `skills/xctest-automation.md` |

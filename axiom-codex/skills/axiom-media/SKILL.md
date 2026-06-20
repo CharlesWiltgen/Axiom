@@ -20,6 +20,7 @@ license: MIT
 | Photo pickers, library access | See `skills/photo-library.md` |
 | PHPicker, PhotosPicker API reference | See `skills/photo-library-ref.md` |
 | Audio, AVFoundation, spatial audio | See `skills/avfoundation-ref.md` |
+| Video write/export/playback, sample-buffer engine, resumable export, Apple Log 2, iOS 27 deprecations (`OS27`) | See `skills/avfoundation-video-ref.md` |
 | Audio recognition, ShazamKit | See `skills/shazamkit.md` |
 | ShazamKit API reference | See `skills/shazamkit-ref.md` |
 | On-device music analysis (key, tempo, structure, loudness), MusicUnderstanding (`OS27`) | See `skills/music-understanding.md` |
@@ -45,6 +46,7 @@ digraph media {
     what -> "skills/camera-capture.md" [label="camera capture"];
     what -> "skills/photo-library.md" [label="photo pickers\n/ library"];
     what -> "skills/avfoundation-ref.md" [label="audio / AVFoundation"];
+    what -> "skills/avfoundation-video-ref.md" [label="video write/export\n/ sample-buffer (OS27)"];
     what -> "skills/shazamkit.md" [label="ShazamKit\n/ audio recognition"];
     what -> "skills/music-understanding.md" [label="music analysis\n(key/tempo/structure)"];
     what -> "skills/haptics.md" [label="haptic feedback"];
@@ -56,7 +58,7 @@ digraph media {
 
 1. Camera capture? → `skills/camera-capture.md` (patterns), `skills/camera-capture-ref.md` (API), `skills/camera-capture-diag.md` (debugging)
 2. Photo pickers / library? → `skills/photo-library.md`, `skills/photo-library-ref.md`
-3. Audio / AVFoundation? → `skills/avfoundation-ref.md`
+3. Audio / AVFoundation (audio)? → `skills/avfoundation-ref.md`; video write/export/playback, sample-buffer engine, resumable export, iOS 27 deprecations? → `skills/avfoundation-video-ref.md` (`OS27`)
 4. ShazamKit / audio recognition? → `skills/shazamkit.md`, `skills/shazamkit-ref.md`
 5. On-device music analysis (key, tempo, structure, pace, instruments, loudness)? → `skills/music-understanding.md` (`OS27`)
 6. Haptics? → `skills/haptics.md`
