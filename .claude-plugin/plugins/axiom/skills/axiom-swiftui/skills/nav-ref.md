@@ -824,6 +824,10 @@ A new `NavigationTransition` that cross-fades between the appearing and disappea
 
 `@available(anyAppleOS 27, *) @available(macOS, unavailable)` — `OS27` except macOS, where the transition is unavailable. (`anyAppleOS` requires the Swift 6.4 toolchain; see `axiom-swift (skills/swift-modern.md)`.) If you share view code with a Mac target, gate it with `if #available` or fall back to the default transition there.
 
+### 6.8 Custom navigation transitions are not authorable
+
+`NavigationTransition` ships only three concrete transitions — `.zoom`, `.crossFade`, and `.automatic`. The protocol is public, but its sole requirement is an SPI method (`_outputs(for:)` taking underscored types), so you cannot meaningfully conform your own type — there is no public custom navigation transition as of the 27 SDK. For a bespoke push/pop effect, drive the animation yourself instead: `matchedTransitionSource`/`matchedGeometryEffect`, `.transition`, `keyframeAnimator`, or `visualEffect`/shader modifiers.
+
 ---
 
 ## Router/Coordinator Patterns
