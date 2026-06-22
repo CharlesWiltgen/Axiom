@@ -222,6 +222,8 @@ Xcode 27 reimplements `@State` as a Swift **macro** so an initial-value expressi
 
 Also: generic-argument inference is slightly less flexible — write the `@State` type explicitly if inference fails. There's no availability gate (the change back-deploys); it's a build-time behavior of the Xcode 27 toolchain, so it bites the moment you build with the 27 SDK regardless of deployment target.
 
+**Deferral scope — declaration only.** This single-evaluation behavior covers only the initial-value expression on the *declaration* (`@State private var model = Model()`). An initial value you compute yourself in a custom `init` — `self.model = Model()` (as in break #1) or the legacy `_model = State(initialValue: Model())` — still runs on **every** re-instantiation; the macro defers only the declaration's expression. So relocating an expensive or side-effecting initializer into `init` to "seed from a parameter" does not buy the once-per-lifetime guarantee. For that, give the declaration a default value, or move the work to `.task`/`onAppear` or an `@Observable` that outlives the view.
+
 ## @Observable Model Pattern
 
 Use `@Observable` for business logic that needs to trigger UI updates:
