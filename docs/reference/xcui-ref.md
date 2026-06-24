@@ -64,5 +64,6 @@ This page documents the `xcui-ref` reference skill — the bundled Axiom CLI for
 - For the agent that drives `xcui` live (set toggles, wait, assert on the tree), see the [simulator-tester agent](/agents/simulator-tester)
 - For static accessibility *source* scanning (the read-only counterpart that pairs with live validation), see the [accessibility-auditor agent](/agents/accessibility-auditor)
 - For the input primitives `xcui` delegates to, see [AXe (Simulator Automation)](/reference/axe-ref)
+- For device *state* setup (biometrics, orientation, location), that is `devicectl`'s job, not `xcui`'s — `xcui` validates the on-screen result, `devicectl` drives the state
 - For the `/axiom:ui` command wrapper, see [/axiom:ui](/commands/testing/ui)
 - For the sibling bundled tools, see [Console Capture (xclog)](/reference/xclog-ref) and [Crash Symbolication (xcsym)](/reference/xcsym-ref)
