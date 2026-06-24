@@ -137,7 +137,27 @@ xcrun simctl status_bar booted override --time "9:41" --batteryLevel 100 --cellu
 xcrun simctl status_bar booted clear
 ```
 
-### 9. Log Capture
+### 9. Device State via devicectl (biometrics + CI-stable JSON)
+
+`devicectl` drives a booted sim through the **same `-d <udid>` selector it uses for real devices** and parses to a **stable `--json-output`** (simctl stdout carries no stability guarantee). It works on simulators in **Xcode 26.6+ — no toolchain gate**. Prefer it for biometrics (simctl has no equivalent) and for any device-state step you want CI-stable and cross-device; simctl still owns lifecycle (boot/erase) and the sim-only features above (push, privacy, media, openurl, status bar).
+
+**Face ID / Touch ID — devicectl only (simctl cannot do this):**
+```bash
+xcrun devicectl device settings biometrics -d "$UDID" --enable      # enroll
+xcrun devicectl device simulate biometrics -d "$UDID" --success     # match (--failure for the reject path)
+xcrun devicectl device settings biometrics -d "$UDID" --disable     # restore
+```
+Flags are `--success` / `--failure` (mutually exclusive) — **not** `--match`.
+
+**Other verified device-state primitives:**
+```bash
+xcrun devicectl device orientation set -d "$UDID" landscapeLeft           # portrait|portraitUpsideDown|landscapeLeft|landscapeRight
+xcrun devicectl device process sendMemoryWarning -d "$UDID" --pid <pid>    # memory-pressure scenario
+```
+
+The full verified catalog — `info displays`, `settings appearance`, `simulate location` / `statusBar`, and the `CoreDeviceError 1001` "device-only on a sim" cases — lives in `axiom-testing (skills/ui-testing.md)` → "Simulator control from CI: devicectl". This agent loads `axiom-testing`; consult it for the complete set and exact JSON keys.
+
+### 10. Log Capture
 ```bash
 # Stream logs for specific app
 xcrun simctl spawn booted log stream --predicate 'subsystem == "com.example.YourApp"' --style compact
@@ -146,7 +166,7 @@ xcrun simctl spawn booted log stream --predicate 'subsystem == "com.example.Your
 ls -lt "$HOME/Library/Logs/DiagnosticReports/"*.crash 2>/dev/null | head -5
 ```
 
-### 10. App Inventory & Diagnostics
+### 11. App Inventory & Diagnostics
 ```bash
 # List all installed apps on booted simulator
 xcrun simctl listapps booted
@@ -163,7 +183,7 @@ xcrun simctl diagnose --no-archive
 ```
 **Use for**: Verifying app installation, inspecting app data, deep debugging
 
-### 11. Simulator Management
+### 12. Simulator Management
 ```bash
 # Clone simulator for test variants
 xcrun simctl clone <source-udid> "Test Variant - Dark Mode"
@@ -175,7 +195,7 @@ xcrun simctl list runtimes -j | jq '.runtimes[] | {name, identifier, isAvailable
 xcrun simctl keychain booted add-root-cert /path/to/ca.pem
 ```
 
-### 12. UI Automation with AXe (preflighted via `xcui doctor`)
+### 13. UI Automation with AXe (preflighted via `xcui doctor`)
 
 **Installation:** AXe is the input/tree engine `xcui` builds on. Preflight it with `xcui doctor` (and `xcui doctor --install` to add it via brew, consented) rather than treating it as optional.
 
@@ -225,7 +245,7 @@ axe button siri --udid $UDID
 ```
 **Use for**: Automated UI flows when XCUITest not available, quick manual automation
 
-### 13. Video Streaming with AXe (preflighted via `xcui doctor`)
+### 14. Video Streaming with AXe (preflighted via `xcui doctor`)
 
 ```bash
 # Stream video at 10 FPS (for monitoring)
@@ -240,7 +260,7 @@ axe screenshot --output /tmp/screenshot.png --udid $UDID
 ```
 **Use for**: Live monitoring, recording test flows, capturing evidence
 
-### 14. Scriptable Assertions & Accessibility with xcui
+### 15. Scriptable Assertions & Accessibility with xcui
 
 `xcui` (bundled) adds the test-harness semantics AXe lacks. **Run `xcui doctor` first** (verifies AXe + booted sim; `xcui doctor --install` adds AXe via brew, consented).
 
@@ -258,7 +278,7 @@ xcui a11y set --toggle dynamic-type --value accessibility-extra-large
 
 Supported `a11y set` toggles: `dynamic-type`, `increase-contrast`, `reduce-motion`, `reduce-transparency`. For taps, use `axe tap --id <id>` directly (real HID touch). Full reference: `axiom-tools (skills/xcui-ref.md)`.
 
-### 15. Network Conditioning (low-bitrate / latency / loss)
+### 16. Network Conditioning (low-bitrate / latency / loss)
 
 Two no-sudo paths — **never run `sudo dnctl`/`pfctl` on the user's machine unprompted.**
 

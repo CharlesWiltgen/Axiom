@@ -475,6 +475,19 @@ let task = Task {
 task.cancel()
 ```
 
+#### withTaskCancellationShield (OS27)
+
+Swift 6.4 adds `withTaskCancellationShield` to run a region to completion even when the surrounding task is cancelled — the shielded operation does not observe cancellation. Use it sparingly, for work that must finish atomically once started (a commit, a handshake); over-use defeats cooperative cancellation.
+
+```swift
+@available(anyAppleOS 27, *)
+func commit() async throws {
+    try await withTaskCancellationShield {
+        try await database.write(pending)   // not interrupted mid-write by cancellation
+    }
+}
+```
+
 ### Task.sleep
 
 Suspends the current task for a duration. Supports cancellation — throws `CancellationError` if cancelled during sleep.
@@ -1283,6 +1296,24 @@ func fastBridge() async -> Data {
 ```
 
 **Use checked continuations during development, switch to unsafe only after thorough testing and when profiling shows the check is a bottleneck.**
+
+### Single-Resume `Continuation` (OS27 — present but limited in beta)
+
+Swift 6.4 adds `withContinuation`, vending a `~Copyable` `Continuation` whose `resume` methods are `consuming` — so a **double-resume is a build error** (`'c' consumed more than once`) rather than a runtime crash. It is the statically-checked successor to `withCheckedContinuation`.
+
+**Not yet a drop-in replacement in the current Xcode 27 beta.** Because the continuation is `~Copyable`, resuming it from an `@escaping` callback does not compile — `noncopyable 'c' cannot be consumed when captured by an escaping closure or borrowed by a non-Escapable type` — which is exactly the delegate / completion-handler bridging that `withCheckedContinuation` is for. Only synchronous resume inside the `withContinuation` body works today; never-resuming is **not** diagnosed.
+
+```swift
+@available(anyAppleOS 27, *)
+func value() async -> Int {
+    await withContinuation { (c: consuming Continuation<Int, Never>) in
+        c.resume(returning: 42)                       // OK — resumed in-body
+        // mgr.fetch { v in c.resume(returning: v) }  // ✗ won't compile: escaping capture
+    }
+}
+```
+
+Keep `withCheckedContinuation` for real callback bridging until a later beta lifts the escaping-closure limitation. Re-probe each beta.
 
 ### Continuation Gotcha Table
 

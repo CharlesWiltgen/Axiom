@@ -30,6 +30,7 @@ Use this router when:
 | Computer vision (image analysis, OCR, segmentation) | **/skill axiom-vision** → Vision framework |
 | Cloud API integration (OpenAI, generic HTTP) | **/skill axiom-networking** → URLSession patterns |
 | Cloud Claude integration (Anthropic SDK, Messages API, Claude Agent SDK) | **See `claude-api` skill** (external) → includes automated Opus 4.6 → 4.7 migration |
+| Turnkey Apple Intelligence UI — suggested actions for a messaging conversation (`OS27`) | **See skills/suggested-actions.md** → drop-in `SuggestedActionsView`, entitlement-gated |
 | System AI features (Writing Tools, Genmoji) | No custom code needed — these are system-provided |
 
 **Key boundary: Foundation Models vs ML (custom models)**
@@ -85,6 +86,10 @@ For the full "which path applies to me?" disambiguation (decision tree, the thre
 ### Core AI — the 27-cycle path for LLM-scale on-device models (`OS27`)
 
 `skills/core-ai.md` covers Core AI, the on-device inference framework that powers Apple Intelligence and is now open to your apps. Route here (not `skills/ios-ml.md`) when the model is LLM-scale / a transformer, or when the developer needs custom Metal kernels, multi-function assets, ahead-of-time compilation, KV-cache states, or the specialization/caching deployment model. Covers the Python toolchain (`coreai-torch`/`coreai-opt`), the Swift runtime (`import CoreAI` → `AIModel`/`InferenceFunction`/`NDArray`), specialization discipline, and the Foundation Models bridge (`CoreAILanguageModel` from the open-source `coreai-models` package — not a system-framework type).
+
+### Turnkey Apple Intelligence UI — Suggested Actions (`OS27`)
+
+`skills/suggested-actions.md` covers the `SuggestedActions` framework: a drop-in SwiftUI `SuggestedActionsView` that renders Apple-Intelligence-generated suggested actions for a messaging conversation (iOS/macOS/macCatalyst/visionOS 27). This is a **system-provided** feature — you describe the message (`SuggestedActionsMessage`) and add the `com.apple.developer.suggested-actions` entitlement; there's no `LanguageModelSession`, prompt, or `@Generable`. Route here for messaging/chat/email apps that want inline system suggestions. If the developer wants to generate their *own* structured output, that's Foundation Models, not this. The entitlement/capability half also surfaces via **axiom-integration**, which cross-points back here.
 
 ### Foundation Models Work
 
@@ -168,6 +173,7 @@ Scores: PRODUCTION-READY / NEEDS HARDENING / FRAGILE
 10. Debugging adapter-specific failures (compatibleAdapterNotFound, tool calls don't fire from adapter, accuracy regression after OS update)? → foundation-models-adapters-diag
 11. Want automated Foundation Models code scan? → foundation-models-auditor (Agent — detects 10 anti-patterns AND completeness gaps including prompt injection, frozen-enum discipline, transcript trimming, Cancel UX; scores PRODUCTION-READY / NEEDS HARDENING / FRAGILE)
 12. Measuring whether an AI feature improved/regressed, or building an eval/regression suite (incl. agentic tool-call eval)? → **foundation-models-evaluations-ref** (`OS27` Evaluations framework)
+13. Adding Apple's built-in suggested actions to a messaging/chat/email app (`SuggestedActionsView`, suggested-actions entitlement)? → **skills/suggested-actions.md** (`OS27` — turnkey, system-provided; NOT Foundation Models)
 
 ## Anti-Rationalization
 
@@ -247,3 +253,6 @@ User: "How do we ship a custom adapter to users?"
 
 User: "How do I measure if my prompt change made the tagging feature better?" / "Write an eval suite for my AI feature"
 → Read: `skills/foundation-models-evaluations-ref.md` (Evaluations framework — Metrics, Swift Testing `.evaluates`, model-as-judge, tool-call eval)
+
+User: "Add Apple's suggested actions to my messaging app" / "Show smart/on-device suggested replies for a message thread" / "What's the com.apple.developer.suggested-actions entitlement for?"
+→ Read: `skills/suggested-actions.md` (turnkey `SuggestedActionsView`, system-provided — not Foundation Models)
