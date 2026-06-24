@@ -7,7 +7,7 @@ apple_platforms: iOS 27+, iPadOS 27+, macOS 27+, macCatalyst 27+, visionOS 27+
 
 # Suggested Actions
 
-`import SuggestedActions` is a new iOS 27 framework that gives a messaging app a drop-in SwiftUI view rendering Apple-Intelligence-generated suggested actions for a conversation. The suggestions are produced on-device — you describe the message and the system generates and renders the actions. There's no `LanguageModelSession`, prompt, or `@Generable`; this is a turnkey Apple Intelligence component, not a build-your-own path.
+`import SuggestedActions` is a new iOS 27 framework that gives a messaging app a drop-in SwiftUI view rendering Apple-Intelligence-generated suggested actions for a conversation. The system produces the suggestions on-device — you describe the message, and it generates and renders the actions. There's no `LanguageModelSession`, prompt, or `@Generable`; this is a turnkey Apple Intelligence component, not a build-your-own path.
 
 ## When to Use
 

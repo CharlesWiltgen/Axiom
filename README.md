@@ -18,7 +18,7 @@ Axiom gives AI coding assistants deep Apple platform development expertise — t
 
 Every discipline skill is TDD-tested against real developer pressure scenarios. [Learn more about quality](https://charleswiltgen.github.io/Axiom/start/quality).
 
-**OS 27 in progress.** Axiom is on a `27.x` beta that tracks Apple's OS 27 developer betas — OS-27 coverage lands continuously through the beta season. Guidance for OS 26 and earlier is stable and unaffected.
+**OS 27 in progress.** Axiom is on a `27.x` beta that tracks Apple's OS 27 developer betas — OS-27 coverage lands continuously through the beta season. Guidance for OS 26 and earlier stays stable.
 
 ## Installation
 

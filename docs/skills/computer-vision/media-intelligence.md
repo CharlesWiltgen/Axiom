@@ -7,7 +7,7 @@ apple_platforms: iOS 27+, iPadOS 27+, macOS 27+, tvOS 27+, visionOS 27+
 
 # Media Intelligence
 
-`import MediaIntelligence` is a new iOS 27 framework that runs two on-device media-analysis engines over photo and video assets you supply by URL. Everything stays on-device — the media never leaves the device, and you need no Vision or ML background.
+`import MediaIntelligence` is a new iOS 27 framework that runs two on-device media-analysis engines over photo and video assets you supply by URL. Everything stays on-device — the media never leaves it, and you need no Vision or ML background.
 
 ## When to Use
 
