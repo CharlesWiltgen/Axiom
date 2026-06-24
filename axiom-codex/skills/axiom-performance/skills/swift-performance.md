@@ -1060,6 +1060,25 @@ func getCached(_ key: Key) -> Value? {
 
 ---
 
+## Compiler Performance Hints
+
+The compiler can flag several of the anti-patterns above for you. Build with `-Wwarning PerformanceHints` (off by default) to surface them:
+
+| Hint | Flags | See |
+|---|---|---|
+| `ExistentialType` | `any P` returns/params forcing heap allocation + dynamic dispatch | Part 5 |
+| `ReturnTypeImplicitCopy` | Returning an array/large value that triggers implicit copies | Part 7 |
+| `UntypedThrows` | Untyped `throws` (heap-allocates the error box per `throw`) | Part 10 |
+
+```bash
+swiftc -Wwarning PerformanceHints …    # surface as warnings
+swiftc -Werror PerformanceHints …      # fail the build on them
+```
+
+Scope it to hot modules — these patterns are negligible in UI-level code (see Part 5's measure-first note). The flag and group predate Swift 6.4 — `ExistentialType` and `ReturnTypeImplicitCopy` already emit on Xcode 26 under flat names like `[#ExistentialType]`; `UntypedThrows` is new in the 6.4 toolchain (Xcode 27), which also namespaces the group as `PerformanceHints::<hint>`. Treat it as a tooling tip, not a 27-only feature.
+
+---
+
 ## Code Review Checklist
 
 ### Memory Management
