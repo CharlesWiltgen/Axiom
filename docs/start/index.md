@@ -59,7 +59,7 @@ Axiom provides comprehensive Apple platform development workflows:
 
 ## Prerequisites
 
-- **Claude Code** ([download here](https://claude.com/product/claude-code))
+- **A supported coding harness or AI-savvy IDE** – [Claude Code](https://claude.com/product/claude-code), Codex, or any MCP-capable harness/IDE (VS Code, Cursor, Gemini CLI, and more); see [Install](/start/install) for each path
 - **Xcode 26+** (for Liquid Glass, Recording UI Automation, and latest iOS features)
 - **iOS 26 SDK** (comes with Xcode 26)
 
