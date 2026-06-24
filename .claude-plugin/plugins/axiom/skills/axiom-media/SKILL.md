@@ -30,6 +30,7 @@ license: MIT
 | Animated lock-screen artwork (iOS 26+) | See `skills/now-playing.md` Pattern 8 |
 | NowPlaying framework (`import NowPlaying`, Swift-native `MediaSession`, `OS27`) | See `skills/now-playing.md` (NowPlaying Framework section) |
 | Cast / route media to non-AirPlay devices (Google Cast/Chromecast, DLNA) as system routes, AVSystemRouting (`iOS27`, EU-gated/beta) | See `skills/system-media-routing.md` |
+| Screen capture / recording / streaming the screen or your own app, ScreenCaptureKit (`OS27` — new on iOS/iPadOS/tvOS/visionOS 27; macOS 12.3+) | See `skills/screen-capture.md` |
 | CarPlay HIG, app categories, design rules, entitlements | See `skills/carplay-hig.md` |
 | CarPlay templates reference (all 12 templates, availability matrix, depth limits) | See `skills/carplay-templates-ref.md` |
 | CarPlay navigation reference (base view, route guidance, cluster/HUD, multitouch, voice prompts, map panels + EV charging iOS 27) | See `skills/carplay-navigation-ref.md` |
@@ -55,6 +56,7 @@ digraph media {
     what -> "skills/haptics.md" [label="haptic feedback"];
     what -> "skills/now-playing.md" [label="Now Playing\n/ remote commands"];
     what -> "skills/system-media-routing.md" [label="cast to non-AirPlay\n(Chromecast/DLNA, iOS27)"];
+    what -> "skills/screen-capture.md" [label="screen capture /\nrecording (OS27)"];
     what -> "skills/carplay-hig.md" [label="CarPlay app design\n/ categories / entitlements"];
     what -> "skills/dockkit.md" [label="DockKit stands\n/ gimbals / tracking"];
 }
@@ -69,9 +71,10 @@ digraph media {
 7. Haptics? → `skills/haptics.md`
 8. Now Playing / remote commands? → `skills/now-playing.md`, `skills/now-playing-carplay.md`, `skills/now-playing-musickit.md`
 9. Cast / route media to non-AirPlay devices (Google Cast/Chromecast, DLNA) as system routes? → `skills/system-media-routing.md` (`iOS27`, EU-gated/beta)
-10. CarPlay app design, category selection, entitlement request? → `skills/carplay-hig.md` (start here for any CarPlay work)
-11. DockKit motorized stands / gimbals, subject tracking, custom motor control? → `skills/dockkit.md`
-12. Want camera code audit? → Launch `camera-auditor` agent (detects deprecated APIs and architectural gaps: missing interruption handlers, runtime-error recovery, audio session deactivation, permission-denied UX, RotationCoordinator on iOS 17+; scores RELIABLE / FRAGILE / BROKEN)
+10. Screen capture / recording / streaming the screen or your own app (ScreenCaptureKit)? → `skills/screen-capture.md` (`OS27` — new on iOS/iPadOS/tvOS/visionOS 27)
+11. CarPlay app design, category selection, entitlement request? → `skills/carplay-hig.md` (start here for any CarPlay work)
+12. DockKit motorized stands / gimbals, subject tracking, custom motor control? → `skills/dockkit.md`
+13. Want camera code audit? → Launch `camera-auditor` agent (detects deprecated APIs and architectural gaps: missing interruption handlers, runtime-error recovery, audio session deactivation, permission-denied UX, RotationCoordinator on iOS 17+; scores RELIABLE / FRAGILE / BROKEN)
 
 ## Cross-Domain Routing
 
@@ -117,6 +120,7 @@ digraph media {
 | "DockKit is just pairing a stand" | Custom control needs system tracking disabled, handles inverted dock states, and two different coordinate origins. |
 | "Grouping faces is just Vision face detection" | Vision detects faces in one image; MediaIntelligence clusters them into persistent people (entities) across a whole library, with its own working directory and state. |
 | "Casting to Chromecast means bundling the Google Cast SDK" | On iOS 27, AVSystemRouting exposes non-AirPlay routes as system routes — you adopt one Apple API (observe events, start a session, drive playbackControl) instead of a per-vendor SDK. Likely EU-gated/beta — gate and keep a fallback. |
+| "ScreenCaptureKit on iPad works like the Mac (enumerate displays/windows)" | On iOS/iPadOS `SCShareableContent` and all `SCContentFilter` initializers are macOS-only — you get a filter ONLY from the system `SCContentSharingPicker`. New on iOS/iPadOS/tvOS/visionOS 27. Also not `ImageRenderer` (that snapshots your own SwiftUI view). |
 
 ## Example Invocations
 
@@ -152,6 +156,9 @@ User: "Group faces into people across my photo library" / "cluster faces on-devi
 
 User: "Cast to Chromecast / Google Cast without the Cast SDK" / "support non-AirPlay casting" / "route media to a DLNA device as a system route"
 → Read: `skills/system-media-routing.md`
+
+User: "Record / stream the iPad screen" / "ScreenCaptureKit on iOS" / "screen recording in my app" / "capture just my app's content"
+→ Read: `skills/screen-capture.md`
 
 User: "Track a subject with a motorized stand" / "Control a DockKit gimbal"
 → Read: `skills/dockkit.md`
