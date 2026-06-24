@@ -417,6 +417,7 @@ export default withMermaid(defineConfig({
             { text: 'Live Activities (ActivityKit)', link: '/skills/integration/live-activities' },
             { text: 'Localization', link: '/skills/integration/localization' },
             { text: 'MapKit', link: '/skills/integration/mapkit' },
+            { text: 'Media Intelligence', link: '/skills/computer-vision/media-intelligence' },
             { text: 'Music Understanding', link: '/skills/integration/music-understanding' },
             { text: 'Networking', link: '/skills/integration/networking' },
             { text: 'Networking (Legacy iOS 12-25)', link: '/skills/integration/networking-legacy' },
@@ -425,6 +426,7 @@ export default withMermaid(defineConfig({
             { text: 'Privacy UX', link: '/skills/integration/privacy-ux' },
             { text: 'Push Notifications', link: '/skills/integration/push-notifications' },
             { text: 'ShazamKit', link: '/skills/integration/shazamkit' },
+            { text: 'Suggested Actions (Apple Intelligence)', link: '/skills/integration/suggested-actions' },
             { text: 'Tap to Pay on iPhone', link: '/skills/integration/tap-to-pay' },
             { text: 'tvOS', link: '/skills/integration/tvos' },
             { text: 'Wallet Orders', link: '/skills/integration/wallet-orders' },
@@ -472,7 +474,8 @@ export default withMermaid(defineConfig({
           text: 'Computer Vision',
           items: [
             { text: 'Overview', link: '/skills/computer-vision/' },
-            { text: 'Vision', link: '/skills/computer-vision/vision' }
+            { text: 'Vision', link: '/skills/computer-vision/vision' },
+            { text: 'Media Intelligence', link: '/skills/computer-vision/media-intelligence' }
           ]
         },
         {

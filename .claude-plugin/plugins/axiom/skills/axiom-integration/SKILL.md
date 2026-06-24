@@ -39,6 +39,7 @@ license: MIT
 | Weather data, forecasts, attribution (WeatherKit) | See `skills/weatherkit.md` |
 | VoIP calls, CallKit, VoIP push, caller ID/blocking | See `skills/callkit-livecommunicationkit.md` |
 | CallKit / LiveCommunicationKit / IdentityLookup API reference | See `skills/callkit-livecommunicationkit-ref.md` |
+| Suggested actions for a messaging conversation (`SuggestedActionsView`, `com.apple.developer.suggested-actions` entitlement, `OS27`) | Use axiom-ai (skills/suggested-actions.md) instead — Apple-Intelligence-backed; the entitlement/capability is the integration half |
 | AlarmKit (iOS 26+) | See `skills/alarmkit-ref.md` |
 | Timer patterns, scheduling | See `skills/timer-patterns.md` |
 | Timer API reference | See `skills/timer-patterns-ref.md` |

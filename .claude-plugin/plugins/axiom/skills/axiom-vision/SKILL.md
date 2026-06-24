@@ -26,6 +26,7 @@ license: MIT
 | Vision framework API reference | See `skills/vision-ref.md` |
 | Visual Intelligence integration (iOS 26+, iPadOS27/macOS27) | See `skills/vision-ref.md` |
 | Sensitive content classification (nudity/gore/violence), categorized via `detectedTypes` (`OS27`) | See `skills/vision-ref.md` |
+| Group/cluster faces into people across a library, video highlights/key frames (`OS27`) | Use axiom-media (skills/media-intelligence.md) instead — MediaIntelligence clusters identities; Vision detects faces in one image |
 | Subject not detected | See `skills/vision-diag.md` |
 | Hand/body pose missing landmarks | See `skills/vision-diag.md` |
 | Low confidence observations | See `skills/vision-diag.md` |
@@ -124,3 +125,6 @@ User: "Can I use Vision in my watchOS app?"
 
 User: "RecognizeDocumentsRequest API reference"
 → See `skills/vision-ref.md`
+
+User: "Group faces into people across my library" / "cluster faces on-device into persons"
+→ Use `axiom-media` (`skills/media-intelligence.md`) — identity clustering across assets, not per-image detection
