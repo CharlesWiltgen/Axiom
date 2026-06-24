@@ -111,6 +111,13 @@ Skip Axiom skills for:
 
 But when in doubt for iOS/Swift work: **check first, decide later.**
 
+## Device Hub (Xcode 27)
+
+On Xcode 27, **Device Hub** — a standalone app that auto-launches on build-and-run — replaces the **Simulator.app** GUI and manages simulators *and* physical devices in one place. This is additive: Xcode 26 and earlier keep Simulator.app, so it isn't "gone" for those users. The Axiom tools are unaffected — `xclog`, `xcsym`, `xcui`, and `xcprof` work the same on both. Device Hub's scriptable CLI counterpart is `devicectl` (itself not 27-only — identical on Xcode 26.6), which complements the Axiom tools: `xcui` drives the in-app UI / accessibility tree, while `devicectl` sets device state (biometrics, orientation, location).
+
+For the GUI workflow, see `axiom-build (skills/xcode-debugging.md)` → "Device Hub (OS27)".
+For the `devicectl` simulator/CI primitives, see `axiom-testing (skills/ui-testing.md)` → "Simulator control from CI: devicectl".
+
 ## Resources
 
 **Skills**: axiom-swiftui, axiom-concurrency, axiom-data, axiom-build, axiom-performance

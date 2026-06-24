@@ -29,6 +29,7 @@ Automated simulator testing with visual verification for closed-loop debugging.
 7. **App lifecycle** – Launch, terminate, install apps
 8. **Status bar override** – Clean screenshots for documentation
 9. **Log analysis** – Monitor console for crashes/errors
+10. **Device state via `devicectl`** – Drives biometrics (Face ID/Touch ID) and orientation where `simctl` can't
 
 ### Test Scenarios Fixed
 - Visual verification → Screenshot capture + Claude analysis
