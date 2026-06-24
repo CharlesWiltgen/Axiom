@@ -26,6 +26,8 @@ Use this skill when:
 - "Should I use Swift Testing or XCTest?"
 - "How do I migrate from XCTest?"
 - "How do I record a non-fatal warning or cancel a test mid-run?" (iOS 27)
+- "How do I rerun a flaky test until it fails?" (Xcode 27)
+- "How do I make cross-framework XCTest/Swift Testing assertion warnings hard failures?" (Xcode 27)
 
 ## What This Skill Provides
 

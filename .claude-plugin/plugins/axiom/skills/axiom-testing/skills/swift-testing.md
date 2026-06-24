@@ -662,6 +662,24 @@ Use cancellation only for "can't run here," not for assertions — a wrong resul
 
 ---
 
+## Repeat Runs for Flaky Tests (OS27)
+
+`swift test` can repeat a run to catch or confirm flakiness — Swift Testing suites only, not XCTest:
+
+```bash
+# Repeat each test up to 10x, stopping early once one FAILS (surface an intermittent failure)
+swift test --maximum-repetitions 10 --repeat-until fail
+
+# Repeat until everything PASSES; only the still-failing tests re-run each round
+swift test --maximum-repetitions 10 --repeat-until pass
+```
+
+- `--repeat-until` takes `pass` or `fail`; with `pass`, already-passing tests are not repeated, so confirming a fix is fast.
+- `--maximum-repetitions <n>` caps the rounds so a permanently-failing test can't loop forever.
+- Pair with `.serialized` or `withMainSerialExecutor` (see Parallel Testing) when isolating an ordering-dependent flake.
+
+---
+
 ## Migration from XCTest
 
 ### Comparison Table
@@ -690,7 +708,7 @@ Use cancellation only for "can't run here," not for assertions — a wrong resul
 2. Migrate incrementally, one test file at a time
 3. Consolidate similar XCTests into parameterized Swift tests
 4. Single-test XCTestCase → global `@Test` function
-5. **Cross-framework assertions (`OS27`)** — the 27 toolchain lets you call `XCTAssert*` from inside a `@Test` function and `#expect`/`#require` from inside an `XCTestCase`, smoothing incremental migration. A cross-framework assertion is reported as a **warning** by default; opt into hard failures via an Xcode build setting. (WWDC 2026-262 — confirm the build-setting name against your Xcode 27.)
+5. **Cross-framework assertions (`OS27`)** — the 27 toolchain lets you call `XCTAssert*` from inside a `@Test` function and `#expect`/`#require` from inside an `XCTestCase`, smoothing incremental migration. A cross-framework assertion is reported as a **warning** by default; set the `SWIFT_TESTING_XCTEST_INTEROP_MODE` build setting (or test-scheme environment variable) to `strict` to promote those into hard test failures so migration can't silently drop coverage.
 
 ---
 
