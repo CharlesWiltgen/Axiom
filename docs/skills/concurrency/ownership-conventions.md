@@ -73,7 +73,7 @@ struct FileHandle: ~Copyable {
 - InlineArray (fixed-size, stack-allocated arrays)
 - Span / MutableSpan (safe zero-copy memory access)
 - Value generics
-- Swift 6.4 (iOS 27): `borrow`/`mutate` accessors, `~Copyable` `Equatable`/`Comparable`/`Hashable`, the `[N of T]` InlineArray literal
+- Swift 6.4 (iOS 27): `borrow`/`mutate` accessors, `~Copyable` `Equatable`/`Comparable`/`Hashable`, the `[N of T]` InlineArray literal, `Ref`/`MutableRef`/`UniqueBox` ownership containers
 
 ## Related Skills
 

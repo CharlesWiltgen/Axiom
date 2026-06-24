@@ -57,6 +57,7 @@ Swift 6.4 ships with Xcode 27 (the toolchain also folds in the 6.3 work). Prefer
 | `weak let` | Immutable weak ref → the class can be `Sendable`, not `@unchecked Sendable` | `weak var` forcing `@unchecked Sendable` |
 | `class T: ~Sendable` | Explicitly suppress `Sendable` (subclasses can still add it back) | No prior syntax |
 | Second memberwise init | A struct mixing `internal` + `private` stored properties also gets an `internal` memberwise init usable from other files | Hand-written init |
+| `@diagnose(Group, as: …)` | Set one diagnostic group's severity (`ignored` / `warning` / `error`) for a single declaration | Project-wide `-Wwarning`/`-Werror`, blanket suppression |
 
 ```swift
 // anyAppleOS — one availability token for the whole 27 cycle
@@ -71,7 +72,18 @@ func launch() { ... }
 final class Spacecraft: Sendable {
     weak let dockedAt: SpaceStation?
 }
+
+// @diagnose — scope a diagnostic group's severity to one declaration.
+// First argument is a diagnostic-group identifier (e.g. DeprecatedDeclaration),
+// NOT a bare keyword. It governs diagnostics emitted inside that declaration.
+@diagnose(DeprecatedDeclaration, as: ignored)
+func usesLegacyAPI() { oldCall() }         // deprecation warning silenced here only
+
+@diagnose(DeprecatedDeclaration, as: error)
+func mustNotRegress() { oldCall() }        // hard-fails the build instead
 ```
+
+`@diagnose` is compiler-gated (needs the Swift 6.4 toolchain), not OS-gated — no `@available` applies. It is the per-declaration counterpart to the whole-module `-Wwarning`/`-Werror <group>` flags.
 
 **Caveat**: `anyAppleOS` requires the Swift 6.4 toolchain (Xcode 27+). For code that must build on older Xcode, keep the explicit per-platform `@available`. Either way, `@available(iOS 27, *)`-style gating remains the authoritative runtime check.
 

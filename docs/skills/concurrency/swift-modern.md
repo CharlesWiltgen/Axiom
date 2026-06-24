@@ -17,6 +17,7 @@ Use this skill when:
 - "Why am I using DateFormatter when I could use FormatStyle?"
 - "Check if my Foundation usage is current"
 - "How do I write availability for all Apple platforms with anyAppleOS?" (iOS 27)
+- "How do I silence a deprecation warning in just one function?" (iOS 27)
 
 ## What This Skill Provides
 

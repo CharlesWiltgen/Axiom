@@ -21,12 +21,13 @@ Use this reference when:
 - "What are the actor reentrancy rules?"
 - "How do I make my class Sendable?"
 - "What's the difference between Task and Task.detached?"
+- "How do I run a block that ignores task cancellation?" (iOS 27)
 
 ## What's Covered
 
 - Actor patterns (definition, nonisolated, reentrancy, global actors, gotcha table)
 - Sendable patterns (struct/enum, @Sendable closures, @unchecked, conditional, gotcha table)
-- Task management (Task, Task.detached, cancellation, priority, @TaskLocal, gotcha table)
+- Task management (Task, Task.detached, cancellation, `withTaskCancellationShield` (iOS 27), priority, @TaskLocal, gotcha table)
 - Structured concurrency (async let, TaskGroup, task tree semantics, gotcha table)
 - Async sequences (AsyncStream, continuation API, buffering, custom AsyncSequence, gotcha table)
 - Isolation patterns (@MainActor, nonisolated, #isolation, sending, gotcha table)

@@ -448,9 +448,43 @@ struct FileHandle: ~Copyable, Equatable {
 }
 ```
 
-### Not yet in the beta SDK
+### Single-value & unique containers
 
-WWDC 2026-262 also announced new stdlib containers for 6.4 — `UniqueArray` (`~Copyable` array), `UniqueBox`, `Ref`/`MutableRef` (a single-value `Span`), `Continuation` (compile-time single-resume), and `for`-loop iteration over a new `Iterable` protocol (borrows elements, batches via `Span`). **None of these are in the Xcode 27.0 beta-1 stdlib yet** (verified absent from `Swift.swiftinterface`) — treat them as forthcoming, not adoptable today. Re-check in a later beta.
+The 6.4 stdlib adds lightweight ownership containers — verified usable in the Xcode 27 beta (no experimental flag). Each gates on `@available(anyAppleOS 27, *)`:
+
+| Type | Copyability | Init | Role |
+|------|-------------|------|------|
+| `UniqueBox<Value>` | `~Copyable` | `UniqueBox(consuming value)` | Heap box that uniquely owns a `~Copyable` value |
+| `Ref<Value>` | `Copyable`, `~Escapable` | `Ref(borrowing value)` | Shareable read-only borrow of a single value |
+| `MutableRef<Value>` | `~Copyable`, `~Escapable` | `MutableRef(&value)` | Exclusive in-place borrow of a single value |
+
+```swift
+@available(anyAppleOS 27, *)
+func demo() {
+    var counter = 0
+    let handle = MutableRef(&counter)   // exclusive borrow, cannot escape
+    _ = handle
+
+    let box = UniqueBox(LargeValue())   // sole heap owner
+    _ = consume box
+}
+```
+
+`Ref`/`MutableRef` are the single-value analog of `Span`/`MutableSpan`: non-escapable, so the borrow can't outlive its source. On the concurrency side, `withTaskCancellationShield` is usable now and the single-resume `Continuation` is present but limited in this beta — see `swift-concurrency-ref`.
+
+### Still forthcoming (re-check each beta)
+
+Other 6.4 stdlib features are **not yet usable** in the current Xcode 27 beta (confirmed by compile-probe, build swiftlang-6.4.0.23.5):
+
+| Feature | State in beta |
+|---------|---------------|
+| `UniqueArray` (`~Copyable` array) | Absent — `UniqueBox` shipped, the array form has not |
+| `Dictionary.mapKeyedValues` | Absent |
+| `FilePath` as a stdlib type | Still requires `import System` |
+| Paren-free `any P?` / `some P?` | Still must be written `(any P)?` |
+| `for`-loop borrowing iteration | Shipped as `BorrowingSequence` / `BorrowingIteratorProtocol` (renamed from "Iterable"), but gated behind `-enable-experimental-feature BorrowingSequence` — present, not yet shippable |
+
+Treat these as forthcoming; re-probe on each new beta and fold what flips.
 
 ## Decision Tree
 
