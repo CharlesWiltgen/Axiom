@@ -425,6 +425,7 @@ export default withMermaid(defineConfig({
             { text: 'Photo Library', link: '/skills/integration/photo-library' },
             { text: 'Privacy UX', link: '/skills/integration/privacy-ux' },
             { text: 'Push Notifications', link: '/skills/integration/push-notifications' },
+            { text: 'Screen Capture (ScreenCaptureKit)', link: '/skills/integration/screen-capture' },
             { text: 'ShazamKit', link: '/skills/integration/shazamkit' },
             { text: 'Suggested Actions (Apple Intelligence)', link: '/skills/integration/suggested-actions' },
             { text: 'System Media Routing (Casting)', link: '/skills/integration/system-media-routing' },
@@ -722,7 +723,7 @@ export default withMermaid(defineConfig({
 
     footer: {
       message: 'Released under the MIT License',
-      copyright: 'Copyright © 2026 Charles Wiltgen • v27.0.0-beta.10'
+      copyright: 'Copyright © 2026 Charles Wiltgen • v27.0.0-beta.11'
     }
   }
 }))
