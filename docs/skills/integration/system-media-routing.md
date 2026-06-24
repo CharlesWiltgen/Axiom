@@ -7,7 +7,7 @@ apple_platforms: iOS 27+
 
 # System Media Routing (Casting Beyond AirPlay)
 
-`import AVSystemRouting` is a new iOS 27 framework that lets a media app route playback to **non-AirPlay system routes** — third-party casting targets such as Google Cast / Chromecast and DLNA — surfaced in the same system route picker and Control Center as AirPlay. Instead of bundling a per-vendor cast SDK, your app adopts one Apple API and drives playback through a uniform interface.
+`import AVSystemRouting` is a new iOS 27 framework (iOS only — no macOS/visionOS/tvOS/watchOS/Mac Catalyst) that lets a media app route playback to **non-AirPlay system routes** — third-party casting targets such as Google Cast / Chromecast and DLNA — surfaced in the same system route picker and Control Center as AirPlay. Instead of bundling a per-vendor cast SDK, your app adopts one Apple API and drives playback through a uniform interface.
 
 ::: warning Availability is narrow and in flux
 This capability is reported to be driven by the EU Digital Markets Act, so it is **likely region-gated (EU)** and is **beta** in the Xcode 27 betas. Treat third-party routes as *may or may not be present*: always `#available`-gate and keep your existing AirPlay / in-app cast path as the fallback.
@@ -39,5 +39,4 @@ For AirPlay specifically, the existing `AVRoutePickerView` + `AVPlayer` path sti
 ## Related
 
 - [Now Playing](/skills/integration/now-playing) – Lock Screen / Control Center metadata and remote commands for the content you route
-- [CarPlay Now Playing](/skills/integration/now-playing) – the in-vehicle playback surface
 - [avfoundation-ref](/reference/avfoundation-ref) – the `AVPlayer` / AirPlay path AVSystemRouting complements
