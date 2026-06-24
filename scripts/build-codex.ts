@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import matter from 'gray-matter';
+import { CODEX_EXCLUDED_SUITES, isEmittableAgent } from './codex-exclude.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const root = path.dirname(path.dirname(__filename));
@@ -12,18 +13,10 @@ const OUTPUT_DIR = path.join(root, 'axiom-codex');
 const OUTPUT_SKILLS = path.join(OUTPUT_DIR, 'skills');
 const OUTPUT_MANIFEST = path.join(OUTPUT_DIR, '.codex-plugin');
 
-// Suites withheld from the Codex variant. This is a CURATED exclusion list, NOT
-// "all routers" — 23 router suites DO ship to Codex. Annotate each entry with why.
-//   - axiom-xcode-mcp removed 2026-06-13 (axiom-pkek): it documents the
-//     Apple-supported `codex mcp add xcode -- xcrun mcpbridge` wiring and a dedicated
-//     Codex setup path, so Codex is a first-class consumer — it now ships.
-//   - 6 stale pre-v3.0 axiom-ios-* names pruned the same day (axiom-u5c0): they
-//     matched no current suite, so they were dead cruft inflating the excluded count.
-const EXCLUDE_SKILLS = new Set([
-  'axiom-apple-docs', // Xcode-bundled for-LLM doc routing — Codex fit not yet assessed
-  'axiom-shipping',   // App Store Connect submission workflow — Codex fit not yet assessed
-  'axiom-tools',      // Claude Code-specific discipline injection + onboarding
-]);
+// Suites withheld from the Codex variant — the curated list + rationale live in
+// scripts/codex-exclude.js, the single source of truth shared with the pre-deploy
+// fidelity gate so the two can't drift (axiom-altb).
+const EXCLUDE_SKILLS = new Set(CODEX_EXCLUDED_SUITES);
 
 // Read version from Claude Code manifest
 const ccManifest = JSON.parse(
@@ -273,7 +266,7 @@ for (const file of agentFiles) {
   const content = fs.readFileSync(path.join(SOURCE_AGENTS, file), 'utf8');
   const { data: fm, content: body } = matter(content);
 
-  if (!fm.name || !fm.description) {
+  if (!isEmittableAgent(fm)) {
     console.warn(`  warn: skipped agent ${agentName} (missing name or description)`);
     continue;
   }
