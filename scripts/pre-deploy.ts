@@ -15,6 +15,11 @@ import path from "node:path";
 import { execSync } from "node:child_process";
 import { VERSION_CORE } from "./version-regex.js";
 import {
+  shippedRouterCount,
+  expectedCodexSkillCount,
+  isEmittableAgent,
+} from "./codex-exclude.js";
+import {
   DOC_STAT_FILES,
   docStatValues,
   extractDocStats,
@@ -1613,25 +1618,35 @@ try {
       .filter((d: fs.Dirent) => d.isDirectory());
     const codexSkillCount = codexSkillDirs.length;
 
-    // Count source top-level skill dirs with SKILL.md (matches what build-codex copies)
-    const sourceSkillDirs = fs.readdirSync(path.join(pluginDir, "skills"), { withFileTypes: true })
-      .filter((d: fs.Dirent) => d.isDirectory() && fs.existsSync(path.join(pluginDir, "skills", d.name, "SKILL.md")));
-    // Must mirror EXCLUDE_SKILLS in scripts/build-codex.ts (hand-synced; see axiom-altb
-    // for the planned shared-module extraction). NOTE: this count check is currently
-    // non-functional — Phase-2 error() calls are not gated, and codexSkillCount counts
-    // all codex dirs (router suites + 40 agent-skills) while expectedCount is router-suite
-    // math, so they never match. Tracked + to be fixed in axiom-altb.
-    const CODEX_EXCLUDE = new Set([
-      'axiom-apple-docs', 'axiom-shipping', 'axiom-tools',
-    ]);
-    const excludedCount = sourceSkillDirs.filter((d: fs.Dirent) => CODEX_EXCLUDE.has(d.name)).length;
-    const sourceTopLevel = sourceSkillDirs.length;
-    const expectedCount = sourceTopLevel - excludedCount;
+    // build-codex emits TWO kinds of dir under skills/: shipped router suites
+    // (source routers minus CODEX_EXCLUDED_SUITES) AND one generated skill per
+    // source agent. The gate must span that SAME universe — comparing all codex
+    // dirs against a router-only expected count is why this check could never
+    // match (65 vs 24) and silently passed. Exclude list + math are shared with
+    // build-codex via scripts/codex-exclude.js so they can't drift (axiom-altb).
+    const sourceRouterNames = fs.readdirSync(path.join(pluginDir, "skills"), { withFileTypes: true })
+      .filter((d: fs.Dirent) => d.isDirectory() && fs.existsSync(path.join(pluginDir, "skills", d.name, "SKILL.md")))
+      .map((d: fs.Dirent) => d.name);
+    // Count agents the way build-codex EMITS them — only those whose frontmatter
+    // has both name and description (isEmittableAgent, shared with build-codex).
+    // A raw .md count would include a description-less agent that build-codex skips,
+    // failing a correct build. Note Phase 1 §6 only errors when BOTH are missing,
+    // so it does not cover the name-only case — the gate must filter here too.
+    const sourceAgentsDir = path.join(pluginDir, "agents");
+    const sourceAgentCount = fs.existsSync(sourceAgentsDir)
+      ? fs.readdirSync(sourceAgentsDir)
+          .filter((f: string) => f.endsWith(".md"))
+          .filter((f: string) =>
+            isEmittableAgent(parseFrontmatter(fs.readFileSync(path.join(sourceAgentsDir, f), "utf8"))),
+          ).length
+      : 0;
+    const shippedRouters = shippedRouterCount(sourceRouterNames);
+    const expectedCount = expectedCodexSkillCount(sourceRouterNames, sourceAgentCount);
 
     if (codexSkillCount !== expectedCount) {
-      error("codex-fidelity", `Codex has ${codexSkillCount} skills, expected ${expectedCount} (${sourceTopLevel} source - ${excludedCount} excluded)`);
+      error("codex-fidelity", `Codex has ${codexSkillCount} skills, expected ${expectedCount} (${shippedRouters} shipped routers + ${sourceAgentCount} agent-skills)`);
     } else {
-      console.log(`  ✓ Codex skill count matches source (${codexSkillCount} = ${sourceTopLevel} - ${excludedCount} excluded)`);
+      console.log(`  ✓ Codex skill count matches source (${codexSkillCount} = ${shippedRouters} routers + ${sourceAgentCount} agent-skills)`);
     }
 
     // Validate every skill has SKILL.md and agents/openai.yaml
@@ -1785,6 +1800,22 @@ heading("17. axiom-pi Extension Tests");
   run("axiom-pi-tests", "tests", "npm test", 120000);
   run("axiom-pi-typecheck", "typecheck", "npm run typecheck", 120000);
   console.log("  ✓ axiom-pi tests pass + typecheck clean");
+}
+
+// ── Phase 2 Gate ──
+// Phase-2 error() calls accumulate into totalErrors/errors[] but were never gated:
+// the only error gate ran at the end of Phase 1 (which process.exit's before Phase 2),
+// so the Final Summary printed "ALL CHECKS PASSED" even when a Phase-2 check
+// (codex-fidelity, Go tests, …) failed. Gate here so any Phase-2 error blocks the
+// deploy. Reaching this line means Phase 1 was clean, so totalErrors is Phase-2-only.
+// axiom-altb.
+if (totalErrors > 0) {
+  console.log(`\n  ERRORS (${totalErrors}):`);
+  for (const e of errors) console.log(e);
+  console.log(
+    `\n✗ Phase 2 FAILED with ${totalErrors} error(s). Fix before deploying.`,
+  );
+  process.exit(1);
 }
 
 // ── Final Summary ──
