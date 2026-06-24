@@ -6,7 +6,7 @@ Use Axiom's full skill catalog inside Xcode 26.3+ with Claude Agent or Codex via
 
 The same catalog available to other MCP clients:
 
-- **<!--ax:skills-->258<!--/ax--> skills** – searchable iOS development guidance
+- **<!--ax:skills-->259<!--/ax--> skills** – searchable iOS development guidance
 - **<!--ax:agents-->41<!--/ax--> agents** – autonomous code scanning and fixing
 - **<!--ax:commands-->15<!--/ax--> commands** – structured workflows
 

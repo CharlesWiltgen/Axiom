@@ -22,7 +22,7 @@ Verify with `/plugin` → "Manage and install" — Axiom should be listed.
 npx skills add CharlesWiltgen/Axiom -a codex -g
 ```
 
-This installs all <!--ax:skills-->258<!--/ax--> skills globally using [npx skills](https://skills.sh/). To update later, run `npx skills update`.
+This installs all <!--ax:skills-->259<!--/ax--> skills globally using [npx skills](https://skills.sh/). To update later, run `npx skills update`.
 
 ::: tip Verifying Installation
 Use `/plugins` in Codex to open the plugin browser — Axiom should appear as installed. You can also run `npx skills list -g` to see installed skills.
