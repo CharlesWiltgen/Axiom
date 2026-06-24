@@ -233,6 +233,7 @@ const allSkillNames = new Set<string>();
 const childOccurrences = new Map<string, string[]>();
 let skillFilesChecked = 0;
 let skillContentCount = 0; // Content units: standalone SKILL.md + skills/*.md in skill suites
+let subSkillFilesChecked = 0; // skills/*.md files only (excludes routers + standalones); for MCP bundle fidelity
 
 function checkSkillsIn(dir: string): void {
   if (!fs.existsSync(dir)) return;
@@ -250,6 +251,7 @@ function checkSkillsIn(dir: string): void {
       if (fs.existsSync(refsDir) && fs.statSync(refsDir).isDirectory()) {
         const childMds = fs.readdirSync(refsDir).filter((f: string) => f.endsWith(".md"));
         skillContentCount += childMds.length;
+        subSkillFilesChecked += childMds.length;
         for (const f of childMds) {
           const base = f.replace(/\.md$/, "");
           const rel = path.relative(pluginDir, path.join(refsDir, f));
@@ -1545,8 +1547,13 @@ try {
     const bundleAgentCount = Object.keys(bundle.agents || {}).length;
     const bundleCommandCount = Object.keys(bundle.commands || {}).length;
 
-    if (bundleSkillCount !== skillFilesChecked) {
-      error("mcp-fidelity", `bundle has ${bundleSkillCount} skills, source has ${skillFilesChecked}`);
+    // The bundle keys one entry per skill markdown file: every SKILL.md (routers +
+    // standalones = skillFilesChecked) plus every skills/*.md sub-skill
+    // (subSkillFilesChecked). NOT skillContentCount, which folds standalone SKILL.md
+    // into the sub-skill tally and would over-count standalones here.
+    const expectedBundleSkills = skillFilesChecked + subSkillFilesChecked;
+    if (bundleSkillCount !== expectedBundleSkills) {
+      error("mcp-fidelity", `bundle has ${bundleSkillCount} skills, source has ${expectedBundleSkills} (${skillFilesChecked} SKILL.md + ${subSkillFilesChecked} sub-skills)`);
     } else {
       console.log(`  ✓ MCP bundle skills match source (${bundleSkillCount})`);
     }
