@@ -427,6 +427,7 @@ export default withMermaid(defineConfig({
             { text: 'Push Notifications', link: '/skills/integration/push-notifications' },
             { text: 'ShazamKit', link: '/skills/integration/shazamkit' },
             { text: 'Suggested Actions (Apple Intelligence)', link: '/skills/integration/suggested-actions' },
+            { text: 'System Media Routing (Casting)', link: '/skills/integration/system-media-routing' },
             { text: 'Tap to Pay on iPhone', link: '/skills/integration/tap-to-pay' },
             { text: 'tvOS', link: '/skills/integration/tvos' },
             { text: 'Wallet Orders', link: '/skills/integration/wallet-orders' },
