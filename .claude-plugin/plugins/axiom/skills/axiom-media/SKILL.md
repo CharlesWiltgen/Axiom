@@ -24,6 +24,7 @@ license: MIT
 | Audio recognition, ShazamKit | See `skills/shazamkit.md` |
 | ShazamKit API reference | See `skills/shazamkit-ref.md` |
 | On-device music analysis (key, tempo, structure, loudness), MusicUnderstanding (`OS27`) | See `skills/music-understanding.md` |
+| On-device face grouping (cluster faces into people across a library), video highlights/key frames, MediaIntelligence (`OS27`) | See `skills/media-intelligence.md` |
 | Haptic feedback, Core Haptics | See `skills/haptics.md` |
 | Now Playing metadata, remote commands | See `skills/now-playing.md` |
 | Animated lock-screen artwork (iOS 26+) | See `skills/now-playing.md` Pattern 8 |
@@ -49,6 +50,7 @@ digraph media {
     what -> "skills/avfoundation-video-ref.md" [label="video write/export\n/ sample-buffer (OS27)"];
     what -> "skills/shazamkit.md" [label="ShazamKit\n/ audio recognition"];
     what -> "skills/music-understanding.md" [label="music analysis\n(key/tempo/structure)"];
+    what -> "skills/media-intelligence.md" [label="face grouping /\nvideo highlights (OS27)"];
     what -> "skills/haptics.md" [label="haptic feedback"];
     what -> "skills/now-playing.md" [label="Now Playing\n/ remote commands"];
     what -> "skills/carplay-hig.md" [label="CarPlay app design\n/ categories / entitlements"];
@@ -61,11 +63,12 @@ digraph media {
 3. Audio / AVFoundation (audio)? → `skills/avfoundation-ref.md`; video write/export/playback, sample-buffer engine, resumable export, iOS 27 deprecations? → `skills/avfoundation-video-ref.md` (`OS27`)
 4. ShazamKit / audio recognition? → `skills/shazamkit.md`, `skills/shazamkit-ref.md`
 5. On-device music analysis (key, tempo, structure, pace, instruments, loudness)? → `skills/music-understanding.md` (`OS27`)
-6. Haptics? → `skills/haptics.md`
-7. Now Playing / remote commands? → `skills/now-playing.md`, `skills/now-playing-carplay.md`, `skills/now-playing-musickit.md`
-8. CarPlay app design, category selection, entitlement request? → `skills/carplay-hig.md` (start here for any CarPlay work)
-9. DockKit motorized stands / gimbals, subject tracking, custom motor control? → `skills/dockkit.md`
-10. Want camera code audit? → Launch `camera-auditor` agent (detects deprecated APIs and architectural gaps: missing interruption handlers, runtime-error recovery, audio session deactivation, permission-denied UX, RotationCoordinator on iOS 17+; scores RELIABLE / FRAGILE / BROKEN)
+6. On-device face grouping (cluster faces into people across a library) or video highlights / key-frame detection? → `skills/media-intelligence.md` (`OS27`)
+7. Haptics? → `skills/haptics.md`
+8. Now Playing / remote commands? → `skills/now-playing.md`, `skills/now-playing-carplay.md`, `skills/now-playing-musickit.md`
+9. CarPlay app design, category selection, entitlement request? → `skills/carplay-hig.md` (start here for any CarPlay work)
+10. DockKit motorized stands / gimbals, subject tracking, custom motor control? → `skills/dockkit.md`
+11. Want camera code audit? → Launch `camera-auditor` agent (detects deprecated APIs and architectural gaps: missing interruption handlers, runtime-error recovery, audio session deactivation, permission-denied UX, RotationCoordinator on iOS 17+; scores RELIABLE / FRAGILE / BROKEN)
 
 ## Cross-Domain Routing
 
@@ -93,6 +96,11 @@ digraph media {
 - Custom Vision / Core ML inference feeding observations → **invoke axiom-vision**
 - Camera permission (NSCameraUsageDescription) → **invoke axiom-integration** (privacy-ux reference)
 
+**MediaIntelligence + Vision** (faces, image analysis):
+- Group faces into people across a library, video highlights / key frames → **stay here** (media-intelligence) — clustering identities + on-device video moment detection
+- Detect *where* a face is in one image (bounding box, landmarks), OCR, segmentation → **invoke axiom-vision** — per-image detection, a different problem
+- System Photos "People" album → that album is system-owned (PhotoKit); MediaIntelligence builds *your own* index over assets you manage → **stay here** (photo-library for the asset access)
+
 ## Anti-Rationalization
 
 | Thought | Reality |
@@ -104,6 +112,7 @@ digraph media {
 | "Now Playing info is just setting metadata" | Remote commands, artwork handling, and state sync have 15+ gotchas. |
 | "I'll use UIImagePickerController for photos" | PHPicker/PhotosPicker are the modern API — no permissions required. |
 | "DockKit is just pairing a stand" | Custom control needs system tracking disabled, handles inverted dock states, and two different coordinate origins. |
+| "Grouping faces is just Vision face detection" | Vision detects faces in one image; MediaIntelligence clusters them into persistent people (entities) across a whole library, with its own working directory and state. |
 
 ## Example Invocations
 
@@ -133,6 +142,9 @@ User: "How do I identify songs with ShazamKit?"
 
 User: "How do I detect a song's tempo / key / beat grid on-device?" / "Analyze audio loudness or structure"
 → Read: `skills/music-understanding.md`
+
+User: "Group faces into people across my photo library" / "cluster faces on-device" / "find highlights or a thumbnail frame in a video"
+→ Read: `skills/media-intelligence.md`
 
 User: "Track a subject with a motorized stand" / "Control a DockKit gimbal"
 → Read: `skills/dockkit.md`
