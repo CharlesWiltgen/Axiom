@@ -57,7 +57,9 @@ xcodebuild test \
   -destination "platform=iOS Simulator,id=$BOOTED_UDID" \
   -resultBundlePath "$RESULT_PATH" \
   -enableCodeCoverage YES \
-  2>&1 | tee /tmp/xcodebuild-test.log
+  > /tmp/xcodebuild-test.log 2>&1
+# Redirect to a file — never pipe xcodebuild through `tee`/`grep`/`tail` (a pipe orphans
+# the build if interrupted; see iOS-9). Structured results come from $RESULT_PATH below.
 
 echo "Results saved to: $RESULT_PATH"
 ```

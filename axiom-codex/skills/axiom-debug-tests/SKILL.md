@@ -35,7 +35,9 @@ xcodebuild test \
   -destination "platform=iOS Simulator,id=$BOOTED_UDID" \
   -resultBundlePath "$RESULT_PATH" \
   -only-testing:"<TARGET>/<TestClass>/<testMethod>" \
-  2>&1 | tee /tmp/xcodebuild-debug.log
+  > /tmp/xcodebuild-debug.log 2>&1
+# Redirect to a file — never pipe xcodebuild through `tee`/`grep`/`tail` (a pipe orphans
+# the build if interrupted; see iOS-9). Structured results come from $RESULT_PATH below.
 
 echo "Results: $RESULT_PATH"
 ```
