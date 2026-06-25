@@ -25,7 +25,7 @@ const CC_HOOKS = {
       { matcher: "Bash", hooks: [{ type: "command", command: 'python3 "${CLAUDE_PLUGIN_ROOT}/hooks/posttool-bash-hints.py"' }] },
       // The production swift-guardrails path: a pipe-separated matcher (Codex aliases
       // Write/Edit to apply_patch) that must survive the transform unchanged.
-      { matcher: "Write|Edit", hooks: [{ type: "command", command: '"${CLAUDE_PLUGIN_ROOT}/hooks/swift-guardrails.sh"' }] },
+      { matcher: "Write|Edit", hooks: [{ type: "command", command: 'python3 "${CLAUDE_PLUGIN_ROOT}/hooks/swift-guardrails.py"' }] },
     ],
     SessionStart: [
       { hooks: [{ type: "command", command: '"${CLAUDE_PLUGIN_ROOT}/hooks/session-start.sh"' }] },
@@ -42,7 +42,7 @@ const EXPECTED_CODEX_HOOKS = {
   hooks: {
     PostToolUse: [
       { matcher: "Bash", hooks: [{ type: "command", command: 'python3 "${PLUGIN_ROOT}/hooks/posttool-bash-hints.py"' }] },
-      { matcher: "Write|Edit", hooks: [{ type: "command", command: '"${PLUGIN_ROOT}/hooks/swift-guardrails.sh"' }] },
+      { matcher: "Write|Edit", hooks: [{ type: "command", command: 'python3 "${PLUGIN_ROOT}/hooks/swift-guardrails.py"' }] },
     ],
     SessionStart: [
       { hooks: [{ type: "command", command: '"${PLUGIN_ROOT}/hooks/session-start.sh"' }] },
@@ -72,7 +72,7 @@ describe("translateHooksToCodex", () => {
     const out = translateHooksToCodex(CC_HOOKS);
     const group = out.hooks.PostToolUse.find((g) => g.matcher === "Write|Edit");
     assert.ok(group, "Write|Edit group must survive into Codex");
-    assert.match(group.hooks[0].command ?? "", /swift-guardrails\.sh/);
+    assert.match(group.hooks[0].command ?? "", /swift-guardrails\.py/);
   });
 
   it("strips a matcher on a matcherless event (Codex rejects it there)", () => {
@@ -96,8 +96,8 @@ describe("translateHooksToCodex", () => {
 
 describe("shouldCopyHookScript", () => {
   it("copies runtime .py and .sh hooks", () => {
-    assert.equal(shouldCopyHookScript("user-prompt-submit.py"), true);
-    assert.equal(shouldCopyHookScript("swift-guardrails.sh"), true);
+    assert.equal(shouldCopyHookScript("swift-guardrails.py"), true);
+    assert.equal(shouldCopyHookScript("session-start.sh"), true);
   });
 
   it("copies transitive-dep scripts absent from the manifest (session-start.py, project_detect.py)", () => {

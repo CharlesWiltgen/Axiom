@@ -15,7 +15,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${PLUGIN_ROOT}/hooks/swift-guardrails.sh\""
+            "command": "python3 \"${PLUGIN_ROOT}/hooks/swift-guardrails.py\""
           }
         ]
       }

@@ -226,8 +226,9 @@ for (const file of fs.readdirSync(SOURCE_HOOKS)) {
   if (!shouldCopyHookScript(file)) continue;
   const dest = path.join(OUTPUT_HOOKS, file);
   fs.copyFileSync(path.join(SOURCE_HOOKS, file), dest);
-  // session-start.sh / swift-guardrails.sh are invoked directly under Codex's `sh -lc`,
-  // so they need the execute bit (copyFileSync does not guarantee mode preservation).
+  // session-start.sh is invoked directly under Codex's `sh -lc`, so it needs the
+  // execute bit (copyFileSync does not guarantee mode preservation). The .py hooks are
+  // invoked via `python3 "..."`, so they don't.
   if (file.endsWith('.sh')) fs.chmodSync(dest, 0o755);
   hookScriptsCopied++;
 }
