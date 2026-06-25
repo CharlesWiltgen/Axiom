@@ -1,23 +1,12 @@
 {
   "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Read",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/pretool-crash-route.py\""
-          }
-        ]
-      }
-    ],
     "PostToolUse": [
       {
         "matcher": "Bash",
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/posttool-bash-hints.py\""
+            "command": "python3 \"${PLUGIN_ROOT}/hooks/posttool-bash-hints.py\""
           }
         ]
       },
@@ -26,7 +15,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/swift-guardrails.sh\""
+            "command": "\"${PLUGIN_ROOT}/hooks/swift-guardrails.sh\""
           }
         ]
       }
@@ -36,7 +25,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/session-start.sh\""
+            "command": "\"${PLUGIN_ROOT}/hooks/session-start.sh\""
           }
         ]
       }
@@ -46,7 +35,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/user-prompt-submit.py\""
+            "command": "python3 \"${PLUGIN_ROOT}/hooks/user-prompt-submit.py\""
           }
         ]
       }
@@ -56,7 +45,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/subagent-start.py\""
+            "command": "python3 \"${PLUGIN_ROOT}/hooks/subagent-start.py\""
           }
         ]
       }
