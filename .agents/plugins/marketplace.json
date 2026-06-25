@@ -1,0 +1,19 @@
+{
+  "name": "axiom-marketplace",
+  "interface": {
+    "displayName": "Axiom"
+  },
+  "plugins": [
+    {
+      "name": "axiom",
+      "source": {
+        "source": "local",
+        "path": "./axiom-codex"
+      },
+      "policy": {
+        "installation": "AVAILABLE"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}
