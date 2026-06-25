@@ -41,6 +41,24 @@ npx skills add CharlesWiltgen/Axiom -a codex
 Run `npx skills list -g` (or `npx skills list` for project-scoped) to see installed skills. You can also use `/plugins` in Codex to check.
 :::
 
+### Codex plugin marketplace (full plugin, including hooks)
+
+`npx skills` installs the skill content. To install the **full Codex plugin** — skills *plus* Axiom's lifecycle hooks (iOS-version ground-truth at session start, automatic skill routing, and the `@State` write-time guardrail) — add Axiom as a native Codex plugin from its bundled marketplace:
+
+```bash
+codex plugin marketplace add CharlesWiltgen/Axiom
+codex plugin add axiom@axiom-marketplace
+```
+
+Hooks are gated behind a Codex feature flag and a one-time trust review. Enable the feature in `~/.codex/config.toml`:
+
+```toml
+[features]
+hooks = true
+```
+
+On first run after enabling, Codex asks you to trust the plugin's hooks (they ship in the plugin's `hooks/` directory). Approve to activate them.
+
 ### Manual Marketplace (alternative)
 
 If you prefer not to use npx skills, you can configure the plugin manually.
@@ -115,7 +133,8 @@ The Codex plugin includes the same skill content as the Claude Code plugin, with
 | Skills | 175 specialized + 23 routers | 175 specialized (Codex has native routing) |
 | Agents | 38 autonomous auditors | Not supported in Codex plugins |
 | Commands | 12 `/axiom:*` commands | Not supported in Codex plugins |
-| Installation | `/plugin marketplace add` | `npx skills add` or manual marketplace |
+| Hooks | Lifecycle hooks (skill routing, `@State` guardrail, version ground-truth) | Supported via the native plugin install — set `features.hooks = true` |
+| Installation | `/plugin marketplace add` | `npx skills add`, native `codex plugin`, or manual marketplace |
 
 ## Troubleshooting
 
@@ -123,6 +142,12 @@ The Codex plugin includes the same skill content as the Claude Code plugin, with
 
 - Run `npx skills list -g` to verify skills are installed
 - If using manual marketplace, verify the path points to the `axiom-codex/` directory (not the repo root) and starts with `./`
+
+### Hooks not firing
+
+- Hooks only run with the **native plugin install** (`codex plugin add axiom@axiom-marketplace`), not the `npx skills` skills-only install
+- Confirm `features.hooks = true` is set in `~/.codex/config.toml`, and that you approved the hook trust prompt on first run
+- Codex runs hook commands through `sh -lc`, which sources your login profile — make sure your profile writes nothing to **stdout** (send any echoes to stderr or guard them behind a TTY check), or it can corrupt a hook's output
 
 ## Also Available
 
