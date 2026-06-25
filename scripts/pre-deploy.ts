@@ -20,6 +20,12 @@ import {
   isEmittableAgent,
 } from "./codex-exclude.js";
 import {
+  UNSUPPORTED_TOOL_MATCHERS,
+  MATCHERLESS_EVENTS,
+  CODEX_EXCLUDED_HOOK_SCRIPTS,
+  shouldCopyHookScript,
+} from "./codex-hooks.js";
+import {
   DOC_STAT_FILES,
   docStatValues,
   extractDocStats,
@@ -1460,6 +1466,254 @@ heading("12k. Pi Install Manifest");
       }
       if (declared.length > 0 && missing.length === 0) {
         console.log(`  ✓ Pi manifest paths resolve (${declared.map(([, p]) => p).join(", ")})`);
+      }
+    }
+  }
+}
+
+// ── 12l. Codex Hooks Fidelity ──
+
+// The Codex variant ports Axiom's Claude Code lifecycle hooks (bd axiom-25ll).
+// 12f only checks mtime staleness against skills/agents *.md, so it can't catch a
+// hooks regression. This gate independently re-derives what the Codex hooks.json
+// MUST contain — event coverage from the source manifest minus the documented
+// exclusions, plus schema/portability invariants — and verifies the copied scripts
+// are byte-identical to source. Sibling to 12f/g/h.
+heading("12l. Codex Hooks Fidelity");
+{
+  const srcHooksDir = path.join(pluginDir, "hooks");
+  const codexHooksDir = path.join(root, "axiom-codex/hooks");
+  const srcHooksPath = path.join(srcHooksDir, "hooks.json");
+  const codexHooksPath = path.join(codexHooksDir, "hooks.json");
+
+  if (!fs.existsSync(codexHooksPath)) {
+    error("codex-hooks", "axiom-codex/hooks/hooks.json missing — run: npm run build:codex");
+  } else {
+    type HookEntry = { type?: string; command?: string };
+    type HookGroup = { matcher?: string; hooks?: HookEntry[] };
+    type HooksManifest = { hooks?: Record<string, HookGroup[]> };
+    const src = JSON.parse(fs.readFileSync(srcHooksPath, "utf8")) as HooksManifest;
+    const emitted = JSON.parse(fs.readFileSync(codexHooksPath, "utf8")) as HooksManifest;
+
+    // (1) Event coverage. A source event survives into Codex iff at least one of
+    // its groups can fire there (no matcher, or a matcher Codex supports). Re-derived
+    // from the source manifest rather than by calling translateHooksToCodex(), so a
+    // translator *logic* regression is caught. (The shared exclusion constants are the
+    // one common dependency — the group/guardrail checks below backstop that vector.)
+    const expectedEvents = Object.entries(src.hooks ?? {})
+      .filter(([, groups]) =>
+        groups.some((g) => g.matcher === undefined || !UNSUPPORTED_TOOL_MATCHERS.has(g.matcher)),
+      )
+      .map(([event]) => event)
+      .sort();
+    const emittedEvents = Object.keys(emitted.hooks ?? {}).sort();
+    if (JSON.stringify(expectedEvents) !== JSON.stringify(emittedEvents)) {
+      error(
+        "codex-hooks",
+        `event coverage drift — expected [${expectedEvents.join(", ")}], emitted [${emittedEvents.join(", ")}]. Run: npm run build:codex`,
+      );
+    } else {
+      console.log(`  ✓ Codex hook events match source minus exclusions (${emittedEvents.join(", ")})`);
+    }
+
+    // (1b) Group/command survival. Event-key equality alone is vacuous: if a firable
+    // group is dropped from an event that survives via another group (e.g. Write|Edit
+    // lost while Bash keeps PostToolUse alive), check (1) stays green. So assert every
+    // source group Codex CAN fire reappears under its event with its commands present
+    // (PLUGIN_ROOT-rewritten). matcher is stripped on matcherless events.
+    let groupsOk = true;
+    for (const [event, groups] of Object.entries(src.hooks ?? {})) {
+      for (const g of groups) {
+        if (g.matcher !== undefined && UNSUPPORTED_TOOL_MATCHERS.has(g.matcher)) continue;
+        const wantMatcher =
+          g.matcher !== undefined && !MATCHERLESS_EVENTS.has(event) ? g.matcher : undefined;
+        const emittedGroup = (emitted.hooks?.[event] ?? []).find((eg) => eg.matcher === wantMatcher);
+        if (!emittedGroup) {
+          error("codex-hooks", `${event} group (matcher=${wantMatcher ?? "none"}) missing from emitted Codex hooks`);
+          groupsOk = false;
+          continue;
+        }
+        const emittedCmds = new Set((emittedGroup.hooks ?? []).map((h) => h.command));
+        for (const h of g.hooks ?? []) {
+          const want = (h.command ?? "").replaceAll("CLAUDE_PLUGIN_ROOT", "PLUGIN_ROOT");
+          if (!emittedCmds.has(want)) {
+            error("codex-hooks", `${event} command dropped from emitted Codex hooks: ${want}`);
+            groupsOk = false;
+          }
+        }
+      }
+    }
+    // Targeted backstop for the shared-constant blind spot: the @State guardrail is the
+    // payload of this port, so assert it survived regardless of the exclusion sets.
+    const guardrailLives = (emitted.hooks?.PostToolUse ?? []).some((g) =>
+      (g.hooks ?? []).some((h) => (h.command ?? "").includes("swift-guardrails.sh")),
+    );
+    if (!guardrailLives) {
+      error("codex-hooks", "swift-guardrails.sh (@State guardrail) is missing from emitted Codex PostToolUse hooks");
+      groupsOk = false;
+    }
+    if (groupsOk) {
+      console.log("  ✓ Every firable source hook group + the @State guardrail survive into Codex");
+    }
+
+    // (2) Schema + harness-portability invariants on every emitted entry, and
+    // collect the scripts each command references for the copy check below.
+    let schemaOk = true;
+    const referencedScripts = new Set<string>();
+    for (const [event, groups] of Object.entries(emitted.hooks ?? {})) {
+      for (const g of groups) {
+        if (g.matcher !== undefined && MATCHERLESS_EVENTS.has(event)) {
+          error("codex-hooks", `${event} carries a matcher Codex rejects on this event: ${g.matcher}`);
+          schemaOk = false;
+        }
+        if (g.matcher !== undefined && UNSUPPORTED_TOOL_MATCHERS.has(g.matcher)) {
+          error("codex-hooks", `${event} group uses a matcher with no Codex tool: ${g.matcher}`);
+          schemaOk = false;
+        }
+        for (const h of g.hooks ?? []) {
+          if (h.type !== "command" || typeof h.command !== "string") {
+            error("codex-hooks", `${event} has a non-command or malformed hook entry`);
+            schemaOk = false;
+            continue;
+          }
+          if (h.command.includes("CLAUDE_PLUGIN_ROOT")) {
+            error("codex-hooks", `${event} command still references CLAUDE_PLUGIN_ROOT (should be PLUGIN_ROOT)`);
+            schemaOk = false;
+          }
+          if (h.command.includes("TOOL_INPUT_")) {
+            error("codex-hooks", `${event} command reads a $TOOL_INPUT_* env var — Codex delivers tool_input on stdin only`);
+            schemaOk = false;
+          }
+          const ref = h.command.match(/\$\{PLUGIN_ROOT\}\/hooks\/([A-Za-z0-9._-]+)/);
+          if (ref) referencedScripts.add(ref[1]);
+        }
+      }
+    }
+    if (schemaOk) {
+      console.log("  ✓ Emitted hooks pass schema + portability invariants (PLUGIN_ROOT, stdin tool_input, valid matchers)");
+    }
+
+    // (3) Script copy fidelity. Every referenced script must be present in the
+    // Codex hooks dir; every source script that should ship (shouldCopyHookScript,
+    // incl. transitive deps) must be byte-identical there; every excluded script
+    // (e.g. crash-route, no Codex Read tool) must be absent.
+    let copyOk = true;
+    for (const s of referencedScripts) {
+      if (!fs.existsSync(path.join(codexHooksDir, s))) {
+        error("codex-hooks", `hooks.json references a script that was not copied: ${s}`);
+        copyOk = false;
+      }
+    }
+    let copiedChecked = 0;
+    for (const file of fs.readdirSync(srcHooksDir)) {
+      if (!shouldCopyHookScript(file)) continue;
+      copiedChecked++;
+      const codexScript = path.join(codexHooksDir, file);
+      if (!fs.existsSync(codexScript)) {
+        error("codex-hooks", `expected hook script not copied to Codex variant: ${file}. Run: npm run build:codex`);
+        copyOk = false;
+      } else if (
+        fs.readFileSync(codexScript, "utf8") !== fs.readFileSync(path.join(srcHooksDir, file), "utf8")
+      ) {
+        error("codex-hooks", `copied hook script drifted from source: ${file}. Run: npm run build:codex`);
+        copyOk = false;
+      }
+    }
+    for (const s of CODEX_EXCLUDED_HOOK_SCRIPTS) {
+      if (fs.existsSync(path.join(codexHooksDir, s))) {
+        error("codex-hooks", `excluded hook script was copied into Codex variant: ${s}`);
+        copyOk = false;
+      }
+    }
+    if (copyOk) {
+      console.log(`  ✓ ${copiedChecked} hook scripts copied byte-identical; ${CODEX_EXCLUDED_HOOK_SCRIPTS.size} excluded script(s) absent`);
+    }
+  }
+}
+
+// ── 12m. Codex Marketplace Manifest ──
+
+// Codex installs plugins from a MARKETPLACE: `codex plugin marketplace add <repo>`
+// then `codex plugin add axiom@axiom-marketplace`. That needs a manifest at the repo
+// root `.agents/plugins/marketplace.json` pointing at the built plugin — Codex reads it
+// at the marketplace/clone root. Without it the Codex variant ships but is
+// uninstallable (bd axiom-adzg). This gate keeps the manifest present and in sync with
+// the plugin it targets.
+heading("12m. Codex Marketplace Manifest");
+{
+  const mfPath = path.join(root, ".agents/plugins/marketplace.json");
+  if (!fs.existsSync(mfPath)) {
+    error(
+      "codex-marketplace",
+      "missing .agents/plugins/marketplace.json — Codex users cannot install axiom-codex",
+    );
+  } else {
+    type MarketplacePlugin = { name?: string; source?: { path?: string } };
+    type Marketplace = { name?: string; plugins?: MarketplacePlugin[] };
+    let mf: Marketplace | undefined;
+    try {
+      mf = JSON.parse(fs.readFileSync(mfPath, "utf8")) as Marketplace;
+    } catch (e: unknown) {
+      error("codex-marketplace", `.agents/plugins/marketplace.json is not valid JSON: ${(e as Error).message}`);
+    }
+    if (mf) {
+      // The marketplace name is load-bearing: the documented install command is
+      // `codex plugin add axiom@axiom-marketplace`. If it drifts, install breaks.
+      if (mf.name !== "axiom-marketplace") {
+        error(
+          "codex-marketplace",
+          `marketplace name "${mf.name}" != "axiom-marketplace" — install command would change to: codex plugin add axiom@${mf.name}`,
+        );
+      }
+      const plugins = Array.isArray(mf.plugins) ? mf.plugins : [];
+      const entry = plugins.find((p) => p?.name === "axiom");
+      if (!entry) {
+        const names = plugins.map((p) => p?.name).filter(Boolean).join(", ") || "none";
+        error("codex-marketplace", `marketplace.json lists no plugin named "axiom" (found: ${names})`);
+      } else if (typeof entry.source?.path !== "string") {
+        error("codex-marketplace", "axiom plugin entry has no source.path");
+      } else {
+        const srcPath = entry.source.path;
+        const pluginJsonPath = path.join(root, srcPath, ".codex-plugin/plugin.json");
+        if (!fs.existsSync(pluginJsonPath)) {
+          error(
+            "codex-marketplace",
+            `source.path "${srcPath}" does not resolve to a Codex plugin (no .codex-plugin/plugin.json). Run: npm run build:codex`,
+          );
+        } else {
+          let pjName: string | undefined;
+          try {
+            pjName = (JSON.parse(fs.readFileSync(pluginJsonPath, "utf8")) as { name?: string }).name;
+          } catch (e: unknown) {
+            error("codex-marketplace", `${srcPath}/.codex-plugin/plugin.json is not valid JSON: ${(e as Error).message}`);
+          }
+          if (pjName !== undefined && pjName !== entry.name) {
+            error(
+              "codex-marketplace",
+              `marketplace plugin name "${entry.name}" != plugin.json name "${pjName}" — the install selector would be wrong`,
+            );
+          } else if (pjName !== undefined) {
+            console.log(
+              `  ✓ Codex marketplace manifest points axiom → ${srcPath}; plugin.json name matches (install: codex plugin add axiom@${mf.name})`,
+            );
+          }
+        }
+      }
+    }
+    // The git-install path (`codex plugin marketplace add CharlesWiltgen/Axiom`)
+    // clones the COMMITTED tree, so the manifest and the plugin's hooks must be
+    // git-tracked — fs.existsSync above only sees the working tree. Warn (not error)
+    // because committing is a release step done outside this gate.
+    if (gitStatus.gitAvailable) {
+      for (const rel of [".agents/plugins/marketplace.json", "axiom-codex/hooks/hooks.json"]) {
+        try {
+          execSync(`git ls-files --error-unmatch "${rel}"`, { cwd: root, stdio: "pipe" });
+        } catch {
+          warn(
+            "codex-marketplace",
+            `${rel} is untracked — commit it, or the GitHub install path ships without it`,
+          );
+        }
       }
     }
   }

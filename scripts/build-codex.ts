@@ -4,6 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import matter from 'gray-matter';
 import { CODEX_EXCLUDED_SUITES, isEmittableAgent } from './codex-exclude.js';
+import { translateHooksToCodex, shouldCopyHookScript } from './codex-hooks.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const root = path.dirname(path.dirname(__filename));
@@ -204,6 +205,33 @@ fs.writeFileSync(
   JSON.stringify(mcpFile, null, 2) + '\n'
 );
 
+// --- Generate hooks/ — port the Claude Code lifecycle hooks to Codex (bd axiom-25ll) ---
+// Codex plugins auto-discover hooks at the plugin-root hooks/hooks.json. translateHooksToCodex
+// rewrites ${CLAUDE_PLUGIN_ROOT} -> ${PLUGIN_ROOT}, drops groups Codex can't fire ("Read"),
+// and strips matchers Codex rejects (UserPromptSubmit/Stop). The script copy is a DENYLIST
+// (shouldCopyHookScript) so transitive deps (session-start.sh -> session-start.py ->
+// project_detect.py, none of which appear in hooks.json) are copied automatically.
+const SOURCE_HOOKS = path.join(root, '.claude-plugin/plugins/axiom/hooks');
+const OUTPUT_HOOKS = path.join(OUTPUT_DIR, 'hooks');
+fs.mkdirSync(OUTPUT_HOOKS, { recursive: true });
+
+const ccHooks = JSON.parse(fs.readFileSync(path.join(SOURCE_HOOKS, 'hooks.json'), 'utf8'));
+fs.writeFileSync(
+  path.join(OUTPUT_HOOKS, 'hooks.json'),
+  JSON.stringify(translateHooksToCodex(ccHooks), null, 2) + '\n'
+);
+
+let hookScriptsCopied = 0;
+for (const file of fs.readdirSync(SOURCE_HOOKS)) {
+  if (!shouldCopyHookScript(file)) continue;
+  const dest = path.join(OUTPUT_HOOKS, file);
+  fs.copyFileSync(path.join(SOURCE_HOOKS, file), dest);
+  // session-start.sh / swift-guardrails.sh are invoked directly under Codex's `sh -lc`,
+  // so they need the execute bit (copyFileSync does not guarantee mode preservation).
+  if (file.endsWith('.sh')) fs.chmodSync(dest, 0o755);
+  hookScriptsCopied++;
+}
+
 // --- Convert agents to on-demand Codex skills ---
 const SOURCE_AGENTS = path.join(root, '.claude-plugin/plugins/axiom/agents');
 
@@ -314,4 +342,4 @@ for (const file of agentFiles) {
 
 // Summary
 const skipped = EXCLUDE_SKILLS.size;
-console.log(`axiom-codex built: ${copied} skills (${skipped} routers excluded) + ${agentsCopied} agent-skills, v${version}`);
+console.log(`axiom-codex built: ${copied} skills (${skipped} routers excluded) + ${agentsCopied} agent-skills + ${hookScriptsCopied} hook scripts, v${version}`);
