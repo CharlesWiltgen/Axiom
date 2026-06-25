@@ -122,6 +122,34 @@ If user mentions ANY of these, it's definitely an environment issue:
 - "Simulator stuck at splash screen"
 - "Unable to install app"
 
+## Running Builds: Capture Structured Errors
+
+Whenever you run a build or test — to reproduce the failure or to verify a fix — **build to a result bundle and read the structured diagnostics**, not the raw `xcodebuild` output. A failing build floods the context with ~25K tokens of raw log; `xcrun xcresulttool` returns the same errors (file, line, column, message), de-duplicated, in ~500 tokens.
+
+```bash
+# Stamp the bundle AND its log together, so a later verify-build doesn't overwrite them.
+STAMP=$(date +%s)
+RESULT="/tmp/fix-build-$STAMP.xcresult"
+LOG="/tmp/fix-build-$STAMP.log"
+
+# Redirect to a file — never pipe xcodebuild (a pipe orphans the build if interrupted;
+# see iOS-9). Let the build finish, then read the bundle whether it SUCCEEDED or FAILED —
+# a failed build still writes its diagnostics to the bundle.
+xcodebuild build -scheme <ACTUAL_SCHEME_NAME> \
+  -destination 'platform=iOS Simulator,name=iPhone 16' \
+  -resultBundlePath "$RESULT" \
+  > "$LOG" 2>&1
+
+# Read the distilled errors (each compiler error once, with its source location):
+xcrun xcresulttool get build-results --compact --path "$RESULT"
+```
+
+For `xcodebuild test` runs, read failures from the bundle with `xcrun xcresulttool get test-results summary --path "$RESULT"` — `test-results` takes a sub-command (`summary`, `tests`, …) and has no `--compact`; the `test-runner` agent has the full recipe.
+
+**Fallback**: if the bundle is missing/malformed (or `xcrun xcresulttool get build-results` errors — it needs Xcode 16+, which is below Axiom's supported floor, so it should always be present), read the redirected log `"$LOG"` and grep it for `error:` lines. Grepping the saved file is safe; piping `xcodebuild` itself is not.
+
+Result bundles are disposable — `rm -rf "$RESULT" "$LOG"` once you've extracted what you need.
+
 ## CI/CD Environment Detection
 
 When running in CI/CD environments, some diagnostics don't apply and fixes need adjustment.
@@ -160,10 +188,12 @@ rm -rf .build/
 rm -rf ~/Library/Caches/org.swift.swiftpm/
 xcodebuild -resolvePackageDependencies -scheme <ACTUAL_SCHEME_NAME>
 
-# For CI/CD build failures
+# For CI/CD build failures (capture to a result bundle; read errors per "Running Builds")
 xcodebuild clean build -scheme <ACTUAL_SCHEME_NAME> \
   -destination 'platform=iOS Simulator,name=iPhone 16' \
-  -allowProvisioningUpdates
+  -allowProvisioningUpdates \
+  -resultBundlePath /tmp/ci-build.xcresult > /tmp/ci-build.log 2>&1
+xcrun xcresulttool get build-results --compact --path /tmp/ci-build.xcresult
 ```
 
 **Downloading Simulator Runtimes (CI/CD Setup):**
@@ -219,6 +249,8 @@ If running in CI/CD, mention this in your diagnosis:
 
 ## Fix Workflows
 
+Each workflow below ends with a rebuild or retest. The `xcodebuild` lines show the *fix* command in bare form for brevity — when you actually run one, capture it to a result bundle and read the errors with `xcresulttool` per **Running Builds** above (§2 shows the full form). Never let raw build output flood the context.
+
 ### 1. For Zombie Processes
 
 If you see 10+ xcodebuild processes OR any processes with elapsed time > 30 minutes:
@@ -257,9 +289,13 @@ xcodebuild clean -scheme <ACTUAL_SCHEME_NAME>
 rm -rf ~/Library/Developer/Xcode/DerivedData/*
 rm -rf .build/ build/
 
-# Rebuild with appropriate destination
+# Rebuild to a result bundle and read structured errors (see "Running Builds")
+STAMP=$(date +%s)
 xcodebuild build -scheme <ACTUAL_SCHEME_NAME> \
-  -destination 'platform=iOS Simulator,name=iPhone 16'
+  -destination 'platform=iOS Simulator,name=iPhone 16' \
+  -resultBundlePath "/tmp/fix-build-$STAMP.xcresult" \
+  > "/tmp/fix-build-$STAMP.log" 2>&1
+xcrun xcresulttool get build-results --compact --path "/tmp/fix-build-$STAMP.xcresult"
 ```
 
 **CRITICAL**:
@@ -373,7 +409,7 @@ Identify issue:
 ├─ Old code executing → Clean Derived Data + rebuild (§6)
 ├─ "Unable to boot simulator" → Shutdown/erase simulator (§4)
 ├─ Tests failing (no code changes) → Clean + retest (§5)
-└─ All checks clean → Report "environment is clean, likely code issue"
+└─ All checks clean → Surface structured compile errors (see "Running Builds"), then report "environment is clean, this is a code issue"
 ```
 
 ## Output Format
@@ -417,7 +453,8 @@ Provide a clear, structured report:
 5. **Handle xcodebuild -list failures** - verify directory and provide recovery steps
 6. **Show command output** - don't just say "I ran X", show the result
 7. **Verify fixes worked** - run the build/test again to confirm
-8. **If fix doesn't work** - escalate to user with specific next steps
+8. **Capture errors structured** - build/test to `-resultBundlePath`, then read `xcrun xcresulttool get build-results --compact` (see "Running Builds") - never dump the raw log into context
+9. **If fix doesn't work** - escalate to user with specific next steps
 
 ## When to Stop and Report
 
