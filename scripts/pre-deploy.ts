@@ -1546,10 +1546,10 @@ heading("12l. Codex Hooks Fidelity");
     // Targeted backstop for the shared-constant blind spot: the @State guardrail is the
     // payload of this port, so assert it survived regardless of the exclusion sets.
     const guardrailLives = (emitted.hooks?.PostToolUse ?? []).some((g) =>
-      (g.hooks ?? []).some((h) => (h.command ?? "").includes("swift-guardrails.sh")),
+      (g.hooks ?? []).some((h) => (h.command ?? "").includes("swift-guardrails.py")),
     );
     if (!guardrailLives) {
-      error("codex-hooks", "swift-guardrails.sh (@State guardrail) is missing from emitted Codex PostToolUse hooks");
+      error("codex-hooks", "swift-guardrails.py (@State guardrail) is missing from emitted Codex PostToolUse hooks");
       groupsOk = false;
     }
     if (groupsOk) {

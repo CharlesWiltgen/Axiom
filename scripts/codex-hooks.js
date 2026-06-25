@@ -17,8 +17,8 @@
 //   3. Drop `matcher` on events where Codex doesn't support it (UserPromptSubmit, Stop).
 //
 // No per-hook command rewriting is needed beyond the plugin-root rename: the
-// format-on-save hook was retired and swift-guardrails.sh now reads tool_input from
-// the stdin JSON (Claude Code file_path OR a Codex apply_patch patch), so it is
+// format-on-save hook was retired and swift-guardrails.py reads tool_input from the
+// stdin JSON (Claude Code file_path OR a Codex apply_patch patch), so it is
 // harness-agnostic and ports with no special transform or exclusion (bd axiom-tybr).
 
 // Tool matchers with no Codex equivalent → their hook groups are dropped. Codex's
