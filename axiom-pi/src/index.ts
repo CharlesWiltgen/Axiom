@@ -4,8 +4,8 @@
  * Skills are installed separately (`npx skills add CharlesWiltgen/Axiom -a pi`).
  * This extension adds the two layers Pi can't get from skills alone:
  *   - the `/axiom-*` commands (trigger the matching skill inline), and
- *   - the SessionStart / tool hooks (version ground truth, Swift guardrail,
- *     swiftformat, crash-file routing, Bash skill hints).
+ *   - the SessionStart / tool hooks (version ground truth, Swift guardrails,
+ *     crash-file routing, Bash skill hints).
  */
 
 import type {
@@ -85,23 +85,13 @@ export default function axiomPi(pi: ExtensionAPI): void {
     if (hint) pi.sendMessage({ customType: "axiom-crash-hint", content: hint, display: true });
   });
 
-  // --- Post-tool hooks: Swift guardrail + swiftformat, Bash skill hints -----
-  pi.on("tool_result", async (event: ToolResultEvent) => {
-    // Compute the advisory first (reads the pre-format file, so the @State
-    // warning's line numbers match what the model wrote), then format.
+  // --- Post-tool hooks: Swift guardrails + Bash skill hints ----------------
+  // Advisory only — Pi appends to the tool result; it can't block. Mirrors the
+  // Claude Code / Codex guardrails minus format-on-save, which was retired as
+  // agentically hazardous (a silent reformat desyncs the file from the model's
+  // in-memory view and breaks its follow-up edits).
+  pi.on("tool_result", (event: ToolResultEvent) => {
     const hint = toolResultHint(event, (p) => fs.readFileSync(p, "utf8"));
-
-    if (event.toolName === "write" || event.toolName === "edit") {
-      const p = inputPath(event.input);
-      if (p && p.endsWith(".swift") && findOnPath("swiftformat")) {
-        try {
-          await pi.exec("swiftformat", [p, "--quiet"]);
-        } catch {
-          // Formatting is best-effort — never fail the write.
-        }
-      }
-    }
-
     if (hint) return { content: [...event.content, { type: "text", text: hint }] };
   });
 }
