@@ -17,6 +17,7 @@ license: MIT
 | Slow previews / building good previews / `@Previewable` / `PreviewModifier` / variant matrix | See `skills/previews.md` |
 | Preview API reference (`#Preview`, traits, modes, Development Assets) | See `skills/previews-ref.md` |
 | Preview crashes / won't load | See `skills/debugging.md` (Preview Crashes section) |
+| Hot reload / live editing / edit the running app on device | See `skills/hot-reload.md` |
 | Navigation issues | See `skills/nav.md` |
 | Navigation still broken after debugging | See `skills/nav-diag.md` |
 | Navigation API reference | See `skills/nav-ref.md` |
@@ -87,6 +88,7 @@ digraph swiftui {
     what -> "skills/previews.md" [label="slow previews / building good previews"];
     what -> "skills/previews-ref.md" [label="preview API reference"];
     what -> "skills/debugging.md" [label="preview crashes / won't load"];
+    what -> "skills/hot-reload.md" [label="hot reload / live editing"];
     what -> "axiom-uikit (skills/uikit-bridging.md)" [label="UIKit interop"];
     what -> "axiom-design (skills/app-composition.md)" [label="app-level (root, auth)"];
     what -> "axiom-swift (skills/transferable-ref.md)" [label="drag/drop, sharing"];
@@ -116,3 +118,4 @@ digraph swiftui {
 | "I'll just add a Done button" | Sheets without Cancel break the HIG (updated 2026-03-24). `.cancellationAction` / `.confirmationAction` produce HIG-correct placement automatically — `skills/toolbars.md` Pattern 2 has the rules. |
 | "Previews are slow forever, I'll just use the simulator" | Five concrete fixes in `skills/previews.md`. Rule 4 (auto-refresh off) is 30 seconds and often halves perceived slowness. |
 | "I'll just write a wrapper view for `@State` in this preview" | `@Previewable @State` (Xcode 16+) eliminates that boilerplate. `skills/previews-ref.md` has the macro signature. |
+| "I'll just rebuild and relaunch every time" | Hot reload edits the running app in place, state preserved. `skills/hot-reload.md` has the InjectionNext + Inject setup and the verify-via-`xclog` loop. |
