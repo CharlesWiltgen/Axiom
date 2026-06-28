@@ -111,6 +111,7 @@ Run all 6 existing detection patterns with pair counting. For every grep match, 
 **Impact**: Retain cycles, memory never released
 **Fix**: Use `[weak self]` capture lists
 **Note**: Only applies to class types. Struct self capture is fine.
+**Swift 6.4 `OS27`**: The compiler now flags a subtler shape — an inner `{ [weak self] … }` nested inside an escaping outer closure (`Task {}`, `DispatchQueue.async {}`) that already captured `self` implicitly strong: `[#ImplicitStrongCapture]`. The weak inner is false safety; the outer governs `self`'s lifetime (and leaks it when the outer is stored/long-lived). Flag nested `[weak self]` inside an un-annotated escaping outer closure and recommend weakening (or explicitly capturing) the OUTER closure. See `axiom-performance (skills/memory-debugging.md)`.
 
 ### Pattern 4: Strong Delegate Cycles (MEDIUM/HIGH)
 
