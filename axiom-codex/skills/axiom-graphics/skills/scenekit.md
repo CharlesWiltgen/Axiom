@@ -30,7 +30,7 @@ SceneKit is **soft-deprecated as of iOS 26** (WWDC 2025). This means:
 - Existing apps continue to work
 - No new features or general bug fixes
 - Only critical security patches
-- `SceneView` (SwiftUI) is formally deprecated in iOS 26
+- `SceneView` (SwiftUI) is **not** annotated deprecated in the SDK (no compiler warning fires), but it wraps legacy SceneKit — prefer `RealityView` for new code
 
 **Apple's forward path is RealityKit.** All new 3D projects should use RealityKit. SceneKit knowledge remains valuable for maintaining legacy code and understanding concepts during migration.
 
@@ -108,10 +108,10 @@ sceneView.backgroundColor = .black
 view.addSubview(sceneView)
 ```
 
-### SceneView (SwiftUI) — Deprecated iOS 26
+### SceneView (SwiftUI) — Legacy (wraps SceneKit; not SDK-deprecated)
 
 ```swift
-// Still works but deprecated. Use SCNViewRepresentable for new code.
+// Works and is NOT SDK-deprecated (no compiler warning), but wraps legacy SceneKit — prefer RealityView for new code.
 import SceneKit
 
 SceneView(
@@ -430,7 +430,7 @@ If you need custom render pipelines, build on Metal directly or use `RealityRend
 
 **Time cost**: Surprise breakage when Apple removes APIs
 
-Track `SceneView` deprecation warnings and plan UIViewRepresentable fallback or RealityKit migration.
+`SceneView` emits no deprecation warning (it carries no `@available` deprecation), but SceneKit is legacy — plan RealityKit migration for new work.
 
 ### Anti-Pattern 6: Creating Hundreds of Nodes in a Loop
 

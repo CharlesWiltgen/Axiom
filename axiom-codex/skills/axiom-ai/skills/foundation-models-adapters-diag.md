@@ -368,7 +368,7 @@ If median system-message length exceeds ~200 characters, this pattern is likely.
 
 1. Rewrite training JSONL with short, consistent system messages (≤100 characters, ideally a single sentence)
 2. Retrain
-3. Re-evaluate token efficiency: `Transcript` is a `RandomAccessCollection` of `Transcript.Entry` (iterate it directly — there is no `.entries` property). On iOS 26.4+ measure its size with `session.tokenCount(for: Array(transcript))`, which accepts `some Collection<Transcript.Entry>`; capture this for a representative single-turn baseline and compare against the previous adapter's measurements
+3. Re-evaluate token efficiency: `Transcript` is a `RandomAccessCollection` of `Transcript.Entry` (iterate it directly — there is no `.entries` property). On iOS 26.4+ measure its size with `SystemLanguageModel.default.tokenCount(for: Array(transcript))` (`tokenCount(for:)` is a `SystemLanguageModel` method, not a `LanguageModelSession` one), which accepts `some Collection<Transcript.Entry>`; capture this for a representative single-turn baseline and compare against the previous adapter's measurements
 
 **Time cost**: days (dataset rewrite + retrain).
 

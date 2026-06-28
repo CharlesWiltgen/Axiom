@@ -270,7 +270,7 @@ Speculative decoding pays off when the *acceptance rate* is high and completions
 
 #### The compilation rate limit (this is the trap)
 
-Apple rate-limits draft-model compilation: *"the framework... rate-limits the compilation process on all platforms, excluding macOS, to three draft model compilations per-app, per-day."* This is a **runtime, on-device** compile step, specific to the draft model — not adapter compilation generally, and not enforced on macOS. Three per app per day is a hard ceiling on iOS/iPadOS/visionOS. Design around it:
+Apple rate-limits adapter compilation: *"the framework... rate-limits the compilation process on all platforms, excluding macOS, to three draft model compilations per-app, per-day."* The limit applies to **`SystemLanguageModel.Adapter.compile()`**, and what it counts is **draft-model** compilations — the draft model being an *optional* component a custom adapter may ship for speculative decoding. So an `Adapter.compile()` for an adapter that includes a draft model consumes one of the three slots. It's a **runtime, on-device** compile step, not enforced on macOS. Three per app per day is a hard ceiling on iOS/iPadOS/visionOS. Design around it:
 
 - **Cache the compiled draft model across launches.** Never recompile speculatively or "to be safe." A recompile-on-every-launch bug silently burns the daily quota and then fails.
 - **The first compilation is the user's first AI invocation cost.** It is not instant — surface progress, don't block the UI on it.

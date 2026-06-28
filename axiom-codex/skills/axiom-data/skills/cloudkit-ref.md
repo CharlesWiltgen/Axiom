@@ -516,24 +516,48 @@ func application(_ application: UIApplication,
 
 ## Sharing Records
 
-### Create a Share
+CloudKit has two sharing models. Pick by how the app reads the shared data.
+
+| Model | API | What's shared | Use when |
+|-------|-----|---------------|----------|
+| Hierarchical (root-record) | `CKShare(rootRecord:)` | Root record + its `parent`-linked descendants | You share one document/object and traverse its hierarchy from the root |
+| Zone-wide | `CKShare(recordZoneID:)` | Every record in the zone | You read/write by enumerating the whole zone, so records aren't tied to a single root |
+
+**Pitfall**: root-record sharing only shares records reachable through `parent` references from the root. If the app instead enumerates the entire zone (no root hierarchy), the participant sees an empty data set. Use zone-wide sharing for that access pattern.
+
+### Create a Share (Root-Record)
 
 ```swift
-// ✅ Share a record with other users
+// ✅ Share a record and its parent-linked descendants
 let record = try await privateDatabase.record(for: recordID)
 
-// Record must be in a custom zone (not default zone)
+// Record must be in a custom zone (not the default zone)
 let share = CKShare(rootRecord: record)
 share[CKShare.SystemFieldKey.title] = "Shared Task List"
 share.publicPermission = .none  // Invite-only
 
-// Save both the record and share together
-let operation = CKModifyRecordsOperation(
-    recordsToSave: [record, share],
-    recordIDsToDelete: nil
-)
-try await privateDatabase.add(operation)
+// Save the root record and share together, atomically
+try await privateDatabase.modifyRecords(saving: [record, share], deleting: [])
 ```
+
+### Share an Entire Zone (Zone-Wide)
+
+```swift
+// ✅ Every record in the zone is shared — no root record
+// Custom zones in the private database have the .zoneWideSharing
+// capability by default; the default zone cannot be shared.
+let share = CKShare(recordZoneID: customZone.zoneID)
+share[CKShare.SystemFieldKey.title] = "Household Inventory"
+share.publicPermission = .none
+
+// No root record to batch — save the share on its own
+try await privateDatabase.save(share)
+```
+
+**Constraints**:
+- A zone and its records can take part in **only one** share — zone-wide and per-record shares are mutually exclusive within the same zone.
+- The zone-wide share's record name is the well-known constant `CKRecordNameZoneWideShare`.
+- On accept, CloudKit copies the records into a new zone in the participant's shared database. Get the new zone ID with `CKFetchDatabaseChangesOperation`, then read records with `CKFetchRecordZoneChangesOperation` (there is no root record to fetch).
 
 ### Present Sharing UI
 
