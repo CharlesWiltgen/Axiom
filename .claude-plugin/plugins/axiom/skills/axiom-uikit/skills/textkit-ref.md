@@ -545,111 +545,88 @@ Advanced integration for custom text engines. `UIWritingToolsCoordinator` and `N
 
 ```swift
 // UIKit
-let coordinator = UIWritingToolsCoordinator()
-coordinator.delegate = self
-textView.addInteraction(coordinator)
-coordinator.writingToolsBehavior = .default
-coordinator.writingToolsResultOptions = [.richText]
+let coordinator = UIWritingToolsCoordinator(delegate: self)  // delegate is set at init (read-only)
+textView.addInteraction(coordinator)                         // the coordinator is a UIInteraction
+coordinator.preferredBehavior = .default
+coordinator.preferredResultOptions = [.richText]
 
 // AppKit
-let coordinator = NSWritingToolsCoordinator()
-coordinator.delegate = self
-customView.writingToolsCoordinator = coordinator
+let coordinator = NSWritingToolsCoordinator(delegate: self)
+customView.writingToolsCoordinator = coordinator             // NSView has a settable writingToolsCoordinator
 ```
 
 ### Coordinator Delegate
 
-**Provide context:**
-```swift
-func writingToolsCoordinator(
-    _ coordinator: NSWritingToolsCoordinator,
-    requestContexts scope: NSWritingToolsCoordinator.ContextScope
-) async -> [NSWritingToolsCoordinator.Context] {
-    // Return attributed string + selection range
-    let context = NSWritingToolsCoordinator.Context(
-        attributedString: currentText,
-        range: currentSelection
-    )
-    return [context]
-}
-```
+Conform your engine object to **`UIWritingToolsCoordinator.Delegate`** (a nested protocol — `UIWritingToolsCoordinator.Delegate`, *not* `UIWritingToolsCoordinatorDelegate`). Eight methods are **required**, all `async`; the framework drives the whole exchange through them.
 
-**Apply changes:**
+**Provide context** — return the text Writing Tools should evaluate:
 ```swift
-func writingToolsCoordinator(
-    _ coordinator: NSWritingToolsCoordinator,
-    replace context: NSWritingToolsCoordinator.Context,
-    range: NSRange,
-    with attributedString: NSAttributedString
-) async {
-    // Update text storage
-    textStorage.replaceCharacters(in: range, with: attributedString)
-}
-```
-
-**Update selection:**
-```swift
-func writingToolsCoordinator(
-    _ coordinator: NSWritingToolsCoordinator,
-    updateSelectedRange selectedRange: NSRange,
-    in context: NSWritingToolsCoordinator.Context
-) async {
-    // Update selection
-    self.selectedRange = selectedRange
-}
-```
-
-**Provide previews for animation:**
-```swift
-// macOS
-func writingToolsCoordinator(
-    _ coordinator: NSWritingToolsCoordinator,
-    previewsFor context: NSWritingToolsCoordinator.Context,
-    range: NSRange
-) async -> [NSTextPreview] {
-    // Return one preview per line for smooth animation
-    return textLines.map { line in
-        NSTextPreview(
-            image: renderImage(for: line),
-            frame: line.frame
-        )
-    }
-}
-
-// iOS
 func writingToolsCoordinator(
     _ coordinator: UIWritingToolsCoordinator,
-    previewFor context: UIWritingToolsCoordinator.Context,
-    range: NSRange
-) async -> UITargetedPreview {
-    // Return single preview
-    return UITargetedPreview(
-        view: previewView,
-        parameters: parameters
-    )
+    contextsFor scope: UIWritingToolsCoordinator.ContextScope
+) async -> [UIWritingToolsCoordinator.Context] {
+    [UIWritingToolsCoordinator.Context(attributedString: currentText, range: currentSelection)]
 }
 ```
 
-**Proofreading marks:**
+**Apply changes** — replace `range`; return the text you actually stored (or `nil`):
 ```swift
 func writingToolsCoordinator(
-    _ coordinator: NSWritingToolsCoordinator,
-    underlinesFor context: NSWritingToolsCoordinator.Context,
-    range: NSRange
-) async -> [NSValue] {
-    // Return bezier paths for underlines
-    return ranges.map { range in
-        let path = bezierPath(for: range)
-        return NSValue(bytes: &path, objCType: "CGPath")
-    }
+    _ coordinator: UIWritingToolsCoordinator,
+    replace range: NSRange,
+    in context: UIWritingToolsCoordinator.Context,
+    proposedText replacementText: NSAttributedString,
+    reason: UIWritingToolsCoordinator.TextReplacementReason,
+    animationParameters: UIWritingToolsCoordinator.AnimationParameters?
+) async -> NSAttributedString? {
+    textStorage.replaceCharacters(in: range, with: replacementText)
+    return replacementText
 }
 ```
+
+**Update selection** — `ranges` is an array of boxed `NSRange` values:
+```swift
+func writingToolsCoordinator(
+    _ coordinator: UIWritingToolsCoordinator,
+    select ranges: [NSValue],
+    in context: UIWritingToolsCoordinator.Context
+) async {
+    selectedRanges = ranges
+}
+```
+
+**Preview for an animation** — return a `UITargetedPreview?` for the range:
+```swift
+func writingToolsCoordinator(
+    _ coordinator: UIWritingToolsCoordinator,
+    previewFor textAnimation: UIWritingToolsCoordinator.TextAnimation,
+    range: NSRange,
+    context: UIWritingToolsCoordinator.Context
+) async -> UITargetedPreview? {
+    UITargetedPreview(view: previewView, parameters: parameters)
+}
+```
+
+**Proofreading underlines** — return bezier paths for the range:
+```swift
+func writingToolsCoordinator(
+    _ coordinator: UIWritingToolsCoordinator,
+    underlinePathsFor range: NSRange,
+    context: UIWritingToolsCoordinator.Context
+) async -> [UIBezierPath] {
+    underlineRanges.map { bezierPath(for: $0) }
+}
+```
+
+The remaining required methods follow the same shape: `boundingBezierPathsFor:context:` (decoration bounds) and the animation bracket `prepareFor:for:in:` / `finish:for:in:` (each wraps one `TextAnimation`). Four methods are **optional**: `singleContainerSubrangesOf:in:` and `decorationContainerViewFor:in:` support multi-container layouts, `willChangeTo:` reports coordinator state transitions, and `rangeInContextWithIdentifierFor:` (a point-based lookup) is deprecated and unused on iOS 18.4+.
+
+> **AppKit parallel**: on macOS conform to `NSWritingToolsCoordinator.Delegate` (same method names); previews return `[NSTextPreview]`, and you attach the coordinator via the settable `NSView.writingToolsCoordinator` instead of `addInteraction(_:)`.
 
 ### PresentationIntent (iOS 26+)
 
 **Semantic rich text result option:**
 ```swift
-coordinator.writingToolsResultOptions = [.richText, .presentationIntent]
+coordinator.preferredResultOptions = [.richText, .presentationIntent]
 ```
 
 **Difference from display attributes:**
