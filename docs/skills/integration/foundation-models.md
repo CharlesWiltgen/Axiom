@@ -49,8 +49,8 @@ let response = try await session.respond(to: longPrompt)
 label.text = response.content  // UI frozen during generation
 
 // ✅ CORRECT: Streaming
-for try await partial in session.respond(to: prompt, stream: true) {
-    await MainActor.run { label.text = partial.content }
+for try await snapshot in session.streamResponse(to: prompt) {
+    await MainActor.run { label.text = snapshot.content }
 }
 ```
 
@@ -87,30 +87,34 @@ struct Analysis {
     var keyPoints: [String]
 }
 
-let analysis: Analysis = try await session.respond(
+let response = try await session.respond(
     to: "Analyze this review...",
     generating: Analysis.self
 )
+let analysis = response.content   // Response<Analysis>.content
 ```
 
 ### Streaming
 ```swift
-for try await partial in session.respond(to: prompt, stream: true) {
-    updateUI(with: partial.content)
+for try await snapshot in session.streamResponse(to: prompt) {
+    updateUI(with: snapshot.content)
 }
 ```
 
 ### Tool Calling
 ```swift
-@Tool
 struct SearchTool: Tool {
-    static let description = "Search for information"
+    let name = "search"
+    let description = "Search for information"
 
-    @Parameter(description: "Search query")
-    var query: String
+    @Generable
+    struct Arguments {
+        @Guide(description: "Search query")
+        var query: String
+    }
 
-    func call() async throws -> String {
-        // Perform search
+    func call(arguments: Arguments) async throws -> String {
+        // Perform search using arguments.query
     }
 }
 ```
