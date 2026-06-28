@@ -29,7 +29,7 @@ Real questions this skill is designed to answer:
 → `@Previewable @State` (Xcode 16+). See `skills/previews-ref.md` for the macro signature.
 
 #### 5. "Should I even bother previewing this view?"
-→ The "When NOT to use previews" section. Some views are honestly cheaper in the simulator with hot-reload.
+→ The "When NOT to use previews" section. Some views are honestly cheaper to iterate on in the running app with **hot reload** (`skills/hot-reload.md`), or on real hardware with **on-device previews** (section below).
 
 ## When to Use This Skill
 
@@ -347,6 +347,19 @@ For design-system components (buttons, cards, list rows, badges), one preview is
 
 ---
 
+## On-Device Previews
+
+The canvas renders on the Mac by default, but you can target a **connected physical device**: in the canvas device selector, pick your iPhone instead of a simulator. The preview then runs *on the phone* and updates live as you edit.
+
+**When it beats the Mac canvas or simulator**:
+- Real sensors, true color/HDR, real ProMotion, and actual touch ergonomics
+- Real GPU/perf characteristics for shader- or Metal-adjacent views
+- Largest Dynamic Type and accessibility behavior on the real display
+
+**Trade-offs**: it is a *preview harness on hardware*, not your running app — still isolated from real app state. For iterating against real navigation depth and model state, use **hot reload** (`skills/hot-reload.md`). On-device previews also need a reliable wired/wireless connection and are flakier than the Mac canvas; a preview that won't load on device usually means the debug connection dropped, not a code problem.
+
+---
+
 ## When NOT to Use Previews
 
 Previews are not always the right tool. Recognize the boundary:
@@ -381,6 +394,8 @@ Previews are not always the right tool. Recognize the boundary:
 3. Apply Rule 1 (Extract a Swift Package — 60–90 minutes one-time, then permanently fast)
 
 **Time cost**: 90 min one-time vs. losing the preview workflow forever (lifetime cost of ~55 hours/year/dev — see Rule 1 above).
+
+**Hot reload is a complement, not a substitute**: `skills/hot-reload.md` tightens *in-app* iteration, but it does not give you the light/dark/Dynamic-Type/RTL variant-audit matrix that previews do. Use both — don't trade one away for the other.
 
 ### Scenario 2: "This component needs 12 previews so I'll just write them inline"
 
