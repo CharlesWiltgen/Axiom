@@ -22,7 +22,7 @@ Use this reference when:
 | `SCNScene` | `RealityViewContent` / `Entity` (root) | RealityKit scenes are entity hierarchies |
 | `SCNNode` | `Entity` | Lightweight container in both |
 | `SCNView` | `RealityView` (SwiftUI) | `ARView` for UIKit on iOS |
-| `SceneView` (SwiftUI) | `RealityView` | SceneView deprecated iOS 26 |
+| `SceneView` (SwiftUI) | `RealityView` | SceneKit is legacy; SceneView itself not SDK-deprecated |
 | `SCNRenderer` | `RealityRenderer` | Low-level Metal rendering |
 | Node properties | Components | ECS separates data from hierarchy |
 | `SCNSceneRendererDelegate` | `System` / `SceneEvents.Update` | Frame-level updates |

@@ -20,7 +20,7 @@ Use this skill when:
 ## Example Prompts
 
 - "Should I start a new 3D project in SceneKit or RealityKit?"
-- "How do I integrate SceneKit with SwiftUI now that SceneView is deprecated?"
+- "How do I integrate SceneKit with SwiftUI — should I still use SceneView or move to RealityView?"
 - "What's the best way to migrate our SceneKit app to RealityKit?"
 - "How do I set up PBR materials in SceneKit?"
 - "My SceneKit physics contacts aren't working"
@@ -30,7 +30,7 @@ Use this skill when:
 
 ### Deprecation Context
 - SceneKit soft-deprecated as of iOS 26 (existing apps continue to work)
-- SceneView (SwiftUI) formally deprecated -- UIViewRepresentable replacement pattern
+- SceneView (SwiftUI) is not SDK-deprecated (no compiler warning) but wraps legacy SceneKit — UIViewRepresentable / RealityView replacement pattern
 - Apple's forward path is RealityKit
 
 ### Scene Graph Architecture
