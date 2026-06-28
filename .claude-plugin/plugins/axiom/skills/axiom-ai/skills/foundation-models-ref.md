@@ -165,7 +165,7 @@ print(response.content) // SearchSuggestions instance
 
 ### Generation Options
 
-See [Sampling & Generation Options](#sampling--generation-options) for `GenerationOptions` (`sampling:`, `temperature:`, `maximumResponseTokens:`). Note that `includeSchemaInPrompt:` is a parameter on `respond(...)` / `streamResponse(...)` itself, not a `GenerationOptions` member — see [Optimization: includeSchemaInPrompt](#optimization-includeschemainprompt).
+See [Sampling & Generation Options](#sampling--generation-options) for `GenerationOptions` (`samplingMode:`, `temperature:`, `maximumResponseTokens:`). Note that `includeSchemaInPrompt:` is a parameter on `respond(...)` / `streamResponse(...)` itself, not a `GenerationOptions` member — see [Optimization: includeSchemaInPrompt](#optimization-includeschemainprompt).
 
 ---
 
@@ -737,7 +737,7 @@ let question = try response.content.value(String.self, forProperty: "question")
 ```swift
 let response = try await session.respond(
     to: prompt,
-    options: GenerationOptions(sampling: .greedy)
+    options: GenerationOptions(samplingMode: .greedy)
 )
 ```
 
@@ -1238,7 +1238,7 @@ struct TripInstructions: DynamicInstructions {
 let session = LanguageModelSession(dynamicInstructions: TripInstructions(trip: trip))
 ```
 
-Built with `@DynamicInstructionsBuilder`: a body may mix `Instructions`, `Tool` values, and nested `DynamicInstructions`; `if`/`switch` are backed by `ConditionalDynamicInstructions`, and `_DynamicInstructionsForEach` drives an instruction/tool set off a collection. `LanguageModelSession(model:dynamicInstructions:history:)` constructs the session; `model:` defaults to `SystemLanguageModel.default`. `OS27` (not tvOS).
+Built with `@DynamicInstructionsBuilder`: a body may mix `Instructions`, `Tool` values, and nested `DynamicInstructions`; `if`/`switch` are backed by `ConditionalDynamicInstructions`, and `_DynamicInstructionsForEach` drives an instruction/tool set off a collection. `LanguageModelSession(model:dynamicInstructions:history:)` constructs the session; `model:` defaults to `SystemLanguageModel.default`. `OS27` — the `dynamicInstructions:` session init is not available on watchOS/tvOS (the `DynamicInstructions` protocol itself is watchOS-available; only the session convenience init is excluded).
 
 **Choosing between them**: `DynamicProfile` models a *state machine* (named branches, one active `Profile`, transitions preserve history) — use it when the app has discrete modes. `DynamicInstructions` *recomputes* the instruction/tool set each request from whatever the app state currently is — use it when instructions track continuously-changing context (location, time, a live document).
 
@@ -1438,7 +1438,7 @@ Playgrounds can also access types defined in your app (like @Generable structs).
 
 - **`LanguageModelSession`** — Main interface: `respond(to:)` → `Response<String>`, `respond(to:generating:)` → `Response<T>`, `streamResponse(to:generating:)` → `ResponseStream<T>` (Element is `Snapshot`; read `snapshot.content` → `T.PartiallyGenerated`). `respond`/`streamResponse` also take `includeSchemaInPrompt:` (defaults `true`). Properties: `transcript`, `isResponding`.
 - **`SystemLanguageModel`** — `default.availability` (`.available`/`.unavailable(reason)`), `default.supportedLanguages`, `default.contextSize`, `default.tokenCount(for:)` → `Int` (5 overloads, iOS 26.4+), `init(useCase:)`
-- **`GenerationOptions`** — `init(sampling:temperature:maximumResponseTokens:)`. `sampling` (`.greedy`, `.random(top:seed:)`, `.random(probabilityThreshold:seed:)`), `temperature`, `maximumResponseTokens`. (`includeSchemaInPrompt` is NOT a `GenerationOptions` member — it has two legitimate homes: a direct parameter on the legacy `respond`/`streamResponse` overloads, and `ContextOptions(includeSchemaInPrompt:)` on the OS27 overloads.)
+- **`GenerationOptions`** — `init(samplingMode:temperature:maximumResponseTokens:)`. `samplingMode` (`.greedy`, `.random(top:seed:)`, `.random(probabilityThreshold:seed:)`), `temperature`, `maximumResponseTokens`. (`sampling` / `init(sampling:)` are deprecated, renamed `samplingMode`.) (`includeSchemaInPrompt` is NOT a `GenerationOptions` member — it has two legitimate homes: a direct parameter on the legacy `respond`/`streamResponse` overloads, and `ContextOptions(includeSchemaInPrompt:)` on the OS27 overloads.)
 - **`@Generable`** — Macro enabling structured output with constrained decoding
 - **`@Guide`** — Property constraints: `description:`, `.range()`, `.count()`, `.maximumCount()`, `.pattern(Regex)`
 - **`Tool` protocol** — `name`, `description`, `Arguments: ConvertibleFromGeneratedContent`, `Output: PromptRepresentable`, `call(arguments:) → Output` (return `String` for text or `GeneratedContent` for structured — no `ToolOutput` type)

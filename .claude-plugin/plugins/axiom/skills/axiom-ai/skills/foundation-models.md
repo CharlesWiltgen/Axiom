@@ -963,7 +963,7 @@ for day in 1...7 {
 
 | Goal | Setting | Use Cases |
 |------|---------|-----------|
-| Deterministic | `GenerationOptions(sampling: .greedy)` | Unit tests, demos, consistency-critical |
+| Deterministic | `GenerationOptions(samplingMode: .greedy)` | Unit tests, demos, consistency-critical |
 | Focused | `GenerationOptions(temperature: 0.5)` | Fact extraction, classification |
 | Creative | `GenerationOptions(temperature: 2.0)` | Story generation, brainstorming, varied NPC dialog |
 

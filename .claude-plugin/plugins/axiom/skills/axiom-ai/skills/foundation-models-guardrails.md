@@ -30,7 +30,7 @@ Apple frames safety as layered — a "Swiss cheese" model where a violation requ
 let model = SystemLanguageModel(guardrails: .permissiveContentTransformations)
 let session = LanguageModelSession(model: model)
 
-// With an adapter:
+// With an adapter (26-cycle only — `init(adapter:)` is obsoleted in 27.0; see foundation-models-adapters.md):
 let model = SystemLanguageModel(adapter: myAdapter, guardrails: .permissiveContentTransformations)
 ```
 

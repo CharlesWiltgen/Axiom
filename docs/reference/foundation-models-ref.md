@@ -41,7 +41,7 @@ Questions you can ask Claude that will draw from this reference:
 - Text: `respond(to:)` → `Response<String>` (`.content`)
 - Structured: `respond(to:generating:)` → `Response<Content>` (`.content`)
 - Streaming: `streamResponse(to:generating:)` → `ResponseStream<Content>`
-- `GenerationOptions` (temperature, sampling); context management
+- `GenerationOptions` (temperature, samplingMode); context management
 
 ### @Generable Structured Output
 - `@Generable` macro; `@Guide(description:_:)` constraints, enums, regex
