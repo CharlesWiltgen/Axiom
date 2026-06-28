@@ -26,7 +26,7 @@ public protocol Evaluation: Sendable {
     var dataset: SampleLoader { get }                          // inputs + expected outputs
     func subject(from sample: Sample) async throws -> Subject  // run your feature on one input
     @EvaluatorsBuilder var evaluators: Evaluators { get }      // score the result into Metrics
-    func aggregateMetrics(using aggregator: inout MetricsAggregator)  // optional; has a default
+    func aggregateMetrics(using aggregator: inout MetricsAggregator)  // required — no default; implement it (may aggregate nothing)
 }
 ```
 
@@ -68,6 +68,11 @@ struct BookTaggingEvaluation: Evaluation {
                 ? tagCount.passing(rationale: "\(count) tags")
                 : tagCount.failing(rationale: "Got \(count) tags, expected 3–8")
         }
+    }
+
+    // Required by Evaluation (no default) — even a one-liner satisfies it.
+    func aggregateMetrics(using aggregator: inout MetricsAggregator) {
+        aggregator.computeMean(of: tagCount)
     }
 }
 ```
@@ -156,7 +161,7 @@ let result = try await BookTaggingEvaluation().run(info: ["build": "1234"])
 
 ## Aggregating metrics
 
-Override `aggregateMetrics(using:)` to compute statistics across all samples. `MetricsAggregator` offers `computeMean/Median/Mode/Minimum/Maximum/StandardDeviation/Variance(of:)` and `group(_:_:)` for nested sections:
+Implement `aggregateMetrics(using:)` (a required `Evaluation` member with no default) to compute statistics across all samples. `MetricsAggregator` offers `computeMean/Median/Mode/Minimum/Maximum/StandardDeviation/Variance(of:)` and `group(_:_:)` for nested sections:
 
 ```swift
 func aggregateMetrics(using aggregator: inout MetricsAggregator) {
@@ -208,7 +213,7 @@ ToolCallEvaluator(allPass: Metric("AllToolsMatched"),
 
 ## Hill-climbing workflow
 
-WWDC 335's loop: pick one optimization-target metric, change one thing (instructions, prompt, schema, or model), re-run the suite, keep the change only if the target moved up without regressing the guardrail metrics. The Evaluations report makes each round measurable instead of vibes-based. Persist each round's result to compare across runs — `EvaluationResult.saveJSON(to:)` / `loadJSON(from:)` (and `saveJSONLines(to:)` / `loadJSONLines(from:)` for an appended history). Watch for **judge drift** when a model-as-judge is part of the loop — a judge that shifts between releases silently moves your baseline.
+WWDC 335's loop: pick one optimization-target metric, change one thing (instructions, prompt, schema, or model), re-run the suite, keep the change only if the target moved up without regressing the guardrail metrics. The Evaluations report makes each round measurable instead of vibes-based. Persist each round's result to compare across runs — `EvaluationResult.saveJSON(to:)` / `EvaluationResult.loadJSON(from:)` (and, for an appended history, `saveJSONLines(to:)` — which is a method on a `[EvaluationResult]` collection, not on a single result — plus the static `EvaluationResult.loadJSONLines(from:)`). Watch for **judge drift** when a model-as-judge is part of the loop — a judge that shifts between releases silently moves your baseline.
 
 ## API Quick Reference
 
@@ -217,7 +222,7 @@ WWDC 335's loop: pick one optimization-target metric, change one thing (instruct
 - **`Evaluator { (input, subject) async throws -> Metric }`**; `subject.value` is the output.
 - **`ModelSample(prompt:expected:instructions:generationSchema:expectations:)`**, `.promptDescription`; loaders `ArrayLoader`, `JSONLoader`, `StreamLoader`, `Loader`.
 - **`[ModelSample].makeSamples(_:targetCount:sessionProvider:validator:)`** (on the array) / **`SampleGenerator(_:samples:targetCount:sessionProvider:samplingStrategy:validator:)`** (`actor`; iterate `run()`).
-- **Swift Testing**: `.evaluates(_:info:)` trait, `EvaluationContext.current.result`, `result.aggregateValue(.mean(of:))`; persist via `EvaluationResult.saveJSON(to:)`/`loadJSON(from:)`/`saveJSONLines(to:)`/`loadJSONLines(from:)`.
+- **Swift Testing**: `.evaluates(_:info:)` trait, `EvaluationContext.current.result`, `result.aggregateValue(.mean(of:))`; persist via `EvaluationResult.saveJSON(to:)`/`loadJSON(from:)` (and `[EvaluationResult].saveJSONLines(to:)` on a results array / static `EvaluationResult.loadJSONLines(from:)`).
 - **`MetricsAggregator`** — `computeMean/Median/Mode/Minimum/Maximum/StandardDeviation/Variance(of:)`, `group(_:_:)`; `AggregationOperation` cases mirror these + `.custom(label:)`.
 - **`ModelJudgeEvaluator(_:scale:judge:scoringMode:)`** / `(judge:dimensions:scoringMode:)` / `prompt:`-taking overloads; `ScoringScale.numeric/.passFail/.custom`; `ScoreDimension`; `ScoringMode.discrete/.continuous`; `ModelJudgePrompt`.
 - **`ToolCallEvaluator(allPass:percentagePass:argumentMatchModel:)`**; `TrajectoryExpectation`, `ToolExpectation(_:arguments:)`, `ArgumentMatcher` (9 cases: `.exact/.keyOnly/.oneOf/.range/.pattern/.contains/.hasPrefix/.hasSuffix/.naturalLanguage`).

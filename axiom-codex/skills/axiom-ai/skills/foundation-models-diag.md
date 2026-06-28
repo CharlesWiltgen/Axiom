@@ -627,7 +627,7 @@ let response2 = try await session.respond(to: "Write a haiku")
 // ✅ For deterministic output (testing/demos)
 let response = try await session.respond(
     to: "Write a haiku",
-    options: GenerationOptions(sampling: .greedy)
+    options: GenerationOptions(samplingMode: .greedy)
 )
 // Same output for same prompt (given same model version)
 

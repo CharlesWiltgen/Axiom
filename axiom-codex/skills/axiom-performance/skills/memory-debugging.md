@@ -230,6 +230,48 @@ class PhotoCell: UICollectionViewCell {
 
 Similar patterns: `AVAssetImageGenerator` → `cancelAllCGImageGeneration()`, `URLSession.dataTask()` → `cancel()`.
 
+## Weak Inner Capture Inside a Strong Outer Closure `OS27`
+
+Swift 6.4 (Xcode 27) adds the **default-on** `[#ImplicitStrongCapture]` warning. It fires when an inner closure captures `self` with `[weak self]` while an **outer escaping closure already captured `self` implicitly strong**. The weak inner is a false sense of safety — the outer closure governs `self`'s lifetime, so the inner's `[weak self]` shortens nothing. This is the exact cycle that used to surface only in Instruments; now the compiler flags it at build time.
+
+Fires only for **escaping** outer closures (`Task {}`, `DispatchQueue.async {}`, stored closures). Non-escaping outers (`forEach`, `map`) don't capture past the call, so they never trigger it. Severity tracks the outer closure's lifetime: a one-shot async hop retains `self` only briefly, but a **stored** outer closure (`store.onChange = { self.x = { [weak self] … } }`) holds `self` for the store's lifetime — a real leak the weak inner does nothing to prevent.
+
+#### ❌ Warns — weak inner, implicit strong outer
+```swift
+DispatchQueue.main.async {           // implicitly captures self STRONG
+    self.doWork()
+    self.handler = { [weak self] in  // false safety — self already retained above
+        self?.doWork()
+    }
+}
+```
+```
+warning: 'weak' ownership of capture 'self' differs from implicitly-captured
+strong reference in outer scope [#ImplicitStrongCapture]
+  note: 'self' implicitly strongly captured here
+  note: add 'self' as a capture list item to silence
+```
+
+#### ✅ Fix by intent, not by silencing
+
+The warning asks one question — did you mean for the outer closure to retain `self`?
+
+| Intent | Fix |
+|--------|-----|
+| `self` SHOULD live for the outer closure | `[self]` on the OUTER closure — makes the strong capture explicit |
+| `self` should NOT be retained (why you wrote weak) | `[weak self]` on the OUTER closure + `guard let self else { return }` |
+
+```swift
+// Intent: don't retain self — weaken the OUTER, not just the inner
+DispatchQueue.main.async { [weak self] in
+    guard let self else { return }
+    self.doWork()
+    self.handler = { [weak self] in self?.doWork() }
+}
+```
+
+**Silencing is not fixing.** `[weak self = self]` on the inner closure also clears the warning, but `self` is still strongly held by the outer — you've muted the diagnostic without changing the retention. Pick the fix that matches intent (see Pattern 3 and Pattern 4 above). Diagnostic group id: `[#ImplicitStrongCapture]`.
+
 ## Systematic Debugging Workflow
 
 ### Phase 1: Confirm Leak (5 min)

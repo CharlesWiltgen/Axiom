@@ -123,6 +123,7 @@ These patterns appear frequently in Claude-generated code:
 10. **Writes the verbose 5-platform `@available(iOS 27, macOS 27, …)`** — On Swift 6.4 (Xcode 27), use `@available(anyAppleOS 27, *)`; add per-platform `unavailable` lines only for exclusions.
 11. **Uses `weak var` + `@unchecked Sendable`** — On Swift 6.4, `weak let` lets the class be plain `Sendable` with no escape hatch.
 12. **Ignores an error thrown in `Task { try … }`** — Swift 6.4 warns; handle it in the task (`do/catch`) or save the task and check the result later.
+13. **Puts `[weak self]` on an inner closure nested in an escaping outer closure that already captures `self` strongly** — false safety; Swift 6.4 warns (`[#ImplicitStrongCapture]`). Weaken the OUTER closure (`[weak self]` + `guard let self`), not just the inner. See `axiom-performance (skills/memory-debugging.md)`.
 
 ## Resources
 

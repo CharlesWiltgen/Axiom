@@ -364,7 +364,7 @@ public struct SystemLanguageModel.Adapter {
 }
 ```
 
-There is no public `isCompatible(_:)` on `Adapter`. A symbol by that name exists in the `FoundationModels` binary (`.tbd`) but has never appeared in any textual `.swiftinterface`, so it does not compile from source — do not call it. To gate an adapter asset-pack download to compatible variants, match the pack identifier against `compatibleAdapterIdentifiers(name:)` instead (see `axiom-integration (skills/background-assets-ref.md)` "Foundation Models Adapter Bridge").
+There is no public `isCompatible(_:)` on `Adapter`. The `.swiftinterface` carries it only as an `internal @usableFromInline` symbol (ABI signature `isCompatible(BackgroundAssets.AssetPack) -> Bool`), not as public API, so it does not compile from source — do not call it. To gate an adapter asset-pack download to compatible variants, match the pack identifier against `compatibleAdapterIdentifiers(name:)` instead (see `axiom-integration (skills/background-assets-ref.md)` "Foundation Models Adapter Bridge").
 
 ### init(name:)
 
@@ -395,7 +395,7 @@ Loads from a direct file URL. Used primarily for testing — production adapters
 try await adapter.compile()
 ```
 
-Compiles the adapter to the device-specific form. Called automatically on first use; can be invoked early to warm the cache. Subject to the same draft-model compilation rate limit (three per app per day on non-macOS).
+Compiles the adapter to the device-specific form and caches the result across launches (a later `compile()` returns the saved compiled draft model immediately). Called automatically on first use; can be invoked early to warm the cache. The rate limit applies to this method: three per app per day on non-macOS, counted when the adapter includes a draft model — see `foundation-models-adapters.md` "The compilation rate limit".
 
 `@concurrent` per the function signature — runs off the calling actor's executor.
 
@@ -664,7 +664,7 @@ For server-hosted delivery (`BADownloaderExtension`), see `axiom-integration (sk
 - **Runtime initializers**: `init(name:)`, `init(fileURL:)`
 - **Runtime instance methods**: `compile() async throws`
 - **Runtime static methods**: `removeObsoleteAdapters() throws`, `compatibleAdapterIdentifiers(name:) -> [String]` (no public `isCompatible(_:)` — see Runtime API note)
-- **Runtime status**: whole runtime API `deprecated: 26.4, obsoleted: 27.0` (iOS/iPadOS/macOS/visionOS; never watchOS/tvOS) — 26-cycle deployments only, no 27 replacement
+- **Runtime status**: the `Adapter` type and its loading surface (`init(name:)`/`init(fileURL:)`/`compile()`/`removeObsoleteAdapters()`/`compatibleAdapterIdentifiers(name:)`) are `deprecated: 26.4, obsoleted: 27.0`; `SystemLanguageModel(adapter:guardrails:)` is `obsoleted: 27.0` (not separately deprecated); `AssetError` is `deprecated: 26.4` (not obsoleted). All iOS/iPadOS/macOS/visionOS; never watchOS/tvOS — 26-cycle deployments only, no 27 replacement
 - **Error cases**: `.compatibleAdapterNotFound(_)`, `.invalidAdapterName(_)`, `.invalidAsset(_)`
 - **Composition**: `SystemLanguageModel(adapter:)`, `SystemLanguageModel(adapter:guardrails:)`, `LanguageModelSession(model:)`
 - **Entitlement**: `com.apple.developer.foundation-model-adapter` (deployment only)
