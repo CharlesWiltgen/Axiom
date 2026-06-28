@@ -1,6 +1,6 @@
 # Skill Map
 
-Visual overview of Axiom's two-layer routing architecture. 23 routers organize <!--ax:skills-->259<!--/ax--> skills, <!--ax:agents-->41<!--/ax--> agents, and <!--ax:commands-->15<!--/ax--> commands into discoverable domains.
+Visual overview of Axiom's two-layer routing architecture. 23 routers organize <!--ax:skills-->260<!--/ax--> skills, <!--ax:agents-->41<!--/ax--> agents, and <!--ax:commands-->15<!--/ax--> commands into discoverable domains.
 
 ## How It Works
 
