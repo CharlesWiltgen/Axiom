@@ -233,6 +233,12 @@ if re.search(r'ios (19|2[0-9])|does.*ios.*exist|current.*ios|which ios|what.*ios
 if re.search(r'xcode\s*mcp|mcpbridge|xcrun\s*mcp|xcode.{0,5}(read|build|test|preview).{0,10}mcp', prompt_lower):
     matches.append("axiom-xcode-mcp")
 
+# Device control (Device Hub, devicectl) — Xcode-independent device/simulator control
+# owned by axiom-tools (skills/device-control-ref.md). Deliberately NOT bare "simctl"
+# (too broad — push/openurl/location route to their own domains).
+if re.search(r'device\s*hub|\bdevicectl\b|(control|drive|manage).{0,25}(simulator|device).{0,20}without.{0,10}xcode|(simulator|device).{0,20}without.{0,10}xcode\s*(run|open|is|be)', prompt_lower):
+    matches.append("axiom-tools")
+
 # --- Output ---
 if not matches:
     print("{}")

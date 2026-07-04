@@ -17,6 +17,7 @@ This suite covers Axiom itself — how to use it, what's available, and the tool
 | "How do I symbolicate a crash?" / "What is xcsym?" / "Why is my crash unsymbolicated?" | [skills/xcsym-ref.md](skills/xcsym-ref.md) |
 | "How do I drive/validate the sim UI?" / "What is xcui?" / "How do I script accessibility checks?" | [skills/xcui-ref.md](skills/xcui-ref.md) |
 | "How do I analyze a trace / CPU or network profile?" / "What is xcprof?" / "Why does the profiler report no findings?" | [skills/xcprof-ref.md](skills/xcprof-ref.md) |
+| "How do I control a simulator/device without Xcode running?" / "What is Device Hub?" / "devicectl vs simctl?" | [skills/device-control-ref.md](skills/device-control-ref.md) |
 
 ## Using Axiom Skills
 
@@ -113,10 +114,9 @@ But when in doubt for iOS/Swift work: **check first, decide later.**
 
 ## Device Hub (Xcode 27)
 
-On Xcode 27, **Device Hub** — a standalone app that auto-launches on build-and-run — replaces the **Simulator.app** GUI and manages simulators *and* physical devices in one place. This is additive: Xcode 26 and earlier keep Simulator.app, so it isn't "gone" for those users. The Axiom tools are unaffected — `xclog`, `xcsym`, `xcui`, and `xcprof` work the same on both. Device Hub's scriptable CLI counterpart is `devicectl` (itself not 27-only — identical on Xcode 26.6), which complements the Axiom tools: `xcui` drives the in-app UI / accessibility tree, while `devicectl` sets device state (biometrics, orientation, location).
+On Xcode 27, **Device Hub** — a standalone app that auto-launches on build-and-run — replaces the `Simulator.app` GUI and manages simulators *and* physical devices in one place (Xcode 26 and earlier keep Simulator.app). Every operation has an Xcode-independent CLI counterpart, so the Axiom tools and scripts are unaffected.
 
-For the GUI workflow, see `axiom-build (skills/xcode-debugging.md)` → "Device Hub (OS27)".
-For the `devicectl` simulator/CI primitives, see `axiom-testing (skills/ui-testing.md)` → "Simulator control from CI: devicectl".
+For the full tool map (Device Hub / devicectl / simctl / xcui vs the Xcode-bound mcpbridge), the verified subcommand matrix, and the Device Hub GUI reference, see `skills/device-control-ref.md`.
 
 ## Resources
 

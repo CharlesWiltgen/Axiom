@@ -492,6 +492,13 @@ class TestPositiveRouting(unittest.TestCase):
         self.assertIn("axiom-xcode-mcp", routed_skills(
             "How do I set up Xcode MCP with xcrun mcpbridge?"))
 
+    def test_tools_device_control(self):
+        # Device Hub / devicectl — Xcode-independent device control lives in axiom-tools
+        self.assertIn("axiom-tools", routed_skills(
+            "How do I control the simulator with devicectl without Xcode running?"))
+        self.assertIn("axiom-tools", routed_skills(
+            "What is Device Hub in Xcode 27?"))
+
     def test_watchos(self):
         # Regression: this router was completely missing from the hook
         self.assertIn("axiom-watchos", routed_skills(

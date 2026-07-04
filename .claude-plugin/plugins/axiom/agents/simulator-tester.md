@@ -190,7 +190,7 @@ xcrun devicectl device orientation set -d "$UDID" landscapeLeft           # port
 xcrun devicectl device process sendMemoryWarning -d "$UDID" --pid <pid>    # memory-pressure scenario
 ```
 
-The full verified catalog — `info displays`, `settings appearance`, `simulate location` / `statusBar`, and the `CoreDeviceError 1001` "device-only on a sim" cases — lives in `axiom-testing (skills/ui-testing.md)` → "Simulator control from CI: devicectl". This agent loads `axiom-testing`; consult it for the complete set and exact JSON keys.
+The full verified catalog — `info displays`, `settings appearance`, `simulate location` / `statusBar`, and the `CoreDeviceError 1001` "device-only on a sim" cases — lives in `axiom-tools (skills/device-control-ref.md)`. Consult it for the complete set and exact JSON keys.
 
 ### 10. Log Capture
 ```bash

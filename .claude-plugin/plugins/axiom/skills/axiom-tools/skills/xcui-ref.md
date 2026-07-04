@@ -31,7 +31,7 @@ xcui makes iOS-simulator UI and accessibility testing scriptable for coding harn
 
 ## Device state — biometrics, orientation, location: use `devicectl`
 
-`xcui` drives the **in-app UI + accessibility tree** (`tap`/`assert`, VoiceOver order) and toggles **accessibility settings** (`a11y set`: Dynamic Type, contrast, motion). It does **not** drive hardware/device state. For **biometrics** (Face ID / Touch ID — neither `xcui` nor `simctl` can do this), orientation, location, status bar, and memory-pressure, use `devicectl`: it works on simulators in Xcode 26.6+, takes one `-d <udid>` selector across sim + device, and emits a stable `--json-output`. The two compose — `devicectl` sets the state, `xcui` asserts the resulting UI. Full verified catalog: `axiom-testing (skills/ui-testing.md)` → "Simulator control from CI: devicectl".
+`xcui` drives the **in-app UI + accessibility tree** (`tap`/`assert`, VoiceOver order) and toggles **accessibility settings** (`a11y set`: Dynamic Type, contrast, motion). It does **not** drive hardware/device state. For **biometrics** (Face ID / Touch ID — neither `xcui` nor `simctl` can do this), orientation, location, status bar, and memory-pressure, use `devicectl`: it works on simulators in Xcode 26.6+, takes one `-d <udid>` selector across sim + device, and emits a stable `--json-output`. The two compose — `devicectl` sets the state, `xcui` asserts the resulting UI. Full verified catalog: `skills/device-control-ref.md`.
 
 ## For input, use AXe directly
 
