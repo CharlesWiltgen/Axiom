@@ -60,6 +60,7 @@ export default withMermaid(defineConfig({
           text: 'Related',
           items: [
             { text: 'AXe (Simulator Automation)', link: '/reference/axe-ref' },
+            { text: 'Device Control (Device Hub, devicectl)', link: '/reference/device-control-ref' },
             { text: 'xctrace', link: '/reference/xctrace-ref' }
           ]
         }
@@ -666,6 +667,7 @@ export default withMermaid(defineConfig({
             { text: 'App Store Submission', link: '/reference/app-store-ref' },
             { text: 'AXe (Simulator Automation)', link: '/reference/axe-ref' },
             { text: 'Code Signing', link: '/reference/code-signing-ref' },
+            { text: 'Device Control (Device Hub, devicectl)', link: '/reference/device-control-ref' },
             { text: 'LLDB Command Reference', link: '/reference/lldb-ref' },
             { text: 'MetricKit', link: '/reference/metrickit-ref' },
             { text: 'Timer Patterns', link: '/reference/timer-patterns-ref' },
@@ -724,7 +726,7 @@ export default withMermaid(defineConfig({
 
     footer: {
       message: 'Released under the MIT License',
-      copyright: 'Copyright © 2026 Charles Wiltgen • v27.0.0-beta.14'
+      copyright: 'Copyright © 2026 Charles Wiltgen • v27.0.0-beta.15'
     }
   }
 }))
