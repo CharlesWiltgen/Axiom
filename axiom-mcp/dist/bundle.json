@@ -1,6 +1,6 @@
 {
   "version": "0.2.0",
-  "generatedAt": "2026-06-28T21:54:11.152Z",
+  "generatedAt": "2026-07-04T01:18:59.287Z",
   "skills": {
     "axiom-accessibility": {
       "name": "axiom-accessibility",
@@ -35694,7 +35694,7 @@
     "axiom-swiftui--nav-ref": {
       "name": "axiom-swiftui--nav-ref",
       "description": "SwiftUI's navigation APIs provide data-driven, programmatic navigation that scales from simple stacks to complex multi-column layouts. Introduced in iOS 16 (2022) with NavigationStack and NavigationSplitView, evolved in iOS 18 (2024) with Tab/Sidebar unification, and refined in iOS 26 (2025) with Liquid Glass design.",
-      "content": "\n# SwiftUI Navigation API Reference\n\n## Overview\n\nSwiftUI's navigation APIs provide data-driven, programmatic navigation that scales from simple stacks to complex multi-column layouts. Introduced in iOS 16 (2022) with NavigationStack and NavigationSplitView, evolved in iOS 18 (2024) with Tab/Sidebar unification, and refined in iOS 26 (2025) with Liquid Glass design.\n\n#### Evolution timeline\n- **2022 (iOS 16)** NavigationStack, NavigationSplitView, NavigationPath, value-based NavigationLink\n- **2024 (iOS 18)** Tab/Sidebar unification, sidebarAdaptable style, zoom navigation transition\n- **2025 (iOS 26)** Liquid Glass navigation chrome, bottom-aligned search, floating tab bars, backgroundExtensionEffect\n\n#### Key capabilities\n- **Data-driven navigation** NavigationPath represents stack state, enabling programmatic push/pop and deep linking\n- **Multi-column layouts** NavigationSplitView adapts automatically (3-column on iPad → single stack on iPhone)\n- **State restoration** Codable NavigationPath + SceneStorage for persistence across app launches\n- **Tab integration** Per-tab NavigationStack with state preservation on tab switch (iOS 18+)\n- **Liquid Glass** Automatic glass navigation bars, sidebars, and toolbars (iOS 26+)\n\n#### When to use vs UIKit\n- **SwiftUI navigation** New apps, multiplatform, simpler navigation flows → Use NavigationStack/SplitView\n- **UINavigationController** Complex coordinator patterns, legacy code, specific UIKit features → Consider UIKit\n\n#### Related Skills\n- Use `skills/nav.md` for anti-patterns, decision trees, pressure scenarios\n- Use `skills/nav-diag.md` for systematic troubleshooting of navigation issues\n\n---\n\n## When to Use This Skill\n\nUse this skill when:\n- **Implementing navigation APIs** NavigationStack, NavigationSplitView, NavigationPath, Tab+Navigation\n- **Deep linking or state restoration** URL routing, Codable NavigationPath, SceneStorage\n- **Adopting iOS 26+ features** Liquid Glass navigation, bottom-aligned search, tab bar minimization\n- **Choosing navigation architecture** Stack vs SplitView vs coordinator patterns\n\n---\n\n## API Evolution\n\n### Timeline\n\n| Year | iOS Version | Key Features |\n|------|-------------|--------------|\n| 2020 | iOS 14 | NavigationView (deprecated iOS 16) |\n| 2022 | iOS 16 | NavigationStack, NavigationSplitView, NavigationPath, value-based NavigationLink |\n| 2024 | iOS 18 | Tab/Sidebar unification, sidebarAdaptable, TabSection, zoom transitions |\n| 2025 | iOS 26 | Liquid Glass navigation, backgroundExtensionEffect, tabBarMinimizeBehavior |\n\n### NavigationView (Deprecated)\n\nNavigationView is deprecated as of iOS 16. Use NavigationStack (single-column push/pop) or NavigationSplitView (multi-column) exclusively in new code. Key improvements: single NavigationPath replaces per-link `isActive` bindings, value-based type safety, built-in Codable state restoration. See \"Migrating to new navigation types\" documentation.\n\n---\n\n## NavigationStack Complete Reference\n\nNavigationStack represents a push-pop interface like Settings on iPhone or System Settings on macOS.\n\n### 1.1 Creating NavigationStack\n\n#### Basic NavigationStack\n\n```swift\nNavigationStack {\n    List(Category.allCases) { category in\n        NavigationLink(category.name, value: category)\n    }\n    .navigationTitle(\"Categories\")\n    .navigationDestination(for: Category.self) { category in\n        CategoryDetail(category: category)\n    }\n}\n```\n\n#### With Path Binding (WWDC 2022, 6:05)\n\n```swift\nstruct PushableStack: View {\n    @State private var path: [Recipe] = []\n    @StateObject private var dataModel = DataModel()\n\n    var body: some View {\n        NavigationStack(path: $path) {\n            List(Category.allCases) { category in\n                Section(category.localizedName) {\n                    ForEach(dataModel.recipes(in: category)) { recipe in\n                        NavigationLink(recipe.name, value: recipe)\n                    }\n                }\n            }\n            .navigationTitle(\"Categories\")\n            .navigationDestination(for: Recipe.self) { recipe in\n                RecipeDetail(recipe: recipe)\n            }\n        }\n        .environmentObject(dataModel)\n    }\n}\n```\n\nPath binding + value-presenting NavigationLink + `navigationDestination(for:)` form the core data-driven navigation pattern.\n\n### 1.2 NavigationLink (Value-Based)\n\n#### Value-presenting NavigationLink\n\n```swift\n// Correct: Value-based (iOS 16+)\nNavigationLink(recipe.name, value: recipe)\n\n// Correct: With custom label\nNavigationLink(value: recipe) {\n    RecipeTile(recipe: recipe)\n}\n\n// Deprecated: View-based (iOS 13-15)\nNavigationLink(recipe.name) {\n    RecipeDetail(recipe: recipe)  // Don't use in new code\n}\n```\n\n#### How NavigationLink works with NavigationStack\n\n1. NavigationStack maintains a `path` collection\n2. Tapping a value-presenting link appends the value to the path\n3. NavigationStack maps `navigationDestination` modifiers over path values\n4. Views are pushed onto the stack based on destination mappings\n\n### 1.3 navigationDestination Modifier\n\n#### Single Type\n\n```swift\n.navigationDestination(for: Recipe.self) { recipe in\n    RecipeDetail(recipe: recipe)\n}\n```\n\n#### Multiple Types\n\n```swift\nNavigationStack(path: $path) {\n    RootView()\n        .navigationDestination(for: Recipe.self) { recipe in\n            RecipeDetail(recipe: recipe)\n        }\n        .navigationDestination(for: Category.self) { category in\n            CategoryList(category: category)\n        }\n        .navigationDestination(for: Chef.self) { chef in\n            ChefProfile(chef: chef)\n        }\n}\n```\n\n#### Navigation Anti-Patterns\n\n- **Never mix `navigationDestination(for:)` and `NavigationLink(destination:)`** in the same NavigationStack hierarchy — causes undefined behavior\n- **Register `navigationDestination(for:)` once per data type** — duplicates cause the wrong view to appear\n\n#### Placement rules\n- Place `navigationDestination` outside lazy containers (not inside ForEach)\n- Place near related NavigationLinks for code organization\n- Must be inside NavigationStack hierarchy\n\n```swift\n// Correct: Outside lazy container\nScrollView {\n    LazyVGrid(columns: columns) {\n        ForEach(recipes) { recipe in\n            NavigationLink(value: recipe) {\n                RecipeTile(recipe: recipe)\n            }\n        }\n    }\n}\n.navigationDestination(for: Recipe.self) { recipe in\n    RecipeDetail(recipe: recipe)\n}\n\n// Wrong: Inside ForEach (may not be loaded)\nForEach(recipes) { recipe in\n    NavigationLink(value: recipe) { RecipeTile(recipe: recipe) }\n        .navigationDestination(for: Recipe.self) { r in  // Don't do this\n            RecipeDetail(recipe: r)\n        }\n}\n```\n\n### 1.4 NavigationPath\n\nNavigationPath is a type-erased collection for heterogeneous navigation stacks.\n\n#### Typed Array vs NavigationPath\n\n```swift\n// Typed array: All values same type\n@State private var path: [Recipe] = []\n\n// NavigationPath: Mixed types\n@State private var path = NavigationPath()\n```\n\n#### NavigationPath Operations\n\n```swift\n// Append value\npath.append(recipe)\n\n// Pop to previous\npath.removeLast()\n\n// Pop to root\npath.removeLast(path.count)\n// or\npath = NavigationPath()\n\n// Check count\nif path.count > 0 { ... }\n\n// Deep link: Set multiple values\npath.append(category)\npath.append(recipe)\n```\n\n#### Codable Support\n\n```swift\n// NavigationPath is Codable when all values are Codable\n@State private var path = NavigationPath()\n\n// Encode\nlet data = try JSONEncoder().encode(path.codable)\n\n// Decode\nlet codableRep = try JSONDecoder().decode(NavigationPath.CodableRepresentation.self, from: data)\npath = NavigationPath(codableRep)\n```\n\n---\n\n## NavigationSplitView Complete Reference\n\nNavigationSplitView creates multi-column layouts that adapt to device size.\n\n### 2.1 Two-Column Layout\n\n#### Basic Two-Column (WWDC 2022, 10:40)\n\n```swift\nstruct MultipleColumns: View {\n    @State private var selectedCategory: Category?\n    @State private var selectedRecipe: Recipe?\n    @StateObject private var dataModel = DataModel()\n\n    var body: some View {\n        NavigationSplitView {\n            List(Category.allCases, selection: $selectedCategory) { category in\n                NavigationLink(category.localizedName, value: category)\n            }\n            .navigationTitle(\"Categories\")\n        } detail: {\n            if let recipe = selectedRecipe {\n                RecipeDetail(recipe: recipe)\n            } else {\n                Text(\"Select a recipe\")\n            }\n        }\n    }\n}\n```\n\n### 2.2 Three-Column Layout\n\nAdd a `content:` closure between sidebar and detail for a middle column:\n\n```swift\nNavigationSplitView {\n    List(Category.allCases, selection: $selectedCategory) { category in\n        NavigationLink(category.localizedName, value: category)\n    }\n} content: {\n    List(dataModel.recipes(in: selectedCategory), selection: $selectedRecipe) { recipe in\n        NavigationLink(recipe.name, value: recipe)\n    }\n} detail: {\n    RecipeDetail(recipe: selectedRecipe)\n}\n```\n\n### 2.3 NavigationSplitView with NavigationStack\n\nPlace a `NavigationStack(path:)` inside the detail column for grid-to-detail drill-down while preserving sidebar selection:\n\n```swift\nNavigationSplitView {\n    List(Category.allCases, selection: $selectedCategory) { ... }\n} detail: {\n    NavigationStack(path: $path) {\n        RecipeGrid(category: selectedCategory)\n            .navigationDestination(for: Recipe.self) { recipe in\n                RecipeDetail(recipe: recipe)\n            }\n    }\n}\n```\n\n### 2.4 Column Visibility\n\n```swift\n@State private var columnVisibility: NavigationSplitViewVisibility = .all\n\nNavigationSplitView(columnVisibility: $columnVisibility) {\n    Sidebar()\n} content: {\n    Content()\n} detail: {\n    Detail()\n}\n\n// Programmatically control visibility\ncolumnVisibility = .detailOnly  // Hide sidebar and content\ncolumnVisibility = .all          // Show all columns\ncolumnVisibility = .automatic    // System decides\n```\n\n### 2.5 Automatic Adaptation\n\nNavigationSplitView automatically adapts:\n- **iPad landscape** All columns visible (depending on configuration)\n- **iPad portrait/Slide Over** Collapses to overlay or single column\n- **iPhone** Single navigation stack\n- **Apple Watch/TV** Single navigation stack\n\nSelection changes automatically translate to push/pop on iPhone.\n\n### 2.6 iOS 26+ Liquid Glass Sidebar (WWDC 2025, 323)\n\n```swift\nNavigationSplitView {\n    List { ... }\n} detail: {\n    DetailView()\n}\n// Sidebar automatically gets Liquid Glass appearance on iPad/macOS\n\n// Extend content behind glass sidebar\n.backgroundExtensionEffect()  // Mirrors and blurs content outside safe area\n```\n\n---\n\n## Deep Linking and URL Routing\n\n### 3.1 Deep Link Pattern\n\nUse `.onOpenURL` to receive URLs, parse with `URLComponents`, then manipulate `NavigationPath`:\n\n```swift\n.onOpenURL { url in\n    guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),\n          let host = components.host else { return }\n    path.removeLast(path.count)  // Pop to root first\n    // Parse host/path to determine destination, then path.append(value)\n}\n```\n\nFor multi-step deep links (`myapp://category/desserts/recipe/apple-pie`), iterate URL path components and append each resolved value to build the full navigation stack.\n\nFor comprehensive deep linking examples, error diagnosis, and testing workflows, see `skills/nav-diag.md` (Pattern 3).\n\n---\n\n## State Restoration\n\n### 4.1 Complete State Restoration (WWDC 2022, 18:12)\n\n```swift\nstruct UseSceneStorage: View {\n    @StateObject private var navModel = NavigationModel()\n    @SceneStorage(\"navigation\") private var data: Data?\n    @StateObject private var dataModel = DataModel()\n\n    var body: some View {\n        NavigationSplitView {\n            List(Category.allCases, selection: $navModel.selectedCategory) { category in\n                NavigationLink(category.localizedName, value: category)\n            }\n            .navigationTitle(\"Categories\")\n        } detail: {\n            NavigationStack(path: $navModel.recipePath) {\n                RecipeGrid(category: navModel.selectedCategory)\n            }\n        }\n        .task {\n            // Restore on appear\n            if let data = data {\n                navModel.jsonData = data\n            }\n        }\n        .onChange(of: navModel.recipePath) {\n            data = navModel.jsonData\n        }\n        .environmentObject(dataModel)\n    }\n}\n```\n\n### 4.2 Codable NavigationModel\n\n```swift\n@MainActor @Observable\nclass NavigationModel: Codable {\n    var selectedCategory: Category?\n    var recipePath: [Recipe] = []\n\n    enum CodingKeys: String, CodingKey {\n        case selectedCategory\n        case recipePathIds  // Store IDs, not full objects\n    }\n\n    func encode(to encoder: Encoder) throws {\n        var container = encoder.container(keyedBy: CodingKeys.self)\n        try container.encodeIfPresent(selectedCategory, forKey: .selectedCategory)\n        try container.encode(recipePath.map(\\.id), forKey: .recipePathIds)\n    }\n\n    init() {}\n\n    required init(from decoder: Decoder) throws {\n        let container = try decoder.container(keyedBy: CodingKeys.self)\n        self.selectedCategory = try container.decodeIfPresent(Category.self, forKey: .selectedCategory)\n        let recipePathIds = try container.decode([Recipe.ID].self, forKey: .recipePathIds)\n        self.recipePath = recipePathIds.compactMap { DataModel.shared[$0] } // Discard deleted items\n    }\n\n    var jsonData: Data? {\n        get { try? JSONEncoder().encode(self) }\n        set {\n            guard let data = newValue,\n                  let model = try? JSONDecoder().decode(NavigationModel.self, from: data)\n            else { return }\n            selectedCategory = model.selectedCategory\n            recipePath = model.recipePath\n        }\n    }\n}\n```\n\nStore IDs (not full model objects) and use `compactMap` to handle deleted items gracefully. The `jsonData` computed property bridges to `SceneStorage` as shown in 4.1.\n\n---\n\n## Tab + Navigation Integration\n\n### 5.1 Tab Syntax (iOS 18+) (WWDC 2024, 4:27)\n\n```swift\nTabView {\n    Tab(\"Watch Now\", systemImage: \"play\") {\n        WatchNowView()\n    }\n    Tab(\"Library\", systemImage: \"books.vertical\") {\n        LibraryView()\n    }\n    Tab(role: .search) {\n        NavigationStack {\n            SearchView()\n                .navigationTitle(\"Search\")\n        }\n    }\n}\n.searchable(text: $searchText)\n.tabViewSearchActivation(.searchTabSelection)\n```\n\n**Search tab placement**: `.searchable()` goes on the `TabView`, not inside the search-role `Tab`. Pair it with `.tabViewSearchActivation(.searchTabSelection)` so the search field activates only when the search tab is selected. Without `.tabViewSearchActivation`, the tab view applies search to all tabs and resets search state on tab change. The search-role tab's contents must still be wrapped in `NavigationStack` for the search field to render. For foundational `.searchable` patterns (suggestions, scopes, tokens, programmatic control), see `skills/search-ref.md`.\n\n### 5.2 TabView with NavigationStack Per Tab\n\n```swift\nTabView {\n    Tab(\"Home\", systemImage: \"house\") {\n        NavigationStack {\n            HomeView()\n                .navigationDestination(for: Item.self) { item in\n                    ItemDetail(item: item)\n                }\n        }\n    }\n    Tab(\"Settings\", systemImage: \"gear\") {\n        NavigationStack {\n            SettingsView()\n        }\n    }\n}\n```\n\nEach tab has its own NavigationStack to preserve navigation state when switching tabs.\n\n### 5.3 Sidebar-Adaptable TabView (WWDC 2024, 6:41)\n\n```swift\nTabView {\n    Tab(\"Watch Now\", systemImage: \"play\") {\n        WatchNowView()\n    }\n    Tab(\"Library\", systemImage: \"books.vertical\") {\n        LibraryView()\n    }\n    TabSection(\"Collections\") {\n        Tab(\"Cinematic Shots\", systemImage: \"list.and.film\") {\n            CinematicShotsView()\n        }\n        Tab(\"Forest Life\", systemImage: \"list.and.film\") {\n            ForestLifeView()\n        }\n    }\n    TabSection(\"Animations\") {\n        // More tabs...\n    }\n    Tab(role: .search) {\n        SearchView()\n    }\n}\n.tabViewStyle(.sidebarAdaptable)\n```\n\n`TabSection` creates sidebar groups. `.sidebarAdaptable` enables sidebar on iPad, tab bar on iPhone. Search tab with `.search` role gets special placement.\n\n### 5.4 Tab Customization (WWDC 2024, 10:45)\n\n```swift\n@AppStorage(\"MyTabViewCustomization\")\nprivate var customization: TabViewCustomization\n\nTabView {\n    Tab(\"Watch Now\", systemImage: \"play\", value: .watchNow) {\n        WatchNowView()\n    }\n    .customizationID(\"Tab.watchNow\")\n    .customizationBehavior(.disabled, for: .sidebar, .tabBar)  // Can't be hidden\n\n    Tab(\"Optional Tab\", systemImage: \"star\", value: .optional) {\n        OptionalView()\n    }\n    .customizationID(\"Tab.optional\")\n    .defaultVisibility(.hidden, for: .tabBar)  // Hidden by default\n}\n.tabViewCustomization($customization)\n```\n\n### 5.5 Tab Context Menus\n\nUse `.contextMenu(menuItems:)` on a `Tab` to add a context menu to its sidebar representation (e.g., right-click on Mac, long-press on iPad sidebar).\n\n```swift\nTab(\"Currently Reading\", systemImage: \"book\") {\n    CurrentBooksList()\n}\n.contextMenu {\n    Button {\n        pinnedTabs.insert(.reading)\n    } label: {\n        Label(\"Pin\", systemImage: \"pin\")\n    }\n    Button {\n        showShareSheet = true\n    } label: {\n        Label(\"Share\", systemImage: \"square.and.arrow.up\")\n    }\n}\n```\n\nReturn an empty closure to deactivate the context menu conditionally:\n\n```swift\n.contextMenu {\n    if canPin {\n        Button(\"Pin\", systemImage: \"pin\") { pin() }\n    }\n}\n```\n\n#### iPhone Tab Bar Long-Press\n\n`.contextMenu` on `Tab` only applies to the sidebar representation (iPad/Mac). iPhone tab bar context menus require UIKit interop (adding `UILongPressGestureRecognizer` to `UITabBar` via Introspect or a `UITabBarController` subclass). See `axiom-uikit (skills/uikit-bridging.md)` for UIKit interop patterns.\n\n**Caveat**: Relies on private `UITabBarButton` subviews — fragile across iOS versions, not a public API guarantee.\n\n### 5.6 Programmatic Tab Visibility\n\nUse `.hidden(_:)` to show/hide tabs based on app state while preserving their navigation state.\n\n#### State-Driven Tab Visibility\n\n```swift\nTab(\"Libraries\", systemImage: \"square.stack\") { LibrariesView() }\n    .hidden(context == .browse)  // Hide based on app state\n```\n\nApply `.hidden(condition)` to each tab. Tabs hidden this way preserve their navigation state (unlike conditional `if` rendering which destroys and recreates them).\n\n#### State Preservation\n\n**Key difference**: `.hidden(_:)` preserves tab state, conditional rendering does not.\n\n```swift\n// ✅ State preserved when hidden\nTab(\"Settings\", systemImage: \"gear\") {\n    SettingsView()  // Navigation stack preserved\n}\n.hidden(!showSettings)\n\n// ❌ State lost when condition changes\nif showSettings {\n    Tab(\"Settings\", systemImage: \"gear\") {\n        SettingsView()  // Navigation stack recreated\n    }\n}\n```\n\n#### Common Patterns\n\n```swift\nTab(\"Beta Features\", systemImage: \"flask\") { BetaView() }\n    .hidden(!UserDefaults.standard.bool(forKey: \"enableBetaFeatures\"))\n```\n\nSame pattern applies to authentication state, purchase status, and debug builds — bind `.hidden()` to any boolean condition.\n\n#### Animated Transitions\n\nWrap state changes in `withAnimation` for smooth tab bar layout transitions:\n\n```swift\nButton(\"Switch to Browse\") {\n    withAnimation {\n        context = .browse\n        selection = .tracks  // Switch to first visible tab\n    }\n}\n// Tab bar animates as tabs appear/disappear\n// Uses system motion curves automatically\n```\n\n### 5.7 iOS 26+ Tab Features (WWDC 2025, 256)\n\n```swift\n// Tab bar minimization on scroll\nTabView { ... }\n    .tabBarMinimizeBehavior(.onScrollDown)\n\n// Bottom accessory view (always visible)\nTabView { ... }\n    .tabViewBottomAccessory {\n        PlaybackControls()\n    }\n\n// Dynamic visibility (recommended for mini-players)\n// ⚠️ Requires iOS 26.1+ (not 26.0)\nTabView { ... }\n    .tabViewBottomAccessory(isEnabled: showMiniPlayer) {\n        MiniPlayerView()\n            .transition(.opacity)\n    }\n// isEnabled: true = shows accessory\n// isEnabled: false = hides AND removes reserved space\n\n// Search tab with dedicated search field\nTabView {\n    // ...other tabs...\n    Tab(role: .search) {\n        NavigationStack {\n            SearchView()\n                .navigationTitle(\"Search\")\n        }\n    }\n}\n.searchable(text: $searchText)\n.tabViewSearchActivation(.searchTabSelection)\n// .searchable goes on the TabView, NOT inside the Tab\n// .tabViewSearchActivation(.searchTabSelection) binds search to the .search role tab\n// Morphs into search field when the search tab is selected\n// ⚠️ NavigationStack wrapper still required for the search field to render\n// Without .tabViewSearchActivation: tab view applies search to ALL tabs,\n// resetting search state when the selected tab changes\n```\n\n**iOS 26 morph gotcha**: `.onGeometryChange { ... }` *anywhere* in the TabView's subtree (on the body containing TabView, on TabView itself, or on any tab's content) breaks the `.search` role's morph on the **first** activation — the state write triggers a re-render during initial layout that the morph integration can't recover from. Subsequent activations work because state is cached. Same family as `.introspect(.navigationStack)` on the search tab (siteline/swiftui-introspect #499). Workaround: read width via `GeometryReader` *above* the TabView, or scope `.onGeometryChange` to a sibling outside the TabView's coordinate space. See `skills/nav-diag.md` Pattern 4e for full diagnosis and fixes.\n\n#### Dynamic Bottom Accessory\n\nThe accessory can switch on `activeTab` for per-tab content, though Apple's usage (Music mini-player) keeps it global. Read `@Environment(\\.tabViewBottomAccessoryPlacement)` to adapt layout: `.expanded` when above the tab bar (full controls) vs `.inline` when inline with the minimized tab bar (compact). The enum has exactly these two cases — there is no `.bar` case.\n\nReserve `tabViewBottomAccessory` for cross-tab content (playback, status). For tab-specific actions, prefer floating glass buttons within the tab's content view.\n\n### 5.8 Tab API Quick Reference\n\n| Modifier | Target | iOS | Purpose |\n|----------|--------|-----|---------|\n| `Tab(_:systemImage:value:content:)` | — | 18+ | New tab syntax with selection value |\n| `Tab(role: .search)` | — | 18+ | Semantic search tab with morph behavior |\n| `TabSection(_:content:)` | — | 18+ | Group tabs in sidebar view |\n| `.contextMenu(menuItems:)` | Tab | 18+ | Add context menu to tab's sidebar representation |\n| `.customizationID(_:)` | Tab | 18+ | Enable user customization |\n| `.customizationBehavior(_:for:)` | Tab | 18+ | Control hide/reorder permissions |\n| `.defaultVisibility(_:for:)` | Tab | 18+ | Set initial visibility state |\n| `.hidden(_:)` | Tab | 18+ | Programmatic visibility with state preservation |\n| `.tabViewStyle(.sidebarAdaptable)` | TabView | 18+ | Sidebar on iPad, tabs on iPhone |\n| `.tabViewCustomization($binding)` | TabView | 18+ | Persist user tab arrangement |\n| `.tabViewSearchActivation(_:)` | TabView | 26+ | Bind `.searchable` to the `.search` role tab (use `.searchTabSelection`) |\n| `.tabBarMinimizeBehavior(_:)` | TabView | 26+ | Auto-hide on scroll |\n| `.tabViewBottomAccessory(isEnabled:content:)` | TabView | 26.1+ | Dynamic content below tab bar |\n| `Tab(role: .prominent)` | — | 27+ | Prominent semantic tab role (OS27); joins `.search` |\n\n### 5.9 Prominent Tab Role — `.prominent` (OS27)\n\nThe 27 cycle adds a second semantic `TabRole`, `.prominent`, alongside `.search`. Pass it to any `Tab(role:)` initializer:\n\n```swift\nTabView {\n    Tab(\"Home\", systemImage: \"house\") { HomeView() }\n    Tab(\"Now Playing\", systemImage: \"play.circle\", role: .prominent) {\n        NowPlayingView()\n    }\n}\n```\n\n`.prominent` marks a tab for elevated system treatment (`@available(anyAppleOS 27.0)` — all platforms). Apple's reference is currently terse (\"the prominent role\"); confirm the exact rendering against WWDC 2026-269 and the SDK before relying on a specific appearance. Like `.search`, it's a *role* you pass to `Tab(role:)`, not a style modifier.\n\n---\n\n## iOS 26+ Navigation Features\n\n### 6.1 Liquid Glass Navigation (WWDC 2025, 323)\n\nAutomatic adoption when building with Xcode 26:\n- Navigation bars become Liquid Glass\n- Sidebars float above content with glass effect\n- Tab bars float with new compact appearance\n- Toolbars get automatic grouping\n\n### 6.2 Background Extension Effect\n\n```swift\nNavigationSplitView {\n    Sidebar()\n} detail: {\n    HeroImage()\n        .backgroundExtensionEffect()  // Content extends behind sidebar\n}\n```\n\n### 6.3 Bottom-Aligned Search (WWDC 2025, 256)\n\n**Foundational search APIs** For `.searchable`, `isSearching`, suggestions, scopes, tokens, and programmatic control, see `skills/search-ref.md`. This section covers iOS 26 bottom-aligned refinement only.\n\n```swift\nNavigationSplitView {\n    Sidebar()\n} detail: {\n    DetailView()\n}\n.searchable(text: $query, prompt: \"What are you looking for?\")\n// Automatically bottom-aligned on iPhone, top-trailing on iPad\n```\n\n### 6.4 Scroll Edge Effect\n\n```swift\n// Automatic blur effect when content scrolls under toolbar\n// Remove any custom darkening backgrounds - they interfere\n\n// For dense UIs, adjust sharpness\nScrollView { ... }\n    .scrollEdgeEffectStyle(.soft, for: .top)  // styles: .automatic, .hard, .soft (the `for:` edges argument is required)\n```\n\n### 6.5 Sheet Presentations with Zoom Transition\n\nIn iOS 26, sheets can morph directly out of the buttons that present them. Make the presenting toolbar item a source for a navigation zoom transition, and mark the sheet content as the destination:\n\n```swift\n@Namespace private var namespace\n\n// Sheet morphs out of presenting button\n.toolbar {\n    ToolbarItem {\n        Button(\"Settings\") { showSettings = true }\n            .matchedTransitionSource(id: \"settings\", in: namespace)\n    }\n}\n.sheet(isPresented: $showSettings) {\n    SettingsView()\n        .navigationTransition(.zoom(sourceID: \"settings\", in: namespace))\n}\n```\n\nOther presentations also flow smoothly out of Liquid Glass controls — menus, alerts, and popovers. Dialogs automatically morph out of the buttons that present them without additional code.\n\n**Audit tip**: If you've used `presentationBackground` to apply custom backgrounds to sheets, consider removing it and let the new Liquid Glass sheet material shine. Partial height sheets are now inset with glass background by default.\n\n### 6.6 Toolbar Morphing Transitions\n\niOS 26 automatically morphs toolbars during NavigationStack push/pop when each destination view declares its own `.toolbar {}`. Items with matching `toolbar(id:)` and `ToolbarItem(id:)` IDs stay stable during the transition (no bounce), while unmatched items animate in/out.\n\n**Key rule**: Attach `.toolbar {}` to individual views inside NavigationStack, not to NavigationStack itself. Otherwise there is nothing to morph between.\n\nSee `skills/26-ref.md` skill for complete toolbar morphing API including DefaultToolbarItem, `toolbar(id:)` stable items, ToolbarSpacer patterns, and troubleshooting.\n\n### 6.7 Cross-Fade Navigation Transition — `.crossFade` (OS27)\n\nA new `NavigationTransition` that cross-fades between the appearing and disappearing views instead of sliding or zooming. Apply it the same way as `.zoom` (section 6.5):\n\n```swift\n.sheet(isPresented: $showDetail) {\n    DetailView()\n        .navigationTransition(.crossFade)\n}\n```\n\n`@available(anyAppleOS 27, *) @available(macOS, unavailable)` — `OS27` except macOS, where the transition is unavailable. (`anyAppleOS` requires the Swift 6.4 toolchain; see `axiom-swift (skills/swift-modern.md)`.) If you share view code with a Mac target, gate it with `if #available` or fall back to the default transition there.\n\n### 6.8 Custom navigation transitions are not authorable\n\n`NavigationTransition` ships only three concrete transitions — `.zoom`, `.crossFade`, and `.automatic`. The protocol is public, but its sole requirement is an SPI method (`_outputs(for:)` taking underscored types), so you cannot meaningfully conform your own type — there is no public custom navigation transition as of the 27 SDK. For a bespoke push/pop effect, drive the animation yourself instead: `matchedTransitionSource`/`matchedGeometryEffect`, `.transition`, `keyframeAnimator`, or `visualEffect`/shader modifiers.\n\n---\n\n## Router/Coordinator Patterns\n\n### 7.1 When to Use Coordinators\n\n#### Use coordinators when\n- Navigation logic is complex with conditional flows\n- Testing navigation in isolation\n- Sharing navigation logic across multiple screens\n- UIKit interop with heavy navigation requirements\n\n#### Use built-in navigation when\n- Simple linear or hierarchical navigation\n- State restoration is primary concern\n- Fewer than 5-10 navigation destinations\n- No need for navigation unit testing\n\n### 7.2 Simple Router Pattern\n\n```swift\n// Route enum defines all possible destinations\nenum AppRoute: Hashable {\n    case home\n    case category(Category)\n    case recipe(Recipe)\n    case settings\n}\n\n// Router class manages navigation\n@Observable\nclass Router {\n    var path = NavigationPath()\n\n    func navigate(to route: AppRoute) {\n        path.append(route)\n    }\n\n    func popToRoot() {\n        path.removeLast(path.count)\n    }\n\n    func pop() {\n        if !path.isEmpty {\n            path.removeLast()\n        }\n    }\n}\n\n// Usage in views\nstruct ContentView: View {\n    @State private var router = Router()\n\n    var body: some View {\n        NavigationStack(path: $router.path) {\n            HomeView()\n                .navigationDestination(for: AppRoute.self) { route in\n                    switch route {\n                    case .home:\n                        HomeView()\n                    case .category(let category):\n                        CategoryView(category: category)\n                    case .recipe(let recipe):\n                        RecipeDetail(recipe: recipe)\n                    case .settings:\n                        SettingsView()\n                    }\n                }\n        }\n        .environment(router)\n    }\n}\n\n// In child views\nstruct RecipeCard: View {\n    let recipe: Recipe\n    @Environment(Router.self) private var router\n\n    var body: some View {\n        Button(recipe.name) {\n            router.navigate(to: .recipe(recipe))\n        }\n    }\n}\n```\n\n### 7.3 Coordinator Pattern with Protocol\n\nFor larger apps, extract a `Coordinator` protocol with `associatedtype Route: Hashable` and `var path: NavigationPath`. Each feature area gets its own coordinator conformance with domain-specific routes and convenience methods (e.g., `showRecipeOfTheDay()` that resets path and navigates).\n\n### 7.4 Testing Navigation\n\n```swift\n// Router is easily testable\nfunc testNavigateToRecipe() {\n    let router = Router()\n    let recipe = Recipe(name: \"Apple Pie\")\n\n    router.navigate(to: .recipe(recipe))\n\n    XCTAssertEqual(router.path.count, 1)\n}\n\nfunc testPopToRoot() {\n    let router = Router()\n    router.navigate(to: .category(.desserts))\n    router.navigate(to: .recipe(Recipe(name: \"Apple Pie\")))\n\n    router.popToRoot()\n\n    XCTAssertTrue(router.path.isEmpty)\n}\n```\n\n---\n\n## Testing Checklist\n\n- [ ] Deep links navigate correctly from cold start AND while running\n- [ ] Pop to root clears entire stack\n- [ ] State restores on app relaunch (SceneStorage key unique per scene)\n- [ ] Deleted items handled gracefully in restoration (compactMap)\n- [ ] NavigationSplitView collapses correctly on iPhone (selection pushes)\n- [ ] iOS 26+: Liquid Glass appearance, bottom-aligned search, tab bar minimization\n\n---\n\n## API Quick Reference\n\n### NavigationStack\n\n```swift\nNavigationStack { content }\nNavigationStack(path: $path) { content }\n```\n\n### NavigationSplitView\n\n```swift\nNavigationSplitView { sidebar } detail: { detail }\nNavigationSplitView { sidebar } content: { content } detail: { detail }\nNavigationSplitView(columnVisibility: $visibility) { ... }\n```\n\n### NavigationLink\n\n```swift\nNavigationLink(title, value: value)\nNavigationLink(value: value) { label }\n```\n\n### NavigationPath\n\n```swift\npath.append(value)\npath.removeLast()\npath.removeLast(path.count)\npath.count\npath.codable  // For encoding\nNavigationPath(codableRepresentation)  // For decoding\n```\n\n### Modifiers\n\n```swift\n.navigationTitle(\"Title\")\n.navigationDestination(for: Type.self) { value in View }\n.searchable(text: $query)\n.tabViewStyle(.sidebarAdaptable)\n.tabBarMinimizeBehavior(.onScrollDown)\n.backgroundExtensionEffect()\n```\n\n---\n\n## Resources\n\n**WWDC**: 2022-10054, 2024-10147, 2025-256, 2025-323 (Build a SwiftUI app with the new design), 2026-269\n\n**Docs**: /swiftui/tabrole/search, /swiftui/tabrole/prominent, /swiftui/view/tabbarminimizebehavior(_:), /swiftui/view/tabviewbottomaccessory(isenabled:content:), /swiftui/view/tabviewsearchactivation(_:), /swiftui/navigationtransition/crossfade\n\n**Skills**: skills/nav.md, skills/nav-diag.md, skills/26-ref.md, axiom-design (skills/liquid-glass.md), skills/search-ref.md\n\n---\n\n**Last Updated** Based on WWDC 2022-10054, WWDC 2024-10147, WWDC 2025-256, WWDC 2025-323 (Build a SwiftUI app with the new design)\n**Platforms** iOS 16+, iPadOS 16+, macOS 13+, watchOS 9+, tvOS 16+\n",
+      "content": "\n# SwiftUI Navigation API Reference\n\n## Overview\n\nSwiftUI's navigation APIs provide data-driven, programmatic navigation that scales from simple stacks to complex multi-column layouts. Introduced in iOS 16 (2022) with NavigationStack and NavigationSplitView, evolved in iOS 18 (2024) with Tab/Sidebar unification, and refined in iOS 26 (2025) with Liquid Glass design.\n\n#### Evolution timeline\n- **2022 (iOS 16)** NavigationStack, NavigationSplitView, NavigationPath, value-based NavigationLink\n- **2024 (iOS 18)** Tab/Sidebar unification, sidebarAdaptable style, zoom navigation transition\n- **2025 (iOS 26)** Liquid Glass navigation chrome, bottom-aligned search, floating tab bars, backgroundExtensionEffect\n\n#### Key capabilities\n- **Data-driven navigation** NavigationPath represents stack state, enabling programmatic push/pop and deep linking\n- **Multi-column layouts** NavigationSplitView adapts automatically (3-column on iPad → single stack on iPhone)\n- **State restoration** Codable NavigationPath + SceneStorage for persistence across app launches\n- **Tab integration** Per-tab NavigationStack with state preservation on tab switch (iOS 18+)\n- **Liquid Glass** Automatic glass navigation bars, sidebars, and toolbars (iOS 26+)\n\n#### When to use vs UIKit\n- **SwiftUI navigation** New apps, multiplatform, simpler navigation flows → Use NavigationStack/SplitView\n- **UINavigationController** Complex coordinator patterns, legacy code, specific UIKit features → Consider UIKit\n\n#### Related Skills\n- Use `skills/nav.md` for anti-patterns, decision trees, pressure scenarios\n- Use `skills/nav-diag.md` for systematic troubleshooting of navigation issues\n\n---\n\n## When to Use This Skill\n\nUse this skill when:\n- **Implementing navigation APIs** NavigationStack, NavigationSplitView, NavigationPath, Tab+Navigation\n- **Deep linking or state restoration** URL routing, Codable NavigationPath, SceneStorage\n- **Adopting iOS 26+ features** Liquid Glass navigation, bottom-aligned search, tab bar minimization\n- **Choosing navigation architecture** Stack vs SplitView vs coordinator patterns\n\n---\n\n## API Evolution\n\n### Timeline\n\n| Year | iOS Version | Key Features |\n|------|-------------|--------------|\n| 2020 | iOS 14 | NavigationView (deprecated iOS 16) |\n| 2022 | iOS 16 | NavigationStack, NavigationSplitView, NavigationPath, value-based NavigationLink |\n| 2024 | iOS 18 | Tab/Sidebar unification, sidebarAdaptable, TabSection, zoom transitions |\n| 2025 | iOS 26 | Liquid Glass navigation, backgroundExtensionEffect, tabBarMinimizeBehavior |\n\n### NavigationView (Deprecated)\n\nNavigationView is deprecated as of iOS 16. Use NavigationStack (single-column push/pop) or NavigationSplitView (multi-column) exclusively in new code. Key improvements: single NavigationPath replaces per-link `isActive` bindings, value-based type safety, built-in Codable state restoration. See \"Migrating to new navigation types\" documentation.\n\n---\n\n## NavigationStack Complete Reference\n\nNavigationStack represents a push-pop interface like Settings on iPhone or System Settings on macOS.\n\n### 1.1 Creating NavigationStack\n\n#### Basic NavigationStack\n\n```swift\nNavigationStack {\n    List(Category.allCases) { category in\n        NavigationLink(category.name, value: category)\n    }\n    .navigationTitle(\"Categories\")\n    .navigationDestination(for: Category.self) { category in\n        CategoryDetail(category: category)\n    }\n}\n```\n\n#### With Path Binding (WWDC 2022, 6:05)\n\n```swift\nstruct PushableStack: View {\n    @State private var path: [Recipe] = []\n    @StateObject private var dataModel = DataModel()\n\n    var body: some View {\n        NavigationStack(path: $path) {\n            List(Category.allCases) { category in\n                Section(category.localizedName) {\n                    ForEach(dataModel.recipes(in: category)) { recipe in\n                        NavigationLink(recipe.name, value: recipe)\n                    }\n                }\n            }\n            .navigationTitle(\"Categories\")\n            .navigationDestination(for: Recipe.self) { recipe in\n                RecipeDetail(recipe: recipe)\n            }\n        }\n        .environmentObject(dataModel)\n    }\n}\n```\n\nPath binding + value-presenting NavigationLink + `navigationDestination(for:)` form the core data-driven navigation pattern.\n\n### 1.2 NavigationLink (Value-Based)\n\n#### Value-presenting NavigationLink\n\n```swift\n// Correct: Value-based (iOS 16+)\nNavigationLink(recipe.name, value: recipe)\n\n// Correct: With custom label\nNavigationLink(value: recipe) {\n    RecipeTile(recipe: recipe)\n}\n\n// Deprecated: View-based (iOS 13-15)\nNavigationLink(recipe.name) {\n    RecipeDetail(recipe: recipe)  // Don't use in new code\n}\n```\n\n#### How NavigationLink works with NavigationStack\n\n1. NavigationStack maintains a `path` collection\n2. Tapping a value-presenting link appends the value to the path\n3. NavigationStack maps `navigationDestination` modifiers over path values\n4. Views are pushed onto the stack based on destination mappings\n\n### 1.3 navigationDestination Modifier\n\n#### Single Type\n\n```swift\n.navigationDestination(for: Recipe.self) { recipe in\n    RecipeDetail(recipe: recipe)\n}\n```\n\n#### Multiple Types\n\n```swift\nNavigationStack(path: $path) {\n    RootView()\n        .navigationDestination(for: Recipe.self) { recipe in\n            RecipeDetail(recipe: recipe)\n        }\n        .navigationDestination(for: Category.self) { category in\n            CategoryList(category: category)\n        }\n        .navigationDestination(for: Chef.self) { chef in\n            ChefProfile(chef: chef)\n        }\n}\n```\n\n#### Navigation Anti-Patterns\n\n- **Never mix `navigationDestination(for:)` and `NavigationLink(destination:)`** in the same NavigationStack hierarchy — causes undefined behavior\n- **Register `navigationDestination(for:)` once per data type** — duplicates cause the wrong view to appear\n\n#### Placement rules\n- Place `navigationDestination` outside lazy containers (not inside ForEach)\n- Place near related NavigationLinks for code organization\n- Must be inside NavigationStack hierarchy\n\n```swift\n// Correct: Outside lazy container\nScrollView {\n    LazyVGrid(columns: columns) {\n        ForEach(recipes) { recipe in\n            NavigationLink(value: recipe) {\n                RecipeTile(recipe: recipe)\n            }\n        }\n    }\n}\n.navigationDestination(for: Recipe.self) { recipe in\n    RecipeDetail(recipe: recipe)\n}\n\n// Wrong: Inside ForEach (may not be loaded)\nForEach(recipes) { recipe in\n    NavigationLink(value: recipe) { RecipeTile(recipe: recipe) }\n        .navigationDestination(for: Recipe.self) { r in  // Don't do this\n            RecipeDetail(recipe: r)\n        }\n}\n```\n\n### 1.4 NavigationPath\n\nNavigationPath is a type-erased collection for heterogeneous navigation stacks.\n\n#### Typed Array vs NavigationPath\n\n```swift\n// Typed array: All values same type\n@State private var path: [Recipe] = []\n\n// NavigationPath: Mixed types\n@State private var path = NavigationPath()\n```\n\n#### NavigationPath Operations\n\n```swift\n// Append value\npath.append(recipe)\n\n// Pop to previous\npath.removeLast()\n\n// Pop to root\npath.removeLast(path.count)\n// or\npath = NavigationPath()\n\n// Check count\nif path.count > 0 { ... }\n\n// Deep link: Set multiple values\npath.append(category)\npath.append(recipe)\n```\n\n#### Codable Support\n\n```swift\n// NavigationPath is Codable when all values are Codable\n@State private var path = NavigationPath()\n\n// Encode\nlet data = try JSONEncoder().encode(path.codable)\n\n// Decode\nlet codableRep = try JSONDecoder().decode(NavigationPath.CodableRepresentation.self, from: data)\npath = NavigationPath(codableRep)\n```\n\n---\n\n## NavigationSplitView Complete Reference\n\nNavigationSplitView creates multi-column layouts that adapt to device size.\n\n### 2.1 Two-Column Layout\n\n#### Basic Two-Column (WWDC 2022, 10:40)\n\n```swift\nstruct MultipleColumns: View {\n    @State private var selectedCategory: Category?\n    @State private var selectedRecipe: Recipe?\n    @StateObject private var dataModel = DataModel()\n\n    var body: some View {\n        NavigationSplitView {\n            List(Category.allCases, selection: $selectedCategory) { category in\n                NavigationLink(category.localizedName, value: category)\n            }\n            .navigationTitle(\"Categories\")\n        } detail: {\n            if let recipe = selectedRecipe {\n                RecipeDetail(recipe: recipe)\n            } else {\n                Text(\"Select a recipe\")\n            }\n        }\n    }\n}\n```\n\n### 2.2 Three-Column Layout\n\nAdd a `content:` closure between sidebar and detail for a middle column:\n\n```swift\nNavigationSplitView {\n    List(Category.allCases, selection: $selectedCategory) { category in\n        NavigationLink(category.localizedName, value: category)\n    }\n} content: {\n    List(dataModel.recipes(in: selectedCategory), selection: $selectedRecipe) { recipe in\n        NavigationLink(recipe.name, value: recipe)\n    }\n} detail: {\n    RecipeDetail(recipe: selectedRecipe)\n}\n```\n\n### 2.3 NavigationSplitView with NavigationStack\n\nPlace a `NavigationStack(path:)` inside the detail column for grid-to-detail drill-down while preserving sidebar selection:\n\n```swift\nNavigationSplitView {\n    List(Category.allCases, selection: $selectedCategory) { ... }\n} detail: {\n    NavigationStack(path: $path) {\n        RecipeGrid(category: selectedCategory)\n            .navigationDestination(for: Recipe.self) { recipe in\n                RecipeDetail(recipe: recipe)\n            }\n    }\n}\n```\n\n### 2.4 Column Visibility\n\n```swift\n@State private var columnVisibility: NavigationSplitViewVisibility = .all\n\nNavigationSplitView(columnVisibility: $columnVisibility) {\n    Sidebar()\n} content: {\n    Content()\n} detail: {\n    Detail()\n}\n\n// Programmatically control visibility\ncolumnVisibility = .detailOnly  // Hide sidebar and content\ncolumnVisibility = .all          // Show all columns\ncolumnVisibility = .automatic    // System decides\n```\n\n### 2.5 Automatic Adaptation\n\nNavigationSplitView automatically adapts:\n- **iPad landscape** All columns visible (depending on configuration)\n- **iPad portrait/Slide Over** Collapses to overlay or single column\n- **iPhone** Single navigation stack\n- **Apple Watch/TV** Single navigation stack\n\nSelection changes automatically translate to push/pop on iPhone.\n\n### 2.6 iOS 26+ Liquid Glass Sidebar (WWDC 2025, 323)\n\n```swift\nNavigationSplitView {\n    List { ... }\n} detail: {\n    DetailView()\n}\n// Sidebar automatically gets Liquid Glass appearance on iPad/macOS\n\n// Extend content behind glass sidebar\n.backgroundExtensionEffect()  // Mirrors and blurs content outside safe area\n```\n\n---\n\n## Deep Linking and URL Routing\n\n### 3.1 Deep Link Pattern\n\nUse `.onOpenURL` to receive URLs, parse with `URLComponents`, then manipulate `NavigationPath`:\n\n```swift\n.onOpenURL { url in\n    guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),\n          let host = components.host else { return }\n    path.removeLast(path.count)  // Pop to root first\n    // Parse host/path to determine destination, then path.append(value)\n}\n```\n\nFor multi-step deep links (`myapp://category/desserts/recipe/apple-pie`), iterate URL path components and append each resolved value to build the full navigation stack.\n\nFor comprehensive deep linking examples, error diagnosis, and testing workflows, see `skills/nav-diag.md` (Pattern 3).\n\n---\n\n## State Restoration\n\n### 4.1 Complete State Restoration (WWDC 2022, 18:12)\n\n```swift\nstruct UseSceneStorage: View {\n    @StateObject private var navModel = NavigationModel()\n    @SceneStorage(\"navigation\") private var data: Data?\n    @StateObject private var dataModel = DataModel()\n\n    var body: some View {\n        NavigationSplitView {\n            List(Category.allCases, selection: $navModel.selectedCategory) { category in\n                NavigationLink(category.localizedName, value: category)\n            }\n            .navigationTitle(\"Categories\")\n        } detail: {\n            NavigationStack(path: $navModel.recipePath) {\n                RecipeGrid(category: navModel.selectedCategory)\n            }\n        }\n        .task {\n            // Restore on appear\n            if let data = data {\n                navModel.jsonData = data\n            }\n        }\n        .onChange(of: navModel.recipePath) {\n            data = navModel.jsonData\n        }\n        .environmentObject(dataModel)\n    }\n}\n```\n\n### 4.2 Codable NavigationModel\n\n```swift\n@MainActor @Observable\nclass NavigationModel: Codable {\n    var selectedCategory: Category?\n    var recipePath: [Recipe] = []\n\n    enum CodingKeys: String, CodingKey {\n        case selectedCategory\n        case recipePathIds  // Store IDs, not full objects\n    }\n\n    func encode(to encoder: Encoder) throws {\n        var container = encoder.container(keyedBy: CodingKeys.self)\n        try container.encodeIfPresent(selectedCategory, forKey: .selectedCategory)\n        try container.encode(recipePath.map(\\.id), forKey: .recipePathIds)\n    }\n\n    init() {}\n\n    required init(from decoder: Decoder) throws {\n        let container = try decoder.container(keyedBy: CodingKeys.self)\n        self.selectedCategory = try container.decodeIfPresent(Category.self, forKey: .selectedCategory)\n        let recipePathIds = try container.decode([Recipe.ID].self, forKey: .recipePathIds)\n        self.recipePath = recipePathIds.compactMap { DataModel.shared[$0] } // Discard deleted items\n    }\n\n    var jsonData: Data? {\n        get { try? JSONEncoder().encode(self) }\n        set {\n            guard let data = newValue,\n                  let model = try? JSONDecoder().decode(NavigationModel.self, from: data)\n            else { return }\n            selectedCategory = model.selectedCategory\n            recipePath = model.recipePath\n        }\n    }\n}\n```\n\nStore IDs (not full model objects) and use `compactMap` to handle deleted items gracefully. The `jsonData` computed property bridges to `SceneStorage` as shown in 4.1.\n\n---\n\n## Tab + Navigation Integration\n\n### 5.1 Tab Syntax (iOS 18+) (WWDC 2024, 4:27)\n\n```swift\nTabView {\n    Tab(\"Watch Now\", systemImage: \"play\") {\n        WatchNowView()\n    }\n    Tab(\"Library\", systemImage: \"books.vertical\") {\n        LibraryView()\n    }\n    Tab(role: .search) {\n        NavigationStack {\n            SearchView()\n                .navigationTitle(\"Search\")\n        }\n    }\n}\n.searchable(text: $searchText)\n.tabViewSearchActivation(.searchTabSelection)\n```\n\n**Search tab placement — two valid patterns**: Either put `.searchable()` on the `TabView` (Pattern A, shown above — this is Apple's own `tabViewSearchActivation(_:)` doc example) OR put it on the `NavigationStack` *inside* the search-role `Tab` (Pattern B — what nilcoalescing / Natalia Panferova and most community examples show):\n\n```swift\n// Pattern B: searchable inside the search tab\nTab(role: .search) {\n    NavigationStack {\n        SearchView()\n            .navigationTitle(\"Search\")\n    }\n    .searchable(text: $searchText)   // on the NavigationStack, inside the Tab\n}\n```\n\nBoth are correct and shippable; **neither is \"wrong,\" leaks, nor mis-scopes.** The iOS 26 tab→search-field morph comes from `Tab(role: .search)` itself, not from where `.searchable` sits, so both patterns morph. In both, the search-role tab's contents must be wrapped in `NavigationStack` for the field to render.\n\n**What `.tabViewSearchActivation(.searchTabSelection)` actually does** (iOS 26+, *optional*): it controls search *activation timing*, not tab scoping. Per Apple, \"by default, search is only activated and deactivated by the user\" (they tap the field); `.searchTabSelection` instead activates search when the user *selects* the search tab. It is **not** required for the morph, and omitting it does **not** spread search across tabs. The \"applies to all tabs, resetting search state as the selected tab changes\" behavior (from the `TabRole.search` docs) is the fallback for when **no** tab has the `.search` role at all — once a search-role tab exists, search is scoped to it with `.searchable` in *either* position.\n\nFor foundational `.searchable` patterns (suggestions, scopes, tokens, programmatic control), see `skills/search-ref.md`.\n\n### 5.2 TabView with NavigationStack Per Tab\n\n```swift\nTabView {\n    Tab(\"Home\", systemImage: \"house\") {\n        NavigationStack {\n            HomeView()\n                .navigationDestination(for: Item.self) { item in\n                    ItemDetail(item: item)\n                }\n        }\n    }\n    Tab(\"Settings\", systemImage: \"gear\") {\n        NavigationStack {\n            SettingsView()\n        }\n    }\n}\n```\n\nEach tab has its own NavigationStack to preserve navigation state when switching tabs.\n\n### 5.3 Sidebar-Adaptable TabView (WWDC 2024, 6:41)\n\n```swift\nTabView {\n    Tab(\"Watch Now\", systemImage: \"play\") {\n        WatchNowView()\n    }\n    Tab(\"Library\", systemImage: \"books.vertical\") {\n        LibraryView()\n    }\n    TabSection(\"Collections\") {\n        Tab(\"Cinematic Shots\", systemImage: \"list.and.film\") {\n            CinematicShotsView()\n        }\n        Tab(\"Forest Life\", systemImage: \"list.and.film\") {\n            ForestLifeView()\n        }\n    }\n    TabSection(\"Animations\") {\n        // More tabs...\n    }\n    Tab(role: .search) {\n        SearchView()\n    }\n}\n.tabViewStyle(.sidebarAdaptable)\n```\n\n`TabSection` creates sidebar groups. `.sidebarAdaptable` enables sidebar on iPad, tab bar on iPhone. Search tab with `.search` role gets special placement.\n\n### 5.4 Tab Customization (WWDC 2024, 10:45)\n\n```swift\n@AppStorage(\"MyTabViewCustomization\")\nprivate var customization: TabViewCustomization\n\nTabView {\n    Tab(\"Watch Now\", systemImage: \"play\", value: .watchNow) {\n        WatchNowView()\n    }\n    .customizationID(\"Tab.watchNow\")\n    .customizationBehavior(.disabled, for: .sidebar, .tabBar)  // Can't be hidden\n\n    Tab(\"Optional Tab\", systemImage: \"star\", value: .optional) {\n        OptionalView()\n    }\n    .customizationID(\"Tab.optional\")\n    .defaultVisibility(.hidden, for: .tabBar)  // Hidden by default\n}\n.tabViewCustomization($customization)\n```\n\n### 5.5 Tab Context Menus\n\nUse `.contextMenu(menuItems:)` on a `Tab` to add a context menu to its sidebar representation (e.g., right-click on Mac, long-press on iPad sidebar).\n\n```swift\nTab(\"Currently Reading\", systemImage: \"book\") {\n    CurrentBooksList()\n}\n.contextMenu {\n    Button {\n        pinnedTabs.insert(.reading)\n    } label: {\n        Label(\"Pin\", systemImage: \"pin\")\n    }\n    Button {\n        showShareSheet = true\n    } label: {\n        Label(\"Share\", systemImage: \"square.and.arrow.up\")\n    }\n}\n```\n\nReturn an empty closure to deactivate the context menu conditionally:\n\n```swift\n.contextMenu {\n    if canPin {\n        Button(\"Pin\", systemImage: \"pin\") { pin() }\n    }\n}\n```\n\n#### iPhone Tab Bar Long-Press\n\n`.contextMenu` on `Tab` only applies to the sidebar representation (iPad/Mac). iPhone tab bar context menus require UIKit interop (adding `UILongPressGestureRecognizer` to `UITabBar` via Introspect or a `UITabBarController` subclass). See `axiom-uikit (skills/uikit-bridging.md)` for UIKit interop patterns.\n\n**Caveat**: Relies on private `UITabBarButton` subviews — fragile across iOS versions, not a public API guarantee.\n\n### 5.6 Programmatic Tab Visibility\n\nUse `.hidden(_:)` to show/hide tabs based on app state while preserving their navigation state.\n\n#### State-Driven Tab Visibility\n\n```swift\nTab(\"Libraries\", systemImage: \"square.stack\") { LibrariesView() }\n    .hidden(context == .browse)  // Hide based on app state\n```\n\nApply `.hidden(condition)` to each tab. Tabs hidden this way preserve their navigation state (unlike conditional `if` rendering which destroys and recreates them).\n\n#### State Preservation\n\n**Key difference**: `.hidden(_:)` preserves tab state, conditional rendering does not.\n\n```swift\n// ✅ State preserved when hidden\nTab(\"Settings\", systemImage: \"gear\") {\n    SettingsView()  // Navigation stack preserved\n}\n.hidden(!showSettings)\n\n// ❌ State lost when condition changes\nif showSettings {\n    Tab(\"Settings\", systemImage: \"gear\") {\n        SettingsView()  // Navigation stack recreated\n    }\n}\n```\n\n#### Common Patterns\n\n```swift\nTab(\"Beta Features\", systemImage: \"flask\") { BetaView() }\n    .hidden(!UserDefaults.standard.bool(forKey: \"enableBetaFeatures\"))\n```\n\nSame pattern applies to authentication state, purchase status, and debug builds — bind `.hidden()` to any boolean condition.\n\n#### Animated Transitions\n\nWrap state changes in `withAnimation` for smooth tab bar layout transitions:\n\n```swift\nButton(\"Switch to Browse\") {\n    withAnimation {\n        context = .browse\n        selection = .tracks  // Switch to first visible tab\n    }\n}\n// Tab bar animates as tabs appear/disappear\n// Uses system motion curves automatically\n```\n\n### 5.7 iOS 26+ Tab Features (WWDC 2025, 256)\n\n```swift\n// Tab bar minimization on scroll\nTabView { ... }\n    .tabBarMinimizeBehavior(.onScrollDown)\n\n// Bottom accessory view (always visible)\nTabView { ... }\n    .tabViewBottomAccessory {\n        PlaybackControls()\n    }\n\n// Dynamic visibility (recommended for mini-players)\n// ⚠️ Requires iOS 26.1+ (not 26.0)\nTabView { ... }\n    .tabViewBottomAccessory(isEnabled: showMiniPlayer) {\n        MiniPlayerView()\n            .transition(.opacity)\n    }\n// isEnabled: true = shows accessory\n// isEnabled: false = hides AND removes reserved space\n\n// Search tab with dedicated search field (Pattern A: searchable on the TabView)\nTabView {\n    // ...other tabs...\n    Tab(role: .search) {\n        NavigationStack {\n            SearchView()\n                .navigationTitle(\"Search\")\n        }\n    }\n}\n.searchable(text: $searchText)\n.tabViewSearchActivation(.searchTabSelection)\n// Pattern A (above) = Apple's tabViewSearchActivation doc example.\n// Pattern B (equally valid, nilcoalescing/community): drop both trailing modifiers\n//   and put .searchable on the NavigationStack INSIDE the .search Tab instead.\n// Both morph into the search field — the morph comes from Tab(role: .search), not\n//   from where .searchable sits. NavigationStack wrapper required in BOTH.\n// .tabViewSearchActivation(.searchTabSelection): OPTIONAL, controls activation TIMING\n//   (activate on tab selection vs. only when the user taps the field). Not tab scoping.\n// The \"search applies to ALL tabs, resetting on tab change\" behavior happens only when\n//   NO tab has the .search role — NOT from omitting .tabViewSearchActivation.\n```\n\n**iOS 26 morph gotcha**: `.onGeometryChange { ... }` *anywhere* in the TabView's subtree (on the body containing TabView, on TabView itself, or on any tab's content) breaks the `.search` role's morph on the **first** activation — the state write triggers a re-render during initial layout that the morph integration can't recover from. Subsequent activations work because state is cached. Same family as `.introspect(.navigationStack)` on the search tab (siteline/swiftui-introspect #499). Workaround: read width via `GeometryReader` *above* the TabView, or scope `.onGeometryChange` to a sibling outside the TabView's coordinate space. See `skills/nav-diag.md` Pattern 4e for full diagnosis and fixes.\n\n#### Dynamic Bottom Accessory\n\nThe accessory can switch on `activeTab` for per-tab content, though Apple's usage (Music mini-player) keeps it global. Read `@Environment(\\.tabViewBottomAccessoryPlacement)` to adapt layout: `.expanded` when above the tab bar (full controls) vs `.inline` when inline with the minimized tab bar (compact). The enum has exactly these two cases — there is no `.bar` case.\n\nReserve `tabViewBottomAccessory` for cross-tab content (playback, status). For tab-specific actions, prefer floating glass buttons within the tab's content view.\n\n### 5.8 Tab API Quick Reference\n\n| Modifier | Target | iOS | Purpose |\n|----------|--------|-----|---------|\n| `Tab(_:systemImage:value:content:)` | — | 18+ | New tab syntax with selection value |\n| `Tab(role: .search)` | — | 18+ | Semantic search tab with morph behavior |\n| `TabSection(_:content:)` | — | 18+ | Group tabs in sidebar view |\n| `.contextMenu(menuItems:)` | Tab | 18+ | Add context menu to tab's sidebar representation |\n| `.customizationID(_:)` | Tab | 18+ | Enable user customization |\n| `.customizationBehavior(_:for:)` | Tab | 18+ | Control hide/reorder permissions |\n| `.defaultVisibility(_:for:)` | Tab | 18+ | Set initial visibility state |\n| `.hidden(_:)` | Tab | 18+ | Programmatic visibility with state preservation |\n| `.tabViewStyle(.sidebarAdaptable)` | TabView | 18+ | Sidebar on iPad, tabs on iPhone |\n| `.tabViewCustomization($binding)` | TabView | 18+ | Persist user tab arrangement |\n| `.tabViewSearchActivation(_:)` | TabView | 26+ | Control search *activation timing* in the `.search` tab (`.searchTabSelection` = activate on tab selection). Optional; not tab scoping |\n| `.tabBarMinimizeBehavior(_:)` | TabView | 26+ | Auto-hide on scroll |\n| `.tabViewBottomAccessory(isEnabled:content:)` | TabView | 26.1+ | Dynamic content below tab bar |\n| `Tab(role: .prominent)` | — | 27+ | Prominent semantic tab role (OS27); joins `.search` |\n\n### 5.9 Prominent Tab Role — `.prominent` (OS27)\n\nThe 27 cycle adds a second semantic `TabRole`, `.prominent`, alongside `.search`. Pass it to any `Tab(role:)` initializer:\n\n```swift\nTabView {\n    Tab(\"Home\", systemImage: \"house\") { HomeView() }\n    Tab(\"Now Playing\", systemImage: \"play.circle\", role: .prominent) {\n        NowPlayingView()\n    }\n}\n```\n\n`.prominent` marks a tab for elevated system treatment (`@available(anyAppleOS 27.0)` — all platforms). Apple's reference is currently terse (\"the prominent role\"); confirm the exact rendering against WWDC 2026-269 and the SDK before relying on a specific appearance. Like `.search`, it's a *role* you pass to `Tab(role:)`, not a style modifier.\n\n---\n\n## iOS 26+ Navigation Features\n\n### 6.1 Liquid Glass Navigation (WWDC 2025, 323)\n\nAutomatic adoption when building with Xcode 26:\n- Navigation bars become Liquid Glass\n- Sidebars float above content with glass effect\n- Tab bars float with new compact appearance\n- Toolbars get automatic grouping\n\n### 6.2 Background Extension Effect\n\n```swift\nNavigationSplitView {\n    Sidebar()\n} detail: {\n    HeroImage()\n        .backgroundExtensionEffect()  // Content extends behind sidebar\n}\n```\n\n### 6.3 Bottom-Aligned Search (WWDC 2025, 256)\n\n**Foundational search APIs** For `.searchable`, `isSearching`, suggestions, scopes, tokens, and programmatic control, see `skills/search-ref.md`. This section covers iOS 26 bottom-aligned refinement only.\n\n```swift\nNavigationSplitView {\n    Sidebar()\n} detail: {\n    DetailView()\n}\n.searchable(text: $query, prompt: \"What are you looking for?\")\n// Automatically bottom-aligned on iPhone, top-trailing on iPad\n```\n\n### 6.4 Scroll Edge Effect\n\n```swift\n// Automatic blur effect when content scrolls under toolbar\n// Remove any custom darkening backgrounds - they interfere\n\n// For dense UIs, adjust sharpness\nScrollView { ... }\n    .scrollEdgeEffectStyle(.soft, for: .top)  // styles: .automatic, .hard, .soft (the `for:` edges argument is required)\n```\n\n### 6.5 Sheet Presentations with Zoom Transition\n\nIn iOS 26, sheets can morph directly out of the buttons that present them. Make the presenting toolbar item a source for a navigation zoom transition, and mark the sheet content as the destination:\n\n```swift\n@Namespace private var namespace\n\n// Sheet morphs out of presenting button\n.toolbar {\n    ToolbarItem {\n        Button(\"Settings\") { showSettings = true }\n            .matchedTransitionSource(id: \"settings\", in: namespace)\n    }\n}\n.sheet(isPresented: $showSettings) {\n    SettingsView()\n        .navigationTransition(.zoom(sourceID: \"settings\", in: namespace))\n}\n```\n\nOther presentations also flow smoothly out of Liquid Glass controls — menus, alerts, and popovers. Dialogs automatically morph out of the buttons that present them without additional code.\n\n**Audit tip**: If you've used `presentationBackground` to apply custom backgrounds to sheets, consider removing it and let the new Liquid Glass sheet material shine. Partial height sheets are now inset with glass background by default.\n\n### 6.6 Toolbar Morphing Transitions\n\niOS 26 automatically morphs toolbars during NavigationStack push/pop when each destination view declares its own `.toolbar {}`. Items with matching `toolbar(id:)` and `ToolbarItem(id:)` IDs stay stable during the transition (no bounce), while unmatched items animate in/out.\n\n**Key rule**: Attach `.toolbar {}` to individual views inside NavigationStack, not to NavigationStack itself. Otherwise there is nothing to morph between.\n\nSee `skills/26-ref.md` skill for complete toolbar morphing API including DefaultToolbarItem, `toolbar(id:)` stable items, ToolbarSpacer patterns, and troubleshooting.\n\n### 6.7 Cross-Fade Navigation Transition — `.crossFade` (OS27)\n\nA new `NavigationTransition` that cross-fades between the appearing and disappearing views instead of sliding or zooming. Apply it the same way as `.zoom` (section 6.5):\n\n```swift\n.sheet(isPresented: $showDetail) {\n    DetailView()\n        .navigationTransition(.crossFade)\n}\n```\n\n`@available(anyAppleOS 27, *) @available(macOS, unavailable)` — `OS27` except macOS, where the transition is unavailable. (`anyAppleOS` requires the Swift 6.4 toolchain; see `axiom-swift (skills/swift-modern.md)`.) If you share view code with a Mac target, gate it with `if #available` or fall back to the default transition there.\n\n### 6.8 Custom navigation transitions are not authorable\n\n`NavigationTransition` ships only three concrete transitions — `.zoom`, `.crossFade`, and `.automatic`. The protocol is public, but its sole requirement is an SPI method (`_outputs(for:)` taking underscored types), so you cannot meaningfully conform your own type — there is no public custom navigation transition as of the 27 SDK. For a bespoke push/pop effect, drive the animation yourself instead: `matchedTransitionSource`/`matchedGeometryEffect`, `.transition`, `keyframeAnimator`, or `visualEffect`/shader modifiers.\n\n---\n\n## Router/Coordinator Patterns\n\n### 7.1 When to Use Coordinators\n\n#### Use coordinators when\n- Navigation logic is complex with conditional flows\n- Testing navigation in isolation\n- Sharing navigation logic across multiple screens\n- UIKit interop with heavy navigation requirements\n\n#### Use built-in navigation when\n- Simple linear or hierarchical navigation\n- State restoration is primary concern\n- Fewer than 5-10 navigation destinations\n- No need for navigation unit testing\n\n### 7.2 Simple Router Pattern\n\n```swift\n// Route enum defines all possible destinations\nenum AppRoute: Hashable {\n    case home\n    case category(Category)\n    case recipe(Recipe)\n    case settings\n}\n\n// Router class manages navigation\n@Observable\nclass Router {\n    var path = NavigationPath()\n\n    func navigate(to route: AppRoute) {\n        path.append(route)\n    }\n\n    func popToRoot() {\n        path.removeLast(path.count)\n    }\n\n    func pop() {\n        if !path.isEmpty {\n            path.removeLast()\n        }\n    }\n}\n\n// Usage in views\nstruct ContentView: View {\n    @State private var router = Router()\n\n    var body: some View {\n        NavigationStack(path: $router.path) {\n            HomeView()\n                .navigationDestination(for: AppRoute.self) { route in\n                    switch route {\n                    case .home:\n                        HomeView()\n                    case .category(let category):\n                        CategoryView(category: category)\n                    case .recipe(let recipe):\n                        RecipeDetail(recipe: recipe)\n                    case .settings:\n                        SettingsView()\n                    }\n                }\n        }\n        .environment(router)\n    }\n}\n\n// In child views\nstruct RecipeCard: View {\n    let recipe: Recipe\n    @Environment(Router.self) private var router\n\n    var body: some View {\n        Button(recipe.name) {\n            router.navigate(to: .recipe(recipe))\n        }\n    }\n}\n```\n\n### 7.3 Coordinator Pattern with Protocol\n\nFor larger apps, extract a `Coordinator` protocol with `associatedtype Route: Hashable` and `var path: NavigationPath`. Each feature area gets its own coordinator conformance with domain-specific routes and convenience methods (e.g., `showRecipeOfTheDay()` that resets path and navigates).\n\n### 7.4 Testing Navigation\n\n```swift\n// Router is easily testable\nfunc testNavigateToRecipe() {\n    let router = Router()\n    let recipe = Recipe(name: \"Apple Pie\")\n\n    router.navigate(to: .recipe(recipe))\n\n    XCTAssertEqual(router.path.count, 1)\n}\n\nfunc testPopToRoot() {\n    let router = Router()\n    router.navigate(to: .category(.desserts))\n    router.navigate(to: .recipe(Recipe(name: \"Apple Pie\")))\n\n    router.popToRoot()\n\n    XCTAssertTrue(router.path.isEmpty)\n}\n```\n\n---\n\n## Testing Checklist\n\n- [ ] Deep links navigate correctly from cold start AND while running\n- [ ] Pop to root clears entire stack\n- [ ] State restores on app relaunch (SceneStorage key unique per scene)\n- [ ] Deleted items handled gracefully in restoration (compactMap)\n- [ ] NavigationSplitView collapses correctly on iPhone (selection pushes)\n- [ ] iOS 26+: Liquid Glass appearance, bottom-aligned search, tab bar minimization\n\n---\n\n## API Quick Reference\n\n### NavigationStack\n\n```swift\nNavigationStack { content }\nNavigationStack(path: $path) { content }\n```\n\n### NavigationSplitView\n\n```swift\nNavigationSplitView { sidebar } detail: { detail }\nNavigationSplitView { sidebar } content: { content } detail: { detail }\nNavigationSplitView(columnVisibility: $visibility) { ... }\n```\n\n### NavigationLink\n\n```swift\nNavigationLink(title, value: value)\nNavigationLink(value: value) { label }\n```\n\n### NavigationPath\n\n```swift\npath.append(value)\npath.removeLast()\npath.removeLast(path.count)\npath.count\npath.codable  // For encoding\nNavigationPath(codableRepresentation)  // For decoding\n```\n\n### Modifiers\n\n```swift\n.navigationTitle(\"Title\")\n.navigationDestination(for: Type.self) { value in View }\n.searchable(text: $query)\n.tabViewStyle(.sidebarAdaptable)\n.tabBarMinimizeBehavior(.onScrollDown)\n.backgroundExtensionEffect()\n```\n\n---\n\n## Resources\n\n**WWDC**: 2022-10054, 2024-10147, 2025-256, 2025-323 (Build a SwiftUI app with the new design), 2026-269\n\n**Docs**: /swiftui/tabrole/search, /swiftui/tabrole/prominent, /swiftui/view/tabbarminimizebehavior(_:), /swiftui/view/tabviewbottomaccessory(isenabled:content:), /swiftui/view/tabviewsearchactivation(_:), /swiftui/navigationtransition/crossfade\n\n**Skills**: skills/nav.md, skills/nav-diag.md, skills/26-ref.md, axiom-design (skills/liquid-glass.md), skills/search-ref.md\n\n---\n\n**Last Updated** Based on WWDC 2022-10054, WWDC 2024-10147, WWDC 2025-256, WWDC 2025-323 (Build a SwiftUI app with the new design)\n**Platforms** iOS 16+, iPadOS 16+, macOS 13+, watchOS 9+, tvOS 16+\n",
       "skillType": "reference",
       "source": "axiom",
       "tags": [
@@ -35780,42 +35780,42 @@
           "heading": "Tab + Navigation Integration",
           "level": 2,
           "startLine": 455,
-          "endLine": 734,
-          "charCount": 10206
+          "endLine": 754,
+          "charCount": 11801
         },
         {
           "heading": "iOS 26+ Navigation Features",
           "level": 2,
-          "startLine": 735,
-          "endLine": 831,
+          "startLine": 755,
+          "endLine": 851,
           "charCount": 4242
         },
         {
           "heading": "Router/Coordinator Patterns",
           "level": 2,
-          "startLine": 832,
-          "endLine": 945,
+          "startLine": 852,
+          "endLine": 965,
           "charCount": 2793
         },
         {
           "heading": "Testing Checklist",
           "level": 2,
-          "startLine": 946,
-          "endLine": 956,
+          "startLine": 966,
+          "endLine": 976,
           "charCount": 434
         },
         {
           "heading": "API Quick Reference",
           "level": 2,
-          "startLine": 957,
-          "endLine": 1004,
+          "startLine": 977,
+          "endLine": 1024,
           "charCount": 896
         },
         {
           "heading": "Resources",
           "level": 2,
-          "startLine": 1005,
-          "endLine": 1017,
+          "startLine": 1025,
+          "endLine": 1037,
           "charCount": 696
         }
       ],
@@ -44503,7 +44503,7 @@
           34,
           8,
           33,
-          828
+          860
         ],
         "222": [
           3,
@@ -44777,7 +44777,7 @@
         18.338461538461534,
         3.996153846153847,
         44.43076923076923,
-        650.7653846153848
+        650.8884615384618
       ],
       "storedFields": {
         "0": {
@@ -61255,7 +61255,6 @@
               "199": 1,
               "212": 1,
               "219": 1,
-              "221": 2,
               "222": 1,
               "243": 1
             }
@@ -69598,6 +69597,7 @@
               "211": 1,
               "215": 5,
               "220": 3,
+              "221": 1,
               "226": 2,
               "228": 1,
               "238": 1,
@@ -77717,6 +77717,7 @@
               "199": 1,
               "207": 1,
               "212": 2,
+              "221": 2,
               "223": 2,
               "227": 2,
               "231": 2,
@@ -78292,7 +78293,8 @@
             "4": {
               "54": 1,
               "199": 1,
-              "213": 1
+              "213": 1,
+              "221": 1
             }
           }
         ],
@@ -85984,6 +85986,7 @@
               "212": 1,
               "216": 1,
               "220": 2,
+              "221": 1,
               "224": 1,
               "230": 2,
               "231": 10,
@@ -89292,7 +89295,7 @@
               "212": 5,
               "215": 1,
               "220": 1,
-              "221": 1,
+              "221": 2,
               "222": 2,
               "231": 1,
               "233": 3,
@@ -89470,6 +89473,7 @@
               "214": 4,
               "215": 7,
               "216": 3,
+              "221": 2,
               "222": 2,
               "223": 2,
               "224": 1,
@@ -90475,7 +90479,6 @@
               "131": 1,
               "160": 1,
               "212": 1,
-              "221": 1,
               "222": 1,
               "225": 1,
               "250": 1
@@ -90565,7 +90568,7 @@
               "213": 1,
               "215": 31,
               "220": 5,
-              "221": 5,
+              "221": 4,
               "222": 2,
               "223": 1,
               "224": 3,
@@ -94777,6 +94780,7 @@
               "216": 7,
               "219": 2,
               "220": 2,
+              "221": 6,
               "222": 1,
               "223": 1,
               "224": 2,
@@ -99590,7 +99594,7 @@
               "216": 4,
               "218": 2,
               "220": 5,
-              "221": 8,
+              "221": 10,
               "222": 6,
               "224": 1,
               "225": 11,
@@ -103875,7 +103879,7 @@
               "212": 1,
               "217": 1,
               "220": 10,
-              "221": 19,
+              "221": 24,
               "222": 2,
               "225": 3,
               "227": 5,
@@ -104923,7 +104927,7 @@
               "215": 1,
               "217": 1,
               "218": 1,
-              "221": 3,
+              "221": 4,
               "222": 2,
               "223": 1,
               "226": 1,
@@ -106756,7 +106760,7 @@
               "215": 4,
               "217": 1,
               "220": 6,
-              "221": 6,
+              "221": 5,
               "222": 3,
               "223": 3,
               "224": 3,
@@ -116768,7 +116772,7 @@
           {
             "4": {
               "216": 2,
-              "221": 1
+              "221": 2
             }
           }
         ],
@@ -116831,7 +116835,7 @@
               "216": 3,
               "218": 2,
               "220": 1,
-              "221": 2,
+              "221": 1,
               "224": 2,
               "244": 1
             }
@@ -121327,7 +121331,7 @@
               "218": 17,
               "219": 16,
               "220": 13,
-              "221": 17,
+              "221": 16,
               "222": 18,
               "223": 18,
               "224": 20,
@@ -121845,7 +121849,7 @@
               "218": 4,
               "219": 2,
               "220": 3,
-              "221": 3,
+              "221": 6,
               "222": 1,
               "224": 2,
               "225": 7,
@@ -129608,7 +129612,7 @@
               "218": 2,
               "219": 10,
               "220": 6,
-              "221": 21,
+              "221": 23,
               "222": 2,
               "223": 5,
               "224": 1,
@@ -134979,6 +134983,7 @@
               "218": 2,
               "219": 1,
               "220": 3,
+              "221": 1,
               "222": 1,
               "227": 2,
               "228": 1,
@@ -140109,7 +140114,7 @@
               "214": 1,
               "215": 11,
               "220": 3,
-              "221": 5,
+              "221": 6,
               "224": 1,
               "225": 23,
               "227": 7,
@@ -141823,7 +141828,7 @@
               "217": 2,
               "218": 2,
               "220": 1,
-              "221": 3,
+              "221": 4,
               "222": 1,
               "223": 2,
               "226": 1,
@@ -143075,6 +143080,7 @@
               "214": 2,
               "215": 1,
               "220": 6,
+              "221": 3,
               "222": 1,
               "224": 2,
               "231": 6,
@@ -144156,7 +144162,7 @@
               "215": 12,
               "218": 5,
               "220": 1,
-              "221": 9,
+              "221": 10,
               "222": 5,
               "223": 2,
               "224": 3,
@@ -146701,7 +146707,7 @@
               "216": 1,
               "217": 1,
               "218": 2,
-              "221": 1,
+              "221": 2,
               "222": 1,
               "223": 2,
               "224": 1,
@@ -149379,7 +149385,7 @@
               "211": 1,
               "213": 6,
               "218": 1,
-              "221": 1,
+              "221": 2,
               "225": 1,
               "227": 40,
               "237": 1,
@@ -153099,7 +153105,7 @@
               "218": 1,
               "219": 1,
               "220": 6,
-              "221": 11,
+              "221": 12,
               "222": 5,
               "251": 6
             }
@@ -153349,7 +153355,7 @@
               "218": 3,
               "219": 4,
               "220": 83,
-              "221": 158,
+              "221": 171,
               "222": 50,
               "223": 2,
               "225": 5,
@@ -153521,6 +153527,7 @@
               "193": 4,
               "199": 1,
               "212": 1,
+              "221": 1,
               "222": 2,
               "225": 2,
               "230": 1,
@@ -153630,6 +153637,7 @@
               "215": 3,
               "216": 37,
               "220": 11,
+              "221": 1,
               "222": 1,
               "225": 2,
               "226": 1,
@@ -154480,7 +154488,7 @@
               "218": 3,
               "219": 7,
               "220": 10,
-              "221": 7,
+              "221": 9,
               "222": 4,
               "223": 2,
               "224": 1,
@@ -157953,6 +157961,7 @@
               "118": 1,
               "138": 1,
               "191": 1,
+              "221": 2,
               "246": 1
             }
           }
@@ -160569,7 +160578,7 @@
               "218": 3,
               "219": 1,
               "220": 6,
-              "221": 4,
+              "221": 5,
               "222": 4,
               "226": 1,
               "228": 1,
@@ -161992,7 +162001,7 @@
               "214": 1,
               "215": 2,
               "217": 2,
-              "221": 4,
+              "221": 7,
               "223": 1,
               "229": 1,
               "231": 3,
@@ -162985,7 +162994,7 @@
               "216": 1,
               "217": 2,
               "220": 6,
-              "221": 1,
+              "221": 2,
               "223": 2,
               "224": 4,
               "226": 7,
@@ -163334,7 +163343,7 @@
               "218": 8,
               "219": 4,
               "220": 6,
-              "221": 5,
+              "221": 7,
               "222": 3,
               "223": 7,
               "224": 7,
@@ -164351,7 +164360,7 @@
               "218": 23,
               "219": 15,
               "220": 35,
-              "221": 42,
+              "221": 44,
               "222": 26,
               "223": 5,
               "224": 4,
@@ -165364,6 +165373,14 @@
               "78": 1,
               "81": 1,
               "163": 1
+            }
+          }
+        ],
+        [
+          "nilcoalesc",
+          {
+            "4": {
+              "221": 2
             }
           }
         ],
@@ -166969,6 +166986,7 @@
               "187": 1,
               "193": 1,
               "218": 1,
+              "221": 1,
               "237": 1
             }
           }
@@ -168861,6 +168879,7 @@
               "163": 1,
               "184": 2,
               "190": 3,
+              "221": 1,
               "237": 1,
               "251": 1
             }
@@ -169754,7 +169773,7 @@
               "218": 7,
               "219": 5,
               "220": 31,
-              "221": 4,
+              "221": 6,
               "222": 11,
               "223": 9,
               "224": 5,
@@ -170801,7 +170820,7 @@
               "218": 16,
               "219": 11,
               "220": 50,
-              "221": 12,
+              "221": 18,
               "222": 9,
               "223": 9,
               "224": 20,
@@ -171042,6 +171061,14 @@
           {
             "4": {
               "37": 1
+            }
+          }
+        ],
+        [
+          "natalia",
+          {
+            "4": {
+              "221": 1
             }
           }
         ],
@@ -172018,7 +172045,7 @@
               "218": 5,
               "219": 6,
               "220": 209,
-              "221": 191,
+              "221": 196,
               "222": 169,
               "224": 2,
               "225": 42,
@@ -178680,6 +178707,7 @@
               "181": 5,
               "182": 1,
               "188": 1,
+              "221": 1,
               "233": 5,
               "235": 4,
               "239": 2
@@ -184456,6 +184484,7 @@
               "212": 1,
               "213": 1,
               "218": 1,
+              "221": 1,
               "223": 1,
               "228": 1,
               "231": 2,
@@ -185588,7 +185617,7 @@
               "217": 3,
               "218": 3,
               "220": 9,
-              "221": 1,
+              "221": 3,
               "222": 1,
               "223": 2,
               "224": 1,
@@ -185969,6 +185998,7 @@
               "168": 1,
               "213": 2,
               "217": 1,
+              "221": 2,
               "227": 1,
               "245": 1
             }
@@ -186164,7 +186194,7 @@
               "216": 1,
               "217": 1,
               "218": 1,
-              "221": 1,
+              "221": 2,
               "223": 2,
               "224": 1,
               "225": 1,
@@ -188299,7 +188329,8 @@
               "168": 1,
               "171": 1,
               "172": 2,
-              "173": 1
+              "173": 1,
+              "221": 1
             }
           }
         ],
@@ -193379,7 +193410,7 @@
               "218": 3,
               "219": 2,
               "220": 4,
-              "221": 6,
+              "221": 7,
               "222": 1,
               "223": 5,
               "224": 5,
@@ -201962,7 +201993,7 @@
               "217": 1,
               "218": 1,
               "220": 2,
-              "221": 2,
+              "221": 3,
               "231": 1,
               "237": 1,
               "241": 1,
@@ -207626,7 +207657,7 @@
               "215": 3,
               "217": 3,
               "220": 11,
-              "221": 7,
+              "221": 9,
               "222": 5,
               "223": 3,
               "224": 3,
@@ -208643,7 +208674,7 @@
               "218": 4,
               "219": 1,
               "220": 4,
-              "221": 2,
+              "221": 4,
               "223": 2,
               "224": 8,
               "226": 1,
@@ -212581,7 +212612,7 @@
               "218": 1,
               "219": 3,
               "220": 2,
-              "221": 5,
+              "221": 6,
               "222": 5,
               "223": 1,
               "224": 1,
@@ -214751,6 +214782,7 @@
               "217": 1,
               "218": 1,
               "220": 1,
+              "221": 2,
               "227": 1,
               "228": 3,
               "229": 1,
@@ -218041,7 +218073,7 @@
               "218": 1,
               "219": 9,
               "220": 27,
-              "221": 2,
+              "221": 3,
               "222": 16,
               "224": 2,
               "225": 7,
@@ -221657,7 +221689,7 @@
               "216": 3,
               "218": 1,
               "220": 1,
-              "221": 1,
+              "221": 3,
               "222": 2,
               "224": 1,
               "225": 3,
@@ -222167,7 +222199,7 @@
               "218": 11,
               "219": 10,
               "220": 15,
-              "221": 18,
+              "221": 19,
               "222": 23,
               "223": 9,
               "224": 14,
@@ -222570,7 +222602,7 @@
               "218": 1,
               "219": 2,
               "220": 3,
-              "221": 1,
+              "221": 3,
               "222": 1,
               "223": 4,
               "224": 6,
@@ -223097,7 +223129,7 @@
               "218": 1,
               "219": 2,
               "220": 6,
-              "221": 3,
+              "221": 1,
               "222": 3,
               "223": 6,
               "224": 6,
@@ -228576,6 +228608,7 @@
               "212": 3,
               "217": 1,
               "220": 1,
+              "221": 3,
               "222": 1,
               "223": 2,
               "224": 1,
@@ -230515,7 +230548,7 @@
               "216": 2,
               "217": 1,
               "220": 4,
-              "221": 6,
+              "221": 7,
               "222": 5,
               "223": 3,
               "224": 5,
@@ -232348,6 +232381,7 @@
               "216": 20,
               "218": 2,
               "220": 1,
+              "221": 1,
               "226": 4,
               "231": 1,
               "237": 1,
@@ -234320,6 +234354,14 @@
           }
         ],
         [
+          "panferova",
+          {
+            "4": {
+              "221": 1
+            }
+          }
+        ],
+        [
           "panoramic",
           {
             "4": {
@@ -234709,7 +234751,6 @@
               "195": 1,
               "210": 4,
               "211": 14,
-              "221": 1,
               "227": 3,
               "228": 1,
               "231": 1,
@@ -235728,7 +235769,7 @@
               "218": 3,
               "219": 2,
               "220": 11,
-              "221": 9,
+              "221": 11,
               "222": 7,
               "223": 2,
               "224": 3,
@@ -235945,7 +235986,7 @@
               "218": 1,
               "219": 4,
               "220": 72,
-              "221": 7,
+              "221": 13,
               "222": 29,
               "224": 13,
               "225": 4,
@@ -248215,6 +248256,14 @@
           }
         ],
         [
+          "mis",
+          {
+            "4": {
+              "221": 1
+            }
+          }
+        ],
+        [
           "misplaced",
           {
             "4": {
@@ -255166,6 +255215,7 @@
               "217": 1,
               "218": 1,
               "220": 3,
+              "221": 1,
               "223": 3,
               "224": 3,
               "225": 2,
@@ -255665,7 +255715,7 @@
               "210": 1,
               "211": 1,
               "220": 1,
-              "221": 3
+              "221": 2
             }
           }
         ],
@@ -255681,7 +255731,7 @@
               "207": 1,
               "210": 13,
               "220": 11,
-              "221": 9
+              "221": 14
             }
           }
         ],
@@ -256229,7 +256279,7 @@
               "215": 1,
               "217": 1,
               "218": 1,
-              "221": 3,
+              "221": 4,
               "223": 1,
               "225": 1,
               "227": 2,
@@ -261444,7 +261494,7 @@
               "218": 50,
               "219": 16,
               "220": 48,
-              "221": 49,
+              "221": 50,
               "222": 27,
               "223": 41,
               "224": 38,
@@ -267436,7 +267486,8 @@
           {
             "4": {
               "62": 1,
-              "63": 1
+              "63": 1,
+              "221": 1
             }
           }
         ],
@@ -268684,7 +268735,8 @@
           "shippable",
           {
             "4": {
-              "206": 1
+              "206": 1,
+              "221": 1
             }
           }
         ],
@@ -270505,7 +270557,7 @@
               "210": 1,
               "213": 1,
               "220": 1,
-              "221": 1,
+              "221": 2,
               "226": 1,
               "228": 1,
               "231": 1,
@@ -270840,7 +270892,7 @@
               "218": 5,
               "219": 5,
               "220": 5,
-              "221": 10,
+              "221": 11,
               "222": 5,
               "223": 3,
               "224": 2,
@@ -274916,7 +274968,7 @@
               "210": 6,
               "212": 4,
               "220": 3,
-              "221": 9,
+              "221": 14,
               "225": 48,
               "227": 7,
               "233": 1
@@ -275025,7 +275077,7 @@
               "214": 5,
               "215": 12,
               "220": 32,
-              "221": 59,
+              "221": 72,
               "222": 7,
               "225": 227,
               "226": 1,
@@ -275177,7 +275229,7 @@
               "218": 1,
               "219": 2,
               "220": 17,
-              "221": 15,
+              "221": 18,
               "222": 10,
               "223": 1,
               "225": 1,
@@ -275280,7 +275332,7 @@
               "215": 8,
               "218": 1,
               "220": 7,
-              "221": 23,
+              "221": 21,
               "222": 18,
               "223": 1,
               "224": 1,
@@ -275310,6 +275362,7 @@
               "147": 1,
               "184": 1,
               "193": 1,
+              "221": 1,
               "231": 1,
               "234": 1,
               "248": 1,
@@ -277965,6 +278018,7 @@
               "159": 1,
               "165": 1,
               "217": 1,
+              "221": 2,
               "241": 1
             }
           }
@@ -280564,6 +280618,7 @@
           "scop",
           {
             "4": {
+              "221": 3,
               "253": 2
             }
           }
@@ -280582,7 +280637,7 @@
               "51": 1,
               "98": 1,
               "198": 1,
-              "221": 2,
+              "221": 3,
               "225": 24,
               "227": 1,
               "231": 1,
@@ -280616,6 +280671,7 @@
               "182": 1,
               "192": 1,
               "211": 3,
+              "221": 1,
               "222": 1,
               "225": 1,
               "231": 1,
@@ -282951,7 +283007,6 @@
               "217": 1,
               "218": 1,
               "220": 2,
-              "221": 2,
               "224": 1,
               "226": 5,
               "228": 4,
@@ -286918,7 +286973,7 @@
               "218": 4,
               "219": 7,
               "220": 35,
-              "221": 27,
+              "221": 26,
               "222": 20,
               "223": 26,
               "224": 38,
@@ -287545,7 +287600,7 @@
               "218": 38,
               "219": 13,
               "220": 70,
-              "221": 51,
+              "221": 55,
               "222": 46,
               "224": 8,
               "225": 14,
@@ -313447,7 +313502,7 @@
               "210": 10,
               "216": 2,
               "219": 1,
-              "221": 3,
+              "221": 5,
               "224": 1,
               "227": 1,
               "230": 1,
@@ -313604,7 +313659,7 @@
               "218": 4,
               "219": 1,
               "220": 3,
-              "221": 4,
+              "221": 5,
               "222": 1,
               "223": 2,
               "224": 2,
@@ -314164,7 +314219,7 @@
               "218": 1,
               "219": 1,
               "220": 14,
-              "221": 3,
+              "221": 4,
               "222": 4,
               "225": 4,
               "226": 1,
@@ -315164,6 +315219,7 @@
               "204": 1,
               "209": 1,
               "216": 1,
+              "221": 2,
               "243": 1,
               "248": 1
             }
@@ -317502,6 +317558,7 @@
             "4": {
               "106": 5,
               "198": 1,
+              "221": 2,
               "223": 1,
               "224": 1
             }
@@ -322995,7 +323052,7 @@
               "217": 1,
               "218": 3,
               "220": 1,
-              "221": 3,
+              "221": 5,
               "224": 2,
               "227": 4,
               "231": 4,
@@ -328302,7 +328359,7 @@
               "218": 1,
               "219": 3,
               "220": 7,
-              "221": 9,
+              "221": 12,
               "222": 1,
               "223": 16,
               "224": 7,
@@ -334059,7 +334116,7 @@
               "218": 12,
               "219": 1,
               "220": 13,
-              "221": 16,
+              "221": 17,
               "222": 12,
               "223": 9,
               "224": 5,
@@ -336198,7 +336255,7 @@
               "215": 2,
               "216": 1,
               "220": 5,
-              "221": 3,
+              "221": 4,
               "222": 6,
               "223": 7,
               "224": 4,
@@ -336405,6 +336462,7 @@
               "212": 1,
               "213": 1,
               "214": 1,
+              "221": 1,
               "224": 2,
               "226": 2,
               "231": 3,
@@ -336973,6 +337031,7 @@
               "146": 4,
               "152": 1,
               "163": 4,
+              "221": 1,
               "225": 1,
               "255": 6
             }
@@ -337025,6 +337084,7 @@
               "178": 1,
               "191": 1,
               "209": 1,
+              "221": 2,
               "225": 3,
               "244": 1,
               "248": 1,
@@ -337057,7 +337117,7 @@
               "210": 2,
               "214": 1,
               "220": 6,
-              "221": 8,
+              "221": 12,
               "225": 9,
               "255": 13
             }
@@ -625007,32 +625067,88 @@
           "activa",
           "selec",
           "place",
-          "goes",
-          "not",
+          "two",
+          "valid",
+          "patterns",
+          "either",
+          "put",
+          "pattern",
+          "shown",
+          "above",
+          "apple",
+          "own",
+          "doc",
+          "example",
           "inside",
-          "pair",
-          "so",
+          "what",
+          "nilcoalesc",
+          "natalia",
+          "panferova",
+          "most",
+          "community",
+          "examples",
+          "show",
+          "both",
+          "correct",
+          "shippable",
+          "neither",
+          "wrong",
+          "leaks",
+          "nor",
+          "mis",
+          "scopes",
+          "26",
           "field",
-          "activates",
-          "only",
-          "when",
-          "selected",
-          "without",
-          "applies",
-          "all",
-          "tabs",
-          "resets",
-          "state",
-          "change",
+          "morph",
+          "comes",
+          "itself",
+          "not",
+          "where",
+          "sits",
+          "so",
           "contents",
           "must",
-          "still",
           "wrapped",
           "render",
+          "actually",
+          "does",
+          "optional",
+          "controls",
+          "tim",
+          "scop",
+          "per",
+          "default",
+          "only",
+          "activated",
+          "deactivated",
+          "user",
+          "they",
+          "tap",
+          "instead",
+          "activates",
+          "when",
+          "selects",
+          "required",
+          "omitt",
+          "spread",
+          "across",
+          "tabs",
+          "applies",
+          "all",
+          "resett",
+          "state",
+          "selected",
+          "changes",
+          "behavior",
+          "docs",
+          "fallback",
+          "no",
+          "once",
+          "exists",
+          "scoped",
+          "posi",
           "foundational",
-          "patterns",
           "suggestions",
-          "scopes",
           "tokens",
           "programmatic",
           "control",
@@ -625040,7 +625156,6 @@
           "skills",
           "ref",
           "md",
-          "per",
           "home",
           "house",
           "destina",
@@ -625050,7 +625165,6 @@
           "settings",
           "gear",
           "each",
-          "own",
           "preserve",
           "switch",
           "sidebar",
@@ -625085,13 +625199,10 @@
           "var",
           "value",
           "id",
-          "behavior",
           "disabled",
           "can",
           "hidden",
-          "optional",
           "star",
-          "default",
           "visibility",
           "context",
           "menus",
@@ -625114,7 +625225,6 @@
           "insert",
           "label",
           "pin",
-          "show",
           "share",
           "sheet",
           "true",
@@ -625144,7 +625254,6 @@
           "relies",
           "subviews",
           "fragile",
-          "across",
           "versions",
           "public",
           "api",
@@ -625171,22 +625280,18 @@
           "key",
           "difference",
           "preserves",
-          "does",
           "preserved",
           "lost",
-          "changes",
           "recreated",
           "common",
           "beta",
           "features",
           "flask",
-          "user",
           "defaults",
           "standard",
           "bool",
           "enable",
           "same",
-          "pattern",
           "authentica",
           "purchase",
           "status",
@@ -625211,7 +625316,6 @@
           "motion",
           "curves",
           "automatically",
-          "26",
           "2025",
           "256",
           "minimiza",
@@ -625222,7 +625326,6 @@
           "accessory",
           "always",
           "playback",
-          "controls",
           "dynamic",
           "recommended",
           "mini",
@@ -625240,20 +625343,23 @@
           "space",
           "dedicated",
           "other",
-          "binds",
-          "morphs",
+          "equally",
+          "drop",
+          "trail",
+          "modifiers",
           "into",
           "wrapper",
-          "required",
-          "resett",
-          "morph",
+          "activate",
+          "vs",
+          "taps",
+          "change",
+          "happens",
           "gotcha",
           "geometry",
           "anywhere",
           "subtree",
           "body",
           "contain",
-          "itself",
           "content",
           "breaks",
           "write",
@@ -625274,7 +625380,6 @@
           "workaround",
           "width",
           "reader",
-          "above",
           "scope",
           "sibl",
           "outside",
@@ -625287,7 +625392,6 @@
           "fixes",
           "active",
           "though",
-          "apple",
           "usage",
           "music",
           "keeps",
@@ -625295,17 +625399,14 @@
           "@environ",
           "adapt",
           "expanded",
-          "vs",
           "inline",
           "minimized",
           "compact",
           "enum",
           "exactly",
           "these",
-          "two",
           "cases",
           "there",
-          "no",
           "case",
           "reserve",
           "cross",
