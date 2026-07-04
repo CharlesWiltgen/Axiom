@@ -10,6 +10,8 @@ license: MIT
 
 Xcode ships an MCP server (`xcrun mcpbridge`, available since Xcode 26.3) that exposes 20 IDE tools to external AI clients. Xcode 27 adds an explicit "Allow external agents to use Xcode tools" gate, the `run-agent` launch path, and an agent-extension model (custom MCP servers, skills, plug-ins). This skill suite covers setup, tool reference, workflow patterns, and troubleshooting.
 
+**mcpbridge requires a running Xcode with a project open** — if that's a liability (headless CI, or you don't want to keep Xcode up), the device/simulator half of these operations has a fully Xcode-independent CLI path: `devicectl` + `simctl` + Axiom's `xcui`/`xclog`/`xcsym`/`xcprof`. See `axiom-tools (skills/device-control-ref.md)`. The IDE-authoring tools (build state, render previews, navigator diagnostics) are MCP-only; `xcodebuild` builds and tests but does not render previews.
+
 ## When to Use
 
 Use this skill when:
