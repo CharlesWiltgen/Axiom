@@ -1052,34 +1052,9 @@ A single `xcodebuild test` runs on **one** destination with **whatever network t
 
 ## Simulator control from CI: devicectl
 
-`devicectl` manages **simulators and physical devices through one interface** — every `device` leaf command takes `-d/--device <udid|name|ecid|…>`, which accepts a simulator UDID or a physical-device identifier, so the same script drives a real iPhone in the dev loop and a simulator in CI with no branching. This is **not new in Xcode 27**: the `devicectl` CLI is byte-identical across the Xcode 26 and 27 toolchains (binary 629.3, verified on 26.6 and 27.0). **Device Hub** (the Xcode 27 GUI that replaces `Simulator.app`) is a front-end over these same operations — see `axiom-build (skills/xcode-debugging.md)` for the Device Hub workflow and the unified `list devices` inventory.
+`devicectl` drives simulators and physical devices through one `-d <udid>` interface with a stable `--json-output`, so the same script drives a real iPhone in the dev loop and a simulator in CI with no branching. **Parse `--json-output <path>`, never stdout** — devicectl guarantees the JSON file is stable across releases; its stdout is not. CI order is unchanged at the front: simctl or `xcodebuild` boots the sim → devicectl configures it → run tests.
 
-**Parse `--json-output <path>`, never stdout.** devicectl guarantees the JSON file is versioned and stable across releases; its stdout is explicitly *not* stable. `simctl`'s human output never carried that guarantee — the stability contract, not the unified syntax, is the real CI win.
-
-### Interaction vs lifecycle — devicectl does NOT replace simctl
-
-devicectl **configures and interacts** with a device/sim; it has no `create`/`boot`/`erase`. simctl still owns the simulator lifecycle and is still required.
-
-| Need | Tool |
-|------|------|
-| create / boot / shutdown / erase a sim | `xcrun simctl boot\|shutdown\|erase` |
-| pick the test destination | `xcodebuild -destination` |
-| configure / interact with a booted sim or device | `xcrun devicectl` |
-
-CI order is unchanged at the front: simctl or xcodebuild boots the sim → devicectl configures it → run tests.
-
-### Simulator-capable subcommands (verified on Xcode 26.6 + 27.0)
-
-| Subcommand | On simulator | Use |
-|------------|--------------|-----|
-| `device info displays` | works (verified) | bounds, pointScale, nativeSize, `framebufferMaskIdentifier` (exact JSON keys) |
-| `device orientation get` (also `set`, `rotate`) | works (`get` verified) | orientation without entering the app |
-| `device settings biometrics [--enable\|--disable]` | works (verified) | enroll / unenroll Face ID / Touch ID |
-| `device simulate biometrics --success\|--failure` | works (verified) | drive a match / no-match |
-| `device settings appearance --mode light\|dark` | works (verified) | force Dark/Light; also `--look-and-feel clear\|tinted`, text size, contrast |
-| `device simulate location` / `device simulate statusBar` | available | inject location; clean status bar for screenshots |
-| `device process sendMemoryWarning` | available | memory-pressure scenarios |
-| `device info lockState` / `info files` / `copy` / `profile *` | physical-device-only | see caveat below |
+The full reference — the tool map (Device Hub / devicectl / simctl / xcui vs the Xcode-bound mcpbridge), the devicectl-vs-simctl division of labor, the verified simulator-capable subcommand matrix, and the `CoreDeviceError 1001` "device-only on a sim" cases — lives in `axiom-tools (skills/device-control-ref.md)`. The most common test use is Face ID:
 
 ### Face ID in CI (verified end-to-end on a simulator)
 
@@ -1095,21 +1070,6 @@ xcrun devicectl device settings biometrics -d "$SIM" --disable   # restore
 ```
 
 The flags are `--success` / `--failure` (mutually exclusive) — **not** `--match`.
-
-### Capability not supported on a simulator
-
-Some capabilities are physical-device-only on a simulator. They fail with a **distinct, detectable** error — not a crash, not a silent no-op:
-
-```
-ERROR: The capability "Get Lock State" is not supported by this device.
-       (com.apple.dt.CoreDeviceError error 1001)
-```
-
-`info lockState` is confirmed device-only; `info files`, `copy`, and `profile *` are reported device-only on simulators. In CI, treat `CoreDeviceError 1001` as "skip on simulator" rather than a failure.
-
-### simctl still owns simulator-only features
-
-devicectl works on simulators across Xcode 26+, so this is not a Xcode-27-only path and needs no toolchain gate. But `simctl` stays primary for simulator-only control devicectl doesn't cover — push notifications, privacy permissions, media injection, and the `status_bar` / `location` / `ui appearance` overrides. Use whichever you already script; reach for devicectl when you want one `-d` selector and stable JSON across device + simulator.
 
 For the in-test (in-process) counterpart to this out-of-process control — `XCUIDevice.shared.orientation` / `.location` set inside the test — see [Setup Device State](#setup-device-state) above. devicectl configures the sim *around* the run; XCUIDevice configures it *from inside* the run.
 

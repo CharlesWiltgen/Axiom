@@ -7,7 +7,7 @@
 
 **Core principle**: hot reload is the tightest loop for iterating on a view *inside its real app context* — real navigation depth, real model state, real device sensors — exactly what the preview canvas isolates away. It is a **debug-only** development tool and never ships in a release build.
 
-**This is third-party**, not an Apple feature. Apple's native motion is toward untethered device *control* (Device Hub / `devicectl`, Xcode 27 — see axiom-build) and agent-driven iteration, not in-place code injection. For genuine "edit the running app," InjectionNext is the current tool.
+**This is third-party**, not an Apple feature. Apple's native motion is toward untethered device *control* (Device Hub / `devicectl`, Xcode 27 — see `axiom-tools (skills/device-control-ref.md)`) and agent-driven iteration, not in-place code injection. For genuine "edit the running app," InjectionNext is the current tool.
 
 ## The Two Layers — Keep Them Straight
 
@@ -117,11 +117,11 @@ Match the loop to the task — they are complementary, not competing:
 | A leaf view's look in isolation | **Previews canvas** (`skills/previews.md`) |
 | A view that needs real sensors / perf / Dynamic Type on hardware | **On-device previews** (`skills/previews.md`) or hot reload |
 | A view *inside the running app* with real navigation + model state | **Hot reload** (this skill) |
-| Untethered device control + diagnostics (no code injection) | **Device Hub / `devicectl`** (axiom-build) |
+| Untethered device control + diagnostics (no code injection) | **Device Hub / `devicectl`** (`axiom-tools (skills/device-control-ref.md)`) |
 | Agent drives the app and screenshots each change | **`xcui` + `simulator-tester` + `xclog`** |
 
 ## Resources
 
 **Tools**: github.com/johnno1962/InjectionNext, github.com/krzysztofzablocki/Inject
 
-**Skills**: skills/previews.md, axiom-build (xcode-debugging.md — Device Hub / devicectl), axiom-tools (xclog)
+**Skills**: skills/previews.md, axiom-tools (device-control-ref.md — Device Hub / devicectl), axiom-tools (xclog)
