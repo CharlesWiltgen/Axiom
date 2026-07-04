@@ -476,7 +476,24 @@ TabView {
 .tabViewSearchActivation(.searchTabSelection)
 ```
 
-**Search tab placement**: `.searchable()` goes on the `TabView`, not inside the search-role `Tab`. Pair it with `.tabViewSearchActivation(.searchTabSelection)` so the search field activates only when the search tab is selected. Without `.tabViewSearchActivation`, the tab view applies search to all tabs and resets search state on tab change. The search-role tab's contents must still be wrapped in `NavigationStack` for the search field to render. For foundational `.searchable` patterns (suggestions, scopes, tokens, programmatic control), see `skills/search-ref.md`.
+**Search tab placement — two valid patterns**: Either put `.searchable()` on the `TabView` (Pattern A, shown above — this is Apple's own `tabViewSearchActivation(_:)` doc example) OR put it on the `NavigationStack` *inside* the search-role `Tab` (Pattern B — what nilcoalescing / Natalia Panferova and most community examples show):
+
+```swift
+// Pattern B: searchable inside the search tab
+Tab(role: .search) {
+    NavigationStack {
+        SearchView()
+            .navigationTitle("Search")
+    }
+    .searchable(text: $searchText)   // on the NavigationStack, inside the Tab
+}
+```
+
+Both are correct and shippable; **neither is "wrong," leaks, nor mis-scopes.** The iOS 26 tab→search-field morph comes from `Tab(role: .search)` itself, not from where `.searchable` sits, so both patterns morph. In both, the search-role tab's contents must be wrapped in `NavigationStack` for the field to render.
+
+**What `.tabViewSearchActivation(.searchTabSelection)` actually does** (iOS 26+, *optional*): it controls search *activation timing*, not tab scoping. Per Apple, "by default, search is only activated and deactivated by the user" (they tap the field); `.searchTabSelection` instead activates search when the user *selects* the search tab. It is **not** required for the morph, and omitting it does **not** spread search across tabs. The "applies to all tabs, resetting search state as the selected tab changes" behavior (from the `TabRole.search` docs) is the fallback for when **no** tab has the `.search` role at all — once a search-role tab exists, search is scoped to it with `.searchable` in *either* position.
+
+For foundational `.searchable` patterns (suggestions, scopes, tokens, programmatic control), see `skills/search-ref.md`.
 
 ### 5.2 TabView with NavigationStack Per Tab
 
@@ -669,7 +686,7 @@ TabView { ... }
 // isEnabled: true = shows accessory
 // isEnabled: false = hides AND removes reserved space
 
-// Search tab with dedicated search field
+// Search tab with dedicated search field (Pattern A: searchable on the TabView)
 TabView {
     // ...other tabs...
     Tab(role: .search) {
@@ -681,12 +698,15 @@ TabView {
 }
 .searchable(text: $searchText)
 .tabViewSearchActivation(.searchTabSelection)
-// .searchable goes on the TabView, NOT inside the Tab
-// .tabViewSearchActivation(.searchTabSelection) binds search to the .search role tab
-// Morphs into search field when the search tab is selected
-// ⚠️ NavigationStack wrapper still required for the search field to render
-// Without .tabViewSearchActivation: tab view applies search to ALL tabs,
-// resetting search state when the selected tab changes
+// Pattern A (above) = Apple's tabViewSearchActivation doc example.
+// Pattern B (equally valid, nilcoalescing/community): drop both trailing modifiers
+//   and put .searchable on the NavigationStack INSIDE the .search Tab instead.
+// Both morph into the search field — the morph comes from Tab(role: .search), not
+//   from where .searchable sits. NavigationStack wrapper required in BOTH.
+// .tabViewSearchActivation(.searchTabSelection): OPTIONAL, controls activation TIMING
+//   (activate on tab selection vs. only when the user taps the field). Not tab scoping.
+// The "search applies to ALL tabs, resetting on tab change" behavior happens only when
+//   NO tab has the .search role — NOT from omitting .tabViewSearchActivation.
 ```
 
 **iOS 26 morph gotcha**: `.onGeometryChange { ... }` *anywhere* in the TabView's subtree (on the body containing TabView, on TabView itself, or on any tab's content) breaks the `.search` role's morph on the **first** activation — the state write triggers a re-render during initial layout that the morph integration can't recover from. Subsequent activations work because state is cached. Same family as `.introspect(.navigationStack)` on the search tab (siteline/swiftui-introspect #499). Workaround: read width via `GeometryReader` *above* the TabView, or scope `.onGeometryChange` to a sibling outside the TabView's coordinate space. See `skills/nav-diag.md` Pattern 4e for full diagnosis and fixes.
@@ -711,7 +731,7 @@ Reserve `tabViewBottomAccessory` for cross-tab content (playback, status). For t
 | `.hidden(_:)` | Tab | 18+ | Programmatic visibility with state preservation |
 | `.tabViewStyle(.sidebarAdaptable)` | TabView | 18+ | Sidebar on iPad, tabs on iPhone |
 | `.tabViewCustomization($binding)` | TabView | 18+ | Persist user tab arrangement |
-| `.tabViewSearchActivation(_:)` | TabView | 26+ | Bind `.searchable` to the `.search` role tab (use `.searchTabSelection`) |
+| `.tabViewSearchActivation(_:)` | TabView | 26+ | Control search *activation timing* in the `.search` tab (`.searchTabSelection` = activate on tab selection). Optional; not tab scoping |
 | `.tabBarMinimizeBehavior(_:)` | TabView | 26+ | Auto-hide on scroll |
 | `.tabViewBottomAccessory(isEnabled:content:)` | TabView | 26.1+ | Dynamic content below tab bar |
 | `Tab(role: .prominent)` | — | 27+ | Prominent semantic tab role (OS27); joins `.search` |
