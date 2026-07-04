@@ -157,6 +157,34 @@ class TestFalsePositiveHardening(unittest.TestCase):
             body = "struct V {\n    @State var count = 0 // axiom-ignore\n}\n"
             self.assertFalse(blocks(claude_stdin(write_swift(d, body))))
 
+    def test_previewable_state_does_not_block(self):
+        # @Previewable @State lives in a #Preview closure's LOCAL scope, where Swift
+        # forbids `private` ("Attribute 'private' can only be used in a non-local
+        # scope") — the guardrail's "@State private var" fix would not compile.
+        with tempfile.TemporaryDirectory() as d:
+            body = '#Preview {\n    @Previewable @State var isOn = false\n    Toggle("x", isOn: $isOn)\n}\n'
+            self.assertFalse(blocks(claude_stdin(write_swift(d, body))))
+
+    def test_previewable_attribute_on_own_line_does_not_block(self):
+        # @Previewable may sit on the attribute line above @State — still local scope.
+        with tempfile.TemporaryDirectory() as d:
+            body = '#Preview {\n    @Previewable\n    @State var isOn = false\n    Toggle("x", isOn: $isOn)\n}\n'
+            self.assertFalse(blocks(claude_stdin(write_swift(d, body))))
+
+    def test_non_previewable_attribute_above_state_still_blocks(self):
+        # A non-@Previewable attribute line above @State (type scope) must still block —
+        # the look-back must not swallow legitimate findings.
+        with tempfile.TemporaryDirectory() as d:
+            body = "struct V {\n    @MainActor\n    @State var count = 0\n}\n"
+            self.assertTrue(blocks(claude_stdin(write_swift(d, body))))
+
+    def test_previewable_only_in_trailing_comment_still_blocks(self):
+        # @Previewable AFTER @State (here, in a trailing comment) is not the inline
+        # attribute — a real type-scope @State var must still block.
+        with tempfile.TemporaryDirectory() as d:
+            body = "struct V {\n    @State var count = 0 // not @Previewable\n}\n"
+            self.assertTrue(blocks(claude_stdin(write_swift(d, body))))
+
 
 class TestCodexApplyPatchShape(unittest.TestCase):
     def _patch(self, path: str) -> str:
