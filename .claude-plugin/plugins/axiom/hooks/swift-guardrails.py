@@ -109,6 +109,23 @@ def _ignored(line: str, check: str) -> bool:
     return m.group(1) is None or check in m.group(1).split(",")
 
 
+def _previewable(lines: list[str], i: int) -> bool:
+    """True if the @State on line `i` is @Previewable — inline or on a preceding
+    attribute line. Such a var lives in a #Preview closure's LOCAL scope, where Swift
+    forbids access modifiers ("Attribute 'private' can only be used in a non-local
+    scope"), so the "@State private var" fix would not compile.
+    """
+    prev = lines[i].find("@Previewable")
+    if prev != -1 and prev < lines[i].find("@State"):  # inline: attribute precedes @State
+        return True
+    j = i - 1
+    while j >= 0 and lines[j].lstrip().startswith("@"):  # consecutive attribute lines
+        if "@Previewable" in lines[j]:
+            return True
+        j -= 1
+    return False
+
+
 def _multiline_string_lines(lines: list[str]) -> set[int]:
     """Indices of lines that fall inside a Swift `\"\"\"` multi-line string literal.
 
@@ -137,9 +154,10 @@ _ACCESS = r"(?:private|fileprivate|internal|public|package|open)"
 def check_state(lines: list[str]) -> list[tuple[int, str]]:
     """@State without an explicit access level (block-tier).
 
-    Drops false positives: a modifier on either side of @State, the axiom-ignore
-    escape hatch, a // comment preceding the match, a same-line string literal, and
-    lines inside a multi-line string.
+    Drops false positives: a modifier on either side of @State, an @Previewable @State
+    in a #Preview closure (local scope forbids `private`), the axiom-ignore escape hatch,
+    a // comment preceding the match, a same-line string literal, and lines inside a
+    multi-line string.
     """
     skip = _multiline_string_lines(lines)
     hits = []
@@ -149,6 +167,8 @@ def check_state(lines: list[str]) -> list[tuple[int, str]]:
         if not re.search(r"@State\s+var\b", line):
             continue
         if re.search(_ACCESS + r"\s+@State|@State\s+" + _ACCESS, line):
+            continue
+        if _previewable(lines, i):
             continue
         if _ignored(line, "state"):
             continue
