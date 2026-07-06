@@ -86,7 +86,7 @@ func resolveBootedInfo(ctx context.Context, explicit string) (udid string, boote
 
 // describeUI runs `axe describe-ui` for the resolved sim and parses the tree.
 func describeUI(ctx context.Context, udid string) ([]AXElement, error) {
-	res, err := ExecRun(ctx, 0, "axe", "describe-ui", "--udid", udid)
+	res, err := runAxe(ctx, 0, "describe-ui", "--udid", udid)
 	if err != nil {
 		return nil, fmt.Errorf("axe describe-ui: %w", err)
 	}

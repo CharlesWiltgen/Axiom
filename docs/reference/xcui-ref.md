@@ -7,6 +7,8 @@ description: Complete reference for the `xcui` CLI that ships with Axiom — doc
 
 Complete reference for `xcui`, the Axiom-bundled CLI that makes iOS-simulator UI and accessibility testing scriptable for coding harnesses. It owns the test-harness semantics AXe and `simctl` lack — waiting on conditions, asserting on the accessibility tree, toggling accessibility settings, handling system permission dialogs, and computing VoiceOver announcements — and delegates input (`tap`/`type`/`swipe`) to AXe, which injects real HID touch. Every subcommand emits a single compact JSON object with a `tool`/`version` envelope (token-lean for LLM consumers); every subcommand also accepts `--human` for a prose rendering, and exit codes drive pass/fail in scripts.
 
+> **Xcode 27 beta** – `xcui`'s own subcommands auto-handle it, but bare `axe` (for direct `tap`/`type`/`swipe`) fails when the selected Xcode relocated `SimulatorKit.framework`. If `xcui doctor` reports an `axe_developer_dir`, prefix direct `axe` calls with `DEVELOPER_DIR=<that value>`.
+
 ## When to Use This Reference
 
 Use this reference when:

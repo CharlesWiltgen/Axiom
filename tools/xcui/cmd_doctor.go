@@ -9,10 +9,11 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 )
 
-func doctorExitCode(axePresent, simBooted bool) int {
-	if axePresent && simBooted {
+func doctorExitCode(axePresent, simBooted, axeWorks bool) int {
+	if axePresent && simBooted && axeWorks {
 		return 0
 	}
 	return 2
@@ -72,7 +73,42 @@ func runDoctor(out io.Writer, args []string) int {
 		rep.NextSteps = append(rep.NextSteps, "boot a simulator: xcrun simctl boot <device>")
 	}
 
-	code := doctorExitCode(axePath != "", rep.BootedUDID != "")
+	// Smoke-test AXe: presence + version isn't enough. Under an Xcode that
+	// relocated SimulatorKit.framework (Xcode 27 beta), AXe loads but every
+	// describe-ui/tap fails — so actually exercise it before green-lighting.
+	axeWorks := true
+	if axePath != "" && rep.BootedUDID != "" {
+		if dir, on := axeDeveloperDirOverride(); on {
+			rep.AxeDeveloperDir = dir
+		}
+		if res, err := runAxe(ctx, 30*time.Second, "describe-ui", "--udid", rep.BootedUDID); err != nil {
+			stderr := strings.TrimSpace(string(res.Stderr))
+			switch {
+			case IsTimeoutError(err):
+				// Inconclusive, not a failure: a slow/cold sim can exceed the
+				// window without AXe being broken. Leave ok as-is.
+				rep.Note = joinNote(rep.Note, "AXe smoke test (describe-ui) timed out — sim may be slow; not treated as a failure")
+			case isSimulatorKitLoadError(stderr):
+				axeWorks = false
+				rep.Problems = append(rep.Problems, "AXe cannot load SimulatorKit.framework — the selected Xcode ("+rep.XcodePath+") relocated it (Xcode 27 beta moved it to Contents/SharedFrameworks) and no fallback Xcode with the legacy path was found")
+				rep.NextSteps = append(rep.NextSteps, "install a stable Xcode.app (keeps SimulatorKit at Contents/Developer/Library/PrivateFrameworks), or prefix axe calls with DEVELOPER_DIR=<xcode-with-SimulatorKit>/Contents/Developer")
+			default:
+				axeWorks = false
+				msg := firstLine(stderr)
+				if msg == "" {
+					msg = err.Error()
+				}
+				rep.Problems = append(rep.Problems, "AXe smoke test (describe-ui) failed: "+msg)
+			}
+		} else if rep.AxeDeveloperDir != "" {
+			// xcui compensates on its own AXe calls, but a bare `axe` (e.g. an
+			// `axe tap` run directly) still needs the same DEVELOPER_DIR prefix.
+			rep.Note = joinNote(rep.Note, "selected Xcode relocated SimulatorKit.framework; xcui auto-applies DEVELOPER_DIR="+rep.AxeDeveloperDir+" to its AXe calls — bare `axe` fails without the same prefix")
+			rep.NextSteps = append(rep.NextSteps, "for direct axe calls: DEVELOPER_DIR="+rep.AxeDeveloperDir+" axe <cmd>")
+		}
+	}
+
+	code := doctorExitCode(axePath != "", rep.BootedUDID != "", axeWorks)
 	rep.OK = code == 0
 
 	if *human {
@@ -98,4 +134,18 @@ func orNone(s string) string {
 		return "(none)"
 	}
 	return s
+}
+
+func firstLine(s string) string {
+	if i := strings.IndexByte(s, '\n'); i >= 0 {
+		return s[:i]
+	}
+	return s
+}
+
+func joinNote(existing, add string) string {
+	if existing == "" {
+		return add
+	}
+	return existing + "; " + add
 }

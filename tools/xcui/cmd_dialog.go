@@ -187,7 +187,7 @@ func runDialogTap(out io.Writer, action string, args []string) int {
 		return 1
 	}
 	rep.Button = buttonLabel(btn)
-	if _, err := ExecRun(ctx, 0, "axe", tapArgs(btn, udid)...); err != nil {
+	if _, err := runAxe(ctx, 0, tapArgs(btn, udid)...); err != nil {
 		fmt.Fprintln(os.Stderr, "dialog:", err)
 		return 2
 	}

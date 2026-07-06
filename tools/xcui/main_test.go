@@ -120,17 +120,18 @@ func TestBootedUDIDsNoneBooted(t *testing.T) {
 
 func TestDoctorExitCode(t *testing.T) {
 	cases := []struct {
-		axe, sim bool
-		want     int
+		axe, sim, works bool
+		want            int
 	}{
-		{true, true, 0},
-		{false, true, 2},
-		{true, false, 2},
-		{false, false, 2},
+		{true, true, true, 0},
+		{true, true, false, 2}, // present + booted but AXe can't load its frameworks
+		{false, true, true, 2},
+		{true, false, true, 2},
+		{false, false, false, 2},
 	}
 	for _, c := range cases {
-		if got := doctorExitCode(c.axe, c.sim); got != c.want {
-			t.Errorf("doctorExitCode(%v,%v) = %d, want %d", c.axe, c.sim, got, c.want)
+		if got := doctorExitCode(c.axe, c.sim, c.works); got != c.want {
+			t.Errorf("doctorExitCode(%v,%v,%v) = %d, want %d", c.axe, c.sim, c.works, got, c.want)
 		}
 	}
 }
