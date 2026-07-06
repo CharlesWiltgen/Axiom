@@ -487,6 +487,7 @@ export default withMermaid(defineConfig({
           items: [
             { text: 'Overview', link: '/skills/machine-learning/' },
             { text: 'CoreML', link: '/skills/machine-learning/coreml' },
+            { text: 'ML Training Paths', link: '/skills/machine-learning/training-paths' },
             { text: 'iOS ML (deployment overview)', link: '/skills/machine-learning/ios-ml' },
             { text: 'Core AI', link: '/skills/machine-learning/core-ai' },
             { text: 'Speech', link: '/skills/machine-learning/speech' }
@@ -726,7 +727,7 @@ export default withMermaid(defineConfig({
 
     footer: {
       message: 'Released under the MIT License',
-      copyright: 'Copyright © 2026 Charles Wiltgen • v27.0.0-beta.15'
+      copyright: 'Copyright © 2026 Charles Wiltgen • v27.0.0-beta.16'
     }
   }
 }))
