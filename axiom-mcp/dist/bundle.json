@@ -1,6 +1,6 @@
 {
   "version": "0.2.0",
-  "generatedAt": "2026-07-04T21:28:33.613Z",
+  "generatedAt": "2026-07-06T17:11:17.015Z",
   "skills": {
     "axiom-accessibility": {
       "name": "axiom-accessibility",
@@ -21620,7 +21620,7 @@
     "axiom-media--music-understanding": {
       "name": "axiom-media--music-understanding",
       "description": "`import MusicUnderstanding` — a new framework (`OS27`, all platforms: iOS 27, macOS 27, watchOS 27, tvOS 27, visionOS 27) that extracts musical features from audio entirely **on-device**: it works offline, the audio never leaves the device, and you need no signal-processing or ML expertise. Apple's Final Cut Pro uses it for beat detection and the iPad montage feature.",
-      "content": "\n# Music Understanding (On-Device Musical Analysis) `OS27`\n\n`import MusicUnderstanding` — a new framework (`OS27`, all platforms: iOS 27, macOS 27, watchOS 27, tvOS 27, visionOS 27) that extracts musical features from audio entirely **on-device**: it works offline, the audio never leaves the device, and you need no signal-processing or ML expertise. Apple's Final Cut Pro uses it for beat detection and the iPad montage feature.\n\nIt analyzes six areas: **key**, **rhythm**, **structure**, **pace**, **instrument activity**, and **loudness**.\n\n## When to Use\n\n- Sync visuals/edits to a song's beat, sections, loudness, or pace (video editors, montage, audio-reactive animation/games)\n- Organize a catalog by tempo or key (DJ / library apps)\n- Pre-compute and bundle analysis data to drive playback-time effects\n\nFor **identifying** which song is playing, use ShazamKit instead (`skills/shazamkit.md`) — that is catalog matching, a different problem.\n\n## Quick Start (analyze a file)\n\n```swift\nimport MusicUnderstanding\nimport AVFoundation\n\n// Set PreferPreciseDurationAndTiming for the most accurate results.\nlet asset = AVURLAsset(\n    url: songURL,\n    options: [AVURLAssetPreferPreciseDurationAndTimingKey: true]\n)\nlet session = try await MusicUnderstandingSession(asset: asset)\n\n// Analyze ALL six areas (every SessionResult field is populated):\nlet result = try await session.analyze()\nif let bpm = result.rhythm?.beatsPerMinute {\n    print(\"Tempo: \\(bpm) bpm\")\n}\n```\n\n`MusicUnderstandingSession` is an `actor`. It has two convenience initializers (no public designated init):\n\n| Init | Signature | Notes |\n|------|-----------|-------|\n| From an asset | `init(asset: any AVAsset & Sendable) async throws` | `async throws` — the common path |\n| From live audio | `init(audioProvider:)` | **Not** async, **not** throwing — see Streaming below |\n\n## `analyze()` vs `analyze(for:)`\n\nBoth are `@discardableResult ... async throws -> SessionResult`.\n\n- `analyze()` — analyzes all six areas; every `SessionResult` field is non-nil.\n- `analyze(for: Set<AnalysisType>)` — only the requested areas; **unrequested fields come back `nil`**. Use this to skip unnecessary computation.\n\n`AnalysisType` values: `.key`, `.rhythm`, `.structure`, `.pace`, `.instrumentActivity`, `.loudness`.\n\n```swift\nlet result = try await session.analyze(for: [.key, .rhythm])\n// result.key and result.rhythm are populated; result.loudness, .structure, etc. are nil.\n```\n\n`SessionResult` fields (all optional): `key`, `rhythm`, `structure`, `pace`, `instrumentActivity`, `loudness`.\n\n## Result Types\n\nTwo helpers tie data to time (both nested in `MusicUnderstandingSession`, both generic, both `Codable`):\n- **`TimedValue<Value>`** — `{ time: CMTime, value: Value }`\n- **`RangedValue<Value>`** — `{ range: CMTimeRange, value: Value }`\n\n```swift\n// KeyResult — a timeline of key signatures\nif let key = result.key {\n    for ranged in key.ranges {                 // [RangedValue<KeyResult.KeySignature>]\n        let sig = ranged.value                 // KeySignature { tonic, mode }\n        print(\"\\(sig.tonic) \\(sig.mode)\")      // e.g. .dFlat .major\n    }\n}\n// Tonic: the 17 chromatic spellings (.c, .cSharp, .dFlat, …). Mode: .major / .minor.\n\n// RhythmResult — beat/bar grid + global tempo\nif let r = result.rhythm {\n    let beats: [CMTime] = r.beats\n    let bars:  [CMTime] = r.bars\n    let bpm:   Float?    = r.beatsPerMinute     // nil if fewer than 2 beats were found\n}\n\n// StructureResult — three nested levels, each an array of ranges\nif let s = result.structure {\n    let sections = s.sections   // [CMTimeRange] — chorus/verse/intro/bridge\n    let segments = s.segments   // [CMTimeRange]\n    let phrases  = s.phrases    // [CMTimeRange]\n}\n\n// PaceResult — how fast the music *feels* over time (energy)\nif let p = result.pace {\n    let energy = p.ranges       // [RangedValue<Double>] — higher = more energetic\n}\n\n// InstrumentActivityResult — per-instrument presence and intensity\nif let inst = result.instrumentActivity {\n    let drumWhen  = inst.ranges[.drum]          // [CMTimeRange]? — when the drum is present\n    let vocalCurve = inst.activity[.vocal]      // [TimedValue<Float>]? — intensity 0…1 over time\n}\n// Instrument: .vocal, .drum, .bass, .other.\n\n// LoudnessResult — LUFS perceptual loudness (peak in dB)\nif let loud = result.loudness {\n    let overall  = loud.integrated.value        // TimedValue<Float> — whole-song average\n    let momentary = loud.momentary              // [TimedValue<Float>] — 400 ms window, every 100 ms\n    let shortTerm = loud.shortTerm              // [TimedValue<Float>] — 3 s window, smoother\n    let peakDB   = loud.peak.value              // absolute peak, in decibels\n}\n```\n\n## Streaming Loudness\n\n`MusicUnderstandingSession` exposes `loudnessResults`, an `AsyncSequence<LoudnessResult, any Error>` that emits as each 100 ms of audio is analyzed — useful for live meters. Consume the stream and drive analysis concurrently:\n\n```swift\nlet session = MusicUnderstandingSession(audioProvider: liveBuffers)\n\n// One task consumes the stream; analysis drives it on the current task.\nlet meter = Task {\n    for try await loud in session.loudnessResults {\n        await updateMeter(loud.momentary.last?.value)\n    }\n}\ntry await session.analyze(for: [.loudness])\ntry await meter.value\n```\n\n## Custom Audio Input (`AudioProvider`)\n\nInstead of an asset, feed buffers from any `AsyncSequence` whose `Element` is `AVReadOnlyAudioPCMBuffer` and whose `Failure` is `Never`. **Send a final `nil` to signal completion** so analysis can finish.\n\n```swift\nlet session = MusicUnderstandingSession(audioProvider: myBufferSequence)\nlet result = try await session.analyze()\n```\n\n## Export\n\nEvery result type is `Codable`. Encode the whole `SessionResult` to JSON:\n\n```swift\nlet data = try JSONEncoder().encode(result)\n```\n\n## Errors & Lifecycle\n\n| `MusicUnderstandingError` | Meaning |\n|---------------------------|---------|\n| `.sessionInProgress` | An analysis is already running — one at a time |\n| `.emptyAnalysisSet` | `analyze(for: [])` called with no types |\n| `.invalidAsset` | The asset could not be read |\n| `.internalError` | Unexpected framework failure |\n\nCall `await session.cancel()` to stop an in-flight analysis.\n\n## Resources\n\n**WWDC**: 2026-253\n\n**Docs**: /musicunderstanding\n\n**Skills**: shazamkit, avfoundation-ref\n",
+      "content": "\n# Music Understanding (On-Device Musical Analysis) `OS27`\n\n`import MusicUnderstanding` — a new framework (`OS27`, all platforms: iOS 27, macOS 27, watchOS 27, tvOS 27, visionOS 27) that extracts musical features from audio entirely **on-device**: it works offline, the audio never leaves the device, and you need no signal-processing or ML expertise. Apple's Final Cut Pro uses it for beat detection and the iPad montage feature.\n\nIt analyzes six areas: **key**, **rhythm**, **structure**, **pace**, **instrument activity**, and **loudness**.\n\n## When to Use\n\n- Sync visuals/edits to a song's beat, sections, loudness, or pace (video editors, montage, audio-reactive animation/games)\n- Organize a catalog by tempo or key (DJ / library apps)\n- Pre-compute and bundle analysis data to drive playback-time effects\n\nFor **identifying** which song is playing, use ShazamKit instead (`skills/shazamkit.md`) — that is catalog matching, a different problem.\n\n## Quick Start (analyze a file)\n\n```swift\nimport MusicUnderstanding\nimport AVFoundation\n\n// Set PreferPreciseDurationAndTiming for the most accurate results.\nlet asset = AVURLAsset(\n    url: songURL,\n    options: [AVURLAssetPreferPreciseDurationAndTimingKey: true]\n)\nlet session = try await MusicUnderstandingSession(asset: asset)\n\n// Analyze ALL six areas (every SessionResult field is populated):\nlet result = try await session.analyze()\nif let bpm = result.rhythm?.beatsPerMinute {\n    print(\"Tempo: \\(bpm) bpm\")\n}\n```\n\n`MusicUnderstandingSession` is an `actor`. It has two convenience initializers (no public designated init):\n\n| Init | Signature | Notes |\n|------|-----------|-------|\n| From an asset | `init(asset: any AVAsset & Sendable) async throws` | `async throws` — the common path; local/complete files only (no HLS) |\n| From live audio | `init(audioProvider:)` | **Not** async, **not** throwing — see Streaming below |\n\n## `analyze()` vs `analyze(for:)`\n\nBoth are `@discardableResult ... async throws -> SessionResult`.\n\n- `analyze()` — analyzes all six areas; every `SessionResult` field is non-nil.\n- `analyze(for: Set<AnalysisType>)` — only the requested areas; **unrequested fields come back `nil`**. Use this to skip unnecessary computation.\n\n`AnalysisType` values: `.key`, `.rhythm`, `.structure`, `.pace`, `.instrumentActivity`, `.loudness`.\n\n```swift\nlet result = try await session.analyze(for: [.key, .rhythm])\n// result.key and result.rhythm are populated; result.loudness, .structure, etc. are nil.\n```\n\n`SessionResult` fields (all optional): `key`, `rhythm`, `structure`, `pace`, `instrumentActivity`, `loudness`.\n\n## Result Types\n\nTwo helpers tie data to time (both nested in `MusicUnderstandingSession`, both generic, both `Codable`):\n- **`TimedValue<Value>`** — `{ time: CMTime, value: Value }`\n- **`RangedValue<Value>`** — `{ range: CMTimeRange, value: Value }`\n\n```swift\n// KeyResult — a timeline of key signatures\nif let key = result.key {\n    for ranged in key.ranges {                 // [RangedValue<KeyResult.KeySignature>]\n        let sig = ranged.value                 // KeySignature { tonic, mode }\n        print(\"\\(sig.tonic) \\(sig.mode)\")      // e.g. .dFlat .major\n    }\n}\n// Tonic: 17 enharmonic spellings (.c, .cSharp, .dFlat, …). Mode: .major / .minor.\n\n// RhythmResult — beat/bar grid + global tempo\nif let r = result.rhythm {\n    let beats: [CMTime] = r.beats\n    let bars:  [CMTime] = r.bars\n    let bpm:   Float?    = r.beatsPerMinute     // nil if fewer than 2 beats were found\n}\n\n// StructureResult — three nested levels, each an array of ranges\nif let s = result.structure {\n    let sections = s.sections   // [CMTimeRange] — chorus/verse/intro/bridge\n    let segments = s.segments   // [CMTimeRange]\n    let phrases  = s.phrases    // [CMTimeRange]\n}\n\n// PaceResult — how fast the music *feels* over time (energy)\nif let p = result.pace {\n    let energy = p.ranges       // [RangedValue<Double>] — higher = more energetic\n}\n\n// InstrumentActivityResult — per-instrument presence and intensity\nif let inst = result.instrumentActivity {\n    let drumWhen  = inst.ranges[.drum]          // [CMTimeRange]? — when the drum is present\n    let vocalCurve = inst.activity[.vocal]      // [TimedValue<Float>]? — intensity 0…1 over time\n}\n// Instrument: .vocal, .drum, .bass, .other.\n\n// LoudnessResult — LUFS perceptual loudness (peak in dB)\nif let loud = result.loudness {\n    let overall  = loud.integrated.value        // Float — whole-song average, in LUFS\n    let momentary = loud.momentary              // [TimedValue<Float>] — 400 ms window, every 100 ms\n    let shortTerm = loud.shortTerm              // [TimedValue<Float>] — 3 s window, smoother\n    let peakDB   = loud.peak.value              // absolute peak, in decibels\n}\n```\n\n## Streaming Loudness\n\n`MusicUnderstandingSession` exposes `loudnessResults`, an `AsyncSequence<LoudnessResult, any Error>` that emits as each 100 ms of audio is analyzed — useful for live meters. Consume the stream and drive analysis concurrently:\n\n```swift\nlet session = MusicUnderstandingSession(audioProvider: liveBuffers)\n\n// One task consumes the stream; analysis drives it on the current task.\nlet meter = Task {\n    for try await loud in session.loudnessResults {\n        await updateMeter(loud.momentary.last?.value)\n    }\n}\ntry await session.analyze(for: [.loudness])\ntry await meter.value\n```\n\n## Custom Audio Input (`AudioProvider`)\n\nInstead of an asset, feed buffers from any `AsyncSequence` whose `Element` is `AVReadOnlyAudioPCMBuffer` and whose `Failure` is `Never`. The element is non-optional — completion is the sequence **ending**, i.e. the iterator's `next()` returns `nil` (Apple's phrasing: \"send a final `nil` to signal completion\"). Model it as Apple does, with a self-iterating struct:\n\n```swift\nstruct AudioProvider: AsyncSequence, AsyncIteratorProtocol {\n    mutating func next() async -> AVReadOnlyAudioPCMBuffer? {\n        // the next buffer, or nil once all audio has been sent\n    }\n    func makeAsyncIterator() -> Self { self }\n}\n\nlet session = MusicUnderstandingSession(audioProvider: AudioProvider())\nlet result = try await session.analyze()\n```\n\n## Export\n\nEvery result type is `Codable`. Encode the whole `SessionResult` to JSON:\n\n```swift\nlet data = try JSONEncoder().encode(result)\n```\n\n## Errors & Lifecycle\n\n| `MusicUnderstandingError` | Meaning |\n|---------------------------|---------|\n| `.sessionInProgress` | An analysis is already running — one at a time |\n| `.emptyAnalysisSet` | `analyze(for: [])` called with no types |\n| `.invalidAsset` | The asset could not be read |\n| `.internalError` | Unexpected framework failure |\n\n**One analysis per session.** Per Apple, call `analyze()` / `analyze(for:)` only once per `MusicUnderstandingSession` — create a new session for another run. Concurrent calls throw `.sessionInProgress`. Call `await session.cancel()` to stop an in-flight analysis; a canceled session cannot be reused.\n\n## Resources\n\n**WWDC**: 2026-253\n\n**Docs**: /musicunderstanding\n\n**Skills**: shazamkit, avfoundation-ref\n",
       "skillType": "discipline",
       "source": "axiom",
       "tags": [
@@ -21655,7 +21655,7 @@
           "level": 2,
           "startLine": 15,
           "endLine": 41,
-          "charCount": 897
+          "charCount": 933
         },
         {
           "heading": "`analyze()` vs `analyze(for:)`",
@@ -21669,7 +21669,7 @@
           "level": 2,
           "startLine": 58,
           "endLine": 108,
-          "charCount": 2149
+          "charCount": 2143
         },
         {
           "heading": "Streaming Loudness",
@@ -21682,28 +21682,28 @@
           "heading": "Custom Audio Input (`AudioProvider`)",
           "level": 2,
           "startLine": 126,
-          "endLine": 134,
-          "charCount": 374
+          "endLine": 141,
+          "charCount": 776
         },
         {
           "heading": "Export",
           "level": 2,
-          "startLine": 135,
-          "endLine": 142,
+          "startLine": 142,
+          "endLine": 149,
           "charCount": 143
         },
         {
           "heading": "Errors & Lifecycle",
           "level": 2,
-          "startLine": 143,
-          "endLine": 153,
-          "charCount": 407
+          "startLine": 150,
+          "endLine": 160,
+          "charCount": 647
         },
         {
           "heading": "Resources",
           "level": 2,
-          "startLine": 154,
-          "endLine": 161,
+          "startLine": 161,
+          "endLine": 168,
           "charCount": 105
         }
       ]
@@ -38288,7 +38288,7 @@
     "axiom-tools--xcui-ref": {
       "name": "axiom-tools--xcui-ref",
       "description": "xcui makes iOS-simulator UI and accessibility testing scriptable for coding harnesses. It owns the test-harness semantics AXe and simctl lack — waiting, asserting, accessibility config, dialogs, computed VoiceOver — and delegates input (tap/type/swipe) to AXe, which injects real HID touch.",
-      "content": "# xcui Reference (Scriptable Simulator UI & Accessibility Testing)\n\nxcui makes iOS-simulator UI and accessibility testing scriptable for coding harnesses. It owns the test-harness semantics AXe and simctl lack — waiting, asserting, accessibility config, dialogs, computed VoiceOver — and delegates input (tap/type/swipe) to AXe, which injects real HID touch.\n\n## Invocation\n\n`xcui` is on PATH as a bare command (plugin `bin/` is auto-resolved). Run `xcui <subcommand>`.\n\n## Prerequisite: run `xcui doctor`\n\n`xcui doctor` verifies AXe (the input/tree engine), Homebrew, Xcode, and a booted sim. If AXe is missing and brew is present, `xcui doctor --install` runs `brew install cameroncooke/axe/axe` (explicit/consented — never silent). Exit 0 = ready; exit 2 = AXe missing or no booted sim (see `problems`/`next_steps` in the JSON). When several sims are booted, every verb targets the lowest UDID deterministically; `doctor` adds a `note` listing them, and `--udid <id>` (accepted by every verb, `doctor` included) targets a specific one.\n\n## Subcommands\n\n- `xcui wait --for-element <id> | --gone <id> | --idle [--timeout 10s] [--poll 250ms]` — poll the a11y tree until a condition holds. Replaces sleep/re-screenshot guesswork (CLI `waitForExistence`).\n- `xcui assert --id <id> [--label <s>] [--value <s>] [--trait <role>] [--single]` — assert on an element. `--single` checks the id resolves to exactly one element (e.g. \"hero announces as one element\").\n- `xcui a11y set --toggle <name> --value <on/off> [--app <bundle-id>]` — set an accessibility setting. Supported toggles (all verified against the simulator):\n  - `dynamic-type` — native `simctl ui content_size`; `--value` is a size (`large`, `accessibility-extra-large`, … up to `accessibility-extra-extra-extra-large`). Applies live; no relaunch.\n  - `increase-contrast` — native `simctl ui increase_contrast`; `--value` is `on`/`off`. Applies live; no relaunch.\n  - `reduce-motion` — `defaults write com.apple.Accessibility ReduceMotionEnabled`; needs relaunch, so pass `--app <bundle-id>` to have xcui terminate + relaunch the app.\n  - `reduce-transparency` — `defaults write com.apple.Accessibility ReduceTransparencyEnabled`; needs relaunch (pass `--app`).\n- `xcui a11y reset` — clear xcui-set overrides (delete the defaults keys, content_size → large, increase_contrast → disabled).\n- `xcui dialog accept | dismiss [--udid <udid>]` — find the frontmost system alert and tap the right button: `accept` prefers the most-permissive standard grant (`Allow While Using App` › `Allow Once` › `Allow` › `OK` › `Open`), `dismiss` prefers the decline (`Don't Allow` › `Cancel` › `Not Now`). A one-button alert is tapped for either intent. Matching is case- and apostrophe-insensitive (curly `’` = straight `'`). The tap delegates to `axe tap` (by id when present, else by label). Exit `0` handled, `1` no actionable alert.\n- `xcui dialog pregrant <bundle-id> <service>… [--udid <udid>]` — grant permissions ahead of time via `simctl privacy … grant`, so the dialog never appears. Services are `simctl privacy` names (`camera`, `photos`, `location`, `microphone`, `contacts`, …). Prefer this over `accept` when you control the test setup — no alert means nothing to race.\n- `xcui voiceover traverse [--udid <udid>]` — emit the **computed** VoiceOver announcement sequence: walk the a11y tree in focus order (top-to-bottom, leading-to-trailing) and render each focusable element as `label, value, trait` (plus `dimmed` when disabled). Output is a `sequence` JSON array.\n- `xcui voiceover assert --sequence <file> [--udid <udid>]` — compare the live announcement sequence to an expected one; the file may be a bare JSON string array **or** a saved `traverse` report (it round-trips). Reports every differing index (one entry per mismatched position, plus a length-mismatch note when counts differ); exit `1` on any mismatch.\n\n> **VoiceOver scope (honest framing):** `voiceover` renders the *computed* announcement from the accessibility tree — what VoiceOver would say, derived deterministically. It is **not** captured audio/TTS, which the simulator does not expose to scripting. Use it to catch missing labels, wrong trait phrasing, bad focus order, and unannounced state — not to verify the speech synthesizer itself.\n\n> **Not yet supported (a11y toggles):** the `voiceover`, `differentiate-without-color`, and `bold-text` *toggles* for `a11y set` had no confirmable simulator mechanism (no native `simctl ui` setter, and their candidate `defaults` keys are not populated/honored by iOS on the sim). They are intentionally omitted from v1 rather than shipped unverified. (This is distinct from the `xcui voiceover` command above, which reads the tree and needs no toggle.)\n\n## Device state — biometrics, orientation, location: use `devicectl`\n\n`xcui` drives the **in-app UI + accessibility tree** (`tap`/`assert`, VoiceOver order) and toggles **accessibility settings** (`a11y set`: Dynamic Type, contrast, motion). It does **not** drive hardware/device state. For **biometrics** (Face ID / Touch ID — neither `xcui` nor `simctl` can do this), orientation, location, status bar, and memory-pressure, use `devicectl`: it works on simulators in Xcode 26.6+, takes one `-d <udid>` selector across sim + device, and emits a stable `--json-output`. The two compose — `devicectl` sets the state, `xcui` asserts the resulting UI. Full verified catalog: `skills/device-control-ref.md`.\n\n## For input, use AXe directly\n\n```bash\naxe tap --id loginButton --udid <udid>     # real HID touch, not pointer-hover\naxe type \"user@example.com\" --udid <udid>\naxe describe-ui --udid <udid>              # raw a11y tree (xcui assert/wait parse this)\n```\n\n## Output & exit codes\n\nJSON by default (`tool`/`version` envelope); `--human` for prose. Exit: `0` pass · `1` assertion-fail/wait-timeout · `2` environment error · `8` output-write error.\n\n> **CLI gotcha:** Go's flag parser stops at the first positional, so always put flags after the subcommand and use the all-flag forms shown above (`assert --id …`, not `assert <id> …`).\n\n## Resources\n\n**Tools**: `axe` (AXe — `brew install cameroncooke/axe/axe`), `xcrun simctl`\n\n**Skills**: axiom-accessibility, axiom-testing\n\n**Agents**: simulator-tester (drives xcui live), accessibility-auditor (static a11y scan)\n",
+      "content": "# xcui Reference (Scriptable Simulator UI & Accessibility Testing)\n\nxcui makes iOS-simulator UI and accessibility testing scriptable for coding harnesses. It owns the test-harness semantics AXe and simctl lack — waiting, asserting, accessibility config, dialogs, computed VoiceOver — and delegates input (tap/type/swipe) to AXe, which injects real HID touch.\n\n## Invocation\n\n`xcui` is on PATH as a bare command (plugin `bin/` is auto-resolved). Run `xcui <subcommand>`.\n\n## Prerequisite: run `xcui doctor`\n\n`xcui doctor` verifies AXe (the input/tree engine), Homebrew, Xcode, and a booted sim. If AXe is missing and brew is present, `xcui doctor --install` runs `brew install cameroncooke/axe/axe` (explicit/consented — never silent). Exit 0 = ready; exit 2 = AXe missing or no booted sim (see `problems`/`next_steps` in the JSON). When several sims are booted, every verb targets the lowest UDID deterministically; `doctor` adds a `note` listing them, and `--udid <id>` (accepted by every verb, `doctor` included) targets a specific one.\n\n## Subcommands\n\n- `xcui wait --for-element <id> | --gone <id> | --idle [--timeout 10s] [--poll 250ms]` — poll the a11y tree until a condition holds. Replaces sleep/re-screenshot guesswork (CLI `waitForExistence`).\n- `xcui assert --id <id> [--label <s>] [--value <s>] [--trait <role>] [--single]` — assert on an element. `--single` checks the id resolves to exactly one element (e.g. \"hero announces as one element\").\n- `xcui a11y set --toggle <name> --value <on/off> [--app <bundle-id>]` — set an accessibility setting. Supported toggles (all verified against the simulator):\n  - `dynamic-type` — native `simctl ui content_size`; `--value` is a size (`large`, `accessibility-extra-large`, … up to `accessibility-extra-extra-extra-large`). Applies live; no relaunch.\n  - `increase-contrast` — native `simctl ui increase_contrast`; `--value` is `on`/`off`. Applies live; no relaunch.\n  - `reduce-motion` — `defaults write com.apple.Accessibility ReduceMotionEnabled`; needs relaunch, so pass `--app <bundle-id>` to have xcui terminate + relaunch the app.\n  - `reduce-transparency` — `defaults write com.apple.Accessibility ReduceTransparencyEnabled`; needs relaunch (pass `--app`).\n- `xcui a11y reset` — clear xcui-set overrides (delete the defaults keys, content_size → large, increase_contrast → disabled).\n- `xcui dialog accept | dismiss [--udid <udid>]` — find the frontmost system alert and tap the right button: `accept` prefers the most-permissive standard grant (`Allow While Using App` › `Allow Once` › `Allow` › `OK` › `Open`), `dismiss` prefers the decline (`Don't Allow` › `Cancel` › `Not Now`). A one-button alert is tapped for either intent. Matching is case- and apostrophe-insensitive (curly `’` = straight `'`). The tap delegates to `axe tap` (by id when present, else by label). Exit `0` handled, `1` no actionable alert.\n- `xcui dialog pregrant <bundle-id> <service>… [--udid <udid>]` — grant permissions ahead of time via `simctl privacy … grant`, so the dialog never appears. Services are `simctl privacy` names (`camera`, `photos`, `location`, `microphone`, `contacts`, …). Prefer this over `accept` when you control the test setup — no alert means nothing to race.\n- `xcui voiceover traverse [--udid <udid>]` — emit the **computed** VoiceOver announcement sequence: walk the a11y tree in focus order (top-to-bottom, leading-to-trailing) and render each focusable element as `label, value, trait` (plus `dimmed` when disabled). Output is a `sequence` JSON array.\n- `xcui voiceover assert --sequence <file> [--udid <udid>]` — compare the live announcement sequence to an expected one; the file may be a bare JSON string array **or** a saved `traverse` report (it round-trips). Reports every differing index (one entry per mismatched position, plus a length-mismatch note when counts differ); exit `1` on any mismatch.\n\n> **VoiceOver scope (honest framing):** `voiceover` renders the *computed* announcement from the accessibility tree — what VoiceOver would say, derived deterministically. It is **not** captured audio/TTS, which the simulator does not expose to scripting. Use it to catch missing labels, wrong trait phrasing, bad focus order, and unannounced state — not to verify the speech synthesizer itself.\n\n> **Not yet supported (a11y toggles):** the `voiceover`, `differentiate-without-color`, and `bold-text` *toggles* for `a11y set` had no confirmable simulator mechanism (no native `simctl ui` setter, and their candidate `defaults` keys are not populated/honored by iOS on the sim). They are intentionally omitted from v1 rather than shipped unverified. (This is distinct from the `xcui voiceover` command above, which reads the tree and needs no toggle.)\n\n## Device state — biometrics, orientation, location: use `devicectl`\n\n`xcui` drives the **in-app UI + accessibility tree** (`tap`/`assert`, VoiceOver order) and toggles **accessibility settings** (`a11y set`: Dynamic Type, contrast, motion). It does **not** drive hardware/device state. For **biometrics** (Face ID / Touch ID — neither `xcui` nor `simctl` can do this), orientation, location, status bar, and memory-pressure, use `devicectl`: it works on simulators in Xcode 26.6+, takes one `-d <udid>` selector across sim + device, and emits a stable `--json-output`. The two compose — `devicectl` sets the state, `xcui` asserts the resulting UI. Full verified catalog: `skills/device-control-ref.md`.\n\n## For input, use AXe directly\n\n> **Xcode 27 beta**: if `xcui doctor` reports an `axe_developer_dir` (a beta that relocated `SimulatorKit.framework` breaks bare `axe`), prefix these `axe` calls with `DEVELOPER_DIR=<that value>`. xcui's own commands apply it automatically.\n\n```bash\naxe tap --id loginButton --udid <udid>     # real HID touch, not pointer-hover\naxe type \"user@example.com\" --udid <udid>\naxe describe-ui --udid <udid>              # raw a11y tree (xcui assert/wait parse this)\n```\n\n## Output & exit codes\n\nJSON by default (`tool`/`version` envelope); `--human` for prose. Exit: `0` pass · `1` assertion-fail/wait-timeout · `2` environment error · `8` output-write error.\n\n> **CLI gotcha:** Go's flag parser stops at the first positional, so always put flags after the subcommand and use the all-flag forms shown above (`assert --id …`, not `assert <id> …`).\n\n## Resources\n\n**Tools**: `axe` (AXe — `brew install cameroncooke/axe/axe`), `xcrun simctl`\n\n**Skills**: axiom-accessibility, axiom-testing\n\n**Agents**: simulator-tester (drives xcui live), accessibility-auditor (static a11y scan)\n",
       "skillType": "reference",
       "source": "axiom",
       "tags": [
@@ -38336,21 +38336,21 @@
           "heading": "For input, use AXe directly",
           "level": 2,
           "startLine": 35,
-          "endLine": 42,
-          "charCount": 254
+          "endLine": 44,
+          "charCount": 496
         },
         {
           "heading": "Output & exit codes",
           "level": 2,
-          "startLine": 43,
-          "endLine": 48,
+          "startLine": 45,
+          "endLine": 50,
           "charCount": 376
         },
         {
           "heading": "Resources",
           "level": 2,
-          "startLine": 49,
-          "endLine": 56,
+          "startLine": 51,
+          "endLine": 58,
           "charCount": 230
         }
       ]
@@ -41035,7 +41035,7 @@
     "axiom-xcode-mcp--axe-ref": {
       "name": "axiom-xcode-mcp--axe-ref",
       "description": "AXe is a CLI tool for interacting with iOS Simulators using Apple's Accessibility APIs and HID functionality. Single binary, no daemon required.",
-      "content": "\n# AXe Reference (iOS Simulator UI Automation)\n\nAXe is a CLI tool for interacting with iOS Simulators using Apple's Accessibility APIs and HID functionality. Single binary, no daemon required.\n\n## Installation\n\n```bash\nbrew install cameroncooke/axe/axe\n\n# Verify installation\naxe --version\n```\n\n## Critical Best Practice: describe_ui First\n\n**ALWAYS run `describe_ui` before UI interactions.** Never guess coordinates from screenshots.\n\n**Best practice:** Use describe-ui to get precise element coordinates prior to using x/y parameters (don't guess from screenshots).\n\n```bash\n# 1. FIRST: Get the UI tree with frame coordinates\naxe describe-ui --udid $UDID\n\n# 2. THEN: Tap by accessibility ID (preferred)\naxe tap --id \"loginButton\" --udid $UDID\n\n# 3. OR: Tap by label\naxe tap --label \"Login\" --udid $UDID\n\n# 4. LAST RESORT: Tap by coordinates from describe-ui output\naxe tap -x 200 -y 400 --udid $UDID\n```\n\n**Priority order for targeting elements:**\n1. `--id` (accessibilityIdentifier) - most stable\n2. `--label` (accessibility label) - stable but may change with localization\n3. `-x -y` coordinates from `describe-ui` - fragile, use only when no identifier\n\n## Core Concept: Accessibility-First\n\n**AXe's key advantage**: Tap elements by accessibility identifier or label, not just coordinates.\n\n```bash\n# Coordinate-based (fragile - breaks with layout changes)\naxe tap -x 200 -y 400 --udid $UDID\n\n# Accessibility-based (stable - survives UI changes)\naxe tap --id \"loginButton\" --udid $UDID\naxe tap --label \"Login\" --udid $UDID\n```\n\n**Always prefer `--id` or `--label` over coordinates.**\n\n## Getting the Simulator UDID\n\nAXe requires the simulator UDID for most commands:\n\n```bash\n# Get booted simulator UDID\nUDID=$(xcrun simctl list devices -j | jq -r '.devices | to_entries[] | .value[] | select(.state == \"Booted\") | .udid' | head -1)\n\n# List all simulators\naxe list-simulators\n```\n\n## Touch & Tap Commands\n\n### Tap by Accessibility Identifier (Recommended)\n\n```bash\n# Tap element with accessibilityIdentifier\naxe tap --id \"loginButton\" --udid $UDID\n\n# Tap element with accessibility label\naxe tap --label \"Submit\" --udid $UDID\n```\n\n### Tap by Coordinates\n\n```bash\n# Basic tap\naxe tap -x 200 -y 400 --udid $UDID\n\n# Tap with timing controls\naxe tap -x 200 -y 400 --pre-delay 0.5 --post-delay 0.3 --udid $UDID\n\n# Long press: use touch with --down --up --delay (tap has no hold option)\naxe touch -x 200 -y 400 --down --up --delay 1.0 --udid $UDID\n```\n\n### Low-Level Touch Events\n\n```bash\n# Touch down (finger press)\naxe touch -x 200 -y 400 --down --udid $UDID\n\n# Touch up (finger release)\naxe touch -x 200 -y 400 --up --udid $UDID\n\n# Both in one call (tap)\naxe touch -x 200 -y 400 --down --up --udid $UDID\n\n# Long press (hold duration in seconds)\naxe touch -x 200 -y 400 --down --up --delay 1.0 --udid $UDID\n```\n\n## Swipe & Gesture Commands\n\n### Custom Swipe\n\n```bash\n# Swipe from point A to point B\naxe swipe --start-x 200 --start-y 600 --end-x 200 --end-y 200 --udid $UDID\n\n# Swipe with duration (slower = more visible)\naxe swipe --start-x 200 --start-y 600 --end-x 200 --end-y 200 --duration 0.5 --udid $UDID\n```\n\n### Gesture Presets\n\n```bash\n# Scrolling\naxe gesture scroll-up --udid $UDID      # Scroll content up (swipe down)\naxe gesture scroll-down --udid $UDID    # Scroll content down (swipe up)\naxe gesture scroll-left --udid $UDID\naxe gesture scroll-right --udid $UDID\n\n# Edge swipes (navigation)\naxe gesture swipe-from-left-edge --udid $UDID   # Back navigation\naxe gesture swipe-from-right-edge --udid $UDID\naxe gesture swipe-from-top-edge --udid $UDID    # Notification Center\naxe gesture swipe-from-bottom-edge --udid $UDID # Home indicator/Control Center\n```\n\n## Text Input\n\n### Type Text\n\n```bash\n# Type text (element must be focused)\naxe type \"user@example.com\" --udid $UDID\n\n# Type a longer string\naxe type \"password123\" --udid $UDID\n\n# Type from stdin\necho \"Hello World\" | axe type --stdin --udid $UDID\n\n# Type from file\naxe type --file /tmp/input.txt --udid $UDID\n```\n\n### Keyboard Keys\n\n```bash\n# Press specific key by HID keycode\naxe key 40 --udid $UDID  # Return/Enter\n\n# Common keycodes:\n# 40 = Return/Enter\n# 41 = Escape\n# 42 = Backspace/Delete\n# 43 = Tab\n# 44 = Space\n# 79 = Right Arrow\n# 80 = Left Arrow\n# 81 = Down Arrow\n# 82 = Up Arrow\n\n# Key sequence with timing (comma-separated keycodes, required --keycodes label)\naxe key-sequence --keycodes 40,43,40 --delay 0.2 --udid $UDID\n```\n\n## Hardware Buttons\n\n```bash\n# Home button\naxe button home --udid $UDID\n\n# Lock/Power button\naxe button lock --udid $UDID\n\n# Long press power (shutdown dialog)\naxe button lock --duration 3.0 --udid $UDID\n\n# Side button (iPhone X+)\naxe button side-button --udid $UDID\n\n# Siri\naxe button siri --udid $UDID\n\n# Apple Pay\naxe button apple-pay --udid $UDID\n```\n\n## Screenshots\n\n```bash\n# Screenshot to auto-named file\naxe screenshot --udid $UDID\n# Output: screenshot_2026-01-11_143052.png\n\n# Screenshot to specific file\naxe screenshot --output /tmp/my-screenshot.png --udid $UDID\n\n# For piping, write to a file then redirect (no --stdout flag exists)\naxe screenshot --output /tmp/shot.png --udid $UDID && cat /tmp/shot.png > screenshot.png\n```\n\n## Video Recording & Streaming\n\n### Record Video\n\n```bash\n# Start recording (Ctrl+C to stop)\naxe record-video --output /tmp/recording.mp4 --udid $UDID\n\n# Record with quality settings\naxe record-video --output /tmp/recording.mp4 --quality high --udid $UDID\n\n# Record with scale (reduce file size)\naxe record-video --output /tmp/recording.mp4 --scale 0.5 --udid $UDID\n```\n\n### Stream Video\n\n```bash\n# Stream at 10 FPS (default)\naxe stream-video --udid $UDID\n\n# Stream at specific framerate (1-30 FPS)\naxe stream-video --fps 30 --udid $UDID\n\n# Stream formats\naxe stream-video --format mjpeg --udid $UDID   # MJPEG (default)\naxe stream-video --format jpeg --udid $UDID    # Individual JPEGs\naxe stream-video --format ffmpeg --udid $UDID  # FFmpeg compatible\naxe stream-video --format bgra --udid $UDID    # Raw BGRA\n```\n\n## UI Inspection (describe-ui)\n\n**Critical for finding accessibility identifiers and labels.**\n\n### Full Screen UI Tree\n\n```bash\n# Get complete accessibility tree\naxe describe-ui --udid $UDID\n\n# Output includes:\n# - Element type (Button, TextField, StaticText, etc.)\n# - Accessibility identifier\n# - Accessibility label\n# - Frame (position and size)\n# - Enabled/disabled state\n```\n\n### Point-Specific UI Info\n\n```bash\n# Get element at specific coordinates\naxe describe-ui --point 200,400 --udid $UDID\n```\n\n### Example Output\n\n```json\n{\n  \"type\": \"Button\",\n  \"identifier\": \"loginButton\",\n  \"label\": \"Login\",\n  \"frame\": {\"x\": 150, \"y\": 380, \"width\": 100, \"height\": 44},\n  \"enabled\": true,\n  \"focused\": false\n}\n```\n\n## Common Workflows\n\n### Login Flow\n\n```bash\nUDID=$(xcrun simctl list devices -j | jq -r '.devices | to_entries[] | .value[] | select(.state == \"Booted\") | .udid' | head -1)\n\n# Tap email field and type\naxe tap --id \"emailTextField\" --udid $UDID\naxe type \"user@example.com\" --udid $UDID\n\n# Tap password field and type\naxe tap --id \"passwordTextField\" --udid $UDID\naxe type \"password123\" --udid $UDID\n\n# Tap login button\naxe tap --id \"loginButton\" --udid $UDID\n\n# Wait and screenshot\nsleep 2\naxe screenshot --output /tmp/login-result.png --udid $UDID\n```\n\n### Discover Elements Before Automating\n\n```bash\n# 1. Get the UI tree\naxe describe-ui --udid $UDID > /tmp/ui-tree.json\n\n# 2. Find elements (search for identifiers)\ncat /tmp/ui-tree.json | jq '.[] | select(.identifier != null) | {identifier, label, type}'\n\n# 3. Use discovered identifiers in automation\naxe tap --id \"discoveredIdentifier\" --udid $UDID\n```\n\n### Scroll to Find Element\n\n```bash\n# Scroll down until element appears (pseudo-code pattern)\nfor i in {1..5}; do\n  if axe describe-ui --udid $UDID | grep -q \"targetElement\"; then\n    axe tap --id \"targetElement\" --udid $UDID\n    break\n  fi\n  axe gesture scroll-down --udid $UDID\n  sleep 0.5\ndone\n```\n\n### Screenshot on Error\n\n```bash\n# Automation with error capture\nif ! axe tap --id \"submitButton\" --udid $UDID; then\n  axe screenshot --output /tmp/error-state.png --udid $UDID\n  axe describe-ui --udid $UDID > /tmp/error-ui-tree.json\n  echo \"Failed to tap submitButton - see error-state.png\"\nfi\n```\n\n## Timing Controls\n\nMost commands support timing options:\n\n| Option | Description |\n|--------|-------------|\n| `--pre-delay` | Wait before action (seconds, `tap`) |\n| `--post-delay` | Wait after action (seconds, `tap`) |\n| `--delay` | Hold duration between down/up (`touch`) or between key presses (`key-sequence`) |\n| `--duration` | Button-press duration (`button`) or swipe duration (`swipe`) |\n\n```bash\n# Example with full timing control\naxe tap --id \"button\" --pre-delay 0.5 --post-delay 0.3 --udid $UDID\n```\n\n## AXe vs simctl\n\n| Capability | simctl | AXe |\n|------------|--------|-----|\n| Device lifecycle | ✅ | ❌ |\n| Permissions | ✅ | ❌ |\n| Push notifications | ✅ | ❌ |\n| Status bar | ✅ | ❌ |\n| Deep links | ✅ | ❌ |\n| Screenshots | ✅ | ✅ (PNG) |\n| Video recording | ✅ | ✅ (H.264) |\n| Video streaming | ❌ | ✅ |\n| UI tap/swipe | ❌ | ✅ |\n| Type text | ❌ | ✅ |\n| Hardware buttons | ❌ | ✅ |\n| Accessibility tree | ❌ | ✅ |\n\n**Use both together**: simctl for device control, AXe for UI automation.\n\n## Troubleshooting\n\n### Element Not Found\n\n1. Run `axe describe-ui` to see available elements\n2. Check element has `accessibilityIdentifier` set in code\n3. Ensure element is visible (not off-screen)\n\n### Tap Doesn't Work\n\n1. Check element is enabled (`\"enabled\": true` in describe-ui)\n2. Try adding `--pre-delay 0.5` for slow-loading UI\n3. Verify correct UDID with `axe list-simulators`\n\n### Type Not Working\n\n1. Ensure text field is focused first: `axe tap --id \"textField\"`\n2. Check keyboard is visible\n3. For unreliable input, split long strings into multiple `axe type` calls, or use `--stdin`/`--file`\n\n### Permission Denied\n\nAXe uses private APIs - ensure you're running on a Mac with Xcode installed and proper entitlements.\n\n## Resources\n\n**GitHub**: https://github.com/cameroncooke/AXe\n\n**Related**: xcsentinel (build orchestration)\n\n**Skills**: axiom-testing\n\n**Agents**: simulator-tester, test-runner\n",
+      "content": "\n# AXe Reference (iOS Simulator UI Automation)\n\nAXe is a CLI tool for interacting with iOS Simulators using Apple's Accessibility APIs and HID functionality. Single binary, no daemon required.\n\n> **Xcode 27 beta gotcha**: a beta that relocated `SimulatorKit.framework` (Xcode 27 moved it to `Contents/SharedFrameworks/`) breaks bare `axe` — \"Failed to load essential private frameworks … SimulatorKit.framework … does not exist\". Run `xcui doctor`; if it reports an `axe_developer_dir`, prefix every `axe` command below with `DEVELOPER_DIR=<that value>` (e.g. `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer axe tap …`). AXe 1.7.1 has no fix yet.\n\n## Installation\n\n```bash\nbrew install cameroncooke/axe/axe\n\n# Verify installation\naxe --version\n```\n\n## Critical Best Practice: describe_ui First\n\n**ALWAYS run `describe_ui` before UI interactions.** Never guess coordinates from screenshots.\n\n**Best practice:** Use describe-ui to get precise element coordinates prior to using x/y parameters (don't guess from screenshots).\n\n```bash\n# 1. FIRST: Get the UI tree with frame coordinates\naxe describe-ui --udid $UDID\n\n# 2. THEN: Tap by accessibility ID (preferred)\naxe tap --id \"loginButton\" --udid $UDID\n\n# 3. OR: Tap by label\naxe tap --label \"Login\" --udid $UDID\n\n# 4. LAST RESORT: Tap by coordinates from describe-ui output\naxe tap -x 200 -y 400 --udid $UDID\n```\n\n**Priority order for targeting elements:**\n1. `--id` (accessibilityIdentifier) - most stable\n2. `--label` (accessibility label) - stable but may change with localization\n3. `-x -y` coordinates from `describe-ui` - fragile, use only when no identifier\n\n## Core Concept: Accessibility-First\n\n**AXe's key advantage**: Tap elements by accessibility identifier or label, not just coordinates.\n\n```bash\n# Coordinate-based (fragile - breaks with layout changes)\naxe tap -x 200 -y 400 --udid $UDID\n\n# Accessibility-based (stable - survives UI changes)\naxe tap --id \"loginButton\" --udid $UDID\naxe tap --label \"Login\" --udid $UDID\n```\n\n**Always prefer `--id` or `--label` over coordinates.**\n\n## Getting the Simulator UDID\n\nAXe requires the simulator UDID for most commands:\n\n```bash\n# Get booted simulator UDID\nUDID=$(xcrun simctl list devices -j | jq -r '.devices | to_entries[] | .value[] | select(.state == \"Booted\") | .udid' | head -1)\n\n# List all simulators\naxe list-simulators\n```\n\n## Touch & Tap Commands\n\n### Tap by Accessibility Identifier (Recommended)\n\n```bash\n# Tap element with accessibilityIdentifier\naxe tap --id \"loginButton\" --udid $UDID\n\n# Tap element with accessibility label\naxe tap --label \"Submit\" --udid $UDID\n```\n\n### Tap by Coordinates\n\n```bash\n# Basic tap\naxe tap -x 200 -y 400 --udid $UDID\n\n# Tap with timing controls\naxe tap -x 200 -y 400 --pre-delay 0.5 --post-delay 0.3 --udid $UDID\n\n# Long press: use touch with --down --up --delay (tap has no hold option)\naxe touch -x 200 -y 400 --down --up --delay 1.0 --udid $UDID\n```\n\n### Low-Level Touch Events\n\n```bash\n# Touch down (finger press)\naxe touch -x 200 -y 400 --down --udid $UDID\n\n# Touch up (finger release)\naxe touch -x 200 -y 400 --up --udid $UDID\n\n# Both in one call (tap)\naxe touch -x 200 -y 400 --down --up --udid $UDID\n\n# Long press (hold duration in seconds)\naxe touch -x 200 -y 400 --down --up --delay 1.0 --udid $UDID\n```\n\n## Swipe & Gesture Commands\n\n### Custom Swipe\n\n```bash\n# Swipe from point A to point B\naxe swipe --start-x 200 --start-y 600 --end-x 200 --end-y 200 --udid $UDID\n\n# Swipe with duration (slower = more visible)\naxe swipe --start-x 200 --start-y 600 --end-x 200 --end-y 200 --duration 0.5 --udid $UDID\n```\n\n### Gesture Presets\n\n```bash\n# Scrolling\naxe gesture scroll-up --udid $UDID      # Scroll content up (swipe down)\naxe gesture scroll-down --udid $UDID    # Scroll content down (swipe up)\naxe gesture scroll-left --udid $UDID\naxe gesture scroll-right --udid $UDID\n\n# Edge swipes (navigation)\naxe gesture swipe-from-left-edge --udid $UDID   # Back navigation\naxe gesture swipe-from-right-edge --udid $UDID\naxe gesture swipe-from-top-edge --udid $UDID    # Notification Center\naxe gesture swipe-from-bottom-edge --udid $UDID # Home indicator/Control Center\n```\n\n## Text Input\n\n### Type Text\n\n```bash\n# Type text (element must be focused)\naxe type \"user@example.com\" --udid $UDID\n\n# Type a longer string\naxe type \"password123\" --udid $UDID\n\n# Type from stdin\necho \"Hello World\" | axe type --stdin --udid $UDID\n\n# Type from file\naxe type --file /tmp/input.txt --udid $UDID\n```\n\n### Keyboard Keys\n\n```bash\n# Press specific key by HID keycode\naxe key 40 --udid $UDID  # Return/Enter\n\n# Common keycodes:\n# 40 = Return/Enter\n# 41 = Escape\n# 42 = Backspace/Delete\n# 43 = Tab\n# 44 = Space\n# 79 = Right Arrow\n# 80 = Left Arrow\n# 81 = Down Arrow\n# 82 = Up Arrow\n\n# Key sequence with timing (comma-separated keycodes, required --keycodes label)\naxe key-sequence --keycodes 40,43,40 --delay 0.2 --udid $UDID\n```\n\n## Hardware Buttons\n\n```bash\n# Home button\naxe button home --udid $UDID\n\n# Lock/Power button\naxe button lock --udid $UDID\n\n# Long press power (shutdown dialog)\naxe button lock --duration 3.0 --udid $UDID\n\n# Side button (iPhone X+)\naxe button side-button --udid $UDID\n\n# Siri\naxe button siri --udid $UDID\n\n# Apple Pay\naxe button apple-pay --udid $UDID\n```\n\n## Screenshots\n\n```bash\n# Screenshot to auto-named file\naxe screenshot --udid $UDID\n# Output: screenshot_2026-01-11_143052.png\n\n# Screenshot to specific file\naxe screenshot --output /tmp/my-screenshot.png --udid $UDID\n\n# For piping, write to a file then redirect (no --stdout flag exists)\naxe screenshot --output /tmp/shot.png --udid $UDID && cat /tmp/shot.png > screenshot.png\n```\n\n## Video Recording & Streaming\n\n### Record Video\n\n```bash\n# Start recording (Ctrl+C to stop)\naxe record-video --output /tmp/recording.mp4 --udid $UDID\n\n# Record with quality settings\naxe record-video --output /tmp/recording.mp4 --quality high --udid $UDID\n\n# Record with scale (reduce file size)\naxe record-video --output /tmp/recording.mp4 --scale 0.5 --udid $UDID\n```\n\n### Stream Video\n\n```bash\n# Stream at 10 FPS (default)\naxe stream-video --udid $UDID\n\n# Stream at specific framerate (1-30 FPS)\naxe stream-video --fps 30 --udid $UDID\n\n# Stream formats\naxe stream-video --format mjpeg --udid $UDID   # MJPEG (default)\naxe stream-video --format jpeg --udid $UDID    # Individual JPEGs\naxe stream-video --format ffmpeg --udid $UDID  # FFmpeg compatible\naxe stream-video --format bgra --udid $UDID    # Raw BGRA\n```\n\n## UI Inspection (describe-ui)\n\n**Critical for finding accessibility identifiers and labels.**\n\n### Full Screen UI Tree\n\n```bash\n# Get complete accessibility tree\naxe describe-ui --udid $UDID\n\n# Output includes:\n# - Element type (Button, TextField, StaticText, etc.)\n# - Accessibility identifier\n# - Accessibility label\n# - Frame (position and size)\n# - Enabled/disabled state\n```\n\n### Point-Specific UI Info\n\n```bash\n# Get element at specific coordinates\naxe describe-ui --point 200,400 --udid $UDID\n```\n\n### Example Output\n\n```json\n{\n  \"type\": \"Button\",\n  \"identifier\": \"loginButton\",\n  \"label\": \"Login\",\n  \"frame\": {\"x\": 150, \"y\": 380, \"width\": 100, \"height\": 44},\n  \"enabled\": true,\n  \"focused\": false\n}\n```\n\n## Common Workflows\n\n### Login Flow\n\n```bash\nUDID=$(xcrun simctl list devices -j | jq -r '.devices | to_entries[] | .value[] | select(.state == \"Booted\") | .udid' | head -1)\n\n# Tap email field and type\naxe tap --id \"emailTextField\" --udid $UDID\naxe type \"user@example.com\" --udid $UDID\n\n# Tap password field and type\naxe tap --id \"passwordTextField\" --udid $UDID\naxe type \"password123\" --udid $UDID\n\n# Tap login button\naxe tap --id \"loginButton\" --udid $UDID\n\n# Wait and screenshot\nsleep 2\naxe screenshot --output /tmp/login-result.png --udid $UDID\n```\n\n### Discover Elements Before Automating\n\n```bash\n# 1. Get the UI tree\naxe describe-ui --udid $UDID > /tmp/ui-tree.json\n\n# 2. Find elements (search for identifiers)\ncat /tmp/ui-tree.json | jq '.[] | select(.identifier != null) | {identifier, label, type}'\n\n# 3. Use discovered identifiers in automation\naxe tap --id \"discoveredIdentifier\" --udid $UDID\n```\n\n### Scroll to Find Element\n\n```bash\n# Scroll down until element appears (pseudo-code pattern)\nfor i in {1..5}; do\n  if axe describe-ui --udid $UDID | grep -q \"targetElement\"; then\n    axe tap --id \"targetElement\" --udid $UDID\n    break\n  fi\n  axe gesture scroll-down --udid $UDID\n  sleep 0.5\ndone\n```\n\n### Screenshot on Error\n\n```bash\n# Automation with error capture\nif ! axe tap --id \"submitButton\" --udid $UDID; then\n  axe screenshot --output /tmp/error-state.png --udid $UDID\n  axe describe-ui --udid $UDID > /tmp/error-ui-tree.json\n  echo \"Failed to tap submitButton - see error-state.png\"\nfi\n```\n\n## Timing Controls\n\nMost commands support timing options:\n\n| Option | Description |\n|--------|-------------|\n| `--pre-delay` | Wait before action (seconds, `tap`) |\n| `--post-delay` | Wait after action (seconds, `tap`) |\n| `--delay` | Hold duration between down/up (`touch`) or between key presses (`key-sequence`) |\n| `--duration` | Button-press duration (`button`) or swipe duration (`swipe`) |\n\n```bash\n# Example with full timing control\naxe tap --id \"button\" --pre-delay 0.5 --post-delay 0.3 --udid $UDID\n```\n\n## AXe vs simctl\n\n| Capability | simctl | AXe |\n|------------|--------|-----|\n| Device lifecycle | ✅ | ❌ |\n| Permissions | ✅ | ❌ |\n| Push notifications | ✅ | ❌ |\n| Status bar | ✅ | ❌ |\n| Deep links | ✅ | ❌ |\n| Screenshots | ✅ | ✅ (PNG) |\n| Video recording | ✅ | ✅ (H.264) |\n| Video streaming | ❌ | ✅ |\n| UI tap/swipe | ❌ | ✅ |\n| Type text | ❌ | ✅ |\n| Hardware buttons | ❌ | ✅ |\n| Accessibility tree | ❌ | ✅ |\n\n**Use both together**: simctl for device control, AXe for UI automation.\n\n## Troubleshooting\n\n### Element Not Found\n\n1. Run `axe describe-ui` to see available elements\n2. Check element has `accessibilityIdentifier` set in code\n3. Ensure element is visible (not off-screen)\n\n### Tap Doesn't Work\n\n1. Check element is enabled (`\"enabled\": true` in describe-ui)\n2. Try adding `--pre-delay 0.5` for slow-loading UI\n3. Verify correct UDID with `axe list-simulators`\n\n### Type Not Working\n\n1. Ensure text field is focused first: `axe tap --id \"textField\"`\n2. Check keyboard is visible\n3. For unreliable input, split long strings into multiple `axe type` calls, or use `--stdin`/`--file`\n\n### Permission Denied\n\nAXe uses private APIs - ensure you're running on a Mac with Xcode installed and proper entitlements.\n\n## Resources\n\n**GitHub**: https://github.com/cameroncooke/AXe\n\n**Related**: xcsentinel (build orchestration)\n\n**Skills**: axiom-testing\n\n**Agents**: simulator-tester, test-runner\n",
       "skillType": "reference",
       "source": "axiom",
       "tags": [
@@ -41066,623 +41066,623 @@
           "heading": "AXe Reference (iOS Simulator UI Automation)",
           "level": 1,
           "startLine": 1,
-          "endLine": 4,
-          "charCount": 192
+          "endLine": 6,
+          "charCount": 656
         },
         {
           "heading": "Installation",
           "level": 2,
-          "startLine": 5,
-          "endLine": 9,
+          "startLine": 7,
+          "endLine": 11,
           "charCount": 59
         },
         {
           "heading": "Verify installation",
           "level": 1,
-          "startLine": 10,
-          "endLine": 13,
+          "startLine": 12,
+          "endLine": 15,
           "charCount": 40
         },
         {
           "heading": "Critical Best Practice: describe_ui First",
           "level": 2,
-          "startLine": 14,
-          "endLine": 20,
+          "startLine": 16,
+          "endLine": 22,
           "charCount": 282
         },
         {
           "heading": "1. FIRST: Get the UI tree with frame coordinates",
           "level": 1,
-          "startLine": 21,
-          "endLine": 23,
+          "startLine": 23,
+          "endLine": 25,
           "charCount": 80
         },
         {
           "heading": "2. THEN: Tap by accessibility ID (preferred)",
           "level": 1,
-          "startLine": 24,
-          "endLine": 26,
+          "startLine": 26,
+          "endLine": 28,
           "charCount": 87
         },
         {
           "heading": "3. OR: Tap by label",
           "level": 1,
-          "startLine": 27,
-          "endLine": 29,
+          "startLine": 29,
+          "endLine": 31,
           "charCount": 59
         },
         {
           "heading": "4. LAST RESORT: Tap by coordinates from describe-ui output",
           "level": 1,
-          "startLine": 30,
-          "endLine": 38,
+          "startLine": 32,
+          "endLine": 40,
           "charCount": 352
         },
         {
           "heading": "Core Concept: Accessibility-First",
           "level": 2,
-          "startLine": 39,
-          "endLine": 43,
+          "startLine": 41,
+          "endLine": 45,
           "charCount": 144
         },
         {
           "heading": "Coordinate-based (fragile - breaks with layout changes)",
           "level": 1,
-          "startLine": 44,
-          "endLine": 46,
+          "startLine": 46,
+          "endLine": 48,
           "charCount": 93
         },
         {
           "heading": "Accessibility-based (stable - survives UI changes)",
           "level": 1,
-          "startLine": 47,
-          "endLine": 53,
+          "startLine": 49,
+          "endLine": 55,
           "charCount": 191
         },
         {
           "heading": "Getting the Simulator UDID",
           "level": 2,
-          "startLine": 54,
-          "endLine": 58,
+          "startLine": 56,
+          "endLine": 60,
           "charCount": 90
         },
         {
           "heading": "Get booted simulator UDID",
           "level": 1,
-          "startLine": 59,
-          "endLine": 61,
+          "startLine": 61,
+          "endLine": 63,
           "charCount": 157
         },
         {
           "heading": "List all simulators",
           "level": 1,
-          "startLine": 62,
-          "endLine": 65,
+          "startLine": 64,
+          "endLine": 67,
           "charCount": 46
         },
         {
           "heading": "Touch & Tap Commands",
           "level": 2,
-          "startLine": 66,
-          "endLine": 70,
+          "startLine": 68,
+          "endLine": 72,
           "charCount": 83
         },
         {
           "heading": "Tap element with accessibilityIdentifier",
           "level": 1,
-          "startLine": 71,
-          "endLine": 73,
+          "startLine": 73,
+          "endLine": 75,
           "charCount": 83
         },
         {
           "heading": "Tap element with accessibility label",
           "level": 1,
-          "startLine": 74,
-          "endLine": 80,
+          "startLine": 76,
+          "endLine": 82,
           "charCount": 113
         },
         {
           "heading": "Basic tap",
           "level": 1,
-          "startLine": 81,
-          "endLine": 83,
+          "startLine": 83,
+          "endLine": 85,
           "charCount": 47
         },
         {
           "heading": "Tap with timing controls",
           "level": 1,
-          "startLine": 84,
-          "endLine": 86,
+          "startLine": 86,
+          "endLine": 88,
           "charCount": 95
         },
         {
           "heading": "Long press: use touch with --down --up --delay (tap has no hold option)",
           "level": 1,
-          "startLine": 87,
-          "endLine": 93,
+          "startLine": 89,
+          "endLine": 95,
           "charCount": 175
         },
         {
           "heading": "Touch down (finger press)",
           "level": 1,
-          "startLine": 94,
-          "endLine": 96,
+          "startLine": 96,
+          "endLine": 98,
           "charCount": 72
         },
         {
           "heading": "Touch up (finger release)",
           "level": 1,
-          "startLine": 97,
-          "endLine": 99,
+          "startLine": 99,
+          "endLine": 101,
           "charCount": 70
         },
         {
           "heading": "Both in one call (tap)",
           "level": 1,
-          "startLine": 100,
-          "endLine": 102,
+          "startLine": 102,
+          "endLine": 104,
           "charCount": 74
         },
         {
           "heading": "Long press (hold duration in seconds)",
           "level": 1,
-          "startLine": 103,
-          "endLine": 106,
+          "startLine": 105,
+          "endLine": 108,
           "charCount": 105
         },
         {
           "heading": "Swipe & Gesture Commands",
           "level": 2,
-          "startLine": 107,
-          "endLine": 111,
+          "startLine": 109,
+          "endLine": 113,
           "charCount": 54
         },
         {
           "heading": "Swipe from point A to point B",
           "level": 1,
-          "startLine": 112,
-          "endLine": 114,
+          "startLine": 114,
+          "endLine": 116,
           "charCount": 107
         },
         {
           "heading": "Swipe with duration (slower = more visible)",
           "level": 1,
-          "startLine": 115,
-          "endLine": 121,
+          "startLine": 117,
+          "endLine": 123,
           "charCount": 169
         },
         {
           "heading": "Scrolling",
           "level": 1,
-          "startLine": 122,
-          "endLine": 127,
+          "startLine": 124,
+          "endLine": 129,
           "charCount": 233
         },
         {
           "heading": "Edge swipes (navigation)",
           "level": 1,
-          "startLine": 128,
-          "endLine": 134,
+          "startLine": 130,
+          "endLine": 136,
           "charCount": 294
         },
         {
           "heading": "Text Input",
           "level": 2,
-          "startLine": 135,
-          "endLine": 139,
+          "startLine": 137,
+          "endLine": 141,
           "charCount": 37
         },
         {
           "heading": "Type text (element must be focused)",
           "level": 1,
-          "startLine": 140,
-          "endLine": 142,
+          "startLine": 142,
+          "endLine": 144,
           "charCount": 79
         },
         {
           "heading": "Type a longer string",
           "level": 1,
-          "startLine": 143,
-          "endLine": 145,
+          "startLine": 145,
+          "endLine": 147,
           "charCount": 59
         },
         {
           "heading": "Type from stdin",
           "level": 1,
-          "startLine": 146,
-          "endLine": 148,
+          "startLine": 148,
+          "endLine": 150,
           "charCount": 69
         },
         {
           "heading": "Type from file",
           "level": 1,
-          "startLine": 149,
-          "endLine": 155,
+          "startLine": 151,
+          "endLine": 157,
           "charCount": 92
         },
         {
           "heading": "Press specific key by HID keycode",
           "level": 1,
-          "startLine": 156,
-          "endLine": 158,
+          "startLine": 158,
+          "endLine": 160,
           "charCount": 76
         },
         {
           "heading": "Common keycodes:",
           "level": 1,
-          "startLine": 159,
-          "endLine": 159,
+          "startLine": 161,
+          "endLine": 161,
           "charCount": 18
         },
         {
           "heading": "40 = Return/Enter",
           "level": 1,
-          "startLine": 160,
-          "endLine": 160,
+          "startLine": 162,
+          "endLine": 162,
           "charCount": 19
         },
         {
           "heading": "41 = Escape",
           "level": 1,
-          "startLine": 161,
-          "endLine": 161,
+          "startLine": 163,
+          "endLine": 163,
           "charCount": 13
         },
         {
           "heading": "42 = Backspace/Delete",
           "level": 1,
-          "startLine": 162,
-          "endLine": 162,
+          "startLine": 164,
+          "endLine": 164,
           "charCount": 23
         },
         {
           "heading": "43 = Tab",
           "level": 1,
-          "startLine": 163,
-          "endLine": 163,
+          "startLine": 165,
+          "endLine": 165,
           "charCount": 10
         },
         {
           "heading": "44 = Space",
           "level": 1,
-          "startLine": 164,
-          "endLine": 164,
+          "startLine": 166,
+          "endLine": 166,
           "charCount": 12
         },
         {
           "heading": "79 = Right Arrow",
           "level": 1,
-          "startLine": 165,
-          "endLine": 165,
+          "startLine": 167,
+          "endLine": 167,
           "charCount": 18
         },
         {
           "heading": "80 = Left Arrow",
           "level": 1,
-          "startLine": 166,
-          "endLine": 166,
+          "startLine": 168,
+          "endLine": 168,
           "charCount": 17
         },
         {
           "heading": "81 = Down Arrow",
           "level": 1,
-          "startLine": 167,
-          "endLine": 167,
+          "startLine": 169,
+          "endLine": 169,
           "charCount": 17
         },
         {
           "heading": "82 = Up Arrow",
           "level": 1,
-          "startLine": 168,
-          "endLine": 169,
+          "startLine": 170,
+          "endLine": 171,
           "charCount": 16
         },
         {
           "heading": "Key sequence with timing (comma-separated keycodes, required --keycodes label)",
           "level": 1,
-          "startLine": 170,
-          "endLine": 173,
+          "startLine": 172,
+          "endLine": 175,
           "charCount": 147
         },
         {
           "heading": "Hardware Buttons",
           "level": 2,
-          "startLine": 174,
-          "endLine": 176,
+          "startLine": 176,
+          "endLine": 178,
           "charCount": 28
         },
         {
           "heading": "Home button",
           "level": 1,
-          "startLine": 177,
-          "endLine": 179,
+          "startLine": 179,
+          "endLine": 181,
           "charCount": 43
         },
         {
           "heading": "Lock/Power button",
           "level": 1,
-          "startLine": 180,
-          "endLine": 182,
+          "startLine": 182,
+          "endLine": 184,
           "charCount": 49
         },
         {
           "heading": "Long press power (shutdown dialog)",
           "level": 1,
-          "startLine": 183,
-          "endLine": 185,
+          "startLine": 185,
+          "endLine": 187,
           "charCount": 81
         },
         {
           "heading": "Side button (iPhone X+)",
           "level": 1,
-          "startLine": 186,
-          "endLine": 188,
+          "startLine": 188,
+          "endLine": 190,
           "charCount": 62
         },
         {
           "heading": "Siri",
           "level": 1,
-          "startLine": 189,
-          "endLine": 191,
+          "startLine": 191,
+          "endLine": 193,
           "charCount": 36
         },
         {
           "heading": "Apple Pay",
           "level": 1,
-          "startLine": 192,
-          "endLine": 195,
+          "startLine": 194,
+          "endLine": 197,
           "charCount": 50
         },
         {
           "heading": "Screenshots",
           "level": 2,
-          "startLine": 196,
-          "endLine": 198,
+          "startLine": 198,
+          "endLine": 200,
           "charCount": 23
         },
         {
           "heading": "Screenshot to auto-named file",
           "level": 1,
-          "startLine": 199,
-          "endLine": 200,
+          "startLine": 201,
+          "endLine": 202,
           "charCount": 59
         },
         {
           "heading": "Output: screenshot_2026-01-11_143052.png",
           "level": 1,
-          "startLine": 201,
-          "endLine": 202,
+          "startLine": 203,
+          "endLine": 204,
           "charCount": 43
         },
         {
           "heading": "Screenshot to specific file",
           "level": 1,
-          "startLine": 203,
-          "endLine": 205,
+          "startLine": 205,
+          "endLine": 207,
           "charCount": 90
         },
         {
           "heading": "For piping, write to a file then redirect (no --stdout flag exists)",
           "level": 1,
-          "startLine": 206,
-          "endLine": 209,
+          "startLine": 208,
+          "endLine": 211,
           "charCount": 163
         },
         {
           "heading": "Video Recording & Streaming",
           "level": 2,
-          "startLine": 210,
-          "endLine": 214,
+          "startLine": 212,
+          "endLine": 216,
           "charCount": 57
         },
         {
           "heading": "Start recording (Ctrl+C to stop)",
           "level": 1,
-          "startLine": 215,
-          "endLine": 217,
+          "startLine": 217,
+          "endLine": 219,
           "charCount": 93
         },
         {
           "heading": "Record with quality settings",
           "level": 1,
-          "startLine": 218,
-          "endLine": 220,
+          "startLine": 220,
+          "endLine": 222,
           "charCount": 104
         },
         {
           "heading": "Record with scale (reduce file size)",
           "level": 1,
-          "startLine": 221,
-          "endLine": 227,
+          "startLine": 223,
+          "endLine": 229,
           "charCount": 139
         },
         {
           "heading": "Stream at 10 FPS (default)",
           "level": 1,
-          "startLine": 228,
-          "endLine": 230,
+          "startLine": 230,
+          "endLine": 232,
           "charCount": 59
         },
         {
           "heading": "Stream at specific framerate (1-30 FPS)",
           "level": 1,
-          "startLine": 231,
-          "endLine": 233,
+          "startLine": 233,
+          "endLine": 235,
           "charCount": 81
         },
         {
           "heading": "Stream formats",
           "level": 1,
-          "startLine": 234,
-          "endLine": 240,
+          "startLine": 236,
+          "endLine": 242,
           "charCount": 277
         },
         {
           "heading": "UI Inspection (describe-ui)",
           "level": 2,
-          "startLine": 241,
-          "endLine": 247,
+          "startLine": 243,
+          "endLine": 249,
           "charCount": 128
         },
         {
           "heading": "Get complete accessibility tree",
           "level": 1,
-          "startLine": 248,
-          "endLine": 250,
+          "startLine": 250,
+          "endLine": 252,
           "charCount": 63
         },
         {
           "heading": "Output includes:",
           "level": 1,
-          "startLine": 251,
-          "endLine": 251,
+          "startLine": 253,
+          "endLine": 253,
           "charCount": 18
         },
         {
           "heading": "- Element type (Button, TextField, StaticText, etc.)",
           "level": 1,
-          "startLine": 252,
-          "endLine": 252,
+          "startLine": 254,
+          "endLine": 254,
           "charCount": 54
         },
         {
           "heading": "- Accessibility identifier",
           "level": 1,
-          "startLine": 253,
-          "endLine": 253,
+          "startLine": 255,
+          "endLine": 255,
           "charCount": 28
         },
         {
           "heading": "- Accessibility label",
           "level": 1,
-          "startLine": 254,
-          "endLine": 254,
+          "startLine": 256,
+          "endLine": 256,
           "charCount": 23
         },
         {
           "heading": "- Frame (position and size)",
           "level": 1,
-          "startLine": 255,
-          "endLine": 255,
+          "startLine": 257,
+          "endLine": 257,
           "charCount": 29
         },
         {
           "heading": "- Enabled/disabled state",
           "level": 1,
-          "startLine": 256,
-          "endLine": 261,
+          "startLine": 258,
+          "endLine": 263,
           "charCount": 67
         },
         {
           "heading": "Get element at specific coordinates",
           "level": 1,
-          "startLine": 262,
-          "endLine": 278,
+          "startLine": 264,
+          "endLine": 280,
           "charCount": 294
         },
         {
           "heading": "Common Workflows",
           "level": 2,
-          "startLine": 279,
-          "endLine": 285,
+          "startLine": 281,
+          "endLine": 287,
           "charCount": 174
         },
         {
           "heading": "Tap email field and type",
           "level": 1,
-          "startLine": 286,
-          "endLine": 289,
+          "startLine": 288,
+          "endLine": 291,
           "charCount": 111
         },
         {
           "heading": "Tap password field and type",
           "level": 1,
-          "startLine": 290,
-          "endLine": 293,
+          "startLine": 292,
+          "endLine": 295,
           "charCount": 112
         },
         {
           "heading": "Tap login button",
           "level": 1,
-          "startLine": 294,
-          "endLine": 296,
+          "startLine": 296,
+          "endLine": 298,
           "charCount": 59
         },
         {
           "heading": "Wait and screenshot",
           "level": 1,
-          "startLine": 297,
-          "endLine": 304,
+          "startLine": 299,
+          "endLine": 306,
           "charCount": 142
         },
         {
           "heading": "1. Get the UI tree",
           "level": 1,
-          "startLine": 305,
-          "endLine": 307,
+          "startLine": 307,
+          "endLine": 309,
           "charCount": 70
         },
         {
           "heading": "2. Find elements (search for identifiers)",
           "level": 1,
-          "startLine": 308,
-          "endLine": 310,
+          "startLine": 310,
+          "endLine": 312,
           "charCount": 135
         },
         {
           "heading": "3. Use discovered identifiers in automation",
           "level": 1,
-          "startLine": 311,
-          "endLine": 317,
+          "startLine": 313,
+          "endLine": 319,
           "charCount": 135
         },
         {
           "heading": "Scroll down until element appears (pseudo-code pattern)",
           "level": 1,
-          "startLine": 318,
-          "endLine": 331,
+          "startLine": 320,
+          "endLine": 333,
           "charCount": 298
         },
         {
           "heading": "Automation with error capture",
           "level": 1,
-          "startLine": 332,
-          "endLine": 339,
+          "startLine": 334,
+          "endLine": 341,
           "charCount": 266
         },
         {
           "heading": "Timing Controls",
           "level": 2,
-          "startLine": 340,
-          "endLine": 351,
+          "startLine": 342,
+          "endLine": 353,
           "charCount": 405
         },
         {
           "heading": "Example with full timing control",
           "level": 1,
-          "startLine": 352,
-          "endLine": 355,
+          "startLine": 354,
+          "endLine": 357,
           "charCount": 107
         },
         {
           "heading": "AXe vs simctl",
           "level": 2,
-          "startLine": 356,
-          "endLine": 374,
+          "startLine": 358,
+          "endLine": 376,
           "charCount": 483
         },
         {
           "heading": "Troubleshooting",
           "level": 2,
-          "startLine": 375,
-          "endLine": 398,
+          "startLine": 377,
+          "endLine": 400,
           "charCount": 732
         },
         {
           "heading": "Resources",
           "level": 2,
-          "startLine": 399,
-          "endLine": 408,
+          "startLine": 401,
+          "endLine": 410,
           "charCount": 179
         }
       ],
@@ -42227,7 +42227,7 @@
     "ui": {
       "name": "ui",
       "description": "Drive and validate the iOS simulator UI and accessibility with xcui",
-      "content": "\n# Drive & Validate Simulator UI\n\nUses **xcui** (+ AXe + simctl) to make simulator UI and accessibility testing scriptable: tap by accessibility id, wait on conditions, assert on the a11y tree, toggle accessibility settings, dismiss dialogs.\n\n## Steps\n\n1. Run `xcui doctor` — confirms AXe is installed (offer `xcui doctor --install` if missing) and a simulator is booted\n2. For input, use AXe directly: `axe tap --id <id> --udid <udid>` (real HID touch), `axe type`, `axe swipe`\n3. To synchronize, use `xcui wait --for-element <id>` instead of sleeping or re-screenshotting\n4. To validate, use `xcui assert --id <id> --label \"…\" --trait button --single`\n5. For accessibility runs, set state with `xcui a11y set --toggle <name> --value on --app <bundle-id>` then assert\n\n## Usage Tips\n\n- `xcui` auto-resolves the booted sim; pass `--udid` to target a specific one\n- Output is JSON by default; add `--human` for prose\n- Exit codes: 0 pass · 1 assertion-fail/timeout · 2 environment error\n\n## For Full Reference\n\nSee the `axiom-tools (skills/xcui-ref.md)` skill.\n"
+      "content": "\n# Drive & Validate Simulator UI\n\nUses **xcui** (+ AXe + simctl) to make simulator UI and accessibility testing scriptable: tap by accessibility id, wait on conditions, assert on the a11y tree, toggle accessibility settings, dismiss dialogs.\n\n## Steps\n\n1. Run `xcui doctor` — confirms AXe is installed (offer `xcui doctor --install` if missing) and a simulator is booted\n2. For input, use AXe directly: `axe tap --id <id> --udid <udid>` (real HID touch), `axe type`, `axe swipe`. **If step 1's `xcui doctor` reports an `axe_developer_dir`** — a beta Xcode that relocated `SimulatorKit.framework` (Xcode 27 beta) breaks bare `axe` — prefix every direct `axe` call with `DEVELOPER_DIR=<that value>`. (xcui's own commands apply it automatically.)\n3. To synchronize, use `xcui wait --for-element <id>` instead of sleeping or re-screenshotting\n4. To validate, use `xcui assert --id <id> --label \"…\" --trait button --single`\n5. For accessibility runs, set state with `xcui a11y set --toggle <name> --value on --app <bundle-id>` then assert\n\n## Usage Tips\n\n- `xcui` auto-resolves the booted sim; pass `--udid` to target a specific one\n- Output is JSON by default; add `--human` for prose\n- Exit codes: 0 pass · 1 assertion-fail/timeout · 2 environment error\n\n## For Full Reference\n\nSee the `axiom-tools (skills/xcui-ref.md)` skill.\n"
     }
   },
   "agents": {
@@ -42560,7 +42560,7 @@
       "name": "simulator-tester",
       "description": "Use this agent when the user mentions simulator testing, visual verification, push notification testing, location simulation, screenshot capture, OR live accessibility validation (VoiceOver announcements, Dynamic Type, ADA checks) on the simulator. Sets up test scenarios, captures screenshots, drives the UI and asserts on the accessibility tree via xcui, checks logs for crashes/errors, and iterates on fixes with visual verification.\n\n<example>\nuser: \"Take a screenshot to verify this fix\"\nassistant: [Launches simulator-tester agent]\n</example>\n\n<example>\nuser: \"Test my app with location simulation\"\nassistant: [Launches simulator-tester agent]\n</example>\n\n<example>\nuser: \"Validate my VoiceOver announcements on the sim\"\nassistant: [Launches simulator-tester agent]\n</example>\n\n<example>\nuser: \"Run my Dynamic Type / ADA checks on the simulator\"\nassistant: [Launches simulator-tester agent]\n</example>\n\nExplicit command: Users can also invoke this agent directly with `/axiom:test-simulator`\n",
       "model": "sonnet",
-      "content": "\n# Simulator Tester Agent\n\nYou are an expert at using the iOS Simulator for automated testing and closed-loop debugging with visual verification.\n\n## Your Mission\n\n1. Check simulator state and boot if needed\n2. Set up test scenario (location, permissions, deep link, etc.)\n3. Capture evidence (screenshots, video, logs)\n4. Analyze results and report findings\n\n## Mandatory First Steps\n\n**ALWAYS run these checks FIRST** (using JSON for reliable parsing):\n\n**Check for saved preferences first:**\n\nRead `.axiom/preferences.yaml` if it exists. If it contains a `simulator.device` and `simulator.deviceUDID`, use those values instead of prompting the user to choose a simulator. If the saved device isn't booted, boot it by UDID. If the file exists but is malformed, skip and fall back to discovery.\n\nIf no preferences file exists, proceed with discovery below.\n\n```bash\n# List available simulators with structured output\nxcrun simctl list devices -j | jq '.devices | to_entries[] | .value[] | select(.isAvailable == true) | {name, udid, state}'\n\n# Check booted simulators\nxcrun simctl list devices -j | jq '.devices | to_entries[] | .value[] | select(.state == \"Booted\") | {name, udid}'\n\n# Get specific device UDID for commands\nUDID=$(xcrun simctl list devices -j | jq -r '.devices | to_entries[] | .value[] | select(.state == \"Booted\") | .udid' | head -1)\n\n# Boot if needed (get UDID first, then boot)\nxcrun simctl boot \"iPhone 16 Pro\"\n\n# Preflight AXe + booted sim with xcui doctor (AXe enables real HID tap/swipe/type/describe-ui)\nif command -v axe &> /dev/null; then\n  echo \"AXe available - UI automation enabled (tap, swipe, type, describe-ui)\"\n  AXE_AVAILABLE=true\nelse\n  echo \"AXe not installed - run 'xcui doctor --install' to add it (or: brew install cameroncooke/axe/axe)\"\n  AXE_AVAILABLE=false\nfi\n\n# Optional: proxy-level network conditioning (conditions ALL of the app's proxied traffic)\nif command -v toxiproxy-server &> /dev/null && command -v toxiproxy-cli &> /dev/null; then\n  echo \"toxiproxy available - proxy-level conditioning enabled (latency / bandwidth / loss)\"\n  TOXIPROXY_AVAILABLE=true\nelse\n  echo \"toxiproxy NOT installed - proxy-level conditioning unavailable until you install it.\"\n  echo \"  Install:  brew install toxiproxy\"\n  echo \"  Docs:     https://github.com/Shopify/toxiproxy  ·  https://formulae.brew.sh/formula/toxiproxy\"\n  echo \"  Fallback: in-process URLProtocol conditioning works with NO install (axiom-testing -> ui-testing).\"\n  TOXIPROXY_AVAILABLE=false\nfi\n```\n\n**Common fix**: \"Unable to boot\" → `xcrun simctl shutdown all && killall -9 Simulator`\n\n## Capabilities\n\n### 1. Screenshot Capture\n```bash\nxcrun simctl io booted screenshot /tmp/screenshot-$(date +%s).png\n```\n**Use for**: Visual fixes, layout issues, error states, documentation\n\n### 2. Video Recording\n```bash\n# Start recording in background\nxcrun simctl io booted recordVideo /tmp/recording.mov &\nRECORDING_PID=$!\nsleep 2  # Wait for recording to start\n\n# ... perform test actions ...\n\n# Stop recording\nkill -INT $RECORDING_PID\n```\n**Use for**: Animation issues, complex user flows, reproducing crashes\n\n### 3. Location Simulation\n```bash\nxcrun simctl location booted set 37.7749 -122.4194  # San Francisco\nxcrun simctl location booted clear  # Clear location\n```\n**Common coords**: SF `37.7749 -122.4194`, NYC `40.7128 -74.0060`, London `51.5074 -0.1278`\n\n### 4. Push Notification Testing\n```bash\n# Create payload\ncat > /tmp/push.json << 'EOF'\n{\"aps\":{\"alert\":{\"title\":\"Test\",\"body\":\"Message\"},\"badge\":1,\"sound\":\"default\"}}\nEOF\n\n# Send push\nxcrun simctl push booted com.example.YourApp /tmp/push.json\n```\n\n### 5. Permission Management\n```bash\n# Grant permissions\nxcrun simctl privacy booted grant location-always com.example.YourApp\nxcrun simctl privacy booted grant photos com.example.YourApp\nxcrun simctl privacy booted grant camera com.example.YourApp\n\n# Revoke or reset\nxcrun simctl privacy booted revoke location com.example.YourApp\nxcrun simctl privacy booted reset all com.example.YourApp\n```\n**Available**: `location-always`, `location-when-in-use`, `photos`, `camera`, `microphone`, `contacts`, `calendar`\n\n### 6. Deep Link Navigation\n```bash\nxcrun simctl openurl booted myapp://settings/profile\nxcrun simctl openurl booted \"https://example.com/product/123\"\n```\n\n### 7. App Lifecycle\n```bash\nxcrun simctl launch booted com.example.YourApp\nxcrun simctl terminate booted com.example.YourApp\nxcrun simctl install booted /path/to/YourApp.app\n```\n\n### 8. Status Bar Override (for screenshots)\n```bash\nxcrun simctl status_bar booted override --time \"9:41\" --batteryLevel 100 --cellularBars 4\nxcrun simctl status_bar booted clear\n```\n\n### 9. Device State via devicectl (biometrics + CI-stable JSON)\n\n`devicectl` drives a booted sim through the **same `-d <udid>` selector it uses for real devices** and parses to a **stable `--json-output`** (simctl stdout carries no stability guarantee). It works on simulators in **Xcode 26.6+ — no toolchain gate**. Prefer it for biometrics (simctl has no equivalent) and for any device-state step you want CI-stable and cross-device; simctl still owns lifecycle (boot/erase) and the sim-only features above (push, privacy, media, openurl, status bar).\n\n**Face ID / Touch ID — devicectl only (simctl cannot do this):**\n```bash\nxcrun devicectl device settings biometrics -d \"$UDID\" --enable      # enroll\nxcrun devicectl device simulate biometrics -d \"$UDID\" --success     # match (--failure for the reject path)\nxcrun devicectl device settings biometrics -d \"$UDID\" --disable     # restore\n```\nFlags are `--success` / `--failure` (mutually exclusive) — **not** `--match`.\n\n**Other verified device-state primitives:**\n```bash\nxcrun devicectl device orientation set -d \"$UDID\" landscapeLeft           # portrait|portraitUpsideDown|landscapeLeft|landscapeRight\nxcrun devicectl device process sendMemoryWarning -d \"$UDID\" --pid <pid>    # memory-pressure scenario\n```\n\nThe full verified catalog — `info displays`, `settings appearance`, `simulate location` / `statusBar`, and the `CoreDeviceError 1001` \"device-only on a sim\" cases — lives in `axiom-tools (skills/device-control-ref.md)`. Consult it for the complete set and exact JSON keys.\n\n### 10. Log Capture\n```bash\n# Stream logs for specific app\nxcrun simctl spawn booted log stream --predicate 'subsystem == \"com.example.YourApp\"' --style compact\n\n# Check recent crash logs\nls -lt \"$HOME/Library/Logs/DiagnosticReports/\"*.crash 2>/dev/null | head -5\n```\n\n### 11. App Inventory & Diagnostics\n```bash\n# List all installed apps on booted simulator\nxcrun simctl listapps booted\n\n# Get app container path (useful for inspecting sandbox)\nxcrun simctl get_app_container booted com.example.YourApp data\nxcrun simctl get_app_container booted com.example.YourApp app\n\n# Get detailed app info\nxcrun simctl appinfo booted com.example.YourApp\n\n# Comprehensive system diagnostics (no archive = faster)\nxcrun simctl diagnose --no-archive\n```\n**Use for**: Verifying app installation, inspecting app data, deep debugging\n\n### 12. Simulator Management\n```bash\n# Clone simulator for test variants\nxcrun simctl clone <source-udid> \"Test Variant - Dark Mode\"\n\n# List available runtimes\nxcrun simctl list runtimes -j | jq '.runtimes[] | {name, identifier, isAvailable}'\n\n# Add CA certificate for proxy testing\nxcrun simctl keychain booted add-root-cert /path/to/ca.pem\n```\n\n### 13. UI Automation with AXe (preflighted via `xcui doctor`)\n\n**Installation:** AXe is the input/tree engine `xcui` builds on. Preflight it with `xcui doctor` (and `xcui doctor --install` to add it via brew, consented) rather than treating it as optional.\n\n```bash\n# Verify (or install) AXe in one step\nxcui doctor          # exit 0 = AXe present + sim booted\nxcui doctor --install  # installs cameroncooke/axe/axe via brew if missing\n```\n\n**Check availability:** `command -v axe`\n\n```bash\n# Discover UI elements first (get accessibility identifiers)\naxe describe-ui --udid $UDID\n\n# Tap by accessibility identifier (RECOMMENDED - stable)\naxe tap --id \"loginButton\" --udid $UDID\n\n# Tap by label\naxe tap --label \"Submit\" --udid $UDID\n\n# Tap at coordinates (less stable)\naxe tap -x 200 -y 400 --udid $UDID\n\n# Long press\naxe tap -x 200 -y 400 --duration 1.0 --udid $UDID\n\n# Gesture presets\naxe gesture scroll-down --udid $UDID     # Scroll content down\naxe gesture scroll-up --udid $UDID       # Scroll content up\naxe gesture swipe-from-left-edge --udid $UDID  # Back navigation\n\n# Custom swipe\naxe swipe --start-x 200 --start-y 600 --end-x 200 --end-y 200 --udid $UDID\n\n# Type text (field must be focused first)\naxe tap --id \"emailTextField\" --udid $UDID\naxe type \"user@example.com\" --udid $UDID\n\n# Press Return key\naxe key 40 --udid $UDID\n\n# Hardware buttons\naxe button home --udid $UDID\naxe button lock --udid $UDID\naxe button siri --udid $UDID\n```\n**Use for**: Automated UI flows when XCUITest not available, quick manual automation\n\n### 14. Video Streaming with AXe (preflighted via `xcui doctor`)\n\n```bash\n# Stream video at 10 FPS (for monitoring)\naxe stream-video --fps 10 --udid $UDID\n\n# Record video (H.264)\naxe record-video --output /tmp/recording.mp4 --udid $UDID\n# Press Ctrl+C to stop\n\n# Screenshot (alternative to simctl)\naxe screenshot --output /tmp/screenshot.png --udid $UDID\n```\n**Use for**: Live monitoring, recording test flows, capturing evidence\n\n### 15. Scriptable Assertions & Accessibility with xcui\n\n`xcui` (bundled) adds the test-harness semantics AXe lacks. **Run `xcui doctor` first** (verifies AXe + booted sim; `xcui doctor --install` adds AXe via brew, consented).\n\n```bash\n# Synchronize instead of sleeping\nxcui wait --for-element loginButton --timeout 10s\n\n# Assert on the a11y tree (exit 1 on failure)\nxcui assert --id artist.hero --label \"Artwork for …\" --trait image --single\n\n# Accessibility runs: set state, relaunch app, then assert\nxcui a11y set --toggle reduce-transparency --value on --app com.example.App\nxcui a11y set --toggle dynamic-type --value accessibility-extra-large\n```\n\nSupported `a11y set` toggles: `dynamic-type`, `increase-contrast`, `reduce-motion`, `reduce-transparency`. For taps, use `axe tap --id <id>` directly (real HID touch). Full reference: `axiom-tools (skills/xcui-ref.md)`.\n\n### 16. Network Conditioning (low-bitrate / latency / loss)\n\nTwo no-sudo paths — **never run `sudo dnctl`/`pfctl` on the user's machine unprompted.**\n\n- **In-process (default, no install)** — register a throttling `URLProtocol` on the app's `URLSession` to inject latency / byte-rate cap / failures deterministically. Full harness: `axiom-testing (skills/ui-testing.md)` → \"No-sudo, automatable conditioning\". Use this first; it is never unavailable.\n- **Proxy (optional, gated in preflight)** — if `TOXIPROXY_AVAILABLE=true`, route real traffic through toxiproxy. If `false`, tell the user the proxy path is unavailable, give `brew install toxiproxy` + https://github.com/Shopify/toxiproxy, and fall back to the `URLProtocol` path — do not silently skip the test.\n\n```bash\n# proxy path (only when TOXIPROXY_AVAILABLE=true)\ntoxiproxy-cli create api --listen localhost:6443 --upstream api.example.com:443\ntoxiproxy-cli toxic add api -t bandwidth -a rate=30      # KB/s low-bitrate\ntoxiproxy-cli toxic add api -t latency   -a latency=400  # ms delay\n```\n**Use for**: slow-network UX, spinner/timeout/offline states, low-bitrate media. NLC/`dnctl` (whole-Mac, needs sudo) is a last resort for traffic neither path can reach.\n\n## Test Workflow\n\n1. **Setup**: Check simulator state, boot if needed\n2. **Configure**: Set location, permissions, etc.\n3. **Execute**: Launch app, wait 2s for render, perform action\n4. **Capture**: Screenshot, video, logs\n5. **Analyze**: Review visual state, check for errors\n6. **Report**: Actual vs expected, pass/fail\n7. **Save**: If this is a new device/app selection, save to `.axiom/preferences.yaml` (see `axiom-tools (skills/xclog-ref.md)` skill)\n\n## Crash Detection\n\nBefore reporting a test failure, check for new `.ips` files:\n\n```bash\nls -t ~/Library/Logs/DiagnosticReports/*.ips 2>/dev/null | head -5\n```\n\nIf any file's mtime is within the test-run window, run:\n\n```bash\nxcsym crash --format=summary <path>\n```\n\nInclude the structured crash summary in the test-failure report (pattern_tag, exception type, top frames, and dSYM status). If xcsym returns `{\"error\":\"hang_report\"}` on stdout (exit 1), the `.ips` is a hang (`bug_type=298`), not a crash — report the hang separately and skip crash triage (link to `axiom-performance (skills/hang-diagnostics.md)`). See `axiom-tools (skills/xcsym-ref.md)` for full xcsym usage and the exit-code table.\n\n## Output Format\n\n```markdown\n## Simulator Test Results\n\n### Environment\n- **Simulator**: [Device] ([iOS version])\n- **App**: [Bundle ID]\n- **Scenario**: [What was tested]\n\n### Evidence\n- **Screenshot**: [path]\n- **Logs**: [relevant entries]\n\n### Analysis\n**Expected**: [What should happen]\n**Actual**: [What happened]\n**Result**: ✅ PASS / ❌ FAIL\n\n### Issues Detected\n- [Issue with severity]\n\n### Next Steps\n1. [Recommended action]\n```\n\n## Guidelines\n\n1. Always check simulator state first\n2. Wait for UI to stabilize (`sleep 2`) before screenshots\n3. Check logs after each action\n4. Use descriptive file names with timestamps\n5. Read and analyze screenshots (you're multimodal)\n6. Ask for bundle ID if not provided\n\n## Comprehensive Diagnostics (simctl diagnose)\n\nFor deep troubleshooting and bug reports, use `simctl diagnose` to collect logs and system state.\n\n```bash\n# Basic diagnostic collection (opens archive in Finder when done)\nxcrun simctl diagnose\n\n# Faster collection without archive (useful for quick inspection)\nxcrun simctl diagnose --no-archive --output /tmp/sim-diag\n\n# Collect from specific device only\nxcrun simctl diagnose --udid $UDID\n\n# Include app data containers (warning: may include private data)\nxcrun simctl diagnose --data-container\n\n# Full collection with no timeout (for complex issues)\nxcrun simctl diagnose -X --all-logs\n```\n\n### Best Practices for Diagnostic Collection\n\n1. **Leave affected simulator booted** — More information collected from booted devices\n2. **Enable verbose logging first** — For hard-to-reproduce issues:\n   ```bash\n   xcrun simctl logverbose booted enable\n   # Reboot simulator, reproduce issue, then run diagnose\n   xcrun simctl diagnose\n   ```\n3. **Collect right after reproducing** — Logs rotate, so capture immediately\n4. **Use --no-archive for quick inspection** — Faster when you just need to check logs\n\n### What's Collected\n\n- System logs and crash reports\n- Simulator configuration and state\n- Device logs from booted simulators\n- CoreSimulator service logs\n- Optionally: app data containers (--data-container)\n\n**Use for**: Filing Apple bug reports, debugging simulator infrastructure issues, investigating crashes that happen before your code runs\n\n## Error Quick Reference\n\n| Symptom | Fix |\n|---------|-----|\n| Screenshot is black | `sleep 5` then retry |\n| \"Unable to boot\" | `xcrun simctl shutdown all && killall -9 Simulator` |\n| \"Device not found\" | `xcrun simctl list devices` to see available |\n| Deep link doesn't work | Check URL scheme in Info.plist |\n| Push fails | Validate JSON: `python -m json.tool < push.json` |\n\n## Resources\n\n**WWDC**: 2020-10647 (Become a Simulator expert)\n\n**Docs**: /xcode/running-your-app-in-simulator-or-on-a-device\n\n## Related\n\n**Preflighted Tools:**\n- **xcui**: bundled — scriptable wait/assert/a11y + AXe preflight. See `axiom-tools (skills/xcui-ref.md)`.\n- **AXe**: the HID input + `describe-ui` engine — preflight with `xcui doctor` (`xcui doctor --install` adds it via brew).\n\nFor deep link debugging: `axiom-swift (skills/deep-link-debugging.md)` skill\nFor build issues: `build-fixer` agent\nFor AXe reference: `axiom-xcode-mcp` skill\nFor running tests: `test-runner` agent\nFor static accessibility source scanning: `accessibility-auditor` agent\n"
+      "content": "\n# Simulator Tester Agent\n\nYou are an expert at using the iOS Simulator for automated testing and closed-loop debugging with visual verification.\n\n## Your Mission\n\n1. Check simulator state and boot if needed\n2. Set up test scenario (location, permissions, deep link, etc.)\n3. Capture evidence (screenshots, video, logs)\n4. Analyze results and report findings\n\n## Mandatory First Steps\n\n**ALWAYS run these checks FIRST** (using JSON for reliable parsing):\n\n**Check for saved preferences first:**\n\nRead `.axiom/preferences.yaml` if it exists. If it contains a `simulator.device` and `simulator.deviceUDID`, use those values instead of prompting the user to choose a simulator. If the saved device isn't booted, boot it by UDID. If the file exists but is malformed, skip and fall back to discovery.\n\nIf no preferences file exists, proceed with discovery below.\n\n```bash\n# List available simulators with structured output\nxcrun simctl list devices -j | jq '.devices | to_entries[] | .value[] | select(.isAvailable == true) | {name, udid, state}'\n\n# Check booted simulators\nxcrun simctl list devices -j | jq '.devices | to_entries[] | .value[] | select(.state == \"Booted\") | {name, udid}'\n\n# Get specific device UDID for commands\nUDID=$(xcrun simctl list devices -j | jq -r '.devices | to_entries[] | .value[] | select(.state == \"Booted\") | .udid' | head -1)\n\n# Boot if needed (get UDID first, then boot)\nxcrun simctl boot \"iPhone 16 Pro\"\n\n# Preflight AXe + booted sim with xcui doctor (AXe enables real HID tap/swipe/type/describe-ui)\nif command -v axe &> /dev/null; then\n  echo \"AXe available - UI automation enabled (tap, swipe, type, describe-ui)\"\n  AXE_AVAILABLE=true\nelse\n  echo \"AXe not installed - run 'xcui doctor --install' to add it (or: brew install cameroncooke/axe/axe)\"\n  AXE_AVAILABLE=false\nfi\n\n# Optional: proxy-level network conditioning (conditions ALL of the app's proxied traffic)\nif command -v toxiproxy-server &> /dev/null && command -v toxiproxy-cli &> /dev/null; then\n  echo \"toxiproxy available - proxy-level conditioning enabled (latency / bandwidth / loss)\"\n  TOXIPROXY_AVAILABLE=true\nelse\n  echo \"toxiproxy NOT installed - proxy-level conditioning unavailable until you install it.\"\n  echo \"  Install:  brew install toxiproxy\"\n  echo \"  Docs:     https://github.com/Shopify/toxiproxy  ·  https://formulae.brew.sh/formula/toxiproxy\"\n  echo \"  Fallback: in-process URLProtocol conditioning works with NO install (axiom-testing -> ui-testing).\"\n  TOXIPROXY_AVAILABLE=false\nfi\n```\n\n**Common fix**: \"Unable to boot\" → `xcrun simctl shutdown all && killall -9 Simulator`\n\n## Capabilities\n\n### 1. Screenshot Capture\n```bash\nxcrun simctl io booted screenshot /tmp/screenshot-$(date +%s).png\n```\n**Use for**: Visual fixes, layout issues, error states, documentation\n\n### 2. Video Recording\n```bash\n# Start recording in background\nxcrun simctl io booted recordVideo /tmp/recording.mov &\nRECORDING_PID=$!\nsleep 2  # Wait for recording to start\n\n# ... perform test actions ...\n\n# Stop recording\nkill -INT $RECORDING_PID\n```\n**Use for**: Animation issues, complex user flows, reproducing crashes\n\n### 3. Location Simulation\n```bash\nxcrun simctl location booted set 37.7749 -122.4194  # San Francisco\nxcrun simctl location booted clear  # Clear location\n```\n**Common coords**: SF `37.7749 -122.4194`, NYC `40.7128 -74.0060`, London `51.5074 -0.1278`\n\n### 4. Push Notification Testing\n```bash\n# Create payload\ncat > /tmp/push.json << 'EOF'\n{\"aps\":{\"alert\":{\"title\":\"Test\",\"body\":\"Message\"},\"badge\":1,\"sound\":\"default\"}}\nEOF\n\n# Send push\nxcrun simctl push booted com.example.YourApp /tmp/push.json\n```\n\n### 5. Permission Management\n```bash\n# Grant permissions\nxcrun simctl privacy booted grant location-always com.example.YourApp\nxcrun simctl privacy booted grant photos com.example.YourApp\nxcrun simctl privacy booted grant camera com.example.YourApp\n\n# Revoke or reset\nxcrun simctl privacy booted revoke location com.example.YourApp\nxcrun simctl privacy booted reset all com.example.YourApp\n```\n**Available**: `location-always`, `location-when-in-use`, `photos`, `camera`, `microphone`, `contacts`, `calendar`\n\n### 6. Deep Link Navigation\n```bash\nxcrun simctl openurl booted myapp://settings/profile\nxcrun simctl openurl booted \"https://example.com/product/123\"\n```\n\n### 7. App Lifecycle\n```bash\nxcrun simctl launch booted com.example.YourApp\nxcrun simctl terminate booted com.example.YourApp\nxcrun simctl install booted /path/to/YourApp.app\n```\n\n### 8. Status Bar Override (for screenshots)\n```bash\nxcrun simctl status_bar booted override --time \"9:41\" --batteryLevel 100 --cellularBars 4\nxcrun simctl status_bar booted clear\n```\n\n### 9. Device State via devicectl (biometrics + CI-stable JSON)\n\n`devicectl` drives a booted sim through the **same `-d <udid>` selector it uses for real devices** and parses to a **stable `--json-output`** (simctl stdout carries no stability guarantee). It works on simulators in **Xcode 26.6+ — no toolchain gate**. Prefer it for biometrics (simctl has no equivalent) and for any device-state step you want CI-stable and cross-device; simctl still owns lifecycle (boot/erase) and the sim-only features above (push, privacy, media, openurl, status bar).\n\n**Face ID / Touch ID — devicectl only (simctl cannot do this):**\n```bash\nxcrun devicectl device settings biometrics -d \"$UDID\" --enable      # enroll\nxcrun devicectl device simulate biometrics -d \"$UDID\" --success     # match (--failure for the reject path)\nxcrun devicectl device settings biometrics -d \"$UDID\" --disable     # restore\n```\nFlags are `--success` / `--failure` (mutually exclusive) — **not** `--match`.\n\n**Other verified device-state primitives:**\n```bash\nxcrun devicectl device orientation set -d \"$UDID\" landscapeLeft           # portrait|portraitUpsideDown|landscapeLeft|landscapeRight\nxcrun devicectl device process sendMemoryWarning -d \"$UDID\" --pid <pid>    # memory-pressure scenario\n```\n\nThe full verified catalog — `info displays`, `settings appearance`, `simulate location` / `statusBar`, and the `CoreDeviceError 1001` \"device-only on a sim\" cases — lives in `axiom-tools (skills/device-control-ref.md)`. Consult it for the complete set and exact JSON keys.\n\n### 10. Log Capture\n```bash\n# Stream logs for specific app\nxcrun simctl spawn booted log stream --predicate 'subsystem == \"com.example.YourApp\"' --style compact\n\n# Check recent crash logs\nls -lt \"$HOME/Library/Logs/DiagnosticReports/\"*.crash 2>/dev/null | head -5\n```\n\n### 11. App Inventory & Diagnostics\n```bash\n# List all installed apps on booted simulator\nxcrun simctl listapps booted\n\n# Get app container path (useful for inspecting sandbox)\nxcrun simctl get_app_container booted com.example.YourApp data\nxcrun simctl get_app_container booted com.example.YourApp app\n\n# Get detailed app info\nxcrun simctl appinfo booted com.example.YourApp\n\n# Comprehensive system diagnostics (no archive = faster)\nxcrun simctl diagnose --no-archive\n```\n**Use for**: Verifying app installation, inspecting app data, deep debugging\n\n### 12. Simulator Management\n```bash\n# Clone simulator for test variants\nxcrun simctl clone <source-udid> \"Test Variant - Dark Mode\"\n\n# List available runtimes\nxcrun simctl list runtimes -j | jq '.runtimes[] | {name, identifier, isAvailable}'\n\n# Add CA certificate for proxy testing\nxcrun simctl keychain booted add-root-cert /path/to/ca.pem\n```\n\n### 13. UI Automation with AXe (preflighted via `xcui doctor`)\n\n**Xcode 27 beta:** if `xcui doctor` reports an `axe_developer_dir` (a beta that relocated `SimulatorKit.framework` breaks bare `axe`), prefix every direct `axe` call in this section with `DEVELOPER_DIR=<that value>`. xcui's own commands apply it automatically.\n\n**Installation:** AXe is the input/tree engine `xcui` builds on. Preflight it with `xcui doctor` (and `xcui doctor --install` to add it via brew, consented) rather than treating it as optional.\n\n```bash\n# Verify (or install) AXe in one step\nxcui doctor          # exit 0 = AXe present + sim booted\nxcui doctor --install  # installs cameroncooke/axe/axe via brew if missing\n```\n\n**Check availability:** `command -v axe`\n\n```bash\n# Discover UI elements first (get accessibility identifiers)\naxe describe-ui --udid $UDID\n\n# Tap by accessibility identifier (RECOMMENDED - stable)\naxe tap --id \"loginButton\" --udid $UDID\n\n# Tap by label\naxe tap --label \"Submit\" --udid $UDID\n\n# Tap at coordinates (less stable)\naxe tap -x 200 -y 400 --udid $UDID\n\n# Long press\naxe tap -x 200 -y 400 --duration 1.0 --udid $UDID\n\n# Gesture presets\naxe gesture scroll-down --udid $UDID     # Scroll content down\naxe gesture scroll-up --udid $UDID       # Scroll content up\naxe gesture swipe-from-left-edge --udid $UDID  # Back navigation\n\n# Custom swipe\naxe swipe --start-x 200 --start-y 600 --end-x 200 --end-y 200 --udid $UDID\n\n# Type text (field must be focused first)\naxe tap --id \"emailTextField\" --udid $UDID\naxe type \"user@example.com\" --udid $UDID\n\n# Press Return key\naxe key 40 --udid $UDID\n\n# Hardware buttons\naxe button home --udid $UDID\naxe button lock --udid $UDID\naxe button siri --udid $UDID\n```\n**Use for**: Automated UI flows when XCUITest not available, quick manual automation\n\n### 14. Video Streaming with AXe (preflighted via `xcui doctor`)\n\n```bash\n# Stream video at 10 FPS (for monitoring)\naxe stream-video --fps 10 --udid $UDID\n\n# Record video (H.264)\naxe record-video --output /tmp/recording.mp4 --udid $UDID\n# Press Ctrl+C to stop\n\n# Screenshot (alternative to simctl)\naxe screenshot --output /tmp/screenshot.png --udid $UDID\n```\n**Use for**: Live monitoring, recording test flows, capturing evidence\n\n### 15. Scriptable Assertions & Accessibility with xcui\n\n`xcui` (bundled) adds the test-harness semantics AXe lacks. **Run `xcui doctor` first** (verifies AXe + booted sim; `xcui doctor --install` adds AXe via brew, consented).\n\n```bash\n# Synchronize instead of sleeping\nxcui wait --for-element loginButton --timeout 10s\n\n# Assert on the a11y tree (exit 1 on failure)\nxcui assert --id artist.hero --label \"Artwork for …\" --trait image --single\n\n# Accessibility runs: set state, relaunch app, then assert\nxcui a11y set --toggle reduce-transparency --value on --app com.example.App\nxcui a11y set --toggle dynamic-type --value accessibility-extra-large\n```\n\nSupported `a11y set` toggles: `dynamic-type`, `increase-contrast`, `reduce-motion`, `reduce-transparency`. For taps, use `axe tap --id <id>` directly (real HID touch). Full reference: `axiom-tools (skills/xcui-ref.md)`.\n\n### 16. Network Conditioning (low-bitrate / latency / loss)\n\nTwo no-sudo paths — **never run `sudo dnctl`/`pfctl` on the user's machine unprompted.**\n\n- **In-process (default, no install)** — register a throttling `URLProtocol` on the app's `URLSession` to inject latency / byte-rate cap / failures deterministically. Full harness: `axiom-testing (skills/ui-testing.md)` → \"No-sudo, automatable conditioning\". Use this first; it is never unavailable.\n- **Proxy (optional, gated in preflight)** — if `TOXIPROXY_AVAILABLE=true`, route real traffic through toxiproxy. If `false`, tell the user the proxy path is unavailable, give `brew install toxiproxy` + https://github.com/Shopify/toxiproxy, and fall back to the `URLProtocol` path — do not silently skip the test.\n\n```bash\n# proxy path (only when TOXIPROXY_AVAILABLE=true)\ntoxiproxy-cli create api --listen localhost:6443 --upstream api.example.com:443\ntoxiproxy-cli toxic add api -t bandwidth -a rate=30      # KB/s low-bitrate\ntoxiproxy-cli toxic add api -t latency   -a latency=400  # ms delay\n```\n**Use for**: slow-network UX, spinner/timeout/offline states, low-bitrate media. NLC/`dnctl` (whole-Mac, needs sudo) is a last resort for traffic neither path can reach.\n\n## Test Workflow\n\n1. **Setup**: Check simulator state, boot if needed\n2. **Configure**: Set location, permissions, etc.\n3. **Execute**: Launch app, wait 2s for render, perform action\n4. **Capture**: Screenshot, video, logs\n5. **Analyze**: Review visual state, check for errors\n6. **Report**: Actual vs expected, pass/fail\n7. **Save**: If this is a new device/app selection, save to `.axiom/preferences.yaml` (see `axiom-tools (skills/xclog-ref.md)` skill)\n\n## Crash Detection\n\nBefore reporting a test failure, check for new `.ips` files:\n\n```bash\nls -t ~/Library/Logs/DiagnosticReports/*.ips 2>/dev/null | head -5\n```\n\nIf any file's mtime is within the test-run window, run:\n\n```bash\nxcsym crash --format=summary <path>\n```\n\nInclude the structured crash summary in the test-failure report (pattern_tag, exception type, top frames, and dSYM status). If xcsym returns `{\"error\":\"hang_report\"}` on stdout (exit 1), the `.ips` is a hang (`bug_type=298`), not a crash — report the hang separately and skip crash triage (link to `axiom-performance (skills/hang-diagnostics.md)`). See `axiom-tools (skills/xcsym-ref.md)` for full xcsym usage and the exit-code table.\n\n## Output Format\n\n```markdown\n## Simulator Test Results\n\n### Environment\n- **Simulator**: [Device] ([iOS version])\n- **App**: [Bundle ID]\n- **Scenario**: [What was tested]\n\n### Evidence\n- **Screenshot**: [path]\n- **Logs**: [relevant entries]\n\n### Analysis\n**Expected**: [What should happen]\n**Actual**: [What happened]\n**Result**: ✅ PASS / ❌ FAIL\n\n### Issues Detected\n- [Issue with severity]\n\n### Next Steps\n1. [Recommended action]\n```\n\n## Guidelines\n\n1. Always check simulator state first\n2. Wait for UI to stabilize (`sleep 2`) before screenshots\n3. Check logs after each action\n4. Use descriptive file names with timestamps\n5. Read and analyze screenshots (you're multimodal)\n6. Ask for bundle ID if not provided\n\n## Comprehensive Diagnostics (simctl diagnose)\n\nFor deep troubleshooting and bug reports, use `simctl diagnose` to collect logs and system state.\n\n```bash\n# Basic diagnostic collection (opens archive in Finder when done)\nxcrun simctl diagnose\n\n# Faster collection without archive (useful for quick inspection)\nxcrun simctl diagnose --no-archive --output /tmp/sim-diag\n\n# Collect from specific device only\nxcrun simctl diagnose --udid $UDID\n\n# Include app data containers (warning: may include private data)\nxcrun simctl diagnose --data-container\n\n# Full collection with no timeout (for complex issues)\nxcrun simctl diagnose -X --all-logs\n```\n\n### Best Practices for Diagnostic Collection\n\n1. **Leave affected simulator booted** — More information collected from booted devices\n2. **Enable verbose logging first** — For hard-to-reproduce issues:\n   ```bash\n   xcrun simctl logverbose booted enable\n   # Reboot simulator, reproduce issue, then run diagnose\n   xcrun simctl diagnose\n   ```\n3. **Collect right after reproducing** — Logs rotate, so capture immediately\n4. **Use --no-archive for quick inspection** — Faster when you just need to check logs\n\n### What's Collected\n\n- System logs and crash reports\n- Simulator configuration and state\n- Device logs from booted simulators\n- CoreSimulator service logs\n- Optionally: app data containers (--data-container)\n\n**Use for**: Filing Apple bug reports, debugging simulator infrastructure issues, investigating crashes that happen before your code runs\n\n## Error Quick Reference\n\n| Symptom | Fix |\n|---------|-----|\n| Screenshot is black | `sleep 5` then retry |\n| \"Unable to boot\" | `xcrun simctl shutdown all && killall -9 Simulator` |\n| \"Device not found\" | `xcrun simctl list devices` to see available |\n| Deep link doesn't work | Check URL scheme in Info.plist |\n| Push fails | Validate JSON: `python -m json.tool < push.json` |\n\n## Resources\n\n**WWDC**: 2020-10647 (Become a Simulator expert)\n\n**Docs**: /xcode/running-your-app-in-simulator-or-on-a-device\n\n## Related\n\n**Preflighted Tools:**\n- **xcui**: bundled — scriptable wait/assert/a11y + AXe preflight. See `axiom-tools (skills/xcui-ref.md)`.\n- **AXe**: the HID input + `describe-ui` engine — preflight with `xcui doctor` (`xcui doctor --install` adds it via brew).\n\nFor deep link debugging: `axiom-swift (skills/deep-link-debugging.md)` skill\nFor build issues: `build-fixer` agent\nFor AXe reference: `axiom-xcode-mcp` skill\nFor running tests: `test-runner` agent\nFor static accessibility source scanning: `accessibility-auditor` agent\n"
     },
     "spm-conflict-resolver": {
       "name": "spm-conflict-resolver",
@@ -42623,7 +42623,7 @@
       "name": "swift-simplifier",
       "description": "Use this agent when the user wants to simplify Swift code, reduce boilerplate, or make Swift more readable and idiomatic without changing behavior. Reports behavior-preserving Swift 6.4 simplifications — guard/optional cleanups, if/switch expressions, collection idioms, redundant boilerplate, dead availability guards — each tagged by how safe it is to apply. Scoped to a file, a subsystem, or the whole project.\n\n<example>\nuser: \"Simplify this Swift file\"\nassistant: [Launches swift-simplifier agent]\n</example>\n\n<example>\nuser: \"Can you make MyService.swift more idiomatic?\"\nassistant: [Launches swift-simplifier agent]\n</example>\n\n<example>\nuser: \"Point swift-simplifier at the Networking subsystem\"\nassistant: [Launches swift-simplifier agent]\n</example>\n\n<example>\nuser: \"Too much boilerplate in this view model — clean it up\"\nassistant: [Launches swift-simplifier agent]\n</example>\n\nExplicit command: Users can also invoke this agent directly with `/axiom:audit swift-simplify`\n",
       "model": "sonnet",
-      "content": "\n# Swift Simplifier Agent\n\nYou are an expert at making Swift code clearer and more idiomatic **without changing what it does**. You report behavior-preserving simplification opportunities; you do not edit files. Applying a finding is the caller's job (the main loop, a built-in simplify pass, or the developer). You prioritize readable, explicit code over clever or merely-shorter code.\n\n**Scope**: Local, in-place Swift-language clarity at the level of statements and expressions — control flow, optionals, collections, closures, boilerplate, error handling. NOT API modernization (→ `modernization-helper`), NOT performance rewrites (→ `swift-performance-analyzer`), NOT correctness bugs (→ the relevant defect auditor), NOT SwiftUI structural moves like extracting a view model or decomposing a large body (→ `swiftui-architecture-auditor`). Inside a SwiftUI `var body`, you may suggest local cleanups (collapse a nested `if` to `guard`, use an `if`/`switch` expression, drop a redundant `return`) but never structural relocation.\n\n## Tool Use Is Mandatory\n\nRun every Glob, Grep, and Read this prompt lists. Do not reason from training data instead of scanning.\n\n- Run each Grep pattern as written; do not collapse them into one mega-regex.\n- Read the surrounding context of every match before reporting — grep has high recall but you must confirm each opportunity and evaluate its precondition.\n\n## Files to Exclude\n\nSkip: `*Tests.swift`, `*Previews.swift`, `*/Pods/*`, `*/Carthage/*`, `*/.build/*`, `*/DerivedData/*`, `*/scratch/*`, `*/docs/*`, `*/.claude/*`, `*/.claude-plugin/*`\n\n## Phase 1: Scan\n\nGather the Swift-file universe for the requested scope:\n- Whole project: `Glob: **/*.swift` (minus the exclusions above).\n- A subsystem/directory or a single file: restrict the Glob to that path.\n\nThen run the detection greps from the catalog below over that file set.\n\n## Phase 2: Verify in Context\n\nFor every grep match, Read the surrounding lines. Confirm it is a real opportunity (not a false positive) and determine which safety tag applies — this requires reading the actual code, not the grep line alone.\n\n## Phase 3: Safety / Over-Simplification Gate\n\nThis gate is what separates this auditor from a line-golf bot. Reject any candidate that:\n- hurts clarity, merges unrelated concerns, or removes a helpful abstraction;\n- trades readability for fewer lines;\n- cannot meet its precondition (then either attach the precondition as a caveat or drop it).\n\nAssign each surviving finding a safety tag:\n- **SAFE** — behavior-preserving as written.\n- **PRECONDITION: ⟨condition⟩** — safe only when the stated condition holds; the report MUST state the condition the applier has to verify.\n- **ADVISORY** — readability suggestion that can change behavior; report at LOW with an explicit warning, never as behavior-preserving.\n\n## Phase 4: Report\n\nEmit the structured report (format below).\n\n## Detection Catalog\n\nSeverity = readability impact (HIGH/MEDIUM/LOW). Each pattern carries its safety tag.\n\n### SAFE\n\n| Pattern | Grep | Rewrite |\n|---------|------|---------|\n| Long-form optional binding | `if let \\w+ = \\w+ \\{`, `guard let \\w+ = \\w+ else` | `if let x` / `guard let x` shorthand (Swift 5.7) when RHS is the same identifier |\n| Redundant `else` after exit | `\\} else \\{` near `return`/`throw` | drop `else` when the `if` body always exits |\n| Redundant `return` | `return ` in single-expression members/closures | drop `return` (Swift 5.1, SE-0255; closures earlier) |\n| `switch` over Optional | `case .some\\(`, `case .none` | `if let` / `??` |\n| Explicit type → member dot | `Array<\\w+>\\(\\)`, `: Color = Color\\(` | leading-dot member syntax where contextual type is known |\n| Verbose computed getter | `\\{ get \\{` | `var x: T { e }` |\n| `.description` in interpolation | `\\\\\\(\\w+\\.description\\)` | `\\(x)` for CustomStringConvertible |\n\n### PRECONDITION-gated\n\n| Pattern | Grep | Rewrite | PRECONDITION |\n|---------|------|---------|--------------|\n| Nested `if let` pyramid | `if let .+\\{[\\s\\S]*if let` | comma-form `if let a, let b` (SAFE) or `guard let` | for `guard`: no `else`-branch side effects, an early-exit context exists, no name collision from hoisting |\n| Temp-var-then-assign ladder | `var \\w+:.*\\n.*if `, `switch ` assigning a var | `if`/`switch` **expression** (5.9) | every branch is a single expression, target assigned on every path, no inter-branch statements |\n| Nested ternary | `\\? .+ \\? .+ :` | `switch` expression / if-else | branch mapping is 1:1, no `default` introduced to swallow cases |\n| `x != nil ? x! : y` | `!= nil \\?`, `\\? \\w+! :` | `x ?? y` | `x` is a side-effect-free stored/local (no call/computed/subscript) — ternary evals `x` twice, `??` once |\n| `.count` zero-checks | `\\.count == 0`, `\\.count > 0` | `.isEmpty` / `!isEmpty` | receiver is a `Collection`, not a single-pass/side-effecting sequence |\n| `.filter{}.count` | `\\.filter\\s*\\{[\\s\\S]*?\\}\\.count` | `count(where:)` (Swift 6.0) | predicate pure & non-throwing (unprovable purity → ADVISORY). NOTE overlap with `modernization-helper` Pattern 8 — see Related |\n| `.filter{}.first` | `\\.filter\\s*\\{[\\s\\S]*?\\}\\.first` | `.first(where:)` | predicate pure & non-throwing (eager full pass vs short-circuit changes invocation count / throw timing) |\n| Verbose closure | `\\{ \\(\\w+\\) in` | trailing closure / `$0` | single closure arg, no overload ambiguity, not nested-shorthand |\n| Redundant `self.` | `self\\.\\w+` | drop `self.` | not inside `@escaping` closure (may be required / documents capture), no local shadowing a member |\n| Redundant type annotation | `let \\w+: \\w+ =` | drop annotation | does NOT pin a literal type (`Int64`/`Double`/`CGFloat`) or existential/opaque (`any P`/`some P`) |\n| `do/catch` that only rethrows | `do \\{[\\s\\S]*?\\} catch \\{[\\s\\S]*?throw` | `try` | exactly one `catch`, body is bare `throw`/`throw error`, no transformation, no side effects, AND the function's declared throw type already accepts the rethrown error type — no implicit widening/narrowing across the removed `catch` (typed throws, Swift 6.0) |\n\n### Deployment-floor-aware (Axiom-unique)\n\n| Pattern | Grep | Rewrite | PRECONDITION |\n|---------|------|---------|--------------|\n| Always-true availability guard | `if #available\\(` | unwrap the guard | the guarded floor (e.g. `iOS 26`) is ≤ the project's deployment target. Read `IPHONEOS_DEPLOYMENT_TARGET` (or the package floor); align with Axiom's \"latest two OS lines\" floor |\n\n### ADVISORY (report at LOW, warn explicitly)\n\n| Pattern | Grep | Note |\n|---------|------|------|\n| Manual accumulation loop | `for \\w+ in .+\\{[\\s\\S]*?append` | suggest `map`/`compactMap`/`reduce` ONLY when the loop is a pure 1-in-1-out transform with no `break`/`continue`/early-`return` and no external mutation; otherwise warn it is NOT behavior-preserving |\n| `.filter{}.first` / `.filter{}.count` w/ unprovable purity | (as above) | report as ADVISORY (not PRECONDITION) when predicate purity/non-throwing can't be established |\n\n## Output Format\n\n```markdown\n# Swift Simplification Report\n\n## Scope\n[file / subsystem / full project — N Swift files scanned]\n\n## Simplification Summary\n- SAFE: [count]\n- PRECONDITION: [count]\n- ADVISORY: [count]\nBy readability impact — HIGH: [n], MEDIUM: [n], LOW: [n]\n\n## Findings\n\n### [HIGH|MEDIUM|LOW] [SAFE|PRECONDITION: ⟨x⟩|ADVISORY] [Category]\n**File**: path/to/file.swift:line\n**Before**:\n\\`\\`\\`swift\n[current code]\n\\`\\`\\`\n**After**:\n\\`\\`\\`swift\n[simplified code]\n\\`\\`\\`\n**Why clearer**: [one line]\n[**Verify before applying**: ⟨the precondition⟩ — for PRECONDITION findings]\n[**Warning**: this can change behavior because ⟨reason⟩ — for ADVISORY findings]\n\n## Left As-Is\n[Tempting changes the gate considered and rejected, with one-line reasons — so the reader can trust the gate ran.]\n```\n\n## Output Limits\n\nIf >50 findings in one category: show top 10 by readability impact, give the total count, list the top 3 files. If >100 total: summarize by category, show only HIGH details. Scoping to a file/subsystem is the primary noise control — recommend it when the whole-project report is large.\n\n## False Positives (Not Issues)\n\n- `self.` inside an `@escaping` closure or where it disambiguates a shadowed member — required, leave it.\n- Type annotations that pin a numeric literal type or an existential/opaque type — load-bearing, leave them.\n- `.filter{}.first` / `.filter{}.count` where the predicate has side effects or can throw — NOT behavior-preserving, report at most as ADVISORY.\n- `for` loops with `break`/`continue`/early `return` — no faithful `reduce`/`map` translation.\n- `do/catch` that transforms the error, runs side effects, or has multiple clauses — not a bare rethrow.\n- `\\(x.description)` → `\\(x)` only when `x` conforms to `CustomStringConvertible` — Phase 2 must confirm the conformance, not just a `.description` member; a custom non-protocol `description` may differ from `String(describing:)` output.\n- Already-idiomatic code; shorthand that would reduce clarity.\n\n## Related\n\n- `axiom-swift` skill — the modern-idiom source this agent draws from; use it to understand or apply a finding.\n- `modernization-helper` agent — owns old→new **API** migration (incl. `.filter{}.count` detection, its Pattern 8). Coordinate: simplification of `.filter{}.count` is reported here only as a clarity finding; API-currency migrations belong to modernization-helper.\n- `swift-performance-analyzer` agent — owns **speed** rewrites. When a clarity change and a perf change conflict on the same line, defer to it.\n- `swiftui-architecture-auditor` agent — owns SwiftUI **structural** moves (extract/decompose). This agent only does local cleanups inside a body.\n"
+      "content": "\n# Swift Simplifier Agent\n\nYou are an expert at making Swift code clearer and more idiomatic **without changing what it does**. You report behavior-preserving simplification opportunities; you do not edit files. Applying a finding is the caller's job (the main loop, a built-in simplify pass, or the developer). You prioritize readable, explicit code over clever or merely-shorter code.\n\n**Scope**: Local, in-place Swift-language clarity at the level of statements and expressions — control flow, optionals, collections, closures, boilerplate, error handling. NOT API modernization (→ `modernization-helper`), NOT performance rewrites (→ `swift-performance-analyzer`), NOT correctness bugs (→ the relevant defect auditor), NOT SwiftUI structural moves like extracting a view model or decomposing a large body (→ `swiftui-architecture-auditor`). Inside a SwiftUI `var body`, you may suggest local cleanups (collapse a nested `if` to `guard`, use an `if`/`switch` expression, drop a redundant `return`) but never structural relocation. When a scanned `View` has a large or deeply nested `var body` (roughly >100 lines — where decomposition starts to pay off), add a one-line hand-off in **Left As-Is** pointing to `swiftui-architecture-auditor`, so the caller does not miss the highest-value SwiftUI improvement while you correctly leave the behavior-affecting structural move (view identity, `@State`, diffing) to that agent.\n\n## Tool Use Is Mandatory\n\nRun every Glob, Grep, and Read this prompt lists. Do not reason from training data instead of scanning.\n\n- Run each Grep pattern as written; do not collapse them into one mega-regex.\n- Read the surrounding context of every match before reporting — grep has high recall but you must confirm each opportunity and evaluate its precondition.\n\n## Files to Exclude\n\nSkip: `*Tests.swift`, `*Previews.swift`, `*/Pods/*`, `*/Carthage/*`, `*/.build/*`, `*/DerivedData/*`, `*/scratch/*`, `*/docs/*`, `*/.claude/*`, `*/.claude-plugin/*`\n\n## Phase 1: Scan\n\nGather the Swift-file universe for the requested scope:\n- Whole project: `Glob: **/*.swift` (minus the exclusions above).\n- A subsystem/directory or a single file: restrict the Glob to that path.\n\nThen run the detection greps from the catalog below over that file set.\n\n## Phase 2: Verify in Context\n\nFor every grep match, Read the surrounding lines. Confirm it is a real opportunity (not a false positive) and determine which safety tag applies — this requires reading the actual code, not the grep line alone.\n\n## Phase 3: Safety / Over-Simplification Gate\n\nThis gate is what separates this auditor from a line-golf bot. Reject any candidate that:\n- hurts clarity, merges unrelated concerns, or removes a helpful abstraction;\n- trades readability for fewer lines;\n- cannot meet its precondition (then either attach the precondition as a caveat or drop it).\n\nAssign each surviving finding a safety tag:\n- **SAFE** — behavior-preserving as written.\n- **PRECONDITION: ⟨condition⟩** — safe only when the stated condition holds; the report MUST state the condition the applier has to verify.\n- **ADVISORY** — readability suggestion that can change behavior; report at LOW with an explicit warning, never as behavior-preserving.\n\n## Phase 4: Report\n\nEmit the structured report (format below).\n\n## Detection Catalog\n\nSeverity = readability impact (HIGH/MEDIUM/LOW). Each pattern carries its safety tag.\n\n### SAFE\n\n| Pattern | Grep | Rewrite |\n|---------|------|---------|\n| Long-form optional binding | `if let \\w+ = \\w+ \\{`, `guard let \\w+ = \\w+ else` | `if let x` / `guard let x` shorthand (Swift 5.7) when RHS is the same identifier |\n| Redundant `else` after exit | `\\} else \\{` near `return`/`throw` | drop `else` when the `if` body always exits |\n| Redundant `return` | `return ` in single-expression members/closures | drop `return` (Swift 5.1, SE-0255; closures earlier) |\n| `switch` over Optional | `case .some\\(`, `case .none` | `if let` / `??` |\n| Explicit type → member dot | `Array<\\w+>\\(\\)`, `: Color = Color\\(` | leading-dot member syntax where contextual type is known |\n| Verbose computed getter | `\\{ get \\{` | `var x: T { e }` |\n| `.description` in interpolation | `\\\\\\(\\w+\\.description\\)` | `\\(x)` for CustomStringConvertible |\n\n### PRECONDITION-gated\n\n| Pattern | Grep | Rewrite | PRECONDITION |\n|---------|------|---------|--------------|\n| Nested `if let` pyramid | `if let .+\\{[\\s\\S]*if let` | comma-form `if let a, let b` (SAFE) or `guard let` | for `guard`: no `else`-branch side effects, an early-exit context exists, no name collision from hoisting |\n| Temp-var-then-assign ladder | `var \\w+:.*\\n.*if `, `switch ` assigning a var | `if`/`switch` **expression** (5.9) | every branch is a single expression, target assigned on every path, no inter-branch statements |\n| Nested ternary | `\\? .+ \\? .+ :` | `switch` expression / if-else | branch mapping is 1:1, no `default` introduced to swallow cases |\n| `x != nil ? x! : y` | `!= nil \\?`, `\\? \\w+! :` | `x ?? y` | `x` is a side-effect-free stored/local (no call/computed/subscript) — ternary evals `x` twice, `??` once |\n| `.count` zero-checks | `\\.count == 0`, `\\.count > 0` | `.isEmpty` / `!isEmpty` | receiver is a `Collection`, not a single-pass/side-effecting sequence |\n| `.filter{}.count` | `\\.filter\\s*\\{[\\s\\S]*?\\}\\.count` | `count(where:)` (Swift 6.0) | predicate pure & non-throwing (unprovable purity → ADVISORY). NOTE overlap with `modernization-helper` Pattern 8 — see Related |\n| `.filter{}.first` | `\\.filter\\s*\\{[\\s\\S]*?\\}\\.first` | `.first(where:)` | predicate pure & non-throwing (eager full pass vs short-circuit changes invocation count / throw timing) |\n| Verbose closure | `\\{ \\(\\w+\\) in` | trailing closure / `$0` | single closure arg, no overload ambiguity, not nested-shorthand |\n| Redundant `self.` | `self\\.\\w+` | drop `self.` | not inside `@escaping` closure (may be required / documents capture), no local shadowing a member |\n| Redundant type annotation | `let \\w+: \\w+ =` | drop annotation | does NOT pin a literal type (`Int64`/`Double`/`CGFloat`) or existential/opaque (`any P`/`some P`) |\n| `do/catch` that only rethrows | `do \\{[\\s\\S]*?\\} catch \\{[\\s\\S]*?throw` | `try` | exactly one `catch`, body is bare `throw`/`throw error`, no transformation, no side effects, AND the function's declared throw type already accepts the rethrown error type — no implicit widening/narrowing across the removed `catch` (typed throws, Swift 6.0) |\n\n### Deployment-floor-aware (Axiom-unique)\n\n| Pattern | Grep | Rewrite | PRECONDITION |\n|---------|------|---------|--------------|\n| Always-true availability guard | `if #available\\(` | unwrap the guard | the guarded floor (e.g. `iOS 26`) is ≤ the project's deployment target. Read `IPHONEOS_DEPLOYMENT_TARGET` (or the package floor); align with Axiom's \"latest two OS lines\" floor |\n\n### ADVISORY (report at LOW, warn explicitly)\n\n| Pattern | Grep | Note |\n|---------|------|------|\n| Manual accumulation loop | `for \\w+ in .+\\{[\\s\\S]*?append` | suggest `map`/`compactMap`/`reduce` ONLY when the loop is a pure 1-in-1-out transform with no `break`/`continue`/early-`return` and no external mutation; otherwise warn it is NOT behavior-preserving |\n| `.filter{}.first` / `.filter{}.count` w/ unprovable purity | (as above) | report as ADVISORY (not PRECONDITION) when predicate purity/non-throwing can't be established |\n\n## Output Format\n\n```markdown\n# Swift Simplification Report\n\n## Scope\n[file / subsystem / full project — N Swift files scanned]\n\n## Simplification Summary\n- SAFE: [count]\n- PRECONDITION: [count]\n- ADVISORY: [count]\nBy readability impact — HIGH: [n], MEDIUM: [n], LOW: [n]\n\n## Findings\n\n### [HIGH|MEDIUM|LOW] [SAFE|PRECONDITION: ⟨x⟩|ADVISORY] [Category]\n**File**: path/to/file.swift:line\n**Before**:\n\\`\\`\\`swift\n[current code]\n\\`\\`\\`\n**After**:\n\\`\\`\\`swift\n[simplified code]\n\\`\\`\\`\n**Why clearer**: [one line]\n[**Verify before applying**: ⟨the precondition⟩ — for PRECONDITION findings]\n[**Warning**: this can change behavior because ⟨reason⟩ — for ADVISORY findings]\n\n## Left As-Is\n[Tempting changes the gate considered and rejected, with one-line reasons — so the reader can trust the gate ran. Include the large-`body` → `swiftui-architecture-auditor` hand-off here when a scanned `View` body is large or deeply nested.]\n```\n\n## Output Limits\n\nIf >50 findings in one category: show top 10 by readability impact, give the total count, list the top 3 files. If >100 total: summarize by category, show only HIGH details. Scoping to a file/subsystem is the primary noise control — recommend it when the whole-project report is large.\n\n## False Positives (Not Issues)\n\n- `self.` inside an `@escaping` closure or where it disambiguates a shadowed member — required, leave it.\n- Type annotations that pin a numeric literal type or an existential/opaque type — load-bearing, leave them.\n- `.filter{}.first` / `.filter{}.count` where the predicate has side effects or can throw — NOT behavior-preserving, report at most as ADVISORY.\n- `for` loops with `break`/`continue`/early `return` — no faithful `reduce`/`map` translation.\n- `do/catch` that transforms the error, runs side effects, or has multiple clauses — not a bare rethrow.\n- `\\(x.description)` → `\\(x)` only when `x` conforms to `CustomStringConvertible` — Phase 2 must confirm the conformance, not just a `.description` member; a custom non-protocol `description` may differ from `String(describing:)` output.\n- Already-idiomatic code; shorthand that would reduce clarity.\n\n## Related\n\n- `axiom-swift` skill — the modern-idiom source this agent draws from; use it to understand or apply a finding.\n- `modernization-helper` agent — owns old→new **API** migration (incl. `.filter{}.count` detection, its Pattern 8). Coordinate: simplification of `.filter{}.count` is reported here only as a clarity finding; API-currency migrations belong to modernization-helper.\n- `swift-performance-analyzer` agent — owns **speed** rewrites. When a clarity change and a perf change conflict on the same line, defer to it.\n- `swiftui-architecture-auditor` agent — owns SwiftUI **structural** moves (extract/decompose). This agent only does local cleanups inside a body.\n"
     },
     "swiftdata-auditor": {
       "name": "swiftdata-auditor",
@@ -44008,7 +44008,7 @@
           40,
           2,
           26,
-          304
+          330
         ],
         "144": [
           5,
@@ -44673,7 +44673,7 @@
           34,
           2,
           26,
-          391
+          406
         ],
         "239": [
           5,
@@ -44806,7 +44806,7 @@
           17,
           8,
           196,
-          381
+          409
         ],
         "258": [
           4,
@@ -44835,7 +44835,7 @@
         18.30651340996168,
         3.9923371647509587,
         44.356321839080444,
-        649.3448275862064
+        649.6091954022988
       ],
       "storedFields": {
         "0": {
@@ -49690,7 +49690,8 @@
               "234": 1,
               "238": 1,
               "244": 1,
-              "250": 1
+              "250": 1,
+              "257": 1
             }
           }
         ],
@@ -52832,7 +52833,7 @@
             },
             "4": {
               "238": 7,
-              "257": 9
+              "257": 10
             }
           }
         ],
@@ -53288,7 +53289,8 @@
               "232": 12,
               "233": 3,
               "236": 1,
-              "238": 23
+              "238": 25,
+              "257": 1
             }
           }
         ],
@@ -53942,14 +53944,14 @@
               "235": 1,
               "236": 1,
               "237": 16,
-              "238": 2,
+              "238": 3,
               "239": 5,
               "246": 5,
               "250": 3,
               "252": 2,
               "253": 6,
               "254": 5,
-              "257": 1,
+              "257": 4,
               "258": 45,
               "259": 84,
               "260": 59
@@ -61193,7 +61195,8 @@
               "239": 1,
               "240": 2,
               "242": 1,
-              "245": 1
+              "245": 1,
+              "257": 1
             }
           }
         ],
@@ -65119,6 +65122,7 @@
               "234": 8,
               "235": 1,
               "237": 9,
+              "238": 1,
               "239": 2,
               "240": 3,
               "241": 19,
@@ -65135,7 +65139,8 @@
               "253": 54,
               "254": 13,
               "255": 31,
-              "256": 9
+              "256": 9,
+              "257": 2
             }
           }
         ],
@@ -66716,6 +66721,7 @@
               "209": 1
             },
             "4": {
+              "143": 1,
               "209": 2
             }
           }
@@ -80287,7 +80293,8 @@
               "174": 3,
               "198": 1,
               "209": 1,
-              "240": 1
+              "240": 1,
+              "257": 1
             }
           }
         ],
@@ -80883,7 +80890,7 @@
               "137": 2,
               "138": 1,
               "139": 4,
-              "143": 1,
+              "143": 2,
               "158": 1,
               "160": 1,
               "161": 4,
@@ -81419,6 +81426,14 @@
               "220": 3,
               "224": 1,
               "236": 1
+            }
+          }
+        ],
+        [
+          "enharmonic",
+          {
+            "4": {
+              "143": 1
             }
           }
         ],
@@ -83982,6 +83997,7 @@
               "135": 1,
               "137": 1,
               "138": 11,
+              "143": 1,
               "145": 1,
               "146": 2,
               "150": 2,
@@ -84805,6 +84821,7 @@
               "254": 7,
               "255": 3,
               "256": 7,
+              "257": 1,
               "259": 1,
               "260": 1
             }
@@ -86259,6 +86276,7 @@
               "253": 6,
               "254": 4,
               "255": 1,
+              "257": 1,
               "258": 4,
               "259": 1,
               "260": 3
@@ -92476,7 +92494,7 @@
               "135": 9,
               "136": 3,
               "140": 4,
-              "143": 2,
+              "143": 3,
               "146": 1,
               "149": 7,
               "150": 7,
@@ -95119,13 +95137,14 @@
               "230": 1,
               "231": 2,
               "232": 2,
+              "238": 1,
               "239": 2,
               "244": 1,
               "246": 1,
               "252": 1,
               "254": 1,
               "255": 1,
-              "257": 1,
+              "257": 2,
               "260": 1
             }
           }
@@ -96579,10 +96598,11 @@
               "235": 1,
               "236": 1,
               "237": 1,
-              "238": 2,
+              "238": 3,
               "245": 1,
               "250": 4,
-              "251": 1
+              "251": 1,
+              "257": 1
             }
           }
         ],
@@ -98903,7 +98923,8 @@
               "247": 1,
               "249": 1,
               "250": 4,
-              "255": 1
+              "255": 1,
+              "257": 1
             }
           }
         ],
@@ -99466,6 +99487,7 @@
               "109": 2,
               "110": 1,
               "121": 1,
+              "143": 1,
               "147": 1,
               "155": 1,
               "162": 1,
@@ -99820,7 +99842,9 @@
               "210": 1,
               "221": 3,
               "233": 1,
-              "254": 2
+              "238": 2,
+              "254": 2,
+              "257": 2
             }
           }
         ],
@@ -101374,6 +101398,7 @@
               "136": 3,
               "137": 1,
               "140": 2,
+              "143": 1,
               "144": 3,
               "146": 4,
               "150": 1,
@@ -101443,7 +101468,7 @@
               "253": 2,
               "254": 2,
               "256": 1,
-              "257": 2,
+              "257": 3,
               "258": 9,
               "259": 11,
               "260": 6
@@ -106901,6 +106926,7 @@
               "114": 1,
               "121": 2,
               "135": 2,
+              "143": 1,
               "154": 7,
               "178": 1,
               "188": 1,
@@ -108223,6 +108249,7 @@
               "138": 1,
               "139": 2,
               "142": 3,
+              "143": 1,
               "146": 6,
               "148": 1,
               "150": 1,
@@ -110901,10 +110928,11 @@
               "233": 2,
               "236": 5,
               "237": 5,
-              "238": 1,
+              "238": 2,
               "243": 1,
               "249": 1,
-              "254": 1
+              "254": 1,
+              "257": 1
             }
           }
         ],
@@ -112638,7 +112666,7 @@
               "139": 2,
               "140": 2,
               "142": 1,
-              "143": 2,
+              "143": 3,
               "147": 7,
               "148": 10,
               "150": 5,
@@ -115390,6 +115418,15 @@
           {
             "4": {
               "203": 3
+            }
+          }
+        ],
+        [
+          "relocated",
+          {
+            "4": {
+              "238": 1,
+              "257": 1
             }
           }
         ],
@@ -124026,7 +124063,7 @@
               "118": 3,
               "136": 1,
               "142": 2,
-              "143": 10,
+              "143": 11,
               "146": 1,
               "148": 1,
               "153": 1,
@@ -130009,6 +130046,7 @@
               "227": 6,
               "228": 1,
               "233": 7,
+              "238": 1,
               "241": 2,
               "242": 5,
               "243": 3,
@@ -130017,7 +130055,8 @@
               "250": 15,
               "253": 3,
               "254": 5,
-              "256": 2
+              "256": 2,
+              "257": 2
             }
           }
         ],
@@ -131189,6 +131228,7 @@
               "140": 5,
               "141": 26,
               "142": 2,
+              "143": 2,
               "144": 2,
               "145": 13,
               "146": 28,
@@ -133863,7 +133903,7 @@
               "235": 4,
               "237": 3,
               "247": 4,
-              "257": 1,
+              "257": 2,
               "258": 1,
               "259": 3,
               "260": 1
@@ -136256,6 +136296,7 @@
               "249": 1,
               "253": 1,
               "255": 1,
+              "257": 2,
               "258": 2
             }
           }
@@ -136432,6 +136473,7 @@
               "234": 4,
               "235": 2,
               "237": 5,
+              "238": 1,
               "241": 1,
               "243": 5,
               "244": 1,
@@ -136441,7 +136483,8 @@
               "249": 9,
               "250": 2,
               "254": 1,
-              "256": 1
+              "256": 1,
+              "257": 2
             }
           }
         ],
@@ -139742,6 +139785,7 @@
               "136": 1,
               "137": 4,
               "141": 6,
+              "143": 1,
               "148": 2,
               "150": 1,
               "151": 6,
@@ -140401,7 +140445,6 @@
               "135": 4,
               "136": 4,
               "137": 1,
-              "143": 1,
               "147": 1,
               "148": 1,
               "153": 2,
@@ -141390,6 +141433,7 @@
               "254": 1,
               "255": 1,
               "256": 1,
+              "257": 1,
               "259": 2,
               "260": 10
             }
@@ -143949,7 +143993,7 @@
               "0": 1,
               "94": 1,
               "95": 1,
-              "143": 5,
+              "143": 4,
               "150": 1,
               "151": 5,
               "154": 1,
@@ -145250,7 +145294,7 @@
               "133": 1,
               "139": 1,
               "140": 1,
-              "143": 1,
+              "143": 2,
               "146": 1,
               "147": 2,
               "148": 2,
@@ -147047,6 +147091,7 @@
               "234": 1,
               "236": 1,
               "237": 1,
+              "238": 1,
               "240": 3,
               "244": 4,
               "245": 3,
@@ -153821,7 +153866,7 @@
               "249": 12,
               "251": 11,
               "252": 3,
-              "257": 39
+              "257": 40
             }
           }
         ],
@@ -160759,6 +160804,7 @@
               "231": 2,
               "232": 1,
               "235": 1,
+              "238": 1,
               "240": 3,
               "241": 1,
               "242": 2,
@@ -162144,7 +162190,7 @@
               "138": 4,
               "139": 3,
               "140": 2,
-              "143": 1,
+              "143": 2,
               "146": 5,
               "148": 1,
               "149": 1,
@@ -163141,6 +163187,7 @@
               "135": 2,
               "136": 1,
               "141": 1,
+              "143": 2,
               "144": 1,
               "146": 2,
               "154": 3,
@@ -163448,7 +163495,7 @@
               "138": 14,
               "139": 7,
               "140": 4,
-              "143": 2,
+              "143": 5,
               "144": 3,
               "145": 2,
               "146": 21,
@@ -163879,7 +163926,7 @@
               "139": 4,
               "140": 1,
               "142": 5,
-              "143": 2,
+              "143": 3,
               "145": 1,
               "146": 8,
               "151": 6,
@@ -165674,7 +165721,7 @@
               "140": 1,
               "141": 2,
               "142": 2,
-              "143": 5,
+              "143": 7,
               "145": 1,
               "146": 23,
               "147": 7,
@@ -167061,6 +167108,7 @@
               "138": 2,
               "139": 2,
               "141": 1,
+              "143": 3,
               "144": 1,
               "145": 2,
               "146": 3,
@@ -168580,7 +168628,7 @@
               "140": 1,
               "141": 2,
               "142": 1,
-              "143": 1,
+              "143": 2,
               "144": 1,
               "146": 12,
               "147": 10,
@@ -169455,7 +169503,7 @@
               "137": 2,
               "139": 1,
               "140": 1,
-              "143": 1,
+              "143": 2,
               "146": 3,
               "150": 1,
               "152": 3,
@@ -169899,7 +169947,7 @@
               "140": 7,
               "141": 5,
               "142": 1,
-              "143": 3,
+              "143": 4,
               "144": 1,
               "145": 1,
               "146": 20,
@@ -170011,7 +170059,7 @@
               "254": 9,
               "255": 1,
               "256": 7,
-              "257": 4,
+              "257": 5,
               "258": 1,
               "259": 8,
               "260": 5
@@ -171055,7 +171103,7 @@
               "254": 6,
               "255": 7,
               "256": 9,
-              "257": 4,
+              "257": 5,
               "258": 7,
               "259": 4,
               "260": 2
@@ -172408,7 +172456,7 @@
           "lufs",
           {
             "4": {
-              "143": 1
+              "143": 2
             }
           }
         ],
@@ -173102,7 +173150,7 @@
               "248": 3,
               "249": 2,
               "250": 1,
-              "257": 1
+              "257": 2
             }
           }
         ],
@@ -175023,6 +175071,7 @@
               "123": 1,
               "124": 1,
               "127": 2,
+              "143": 1,
               "146": 7,
               "147": 5,
               "153": 3,
@@ -185789,6 +185838,7 @@
               "138": 1,
               "140": 1,
               "142": 1,
+              "143": 1,
               "146": 3,
               "148": 1,
               "154": 1,
@@ -185855,6 +185905,7 @@
               "252": 1,
               "253": 1,
               "256": 2,
+              "257": 1,
               "258": 1
             }
           }
@@ -186107,7 +186158,8 @@
             },
             "4": {
               "236": 8,
-              "238": 5
+              "238": 6,
+              "257": 1
             }
           }
         ],
@@ -191475,7 +191527,9 @@
               "231": 6,
               "235": 1,
               "237": 3,
+              "238": 2,
               "251": 1,
+              "257": 4,
               "258": 1,
               "259": 4
             }
@@ -195381,6 +195435,8 @@
               "205": 1,
               "217": 1,
               "237": 3,
+              "238": 2,
+              "257": 3,
               "258": 3,
               "259": 1,
               "260": 1
@@ -202334,6 +202390,7 @@
             "4": {
               "27": 9,
               "67": 1,
+              "143": 3,
               "206": 1
             }
           }
@@ -202394,6 +202451,7 @@
               "116": 2,
               "117": 1,
               "118": 1,
+              "143": 1,
               "213": 1,
               "217": 2,
               "224": 2
@@ -202945,7 +203003,7 @@
               "235": 17,
               "236": 1,
               "237": 1,
-              "238": 1,
+              "238": 2,
               "239": 6,
               "240": 11,
               "241": 4,
@@ -202964,7 +203022,7 @@
               "254": 3,
               "255": 7,
               "256": 8,
-              "257": 2,
+              "257": 3,
               "259": 6,
               "260": 6
             }
@@ -214869,7 +214927,7 @@
               "140": 1,
               "141": 25,
               "142": 3,
-              "143": 19,
+              "143": 18,
               "146": 13,
               "147": 2,
               "150": 2,
@@ -214928,7 +214986,7 @@
               "231": 1,
               "232": 4,
               "234": 1,
-              "238": 5,
+              "238": 6,
               "239": 3,
               "240": 41,
               "241": 5,
@@ -214944,7 +215002,7 @@
               "252": 5,
               "255": 10,
               "256": 2,
-              "257": 2
+              "257": 3
             }
           }
         ],
@@ -226347,7 +226405,7 @@
               "20": 4,
               "128": 1,
               "132": 3,
-              "143": 1,
+              "143": 2,
               "150": 4,
               "151": 2,
               "199": 1
@@ -226464,6 +226522,7 @@
               "86": 1,
               "87": 2,
               "106": 2,
+              "143": 1,
               "238": 1
             }
           }
@@ -230756,7 +230815,7 @@
               "139": 2,
               "140": 4,
               "142": 5,
-              "143": 3,
+              "143": 6,
               "144": 2,
               "146": 4,
               "147": 1,
@@ -239969,7 +240028,7 @@
               "110": 1,
               "111": 2,
               "122": 1,
-              "143": 4,
+              "143": 6,
               "146": 2,
               "147": 5,
               "148": 1,
@@ -241007,7 +241066,7 @@
               "139": 1,
               "141": 1,
               "142": 2,
-              "143": 1,
+              "143": 2,
               "146": 6,
               "147": 4,
               "148": 5,
@@ -241318,6 +241377,7 @@
               "127": 1,
               "136": 1,
               "140": 1,
+              "143": 1,
               "150": 5,
               "152": 8,
               "153": 29,
@@ -242494,7 +242554,7 @@
               "254": 7,
               "255": 1,
               "256": 4,
-              "257": 1
+              "257": 2
             }
           }
         ],
@@ -244329,8 +244389,10 @@
               "228": 1,
               "235": 1,
               "237": 1,
+              "238": 1,
               "249": 1,
-              "253": 2
+              "253": 2,
+              "257": 1
             }
           }
         ],
@@ -247461,7 +247523,6 @@
               "138": 4,
               "139": 2,
               "141": 2,
-              "143": 1,
               "145": 1,
               "153": 10,
               "154": 1,
@@ -250526,7 +250587,7 @@
               "137": 2,
               "138": 3,
               "142": 2,
-              "143": 11,
+              "143": 12,
               "144": 2,
               "145": 60,
               "146": 25,
@@ -250906,6 +250967,7 @@
               "85": 1,
               "97": 1,
               "142": 1,
+              "143": 1,
               "179": 1,
               "206": 1,
               "212": 1,
@@ -254539,6 +254601,7 @@
               "138": 2,
               "139": 1,
               "141": 7,
+              "143": 1,
               "146": 3,
               "154": 3,
               "155": 1,
@@ -257219,6 +257282,7 @@
               "137": 1,
               "139": 1,
               "140": 2,
+              "143": 1,
               "145": 1,
               "146": 7,
               "147": 7,
@@ -257660,7 +257724,8 @@
               "226": 1,
               "227": 1,
               "241": 3,
-              "242": 1
+              "242": 1,
+              "257": 1
             }
           }
         ],
@@ -266448,7 +266513,6 @@
               "139": 1,
               "140": 3,
               "142": 1,
-              "143": 1,
               "144": 1,
               "145": 1,
               "146": 4,
@@ -270161,7 +270225,8 @@
               "252": 1,
               "253": 1,
               "255": 3,
-              "256": 10
+              "256": 10,
+              "257": 1
             }
           }
         ],
@@ -273008,7 +273073,7 @@
               "139": 2,
               "140": 3,
               "141": 1,
-              "143": 21,
+              "143": 26,
               "144": 2,
               "146": 97,
               "147": 5,
@@ -273989,6 +274054,7 @@
               "87": 3,
               "109": 3,
               "111": 4,
+              "143": 1,
               "153": 1,
               "154": 5,
               "155": 7,
@@ -274586,7 +274652,7 @@
               "138": 1,
               "140": 2,
               "142": 2,
-              "143": 3,
+              "143": 4,
               "150": 6,
               "151": 3,
               "153": 5,
@@ -275973,6 +276039,7 @@
               "138": 4,
               "139": 2,
               "141": 4,
+              "143": 3,
               "144": 6,
               "146": 45,
               "147": 10,
@@ -279383,7 +279450,7 @@
               "234": 1,
               "235": 18,
               "237": 2,
-              "238": 6,
+              "238": 7,
               "241": 2,
               "242": 4,
               "244": 12,
@@ -279391,7 +279458,7 @@
               "250": 6,
               "252": 1,
               "254": 5,
-              "257": 5,
+              "257": 7,
               "260": 1
             }
           }
@@ -284650,6 +284717,7 @@
               "131": 7,
               "135": 1,
               "136": 2,
+              "143": 2,
               "147": 2,
               "148": 4,
               "150": 2,
@@ -294156,6 +294224,7 @@
               "137": 2,
               "138": 6,
               "141": 7,
+              "143": 1,
               "146": 3,
               "147": 5,
               "148": 5,
@@ -298388,14 +298457,6 @@
           }
         ],
         [
-          "chromatic",
-          {
-            "4": {
-              "143": 1
-            }
-          }
-        ],
-        [
           "chroma",
           {
             "4": {
@@ -302570,6 +302631,7 @@
               "139": 1,
               "140": 1,
               "141": 1,
+              "143": 1,
               "146": 3,
               "153": 1,
               "155": 3,
@@ -302596,6 +302658,7 @@
               "223": 1,
               "226": 3,
               "235": 1,
+              "238": 1,
               "240": 2,
               "243": 1,
               "245": 1,
@@ -302713,7 +302776,7 @@
               "140": 2,
               "141": 3,
               "142": 3,
-              "143": 1,
+              "143": 2,
               "146": 8,
               "151": 2,
               "152": 1,
@@ -303563,6 +303626,7 @@
               "135": 2,
               "138": 1,
               "141": 1,
+              "143": 1,
               "144": 1,
               "149": 1,
               "161": 1,
@@ -303922,7 +303986,6 @@
               "140": 1,
               "141": 3,
               "142": 1,
-              "143": 1,
               "144": 4,
               "145": 5,
               "146": 2,
@@ -304035,6 +304098,7 @@
               "99": 3,
               "117": 1,
               "138": 2,
+              "143": 1,
               "193": 2
             }
           }
@@ -309595,6 +309659,7 @@
               "104": 2,
               "105": 1,
               "114": 2,
+              "143": 1,
               "178": 1,
               "210": 1
             }
@@ -313010,6 +313075,7 @@
               "241": 2,
               "242": 2,
               "250": 3,
+              "257": 2,
               "258": 4,
               "260": 3
             }
@@ -317609,6 +317675,7 @@
               "135": 1,
               "136": 1,
               "137": 5,
+              "143": 1,
               "144": 1,
               "146": 1,
               "147": 2,
@@ -317732,7 +317799,7 @@
               "136": 1,
               "138": 3,
               "139": 8,
-              "143": 1,
+              "143": 2,
               "146": 1,
               "147": 3,
               "150": 2,
@@ -318196,6 +318263,7 @@
               "234": 8,
               "235": 2,
               "237": 1,
+              "238": 1,
               "257": 4,
               "259": 2
             }
@@ -318278,6 +318346,7 @@
               "236": 4,
               "237": 2,
               "238": 2,
+              "257": 1,
               "259": 7
             }
           }
@@ -322363,7 +322432,7 @@
               "138": 6,
               "140": 2,
               "141": 2,
-              "143": 3,
+              "143": 4,
               "145": 7,
               "146": 35,
               "147": 6,
@@ -322388,8 +322457,8 @@
               "257": 1
             },
             "4": {
-              "238": 9,
-              "257": 75
+              "238": 12,
+              "257": 79
             }
           }
         ],
@@ -325802,6 +325871,7 @@
               "234": 3,
               "235": 1,
               "237": 3,
+              "238": 1,
               "239": 3,
               "240": 2,
               "241": 2,
@@ -326246,7 +326316,7 @@
               "139": 16,
               "141": 33,
               "142": 1,
-              "143": 11,
+              "143": 15,
               "144": 12,
               "146": 46,
               "147": 3,
@@ -328004,6 +328074,7 @@
               "225": 2,
               "226": 3,
               "228": 2,
+              "238": 1,
               "242": 1,
               "243": 2,
               "244": 6,
@@ -328177,7 +328248,8 @@
               "155": 1,
               "188": 1,
               "217": 1,
-              "237": 1
+              "237": 1,
+              "257": 1
             }
           }
         ],
@@ -328662,7 +328734,7 @@
               "137": 36,
               "138": 1,
               "141": 4,
-              "143": 1,
+              "143": 4,
               "144": 9,
               "145": 14,
               "146": 23,
@@ -329139,7 +329211,8 @@
               "253": 58,
               "254": 60,
               "255": 17,
-              "256": 29
+              "256": 29,
+              "257": 1
             }
           }
         ],
@@ -329532,7 +329605,7 @@
               "65": 1,
               "108": 1,
               "142": 4,
-              "143": 11,
+              "143": 13,
               "172": 1,
               "174": 4,
               "175": 3,
@@ -330318,6 +330391,7 @@
               "135": 4,
               "136": 6,
               "139": 1,
+              "143": 1,
               "146": 4,
               "154": 2,
               "159": 1,
@@ -331691,7 +331765,7 @@
               "140": 9,
               "141": 1,
               "142": 6,
-              "143": 6,
+              "143": 10,
               "145": 7,
               "146": 22,
               "147": 8,
@@ -334416,7 +334490,7 @@
               "140": 2,
               "141": 4,
               "142": 10,
-              "143": 4,
+              "143": 5,
               "145": 4,
               "146": 12,
               "147": 5,
@@ -516943,6 +517017,11 @@
           "throws",
           "common",
           "path",
+          "local",
+          "complete",
+          "files",
+          "only",
+          "hls",
           "live",
           "audio",
           "provider",
@@ -517033,7 +517112,7 @@
           "flat",
           "major",
           "17",
-          "chromatic",
+          "enharmonic",
           "spellings",
           "sharp",
           "minor",
@@ -517174,21 +517253,37 @@
           "buffer",
           "failure",
           "never",
+          "non",
+          "optional",
+          "comple",
+          "end",
+          "iterator",
+          "next",
+          "returns",
+          "nil",
+          "apple",
+          "phras",
           "send",
           "final",
-          "nil",
           "signal",
-          "comple",
-          "so",
-          "analysis",
-          "can",
-          "finish",
+          "model",
+          "does",
+          "self",
+          "iterat",
+          "struct",
           "swift",
+          "protocol",
+          "mutat",
+          "func",
+          "once",
+          "all",
+          "been",
+          "sent",
+          "make",
           "let",
           "session",
           "music",
           "understand",
-          "my",
           "result",
           "try",
           "await",
@@ -517239,11 +517334,25 @@
           "unexpected",
           "framework",
           "failure",
+          "per",
+          "apple",
           "call",
+          "only",
+          "once",
+          "create",
+          "new",
+          "another",
+          "run",
+          "concurrent",
+          "calls",
+          "throw",
           "await",
           "cancel",
           "stop",
-          "flight"
+          "flight",
+          "canceled",
+          "cannot",
+          "reused"
         ],
         "Resources": [
           "resources",
@@ -646201,8 +646310,31 @@
           "use",
           "xe",
           "directly",
-          "bash",
+          "xcode",
+          "27",
+          "beta",
+          "if",
+          "xcui",
+          "doctor",
+          "reports",
           "axe",
+          "developer",
+          "dir",
+          "relocated",
+          "simulator",
+          "kit",
+          "framework",
+          "breaks",
+          "bare",
+          "prefix",
+          "these",
+          "calls",
+          "value",
+          "own",
+          "commands",
+          "apply",
+          "automatically",
+          "bash",
           "tap",
           "id",
           "login",
@@ -646222,7 +646354,6 @@
           "raw",
           "a11y",
           "tree",
-          "xcui",
           "assert",
           "wait",
           "parse"
@@ -669002,7 +669133,45 @@
           "binary",
           "no",
           "daemon",
-          "required"
+          "required",
+          "xcode",
+          "27",
+          "beta",
+          "gotcha",
+          "relocated",
+          "kit",
+          "framework",
+          "moved",
+          "contents",
+          "shared",
+          "frameworks",
+          "breaks",
+          "bare",
+          "axe",
+          "failed",
+          "load",
+          "essential",
+          "private",
+          "does",
+          "not",
+          "exist",
+          "run",
+          "xcui",
+          "doctor",
+          "if",
+          "reports",
+          "developer",
+          "dir",
+          "prefix",
+          "every",
+          "command",
+          "below",
+          "value",
+          "applications",
+          "app",
+          "tap",
+          "fix",
+          "yet"
         ],
         "Installation": [
           "installa",
