@@ -37,7 +37,7 @@ if let bpm = result.rhythm?.beatsPerMinute {
 
 | Init | Signature | Notes |
 |------|-----------|-------|
-| From an asset | `init(asset: any AVAsset & Sendable) async throws` | `async throws` — the common path |
+| From an asset | `init(asset: any AVAsset & Sendable) async throws` | `async throws` — the common path; local/complete files only (no HLS) |
 | From live audio | `init(audioProvider:)` | **Not** async, **not** throwing — see Streaming below |
 
 ## `analyze()` vs `analyze(for:)`
@@ -70,7 +70,7 @@ if let key = result.key {
         print("\(sig.tonic) \(sig.mode)")      // e.g. .dFlat .major
     }
 }
-// Tonic: the 17 chromatic spellings (.c, .cSharp, .dFlat, …). Mode: .major / .minor.
+// Tonic: 17 enharmonic spellings (.c, .cSharp, .dFlat, …). Mode: .major / .minor.
 
 // RhythmResult — beat/bar grid + global tempo
 if let r = result.rhythm {
@@ -100,7 +100,7 @@ if let inst = result.instrumentActivity {
 
 // LoudnessResult — LUFS perceptual loudness (peak in dB)
 if let loud = result.loudness {
-    let overall  = loud.integrated.value        // TimedValue<Float> — whole-song average
+    let overall  = loud.integrated.value        // Float — whole-song average, in LUFS
     let momentary = loud.momentary              // [TimedValue<Float>] — 400 ms window, every 100 ms
     let shortTerm = loud.shortTerm              // [TimedValue<Float>] — 3 s window, smoother
     let peakDB   = loud.peak.value              // absolute peak, in decibels
@@ -126,10 +126,17 @@ try await meter.value
 
 ## Custom Audio Input (`AudioProvider`)
 
-Instead of an asset, feed buffers from any `AsyncSequence` whose `Element` is `AVReadOnlyAudioPCMBuffer` and whose `Failure` is `Never`. **Send a final `nil` to signal completion** so analysis can finish.
+Instead of an asset, feed buffers from any `AsyncSequence` whose `Element` is `AVReadOnlyAudioPCMBuffer` and whose `Failure` is `Never`. The element is non-optional — completion is the sequence **ending**, i.e. the iterator's `next()` returns `nil` (Apple's phrasing: "send a final `nil` to signal completion"). Model it as Apple does, with a self-iterating struct:
 
 ```swift
-let session = MusicUnderstandingSession(audioProvider: myBufferSequence)
+struct AudioProvider: AsyncSequence, AsyncIteratorProtocol {
+    mutating func next() async -> AVReadOnlyAudioPCMBuffer? {
+        // the next buffer, or nil once all audio has been sent
+    }
+    func makeAsyncIterator() -> Self { self }
+}
+
+let session = MusicUnderstandingSession(audioProvider: AudioProvider())
 let result = try await session.analyze()
 ```
 
@@ -150,7 +157,7 @@ let data = try JSONEncoder().encode(result)
 | `.invalidAsset` | The asset could not be read |
 | `.internalError` | Unexpected framework failure |
 
-Call `await session.cancel()` to stop an in-flight analysis.
+**One analysis per session.** Per Apple, call `analyze()` / `analyze(for:)` only once per `MusicUnderstandingSession` — create a new session for another run. Concurrent calls throw `.sessionInProgress`. Call `await session.cancel()` to stop an in-flight analysis; a canceled session cannot be reused.
 
 ## Resources
 
