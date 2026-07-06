@@ -34,6 +34,18 @@ flowchart LR
 
 Deploy custom ML models on-device — model conversion with coremltools, compression (quantization, palettization), stateful models with KV-cache, MLTensor operations, and LLM inference patterns.
 
+### [ML Training Paths](/skills/machine-learning/training-paths)
+
+Pick the right training toolchain before you build — disambiguates Foundation Models adapters, Create ML, `MLUpdateTask` personalization, coremltools conversion, and MLX, and flags the format and toolchain traps that make a trained artifact fail to load.
+
+### [iOS ML (deployment overview)](/skills/machine-learning/ios-ml)
+
+Navigation hub for on-device ML and speech-to-text — routes you to the right skill for model conversion, inference optimization, debugging, or SpeechAnalyzer transcription.
+
+### [Core AI](/skills/machine-learning/core-ai)
+
+Core AI (iOS 27) — the on-device inference framework behind Apple Intelligence, now open to apps. Convert PyTorch models to `.aimodel`, run them from Swift across CPU, GPU, and Neural Engine, and back a `LanguageModelSession` with your own model.
+
 ### [Speech](/skills/machine-learning/speech)
 
 Speech-to-text with SpeechAnalyzer (iOS 26+) — live transcription from microphone, file transcription, custom vocabulary, and language detection.
