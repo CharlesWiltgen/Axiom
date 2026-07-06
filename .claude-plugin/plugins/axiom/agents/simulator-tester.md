@@ -232,6 +232,8 @@ xcrun simctl keychain booted add-root-cert /path/to/ca.pem
 
 ### 13. UI Automation with AXe (preflighted via `xcui doctor`)
 
+**Xcode 27 beta:** if `xcui doctor` reports an `axe_developer_dir` (a beta that relocated `SimulatorKit.framework` breaks bare `axe`), prefix every direct `axe` call in this section with `DEVELOPER_DIR=<that value>`. xcui's own commands apply it automatically.
+
 **Installation:** AXe is the input/tree engine `xcui` builds on. Preflight it with `xcui doctor` (and `xcui doctor --install` to add it via brew, consented) rather than treating it as optional.
 
 ```bash

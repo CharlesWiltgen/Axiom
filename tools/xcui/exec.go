@@ -45,12 +45,21 @@ func IsTimeoutError(err error) bool {
 
 // ExecRun runs a command with a timeout, returning both stdout and stderr.
 func ExecRun(ctx context.Context, timeout time.Duration, name string, args ...string) (ExecResult, error) {
+	return ExecRunEnv(ctx, timeout, nil, name, args...)
+}
+
+// ExecRunEnv is ExecRun with extra environment variables (each "KEY=VALUE")
+// appended to the current process environment. Pass nil to inherit unchanged.
+func ExecRunEnv(ctx context.Context, timeout time.Duration, env []string, name string, args ...string) (ExecResult, error) {
 	if timeout <= 0 {
 		timeout = DefaultExecTimeout()
 	}
 	cctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 	cmd := exec.CommandContext(cctx, name, args...)
+	if len(env) > 0 {
+		cmd.Env = append(os.Environ(), env...)
+	}
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr

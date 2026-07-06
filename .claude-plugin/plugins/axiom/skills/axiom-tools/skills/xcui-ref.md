@@ -35,6 +35,8 @@ xcui makes iOS-simulator UI and accessibility testing scriptable for coding harn
 
 ## For input, use AXe directly
 
+> **Xcode 27 beta**: if `xcui doctor` reports an `axe_developer_dir` (a beta that relocated `SimulatorKit.framework` breaks bare `axe`), prefix these `axe` calls with `DEVELOPER_DIR=<that value>`. xcui's own commands apply it automatically.
+
 ```bash
 axe tap --id loginButton --udid <udid>     # real HID touch, not pointer-hover
 axe type "user@example.com" --udid <udid>

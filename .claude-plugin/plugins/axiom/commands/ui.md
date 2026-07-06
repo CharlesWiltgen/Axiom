@@ -11,7 +11,7 @@ Uses **xcui** (+ AXe + simctl) to make simulator UI and accessibility testing sc
 ## Steps
 
 1. Run `xcui doctor` — confirms AXe is installed (offer `xcui doctor --install` if missing) and a simulator is booted
-2. For input, use AXe directly: `axe tap --id <id> --udid <udid>` (real HID touch), `axe type`, `axe swipe`
+2. For input, use AXe directly: `axe tap --id <id> --udid <udid>` (real HID touch), `axe type`, `axe swipe`. **If step 1's `xcui doctor` reports an `axe_developer_dir`** — a beta Xcode that relocated `SimulatorKit.framework` (Xcode 27 beta) breaks bare `axe` — prefix every direct `axe` call with `DEVELOPER_DIR=<that value>`. (xcui's own commands apply it automatically.)
 3. To synchronize, use `xcui wait --for-element <id>` instead of sleeping or re-screenshotting
 4. To validate, use `xcui assert --id <id> --label "…" --trait button --single`
 5. For accessibility runs, set state with `xcui a11y set --toggle <name> --value on --app <bundle-id>` then assert
