@@ -681,7 +681,7 @@ RealityKit 27 ships GPU cloth in the `RealityFoundationCloth` implementation mod
 
 | Component | Role |
 |-----------|------|
-| `ClothBodyComponent` | The simulated cloth — `mesh` (`ClothMeshResource`), `mass`, per-vertex `motionTypes` (`ParticleMotionType.dynamic`/`.kinematic`), `externalForces`, `targetShapes`, `inflationConstraint`, `colliderBinding`, `materialNames` (`ClothBodyMaterial`) |
+| `ClothBodyComponent` | The simulated cloth — `mesh` (`ClothMeshResource`), `mass`, per-vertex `motionTypes` (`ParticleMotionType.dynamic`/`.kinematic`), `externalForces`, `targetShapes`, `inflationConstraint`, `colliderBinding`, `materialNames` (names into `ClothSimulationComponent.materials`) |
 | `ClothColliderComponent` | What the cloth collides with — `init(shape:)` from `ClothColliderShape` (sphere/box/rounded-box/capsule/plane/mesh, e.g. `ClothSphereShape`), plus `init(mesh:bias:)`; `collisionFilter`, `isCollisionResponseEnabled`, `ClothColliderMaterial` |
 | `ClothSimulationComponent` | World settings on the simulation root — `gravity`, `wind`, `dampingFactor` |
 
@@ -699,7 +699,9 @@ func setUpCloth(simulationRoot: Entity, cloth: Entity) {
 }
 ```
 
-**Beta caveat:** in the current 27 beta, importing `ComputeGraph` in the same file as `RealityKit` hides the cloth re-export (`error: cannot find 'ClothSphereShape' in scope`). Keep cloth code in a file that imports only `RealityKit`, or re-verify per beta.
+**Building the cloth mesh:** create geometry with `ClothMeshResource` factories — `.patch(size:)`, `.box(size:)`, `.sphere(radius:)`, `.capsule(height:radius:)`, `.cylinder(height:radius:withCaps:)`, or `init(from: MeshResource)` — then `ClothBodyComponent(mesh:meshDraping:)`, draping from a `ClothPoseResource(positions:)`. `ClothSimulationComponent` also exposes `solver` (`.gaussSeidel(iterationCount:)` / `.jacobi(iterationCount:)`), `speedLimit`, `timeStep`, and a by-name `materials` collection where `ClothBodyMaterial` / `ClothColliderMaterial` register (referenced by each component's `materialNames`). Force/query/grab volumes take a `ClothVolumeShape` (distinct from the collider's `ClothColliderShape`).
+
+**Experimental API:** the entire cloth surface is annotated `@available(*, deprecated, message: "This API is experimental and may change or be removed in a future release.")` in the 27 beta. Adopting it emits deprecation warnings today and can source-break in a later beta — gate it behind your own flag and re-verify each beta.
 
 ### ComputeGraph framework (`OS27`, not watchOS)
 
