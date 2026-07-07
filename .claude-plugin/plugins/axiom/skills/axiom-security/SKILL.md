@@ -23,6 +23,7 @@ license: MIT
 | App integrity verification, DCAppAttestService, fraud metric | See `skills/app-attest.md` |
 | Prompt injection, securing AI agents / agentic features, tool confirmation | See `skills/agentic-security.md` |
 | NSFileProtection levels, data protection at rest | See `skills/file-protection-ref.md` |
+| SensitiveContentAnalysis verdict must never leave the device (no analytics/moderation queue/synced cache; license §3.3.3) | See `axiom-vision` (skills/vision-ref.md) |
 | Certificate management, provisioning profiles, CI/CD signing | See `skills/code-signing.md` |
 | Certificate not found, profile mismatch, entitlement errors | See `skills/code-signing-diag.md` |
 | Certificate CLI, profile inspection, entitlement extraction | See `skills/code-signing-ref.md` |

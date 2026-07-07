@@ -1447,6 +1447,47 @@ if result.isSensitive {
 
 **`OS27` upgrade — categorized results.** Before 27 you got only the boolean `isSensitive`. At 27 (`iOS27`/`macOS27`/`visionOS27`, not watchOS/tvOS) `detectedTypes` reports *which kind* of sensitive content was found, so you can branch handling (different messaging for gore vs. explicit). Guard it with `#available` and fall back to the boolean on earlier targets.
 
+**Building against multiple Xcodes.** `detectedTypes` and `ContentType` are absent from the iOS 26 SDK, and `#available` is a *runtime* gate — it does not stop the compiler from type-checking the symbol. A package that must also build on Xcode 26 needs a compile-time gate too, or older Xcodes fail to build:
+
+```swift
+if result.isSensitive {
+    #if compiler(>=6.4)   // Xcode 27+ SDK is the first to declare the symbol
+    if #available(iOS 27, macOS 27, visionOS 27, *) {
+        handle(result.detectedTypes)
+    }
+    #endif
+}
+```
+
+If you only ever build with Xcode 27+, `#available` alone is enough — the `#if compiler` guard matters only when the same source must compile on an older Xcode.
+
+## Sensitive Content Analysis — design for the unavailable path
+
+`.disabled` is the **default state for adults**: Sensitive Content Warning ships off and is buried in Settings > Privacy & Security. Child and teen accounts get it on by default through Family Sharing / Communication Safety. If your audience is adults, `.disabled` is the *common* path, not an edge case — build a real UI for it rather than treating it as an error.
+
+You **cannot deep-link the toggle.** `UIApplication.openSettingsURLString` opens *your app's* Settings page, not Privacy & Security > Sensitive Content Warning, and no public URL targets that pane. Undocumented `prefs:root=…` URLs are private API and an App Review rejection risk. The shippable path is on-screen instructions telling the user where to go.
+
+The two *enabled* policies imply different UI: `.simpleInterventions` (adult, Sensitive Content Warning) expects brief inline affordances like a "Show" button; `.descriptiveInterventions` (kids/teens, Communication Safety) expects more explanatory UI about the risk.
+
+## Sensitive Content Analysis — never transmit the verdict off-device
+
+The Apple Developer Program License Agreement (§3.3.3, Data and Privacy; the "Sensitive Content Analysis Framework" clause) prohibits transmitting off the device *any* information about whether the framework flagged an image or video. Practical consequences:
+
+- **No analytics events** on `isSensitive` / `detectedTypes` — not even a count.
+- **No server-side moderation queue** keyed off the verdict.
+- **No synced verdict cache** (iCloud / CloudKit / your backend). Any cache stays on-device only.
+- **Reporting is an explicit user action**, and the report payload carries the media the user chose to send — never the framework's verdict.
+
+This is a licensing requirement, not a suggestion: exfiltrating the verdict is grounds for rejection or agreement breach. See axiom-security.
+
+## Sensitive Content Analysis — testing
+
+Explicit fixtures don't belong in your repo. Apple ships a **configuration profile + QR code + a harmless test image** the analyzer will flag, so you can exercise the flagged path with safe content. Gotcha: **downloading the profile does nothing on its own** — install it in **Settings > General > VPN & Device Management** first. Until you do, the test image sails through unflagged and the analyzer looks broken.
+
+## Sensitive Content Analysis — the real work is the surrounding policy
+
+The analyzer call is ~3 lines; shipping it well is not. The surface area that matters is fail-closed blur/reveal/report UI (default to hidden, reveal only on explicit user action), on-device-only verdict caching, and the `.disabled` path above. Budget for the policy state machine, not the API call.
+
 ## Resources
 
 **WWDC**: 2019-234, 2021-10041, 2022-10024, 2022-10025, 2025-272, 2023-10176, 2023-111241, 2023-10048, 2020-10653, 2020-10043, 2020-10099, 2026-237, 2026-297
