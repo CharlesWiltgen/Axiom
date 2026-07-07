@@ -93,6 +93,9 @@ Vision provides computer vision algorithms for still images and video. This refe
   - Detects nudity, gore, and violence in images and video
   - Gated by the user's Sensitive Content Warning setting — check `analysisPolicy != .disabled` before analyzing; `.disabled` means the feature is off, not an error
   - iOS 27: `detectedTypes` (`Set<SCSensitivityAnalysis.ContentType>`) adds per-category results (`.sexuallyExplicit`, `.goreOrViolence`); prior to iOS 27 only the boolean `isSensitive` is available
+  - The verdict must stay on-device — the Apple Developer Program License Agreement prohibits transmitting whether content was flagged off the device (no analytics, server-side moderation queue, or synced cache); reporting has to be a separate explicit user action
+  - No public deep-link to the Sensitive Content Warning toggle — `openSettingsURLString` opens your app's own settings page, so guide users to the setting with on-screen instructions
+  - Testing: install Apple's configuration profile (it flags a harmless test image) via Settings > General > VPN & Device Management — downloading the profile alone does nothing
 
 ## Code Examples
 
