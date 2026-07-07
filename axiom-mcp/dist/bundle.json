@@ -1,6 +1,6 @@
 {
   "version": "0.2.0",
-  "generatedAt": "2026-07-07T03:18:12.890Z",
+  "generatedAt": "2026-07-07T14:57:23.601Z",
   "skills": {
     "axiom-accessibility": {
       "name": "axiom-accessibility",
@@ -27986,7 +27986,7 @@
     "axiom-security": {
       "name": "axiom-security",
       "description": "Use when storing credentials securely, encrypting data, implementing passkeys, securing AI/agentic features against prompt injection, code signing, or managing certificates and provisioning profiles.",
-      "content": "\n# Security & Credentials\n\n**You MUST use this skill for ANY keychain, encryption, passkey, app integrity, agentic/AI feature security, file protection, or code signing work.**\n\n## Quick Reference\n\n| Symptom / Task | Reference |\n|----------------|-----------|\n| Store tokens, passwords, API keys securely | See `skills/keychain.md` |\n| Choose kSecAttrAccessible level, biometric protection | See `skills/keychain.md` |\n| SecItem function signatures, attribute constants | See `skills/keychain-ref.md` |\n| errSecDuplicateItem, errSecItemNotFound, errSecInteractionNotAllowed | See `skills/keychain-diag.md` |\n| Encrypt data, sign payloads, key management | See `skills/cryptokit.md` |\n| Hash functions, HMAC, AES-GCM, ChaChaPoly, ECDSA, EdDSA, key agreement | See `skills/cryptokit-ref.md` |\n| Passkey sign-in, WebAuthn, ASAuthorizationController | See `skills/passkeys.md` |\n| One-time code AutoFill for credential providers `OS27` | See `skills/passkeys.md` (Delivered Verification Codes) |\n| App integrity verification, DCAppAttestService, fraud metric | See `skills/app-attest.md` |\n| Prompt injection, securing AI agents / agentic features, tool confirmation | See `skills/agentic-security.md` |\n| NSFileProtection levels, data protection at rest | See `skills/file-protection-ref.md` |\n| Certificate management, provisioning profiles, CI/CD signing | See `skills/code-signing.md` |\n| Certificate not found, profile mismatch, entitlement errors | See `skills/code-signing-diag.md` |\n| Certificate CLI, profile inspection, entitlement extraction | See `skills/code-signing-ref.md` |\n| Apple Pay payment certs / pass type certs / Tap to Pay entitlement | See `axiom-payments` suite |\n\n## Decision Tree\n\n```dot\ndigraph security {\n    start [label=\"Security task\" shape=ellipse];\n    what [label=\"What do you need?\" shape=diamond];\n\n    start -> what;\n    what -> \"skills/keychain.md\" [label=\"store/retrieve\\ncredentials, tokens,\\nsecrets\"];\n    what -> \"skills/keychain-ref.md\" [label=\"SecItem API syntax,\\nattribute constants,\\naccess levels\"];\n    what -> \"skills/keychain-diag.md\" [label=\"keychain errors\\n(errSec codes)\"];\n    what -> \"skills/cryptokit.md\" [label=\"encrypt data,\\nsign payloads,\\nSecure Enclave keys\"];\n    what -> \"skills/cryptokit-ref.md\" [label=\"CryptoKit API\\n(AES, ECDSA, HPKE,\\npost-quantum)\"];\n    what -> \"skills/passkeys.md\" [label=\"passkey sign-in,\\nreplace passwords\"];\n    what -> \"skills/app-attest.md\" [label=\"app integrity,\\nfraud prevention\"];\n    what -> \"skills/agentic-security.md\" [label=\"AI agent security,\\nprompt injection\"];\n    what -> \"skills/file-protection-ref.md\" [label=\"file encryption,\\nNSFileProtection\"];\n    what -> \"skills/code-signing.md\" [label=\"set up signing,\\nprofiles, CI/CD\"];\n    what -> \"skills/code-signing-diag.md\" [label=\"signing errors,\\nupload rejections\"];\n    what -> \"skills/code-signing-ref.md\" [label=\"CLI commands,\\nprofile inspection\"];\n}\n```\n\n1. Store tokens, passwords, API keys securely? → `skills/keychain.md`\n1a. Need SecItem function signatures, attribute constants? → `skills/keychain-ref.md`\n1b. Keychain errors (errSecDuplicateItem, errSecItemNotFound)? → `skills/keychain-diag.md`\n2. Encrypt data, sign payloads, manage keys? → `skills/cryptokit.md`\n2a. Need CryptoKit API details (AES-GCM, ECDSA, HPKE, post-quantum)? → `skills/cryptokit-ref.md`\n3. Implement passkey sign-in, replace passwords? → `skills/passkeys.md`\n4. Verify app integrity, prevent fraud? → `skills/app-attest.md`\n5. Securing an agentic/AI feature (prompt injection, tool confirmation, lock-screen intents)? → `skills/agentic-security.md`\n6. File encryption at rest, NSFileProtection levels? → `skills/file-protection-ref.md`\n7. Set up code signing, manage certificates, CI/CD? → `skills/code-signing.md`\n7a. Code signing error troubleshooting? → `skills/code-signing-diag.md`\n7b. Certificate CLI commands, profile inspection? → `skills/code-signing-ref.md`\n8. Build/upload failures after signing? → See axiom-build\n9. App Store submission prep? → `/skill axiom-shipping`\n10. Privacy manifests, tracking transparency? → See axiom-integration\n11. Data persistence (SwiftData, Core Data, storage strategy)? → `/skill axiom-data`\n12. TLS configuration, certificate pinning for network requests? → `/skill axiom-networking`\n13. Want automated security scan? → security-privacy-scanner (Agent)\n\n## Conflict Resolution\n\n**security vs axiom-build**: When build fails with signing errors:\n- Code signing errors (certificate, profile, entitlement) → **use security**\n- Environment issues (Xcode version, simulator, Derived Data) → **use axiom-build**\n- If unsure, check the error message: `CODESIGN`, `ITMS-90xxx`, `errSec` → **security**\n\n**security vs shipping**: When preparing for App Store:\n- Privacy manifests, submission checklists, rejections → **use shipping**\n- Code signing for distribution, certificate management → **use security**\n\n**security vs axiom-data**: When storing sensitive data:\n- Tokens, passwords, API keys → **use security** (keychain)\n- User preferences, non-sensitive settings → **use axiom-data** (UserDefaults/SwiftData)\n- File encryption levels for database files → **use security** (file-protection-ref)\n- SQLite-specific Data Protection (`.db`/`-wal`/`-shm` trio, widget-while-locked access) → See axiom-data (skills/grdb-app-groups.md) §4\n\n**security vs axiom-networking**: When securing network communication:\n- TLS configuration, certificate pinning → **use axiom-networking**\n- Signing API requests, encrypting payloads → **use security** (CryptoKit)\n\n## Critical Patterns\n\n**Keychain** (`skills/keychain.md`):\n- SecItem mental model: uniqueness constraints, data protection classes\n- Biometric access control (Face ID / Touch ID)\n- Keychain sharing between app and extensions\n- Background access pitfalls, Mac keychain differences\n- Migration from UserDefaults/@AppStorage for sensitive data\n\n**Keychain API** (`skills/keychain-ref.md`):\n- SecItemAdd/CopyMatching/Update/Delete signatures\n- Item class attributes, uniqueness constraint rules\n- kSecAttrAccessible levels and when each applies\n- Access control flags, biometric integration\n- Complete error code reference\n\n**Keychain Diagnostics** (`skills/keychain-diag.md`):\n- errSecDuplicateItem from unexpected uniqueness constraints\n- errSecItemNotFound despite item existing (query mismatch)\n- errSecInteractionNotAllowed in background contexts\n- Access group and entitlement mismatches\n- Items disappearing after app updates\n\n**CryptoKit** (`skills/cryptokit.md`):\n- AES-GCM and ChaChaPoly authenticated encryption\n- ECDSA/EdDSA digital signatures\n- Secure Enclave hardware-backed keys\n- Key agreement (ECDH) for end-to-end encryption\n- HPKE for modern asymmetric encryption\n- Post-quantum algorithms (ML-KEM, ML-DSA)\n- CommonCrypto migration path\n\n**CryptoKit API** (`skills/cryptokit-ref.md`):\n- Hash functions (SHA-256/384/512, SHA-3), HMAC\n- Symmetric encryption (AES-GCM, ChaChaPoly)\n- Asymmetric signing (P256, P384, P521, Curve25519, Ed25519)\n- Key agreement, key derivation (HKDF)\n- Secure Enclave key creation and usage\n- Swift Crypto cross-platform parity\n\n**Passkeys** (`skills/passkeys.md`):\n- ASAuthorizationController registration and assertion flows\n- AutoFill-assisted requests (QuickType bar integration)\n- Automatic passkey upgrades for existing users (iOS 18+)\n- Combined credential requests (passkey + password + Sign in with Apple)\n- Associated domains configuration for WebAuthn\n\n**App Attest** (`skills/app-attest.md`):\n- DCAppAttestService attestation and assertion flows\n- Server-side validation of attestation objects\n- macOS support + tampering signals (extensions, key access control) from the 27 cycle\n- Fraud metric as an investigation signal\n- DeviceCheck 2-bit per-device state\n- Gradual rollout strategies for large install bases\n- Handling unsupported devices gracefully\n\n**Agentic Security** (`skills/agentic-security.md`):\n- Threat modeling agentic features (indirect prompt injection, Lethal Trifecta)\n- Deterministic vs probabilistic mitigations (redaction, spotlighting, confirmation, unlock gating)\n- Foundation Models lifecycle modifiers (.onToolCall confirmation, .historyTransform)\n- App Intents authenticationPolicy and schema risk metadata\n\n**File Protection** (`skills/file-protection-ref.md`):\n- NSFileProtection levels (complete, completeUnlessOpen, afterFirstUnlock, none)\n- Hardware-accelerated encryption tied to device passcode\n- Background file access requirements\n- Keychain vs file protection comparison\n\n**Code Signing** (`skills/code-signing.md`):\n- Automatic vs manual signing tradeoffs\n- Certificate and profile management across teams\n- fastlane match for team-wide certificate sharing\n- CI/CD signing setup (GitHub Actions, Xcode Cloud)\n- Distribution build preparation (App Store, TestFlight, Ad Hoc)\n\n**Code Signing Diagnostics** (`skills/code-signing-diag.md`):\n- Certificate issues (expired, missing, wrong type, revoked)\n- Provisioning profile issues (expired, missing cert, wrong App ID)\n- Entitlement mismatches (capability in Xcode but not in profile)\n- Keychain issues in CI (locked keychain, errSecInternalComponent)\n- Archive/export failures (wrong export method, wrong cert type)\n\n**Code Signing CLI** (`skills/code-signing-ref.md`):\n- `security find-identity`, `security cms -D` for profile inspection\n- `codesign -d --entitlements` for entitlement extraction\n- Certificate types, validity periods, per-account limits\n- fastlane match commands and Keychain management\n\n## Automated Scanning\n\n**Security audit** → Launch `security-privacy-scanner` agent (scans for hardcoded credentials, insecure token storage, Privacy Manifest coverage gaps, ATS violations, missing ATT descriptions, missing export compliance, weak Keychain ACLs, and compound rejection risks; scores posture HARDENED/GAPS/VULNERABLE)\n\n## Anti-Rationalization\n\n| Thought | Reality |\n|---------|---------|\n| \"I'll store the token in UserDefaults for now\" | UserDefaults is a plist file readable by any process with file access. Keychain takes 10 lines. `skills/keychain.md` shows the pattern. |\n| \"My app doesn't need encryption\" | If you store any user data at rest, iOS file protection is free. `skills/file-protection-ref.md` covers protection levels. |\n| \"CommonCrypto works fine, no need to migrate\" | CommonCrypto is C API with manual memory management and no compile-time safety. CryptoKit prevents buffer overflows and key misuse. |\n| \"I'll just use automatic signing\" | Automatic signing works until CI, team scaling, or capability changes break it. Understand manual signing before you need it. `skills/code-signing.md` covers both. |\n| \"Passkeys are too new, passwords are fine\" | Passkeys are phishing-resistant and supported since iOS 16. The migration path supports both simultaneously. `skills/passkeys.md` shows combined flows. |\n| \"I'll regenerate all certificates to fix this\" | Regenerating revokes existing certs and breaks every teammate's build. Diagnose first. `skills/code-signing-diag.md` has the diagnostic flow. |\n| \"App Attest is overkill for my app\" | If your app has any server-verified purchase, promotion, or competitive feature, tampered clients will exploit it. `skills/app-attest.md` covers gradual rollout. |\n| \"I'll use @unchecked Sendable on my crypto wrapper\" | Hiding thread-safety issues from the compiler in security code is how data corruption happens. See axiom-concurrency for safe patterns. |\n| \"kSecAttrAccessibleAlways is fine\" | Deprecated since iOS 12. Items are accessible even when device is locked and unencrypted during backup. Use kSecAttrAccessibleAfterFirstUnlock at minimum. |\n| \"Prompt injection won't hit our little AI feature\" | Any external content reaching your model (a calendar invite, a feed post) is the attack surface, and the model picks the actions. `skills/agentic-security.md` has the threat model and the deterministic mitigations. |\n\n## Example Invocations\n\nUser: \"How do I store an auth token securely?\"\n→ Read: `skills/keychain.md`\n\nUser: \"errSecDuplicateItem when saving to keychain\"\n→ Read: `skills/keychain-diag.md`\n\nUser: \"What are the SecItem attribute constants?\"\n→ Read: `skills/keychain-ref.md`\n\nUser: \"How do I encrypt user data with AES?\"\n→ Read: `skills/cryptokit.md`\n\nUser: \"What's the CryptoKit API for ECDSA signing?\"\n→ Read: `skills/cryptokit-ref.md`\n\nUser: \"How do I add passkey sign-in to my app?\"\n→ Read: `skills/passkeys.md`\n\nUser: \"How do I verify my app hasn't been tampered with?\"\n→ Read: `skills/app-attest.md`\n\nUser: \"How do I protect my app's AI agent from prompt injection?\"\n→ Read: `skills/agentic-security.md`\n\nUser: \"Should my Siri intent work from the lock screen?\"\n→ Read: `skills/agentic-security.md`\n\nUser: \"What NSFileProtection level should I use?\"\n→ Read: `skills/file-protection-ref.md`\n\nUser: \"My build fails with 'No signing certificate found'\"\n→ Read: `skills/code-signing-diag.md`\n\nUser: \"How do I set up fastlane match for CI?\"\n→ Read: `skills/code-signing.md`\n\nUser: \"How do I inspect a provisioning profile?\"\n→ Read: `skills/code-signing-ref.md`\n\nUser: \"Scan my code for security issues\"\n→ Invoke: `security-privacy-scanner` agent\n",
+      "content": "\n# Security & Credentials\n\n**You MUST use this skill for ANY keychain, encryption, passkey, app integrity, agentic/AI feature security, file protection, or code signing work.**\n\n## Quick Reference\n\n| Symptom / Task | Reference |\n|----------------|-----------|\n| Store tokens, passwords, API keys securely | See `skills/keychain.md` |\n| Choose kSecAttrAccessible level, biometric protection | See `skills/keychain.md` |\n| SecItem function signatures, attribute constants | See `skills/keychain-ref.md` |\n| errSecDuplicateItem, errSecItemNotFound, errSecInteractionNotAllowed | See `skills/keychain-diag.md` |\n| Encrypt data, sign payloads, key management | See `skills/cryptokit.md` |\n| Hash functions, HMAC, AES-GCM, ChaChaPoly, ECDSA, EdDSA, key agreement | See `skills/cryptokit-ref.md` |\n| Passkey sign-in, WebAuthn, ASAuthorizationController | See `skills/passkeys.md` |\n| One-time code AutoFill for credential providers `OS27` | See `skills/passkeys.md` (Delivered Verification Codes) |\n| App integrity verification, DCAppAttestService, fraud metric | See `skills/app-attest.md` |\n| Prompt injection, securing AI agents / agentic features, tool confirmation | See `skills/agentic-security.md` |\n| NSFileProtection levels, data protection at rest | See `skills/file-protection-ref.md` |\n| SensitiveContentAnalysis verdict must never leave the device (no analytics/moderation queue/synced cache; license §3.3.3) | See `axiom-vision` (skills/vision-ref.md) |\n| Certificate management, provisioning profiles, CI/CD signing | See `skills/code-signing.md` |\n| Certificate not found, profile mismatch, entitlement errors | See `skills/code-signing-diag.md` |\n| Certificate CLI, profile inspection, entitlement extraction | See `skills/code-signing-ref.md` |\n| Apple Pay payment certs / pass type certs / Tap to Pay entitlement | See `axiom-payments` suite |\n\n## Decision Tree\n\n```dot\ndigraph security {\n    start [label=\"Security task\" shape=ellipse];\n    what [label=\"What do you need?\" shape=diamond];\n\n    start -> what;\n    what -> \"skills/keychain.md\" [label=\"store/retrieve\\ncredentials, tokens,\\nsecrets\"];\n    what -> \"skills/keychain-ref.md\" [label=\"SecItem API syntax,\\nattribute constants,\\naccess levels\"];\n    what -> \"skills/keychain-diag.md\" [label=\"keychain errors\\n(errSec codes)\"];\n    what -> \"skills/cryptokit.md\" [label=\"encrypt data,\\nsign payloads,\\nSecure Enclave keys\"];\n    what -> \"skills/cryptokit-ref.md\" [label=\"CryptoKit API\\n(AES, ECDSA, HPKE,\\npost-quantum)\"];\n    what -> \"skills/passkeys.md\" [label=\"passkey sign-in,\\nreplace passwords\"];\n    what -> \"skills/app-attest.md\" [label=\"app integrity,\\nfraud prevention\"];\n    what -> \"skills/agentic-security.md\" [label=\"AI agent security,\\nprompt injection\"];\n    what -> \"skills/file-protection-ref.md\" [label=\"file encryption,\\nNSFileProtection\"];\n    what -> \"skills/code-signing.md\" [label=\"set up signing,\\nprofiles, CI/CD\"];\n    what -> \"skills/code-signing-diag.md\" [label=\"signing errors,\\nupload rejections\"];\n    what -> \"skills/code-signing-ref.md\" [label=\"CLI commands,\\nprofile inspection\"];\n}\n```\n\n1. Store tokens, passwords, API keys securely? → `skills/keychain.md`\n1a. Need SecItem function signatures, attribute constants? → `skills/keychain-ref.md`\n1b. Keychain errors (errSecDuplicateItem, errSecItemNotFound)? → `skills/keychain-diag.md`\n2. Encrypt data, sign payloads, manage keys? → `skills/cryptokit.md`\n2a. Need CryptoKit API details (AES-GCM, ECDSA, HPKE, post-quantum)? → `skills/cryptokit-ref.md`\n3. Implement passkey sign-in, replace passwords? → `skills/passkeys.md`\n4. Verify app integrity, prevent fraud? → `skills/app-attest.md`\n5. Securing an agentic/AI feature (prompt injection, tool confirmation, lock-screen intents)? → `skills/agentic-security.md`\n6. File encryption at rest, NSFileProtection levels? → `skills/file-protection-ref.md`\n7. Set up code signing, manage certificates, CI/CD? → `skills/code-signing.md`\n7a. Code signing error troubleshooting? → `skills/code-signing-diag.md`\n7b. Certificate CLI commands, profile inspection? → `skills/code-signing-ref.md`\n8. Build/upload failures after signing? → See axiom-build\n9. App Store submission prep? → `/skill axiom-shipping`\n10. Privacy manifests, tracking transparency? → See axiom-integration\n11. Data persistence (SwiftData, Core Data, storage strategy)? → `/skill axiom-data`\n12. TLS configuration, certificate pinning for network requests? → `/skill axiom-networking`\n13. Want automated security scan? → security-privacy-scanner (Agent)\n\n## Conflict Resolution\n\n**security vs axiom-build**: When build fails with signing errors:\n- Code signing errors (certificate, profile, entitlement) → **use security**\n- Environment issues (Xcode version, simulator, Derived Data) → **use axiom-build**\n- If unsure, check the error message: `CODESIGN`, `ITMS-90xxx`, `errSec` → **security**\n\n**security vs shipping**: When preparing for App Store:\n- Privacy manifests, submission checklists, rejections → **use shipping**\n- Code signing for distribution, certificate management → **use security**\n\n**security vs axiom-data**: When storing sensitive data:\n- Tokens, passwords, API keys → **use security** (keychain)\n- User preferences, non-sensitive settings → **use axiom-data** (UserDefaults/SwiftData)\n- File encryption levels for database files → **use security** (file-protection-ref)\n- SQLite-specific Data Protection (`.db`/`-wal`/`-shm` trio, widget-while-locked access) → See axiom-data (skills/grdb-app-groups.md) §4\n\n**security vs axiom-networking**: When securing network communication:\n- TLS configuration, certificate pinning → **use axiom-networking**\n- Signing API requests, encrypting payloads → **use security** (CryptoKit)\n\n## Critical Patterns\n\n**Keychain** (`skills/keychain.md`):\n- SecItem mental model: uniqueness constraints, data protection classes\n- Biometric access control (Face ID / Touch ID)\n- Keychain sharing between app and extensions\n- Background access pitfalls, Mac keychain differences\n- Migration from UserDefaults/@AppStorage for sensitive data\n\n**Keychain API** (`skills/keychain-ref.md`):\n- SecItemAdd/CopyMatching/Update/Delete signatures\n- Item class attributes, uniqueness constraint rules\n- kSecAttrAccessible levels and when each applies\n- Access control flags, biometric integration\n- Complete error code reference\n\n**Keychain Diagnostics** (`skills/keychain-diag.md`):\n- errSecDuplicateItem from unexpected uniqueness constraints\n- errSecItemNotFound despite item existing (query mismatch)\n- errSecInteractionNotAllowed in background contexts\n- Access group and entitlement mismatches\n- Items disappearing after app updates\n\n**CryptoKit** (`skills/cryptokit.md`):\n- AES-GCM and ChaChaPoly authenticated encryption\n- ECDSA/EdDSA digital signatures\n- Secure Enclave hardware-backed keys\n- Key agreement (ECDH) for end-to-end encryption\n- HPKE for modern asymmetric encryption\n- Post-quantum algorithms (ML-KEM, ML-DSA)\n- CommonCrypto migration path\n\n**CryptoKit API** (`skills/cryptokit-ref.md`):\n- Hash functions (SHA-256/384/512, SHA-3), HMAC\n- Symmetric encryption (AES-GCM, ChaChaPoly)\n- Asymmetric signing (P256, P384, P521, Curve25519, Ed25519)\n- Key agreement, key derivation (HKDF)\n- Secure Enclave key creation and usage\n- Swift Crypto cross-platform parity\n\n**Passkeys** (`skills/passkeys.md`):\n- ASAuthorizationController registration and assertion flows\n- AutoFill-assisted requests (QuickType bar integration)\n- Automatic passkey upgrades for existing users (iOS 18+)\n- Combined credential requests (passkey + password + Sign in with Apple)\n- Associated domains configuration for WebAuthn\n\n**App Attest** (`skills/app-attest.md`):\n- DCAppAttestService attestation and assertion flows\n- Server-side validation of attestation objects\n- macOS support + tampering signals (extensions, key access control) from the 27 cycle\n- Fraud metric as an investigation signal\n- DeviceCheck 2-bit per-device state\n- Gradual rollout strategies for large install bases\n- Handling unsupported devices gracefully\n\n**Agentic Security** (`skills/agentic-security.md`):\n- Threat modeling agentic features (indirect prompt injection, Lethal Trifecta)\n- Deterministic vs probabilistic mitigations (redaction, spotlighting, confirmation, unlock gating)\n- Foundation Models lifecycle modifiers (.onToolCall confirmation, .historyTransform)\n- App Intents authenticationPolicy and schema risk metadata\n\n**File Protection** (`skills/file-protection-ref.md`):\n- NSFileProtection levels (complete, completeUnlessOpen, afterFirstUnlock, none)\n- Hardware-accelerated encryption tied to device passcode\n- Background file access requirements\n- Keychain vs file protection comparison\n\n**Code Signing** (`skills/code-signing.md`):\n- Automatic vs manual signing tradeoffs\n- Certificate and profile management across teams\n- fastlane match for team-wide certificate sharing\n- CI/CD signing setup (GitHub Actions, Xcode Cloud)\n- Distribution build preparation (App Store, TestFlight, Ad Hoc)\n\n**Code Signing Diagnostics** (`skills/code-signing-diag.md`):\n- Certificate issues (expired, missing, wrong type, revoked)\n- Provisioning profile issues (expired, missing cert, wrong App ID)\n- Entitlement mismatches (capability in Xcode but not in profile)\n- Keychain issues in CI (locked keychain, errSecInternalComponent)\n- Archive/export failures (wrong export method, wrong cert type)\n\n**Code Signing CLI** (`skills/code-signing-ref.md`):\n- `security find-identity`, `security cms -D` for profile inspection\n- `codesign -d --entitlements` for entitlement extraction\n- Certificate types, validity periods, per-account limits\n- fastlane match commands and Keychain management\n\n## Automated Scanning\n\n**Security audit** → Launch `security-privacy-scanner` agent (scans for hardcoded credentials, insecure token storage, Privacy Manifest coverage gaps, ATS violations, missing ATT descriptions, missing export compliance, weak Keychain ACLs, and compound rejection risks; scores posture HARDENED/GAPS/VULNERABLE)\n\n## Anti-Rationalization\n\n| Thought | Reality |\n|---------|---------|\n| \"I'll store the token in UserDefaults for now\" | UserDefaults is a plist file readable by any process with file access. Keychain takes 10 lines. `skills/keychain.md` shows the pattern. |\n| \"My app doesn't need encryption\" | If you store any user data at rest, iOS file protection is free. `skills/file-protection-ref.md` covers protection levels. |\n| \"CommonCrypto works fine, no need to migrate\" | CommonCrypto is C API with manual memory management and no compile-time safety. CryptoKit prevents buffer overflows and key misuse. |\n| \"I'll just use automatic signing\" | Automatic signing works until CI, team scaling, or capability changes break it. Understand manual signing before you need it. `skills/code-signing.md` covers both. |\n| \"Passkeys are too new, passwords are fine\" | Passkeys are phishing-resistant and supported since iOS 16. The migration path supports both simultaneously. `skills/passkeys.md` shows combined flows. |\n| \"I'll regenerate all certificates to fix this\" | Regenerating revokes existing certs and breaks every teammate's build. Diagnose first. `skills/code-signing-diag.md` has the diagnostic flow. |\n| \"App Attest is overkill for my app\" | If your app has any server-verified purchase, promotion, or competitive feature, tampered clients will exploit it. `skills/app-attest.md` covers gradual rollout. |\n| \"I'll use @unchecked Sendable on my crypto wrapper\" | Hiding thread-safety issues from the compiler in security code is how data corruption happens. See axiom-concurrency for safe patterns. |\n| \"kSecAttrAccessibleAlways is fine\" | Deprecated since iOS 12. Items are accessible even when device is locked and unencrypted during backup. Use kSecAttrAccessibleAfterFirstUnlock at minimum. |\n| \"Prompt injection won't hit our little AI feature\" | Any external content reaching your model (a calendar invite, a feed post) is the attack surface, and the model picks the actions. `skills/agentic-security.md` has the threat model and the deterministic mitigations. |\n\n## Example Invocations\n\nUser: \"How do I store an auth token securely?\"\n→ Read: `skills/keychain.md`\n\nUser: \"errSecDuplicateItem when saving to keychain\"\n→ Read: `skills/keychain-diag.md`\n\nUser: \"What are the SecItem attribute constants?\"\n→ Read: `skills/keychain-ref.md`\n\nUser: \"How do I encrypt user data with AES?\"\n→ Read: `skills/cryptokit.md`\n\nUser: \"What's the CryptoKit API for ECDSA signing?\"\n→ Read: `skills/cryptokit-ref.md`\n\nUser: \"How do I add passkey sign-in to my app?\"\n→ Read: `skills/passkeys.md`\n\nUser: \"How do I verify my app hasn't been tampered with?\"\n→ Read: `skills/app-attest.md`\n\nUser: \"How do I protect my app's AI agent from prompt injection?\"\n→ Read: `skills/agentic-security.md`\n\nUser: \"Should my Siri intent work from the lock screen?\"\n→ Read: `skills/agentic-security.md`\n\nUser: \"What NSFileProtection level should I use?\"\n→ Read: `skills/file-protection-ref.md`\n\nUser: \"My build fails with 'No signing certificate found'\"\n→ Read: `skills/code-signing-diag.md`\n\nUser: \"How do I set up fastlane match for CI?\"\n→ Read: `skills/code-signing.md`\n\nUser: \"How do I inspect a provisioning profile?\"\n→ Read: `skills/code-signing-ref.md`\n\nUser: \"Scan my code for security issues\"\n→ Invoke: `security-privacy-scanner` agent\n",
       "skillType": "router",
       "source": "axiom",
       "category": "general",
@@ -28013,49 +28013,49 @@
           "heading": "Quick Reference",
           "level": 2,
           "startLine": 5,
-          "endLine": 24,
-          "charCount": 1508
+          "endLine": 25,
+          "charCount": 1678
         },
         {
           "heading": "Decision Tree",
           "level": 2,
-          "startLine": 25,
-          "endLine": 66,
+          "startLine": 26,
+          "endLine": 67,
           "charCount": 2660
         },
         {
           "heading": "Conflict Resolution",
           "level": 2,
-          "startLine": 67,
-          "endLine": 87,
+          "startLine": 68,
+          "endLine": 88,
           "charCount": 1190
         },
         {
           "heading": "Critical Patterns",
           "level": 2,
-          "startLine": 88,
-          "endLine": 175,
+          "startLine": 89,
+          "endLine": 176,
           "charCount": 3946
         },
         {
           "heading": "Automated Scanning",
           "level": 2,
-          "startLine": 176,
-          "endLine": 179,
+          "startLine": 177,
+          "endLine": 180,
           "charCount": 334
         },
         {
           "heading": "Anti-Rationalization",
           "level": 2,
-          "startLine": 180,
-          "endLine": 194,
+          "startLine": 181,
+          "endLine": 195,
           "charCount": 2070
         },
         {
           "heading": "Example Invocations",
           "level": 2,
-          "startLine": 195,
-          "endLine": 238,
+          "startLine": 196,
+          "endLine": 239,
           "charCount": 1243
         }
       ],
@@ -39938,7 +39938,7 @@
     "axiom-vision--vision-ref": {
       "name": "axiom-vision--vision-ref",
       "description": "Comprehensive reference for Vision framework computer vision: subject segmentation, hand/body pose detection, person detection, face analysis, text recognition (OCR), barcode detection, document scanning, Visual Intelligence integration, and the 27-cycle additions (tap-to-segment, Vision on watchOS, Foundation Models tools).",
-      "content": "# Vision Framework API Reference\n\nComprehensive reference for Vision framework computer vision: subject segmentation, hand/body pose detection, person detection, face analysis, text recognition (OCR), barcode detection, document scanning, Visual Intelligence integration, and the 27-cycle additions (tap-to-segment, Vision on watchOS, Foundation Models tools).\n\n## When to Use This Reference\n\n- **Implementing subject lifting** using VisionKit or Vision\n- **Detecting hand/body poses** for gesture recognition or fitness apps\n- **Segmenting people** from backgrounds or separating multiple individuals\n- **Face detection and landmarks** for AR effects or authentication\n- **Combining Vision APIs** to solve complex computer vision problems\n- **Looking up specific API signatures** and parameter meanings\n- **Recognizing text** in images (OCR) with VNRecognizeTextRequest\n- **Detecting barcodes** and QR codes with VNDetectBarcodesRequest\n- **Building live scanners** with DataScannerViewController\n- **Scanning documents** with VNDocumentCameraViewController\n- **Extracting structured document data** with RecognizeDocumentsRequest (iOS 26+)\n- **Integrating with Visual Intelligence** — camera/screenshot search surfacing your app's content (iOS 26+, iPadOS27/macOS27)\n- **Tap-to-segment any object** with GenerateIterativeSegmentationRequest `OS27`\n- **Using Vision on watchOS** `watchOS27`\n- **Giving Foundation Models vision tools** (BarcodeReaderTool, OCRTool) `OS27`\n\n**Related skills**: See `skills/vision-framework.md` for decision trees and patterns, `skills/vision-diag.md` for troubleshooting\n\n## Vision Framework Overview\n\nVision provides computer vision algorithms for still images and video:\n\n**Core workflow**:\n1. Create request (e.g., `VNDetectHumanHandPoseRequest()`)\n2. Create handler with image (`VNImageRequestHandler(cgImage: image)`)\n3. Perform request (`try handler.perform([request])`)\n4. Access observations from `request.results`\n\n**Coordinate system**: Lower-left origin, normalized (0.0-1.0) coordinates\n\n**Performance**: Run on background queue - resource intensive, blocks UI if on main thread\n\n## Request Handlers\n\nVision provides two request handlers for different scenarios.\n\n### VNImageRequestHandler\n\nAnalyzes a **single image**. Initialize with the image, perform requests against it, discard.\n\n```swift\nlet handler = VNImageRequestHandler(cgImage: image)\ntry handler.perform([request1, request2])  // Multiple requests, one image\n```\n\n**Initialize with**: `CGImage`, `CIImage`, `CVPixelBuffer`, `Data`, or `URL`\n\n**Rule**: One handler per image. Reusing a handler with a different image is unsupported.\n\n### VNSequenceRequestHandler\n\nAnalyzes a **sequence of frames** (video, camera feed). Initialize empty, pass each frame to `perform()`. Maintains inter-frame state for temporal smoothing.\n\n```swift\nlet sequenceHandler = VNSequenceRequestHandler()\n\n// In your camera/video frame callback:\nfunc processFrame(_ pixelBuffer: CVPixelBuffer) throws {\n    try sequenceHandler.perform([request], on: pixelBuffer)\n}\n```\n\n**Rule**: Create once, reuse across frames. The handler tracks state between calls.\n\n### When to Use Which\n\n| Use Case | Handler |\n|----------|---------|\n| Single photo or screenshot | `VNImageRequestHandler` |\n| Video stream or camera frames | `VNSequenceRequestHandler` |\n| Temporal smoothing (pose, segmentation) | `VNSequenceRequestHandler` |\n| One-off analysis of a CVPixelBuffer | `VNImageRequestHandler` |\n\n### Requests That Benefit from Sequence Handling\n\nThese requests use inter-frame state when run through `VNSequenceRequestHandler`:\n- `VNDetectHumanBodyPoseRequest` — Smoother joint tracking\n- `VNDetectHumanHandPoseRequest` — Smoother landmark tracking\n- `VNGeneratePersonSegmentationRequest` — Temporally consistent masks\n- `VNGeneratePersonInstanceMaskRequest` — Stable person identity across frames\n- `VNDetectDocumentSegmentationRequest` — Stable document edges\n- Any `VNStatefulRequest` subclass — Designed for sequences\n\n### Common Mistake\n\nCreating a new `VNImageRequestHandler` per video frame discards temporal context. Pose landmarks jitter, segmentation masks flicker, and you lose the smoothing that sequence handling provides.\n\n```swift\n// Wrong — loses temporal context every frame\nfunc processFrame(_ buffer: CVPixelBuffer) throws {\n    let handler = VNImageRequestHandler(cvPixelBuffer: buffer)\n    try handler.perform([poseRequest])\n}\n\n// Right — maintains inter-frame state\nlet sequenceHandler = VNSequenceRequestHandler()\nfunc processFrame(_ buffer: CVPixelBuffer) throws {\n    try sequenceHandler.perform([poseRequest], on: buffer)\n}\n```\n\n## Subject Segmentation APIs\n\n### VNGenerateForegroundInstanceMaskRequest\n\n**Availability**: iOS 17+, macOS 14+, tvOS 17+, visionOS 1+\n\nGenerates class-agnostic instance mask of foreground objects (people, pets, buildings, food, shoes, etc.)\n\n#### Basic Usage\n\n```swift\nlet handler = ImageRequestHandler(image)\n\nguard let observation = try await handler.perform(GenerateForegroundInstanceMaskRequest()) else {\n    return\n}\n```\n\n#### InstanceMaskObservation\n\n**allInstances**: `IndexSet` containing all foreground instance indices (excludes background 0)\n\n**allInstancesMask**: `PixelBufferObservation` holding the UInt8 label buffer (0 = background, 1+ = instance indices). Read a single label with `pixel(at:)` (takes a `NormalizedPoint`, returns `Float`) or scan the whole buffer — pre-27 via `withUnsafePointer(_:)`; on 27 via the new `pixelBuffer` property (`CVReadOnlyPixelBuffer`, `OS27`) and `pixelBuffer.withUnsafeBuffer`, which deprecates `withUnsafePointer`. There is no mutable `CVPixelBuffer` accessor.\n\n**instanceAtPoint(_:)**: Takes a `NormalizedPoint` and returns the `IndexSet` of instances at that point. iOS 18+ modern `InstanceMaskObservation` only. (For raw label lookup you can instead use `allInstancesMask.pixel(at:)` — see below.)\n\n```swift\n// Center of image; returns an IndexSet (empty = background)\nlet instances = observation.instanceAtPoint(NormalizedPoint(x: 0.5, y: 0.5))\n\nif instances.isEmpty {\n    print(\"Background tapped\")\n} else {\n    print(\"Instances \\(instances) tapped\")\n}\n```\n\n#### Generating Masks\n\nThree methods generate output from the selected instances. All are throwing and require the request handler that performed the request (`VNImageRequestHandler`/`ImageRequestHandler`).\n\n**generateScaledMask(for:scaledToImageFrom:)** → soft segmentation mask\n\nParameters:\n- `for`: `IndexSet` of instances to include\n- `scaledToImageFrom`: the request handler that performed the request\n\nReturns: single-channel floating-point `CVPixelBuffer` (soft mask) at the input image's resolution. No crop option — use it for compositing.\n\n**generateMaskedImage(for:imageFrom:croppedToInstancesExtent:)** → masked image\n\nParameters:\n- `for`: `IndexSet` of instances to include\n- `imageFrom`: the request handler that performed the request\n- `croppedToInstancesExtent`: `false` (default) = full image; `true` = tight crop around the selected instances\n\nReturns: the masked **image** as a `CVPixelBuffer`, optionally cropped.\n\n**generateMask(for:)** → handler-free soft mask (modern `InstanceMaskObservation` only)\n\nReturns a soft mask without needing a handler. For input-resolution scaling use `generateScaledMask(for:scaledToImageFrom:)` instead.\n\n```swift\n// All instances, soft mask at input resolution (handler in scope)\nlet mask = try observation.generateScaledMask(\n    for: observation.allInstances,\n    scaledToImageFrom: handler\n)\n\n// Single instance, masked image cropped to its extent\nlet instances = IndexSet(integer: 1)\nlet croppedImage = try observation.generateMaskedImage(\n    for: instances,\n    imageFrom: handler,\n    croppedToInstancesExtent: true\n)\n```\n\n#### Instance Mask Hit Testing\n\nThe simplest path is `instanceAtPoint(_:)`, which maps a `NormalizedPoint` straight to an `IndexSet`. To read the raw label yourself, the `allInstancesMask` (`PixelBufferObservation`) gives you `pixel(at:)` for a single point; for whole-buffer scans use `withUnsafePointer(_:)` pre-27, or `pixelBuffer.withUnsafeBuffer` on 27 (`pixelBuffer` is the `OS27` read-only buffer accessor; `withUnsafePointer` is deprecated in 27 and renamed to it).\n\n```swift\nlet labelMask = observation.allInstancesMask  // PixelBufferObservation\n\n// Single point: read the label directly (returns Float; 0 = background)\nlet label = labelMask.pixel(at: NormalizedPoint(x: normalizedX, y: normalizedY))\n\nlet instances = label == 0\n    ? observation.allInstances\n    : IndexSet(integer: Int(label))\n\n// Whole buffer: scan all labels via the unsafe pointer (pre-27;\n// on 27 use labelMask.pixelBuffer.withUnsafeBuffer instead)\nlabelMask.withUnsafePointer { raw in\n    let first = raw.load(fromByteOffset: 0, as: UInt8.self)\n    // ... iterate label bytes as needed\n    _ = first\n}\n```\n\n## VisionKit Subject Lifting\n\n### ImageAnalysisInteraction (iOS)\n\n**Availability**: iOS 16+, iPadOS 16+\n\nAdds system-like subject lifting UI to views:\n\n```swift\nlet interaction = ImageAnalysisInteraction()\ninteraction.preferredInteractionTypes = .imageSubject  // Or .automatic\nimageView.addInteraction(interaction)\n```\n\n**Interaction types**:\n- `.automatic`: Subject lifting + Live Text + data detectors\n- `.imageSubject`: Subject lifting only (no interactive text)\n\n### ImageAnalysisOverlayView (macOS)\n\n**Availability**: macOS 13+\n\n```swift\nlet overlayView = ImageAnalysisOverlayView()\noverlayView.preferredInteractionTypes = .imageSubject\nnsView.addSubview(overlayView)\n```\n\n### Programmatic Access\n\n#### ImageAnalyzer\n\n```swift\nlet analyzer = ImageAnalyzer()\nlet configuration = ImageAnalyzer.Configuration([.text, .visualLookUp])\n\nlet analysis = try await analyzer.analyze(image, configuration: configuration)\n```\n\n#### ImageAnalysisInteraction (subjects)\n\nSubject APIs live on `ImageAnalysisInteraction` (a `@MainActor` `UIInteraction`), NOT on the `ImageAnalysis` returned by `analyzer.analyze(...)`. The `ImageAnalysis` result only exposes `transcript` and `hasResults(for:)`.\n\n**subjects**: `Set<ImageAnalysisInteraction.Subject>` - All subjects in image (async — read with `await`)\n\n**highlightedSubjects**: `Set<ImageAnalysisInteraction.Subject>` - Currently highlighted (user long-pressed)\n\n**subject(at:)**: Async lookup of subject at a point (returns `nil` if none)\n\n**image(for:)**: Async composite of the given subjects\n\n```swift\n// Get all subjects (Set — cannot subscript by Int). `subjects` is async.\nlet subjects = await interaction.subjects\n\n// Look up subject at tap\nif let subject = await interaction.subject(at: tapPoint) {\n    // Process subject\n}\n\n// Change highlight state (take first two safely)\ninteraction.highlightedSubjects = Set(subjects.prefix(2))\n```\n\n#### Subject Struct\n\nThe type is `ImageAnalysisInteraction.Subject` (nested on the interaction).\n\n**image**: `UIImage` - Extracted subject with transparency. The accessor is `async throws` — read it with `try await`.\n\n**bounds**: `CGRect` - Subject boundaries in image coordinates (`@MainActor`-isolated)\n\n```swift\n// Single subject image (`image` is async throws)\nlet subjectImage = try await subject.image\n\n// Composite multiple subjects\nlet compositeImage = try await interaction.image(for: [subject1, subject2])\n```\n\n**Out-of-process**: VisionKit analysis happens out-of-process (performance benefit, image size limited)\n\n## Person Segmentation APIs\n\n### VNGeneratePersonSegmentationRequest\n\n**Availability**: iOS 15+, macOS 12+\n\nReturns single mask containing **all people** in image:\n\n```swift\nlet request = VNGeneratePersonSegmentationRequest()\n// Configure quality level if needed\ntry handler.perform([request])\n\nguard let observation = request.results?.first as? VNPixelBufferObservation else {\n    return\n}\n\nlet personMask = observation.pixelBuffer  // CVPixelBuffer\n```\n\n### VNGeneratePersonInstanceMaskRequest\n\n**Availability**: iOS 17+, macOS 14+\n\nReturns **separate masks for up to 4 people**:\n\n```swift\nlet handler = ImageRequestHandler(image)\n\nguard let observation = try await handler.perform(GeneratePersonInstanceMaskRequest()) else {\n    return\n}\n\n// Same InstanceMaskObservation API as foreground instance masks\nlet allPeople = observation.allInstances  // Up to 4 people (1-4)\n\n// Get mask for person 1\nlet person1Mask = try observation.generateScaledMask(\n    for: IndexSet(integer: 1),\n    scaledToImageFrom: handler\n)\n```\n\n**Limitations**:\n- Segments up to 4 people\n- With >4 people: may miss people or combine them (typically background people)\n- Use `VNDetectFaceRectanglesRequest` to count faces if you need to handle crowded scenes\n\n## Iterative Segmentation (Tap-to-Segment) `OS27`\n\n`GenerateIterativeSegmentationRequest` segments **any object the user selects** — by tap, bounding box, or scribble/lasso — and refines the mask interactively. Modern Swift API; not available on watchOS. Apple ships a tap-to-segment sample app (WWDC 2026-237).\n\n### Seeding and Refining\n\n```swift\nlet handler = ImageRequestHandler(image)\nlet request = GenerateIterativeSegmentationRequest(seedPoint: point)  // NormalizedPoint\nlet observation = try await handler.perform(request)  // PixelBufferObservation?\nlet mask = observation?.pixelBuffer  // CVReadOnlyPixelBuffer (or try .cgImage)\n\n// Refine: include the plate, exclude the cup — then perform again\ntry request.addIncludedPoint(platePoint)\ntry request.addExcludedPoint(cupPoint)\nlet refined = try await handler.perform(request)\n```\n\nSeed initializers (each takes an optional trailing `Revision` argument):\n\n| Initializer | Use for |\n|-------------|---------|\n| `init(seedPoint: NormalizedPoint)` | Simple objects — single tap |\n| `init(seedBox: NormalizedRect)` | Multiple or complex objects — drawn bounding box |\n| `init(seedScribbleBuffer: CVReadOnlyPixelBuffer)` | Lasso or scribble strokes drawn by the user |\n\n- `qualityLevel` — `.fast` / `.balanced` / `.accurate`\n- Result is `PixelBufferObservation?` — pixels in the mask belong to the selected object\n- Coordinates are normalized (0–1) with **lower-left origin** — the same conversion gotchas as every Vision request\n- Scribble/lasso strokes must be at least **1% of the image width** wide; thinner strokes degrade results\n\n### Model Download (DownloadableAssetsRequest)\n\nThe segmentation model is not on-device by default — **first use requires a download**. `GenerateIterativeSegmentationRequest` is the first request conforming to the new `DownloadableAssetsRequest` protocol (`OS27`):\n\n```swift\nswitch await request.assetStatus {  // DownloadableAssetsRequestStatus\ncase .notReady:\n    try await request.downloadAssets()  // or downloadAssets(progress: consuming Subprogress)\ncase .ready:\n    break\ncase .error(let error):\n    throw error  // surface or retry the download\n@unknown default:\n    break\n}\n```\n\nPerforming without the model downloaded fails; the legacy `VNError` domain adds `VNErrorResourceUnavailable` and `VNErrorResourceCorrupted` codes in 27 for asset failures. Check `assetStatus` before the first perform.\n\n## Hand Pose Detection\n\n### VNDetectHumanHandPoseRequest\n\n**Availability**: iOS 14+, macOS 11+\n\nDetects **21 hand landmarks** per hand:\n\n```swift\nlet request = VNDetectHumanHandPoseRequest()\nrequest.maximumHandCount = 2  // Default: 2, increase if needed\n\nlet handler = VNImageRequestHandler(cgImage: image)\ntry handler.perform([request])\n\nfor observation in request.results as? [VNHumanHandPoseObservation] ?? [] {\n    // Process each hand\n}\n```\n\n**Performance note**: `maximumHandCount` affects latency. Pose computed only for hands ≤ maximum. Set to lowest acceptable value.\n\n### Hand Landmarks (21 points)\n\n**Wrist**: 1 landmark\n\n**Thumb** (4 landmarks):\n- `.thumbTip`\n- `.thumbIP` (interphalangeal joint)\n- `.thumbMP` (metacarpophalangeal joint)\n- `.thumbCMC` (carpometacarpal joint)\n\n**Fingers** (4 landmarks each):\n- Tip (`.indexTip`, `.middleTip`, `.ringTip`, `.littleTip`)\n- DIP (distal interphalangeal joint)\n- PIP (proximal interphalangeal joint)\n- MCP (metacarpophalangeal joint)\n\n### Group Keys\n\nAccess landmark groups:\n\n| Group Key | Points |\n|-----------|--------|\n| `.all` | All 21 landmarks |\n| `.thumb` | 4 thumb joints |\n| `.indexFinger` | 4 index finger joints |\n| `.middleFinger` | 4 middle finger joints |\n| `.ringFinger` | 4 ring finger joints |\n| `.littleFinger` | 4 little finger joints |\n\n```swift\n// Get all points\nlet allPoints = try observation.recognizedPoints(.all)\n\n// Get index finger points only\nlet indexPoints = try observation.recognizedPoints(.indexFinger)\n\n// Get specific point\nlet thumbTip = try observation.recognizedPoint(.thumbTip)\nlet indexTip = try observation.recognizedPoint(.indexTip)\n\n// Check confidence\nguard thumbTip.confidence > 0.5 else { return }\n\n// Access location (normalized coordinates, lower-left origin)\nlet location = thumbTip.location  // CGPoint\n```\n\n### Gesture Recognition Example (Pinch)\n\n```swift\nlet thumbTip = try observation.recognizedPoint(.thumbTip)\nlet indexTip = try observation.recognizedPoint(.indexTip)\n\nguard thumbTip.confidence > 0.5, indexTip.confidence > 0.5 else {\n    return\n}\n\nlet distance = hypot(\n    thumbTip.location.x - indexTip.location.x,\n    thumbTip.location.y - indexTip.location.y\n)\n\nlet isPinching = distance < 0.05  // Normalized threshold\n```\n\n### Chirality (Handedness)\n\n```swift\nlet chirality = observation.chirality  // .left or .right or .unknown\n```\n\n## Body Pose Detection\n\n### VNDetectHumanBodyPoseRequest (2D)\n\n**Availability**: iOS 14+, macOS 11+\n\nDetects **19 body landmarks** (2D normalized coordinates):\n\n```swift\nlet request = VNDetectHumanBodyPoseRequest()\ntry handler.perform([request])\n\nfor observation in request.results as? [VNHumanBodyPoseObservation] ?? [] {\n    // Process each person\n}\n```\n\n### Body Landmarks (19 points)\n\n**Face** (5 landmarks):\n- `.nose`, `.leftEye`, `.rightEye`, `.leftEar`, `.rightEar`\n\n**Arms** (6 landmarks):\n- Left: `.leftShoulder`, `.leftElbow`, `.leftWrist`\n- Right: `.rightShoulder`, `.rightElbow`, `.rightWrist`\n\n**Torso** (7 landmarks):\n- `.neck` (between shoulders)\n- `.leftShoulder`, `.rightShoulder` (also in arm groups)\n- `.leftHip`, `.rightHip`\n- `.root` (between hips)\n\n**Legs** (6 landmarks):\n- Left: `.leftHip`, `.leftKnee`, `.leftAnkle`\n- Right: `.rightHip`, `.rightKnee`, `.rightAnkle`\n\n**Note**: Shoulders and hips appear in multiple groups\n\n### Group Keys (Body)\n\n| Group Key | Points |\n|-----------|--------|\n| `.all` | All 19 landmarks |\n| `.face` | 5 face landmarks |\n| `.leftArm` | shoulder, elbow, wrist |\n| `.rightArm` | shoulder, elbow, wrist |\n| `.torso` | neck, shoulders, hips, root |\n| `.leftLeg` | hip, knee, ankle |\n| `.rightLeg` | hip, knee, ankle |\n\n```swift\n// Get all body points\nlet allPoints = try observation.recognizedPoints(.all)\n\n// Get left arm only\nlet leftArmPoints = try observation.recognizedPoints(.leftArm)\n\n// Get specific joint\nlet leftWrist = try observation.recognizedPoint(.leftWrist)\n```\n\n### VNDetectHumanBodyPose3DRequest (3D)\n\n**Availability**: iOS 17+, macOS 14+\n\nReturns **3D skeleton with 17 joints** in meters (real-world coordinates):\n\n```swift\nlet request = VNDetectHumanBodyPose3DRequest()\ntry handler.perform([request])\n\nguard let observation = request.results?.first as? VNHumanBodyPose3DObservation else {\n    return\n}\n\n// Get 3D joint position\nlet leftWrist = try observation.recognizedPoint(.leftWrist)\nlet position = leftWrist.position  // simd_float4x4 matrix\nlet localPosition = leftWrist.localPosition  // Relative to parent joint\n```\n\n**3D Body Landmarks** (17 joints, `VNHumanBodyPose3DObservation.JointName`): root, spine, centerShoulder, centerHead, topHead, plus left/right shoulder, elbow, wrist, hip, knee, ankle. The 3D skeleton is NOT the 2D set minus ears — it omits the 2D face/head joints (nose, eyes, ears, neck) and adds spine, centerShoulder, centerHead, topHead. (2D set = 19 joints via `VNHumanBodyPoseObservation.JointName`.)\n\n#### 3D Observation Properties\n\n**bodyHeight**: Estimated height in meters\n- With depth data: Measured height\n- Without depth data: Reference height (1.8m)\n\n**heightEstimation**: `.measured` or `.reference`\n\n**cameraOriginMatrix**: `simd_float4x4` camera position/orientation relative to subject\n\n**pointInImage(\\_:)**: Project 3D joint back to 2D image coordinates\n\n```swift\nlet wrist2D = try observation.pointInImage(leftWrist)\n```\n\n#### 3D Point Classes\n\n**VNPoint3D**: Base class with `simd_float4x4` position matrix\n\n**VNRecognizedPoint3D**: Adds identifier (joint name)\n\n**VNHumanBodyRecognizedPoint3D**: Adds `localPosition` and `parentJoint`\n\n```swift\n// Position relative to skeleton root (center of hip)\nlet modelPosition = leftWrist.position\n\n// Position relative to parent joint (left elbow)\nlet relativePosition = leftWrist.localPosition\n```\n\n#### Depth Input\n\nVision accepts depth data alongside images:\n\n```swift\n// From AVDepthData\nlet handler = VNImageRequestHandler(\n    cvPixelBuffer: imageBuffer,\n    depthData: depthData,\n    orientation: orientation\n)\n\n// From file (automatic depth extraction)\nlet handler = VNImageRequestHandler(url: imageURL)  // Depth auto-fetched\n```\n\n**Depth formats**: Disparity or Depth (interchangeable via AVFoundation)\n\n**LiDAR**: Use in live capture sessions for accurate scale/measurement\n\n## Face Detection & Landmarks\n\n### VNDetectFaceRectanglesRequest\n\n**Availability**: iOS 11+\n\nDetects face bounding boxes:\n\n```swift\nlet request = VNDetectFaceRectanglesRequest()\ntry handler.perform([request])\n\nfor observation in request.results as? [VNFaceObservation] ?? [] {\n    let faceBounds = observation.boundingBox  // Normalized rect\n}\n```\n\n### VNDetectFaceLandmarksRequest\n\n**Availability**: iOS 11+\n\nDetects face with detailed landmarks:\n\n```swift\nlet request = VNDetectFaceLandmarksRequest()\ntry handler.perform([request])\n\nfor observation in request.results as? [VNFaceObservation] ?? [] {\n    if let landmarks = observation.landmarks {\n        let leftEye = landmarks.leftEye\n        let nose = landmarks.nose\n        let leftPupil = landmarks.leftPupil  // Revision 2+\n    }\n}\n```\n\n**Revisions**:\n- Revision 1: Basic landmarks\n- Revision 2: Detects upside-down faces\n- Revision 3+: Pupil locations\n\n## Person Detection\n\n### VNDetectHumanRectanglesRequest\n\n**Availability**: iOS 13+\n\nDetects human bounding boxes (torso detection):\n\n```swift\nlet request = VNDetectHumanRectanglesRequest()\ntry handler.perform([request])\n\nfor observation in request.results as? [VNHumanObservation] ?? [] {\n    let humanBounds = observation.boundingBox  // Normalized rect\n}\n```\n\n**Use case**: Faster than pose detection when you only need location\n\n## CoreImage Integration\n\n### CIBlendWithMask Filter\n\nComposite subject on new background using Vision mask:\n\n```swift\n// 1. Get mask from Vision (`handler` is the ImageRequestHandler that performed the request)\nlet handler = ImageRequestHandler(sourceImage)\nguard let observation = try await handler.perform(GenerateForegroundInstanceMaskRequest()) else { return }\nlet visionMask = try observation.generateScaledMask(\n    for: observation.allInstances,\n    scaledToImageFrom: handler\n)\n\n// 2. Convert to CIImage\nlet maskImage = CIImage(cvPixelBuffer: visionMask)\n\n// 3. Apply filter\nlet filter = CIFilter(name: \"CIBlendWithMask\")!\nfilter.setValue(sourceImage, forKey: kCIInputImageKey)\nfilter.setValue(maskImage, forKey: kCIInputMaskImageKey)\nfilter.setValue(newBackground, forKey: kCIInputBackgroundImageKey)\n\nlet output = filter.outputImage  // Composited result\n```\n\n**Parameters**:\n- **Input image**: Original image to mask\n- **Mask image**: Vision's soft segmentation mask\n- **Background image**: New background (or empty image for transparency)\n\n**HDR preservation**: CoreImage preserves high dynamic range from input (Vision/VisionKit output is SDR)\n\n## Text Recognition APIs\n\n### VNRecognizeTextRequest\n\n**Availability**: iOS 13+, macOS 10.15+\n\nRecognizes text in images with configurable accuracy/speed trade-off.\n\n#### Basic Usage\n\n```swift\nlet request = VNRecognizeTextRequest()\nrequest.recognitionLevel = .accurate  // Or .fast\nrequest.recognitionLanguages = [\"en-US\", \"de-DE\"]  // Order matters\nrequest.usesLanguageCorrection = true\n\nlet handler = VNImageRequestHandler(cgImage: image)\ntry handler.perform([request])\n\nfor observation in request.results as? [VNRecognizedTextObservation] ?? [] {\n    // Get top candidates\n    let candidates = observation.topCandidates(3)\n    let bestText = candidates.first?.string ?? \"\"\n}\n```\n\n#### Recognition Levels\n\n| Level | Performance | Accuracy | Best For |\n|-------|-------------|----------|----------|\n| `.fast` | Real-time | Good | Camera feed, large text, signs |\n| `.accurate` | Slower | Excellent | Documents, receipts, handwriting |\n\n**Fast path**: Character-by-character recognition (Neural Network → Character Detection)\n\n**Accurate path**: Full-line ML recognition (Neural Network → Line/Word Recognition)\n\n#### Properties\n\n| Property | Type | Description |\n|----------|------|-------------|\n| `recognitionLevel` | `VNRequestTextRecognitionLevel` | `.fast` or `.accurate` |\n| `recognitionLanguages` | `[String]` | BCP 47 language codes, order = priority |\n| `usesLanguageCorrection` | `Bool` | Use language model for correction |\n| `customWords` | `[String]` | Domain-specific vocabulary |\n| `automaticallyDetectsLanguage` | `Bool` | Auto-detect language (iOS 16+) |\n| `minimumTextHeight` | `Float` | Min text height as fraction of image (0-1) |\n| `revision` | `Int` | API version (affects supported languages) |\n\n#### Language Support\n\n```swift\n// Check supported languages for current settings\nlet languages = try VNRecognizeTextRequest.supportedRecognitionLanguages(\n    for: .accurate,\n    revision: VNRecognizeTextRequestRevision3\n)\n```\n\n**Language correction**: Improves accuracy but takes processing time. Disable for codes/serial numbers.\n\n**Custom words**: Add domain-specific vocabulary for better recognition (medical terms, product codes).\n\n#### VNRecognizedTextObservation\n\n**boundingBox**: Normalized rect containing recognized text\n\n**topCandidates(_:)**: Returns `[VNRecognizedText]` ordered by confidence\n\n#### VNRecognizedText\n\n| Property | Type | Description |\n|----------|------|-------------|\n| `string` | `String` | Recognized text |\n| `confidence` | `VNConfidence` | 0.0-1.0 |\n| `boundingBox(for:)` | `VNRectangleObservation?` | Box for substring range |\n\n```swift\n// Get bounding box for substring\nlet text = candidate.string\nif let range = text.range(of: \"invoice\") {\n    let box = try candidate.boundingBox(for: range)\n}\n```\n\n## Barcode Detection APIs\n\n### VNDetectBarcodesRequest\n\n**Availability**: iOS 11+, macOS 10.13+\n\nDetects and decodes barcodes and QR codes.\n\n#### Basic Usage\n\n```swift\nlet request = VNDetectBarcodesRequest()\nrequest.symbologies = [.qr, .ean13, .code128]  // Specific codes\n\nlet handler = VNImageRequestHandler(cgImage: image)\ntry handler.perform([request])\n\nfor barcode in request.results as? [VNBarcodeObservation] ?? [] {\n    let payload = barcode.payloadStringValue\n    let type = barcode.symbology\n    let bounds = barcode.boundingBox\n}\n```\n\n#### Symbologies\n\n**1D Barcodes**:\n- `.codabar` (iOS 15+)\n- `.code39`, `.code39Checksum`, `.code39FullASCII`, `.code39FullASCIIChecksum`\n- `.code93`, `.code93i`\n- `.code128`\n- `.ean8`, `.ean13`\n- `.gs1DataBar`, `.gs1DataBarExpanded`, `.gs1DataBarLimited` (iOS 15+)\n- `.i2of5`, `.i2of5Checksum`\n- `.itf14`\n- `.upce`\n\n**2D Codes**:\n- `.aztec`\n- `.dataMatrix`\n- `.microPDF417` (iOS 15+)\n- `.microQR` (iOS 15+)\n- `.pdf417`\n- `.qr`\n\n**Performance**: Specifying fewer symbologies = faster detection\n\n#### Revisions\n\n| Revision | iOS | Features |\n|----------|-----|----------|\n| 1 | 11+ | Basic detection, one code at a time |\n| 2 | 15+ | Codabar, GS1, MicroPDF, MicroQR, better ROI |\n| 3 | 16+ | ML-based, multiple codes, better bounding boxes |\n\n#### VNBarcodeObservation\n\n| Property | Type | Description |\n|----------|------|-------------|\n| `payloadStringValue` | `String?` | Decoded content |\n| `symbology` | `VNBarcodeSymbology` | Barcode type |\n| `boundingBox` | `CGRect` | Normalized bounds |\n| `topLeft/topRight/bottomLeft/bottomRight` | `CGPoint` | Corner points |\n\n## VisionKit Scanner APIs\n\n### DataScannerViewController\n\n**Availability**: iOS 16+\n\nCamera-based live scanner with built-in UI for text and barcodes.\n\n#### Check Availability\n\n```swift\n// Hardware support\nDataScannerViewController.isSupported\n\n// Runtime availability (camera access, parental controls)\nDataScannerViewController.isAvailable\n```\n\n#### Configuration\n\n```swift\nimport VisionKit\n\nlet dataTypes: Set<DataScannerViewController.RecognizedDataType> = [\n    .barcode(symbologies: [.qr, .ean13]),\n    .text(textContentType: .URL),  // Or nil for all text\n    // .text(languages: [\"ja\"])  // Filter by language\n]\n\nlet scanner = DataScannerViewController(\n    recognizedDataTypes: dataTypes,\n    qualityLevel: .balanced,  // .fast, .balanced, .accurate\n    recognizesMultipleItems: true,\n    isHighFrameRateTrackingEnabled: true,\n    isPinchToZoomEnabled: true,\n    isGuidanceEnabled: true,\n    isHighlightingEnabled: true\n)\n\nscanner.delegate = self\npresent(scanner, animated: true) {\n    try? scanner.startScanning()\n}\n```\n\n#### RecognizedDataType\n\n| Type | Description |\n|------|-------------|\n| `.barcode(symbologies:)` | Specific barcode types |\n| `.text()` | All text |\n| `.text(languages:)` | Text filtered by language |\n| `.text(textContentType:)` | Text filtered by type (URL, phone, email) |\n\n#### Delegate Protocol\n\n```swift\nprotocol DataScannerViewControllerDelegate {\n    func dataScanner(_ dataScanner: DataScannerViewController,\n                     didTapOn item: RecognizedItem)\n\n    func dataScanner(_ dataScanner: DataScannerViewController,\n                     didAdd addedItems: [RecognizedItem],\n                     allItems: [RecognizedItem])\n\n    func dataScanner(_ dataScanner: DataScannerViewController,\n                     didUpdate updatedItems: [RecognizedItem],\n                     allItems: [RecognizedItem])\n\n    func dataScanner(_ dataScanner: DataScannerViewController,\n                     didRemove removedItems: [RecognizedItem],\n                     allItems: [RecognizedItem])\n\n    func dataScanner(_ dataScanner: DataScannerViewController,\n                     becameUnavailableWithError error: DataScannerViewController.ScanningUnavailable)\n}\n```\n\n#### RecognizedItem\n\n```swift\nenum RecognizedItem {\n    case text(RecognizedItem.Text)\n    case barcode(RecognizedItem.Barcode)\n\n    var id: UUID { get }\n    var bounds: RecognizedItem.Bounds { get }\n}\n\n// Text item\nstruct Text {\n    let transcript: String\n}\n\n// Barcode item\nstruct Barcode {\n    let payloadStringValue: String?\n    let observation: VNBarcodeObservation\n}\n```\n\n#### Async Stream\n\n```swift\n// Alternative to delegate\nfor await items in scanner.recognizedItems {\n    // Current recognized items\n}\n```\n\n#### Custom Highlights\n\n```swift\n// Add custom views over recognized items\nscanner.overlayContainerView.addSubview(customHighlight)\n\n// Capture still photo\nlet photo = try await scanner.capturePhoto()\n```\n\n### VNDocumentCameraViewController\n\n**Availability**: iOS 13+\n\nDocument scanning with automatic edge detection, perspective correction, and lighting adjustment.\n\n#### Basic Usage\n\n```swift\nimport VisionKit\n\nlet camera = VNDocumentCameraViewController()\ncamera.delegate = self\npresent(camera, animated: true)\n```\n\n#### Delegate Protocol\n\n```swift\nprotocol VNDocumentCameraViewControllerDelegate {\n    func documentCameraViewController(_ controller: VNDocumentCameraViewController,\n                                       didFinishWith scan: VNDocumentCameraScan)\n\n    func documentCameraViewControllerDidCancel(_ controller: VNDocumentCameraViewController)\n\n    func documentCameraViewController(_ controller: VNDocumentCameraViewController,\n                                       didFailWithError error: Error)\n}\n```\n\n#### VNDocumentCameraScan\n\n| Property | Type | Description |\n|----------|------|-------------|\n| `pageCount` | `Int` | Number of scanned pages |\n| `imageOfPage(at:)` | `UIImage` | Get page image at index |\n| `title` | `String` | User-editable title |\n\n```swift\nfunc documentCameraViewController(_ controller: VNDocumentCameraViewController,\n                                   didFinishWith scan: VNDocumentCameraScan) {\n    controller.dismiss(animated: true)\n\n    for i in 0..<scan.pageCount {\n        let pageImage = scan.imageOfPage(at: i)\n        // Process with VNRecognizeTextRequest\n    }\n}\n```\n\n## Document Analysis APIs\n\n### VNDetectDocumentSegmentationRequest\n\n**Availability**: iOS 15+, macOS 12+\n\nDetects document boundaries for custom camera UIs or post-processing.\n\n```swift\nlet request = VNDetectDocumentSegmentationRequest()\nlet handler = VNImageRequestHandler(ciImage: image)\ntry handler.perform([request])\n\nguard let observation = request.results?.first as? VNRectangleObservation else {\n    return  // No document found\n}\n\n// Get corner points (normalized)\nlet corners = [\n    observation.topLeft,\n    observation.topRight,\n    observation.bottomLeft,\n    observation.bottomRight\n]\n```\n\n**vs VNDetectRectanglesRequest**:\n- Document: ML-based, trained specifically on documents\n- Rectangle: Edge-based, finds any quadrilateral\n\n### RecognizeDocumentsRequest (iOS 26+)\n\n**Availability**: iOS 26+, macOS 26+\n\nStructured document understanding with semantic parsing.\n\n#### Basic Usage\n\n```swift\nlet request = RecognizeDocumentsRequest()\nlet observations = try await request.perform(on: imageData)\n\nguard let document = observations.first?.document else {\n    return\n}\n```\n\n#### DocumentObservation Hierarchy\n\n```\nDocumentObservation\n└── document: DocumentObservation.Container\n    ├── text: Container.Text\n    ├── paragraphs: [Container.Text]\n    ├── tables: [Container.Table]\n    └── lists: [Container.List]\n```\n\n#### Table Extraction\n\n```swift\nfor table in document.tables {\n    for row in table.rows {\n        for cell in row {\n            let text = cell.content.text.transcript\n            let detectedData = cell.content.text.detectedData\n        }\n    }\n}\n```\n\n#### Detected Data Types\n\n```swift\nfor data in document.text.detectedData {\n    switch data.match.details {\n    case .emailAddress(let email):\n        let address = email.emailAddress\n    case .phoneNumber(let phone):\n        let number = phone.phoneNumber\n    case .link(let link):\n        let url = link.url\n    case .postalAddress(let address):\n        let components = address\n    case .calendarEvent(let event):\n        let dates = (event.startDate, event.endDate)\n    default:\n        break\n    }\n}\n```\n\n#### Container.Text Hierarchy\n\n```\nContainer.Text\n├── transcript: String\n├── lines: [RecognizedTextObservation]\n├── words: [RecognizedTextObservation]?\n└── detectedData: [DataDetectorMatch]\n```\n\n## Visual Intelligence Integration\n\nVisual Intelligence is a **system-level feature** (iOS 26+; expands to iPadOS27/macOS27) that lets users point their camera at real-world objects — or highlight a screenshot — and find matching content across apps. This is distinct from the Vision framework (VNRequest-based image analysis) covered above. Vision analyzes images within your app; Visual Intelligence lets the system invoke your app when users search with the camera or screenshots.\n\nThe same `IntentValueQuery`, entities, and `OpenIntent` code works unchanged across iOS, iPadOS, and macOS. Platform differences worth handling:\n\n- **iOS** — primary entry point is the camera (physical objects: posters, products, artwork)\n- **iPad/Mac** — primary entry point is screenshots (digital media); make sure your search handles both kinds of content\n- **Mac** — the input pixel buffer can be much larger than on iPhone; consider resizing before analysis\n\n### How It Works\n\n1. User activates Visual Intelligence camera or takes a screenshot\n2. System analyzes what the user is looking at\n3. System queries participating apps via `IntentValueQuery`\n4. Your app receives a `SemanticContentDescriptor` with labels and/or pixel data\n5. Your app searches its content and returns matching `AppEntity` results\n6. Results appear in the Visual Intelligence UI with your app's branding\n\n### Required Frameworks\n\n```swift\nimport VisualIntelligence\nimport AppIntents\n```\n\n### SemanticContentDescriptor\n\nThe core object the system provides to describe what the user is looking at.\n\n| Property | Type | Description |\n|----------|------|-------------|\n| `labels` | `[String]` | Classification labels for the detected item |\n| `pixelBuffer` | `CVReadOnlyPixelBuffer?` | Visual data of the detected item |\n\nUse labels for fast keyword matching against your content catalog. Use the pixel buffer for image-similarity search when labels are insufficient.\n\n### Matching by Image Similarity (Feature Prints)\n\nFor visual matching against your own catalog, compare Vision feature prints. Pre-compute prints for catalog items (never at query time); at query time, convert the descriptor's pixel buffer to a `CGImage` and rank by distance:\n\n```swift\nimport Vision\nimport VideoToolbox\n\nvar cgImage: CGImage?\n_ = pixelBuffer.withUnsafeBuffer {\n    VTCreateCGImageFromCVPixelBuffer($0, options: nil, imageOut: &cgImage)\n}\nguard let cgImage else { return [] }\n\nlet queryPrint = try await GenerateImageFeaturePrintRequest().perform(on: cgImage)\nlet distance = try queryPrint.distance(to: entry.featurePrint)  // pre-computed FeaturePrintObservation; smaller = more similar\n```\n\nFilter by a maximum distance, sort ascending, and cap the result count — return results fast and ranked. Returning an empty array is fine; the system handles the empty state.\n\n### IntentValueQuery\n\nThe entry point for Visual Intelligence to communicate with your app. Implement `values(for:)` to receive search requests and return matching entities.\n\n```swift\nstruct LandmarkIntentValueQuery: IntentValueQuery {\n    @Dependency var modelData: ModelData\n\n    func values(for input: SemanticContentDescriptor) async throws -> [LandmarkEntity] {\n        if !input.labels.isEmpty {\n            return try await modelData.search(matching: input.labels)\n        }\n        guard let pixelBuffer = input.pixelBuffer else { return [] }\n        return try await modelData.search(matching: pixelBuffer)\n    }\n}\n```\n\n### Returning Multiple Result Types\n\nUse `@UnionValue` when your app can return different entity types from a single search.\n\n```swift\n@UnionValue\nenum VisualSearchResult {\n    case landmark(LandmarkEntity)\n    case collection(CollectionEntity)\n}\n```\n\n### Display Representation\n\nVisual Intelligence uses your entity's `DisplayRepresentation` to show results. Provide a title, subtitle, and image for each result.\n\n```swift\nstruct LandmarkEntity: AppEntity {\n    var id: String\n    var name: String\n    var location: String\n\n    static var typeDisplayRepresentation: TypeDisplayRepresentation {\n        TypeDisplayRepresentation(\n            name: LocalizedStringResource(\"Landmark\", table: \"AppIntents\"),\n            numericFormat: \"\\(placeholder: .int) landmarks\"\n        )\n    }\n\n    var displayRepresentation: DisplayRepresentation {\n        DisplayRepresentation(\n            title: \"\\(name)\",\n            subtitle: \"\\(location)\",\n            image: .init(named: thumbnailImageName)\n        )\n    }\n}\n```\n\n### Deep Linking from Results\n\nWhen a user taps a result, your app should open to the relevant content. Provide an `appLinkURL` on your entity.\n\n```swift\nvar appLinkURL: URL? {\n    URL(string: \"yourapp://landmark/\\(id)\")\n}\n```\n\n### \"More Results\" — Continue Search in Your App\n\nAdopt the `semanticContentSearch` schema so the system's **More results** button lands users in your full in-app search, pre-populated from the captured context. The system provides the `semanticContent` property automatically — no `@Parameter` needed:\n\n```swift\n@AppIntent(schema: .visualIntelligence.semanticContentSearch)\nstruct SemanticContentSearchIntent: AppIntent {\n    static let title: LocalizedStringResource = \"Search in app\"\n    static let openAppWhenRun: Bool = true\n\n    var semanticContent: SemanticContentDescriptor\n\n    func perform() async throws -> some IntentResult {\n        guard let pixelBuffer = semanticContent.pixelBuffer else { return .result() }\n        // Search, then navigate to your full search UI pre-populated with results\n        return .result()\n    }\n}\n```\n\nYour in-app search can show far more than the Visual Intelligence results sheet — filters, categories, the full depth of your content.\n\n### System Store Integrations\n\nImage Search is your app providing results *to* Visual Intelligence. The reverse also works: Visual Intelligence actions write data to system stores your app may already read — making Visual Intelligence a new input source with zero Visual Intelligence code. New in the 27 cycle: adding to contacts, saving multiple calendar events, and medical-device logging (WWDC 2026-297).\n\n| Visual Intelligence captures | Your app reads it with |\n|------------------------------|------------------------|\n| Calendar events from posters/posts (multi-event saving `OS27`) | EventKit (`EKEventStore`) |\n| Contact info from business cards `OS27` | Contacts (`CNContactStore`) |\n| Medical-device readings (blood pressure monitors, glucose meters, scales) `OS27` | HealthKit (`HKHealthStore`) |\n\nObserve store-change notifications (e.g. `.EKEventStoreChanged`) so entries created by Visual Intelligence appear in your app without a manual refresh.\n\n### Best Practices\n\n- **Return results quickly** — Visual Intelligence expects low-latency responses. Limit to 10-20 most relevant results; returning an empty array is fine\n- **Prefer labels first** — Label matching is faster than pixel buffer analysis. Fall back to pixel buffer when labels are empty or insufficient\n- **Serve thumbnail-sized images** — the results sheet shows ~3 lines of text + a thumbnail in a two-column layout; a single result's image spans the full sheet width\n- **Reuse your existing `OpenIntent`** — if you already have one for the entity, Visual Intelligence uses it; don't write a separate one\n- **Keep `perform()` lightweight** — it runs as your app comes to the foreground; navigate first, defer heavy loading until the view appears\n- **Localize everything** — Display representations appear in the system UI. Use `LocalizedStringResource` for all user-facing text\n\n### Testing\n\n1. Build and run on a physical device (iPhone, iPad, or Mac)\n2. Activate Visual Intelligence camera or take a screenshot of relevant content\n3. Perform a visual search and verify your app's results appear (ordering among providers is decided by the system)\n4. Tap results to verify deep linking opens the correct content\n5. On Mac, test with large screenshots — input pixel buffers are bigger than iPhone's\n\n## Vision on watchOS `watchOS27`\n\nVision arrives on watchOS in the 27 cycle — the framework does not exist in earlier watchOS SDKs. The watch gets the **modern Swift API only** (no legacy `VN*` request classes) and a subset of requests:\n\n| On watchOS 27 | NOT on watchOS |\n|---------------|----------------|\n| Face detection/landmarks/capture quality | Text recognition (`RecognizeTextRequest`, `RecognizeDocumentsRequest`, `DetectTextRectanglesRequest`) |\n| Image classification + animal recognition | All pose requests (body 2D/3D, hand, animal) |\n| Segmentation (foreground/person/person-instance) | Optical flow (`TrackOpticalFlowRequest`) |\n| Saliency (attention + objectness), feature prints | Iterative segmentation (tap-to-segment) |\n| Barcodes, contours, rectangles, horizon, document segmentation | |\n| Lens smudge, aesthetics scores, `CoreMLRequest` | |\n| Tracking (object/rectangle/trajectories/registration), `VideoProcessor` | |\n\nCanonical watch use case from WWDC 2026-237 — saliency-based cropping so small screens feature the subject prominently:\n\n```swift\n// Crop to the most prominent subject for a small watch screen\nlet request = GenerateObjectnessBasedSaliencyImageRequest()\nlet observation = try await request.perform(on: image)  // SaliencyImageObservation\nlet crop = observation.salientObjects.first?.boundingBox  // NormalizedRect\n```\n\n`salientObjects` is `[RectangleObservation]` — take `.boundingBox` (or the quadrilateral corners) for the crop rect.\n\n## Vision Tools for Foundation Models `OS27`\n\nVision ships two ready-made `FoundationModels.Tool` implementations via a cross-import overlay (`import Vision` + `import FoundationModels`) so the on-device LLM can call computer vision on attached images:\n\n| Tool | Purpose | Platforms |\n|------|---------|-----------|\n| `BarcodeReaderTool` | Barcode/QR reading — models can't read QR codes themselves | `OS27` (not tvOS) |\n| `OCRTool` | Fine or dense text recognition, 30+ languages | `OS27` (not watchOS/tvOS) |\n\n```swift\nimport FoundationModels\nimport Vision\n\nlet session = LanguageModelSession(tools: [BarcodeReaderTool()])\nlet response = try await session.respond(generating: EventInfo.self) {  // EventInfo: your @Generable struct\n    \"Get the date, location, and website from this flyer\"\n    Attachment(image)\n        .label(\"flyer\")  // labels are how the model picks which image to pass to a tool\n}\n```\n\nBoth tools accept optional `init(name:description:)` overrides. For image inputs, `ImageReference` tool arguments, and the rest of the Foundation Models surface, see axiom-ai `foundation-models-ref.md` (Built-in System Tools).\n\n## API Quick Reference\n\n### Subject Segmentation\n\n| API | Platform | Purpose |\n|-----|----------|---------|\n| `VNGenerateForegroundInstanceMaskRequest` | iOS 17+ | Class-agnostic subject instances |\n| `VNGeneratePersonInstanceMaskRequest` | iOS 17+ | Up to 4 people separately |\n| `VNGeneratePersonSegmentationRequest` | iOS 15+ | All people (single mask) |\n| `ImageAnalysisInteraction` (VisionKit) | iOS 16+ | UI for subject lifting |\n| `GenerateIterativeSegmentationRequest` | `OS27` (not watchOS) | Tap/box/scribble-seeded segmentation of any object |\n\n### Pose Detection\n\n| API | Platform | Landmarks | Coordinates |\n|-----|----------|-----------|-------------|\n| `VNDetectHumanHandPoseRequest` | iOS 14+ | 21 per hand | 2D normalized |\n| `VNDetectHumanBodyPoseRequest` | iOS 14+ | 19 body joints | 2D normalized |\n| `VNDetectHumanBodyPose3DRequest` | iOS 17+ | 17 body joints | 3D meters |\n\n### Face & Person Detection\n\n| API | Platform | Purpose |\n|-----|----------|---------|\n| `VNDetectFaceRectanglesRequest` | iOS 11+ | Face bounding boxes |\n| `VNDetectFaceLandmarksRequest` | iOS 11+ | Face with detailed landmarks |\n| `VNDetectHumanRectanglesRequest` | iOS 13+ | Human torso bounding boxes |\n\n### Text & Barcode\n\n| API | Platform | Purpose |\n|-----|----------|---------|\n| `VNRecognizeTextRequest` | iOS 13+ | Text recognition (OCR) |\n| `VNDetectBarcodesRequest` | iOS 11+ | Barcode/QR detection |\n| `DataScannerViewController` | iOS 16+ | Live camera scanner (text + barcodes) |\n| `VNDocumentCameraViewController` | iOS 13+ | Document scanning with perspective correction |\n| `VNDetectDocumentSegmentationRequest` | iOS 15+ | Programmatic document edge detection |\n| `RecognizeDocumentsRequest` | iOS 26+ | Structured document extraction |\n\n### Visual Intelligence\n\n| API | Platform | Purpose |\n|-----|----------|---------|\n| `SemanticContentDescriptor` | iOS 26+, iPadOS27/macOS27 | Describes what the user is looking at (labels + pixel buffer) |\n| `IntentValueQuery` | iOS 26+, iPadOS27/macOS27 | Entry point for receiving visual search requests |\n| `semanticContentSearch` schema | iOS 26+, iPadOS27/macOS27 | \"More results\" intent that continues search in your app |\n\n### Observation Types\n\n| Observation | Returned By |\n|-------------|-------------|\n| `InstanceMaskObservation` | Foreground/person instance masks (modern, iOS 18+) |\n| `VNPixelBufferObservation` | Person segmentation (single mask) |\n| `VNHumanHandPoseObservation` | Hand pose |\n| `VNHumanBodyPoseObservation` | Body pose (2D) |\n| `VNHumanBodyPose3DObservation` | Body pose (3D) |\n| `VNFaceObservation` | Face detection/landmarks |\n| `VNHumanObservation` | Human rectangles |\n| `VNRecognizedTextObservation` | Text recognition |\n| `VNBarcodeObservation` | Barcode detection |\n| `VNRectangleObservation` | Document segmentation |\n| `DocumentObservation` | Structured document (iOS 26+) |\n| `PixelBufferObservation` | Iterative segmentation mask (`OS27`); modern person segmentation |\n| `SaliencyImageObservation` | Saliency heat map + salient object rects (modern) |\n\n## Sensitive Content Analysis (`SensitiveContentAnalysis` framework)\n\nA **separate framework** from Vision (and VisionKit), but the same job family — `SensitiveContentAnalysis` (iOS 17+, macOS 14+, visionOS 2+; **not watchOS/tvOS**) flags nudity, gore, and violence in images and video. It runs only when the user has the system **Sensitive Content Warning** / **Communication Safety** setting on: check `analysisPolicy` first, and treat `.disabled` as \"feature off,\" not an error.\n\n```swift\nimport SensitiveContentAnalysis\n\nlet analyzer = SCSensitivityAnalyzer()\nguard analyzer.analysisPolicy != .disabled else { return }   // user setting gates analysis\n\nlet result = try await analyzer.analyzeImage(cgImage)         // -> SCSensitivityAnalysis\nif result.isSensitive {\n    if #available(iOS 27, macOS 27, visionOS 27, *) {\n        let kinds = result.detectedTypes                     // Set<SCSensitivityAnalysis.ContentType>\n        if kinds.contains(.goreOrViolence) { /* gore-specific UX */ }\n        if kinds.contains(.sexuallyExplicit) { /* explicit-specific UX */ }\n    }\n}\n```\n\n| Member | Availability | Notes |\n|--------|--------------|-------|\n| `SCSensitivityAnalyzer` | iOS 17+, macOS 14+, visionOS 2+ | `analyzeImage(_:)` / `analyzeImage(at:)`; video via `videoAnalysis(forFileAt:)` → `VideoAnalysisHandler.hasSensitiveContent()` |\n| `analysisPolicy` | iOS 17+ | `SCSensitivityAnalysisPolicy`: `.disabled` / `.simpleInterventions` / `.descriptiveInterventions` |\n| `SCSensitivityAnalysis.isSensitive` | iOS 17+ | Boolean — *any* sensitive content |\n| `SCSensitivityAnalysis.detectedTypes` | `OS27` (not watchOS/tvOS) | `Set<SCSensitivityAnalysis.ContentType>` — which categories |\n| `SCSensitivityAnalysis.ContentType` | `OS27` (not watchOS/tvOS) | `.sexuallyExplicit`, `.goreOrViolence` |\n\n**`OS27` upgrade — categorized results.** Before 27 you got only the boolean `isSensitive`. At 27 (`iOS27`/`macOS27`/`visionOS27`, not watchOS/tvOS) `detectedTypes` reports *which kind* of sensitive content was found, so you can branch handling (different messaging for gore vs. explicit). Guard it with `#available` and fall back to the boolean on earlier targets.\n\n## Resources\n\n**WWDC**: 2019-234, 2021-10041, 2022-10024, 2022-10025, 2025-272, 2023-10176, 2023-111241, 2023-10048, 2020-10653, 2020-10043, 2020-10099, 2026-237, 2026-297\n\n**Docs**: /vision, /visionkit, /visualintelligence, /visualintelligence/semanticcontentdescriptor, /visualintelligence/integrating-your-app-with-visual-intelligence, /vision/generateiterativesegmentationrequest, /vision/vnrecognizetextrequest, /vision/vndetectbarcodesrequest, /sensitivecontentanalysis\n\n**Skills**: skills/vision-framework.md, skills/vision-diag.md, axiom-ai (skills/foundation-models-ref.md)\n",
+      "content": "# Vision Framework API Reference\n\nComprehensive reference for Vision framework computer vision: subject segmentation, hand/body pose detection, person detection, face analysis, text recognition (OCR), barcode detection, document scanning, Visual Intelligence integration, and the 27-cycle additions (tap-to-segment, Vision on watchOS, Foundation Models tools).\n\n## When to Use This Reference\n\n- **Implementing subject lifting** using VisionKit or Vision\n- **Detecting hand/body poses** for gesture recognition or fitness apps\n- **Segmenting people** from backgrounds or separating multiple individuals\n- **Face detection and landmarks** for AR effects or authentication\n- **Combining Vision APIs** to solve complex computer vision problems\n- **Looking up specific API signatures** and parameter meanings\n- **Recognizing text** in images (OCR) with VNRecognizeTextRequest\n- **Detecting barcodes** and QR codes with VNDetectBarcodesRequest\n- **Building live scanners** with DataScannerViewController\n- **Scanning documents** with VNDocumentCameraViewController\n- **Extracting structured document data** with RecognizeDocumentsRequest (iOS 26+)\n- **Integrating with Visual Intelligence** — camera/screenshot search surfacing your app's content (iOS 26+, iPadOS27/macOS27)\n- **Tap-to-segment any object** with GenerateIterativeSegmentationRequest `OS27`\n- **Using Vision on watchOS** `watchOS27`\n- **Giving Foundation Models vision tools** (BarcodeReaderTool, OCRTool) `OS27`\n\n**Related skills**: See `skills/vision-framework.md` for decision trees and patterns, `skills/vision-diag.md` for troubleshooting\n\n## Vision Framework Overview\n\nVision provides computer vision algorithms for still images and video:\n\n**Core workflow**:\n1. Create request (e.g., `VNDetectHumanHandPoseRequest()`)\n2. Create handler with image (`VNImageRequestHandler(cgImage: image)`)\n3. Perform request (`try handler.perform([request])`)\n4. Access observations from `request.results`\n\n**Coordinate system**: Lower-left origin, normalized (0.0-1.0) coordinates\n\n**Performance**: Run on background queue - resource intensive, blocks UI if on main thread\n\n## Request Handlers\n\nVision provides two request handlers for different scenarios.\n\n### VNImageRequestHandler\n\nAnalyzes a **single image**. Initialize with the image, perform requests against it, discard.\n\n```swift\nlet handler = VNImageRequestHandler(cgImage: image)\ntry handler.perform([request1, request2])  // Multiple requests, one image\n```\n\n**Initialize with**: `CGImage`, `CIImage`, `CVPixelBuffer`, `Data`, or `URL`\n\n**Rule**: One handler per image. Reusing a handler with a different image is unsupported.\n\n### VNSequenceRequestHandler\n\nAnalyzes a **sequence of frames** (video, camera feed). Initialize empty, pass each frame to `perform()`. Maintains inter-frame state for temporal smoothing.\n\n```swift\nlet sequenceHandler = VNSequenceRequestHandler()\n\n// In your camera/video frame callback:\nfunc processFrame(_ pixelBuffer: CVPixelBuffer) throws {\n    try sequenceHandler.perform([request], on: pixelBuffer)\n}\n```\n\n**Rule**: Create once, reuse across frames. The handler tracks state between calls.\n\n### When to Use Which\n\n| Use Case | Handler |\n|----------|---------|\n| Single photo or screenshot | `VNImageRequestHandler` |\n| Video stream or camera frames | `VNSequenceRequestHandler` |\n| Temporal smoothing (pose, segmentation) | `VNSequenceRequestHandler` |\n| One-off analysis of a CVPixelBuffer | `VNImageRequestHandler` |\n\n### Requests That Benefit from Sequence Handling\n\nThese requests use inter-frame state when run through `VNSequenceRequestHandler`:\n- `VNDetectHumanBodyPoseRequest` — Smoother joint tracking\n- `VNDetectHumanHandPoseRequest` — Smoother landmark tracking\n- `VNGeneratePersonSegmentationRequest` — Temporally consistent masks\n- `VNGeneratePersonInstanceMaskRequest` — Stable person identity across frames\n- `VNDetectDocumentSegmentationRequest` — Stable document edges\n- Any `VNStatefulRequest` subclass — Designed for sequences\n\n### Common Mistake\n\nCreating a new `VNImageRequestHandler` per video frame discards temporal context. Pose landmarks jitter, segmentation masks flicker, and you lose the smoothing that sequence handling provides.\n\n```swift\n// Wrong — loses temporal context every frame\nfunc processFrame(_ buffer: CVPixelBuffer) throws {\n    let handler = VNImageRequestHandler(cvPixelBuffer: buffer)\n    try handler.perform([poseRequest])\n}\n\n// Right — maintains inter-frame state\nlet sequenceHandler = VNSequenceRequestHandler()\nfunc processFrame(_ buffer: CVPixelBuffer) throws {\n    try sequenceHandler.perform([poseRequest], on: buffer)\n}\n```\n\n## Subject Segmentation APIs\n\n### VNGenerateForegroundInstanceMaskRequest\n\n**Availability**: iOS 17+, macOS 14+, tvOS 17+, visionOS 1+\n\nGenerates class-agnostic instance mask of foreground objects (people, pets, buildings, food, shoes, etc.)\n\n#### Basic Usage\n\n```swift\nlet handler = ImageRequestHandler(image)\n\nguard let observation = try await handler.perform(GenerateForegroundInstanceMaskRequest()) else {\n    return\n}\n```\n\n#### InstanceMaskObservation\n\n**allInstances**: `IndexSet` containing all foreground instance indices (excludes background 0)\n\n**allInstancesMask**: `PixelBufferObservation` holding the UInt8 label buffer (0 = background, 1+ = instance indices). Read a single label with `pixel(at:)` (takes a `NormalizedPoint`, returns `Float`) or scan the whole buffer — pre-27 via `withUnsafePointer(_:)`; on 27 via the new `pixelBuffer` property (`CVReadOnlyPixelBuffer`, `OS27`) and `pixelBuffer.withUnsafeBuffer`, which deprecates `withUnsafePointer`. There is no mutable `CVPixelBuffer` accessor.\n\n**instanceAtPoint(_:)**: Takes a `NormalizedPoint` and returns the `IndexSet` of instances at that point. iOS 18+ modern `InstanceMaskObservation` only. (For raw label lookup you can instead use `allInstancesMask.pixel(at:)` — see below.)\n\n```swift\n// Center of image; returns an IndexSet (empty = background)\nlet instances = observation.instanceAtPoint(NormalizedPoint(x: 0.5, y: 0.5))\n\nif instances.isEmpty {\n    print(\"Background tapped\")\n} else {\n    print(\"Instances \\(instances) tapped\")\n}\n```\n\n#### Generating Masks\n\nThree methods generate output from the selected instances. All are throwing and require the request handler that performed the request (`VNImageRequestHandler`/`ImageRequestHandler`).\n\n**generateScaledMask(for:scaledToImageFrom:)** → soft segmentation mask\n\nParameters:\n- `for`: `IndexSet` of instances to include\n- `scaledToImageFrom`: the request handler that performed the request\n\nReturns: single-channel floating-point `CVPixelBuffer` (soft mask) at the input image's resolution. No crop option — use it for compositing.\n\n**generateMaskedImage(for:imageFrom:croppedToInstancesExtent:)** → masked image\n\nParameters:\n- `for`: `IndexSet` of instances to include\n- `imageFrom`: the request handler that performed the request\n- `croppedToInstancesExtent`: `false` (default) = full image; `true` = tight crop around the selected instances\n\nReturns: the masked **image** as a `CVPixelBuffer`, optionally cropped.\n\n**generateMask(for:)** → handler-free soft mask (modern `InstanceMaskObservation` only)\n\nReturns a soft mask without needing a handler. For input-resolution scaling use `generateScaledMask(for:scaledToImageFrom:)` instead.\n\n```swift\n// All instances, soft mask at input resolution (handler in scope)\nlet mask = try observation.generateScaledMask(\n    for: observation.allInstances,\n    scaledToImageFrom: handler\n)\n\n// Single instance, masked image cropped to its extent\nlet instances = IndexSet(integer: 1)\nlet croppedImage = try observation.generateMaskedImage(\n    for: instances,\n    imageFrom: handler,\n    croppedToInstancesExtent: true\n)\n```\n\n#### Instance Mask Hit Testing\n\nThe simplest path is `instanceAtPoint(_:)`, which maps a `NormalizedPoint` straight to an `IndexSet`. To read the raw label yourself, the `allInstancesMask` (`PixelBufferObservation`) gives you `pixel(at:)` for a single point; for whole-buffer scans use `withUnsafePointer(_:)` pre-27, or `pixelBuffer.withUnsafeBuffer` on 27 (`pixelBuffer` is the `OS27` read-only buffer accessor; `withUnsafePointer` is deprecated in 27 and renamed to it).\n\n```swift\nlet labelMask = observation.allInstancesMask  // PixelBufferObservation\n\n// Single point: read the label directly (returns Float; 0 = background)\nlet label = labelMask.pixel(at: NormalizedPoint(x: normalizedX, y: normalizedY))\n\nlet instances = label == 0\n    ? observation.allInstances\n    : IndexSet(integer: Int(label))\n\n// Whole buffer: scan all labels via the unsafe pointer (pre-27;\n// on 27 use labelMask.pixelBuffer.withUnsafeBuffer instead)\nlabelMask.withUnsafePointer { raw in\n    let first = raw.load(fromByteOffset: 0, as: UInt8.self)\n    // ... iterate label bytes as needed\n    _ = first\n}\n```\n\n## VisionKit Subject Lifting\n\n### ImageAnalysisInteraction (iOS)\n\n**Availability**: iOS 16+, iPadOS 16+\n\nAdds system-like subject lifting UI to views:\n\n```swift\nlet interaction = ImageAnalysisInteraction()\ninteraction.preferredInteractionTypes = .imageSubject  // Or .automatic\nimageView.addInteraction(interaction)\n```\n\n**Interaction types**:\n- `.automatic`: Subject lifting + Live Text + data detectors\n- `.imageSubject`: Subject lifting only (no interactive text)\n\n### ImageAnalysisOverlayView (macOS)\n\n**Availability**: macOS 13+\n\n```swift\nlet overlayView = ImageAnalysisOverlayView()\noverlayView.preferredInteractionTypes = .imageSubject\nnsView.addSubview(overlayView)\n```\n\n### Programmatic Access\n\n#### ImageAnalyzer\n\n```swift\nlet analyzer = ImageAnalyzer()\nlet configuration = ImageAnalyzer.Configuration([.text, .visualLookUp])\n\nlet analysis = try await analyzer.analyze(image, configuration: configuration)\n```\n\n#### ImageAnalysisInteraction (subjects)\n\nSubject APIs live on `ImageAnalysisInteraction` (a `@MainActor` `UIInteraction`), NOT on the `ImageAnalysis` returned by `analyzer.analyze(...)`. The `ImageAnalysis` result only exposes `transcript` and `hasResults(for:)`.\n\n**subjects**: `Set<ImageAnalysisInteraction.Subject>` - All subjects in image (async — read with `await`)\n\n**highlightedSubjects**: `Set<ImageAnalysisInteraction.Subject>` - Currently highlighted (user long-pressed)\n\n**subject(at:)**: Async lookup of subject at a point (returns `nil` if none)\n\n**image(for:)**: Async composite of the given subjects\n\n```swift\n// Get all subjects (Set — cannot subscript by Int). `subjects` is async.\nlet subjects = await interaction.subjects\n\n// Look up subject at tap\nif let subject = await interaction.subject(at: tapPoint) {\n    // Process subject\n}\n\n// Change highlight state (take first two safely)\ninteraction.highlightedSubjects = Set(subjects.prefix(2))\n```\n\n#### Subject Struct\n\nThe type is `ImageAnalysisInteraction.Subject` (nested on the interaction).\n\n**image**: `UIImage` - Extracted subject with transparency. The accessor is `async throws` — read it with `try await`.\n\n**bounds**: `CGRect` - Subject boundaries in image coordinates (`@MainActor`-isolated)\n\n```swift\n// Single subject image (`image` is async throws)\nlet subjectImage = try await subject.image\n\n// Composite multiple subjects\nlet compositeImage = try await interaction.image(for: [subject1, subject2])\n```\n\n**Out-of-process**: VisionKit analysis happens out-of-process (performance benefit, image size limited)\n\n## Person Segmentation APIs\n\n### VNGeneratePersonSegmentationRequest\n\n**Availability**: iOS 15+, macOS 12+\n\nReturns single mask containing **all people** in image:\n\n```swift\nlet request = VNGeneratePersonSegmentationRequest()\n// Configure quality level if needed\ntry handler.perform([request])\n\nguard let observation = request.results?.first as? VNPixelBufferObservation else {\n    return\n}\n\nlet personMask = observation.pixelBuffer  // CVPixelBuffer\n```\n\n### VNGeneratePersonInstanceMaskRequest\n\n**Availability**: iOS 17+, macOS 14+\n\nReturns **separate masks for up to 4 people**:\n\n```swift\nlet handler = ImageRequestHandler(image)\n\nguard let observation = try await handler.perform(GeneratePersonInstanceMaskRequest()) else {\n    return\n}\n\n// Same InstanceMaskObservation API as foreground instance masks\nlet allPeople = observation.allInstances  // Up to 4 people (1-4)\n\n// Get mask for person 1\nlet person1Mask = try observation.generateScaledMask(\n    for: IndexSet(integer: 1),\n    scaledToImageFrom: handler\n)\n```\n\n**Limitations**:\n- Segments up to 4 people\n- With >4 people: may miss people or combine them (typically background people)\n- Use `VNDetectFaceRectanglesRequest` to count faces if you need to handle crowded scenes\n\n## Iterative Segmentation (Tap-to-Segment) `OS27`\n\n`GenerateIterativeSegmentationRequest` segments **any object the user selects** — by tap, bounding box, or scribble/lasso — and refines the mask interactively. Modern Swift API; not available on watchOS. Apple ships a tap-to-segment sample app (WWDC 2026-237).\n\n### Seeding and Refining\n\n```swift\nlet handler = ImageRequestHandler(image)\nlet request = GenerateIterativeSegmentationRequest(seedPoint: point)  // NormalizedPoint\nlet observation = try await handler.perform(request)  // PixelBufferObservation?\nlet mask = observation?.pixelBuffer  // CVReadOnlyPixelBuffer (or try .cgImage)\n\n// Refine: include the plate, exclude the cup — then perform again\ntry request.addIncludedPoint(platePoint)\ntry request.addExcludedPoint(cupPoint)\nlet refined = try await handler.perform(request)\n```\n\nSeed initializers (each takes an optional trailing `Revision` argument):\n\n| Initializer | Use for |\n|-------------|---------|\n| `init(seedPoint: NormalizedPoint)` | Simple objects — single tap |\n| `init(seedBox: NormalizedRect)` | Multiple or complex objects — drawn bounding box |\n| `init(seedScribbleBuffer: CVReadOnlyPixelBuffer)` | Lasso or scribble strokes drawn by the user |\n\n- `qualityLevel` — `.fast` / `.balanced` / `.accurate`\n- Result is `PixelBufferObservation?` — pixels in the mask belong to the selected object\n- Coordinates are normalized (0–1) with **lower-left origin** — the same conversion gotchas as every Vision request\n- Scribble/lasso strokes must be at least **1% of the image width** wide; thinner strokes degrade results\n\n### Model Download (DownloadableAssetsRequest)\n\nThe segmentation model is not on-device by default — **first use requires a download**. `GenerateIterativeSegmentationRequest` is the first request conforming to the new `DownloadableAssetsRequest` protocol (`OS27`):\n\n```swift\nswitch await request.assetStatus {  // DownloadableAssetsRequestStatus\ncase .notReady:\n    try await request.downloadAssets()  // or downloadAssets(progress: consuming Subprogress)\ncase .ready:\n    break\ncase .error(let error):\n    throw error  // surface or retry the download\n@unknown default:\n    break\n}\n```\n\nPerforming without the model downloaded fails; the legacy `VNError` domain adds `VNErrorResourceUnavailable` and `VNErrorResourceCorrupted` codes in 27 for asset failures. Check `assetStatus` before the first perform.\n\n## Hand Pose Detection\n\n### VNDetectHumanHandPoseRequest\n\n**Availability**: iOS 14+, macOS 11+\n\nDetects **21 hand landmarks** per hand:\n\n```swift\nlet request = VNDetectHumanHandPoseRequest()\nrequest.maximumHandCount = 2  // Default: 2, increase if needed\n\nlet handler = VNImageRequestHandler(cgImage: image)\ntry handler.perform([request])\n\nfor observation in request.results as? [VNHumanHandPoseObservation] ?? [] {\n    // Process each hand\n}\n```\n\n**Performance note**: `maximumHandCount` affects latency. Pose computed only for hands ≤ maximum. Set to lowest acceptable value.\n\n### Hand Landmarks (21 points)\n\n**Wrist**: 1 landmark\n\n**Thumb** (4 landmarks):\n- `.thumbTip`\n- `.thumbIP` (interphalangeal joint)\n- `.thumbMP` (metacarpophalangeal joint)\n- `.thumbCMC` (carpometacarpal joint)\n\n**Fingers** (4 landmarks each):\n- Tip (`.indexTip`, `.middleTip`, `.ringTip`, `.littleTip`)\n- DIP (distal interphalangeal joint)\n- PIP (proximal interphalangeal joint)\n- MCP (metacarpophalangeal joint)\n\n### Group Keys\n\nAccess landmark groups:\n\n| Group Key | Points |\n|-----------|--------|\n| `.all` | All 21 landmarks |\n| `.thumb` | 4 thumb joints |\n| `.indexFinger` | 4 index finger joints |\n| `.middleFinger` | 4 middle finger joints |\n| `.ringFinger` | 4 ring finger joints |\n| `.littleFinger` | 4 little finger joints |\n\n```swift\n// Get all points\nlet allPoints = try observation.recognizedPoints(.all)\n\n// Get index finger points only\nlet indexPoints = try observation.recognizedPoints(.indexFinger)\n\n// Get specific point\nlet thumbTip = try observation.recognizedPoint(.thumbTip)\nlet indexTip = try observation.recognizedPoint(.indexTip)\n\n// Check confidence\nguard thumbTip.confidence > 0.5 else { return }\n\n// Access location (normalized coordinates, lower-left origin)\nlet location = thumbTip.location  // CGPoint\n```\n\n### Gesture Recognition Example (Pinch)\n\n```swift\nlet thumbTip = try observation.recognizedPoint(.thumbTip)\nlet indexTip = try observation.recognizedPoint(.indexTip)\n\nguard thumbTip.confidence > 0.5, indexTip.confidence > 0.5 else {\n    return\n}\n\nlet distance = hypot(\n    thumbTip.location.x - indexTip.location.x,\n    thumbTip.location.y - indexTip.location.y\n)\n\nlet isPinching = distance < 0.05  // Normalized threshold\n```\n\n### Chirality (Handedness)\n\n```swift\nlet chirality = observation.chirality  // .left or .right or .unknown\n```\n\n## Body Pose Detection\n\n### VNDetectHumanBodyPoseRequest (2D)\n\n**Availability**: iOS 14+, macOS 11+\n\nDetects **19 body landmarks** (2D normalized coordinates):\n\n```swift\nlet request = VNDetectHumanBodyPoseRequest()\ntry handler.perform([request])\n\nfor observation in request.results as? [VNHumanBodyPoseObservation] ?? [] {\n    // Process each person\n}\n```\n\n### Body Landmarks (19 points)\n\n**Face** (5 landmarks):\n- `.nose`, `.leftEye`, `.rightEye`, `.leftEar`, `.rightEar`\n\n**Arms** (6 landmarks):\n- Left: `.leftShoulder`, `.leftElbow`, `.leftWrist`\n- Right: `.rightShoulder`, `.rightElbow`, `.rightWrist`\n\n**Torso** (7 landmarks):\n- `.neck` (between shoulders)\n- `.leftShoulder`, `.rightShoulder` (also in arm groups)\n- `.leftHip`, `.rightHip`\n- `.root` (between hips)\n\n**Legs** (6 landmarks):\n- Left: `.leftHip`, `.leftKnee`, `.leftAnkle`\n- Right: `.rightHip`, `.rightKnee`, `.rightAnkle`\n\n**Note**: Shoulders and hips appear in multiple groups\n\n### Group Keys (Body)\n\n| Group Key | Points |\n|-----------|--------|\n| `.all` | All 19 landmarks |\n| `.face` | 5 face landmarks |\n| `.leftArm` | shoulder, elbow, wrist |\n| `.rightArm` | shoulder, elbow, wrist |\n| `.torso` | neck, shoulders, hips, root |\n| `.leftLeg` | hip, knee, ankle |\n| `.rightLeg` | hip, knee, ankle |\n\n```swift\n// Get all body points\nlet allPoints = try observation.recognizedPoints(.all)\n\n// Get left arm only\nlet leftArmPoints = try observation.recognizedPoints(.leftArm)\n\n// Get specific joint\nlet leftWrist = try observation.recognizedPoint(.leftWrist)\n```\n\n### VNDetectHumanBodyPose3DRequest (3D)\n\n**Availability**: iOS 17+, macOS 14+\n\nReturns **3D skeleton with 17 joints** in meters (real-world coordinates):\n\n```swift\nlet request = VNDetectHumanBodyPose3DRequest()\ntry handler.perform([request])\n\nguard let observation = request.results?.first as? VNHumanBodyPose3DObservation else {\n    return\n}\n\n// Get 3D joint position\nlet leftWrist = try observation.recognizedPoint(.leftWrist)\nlet position = leftWrist.position  // simd_float4x4 matrix\nlet localPosition = leftWrist.localPosition  // Relative to parent joint\n```\n\n**3D Body Landmarks** (17 joints, `VNHumanBodyPose3DObservation.JointName`): root, spine, centerShoulder, centerHead, topHead, plus left/right shoulder, elbow, wrist, hip, knee, ankle. The 3D skeleton is NOT the 2D set minus ears — it omits the 2D face/head joints (nose, eyes, ears, neck) and adds spine, centerShoulder, centerHead, topHead. (2D set = 19 joints via `VNHumanBodyPoseObservation.JointName`.)\n\n#### 3D Observation Properties\n\n**bodyHeight**: Estimated height in meters\n- With depth data: Measured height\n- Without depth data: Reference height (1.8m)\n\n**heightEstimation**: `.measured` or `.reference`\n\n**cameraOriginMatrix**: `simd_float4x4` camera position/orientation relative to subject\n\n**pointInImage(\\_:)**: Project 3D joint back to 2D image coordinates\n\n```swift\nlet wrist2D = try observation.pointInImage(leftWrist)\n```\n\n#### 3D Point Classes\n\n**VNPoint3D**: Base class with `simd_float4x4` position matrix\n\n**VNRecognizedPoint3D**: Adds identifier (joint name)\n\n**VNHumanBodyRecognizedPoint3D**: Adds `localPosition` and `parentJoint`\n\n```swift\n// Position relative to skeleton root (center of hip)\nlet modelPosition = leftWrist.position\n\n// Position relative to parent joint (left elbow)\nlet relativePosition = leftWrist.localPosition\n```\n\n#### Depth Input\n\nVision accepts depth data alongside images:\n\n```swift\n// From AVDepthData\nlet handler = VNImageRequestHandler(\n    cvPixelBuffer: imageBuffer,\n    depthData: depthData,\n    orientation: orientation\n)\n\n// From file (automatic depth extraction)\nlet handler = VNImageRequestHandler(url: imageURL)  // Depth auto-fetched\n```\n\n**Depth formats**: Disparity or Depth (interchangeable via AVFoundation)\n\n**LiDAR**: Use in live capture sessions for accurate scale/measurement\n\n## Face Detection & Landmarks\n\n### VNDetectFaceRectanglesRequest\n\n**Availability**: iOS 11+\n\nDetects face bounding boxes:\n\n```swift\nlet request = VNDetectFaceRectanglesRequest()\ntry handler.perform([request])\n\nfor observation in request.results as? [VNFaceObservation] ?? [] {\n    let faceBounds = observation.boundingBox  // Normalized rect\n}\n```\n\n### VNDetectFaceLandmarksRequest\n\n**Availability**: iOS 11+\n\nDetects face with detailed landmarks:\n\n```swift\nlet request = VNDetectFaceLandmarksRequest()\ntry handler.perform([request])\n\nfor observation in request.results as? [VNFaceObservation] ?? [] {\n    if let landmarks = observation.landmarks {\n        let leftEye = landmarks.leftEye\n        let nose = landmarks.nose\n        let leftPupil = landmarks.leftPupil  // Revision 2+\n    }\n}\n```\n\n**Revisions**:\n- Revision 1: Basic landmarks\n- Revision 2: Detects upside-down faces\n- Revision 3+: Pupil locations\n\n## Person Detection\n\n### VNDetectHumanRectanglesRequest\n\n**Availability**: iOS 13+\n\nDetects human bounding boxes (torso detection):\n\n```swift\nlet request = VNDetectHumanRectanglesRequest()\ntry handler.perform([request])\n\nfor observation in request.results as? [VNHumanObservation] ?? [] {\n    let humanBounds = observation.boundingBox  // Normalized rect\n}\n```\n\n**Use case**: Faster than pose detection when you only need location\n\n## CoreImage Integration\n\n### CIBlendWithMask Filter\n\nComposite subject on new background using Vision mask:\n\n```swift\n// 1. Get mask from Vision (`handler` is the ImageRequestHandler that performed the request)\nlet handler = ImageRequestHandler(sourceImage)\nguard let observation = try await handler.perform(GenerateForegroundInstanceMaskRequest()) else { return }\nlet visionMask = try observation.generateScaledMask(\n    for: observation.allInstances,\n    scaledToImageFrom: handler\n)\n\n// 2. Convert to CIImage\nlet maskImage = CIImage(cvPixelBuffer: visionMask)\n\n// 3. Apply filter\nlet filter = CIFilter(name: \"CIBlendWithMask\")!\nfilter.setValue(sourceImage, forKey: kCIInputImageKey)\nfilter.setValue(maskImage, forKey: kCIInputMaskImageKey)\nfilter.setValue(newBackground, forKey: kCIInputBackgroundImageKey)\n\nlet output = filter.outputImage  // Composited result\n```\n\n**Parameters**:\n- **Input image**: Original image to mask\n- **Mask image**: Vision's soft segmentation mask\n- **Background image**: New background (or empty image for transparency)\n\n**HDR preservation**: CoreImage preserves high dynamic range from input (Vision/VisionKit output is SDR)\n\n## Text Recognition APIs\n\n### VNRecognizeTextRequest\n\n**Availability**: iOS 13+, macOS 10.15+\n\nRecognizes text in images with configurable accuracy/speed trade-off.\n\n#### Basic Usage\n\n```swift\nlet request = VNRecognizeTextRequest()\nrequest.recognitionLevel = .accurate  // Or .fast\nrequest.recognitionLanguages = [\"en-US\", \"de-DE\"]  // Order matters\nrequest.usesLanguageCorrection = true\n\nlet handler = VNImageRequestHandler(cgImage: image)\ntry handler.perform([request])\n\nfor observation in request.results as? [VNRecognizedTextObservation] ?? [] {\n    // Get top candidates\n    let candidates = observation.topCandidates(3)\n    let bestText = candidates.first?.string ?? \"\"\n}\n```\n\n#### Recognition Levels\n\n| Level | Performance | Accuracy | Best For |\n|-------|-------------|----------|----------|\n| `.fast` | Real-time | Good | Camera feed, large text, signs |\n| `.accurate` | Slower | Excellent | Documents, receipts, handwriting |\n\n**Fast path**: Character-by-character recognition (Neural Network → Character Detection)\n\n**Accurate path**: Full-line ML recognition (Neural Network → Line/Word Recognition)\n\n#### Properties\n\n| Property | Type | Description |\n|----------|------|-------------|\n| `recognitionLevel` | `VNRequestTextRecognitionLevel` | `.fast` or `.accurate` |\n| `recognitionLanguages` | `[String]` | BCP 47 language codes, order = priority |\n| `usesLanguageCorrection` | `Bool` | Use language model for correction |\n| `customWords` | `[String]` | Domain-specific vocabulary |\n| `automaticallyDetectsLanguage` | `Bool` | Auto-detect language (iOS 16+) |\n| `minimumTextHeight` | `Float` | Min text height as fraction of image (0-1) |\n| `revision` | `Int` | API version (affects supported languages) |\n\n#### Language Support\n\n```swift\n// Check supported languages for current settings\nlet languages = try VNRecognizeTextRequest.supportedRecognitionLanguages(\n    for: .accurate,\n    revision: VNRecognizeTextRequestRevision3\n)\n```\n\n**Language correction**: Improves accuracy but takes processing time. Disable for codes/serial numbers.\n\n**Custom words**: Add domain-specific vocabulary for better recognition (medical terms, product codes).\n\n#### VNRecognizedTextObservation\n\n**boundingBox**: Normalized rect containing recognized text\n\n**topCandidates(_:)**: Returns `[VNRecognizedText]` ordered by confidence\n\n#### VNRecognizedText\n\n| Property | Type | Description |\n|----------|------|-------------|\n| `string` | `String` | Recognized text |\n| `confidence` | `VNConfidence` | 0.0-1.0 |\n| `boundingBox(for:)` | `VNRectangleObservation?` | Box for substring range |\n\n```swift\n// Get bounding box for substring\nlet text = candidate.string\nif let range = text.range(of: \"invoice\") {\n    let box = try candidate.boundingBox(for: range)\n}\n```\n\n## Barcode Detection APIs\n\n### VNDetectBarcodesRequest\n\n**Availability**: iOS 11+, macOS 10.13+\n\nDetects and decodes barcodes and QR codes.\n\n#### Basic Usage\n\n```swift\nlet request = VNDetectBarcodesRequest()\nrequest.symbologies = [.qr, .ean13, .code128]  // Specific codes\n\nlet handler = VNImageRequestHandler(cgImage: image)\ntry handler.perform([request])\n\nfor barcode in request.results as? [VNBarcodeObservation] ?? [] {\n    let payload = barcode.payloadStringValue\n    let type = barcode.symbology\n    let bounds = barcode.boundingBox\n}\n```\n\n#### Symbologies\n\n**1D Barcodes**:\n- `.codabar` (iOS 15+)\n- `.code39`, `.code39Checksum`, `.code39FullASCII`, `.code39FullASCIIChecksum`\n- `.code93`, `.code93i`\n- `.code128`\n- `.ean8`, `.ean13`\n- `.gs1DataBar`, `.gs1DataBarExpanded`, `.gs1DataBarLimited` (iOS 15+)\n- `.i2of5`, `.i2of5Checksum`\n- `.itf14`\n- `.upce`\n\n**2D Codes**:\n- `.aztec`\n- `.dataMatrix`\n- `.microPDF417` (iOS 15+)\n- `.microQR` (iOS 15+)\n- `.pdf417`\n- `.qr`\n\n**Performance**: Specifying fewer symbologies = faster detection\n\n#### Revisions\n\n| Revision | iOS | Features |\n|----------|-----|----------|\n| 1 | 11+ | Basic detection, one code at a time |\n| 2 | 15+ | Codabar, GS1, MicroPDF, MicroQR, better ROI |\n| 3 | 16+ | ML-based, multiple codes, better bounding boxes |\n\n#### VNBarcodeObservation\n\n| Property | Type | Description |\n|----------|------|-------------|\n| `payloadStringValue` | `String?` | Decoded content |\n| `symbology` | `VNBarcodeSymbology` | Barcode type |\n| `boundingBox` | `CGRect` | Normalized bounds |\n| `topLeft/topRight/bottomLeft/bottomRight` | `CGPoint` | Corner points |\n\n## VisionKit Scanner APIs\n\n### DataScannerViewController\n\n**Availability**: iOS 16+\n\nCamera-based live scanner with built-in UI for text and barcodes.\n\n#### Check Availability\n\n```swift\n// Hardware support\nDataScannerViewController.isSupported\n\n// Runtime availability (camera access, parental controls)\nDataScannerViewController.isAvailable\n```\n\n#### Configuration\n\n```swift\nimport VisionKit\n\nlet dataTypes: Set<DataScannerViewController.RecognizedDataType> = [\n    .barcode(symbologies: [.qr, .ean13]),\n    .text(textContentType: .URL),  // Or nil for all text\n    // .text(languages: [\"ja\"])  // Filter by language\n]\n\nlet scanner = DataScannerViewController(\n    recognizedDataTypes: dataTypes,\n    qualityLevel: .balanced,  // .fast, .balanced, .accurate\n    recognizesMultipleItems: true,\n    isHighFrameRateTrackingEnabled: true,\n    isPinchToZoomEnabled: true,\n    isGuidanceEnabled: true,\n    isHighlightingEnabled: true\n)\n\nscanner.delegate = self\npresent(scanner, animated: true) {\n    try? scanner.startScanning()\n}\n```\n\n#### RecognizedDataType\n\n| Type | Description |\n|------|-------------|\n| `.barcode(symbologies:)` | Specific barcode types |\n| `.text()` | All text |\n| `.text(languages:)` | Text filtered by language |\n| `.text(textContentType:)` | Text filtered by type (URL, phone, email) |\n\n#### Delegate Protocol\n\n```swift\nprotocol DataScannerViewControllerDelegate {\n    func dataScanner(_ dataScanner: DataScannerViewController,\n                     didTapOn item: RecognizedItem)\n\n    func dataScanner(_ dataScanner: DataScannerViewController,\n                     didAdd addedItems: [RecognizedItem],\n                     allItems: [RecognizedItem])\n\n    func dataScanner(_ dataScanner: DataScannerViewController,\n                     didUpdate updatedItems: [RecognizedItem],\n                     allItems: [RecognizedItem])\n\n    func dataScanner(_ dataScanner: DataScannerViewController,\n                     didRemove removedItems: [RecognizedItem],\n                     allItems: [RecognizedItem])\n\n    func dataScanner(_ dataScanner: DataScannerViewController,\n                     becameUnavailableWithError error: DataScannerViewController.ScanningUnavailable)\n}\n```\n\n#### RecognizedItem\n\n```swift\nenum RecognizedItem {\n    case text(RecognizedItem.Text)\n    case barcode(RecognizedItem.Barcode)\n\n    var id: UUID { get }\n    var bounds: RecognizedItem.Bounds { get }\n}\n\n// Text item\nstruct Text {\n    let transcript: String\n}\n\n// Barcode item\nstruct Barcode {\n    let payloadStringValue: String?\n    let observation: VNBarcodeObservation\n}\n```\n\n#### Async Stream\n\n```swift\n// Alternative to delegate\nfor await items in scanner.recognizedItems {\n    // Current recognized items\n}\n```\n\n#### Custom Highlights\n\n```swift\n// Add custom views over recognized items\nscanner.overlayContainerView.addSubview(customHighlight)\n\n// Capture still photo\nlet photo = try await scanner.capturePhoto()\n```\n\n### VNDocumentCameraViewController\n\n**Availability**: iOS 13+\n\nDocument scanning with automatic edge detection, perspective correction, and lighting adjustment.\n\n#### Basic Usage\n\n```swift\nimport VisionKit\n\nlet camera = VNDocumentCameraViewController()\ncamera.delegate = self\npresent(camera, animated: true)\n```\n\n#### Delegate Protocol\n\n```swift\nprotocol VNDocumentCameraViewControllerDelegate {\n    func documentCameraViewController(_ controller: VNDocumentCameraViewController,\n                                       didFinishWith scan: VNDocumentCameraScan)\n\n    func documentCameraViewControllerDidCancel(_ controller: VNDocumentCameraViewController)\n\n    func documentCameraViewController(_ controller: VNDocumentCameraViewController,\n                                       didFailWithError error: Error)\n}\n```\n\n#### VNDocumentCameraScan\n\n| Property | Type | Description |\n|----------|------|-------------|\n| `pageCount` | `Int` | Number of scanned pages |\n| `imageOfPage(at:)` | `UIImage` | Get page image at index |\n| `title` | `String` | User-editable title |\n\n```swift\nfunc documentCameraViewController(_ controller: VNDocumentCameraViewController,\n                                   didFinishWith scan: VNDocumentCameraScan) {\n    controller.dismiss(animated: true)\n\n    for i in 0..<scan.pageCount {\n        let pageImage = scan.imageOfPage(at: i)\n        // Process with VNRecognizeTextRequest\n    }\n}\n```\n\n## Document Analysis APIs\n\n### VNDetectDocumentSegmentationRequest\n\n**Availability**: iOS 15+, macOS 12+\n\nDetects document boundaries for custom camera UIs or post-processing.\n\n```swift\nlet request = VNDetectDocumentSegmentationRequest()\nlet handler = VNImageRequestHandler(ciImage: image)\ntry handler.perform([request])\n\nguard let observation = request.results?.first as? VNRectangleObservation else {\n    return  // No document found\n}\n\n// Get corner points (normalized)\nlet corners = [\n    observation.topLeft,\n    observation.topRight,\n    observation.bottomLeft,\n    observation.bottomRight\n]\n```\n\n**vs VNDetectRectanglesRequest**:\n- Document: ML-based, trained specifically on documents\n- Rectangle: Edge-based, finds any quadrilateral\n\n### RecognizeDocumentsRequest (iOS 26+)\n\n**Availability**: iOS 26+, macOS 26+\n\nStructured document understanding with semantic parsing.\n\n#### Basic Usage\n\n```swift\nlet request = RecognizeDocumentsRequest()\nlet observations = try await request.perform(on: imageData)\n\nguard let document = observations.first?.document else {\n    return\n}\n```\n\n#### DocumentObservation Hierarchy\n\n```\nDocumentObservation\n└── document: DocumentObservation.Container\n    ├── text: Container.Text\n    ├── paragraphs: [Container.Text]\n    ├── tables: [Container.Table]\n    └── lists: [Container.List]\n```\n\n#### Table Extraction\n\n```swift\nfor table in document.tables {\n    for row in table.rows {\n        for cell in row {\n            let text = cell.content.text.transcript\n            let detectedData = cell.content.text.detectedData\n        }\n    }\n}\n```\n\n#### Detected Data Types\n\n```swift\nfor data in document.text.detectedData {\n    switch data.match.details {\n    case .emailAddress(let email):\n        let address = email.emailAddress\n    case .phoneNumber(let phone):\n        let number = phone.phoneNumber\n    case .link(let link):\n        let url = link.url\n    case .postalAddress(let address):\n        let components = address\n    case .calendarEvent(let event):\n        let dates = (event.startDate, event.endDate)\n    default:\n        break\n    }\n}\n```\n\n#### Container.Text Hierarchy\n\n```\nContainer.Text\n├── transcript: String\n├── lines: [RecognizedTextObservation]\n├── words: [RecognizedTextObservation]?\n└── detectedData: [DataDetectorMatch]\n```\n\n## Visual Intelligence Integration\n\nVisual Intelligence is a **system-level feature** (iOS 26+; expands to iPadOS27/macOS27) that lets users point their camera at real-world objects — or highlight a screenshot — and find matching content across apps. This is distinct from the Vision framework (VNRequest-based image analysis) covered above. Vision analyzes images within your app; Visual Intelligence lets the system invoke your app when users search with the camera or screenshots.\n\nThe same `IntentValueQuery`, entities, and `OpenIntent` code works unchanged across iOS, iPadOS, and macOS. Platform differences worth handling:\n\n- **iOS** — primary entry point is the camera (physical objects: posters, products, artwork)\n- **iPad/Mac** — primary entry point is screenshots (digital media); make sure your search handles both kinds of content\n- **Mac** — the input pixel buffer can be much larger than on iPhone; consider resizing before analysis\n\n### How It Works\n\n1. User activates Visual Intelligence camera or takes a screenshot\n2. System analyzes what the user is looking at\n3. System queries participating apps via `IntentValueQuery`\n4. Your app receives a `SemanticContentDescriptor` with labels and/or pixel data\n5. Your app searches its content and returns matching `AppEntity` results\n6. Results appear in the Visual Intelligence UI with your app's branding\n\n### Required Frameworks\n\n```swift\nimport VisualIntelligence\nimport AppIntents\n```\n\n### SemanticContentDescriptor\n\nThe core object the system provides to describe what the user is looking at.\n\n| Property | Type | Description |\n|----------|------|-------------|\n| `labels` | `[String]` | Classification labels for the detected item |\n| `pixelBuffer` | `CVReadOnlyPixelBuffer?` | Visual data of the detected item |\n\nUse labels for fast keyword matching against your content catalog. Use the pixel buffer for image-similarity search when labels are insufficient.\n\n### Matching by Image Similarity (Feature Prints)\n\nFor visual matching against your own catalog, compare Vision feature prints. Pre-compute prints for catalog items (never at query time); at query time, convert the descriptor's pixel buffer to a `CGImage` and rank by distance:\n\n```swift\nimport Vision\nimport VideoToolbox\n\nvar cgImage: CGImage?\n_ = pixelBuffer.withUnsafeBuffer {\n    VTCreateCGImageFromCVPixelBuffer($0, options: nil, imageOut: &cgImage)\n}\nguard let cgImage else { return [] }\n\nlet queryPrint = try await GenerateImageFeaturePrintRequest().perform(on: cgImage)\nlet distance = try queryPrint.distance(to: entry.featurePrint)  // pre-computed FeaturePrintObservation; smaller = more similar\n```\n\nFilter by a maximum distance, sort ascending, and cap the result count — return results fast and ranked. Returning an empty array is fine; the system handles the empty state.\n\n### IntentValueQuery\n\nThe entry point for Visual Intelligence to communicate with your app. Implement `values(for:)` to receive search requests and return matching entities.\n\n```swift\nstruct LandmarkIntentValueQuery: IntentValueQuery {\n    @Dependency var modelData: ModelData\n\n    func values(for input: SemanticContentDescriptor) async throws -> [LandmarkEntity] {\n        if !input.labels.isEmpty {\n            return try await modelData.search(matching: input.labels)\n        }\n        guard let pixelBuffer = input.pixelBuffer else { return [] }\n        return try await modelData.search(matching: pixelBuffer)\n    }\n}\n```\n\n### Returning Multiple Result Types\n\nUse `@UnionValue` when your app can return different entity types from a single search.\n\n```swift\n@UnionValue\nenum VisualSearchResult {\n    case landmark(LandmarkEntity)\n    case collection(CollectionEntity)\n}\n```\n\n### Display Representation\n\nVisual Intelligence uses your entity's `DisplayRepresentation` to show results. Provide a title, subtitle, and image for each result.\n\n```swift\nstruct LandmarkEntity: AppEntity {\n    var id: String\n    var name: String\n    var location: String\n\n    static var typeDisplayRepresentation: TypeDisplayRepresentation {\n        TypeDisplayRepresentation(\n            name: LocalizedStringResource(\"Landmark\", table: \"AppIntents\"),\n            numericFormat: \"\\(placeholder: .int) landmarks\"\n        )\n    }\n\n    var displayRepresentation: DisplayRepresentation {\n        DisplayRepresentation(\n            title: \"\\(name)\",\n            subtitle: \"\\(location)\",\n            image: .init(named: thumbnailImageName)\n        )\n    }\n}\n```\n\n### Deep Linking from Results\n\nWhen a user taps a result, your app should open to the relevant content. Provide an `appLinkURL` on your entity.\n\n```swift\nvar appLinkURL: URL? {\n    URL(string: \"yourapp://landmark/\\(id)\")\n}\n```\n\n### \"More Results\" — Continue Search in Your App\n\nAdopt the `semanticContentSearch` schema so the system's **More results** button lands users in your full in-app search, pre-populated from the captured context. The system provides the `semanticContent` property automatically — no `@Parameter` needed:\n\n```swift\n@AppIntent(schema: .visualIntelligence.semanticContentSearch)\nstruct SemanticContentSearchIntent: AppIntent {\n    static let title: LocalizedStringResource = \"Search in app\"\n    static let openAppWhenRun: Bool = true\n\n    var semanticContent: SemanticContentDescriptor\n\n    func perform() async throws -> some IntentResult {\n        guard let pixelBuffer = semanticContent.pixelBuffer else { return .result() }\n        // Search, then navigate to your full search UI pre-populated with results\n        return .result()\n    }\n}\n```\n\nYour in-app search can show far more than the Visual Intelligence results sheet — filters, categories, the full depth of your content.\n\n### System Store Integrations\n\nImage Search is your app providing results *to* Visual Intelligence. The reverse also works: Visual Intelligence actions write data to system stores your app may already read — making Visual Intelligence a new input source with zero Visual Intelligence code. New in the 27 cycle: adding to contacts, saving multiple calendar events, and medical-device logging (WWDC 2026-297).\n\n| Visual Intelligence captures | Your app reads it with |\n|------------------------------|------------------------|\n| Calendar events from posters/posts (multi-event saving `OS27`) | EventKit (`EKEventStore`) |\n| Contact info from business cards `OS27` | Contacts (`CNContactStore`) |\n| Medical-device readings (blood pressure monitors, glucose meters, scales) `OS27` | HealthKit (`HKHealthStore`) |\n\nObserve store-change notifications (e.g. `.EKEventStoreChanged`) so entries created by Visual Intelligence appear in your app without a manual refresh.\n\n### Best Practices\n\n- **Return results quickly** — Visual Intelligence expects low-latency responses. Limit to 10-20 most relevant results; returning an empty array is fine\n- **Prefer labels first** — Label matching is faster than pixel buffer analysis. Fall back to pixel buffer when labels are empty or insufficient\n- **Serve thumbnail-sized images** — the results sheet shows ~3 lines of text + a thumbnail in a two-column layout; a single result's image spans the full sheet width\n- **Reuse your existing `OpenIntent`** — if you already have one for the entity, Visual Intelligence uses it; don't write a separate one\n- **Keep `perform()` lightweight** — it runs as your app comes to the foreground; navigate first, defer heavy loading until the view appears\n- **Localize everything** — Display representations appear in the system UI. Use `LocalizedStringResource` for all user-facing text\n\n### Testing\n\n1. Build and run on a physical device (iPhone, iPad, or Mac)\n2. Activate Visual Intelligence camera or take a screenshot of relevant content\n3. Perform a visual search and verify your app's results appear (ordering among providers is decided by the system)\n4. Tap results to verify deep linking opens the correct content\n5. On Mac, test with large screenshots — input pixel buffers are bigger than iPhone's\n\n## Vision on watchOS `watchOS27`\n\nVision arrives on watchOS in the 27 cycle — the framework does not exist in earlier watchOS SDKs. The watch gets the **modern Swift API only** (no legacy `VN*` request classes) and a subset of requests:\n\n| On watchOS 27 | NOT on watchOS |\n|---------------|----------------|\n| Face detection/landmarks/capture quality | Text recognition (`RecognizeTextRequest`, `RecognizeDocumentsRequest`, `DetectTextRectanglesRequest`) |\n| Image classification + animal recognition | All pose requests (body 2D/3D, hand, animal) |\n| Segmentation (foreground/person/person-instance) | Optical flow (`TrackOpticalFlowRequest`) |\n| Saliency (attention + objectness), feature prints | Iterative segmentation (tap-to-segment) |\n| Barcodes, contours, rectangles, horizon, document segmentation | |\n| Lens smudge, aesthetics scores, `CoreMLRequest` | |\n| Tracking (object/rectangle/trajectories/registration), `VideoProcessor` | |\n\nCanonical watch use case from WWDC 2026-237 — saliency-based cropping so small screens feature the subject prominently:\n\n```swift\n// Crop to the most prominent subject for a small watch screen\nlet request = GenerateObjectnessBasedSaliencyImageRequest()\nlet observation = try await request.perform(on: image)  // SaliencyImageObservation\nlet crop = observation.salientObjects.first?.boundingBox  // NormalizedRect\n```\n\n`salientObjects` is `[RectangleObservation]` — take `.boundingBox` (or the quadrilateral corners) for the crop rect.\n\n## Vision Tools for Foundation Models `OS27`\n\nVision ships two ready-made `FoundationModels.Tool` implementations via a cross-import overlay (`import Vision` + `import FoundationModels`) so the on-device LLM can call computer vision on attached images:\n\n| Tool | Purpose | Platforms |\n|------|---------|-----------|\n| `BarcodeReaderTool` | Barcode/QR reading — models can't read QR codes themselves | `OS27` (not tvOS) |\n| `OCRTool` | Fine or dense text recognition, 30+ languages | `OS27` (not watchOS/tvOS) |\n\n```swift\nimport FoundationModels\nimport Vision\n\nlet session = LanguageModelSession(tools: [BarcodeReaderTool()])\nlet response = try await session.respond(generating: EventInfo.self) {  // EventInfo: your @Generable struct\n    \"Get the date, location, and website from this flyer\"\n    Attachment(image)\n        .label(\"flyer\")  // labels are how the model picks which image to pass to a tool\n}\n```\n\nBoth tools accept optional `init(name:description:)` overrides. For image inputs, `ImageReference` tool arguments, and the rest of the Foundation Models surface, see axiom-ai `foundation-models-ref.md` (Built-in System Tools).\n\n## API Quick Reference\n\n### Subject Segmentation\n\n| API | Platform | Purpose |\n|-----|----------|---------|\n| `VNGenerateForegroundInstanceMaskRequest` | iOS 17+ | Class-agnostic subject instances |\n| `VNGeneratePersonInstanceMaskRequest` | iOS 17+ | Up to 4 people separately |\n| `VNGeneratePersonSegmentationRequest` | iOS 15+ | All people (single mask) |\n| `ImageAnalysisInteraction` (VisionKit) | iOS 16+ | UI for subject lifting |\n| `GenerateIterativeSegmentationRequest` | `OS27` (not watchOS) | Tap/box/scribble-seeded segmentation of any object |\n\n### Pose Detection\n\n| API | Platform | Landmarks | Coordinates |\n|-----|----------|-----------|-------------|\n| `VNDetectHumanHandPoseRequest` | iOS 14+ | 21 per hand | 2D normalized |\n| `VNDetectHumanBodyPoseRequest` | iOS 14+ | 19 body joints | 2D normalized |\n| `VNDetectHumanBodyPose3DRequest` | iOS 17+ | 17 body joints | 3D meters |\n\n### Face & Person Detection\n\n| API | Platform | Purpose |\n|-----|----------|---------|\n| `VNDetectFaceRectanglesRequest` | iOS 11+ | Face bounding boxes |\n| `VNDetectFaceLandmarksRequest` | iOS 11+ | Face with detailed landmarks |\n| `VNDetectHumanRectanglesRequest` | iOS 13+ | Human torso bounding boxes |\n\n### Text & Barcode\n\n| API | Platform | Purpose |\n|-----|----------|---------|\n| `VNRecognizeTextRequest` | iOS 13+ | Text recognition (OCR) |\n| `VNDetectBarcodesRequest` | iOS 11+ | Barcode/QR detection |\n| `DataScannerViewController` | iOS 16+ | Live camera scanner (text + barcodes) |\n| `VNDocumentCameraViewController` | iOS 13+ | Document scanning with perspective correction |\n| `VNDetectDocumentSegmentationRequest` | iOS 15+ | Programmatic document edge detection |\n| `RecognizeDocumentsRequest` | iOS 26+ | Structured document extraction |\n\n### Visual Intelligence\n\n| API | Platform | Purpose |\n|-----|----------|---------|\n| `SemanticContentDescriptor` | iOS 26+, iPadOS27/macOS27 | Describes what the user is looking at (labels + pixel buffer) |\n| `IntentValueQuery` | iOS 26+, iPadOS27/macOS27 | Entry point for receiving visual search requests |\n| `semanticContentSearch` schema | iOS 26+, iPadOS27/macOS27 | \"More results\" intent that continues search in your app |\n\n### Observation Types\n\n| Observation | Returned By |\n|-------------|-------------|\n| `InstanceMaskObservation` | Foreground/person instance masks (modern, iOS 18+) |\n| `VNPixelBufferObservation` | Person segmentation (single mask) |\n| `VNHumanHandPoseObservation` | Hand pose |\n| `VNHumanBodyPoseObservation` | Body pose (2D) |\n| `VNHumanBodyPose3DObservation` | Body pose (3D) |\n| `VNFaceObservation` | Face detection/landmarks |\n| `VNHumanObservation` | Human rectangles |\n| `VNRecognizedTextObservation` | Text recognition |\n| `VNBarcodeObservation` | Barcode detection |\n| `VNRectangleObservation` | Document segmentation |\n| `DocumentObservation` | Structured document (iOS 26+) |\n| `PixelBufferObservation` | Iterative segmentation mask (`OS27`); modern person segmentation |\n| `SaliencyImageObservation` | Saliency heat map + salient object rects (modern) |\n\n## Sensitive Content Analysis (`SensitiveContentAnalysis` framework)\n\nA **separate framework** from Vision (and VisionKit), but the same job family — `SensitiveContentAnalysis` (iOS 17+, macOS 14+, visionOS 2+; **not watchOS/tvOS**) flags nudity, gore, and violence in images and video. It runs only when the user has the system **Sensitive Content Warning** / **Communication Safety** setting on: check `analysisPolicy` first, and treat `.disabled` as \"feature off,\" not an error.\n\n```swift\nimport SensitiveContentAnalysis\n\nlet analyzer = SCSensitivityAnalyzer()\nguard analyzer.analysisPolicy != .disabled else { return }   // user setting gates analysis\n\nlet result = try await analyzer.analyzeImage(cgImage)         // -> SCSensitivityAnalysis\nif result.isSensitive {\n    if #available(iOS 27, macOS 27, visionOS 27, *) {\n        let kinds = result.detectedTypes                     // Set<SCSensitivityAnalysis.ContentType>\n        if kinds.contains(.goreOrViolence) { /* gore-specific UX */ }\n        if kinds.contains(.sexuallyExplicit) { /* explicit-specific UX */ }\n    }\n}\n```\n\n| Member | Availability | Notes |\n|--------|--------------|-------|\n| `SCSensitivityAnalyzer` | iOS 17+, macOS 14+, visionOS 2+ | `analyzeImage(_:)` / `analyzeImage(at:)`; video via `videoAnalysis(forFileAt:)` → `VideoAnalysisHandler.hasSensitiveContent()` |\n| `analysisPolicy` | iOS 17+ | `SCSensitivityAnalysisPolicy`: `.disabled` / `.simpleInterventions` / `.descriptiveInterventions` |\n| `SCSensitivityAnalysis.isSensitive` | iOS 17+ | Boolean — *any* sensitive content |\n| `SCSensitivityAnalysis.detectedTypes` | `OS27` (not watchOS/tvOS) | `Set<SCSensitivityAnalysis.ContentType>` — which categories |\n| `SCSensitivityAnalysis.ContentType` | `OS27` (not watchOS/tvOS) | `.sexuallyExplicit`, `.goreOrViolence` |\n\n**`OS27` upgrade — categorized results.** Before 27 you got only the boolean `isSensitive`. At 27 (`iOS27`/`macOS27`/`visionOS27`, not watchOS/tvOS) `detectedTypes` reports *which kind* of sensitive content was found, so you can branch handling (different messaging for gore vs. explicit). Guard it with `#available` and fall back to the boolean on earlier targets.\n\n**Building against multiple Xcodes.** `detectedTypes` and `ContentType` are absent from the iOS 26 SDK, and `#available` is a *runtime* gate — it does not stop the compiler from type-checking the symbol. A package that must also build on Xcode 26 needs a compile-time gate too, or older Xcodes fail to build:\n\n```swift\nif result.isSensitive {\n    #if compiler(>=6.4)   // Xcode 27+ SDK is the first to declare the symbol\n    if #available(iOS 27, macOS 27, visionOS 27, *) {\n        handle(result.detectedTypes)\n    }\n    #endif\n}\n```\n\nIf you only ever build with Xcode 27+, `#available` alone is enough — the `#if compiler` guard matters only when the same source must compile on an older Xcode.\n\n## Sensitive Content Analysis — design for the unavailable path\n\n`.disabled` is the **default state for adults**: Sensitive Content Warning ships off and is buried in Settings > Privacy & Security. Child and teen accounts get it on by default through Family Sharing / Communication Safety. If your audience is adults, `.disabled` is the *common* path, not an edge case — build a real UI for it rather than treating it as an error.\n\nYou **cannot deep-link the toggle.** `UIApplication.openSettingsURLString` opens *your app's* Settings page, not Privacy & Security > Sensitive Content Warning, and no public URL targets that pane. Undocumented `prefs:root=…` URLs are private API and an App Review rejection risk. The shippable path is on-screen instructions telling the user where to go.\n\nThe two *enabled* policies imply different UI: `.simpleInterventions` (adult, Sensitive Content Warning) expects brief inline affordances like a \"Show\" button; `.descriptiveInterventions` (kids/teens, Communication Safety) expects more explanatory UI about the risk.\n\n## Sensitive Content Analysis — never transmit the verdict off-device\n\nThe Apple Developer Program License Agreement (§3.3.3, Data and Privacy; the \"Sensitive Content Analysis Framework\" clause) prohibits transmitting off the device *any* information about whether the framework flagged an image or video. Practical consequences:\n\n- **No analytics events** on `isSensitive` / `detectedTypes` — not even a count.\n- **No server-side moderation queue** keyed off the verdict.\n- **No synced verdict cache** (iCloud / CloudKit / your backend). Any cache stays on-device only.\n- **Reporting is an explicit user action**, and the report payload carries the media the user chose to send — never the framework's verdict.\n\nThis is a licensing requirement, not a suggestion: exfiltrating the verdict is grounds for rejection or agreement breach. See axiom-security.\n\n## Sensitive Content Analysis — testing\n\nExplicit fixtures don't belong in your repo. Apple ships a **configuration profile + QR code + a harmless test image** the analyzer will flag, so you can exercise the flagged path with safe content. Gotcha: **downloading the profile does nothing on its own** — install it in **Settings > General > VPN & Device Management** first. Until you do, the test image sails through unflagged and the analyzer looks broken.\n\n## Sensitive Content Analysis — the real work is the surrounding policy\n\nThe analyzer call is ~3 lines; shipping it well is not. The surface area that matters is fail-closed blur/reveal/report UI (default to hidden, reveal only on explicit user action), on-device-only verdict caching, and the `.disabled` path above. Budget for the policy state machine, not the API call.\n\n## Resources\n\n**WWDC**: 2019-234, 2021-10041, 2022-10024, 2022-10025, 2025-272, 2023-10176, 2023-111241, 2023-10048, 2020-10653, 2020-10043, 2020-10099, 2026-237, 2026-297\n\n**Docs**: /vision, /visionkit, /visualintelligence, /visualintelligence/semanticcontentdescriptor, /visualintelligence/integrating-your-app-with-visual-intelligence, /vision/generateiterativesegmentationrequest, /vision/vnrecognizetextrequest, /vision/vndetectbarcodesrequest, /sensitivecontentanalysis\n\n**Skills**: skills/vision-framework.md, skills/vision-diag.md, axiom-ai (skills/foundation-models-ref.md)\n",
       "skillType": "reference",
       "source": "axiom",
       "tags": [
@@ -40115,14 +40115,42 @@
           "heading": "Sensitive Content Analysis (`SensitiveContentAnalysis` framework)",
           "level": 2,
           "startLine": 1419,
-          "endLine": 1448,
-          "charCount": 2171
+          "endLine": 1462,
+          "charCount": 2869
+        },
+        {
+          "heading": "Sensitive Content Analysis — design for the unavailable path",
+          "level": 2,
+          "startLine": 1463,
+          "endLine": 1470,
+          "charCount": 1056
+        },
+        {
+          "heading": "Sensitive Content Analysis — never transmit the verdict off-device",
+          "level": 2,
+          "startLine": 1471,
+          "endLine": 1481,
+          "charCount": 855
+        },
+        {
+          "heading": "Sensitive Content Analysis — testing",
+          "level": 2,
+          "startLine": 1482,
+          "endLine": 1485,
+          "charCount": 456
+        },
+        {
+          "heading": "Sensitive Content Analysis — the real work is the surrounding policy",
+          "level": 2,
+          "startLine": 1486,
+          "endLine": 1489,
+          "charCount": 373
         },
         {
           "heading": "Resources",
           "level": 2,
-          "startLine": 1449,
-          "endLine": 1456,
+          "startLine": 1490,
+          "endLine": 1497,
           "charCount": 583
         }
       ],
@@ -44749,8 +44777,8 @@
           3,
           33,
           16,
-          45,
-          1176
+          58,
+          1302
         ],
         "250": [
           4,
@@ -44834,8 +44862,8 @@
         4.026819923371651,
         18.30651340996168,
         3.9923371647509587,
-        44.356321839080444,
-        650.0000000000002
+        44.40613026819922,
+        650.4827586206899
       ],
       "storedFields": {
         "0": {
@@ -47898,7 +47926,7 @@
               "194": 2,
               "195": 8,
               "248": 9,
-              "249": 10
+              "249": 11
             }
           }
         ],
@@ -49145,7 +49173,7 @@
               "245": 3,
               "247": 7,
               "248": 8,
-              "249": 1,
+              "249": 2,
               "256": 3
             }
           }
@@ -53707,6 +53735,14 @@
           }
         ],
         [
+          "xcodes",
+          {
+            "4": {
+              "249": 2
+            }
+          }
+        ],
+        [
           "xcodeproj",
           {
             "4": {
@@ -53956,6 +53992,7 @@
               "238": 3,
               "239": 5,
               "246": 5,
+              "249": 4,
               "250": 3,
               "252": 2,
               "253": 6,
@@ -59684,7 +59721,7 @@
               "245": 3,
               "247": 4,
               "248": 19,
-              "249": 14,
+              "249": 15,
               "255": 3,
               "256": 3
             }
@@ -60895,6 +60932,7 @@
               "236": 6,
               "242": 3,
               "248": 3,
+              "249": 2,
               "252": 2,
               "253": 3,
               "254": 2,
@@ -61217,6 +61255,7 @@
               "240": 2,
               "242": 1,
               "245": 1,
+              "249": 1,
               "257": 1
             }
           }
@@ -61476,6 +61515,7 @@
               "237": 3,
               "238": 1,
               "242": 1,
+              "249": 1,
               "260": 2
             }
           }
@@ -62423,7 +62463,8 @@
           {
             "4": {
               "198": 1,
-              "199": 2
+              "199": 2,
+              "249": 1
             }
           }
         ],
@@ -63519,6 +63560,7 @@
               "206": 1,
               "223": 1,
               "240": 1,
+              "249": 1,
               "250": 1,
               "251": 1,
               "252": 2,
@@ -63909,7 +63951,7 @@
               "245": 2,
               "247": 4,
               "248": 12,
-              "249": 17,
+              "249": 18,
               "250": 2,
               "252": 1,
               "253": 6,
@@ -64620,7 +64662,8 @@
             "4": {
               "196": 6,
               "198": 15,
-              "199": 2
+              "199": 2,
+              "249": 1
             }
           }
         ],
@@ -65162,7 +65205,7 @@
               "246": 5,
               "247": 7,
               "248": 16,
-              "249": 11,
+              "249": 12,
               "250": 9,
               "251": 8,
               "253": 54,
@@ -65706,7 +65749,8 @@
               "209": 1,
               "221": 2,
               "222": 2,
-              "243": 1
+              "243": 1,
+              "249": 1
             }
           }
         ],
@@ -70399,7 +70443,7 @@
               "244": 1,
               "245": 9,
               "248": 1,
-              "249": 1,
+              "249": 2,
               "250": 18,
               "254": 2,
               "256": 3
@@ -70928,7 +70972,8 @@
             "4": {
               "87": 1,
               "126": 1,
-              "182": 2
+              "182": 2,
+              "249": 1
             }
           }
         ],
@@ -72393,6 +72438,7 @@
               "228": 1,
               "241": 1,
               "245": 1,
+              "249": 1,
               "252": 1,
               "253": 1
             }
@@ -79124,7 +79170,7 @@
               "245": 2,
               "247": 5,
               "248": 3,
-              "249": 12,
+              "249": 13,
               "250": 9,
               "252": 1,
               "256": 9,
@@ -81324,7 +81370,7 @@
               "245": 1,
               "247": 9,
               "248": 5,
-              "249": 3,
+              "249": 4,
               "257": 5
             }
           }
@@ -82286,7 +82332,7 @@
               "245": 2,
               "247": 1,
               "248": 4,
-              "249": 4,
+              "249": 5,
               "252": 1,
               "256": 3,
               "257": 4,
@@ -82757,6 +82803,7 @@
               "224": 1,
               "239": 1,
               "244": 1,
+              "249": 1,
               "251": 1,
               "253": 1,
               "260": 1
@@ -83864,6 +83911,7 @@
               "209": 2,
               "216": 1,
               "220": 1,
+              "249": 1,
               "256": 1
             }
           }
@@ -84486,7 +84534,8 @@
               "186": 1,
               "199": 1,
               "226": 1,
-              "236": 1
+              "236": 1,
+              "249": 1
             }
           }
         ],
@@ -84981,6 +85030,7 @@
               "240": 1,
               "241": 1,
               "248": 1,
+              "249": 1,
               "250": 3,
               "251": 1,
               "253": 1,
@@ -85143,7 +85193,7 @@
               "231": 1,
               "237": 1,
               "240": 3,
-              "249": 2,
+              "249": 3,
               "250": 1,
               "251": 1,
               "254": 1,
@@ -85892,7 +85942,8 @@
           {
             "4": {
               "87": 1,
-              "182": 1
+              "182": 1,
+              "249": 1
             }
           }
         ],
@@ -86635,6 +86686,7 @@
               "223": 1,
               "236": 1,
               "248": 1,
+              "249": 1,
               "252": 1
             }
           }
@@ -88293,6 +88345,14 @@
           }
         ],
         [
+          "explanatory",
+          {
+            "4": {
+              "249": 1
+            }
+          }
+        ],
+        [
           "explanations",
           {
             "4": {
@@ -88504,7 +88564,7 @@
               "239": 1,
               "241": 1,
               "245": 2,
-              "249": 4,
+              "249": 7,
               "250": 2,
               "253": 1
             }
@@ -89267,7 +89327,7 @@
               "172": 2,
               "186": 1,
               "247": 1,
-              "249": 1,
+              "249": 3,
               "253": 1
             }
           }
@@ -91090,6 +91150,7 @@
               "221": 1,
               "234": 1,
               "248": 1,
+              "249": 1,
               "252": 6
             }
           }
@@ -91981,6 +92042,7 @@
               "214": 1,
               "226": 1,
               "237": 1,
+              "249": 1,
               "250": 6,
               "253": 4,
               "255": 3,
@@ -92072,7 +92134,8 @@
               "1": 4,
               "198": 1,
               "199": 1,
-              "203": 2
+              "203": 2,
+              "249": 1
             }
           }
         ],
@@ -92933,7 +92996,7 @@
               "243": 2,
               "246": 2,
               "248": 4,
-              "249": 2,
+              "249": 7,
               "250": 2,
               "251": 2,
               "253": 4,
@@ -93288,7 +93351,7 @@
               "243": 5,
               "245": 1,
               "247": 2,
-              "249": 1,
+              "249": 2,
               "251": 11,
               "252": 15,
               "257": 23
@@ -95043,7 +95106,8 @@
           {
             "4": {
               "38": 1,
-              "193": 2
+              "193": 2,
+              "249": 1
             }
           }
         ],
@@ -95655,6 +95719,7 @@
               "228": 1,
               "239": 1,
               "244": 3,
+              "249": 1,
               "252": 1,
               "253": 1
             }
@@ -95985,6 +96050,7 @@
               "215": 1,
               "227": 1,
               "240": 1,
+              "249": 1,
               "250": 1
             }
           }
@@ -97550,7 +97616,8 @@
               "198": 8,
               "209": 1,
               "228": 2,
-              "231": 4
+              "231": 4,
+              "249": 1
             }
           }
         ],
@@ -98849,7 +98916,7 @@
               "204": 1,
               "212": 3,
               "227": 1,
-              "249": 1
+              "249": 2
             }
           }
         ],
@@ -101299,7 +101366,7 @@
               "239": 2,
               "240": 2,
               "246": 1,
-              "249": 1,
+              "249": 2,
               "254": 2
             }
           }
@@ -102938,6 +103005,7 @@
               "237": 1,
               "238": 1,
               "242": 1,
+              "249": 1,
               "253": 1,
               "256": 1,
               "259": 1,
@@ -103086,6 +103154,7 @@
               "214": 2,
               "244": 1,
               "245": 1,
+              "249": 2,
               "260": 1
             }
           }
@@ -103653,7 +103722,7 @@
               "245": 7,
               "247": 8,
               "248": 1,
-              "249": 4,
+              "249": 5,
               "252": 1,
               "253": 2,
               "259": 1
@@ -104771,7 +104840,7 @@
               "245": 1,
               "246": 1,
               "248": 2,
-              "249": 1,
+              "249": 2,
               "253": 1,
               "258": 1,
               "260": 2
@@ -106096,7 +106165,8 @@
               "175": 1,
               "213": 1,
               "225": 2,
-              "231": 1
+              "231": 1,
+              "249": 2
             }
           }
         ],
@@ -106507,6 +106577,7 @@
               "232": 1,
               "234": 4,
               "247": 3,
+              "249": 1,
               "252": 1,
               "254": 1,
               "260": 1
@@ -110851,7 +110922,8 @@
               "186": 7,
               "199": 2,
               "217": 1,
-              "228": 1
+              "228": 1,
+              "249": 1
             }
           }
         ],
@@ -111065,7 +111137,8 @@
               "236": 4,
               "237": 16,
               "238": 1,
-              "245": 1
+              "245": 1,
+              "249": 3
             }
           }
         ],
@@ -112115,7 +112188,8 @@
               "226": 1,
               "231": 1,
               "239": 1,
-              "244": 1
+              "244": 1,
+              "249": 1
             },
             "4": {
               "0": 5,
@@ -112248,7 +112322,7 @@
               "244": 10,
               "247": 8,
               "248": 13,
-              "249": 3,
+              "249": 5,
               "250": 3,
               "254": 1,
               "255": 2,
@@ -116576,6 +116650,7 @@
               "199": 14,
               "200": 42,
               "247": 2,
+              "249": 2,
               "253": 1
             }
           }
@@ -117530,7 +117605,7 @@
               "245": 5,
               "247": 2,
               "248": 1,
-              "249": 15,
+              "249": 17,
               "251": 4,
               "253": 1,
               "256": 2,
@@ -119798,6 +119873,7 @@
               "221": 1,
               "222": 2,
               "248": 1,
+              "249": 1,
               "250": 2
             }
           }
@@ -120020,7 +120096,7 @@
               "241": 1,
               "242": 2,
               "248": 3,
-              "249": 11,
+              "249": 13,
               "250": 42,
               "253": 1,
               "254": 3,
@@ -122087,7 +122163,7 @@
               "246": 3,
               "247": 8,
               "248": 12,
-              "249": 12,
+              "249": 16,
               "250": 24,
               "251": 6,
               "252": 3,
@@ -123865,7 +123941,8 @@
               "126": 1,
               "165": 1,
               "196": 1,
-              "200": 1
+              "200": 1,
+              "249": 1
             }
           }
         ],
@@ -124323,6 +124400,14 @@
           {
             "4": {
               "11": 4
+            }
+          }
+        ],
+        [
+          "unflagged",
+          {
+            "4": {
+              "249": 1
             }
           }
         ],
@@ -125342,7 +125427,7 @@
               "240": 3,
               "244": 3,
               "247": 1,
-              "249": 1,
+              "249": 2,
               "252": 1,
               "254": 1,
               "256": 1,
@@ -126188,6 +126273,9 @@
             "1": {
               "7": 1
             },
+            "3": {
+              "249": 1
+            },
             "4": {
               "0": 5,
               "1": 2,
@@ -126263,7 +126351,7 @@
               "221": 2,
               "231": 2,
               "247": 1,
-              "249": 3,
+              "249": 4,
               "250": 2,
               "253": 1,
               "254": 5,
@@ -127047,7 +127135,7 @@
               "246": 32,
               "247": 32,
               "248": 25,
-              "249": 10,
+              "249": 15,
               "250": 13,
               "251": 1,
               "252": 2,
@@ -129856,7 +129944,7 @@
               "245": 6,
               "246": 3,
               "248": 7,
-              "249": 11,
+              "249": 13,
               "250": 8,
               "251": 6,
               "252": 5,
@@ -130100,7 +130188,7 @@
               "242": 5,
               "243": 3,
               "246": 10,
-              "249": 17,
+              "249": 22,
               "250": 15,
               "253": 3,
               "254": 5,
@@ -132644,6 +132732,7 @@
               "238": 2,
               "244": 4,
               "247": 1,
+              "249": 1,
               "253": 1,
               "257": 1
             }
@@ -132662,7 +132751,8 @@
               "199": 1,
               "203": 4,
               "236": 2,
-              "237": 1
+              "237": 1,
+              "249": 2
             }
           }
         ],
@@ -133755,7 +133845,7 @@
               "221": 1,
               "223": 6,
               "236": 4,
-              "249": 1,
+              "249": 2,
               "254": 3,
               "255": 1,
               "256": 3
@@ -134087,7 +134177,7 @@
               "240": 2,
               "242": 2,
               "247": 1,
-              "249": 1,
+              "249": 3,
               "251": 1,
               "256": 1,
               "259": 1,
@@ -136533,7 +136623,7 @@
               "245": 2,
               "247": 4,
               "248": 3,
-              "249": 9,
+              "249": 12,
               "250": 2,
               "254": 1,
               "256": 1,
@@ -139455,7 +139545,7 @@
               "245": 3,
               "247": 16,
               "248": 13,
-              "249": 15,
+              "249": 17,
               "251": 2,
               "252": 2,
               "253": 1,
@@ -141145,7 +141235,8 @@
           {
             "4": {
               "223": 1,
-              "237": 2
+              "237": 2,
+              "249": 1
             }
           }
         ],
@@ -142089,7 +142180,7 @@
               "245": 1,
               "247": 2,
               "248": 2,
-              "249": 4,
+              "249": 5,
               "251": 1,
               "252": 3,
               "253": 2,
@@ -142739,7 +142830,7 @@
               "243": 1,
               "247": 12,
               "248": 6,
-              "249": 14,
+              "249": 17,
               "250": 3,
               "252": 1,
               "254": 1,
@@ -142982,7 +143073,7 @@
               "245": 3,
               "247": 6,
               "248": 4,
-              "249": 20,
+              "249": 22,
               "250": 1,
               "251": 3,
               "252": 1,
@@ -144024,7 +144115,7 @@
               "246": 1,
               "247": 33,
               "248": 12,
-              "249": 5,
+              "249": 6,
               "250": 5,
               "252": 4,
               "253": 2,
@@ -144725,7 +144816,7 @@
               "244": 1,
               "247": 2,
               "248": 1,
-              "249": 5,
+              "249": 6,
               "250": 1,
               "252": 5,
               "253": 1,
@@ -145663,7 +145754,7 @@
               "243": 2,
               "245": 5,
               "248": 2,
-              "249": 1,
+              "249": 3,
               "250": 3,
               "251": 1,
               "252": 2,
@@ -147408,7 +147499,7 @@
               "236": 1,
               "242": 2,
               "246": 1,
-              "249": 1,
+              "249": 2,
               "251": 1,
               "254": 1
             }
@@ -148569,6 +148660,14 @@
           }
         ],
         [
+          "transmitt",
+          {
+            "4": {
+              "249": 1
+            }
+          }
+        ],
+        [
           "transmitted",
           {
             "4": {
@@ -148579,8 +148678,12 @@
         [
           "transmit",
           {
+            "3": {
+              "249": 1
+            },
             "4": {
-              "187": 1
+              "187": 1,
+              "249": 1
             }
           }
         ],
@@ -151556,6 +151659,7 @@
               "233": 1,
               "238": 2,
               "242": 1,
+              "249": 1,
               "250": 1,
               "251": 14,
               "252": 1,
@@ -152453,6 +152557,7 @@
               "243": 1,
               "247": 16,
               "248": 1,
+              "249": 1,
               "251": 2,
               "255": 1
             }
@@ -154040,7 +154145,7 @@
               "237": 1,
               "238": 2,
               "242": 1,
-              "249": 1,
+              "249": 2,
               "253": 1,
               "256": 1
             }
@@ -155078,6 +155183,22 @@
           }
         ],
         [
+          "teens",
+          {
+            "4": {
+              "249": 1
+            }
+          }
+        ],
+        [
+          "teen",
+          {
+            "4": {
+              "249": 1
+            }
+          }
+        ],
+        [
           "tee",
           {
             "4": {
@@ -155189,7 +155310,8 @@
               "224": 1,
               "236": 1,
               "237": 1,
-              "245": 3
+              "245": 3,
+              "249": 1
             }
           }
         ],
@@ -156377,6 +156499,7 @@
               "231": 7,
               "232": 3,
               "238": 1,
+              "249": 1,
               "258": 1,
               "260": 1
             },
@@ -156548,7 +156671,7 @@
               "245": 1,
               "247": 2,
               "248": 2,
-              "249": 3,
+              "249": 6,
               "250": 6,
               "251": 3,
               "254": 3,
@@ -156687,6 +156810,7 @@
               "244": 3,
               "247": 5,
               "248": 3,
+              "249": 2,
               "251": 1,
               "253": 1,
               "255": 1
@@ -158925,7 +159049,8 @@
             "3": {
               "3": 1,
               "28": 1,
-              "195": 1
+              "195": 1,
+              "249": 1
             },
             "4": {
               "0": 4,
@@ -159025,7 +159150,7 @@
               "243": 1,
               "247": 4,
               "248": 1,
-              "249": 3,
+              "249": 7,
               "250": 1,
               "251": 2,
               "252": 2,
@@ -160871,7 +160996,7 @@
               "245": 4,
               "246": 2,
               "248": 1,
-              "249": 1,
+              "249": 2,
               "251": 3,
               "252": 1,
               "256": 3,
@@ -161445,7 +161570,7 @@
               "227": 1,
               "241": 1,
               "242": 1,
-              "249": 1
+              "249": 2
             }
           }
         ],
@@ -161601,7 +161726,7 @@
               "238": 1,
               "239": 3,
               "242": 1,
-              "249": 4,
+              "249": 5,
               "251": 15,
               "258": 2,
               "259": 8,
@@ -163655,7 +163780,7 @@
               "246": 4,
               "247": 5,
               "248": 12,
-              "249": 16,
+              "249": 21,
               "250": 5,
               "251": 10,
               "252": 3,
@@ -164676,7 +164801,7 @@
               "246": 6,
               "247": 15,
               "248": 44,
-              "249": 99,
+              "249": 103,
               "250": 29,
               "251": 16,
               "252": 16,
@@ -166908,7 +167033,8 @@
               "116": 1,
               "163": 1,
               "185": 2,
-              "203": 1
+              "203": 1,
+              "249": 1
             },
             "4": {
               "0": 4,
@@ -167062,7 +167188,7 @@
               "245": 4,
               "247": 3,
               "248": 2,
-              "249": 1,
+              "249": 3,
               "250": 4,
               "251": 2,
               "252": 3,
@@ -168232,6 +168358,7 @@
               "245": 3,
               "246": 1,
               "248": 2,
+              "249": 1,
               "251": 2,
               "252": 1,
               "253": 2,
@@ -170112,7 +170239,7 @@
               "246": 5,
               "247": 26,
               "248": 12,
-              "249": 6,
+              "249": 10,
               "250": 9,
               "251": 3,
               "252": 2,
@@ -170829,6 +170956,7 @@
               "243": 1,
               "247": 9,
               "248": 1,
+              "249": 1,
               "250": 1,
               "251": 1,
               "254": 1
@@ -171156,7 +171284,7 @@
               "246": 5,
               "247": 35,
               "248": 11,
-              "249": 15,
+              "249": 22,
               "250": 14,
               "251": 4,
               "252": 3,
@@ -172680,6 +172808,7 @@
               "222": 2,
               "237": 2,
               "248": 1,
+              "249": 1,
               "250": 2,
               "258": 3,
               "260": 1
@@ -174468,6 +174597,7 @@
               "239": 1,
               "244": 1,
               "247": 1,
+              "249": 1,
               "252": 1
             }
           }
@@ -175768,7 +175898,8 @@
           "licens",
           {
             "4": {
-              "196": 3
+              "196": 3,
+              "249": 1
             }
           }
         ],
@@ -175803,7 +175934,8 @@
               "52": 1,
               "164": 1,
               "165": 1,
-              "200": 2
+              "200": 2,
+              "249": 1
             }
           }
         ],
@@ -177830,7 +177962,7 @@
               "241": 1,
               "244": 10,
               "248": 3,
-              "249": 7,
+              "249": 8,
               "252": 2,
               "253": 1
             }
@@ -177904,7 +178036,7 @@
               "244": 3,
               "245": 1,
               "248": 2,
-              "249": 2,
+              "249": 3,
               "255": 1,
               "258": 9
             }
@@ -178237,7 +178369,7 @@
               "239": 2,
               "243": 1,
               "248": 4,
-              "249": 1,
+              "249": 2,
               "251": 1,
               "252": 1,
               "259": 1
@@ -184390,7 +184522,7 @@
               "245": 3,
               "247": 26,
               "248": 35,
-              "249": 55,
+              "249": 56,
               "250": 12,
               "251": 4,
               "252": 1,
@@ -185973,7 +186105,7 @@
               "241": 1,
               "242": 7,
               "244": 2,
-              "249": 1,
+              "249": 3,
               "250": 1,
               "251": 1,
               "252": 1,
@@ -187044,6 +187176,7 @@
               "246": 2,
               "247": 2,
               "248": 11,
+              "249": 1,
               "251": 1,
               "252": 2,
               "254": 1,
@@ -187307,7 +187440,7 @@
               "233": 1,
               "237": 2,
               "247": 1,
-              "249": 5,
+              "249": 6,
               "250": 10
             }
           }
@@ -187804,7 +187937,7 @@
               "246": 1,
               "247": 4,
               "248": 2,
-              "249": 1,
+              "249": 2,
               "250": 2,
               "251": 5,
               "252": 1,
@@ -189348,7 +189481,7 @@
               "226": 1,
               "231": 1,
               "234": 3,
-              "249": 2,
+              "249": 3,
               "252": 1,
               "253": 1,
               "257": 1
@@ -190829,7 +190962,7 @@
               "242": 1,
               "247": 36,
               "248": 9,
-              "249": 10
+              "249": 13
             }
           }
         ],
@@ -191187,7 +191320,8 @@
               "231": 2,
               "233": 5,
               "235": 3,
-              "238": 1
+              "238": 1,
+              "249": 1
             },
             "4": {
               "0": 6,
@@ -191358,7 +191492,7 @@
               "244": 25,
               "246": 3,
               "247": 7,
-              "249": 5,
+              "249": 10,
               "250": 8,
               "251": 2,
               "252": 1,
@@ -191606,6 +191740,7 @@
               "235": 1,
               "237": 3,
               "238": 2,
+              "249": 1,
               "251": 1,
               "257": 4,
               "258": 1,
@@ -192789,6 +192924,7 @@
               "213": 1,
               "223": 1,
               "227": 2,
+              "249": 1,
               "251": 1,
               "255": 1,
               "259": 1,
@@ -193803,7 +193939,7 @@
               "246": 1,
               "247": 5,
               "248": 5,
-              "249": 5,
+              "249": 8,
               "250": 8,
               "251": 1,
               "252": 7,
@@ -194538,7 +194674,7 @@
               "0": 5,
               "199": 1,
               "231": 1,
-              "249": 1
+              "249": 2
             }
           }
         ],
@@ -194906,6 +195042,7 @@
               "210": 1,
               "224": 1,
               "243": 1,
+              "249": 1,
               "252": 2,
               "256": 1
             },
@@ -194999,6 +195136,7 @@
               "236": 1,
               "237": 3,
               "243": 1,
+              "249": 1,
               "250": 2,
               "251": 1,
               "252": 7,
@@ -197445,7 +197583,7 @@
               "245": 1,
               "247": 1,
               "248": 1,
-              "249": 4,
+              "249": 5,
               "255": 1
             }
           }
@@ -198938,7 +199076,7 @@
               "245": 1,
               "247": 1,
               "248": 1,
-              "249": 3,
+              "249": 6,
               "251": 1,
               "257": 1
             }
@@ -203098,7 +203236,7 @@
               "246": 1,
               "247": 31,
               "248": 18,
-              "249": 15,
+              "249": 21,
               "250": 6,
               "251": 3,
               "252": 3,
@@ -203409,7 +203547,7 @@
               "246": 1,
               "247": 83,
               "248": 97,
-              "249": 155,
+              "249": 158,
               "251": 7,
               "252": 8,
               "256": 1,
@@ -203831,7 +203969,8 @@
           "imply",
           {
             "4": {
-              "81": 1
+              "81": 1,
+              "249": 1
             }
           }
         ],
@@ -204796,6 +204935,7 @@
               "227": 3,
               "243": 4,
               "245": 1,
+              "249": 1,
               "252": 1,
               "255": 3
             }
@@ -207479,6 +207619,7 @@
               "228": 1,
               "231": 1,
               "243": 2,
+              "249": 1,
               "251": 1,
               "252": 3
             }
@@ -208407,7 +208548,8 @@
               "176": 3,
               "178": 2,
               "182": 11,
-              "200": 3
+              "200": 3,
+              "249": 1
             }
           }
         ],
@@ -208662,6 +208804,7 @@
               "231": 8,
               "233": 4,
               "238": 3,
+              "249": 1,
               "253": 2,
               "254": 1,
               "255": 1,
@@ -210902,7 +211045,7 @@
           "interventions",
           {
             "4": {
-              "249": 2
+              "249": 4
             }
           }
         ],
@@ -212581,7 +212724,8 @@
               "154": 14,
               "155": 6,
               "196": 2,
-              "199": 1
+              "199": 1,
+              "249": 1
             }
           }
         ],
@@ -214504,9 +214648,13 @@
         [
           "verdict",
           {
+            "3": {
+              "249": 1
+            },
             "4": {
               "0": 1,
-              "236": 1
+              "236": 1,
+              "249": 6
             }
           }
         ],
@@ -217337,7 +217485,7 @@
               "246": 4,
               "247": 43,
               "248": 55,
-              "249": 55,
+              "249": 56,
               "250": 2,
               "254": 3,
               "255": 1
@@ -217640,7 +217788,7 @@
               "232": 1,
               "247": 2,
               "248": 2,
-              "249": 11,
+              "249": 12,
               "257": 14
             }
           }
@@ -219290,6 +219438,7 @@
               "195": 1,
               "198": 1,
               "212": 1,
+              "249": 1,
               "251": 1
             }
           }
@@ -221045,7 +221194,7 @@
               "243": 1,
               "245": 1,
               "247": 3,
-              "249": 1,
+              "249": 4,
               "258": 2
             }
           }
@@ -221931,6 +222080,7 @@
               "226": 1,
               "231": 1,
               "240": 1,
+              "249": 1,
               "251": 2,
               "254": 2
             }
@@ -222107,6 +222257,7 @@
               "245": 1,
               "246": 1,
               "248": 5,
+              "249": 1,
               "251": 2,
               "252": 1,
               "253": 1,
@@ -222631,7 +222782,7 @@
               "246": 4,
               "247": 7,
               "248": 15,
-              "249": 11,
+              "249": 12,
               "250": 14,
               "251": 9,
               "252": 8,
@@ -225160,7 +225311,8 @@
               "146": 1,
               "167": 1,
               "203": 1,
-              "234": 1
+              "234": 1,
+              "249": 1
             },
             "4": {
               "0": 2,
@@ -225335,6 +225487,7 @@
               "246": 1,
               "247": 4,
               "248": 2,
+              "249": 1,
               "250": 10,
               "251": 1,
               "253": 4,
@@ -228523,7 +228676,8 @@
               "221": 3,
               "228": 6,
               "231": 1,
-              "243": 2
+              "243": 2,
+              "249": 1
             }
           }
         ],
@@ -231835,7 +231989,8 @@
               "110": 1,
               "111": 1,
               "196": 1,
-              "199": 1
+              "199": 1,
+              "249": 1
             }
           }
         ],
@@ -231846,7 +232001,8 @@
               "8": 1,
               "90": 1,
               "154": 1,
-              "185": 1
+              "185": 1,
+              "249": 1
             },
             "4": {
               "3": 4,
@@ -231894,7 +232050,7 @@
               "241": 2,
               "242": 6,
               "243": 2,
-              "249": 4,
+              "249": 6,
               "250": 1,
               "253": 1
             }
@@ -234515,7 +234671,8 @@
               "224": 14,
               "228": 21,
               "231": 2,
-              "237": 1
+              "237": 1,
+              "249": 1
             }
           }
         ],
@@ -234768,7 +234925,7 @@
               "241": 1,
               "245": 1,
               "248": 5,
-              "249": 6,
+              "249": 7,
               "252": 15,
               "253": 1
             }
@@ -234839,7 +234996,8 @@
               "173": 3,
               "214": 3,
               "226": 4,
-              "231": 3
+              "231": 3,
+              "249": 1
             }
           }
         ],
@@ -235405,7 +235563,7 @@
               "237": 2,
               "247": 13,
               "248": 4,
-              "249": 4,
+              "249": 5,
               "250": 1,
               "251": 3,
               "256": 5
@@ -235708,7 +235866,8 @@
               "170": 1,
               "180": 1,
               "198": 1,
-              "214": 1
+              "214": 1,
+              "249": 1
             },
             "4": {
               "0": 1,
@@ -235876,7 +236035,7 @@
               "245": 1,
               "246": 1,
               "248": 1,
-              "249": 3,
+              "249": 8,
               "250": 12,
               "251": 1,
               "252": 3,
@@ -238399,7 +238558,8 @@
               "135": 1,
               "179": 1,
               "227": 1,
-              "243": 1
+              "243": 1,
+              "249": 1
             }
           }
         ],
@@ -240499,7 +240659,8 @@
             "4": {
               "9": 1,
               "90": 2,
-              "159": 2
+              "159": 2,
+              "249": 1
             }
           }
         ],
@@ -241101,7 +241262,8 @@
               "185": 1,
               "186": 2,
               "196": 5,
-              "200": 3
+              "200": 3,
+              "249": 1
             }
           }
         ],
@@ -241823,7 +241985,8 @@
               "239": 6,
               "244": 5,
               "245": 4,
-              "247": 1
+              "247": 1,
+              "249": 2
             }
           }
         ],
@@ -242476,6 +242639,7 @@
               "233": 2,
               "236": 1,
               "238": 2,
+              "249": 3,
               "252": 10
             }
           }
@@ -242645,6 +242809,7 @@
               "243": 2,
               "245": 4,
               "248": 4,
+              "249": 1,
               "250": 1,
               "252": 3,
               "254": 7,
@@ -244121,7 +244286,8 @@
           "prefs",
           {
             "4": {
-              "129": 2
+              "129": 2,
+              "249": 1
             }
           }
         ],
@@ -250441,7 +250607,7 @@
               "245": 1,
               "247": 3,
               "248": 9,
-              "249": 9,
+              "249": 10,
               "251": 1,
               "253": 2,
               "255": 2,
@@ -250902,7 +251068,7 @@
               "245": 2,
               "246": 3,
               "248": 1,
-              "249": 1,
+              "249": 3,
               "250": 5,
               "251": 2,
               "253": 1,
@@ -252036,7 +252202,7 @@
               "240": 1,
               "244": 1,
               "248": 6,
-              "249": 1,
+              "249": 3,
               "253": 1,
               "255": 4,
               "256": 4
@@ -254343,7 +254509,8 @@
               "222": 1,
               "228": 1,
               "240": 2,
-              "245": 2
+              "245": 2,
+              "249": 1
             }
           }
         ],
@@ -254982,7 +255149,8 @@
               "236": 1,
               "237": 2,
               "245": 2,
-              "248": 5
+              "248": 5,
+              "249": 1
             }
           }
         ],
@@ -255282,7 +255450,7 @@
               "243": 5,
               "246": 2,
               "248": 2,
-              "249": 26,
+              "249": 27,
               "250": 1,
               "255": 1,
               "257": 1,
@@ -256357,7 +256525,7 @@
               "244": 1,
               "246": 1,
               "248": 2,
-              "249": 5,
+              "249": 6,
               "250": 3,
               "251": 1,
               "252": 4,
@@ -256924,7 +257092,8 @@
             "4": {
               "198": 16,
               "199": 1,
-              "202": 1
+              "202": 1,
+              "249": 1
             }
           }
         ],
@@ -258351,7 +258520,7 @@
               "210": 1,
               "231": 1,
               "233": 2,
-              "249": 1
+              "249": 2
             }
           }
         ],
@@ -260732,6 +260901,7 @@
               "240": 1,
               "242": 1,
               "246": 2,
+              "249": 2,
               "250": 8,
               "253": 6,
               "254": 5
@@ -261981,7 +262151,7 @@
               "246": 3,
               "247": 45,
               "248": 33,
-              "249": 59,
+              "249": 60,
               "250": 19,
               "251": 7,
               "252": 13,
@@ -264903,7 +265073,8 @@
               "150": 2,
               "151": 6,
               "191": 1,
-              "244": 2
+              "244": 2,
+              "249": 1
             }
           }
         ],
@@ -265510,7 +265681,8 @@
               "223": 1,
               "227": 2,
               "236": 1,
-              "239": 2
+              "239": 2,
+              "249": 2
             }
           }
         ],
@@ -266446,7 +266618,7 @@
               "245": 1,
               "247": 3,
               "248": 9,
-              "249": 3,
+              "249": 4,
               "252": 6,
               "253": 4,
               "256": 1,
@@ -266688,7 +266860,7 @@
               "246": 3,
               "247": 4,
               "248": 1,
-              "249": 5,
+              "249": 6,
               "251": 2,
               "252": 2,
               "253": 2,
@@ -269208,7 +269380,8 @@
           {
             "4": {
               "206": 1,
-              "221": 1
+              "221": 1,
+              "249": 1
             }
           }
         ],
@@ -269337,6 +269510,7 @@
               "237": 2,
               "244": 3,
               "248": 1,
+              "249": 1,
               "251": 1,
               "253": 4,
               "254": 2,
@@ -269438,7 +269612,7 @@
               "244": 1,
               "246": 1,
               "248": 1,
-              "249": 2,
+              "249": 4,
               "250": 1,
               "251": 2,
               "253": 3,
@@ -270017,7 +270191,8 @@
               "228": 1,
               "242": 1,
               "243": 1,
-              "245": 1
+              "245": 1,
+              "249": 1
             }
           }
         ],
@@ -271388,7 +271563,7 @@
               "244": 2,
               "245": 2,
               "247": 5,
-              "249": 2,
+              "249": 3,
               "252": 5,
               "253": 1,
               "254": 1,
@@ -271588,6 +271763,14 @@
               "255": 1,
               "256": 1,
               "259": 2
+            }
+          }
+        ],
+        [
+          "sails",
+          {
+            "4": {
+              "249": 1
             }
           }
         ],
@@ -271934,7 +272117,7 @@
               "240": 1,
               "243": 2,
               "244": 1,
-              "249": 1
+              "249": 3
             }
           }
         ],
@@ -272060,6 +272243,7 @@
               "243": 1,
               "246": 2,
               "247": 1,
+              "249": 1,
               "252": 1,
               "254": 2
             }
@@ -272987,7 +273171,7 @@
               "244": 7,
               "245": 2,
               "247": 1,
-              "249": 4,
+              "249": 5,
               "252": 1,
               "253": 1,
               "254": 2,
@@ -274121,6 +274305,7 @@
               "224": 1,
               "225": 2,
               "231": 2,
+              "249": 1,
               "250": 1,
               "251": 1,
               "258": 1,
@@ -274276,7 +274461,7 @@
           {
             "3": {
               "196": 1,
-              "249": 2
+              "249": 6
             },
             "4": {
               "4": 2,
@@ -274319,7 +274504,7 @@
               "212": 2,
               "231": 1,
               "247": 1,
-              "249": 11,
+              "249": 21,
               "250": 1,
               "252": 6
             }
@@ -274578,6 +274763,7 @@
               "212": 3,
               "233": 1,
               "240": 12,
+              "249": 1,
               "255": 1,
               "256": 13
             }
@@ -275272,7 +275458,7 @@
               "246": 3,
               "247": 27,
               "248": 4,
-              "249": 3,
+              "249": 4,
               "250": 2,
               "251": 2,
               "252": 3,
@@ -276491,7 +276677,8 @@
               "201": 1,
               "205": 1,
               "231": 1,
-              "236": 4
+              "236": 4,
+              "249": 3
             }
           }
         ],
@@ -277751,7 +277938,7 @@
               "242": 1,
               "245": 3,
               "247": 1,
-              "249": 1,
+              "249": 5,
               "250": 3,
               "252": 1,
               "253": 5,
@@ -279880,7 +280067,7 @@
               "228": 1,
               "229": 1,
               "248": 3,
-              "249": 2,
+              "249": 3,
               "260": 1
             }
           }
@@ -280532,6 +280719,7 @@
               "233": 2,
               "243": 1,
               "245": 5,
+              "249": 1,
               "251": 2,
               "254": 1,
               "256": 2,
@@ -282189,7 +282377,7 @@
               "245": 3,
               "246": 10,
               "247": 5,
-              "249": 1,
+              "249": 2,
               "251": 5,
               "252": 10,
               "253": 1,
@@ -284332,6 +284520,7 @@
               "240": 1,
               "244": 7,
               "246": 1,
+              "249": 1,
               "251": 1,
               "252": 1,
               "253": 2,
@@ -285721,7 +285910,7 @@
               "245": 5,
               "247": 10,
               "248": 18,
-              "249": 22,
+              "249": 23,
               "250": 13,
               "251": 9,
               "255": 1,
@@ -286457,6 +286646,7 @@
               "228": 2,
               "231": 2,
               "245": 1,
+              "249": 1,
               "250": 1,
               "252": 2,
               "253": 1,
@@ -287523,7 +287713,7 @@
               "246": 1,
               "247": 1,
               "248": 8,
-              "249": 6,
+              "249": 8,
               "250": 4,
               "251": 12,
               "252": 5,
@@ -289032,6 +289222,7 @@
               "168": 1,
               "215": 1,
               "225": 8,
+              "249": 1,
               "254": 2
             }
           }
@@ -289335,7 +289526,7 @@
               "236": 2,
               "242": 1,
               "243": 8,
-              "249": 2,
+              "249": 3,
               "250": 1,
               "251": 4,
               "254": 2,
@@ -289440,13 +289631,17 @@
         [
           "surround",
           {
+            "3": {
+              "249": 1
+            },
             "4": {
               "27": 1,
               "28": 4,
               "54": 1,
               "55": 1,
               "122": 1,
-              "227": 1
+              "227": 1,
+              "249": 1
             }
           }
         ],
@@ -297107,6 +297302,7 @@
               "189": 5,
               "204": 2,
               "205": 1,
+              "249": 1,
               "260": 3
             }
           }
@@ -297289,6 +297485,7 @@
               "209": 18,
               "231": 7,
               "234": 4,
+              "249": 2,
               "250": 1,
               "254": 7,
               "256": 4
@@ -297353,7 +297550,8 @@
               "45": 2,
               "46": 1,
               "164": 1,
-              "243": 1
+              "243": 1,
+              "249": 1
             }
           }
         ],
@@ -298822,6 +299020,7 @@
               "239": 3,
               "242": 1,
               "245": 5,
+              "249": 1,
               "252": 1
             }
           }
@@ -299439,7 +299638,7 @@
               "244": 17,
               "247": 31,
               "248": 3,
-              "249": 5,
+              "249": 6,
               "250": 2,
               "253": 2,
               "254": 3,
@@ -299727,7 +299926,8 @@
               "160": 1,
               "182": 1,
               "193": 1,
-              "223": 1
+              "223": 1,
+              "249": 1
             }
           }
         ],
@@ -302136,7 +302336,7 @@
               "245": 2,
               "247": 10,
               "248": 30,
-              "249": 15,
+              "249": 16,
               "250": 6,
               "251": 3,
               "252": 3,
@@ -302975,7 +303175,7 @@
               "245": 7,
               "246": 1,
               "247": 3,
-              "249": 1,
+              "249": 3,
               "250": 8,
               "251": 1,
               "253": 1,
@@ -303119,6 +303319,7 @@
               "237": 8,
               "240": 5,
               "243": 1,
+              "249": 2,
               "250": 1,
               "256": 1,
               "260": 1
@@ -303203,7 +303404,8 @@
               "173": 1,
               "178": 10,
               "204": 1,
-              "213": 1
+              "213": 1,
+              "249": 1
             }
           }
         ],
@@ -303797,7 +303999,7 @@
               "231": 1,
               "243": 1,
               "244": 1,
-              "249": 1,
+              "249": 2,
               "251": 1
             }
           }
@@ -304213,7 +304415,7 @@
               "245": 5,
               "246": 4,
               "248": 5,
-              "249": 7,
+              "249": 8,
               "250": 2,
               "251": 7,
               "252": 1,
@@ -304756,6 +304958,7 @@
               "237": 1,
               "246": 1,
               "247": 1,
+              "249": 1,
               "251": 1
             }
           }
@@ -306810,7 +307013,7 @@
               "245": 7,
               "247": 32,
               "248": 28,
-              "249": 6,
+              "249": 7,
               "255": 1,
               "258": 3
             }
@@ -307620,7 +307823,7 @@
               "244": 3,
               "247": 6,
               "248": 4,
-              "249": 3,
+              "249": 4,
               "250": 1,
               "252": 1,
               "253": 4,
@@ -311046,7 +311249,7 @@
               "245": 12,
               "247": 1,
               "248": 5,
-              "249": 5,
+              "249": 6,
               "250": 4,
               "251": 30,
               "253": 8,
@@ -311519,7 +311722,8 @@
             "4": {
               "34": 1,
               "80": 1,
-              "199": 1
+              "199": 1,
+              "249": 1
             }
           }
         ],
@@ -313247,7 +313451,7 @@
               "151": 1,
               "202": 1,
               "208": 1,
-              "249": 2
+              "249": 6
             },
             "4": {
               "0": 27,
@@ -313413,7 +313617,7 @@
               "245": 39,
               "247": 2,
               "248": 5,
-              "249": 37,
+              "249": 47,
               "250": 2,
               "251": 2,
               "252": 7,
@@ -316417,6 +316621,7 @@
               "242": 2,
               "244": 2,
               "245": 1,
+              "249": 2,
               "250": 1,
               "254": 1
             }
@@ -316459,6 +316664,7 @@
               "179": 9,
               "206": 10,
               "207": 2,
+              "249": 3,
               "260": 2
             }
           }
@@ -318227,7 +318433,7 @@
               "200": 4,
               "220": 1,
               "245": 1,
-              "249": 1
+              "249": 3
             }
           }
         ],
@@ -318924,7 +319130,7 @@
               "245": 2,
               "247": 19,
               "248": 1,
-              "249": 1,
+              "249": 2,
               "250": 1,
               "251": 1,
               "252": 2,
@@ -321147,7 +321353,8 @@
               "191": 1,
               "200": 3,
               "212": 1,
-              "219": 1
+              "219": 1,
+              "249": 2
             }
           }
         ],
@@ -321320,7 +321527,7 @@
               "246": 2,
               "247": 2,
               "248": 1,
-              "249": 3,
+              "249": 4,
               "252": 1,
               "253": 1,
               "254": 4,
@@ -321385,7 +321592,8 @@
               "210": 1,
               "220": 1,
               "224": 1,
-              "227": 1
+              "227": 1,
+              "249": 1
             }
           }
         ],
@@ -322489,7 +322697,7 @@
               "243": 3,
               "247": 8,
               "248": 1,
-              "249": 4,
+              "249": 7,
               "250": 1,
               "251": 1,
               "254": 1,
@@ -323165,7 +323373,7 @@
               "242": 4,
               "245": 3,
               "246": 4,
-              "249": 2,
+              "249": 3,
               "250": 5,
               "251": 5,
               "252": 6,
@@ -323382,7 +323590,8 @@
               "210": 1,
               "217": 1,
               "231": 1,
-              "236": 1
+              "236": 1,
+              "249": 1
             }
           }
         ],
@@ -323640,7 +323849,7 @@
               "242": 1,
               "245": 1,
               "247": 1,
-              "249": 1,
+              "249": 2,
               "250": 1,
               "251": 1,
               "254": 1,
@@ -323736,6 +323945,7 @@
               "236": 1,
               "237": 1,
               "243": 1,
+              "249": 2,
               "250": 2,
               "252": 1
             }
@@ -324993,6 +325203,7 @@
               "246": 2,
               "247": 1,
               "248": 2,
+              "249": 1,
               "252": 2,
               "254": 1
             }
@@ -326353,7 +326564,8 @@
               "106": 1,
               "166": 1,
               "198": 2,
-              "222": 1
+              "222": 1,
+              "249": 1
             }
           }
         ],
@@ -327043,7 +327255,7 @@
               "246": 2,
               "247": 12,
               "248": 5,
-              "249": 12,
+              "249": 14,
               "251": 1,
               "252": 1
             }
@@ -328557,6 +328769,7 @@
               "235": 1,
               "243": 1,
               "246": 4,
+              "249": 1,
               "250": 7,
               "253": 10,
               "254": 6,
@@ -328957,7 +329170,7 @@
               "243": 1,
               "245": 1,
               "246": 2,
-              "249": 1,
+              "249": 3,
               "250": 5,
               "251": 17,
               "252": 1,
@@ -329346,7 +329559,7 @@
               "246": 10,
               "247": 7,
               "248": 5,
-              "249": 30,
+              "249": 32,
               "250": 45,
               "251": 51,
               "252": 11,
@@ -329809,7 +330022,7 @@
               "237": 3,
               "247": 4,
               "248": 5,
-              "249": 11
+              "249": 14
             }
           }
         ],
@@ -329849,7 +330062,8 @@
               "213": 1,
               "220": 2,
               "224": 7,
-              "231": 2
+              "231": 2,
+              "249": 1
             }
           }
         ],
@@ -329871,7 +330085,7 @@
               "178": 1,
               "181": 2,
               "236": 1,
-              "249": 3
+              "249": 7
             },
             "4": {
               "8": 1,
@@ -329913,7 +330127,7 @@
               "236": 4,
               "247": 10,
               "248": 9,
-              "249": 37
+              "249": 42
             }
           }
         ],
@@ -331509,7 +331723,7 @@
               "245": 5,
               "246": 1,
               "248": 3,
-              "249": 6,
+              "249": 8,
               "250": 1,
               "251": 1,
               "252": 2,
@@ -333779,6 +333993,7 @@
               "231": 3,
               "240": 1,
               "245": 2,
+              "249": 1,
               "254": 1
             }
           }
@@ -334103,7 +334318,7 @@
               "240": 2,
               "241": 3,
               "247": 1,
-              "249": 2,
+              "249": 3,
               "250": 1,
               "251": 1,
               "253": 2,
@@ -335401,12 +335616,21 @@
           }
         ],
         [
+          "adults",
+          {
+            "4": {
+              "249": 2
+            }
+          }
+        ],
+        [
           "adult",
           {
             "4": {
               "12": 2,
               "27": 1,
-              "198": 1
+              "198": 1,
+              "249": 1
             }
           }
         ],
@@ -337999,6 +338223,7 @@
               "245": 7,
               "247": 1,
               "248": 8,
+              "249": 2,
               "250": 3,
               "251": 26,
               "252": 8,
@@ -338120,7 +338345,8 @@
               "198": 1,
               "199": 2,
               "200": 3,
-              "201": 1
+              "201": 1,
+              "249": 1
             }
           }
         ],
@@ -661980,7 +662206,287 @@
           "fall",
           "back",
           "earlier",
-          "targets"
+          "targets",
+          "build",
+          "against",
+          "multiple",
+          "xcodes",
+          "absent",
+          "26",
+          "sdk",
+          "runtime",
+          "gate",
+          "does",
+          "stop",
+          "compiler",
+          "symbol",
+          "package",
+          "must",
+          "also",
+          "xcode",
+          "needs",
+          "compile",
+          "time",
+          "too",
+          "older",
+          "fail",
+          "declare",
+          "handle",
+          "endif",
+          "ever",
+          "alone",
+          "enough",
+          "matters",
+          "source"
+        ],
+        "Sensitive Content Analysis — design for the unavailable path": [
+          "sensitive",
+          "content",
+          "analysis",
+          "design",
+          "unavailable",
+          "path",
+          "disabled",
+          "default",
+          "state",
+          "adults",
+          "warn",
+          "ships",
+          "off",
+          "buried",
+          "settings",
+          "privacy",
+          "security",
+          "child",
+          "teen",
+          "accounts",
+          "get",
+          "through",
+          "family",
+          "shar",
+          "communica",
+          "safety",
+          "if",
+          "audience",
+          "common",
+          "not",
+          "edge",
+          "case",
+          "build",
+          "real",
+          "ui",
+          "rather",
+          "than",
+          "treat",
+          "error",
+          "cannot",
+          "deep",
+          "link",
+          "toggle",
+          "applica",
+          "open",
+          "url",
+          "str",
+          "opens",
+          "app",
+          "page",
+          "no",
+          "public",
+          "targets",
+          "pane",
+          "undocumented",
+          "prefs",
+          "root",
+          "ur",
+          "ls",
+          "private",
+          "api",
+          "review",
+          "rejec",
+          "risk",
+          "shippable",
+          "screen",
+          "instructions",
+          "tell",
+          "user",
+          "where",
+          "go",
+          "two",
+          "enabled",
+          "policies",
+          "imply",
+          "different",
+          "simple",
+          "interventions",
+          "adult",
+          "expects",
+          "brief",
+          "inline",
+          "affordances",
+          "like",
+          "show",
+          "button",
+          "descriptive",
+          "kids",
+          "teens",
+          "more",
+          "explanatory",
+          "about"
+        ],
+        "Sensitive Content Analysis — never transmit the verdict off-device": [
+          "sensitive",
+          "content",
+          "analysis",
+          "never",
+          "transmit",
+          "verdict",
+          "off",
+          "device",
+          "apple",
+          "developer",
+          "program",
+          "license",
+          "agree",
+          "data",
+          "privacy",
+          "framework",
+          "clause",
+          "prohibits",
+          "transmitt",
+          "any",
+          "informa",
+          "about",
+          "whether",
+          "flagged",
+          "image",
+          "video",
+          "practical",
+          "consequences",
+          "no",
+          "analytics",
+          "events",
+          "detected",
+          "types",
+          "not",
+          "even",
+          "count",
+          "server",
+          "side",
+          "modera",
+          "queue",
+          "keyed",
+          "synced",
+          "cache",
+          "cloud",
+          "kit",
+          "backend",
+          "stays",
+          "only",
+          "report",
+          "explicit",
+          "user",
+          "action",
+          "payload",
+          "carries",
+          "media",
+          "chose",
+          "send",
+          "licens",
+          "require",
+          "sugges",
+          "exfiltrat",
+          "grounds",
+          "rejec",
+          "breach",
+          "see",
+          "axiom",
+          "security"
+        ],
+        "Sensitive Content Analysis — testing": [
+          "sensitive",
+          "content",
+          "analysis",
+          "test",
+          "explicit",
+          "fixtures",
+          "don",
+          "belong",
+          "repo",
+          "apple",
+          "ships",
+          "configura",
+          "profile",
+          "qr",
+          "code",
+          "harmless",
+          "image",
+          "analyzer",
+          "flag",
+          "so",
+          "can",
+          "exercise",
+          "flagged",
+          "path",
+          "safe",
+          "gotcha",
+          "download",
+          "does",
+          "noth",
+          "own",
+          "install",
+          "settings",
+          "general",
+          "vpn",
+          "device",
+          "manage",
+          "first",
+          "until",
+          "do",
+          "sails",
+          "through",
+          "unflagged",
+          "looks",
+          "broken"
+        ],
+        "Sensitive Content Analysis — the real work is the surrounding policy": [
+          "sensitive",
+          "content",
+          "analysis",
+          "real",
+          "work",
+          "surround",
+          "policy",
+          "analyzer",
+          "call",
+          "lines",
+          "shipp",
+          "well",
+          "not",
+          "surface",
+          "area",
+          "matters",
+          "fail",
+          "closed",
+          "blur",
+          "reveal",
+          "report",
+          "ui",
+          "default",
+          "hidden",
+          "only",
+          "explicit",
+          "user",
+          "action",
+          "device",
+          "verdict",
+          "cach",
+          "disabled",
+          "path",
+          "above",
+          "budget",
+          "state",
+          "machine",
+          "api"
         ],
         "Resources": [
           "resources",
