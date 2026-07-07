@@ -351,6 +351,8 @@ for try await code in try await manager.oneTimeCodes(preferredDuration: 600, anc
 try await manager.consumeOneTimeCode(code)
 ```
 
+**SwiftUI:** read `@Environment(\.deliveredVerificationCodesManager)` (a `@MainActor DeliveredVerificationCodesManager`) whose `oneTimeCodes(preferredDuration:)` drops the `anchor:` argument — the scene supplies the presentation context; `consumeOneTimeCode(_:)` is unchanged.
+
 - `ASVerificationCode` carries the `code` string, `timestamp`, optional `domain`, and `embeddedDomains` — match against the site/app being filled before offering
 - `VerificationError.Code`: `.failed`, `.userPermissionDenied`, and `.appIsNotEnabledCredentialProvider` — the app must be enabled as a credential provider in Settings before codes flow
 
