@@ -30,6 +30,7 @@ Questions you can ask Claude that will draw from this reference:
 - "How do I embed web content with WebView in SwiftUI?"
 - "How do I intercept form submissions in a SwiftUI WebView?"
 - "How do I use TextEditor with AttributedString?"
+- "How do I make links, phone numbers, and addresses tappable in SwiftUI text?"
 - "How do I create 3D charts in SwiftUI?"
 - "Why does my Chart crash with conditional if/else content?"
 - "What performance improvements does iOS 26 bring to SwiftUI?"
@@ -70,7 +71,11 @@ Questions you can ask Claude that will draw from this reference:
 - WebPage for custom HTML
 - Navigation and load status handling
 - JavaScript interaction
-- Form-submission hook (iOS 27) — `WebPage.FormInfo`, `willSubmit(formInfo:)`, `NavigationPreferences.alternateRequest`
+- Form-submission hook (iOS/macOS/visionOS 27) — `WebPage.FormInfo`, `willSubmit(formInfo:)`, `NavigationPreferences.alternateRequest` / `overrideReferrer` / `isGlobalPrivacyControlEnabled`
+
+### Data Detection (iOS 27)
+- `.dataDetection(_:options:)` – makes links, phone numbers, addresses, dates, and money in a view's text tappable
+- `DataDetector.MatchType` options; iOS/macOS/watchOS/visionOS 27, not tvOS
 
 ### Rich Text Editing
 - TextEditor with AttributedString
