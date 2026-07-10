@@ -306,13 +306,13 @@ Capsule()
 
 #### 3. Concentric Shapes
 
-Calculate radius by subtracting padding from parent's radius:
+Radius derives from the container's corner radius minus the padding between them, so nested corners share a center:
 
 ```swift
-.containerRelativeShape(.roundedRectangle)
+ConcentricRectangle(corners: .concentric(minimum: .fixed(8)))
 ```
 
-**Use when:** Nesting shapes within containers to maintain visual harmony.
+**Use when:** Nesting shapes within containers to maintain visual harmony. System containers (sheets, glass containers, widgets) provide the container shape; custom containers declare one with `.containerShape(_:)`. The `minimum:` floor keeps corners rounded when no container radius resolves. Full API surface: `axiom-swiftui (skills/26-ref.md)` Corner Concentricity.
 
 ### Concentricity Principle
 
