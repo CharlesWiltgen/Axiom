@@ -17,6 +17,8 @@ Use when you need to:
 - ☑ Broadcast push for large audiences (iOS 18+)
 - ☑ Local notification scheduling
 
+NOT for networks where APNs can't reach the device (ships, hospitals, firewalled Wi-Fi/Ethernet, MCX cellular slices) — that's Local Push Connectivity: see `local-push-connectivity.md`.
+
 ## Example Prompts
 
 "How do I set up push notifications?"
