@@ -60,3 +60,4 @@ This page documents the `axiom-integration` skill — push notification patterns
 - [push-notifications-ref](/reference/push-notifications-ref) – Complete APNs transport, payload format, and notification API reference
 - [extensions-widgets](/skills/integration/extensions-widgets) – Live Activity UI, widget timelines, Dynamic Island
 - [background-processing](/skills/integration/background-processing) – Background execution from silent push notifications
+- [local-push-connectivity](/skills/integration/local-push-connectivity) – Push on networks APNs can't reach (restricted Wi-Fi, Ethernet, MCX slices)
