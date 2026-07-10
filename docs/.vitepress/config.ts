@@ -417,6 +417,7 @@ export default withMermaid(defineConfig({
             { text: 'Foundation Models Custom Adapters', link: '/skills/integration/foundation-models-adapters' },
             { text: 'In-App Purchases (StoreKit 2)', link: '/skills/integration/in-app-purchases' },
             { text: 'Live Activities (ActivityKit)', link: '/skills/integration/live-activities' },
+            { text: 'Local Push Connectivity', link: '/skills/integration/local-push-connectivity' },
             { text: 'Localization', link: '/skills/integration/localization' },
             { text: 'MapKit', link: '/skills/integration/mapkit' },
             { text: 'Media Intelligence', link: '/skills/computer-vision/media-intelligence' },
