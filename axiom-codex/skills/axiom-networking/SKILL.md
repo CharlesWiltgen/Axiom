@@ -28,6 +28,7 @@ license: MIT
 | NWConnection patterns (iOS 12-18) | See `skills/networking-legacy.md` |
 | UDP batch, NWListener, NWBrowser | See `skills/networking-legacy.md` |
 | BSD sockets → NWConnection migration | See `skills/networking-migration.md` |
+| Push/calls on networks without internet (Local Push Connectivity, NEAppPushProvider) | **Use axiom-integration (skills/local-push-connectivity.md)** |
 | NWConnection → NetworkConnection migration | See `skills/networking-migration.md` |
 | URLSession StreamTask → NetworkConnection | See `skills/networking-migration.md` |
 
