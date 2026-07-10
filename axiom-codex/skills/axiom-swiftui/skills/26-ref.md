@@ -158,8 +158,33 @@ Button("To Top", systemImage: "chevron.up") { scrollToTop() }
 - `.buttonStyle(.glass)` / `.glassProminent` / `.glass(.regular.tint(.blue))` — Glass button styles (the `GlassButtonStyle(_:)` initializer is iOS 26.1+)
 - `.buttonSizing(.automatic/.flexible/.fitted)` — Control button layout behavior
 - `Button(role: .close)` / `Button(role: .confirm)` — System-styled close/confirm
-- `ConcentricRectangle()` (or `.rect(cornerRadius:style:)` with `.circular`/`.continuous`) — Corner concentricity (there is no `.containerConcentric` corner style)
+- `ConcentricRectangle()` — corners resolve concentric with the container's (see Corner Concentricity below)
 - Menus: icons on leading edge, consistent iOS/macOS
+
+### Corner Concentricity (`ConcentricRectangle`)
+
+A `Shape` whose corners resolve concentric to the container shape's corners — sharing a center with the container's corner radius — instead of using a hardcoded value. System containers (sheets, glass containers, widgets) provide the container shape automatically; give a custom container one with `.containerShape(_:)`. When a corner sits far from the container's corner the resolved radius can be zero (square corner) — pass `.concentric(minimum:)` to guarantee a floor. If the container shape isn't a `RoundedRectangularShape`, the result is an inset version of the container shape.
+
+```swift
+// Inside a sheet/glass container/widget the container shape is provided;
+// on a custom container, set .containerShape(.rect(cornerRadius: 32)) on the container.
+CardContent()
+    .padding(12)
+    .background(ConcentricRectangle(corners: .concentric(minimum: .fixed(8))).fill(.background))
+```
+
+| API | Notes |
+|-----|-------|
+| `ConcentricRectangle()` | All four corners `.concentric` |
+| `init(corners:isUniform:)` | One `Edge.Corner.Style` for every corner; `isUniform: true` resolves each corner, then applies the largest radius to all |
+| Per-corner/per-edge inits | `topLeadingCorner:…`, `uniformTopCorners:uniformBottomCorners:`, `uniformLeadingCorners:uniformTrailingCorners:`, plus mixed edge+corner combinations — mix concentric and fixed corners in one shape |
+| `.rect(corners:isUniform:)` and friends | Static `Shape` sugar mirroring each initializer |
+| `Edge.Corner.Style` | `.fixed(_:)`, `.concentric`, `.concentric(minimum:)`; expressible by int/float literal (`corners: 12`); animatable |
+| `RoundedRectangularShape` | Protocol for containers whose corners resolve concentrically (`Capsule` conforms); `corners(in:)` → `RoundedRectangularShapeCorners?` |
+| `GeometryProxy.containerCornerInsets` | Insets of the container's corners, for manual layout near corners |
+| `GeometryProxy.concentricCornerRadii` / `concentricCornerRadii(in:)` `OS27` | Read back the resolved concentric radii for a frame |
+
+There is no `.containerConcentric` corner style. Use `RoundedRectangle`/`Capsule` when the radius must not track the container; `ConcentricRectangle` supersedes `ContainerRelativeShape` (iOS 14, rounded-rect only) for concentric nesting.
 
 ---
 

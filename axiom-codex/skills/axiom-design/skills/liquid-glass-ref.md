@@ -171,7 +171,7 @@ Use `.scrollEdgeEffectStyle(.hard, for: .top)` to obscure content scrolling bene
 
 ### Align Control Shapes with Containers
 
-Use `containerRelativeShape()` to align control curvature with containers — creates concentric visual continuity from controls to sheets to windows to display.
+Use `ConcentricRectangle` (e.g. `.background(ConcentricRectangle().fill(.thinMaterial))`, or the `.rect(corners: .concentric)` shape sugar) to align control curvature with containers — creates concentric visual continuity from controls to sheets to windows to display. `ContainerRelativeShape` is the pre-26, rounded-rect-only equivalent; there is no `containerRelativeShape()` view modifier.
 
 ### New Button Styles
 
