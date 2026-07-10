@@ -52,6 +52,7 @@ license: MIT
 | Push notifications, APNs | See `skills/push-notifications.md` |
 | Push notification debugging | See `skills/push-notifications-diag.md` |
 | Push notification API reference | See `skills/push-notifications-ref.md` |
+| Push without APNs on restricted/local networks (Local Push Connectivity, NEAppPushProvider, MCX `iOS27`) | See `skills/local-push-connectivity.md` |
 
 ## Decision Tree
 
@@ -79,6 +80,7 @@ digraph integration {
     what -> "skills/background-processing.md" [label="background tasks"];
     what -> "skills/background-assets.md" [label="large asset delivery /\nFM adapter shipping"];
     what -> "skills/push-notifications.md" [label="push notifications"];
+    what -> "skills/local-push-connectivity.md" [label="push without APNs\n(local network / MCX)"];
 }
 ```
 
@@ -103,6 +105,7 @@ digraph integration {
 12. Background tasks / BGTaskScheduler? → `skills/background-processing.md`, `skills/background-processing-diag.md`, `skills/background-processing-ref.md`
 12a. Large asset delivery (game packs, localized asset packs, ML models, Foundation Models adapters, ODR migration)? → `skills/background-assets.md`, `skills/background-assets-ref.md`
 13. Push notifications? → `skills/push-notifications.md`, `skills/push-notifications-diag.md`, `skills/push-notifications-ref.md`
+13a. Push/calls on networks without internet, or PTT over an MCX cellular slice? → `skills/local-push-connectivity.md`
 14. Want IAP audit? → Launch `iap-auditor` agent
 15. Want full IAP implementation? → Launch `iap-implementation` agent
 16. Camera / photos / audio / haptics / ShazamKit? → **Use `axiom-media` instead**
@@ -173,6 +176,7 @@ digraph integration {
 | "Just request full Calendar access" | Most apps only need to add events — EventKitUI does that with zero permissions. |
 | "I'll request Bluetooth permission and scan for the accessory" | AccessorySetupKit (iOS 18+) pairs in one tap with no broad Bluetooth prompt and grants scoped BT+Wi-Fi access. See `skills/accessorysetupkit.md`. |
 | "I'll process the VoIP push, then report the call when ready" | iOS terminates your app and stops delivering VoIP pushes if a push doesn't report a call *before* completion. Report first, fetch after. See `skills/callkit-livecommunicationkit.md`. |
+| "No internet on this network, so I'll keep my own socket open in the background" | iOS suspends the app and the socket dies. Local Push Connectivity runs a system-managed provider extension for exactly this. See `skills/local-push-connectivity.md`. |
 | "I'll activate the audio session when the call connects" | CallKit owns the audio session — activate only in `provider(_:didActivate:)` or audio is silent/misrouted. See `skills/callkit-livecommunicationkit.md`. |
 | "I'll use CNContactStore directly for picking" | CNContactPickerViewController needs no authorization and shows all contacts. |
 
@@ -204,6 +208,9 @@ User: "How do I implement push notifications?"
 
 User: "Push notifications work in dev but not production"
 → Read: `skills/push-notifications-diag.md`
+
+User: "Our app must receive calls on a ship / hospital network with no internet" / "Push to Talk over a Mission Critical 5G slice"
+→ Read: `skills/local-push-connectivity.md`
 
 User: "My background task never runs"
 → Read: `skills/background-processing-diag.md`
