@@ -26,6 +26,7 @@ Use this reference when you need:
 Questions you can ask Claude that will draw from this reference:
 
 - "What Liquid Glass APIs are available in iOS 26?"
+- "How do I keep nested corners concentric with their container in iOS 26?"
 - "How do I use the @Animatable macro?"
 - "How do I embed web content with WebView in SwiftUI?"
 - "How do I intercept form submissions in a SwiftUI WebView?"
@@ -53,6 +54,13 @@ Questions you can ask Claude that will draw from this reference:
 - User-customizable toolbars (CustomizableToolbarContent, ToolbarCustomizationBehavior)
 - SearchToolbarBehavior type (.minimize, .automatic)
 - Material-aware backgrounds
+
+### Corner Concentricity
+- `ConcentricRectangle` shape and `.rect(corners:isUniform:)` sugar
+- `Edge.Corner.Style` (`.fixed`, `.concentric`, `.concentric(minimum:)`)
+- Per-corner and per-edge initializer variants
+- `RoundedRectangularShape` protocol
+- `GeometryProxy.containerCornerInsets`; `concentricCornerRadii` (iOS 27)
 
 ### Performance Improvements
 - 6x faster simple lists
