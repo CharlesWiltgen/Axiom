@@ -145,6 +145,31 @@ func sometimesFailingTest() { }
 @Test func iOS18OnlyFeature() { }
 ```
 
+### Evaluating a generative feature — `.evaluates` `OS27`
+
+A model isn't a pure function, so `#expect(output == expected)` is the wrong shape for an AI feature — it fails on a synonym and passes on a fluent lie. The Evaluations framework plugs into Swift Testing as a trait: it runs your feature over a dataset, scores every output, and hands you an aggregate to assert on.
+
+```swift
+import Evaluations
+import FoundationModels
+
+@available(anyAppleOS 27, *)
+@Test("Book tagging quality",
+      .enabled(if: SystemLanguageModel.default.isAvailable),   // else every sample errors,
+                                                               // every metric is .ignore, and
+                                                               // the empty aggregate PASSES
+      .evaluates(BookTaggingEvaluation()))
+func bookTagging() async throws {
+    let e = BookTaggingEvaluation()
+    let result = EvaluationContext.current.result
+    #expect(result.aggregateValue(.mean(of: e.tagCount)) >= 0.8)
+}
+```
+
+The `.enabled(if:)` guard is not optional politeness. An unavailable model produces an aggregate over an *empty set*, which is not a failing gate — it's a passing one.
+
+`Evaluations.framework` is a Developer framework, so it links into the test target like Swift Testing itself. See axiom-ai (`skills/foundation-models-evaluations.md`) for the discipline and axiom-ai (`skills/foundation-models-evaluations-ref.md`) for the API.
+
 ### Tags for Organization
 
 ```swift

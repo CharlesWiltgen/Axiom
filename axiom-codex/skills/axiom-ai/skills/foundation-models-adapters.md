@@ -184,6 +184,8 @@ Apple ships no default eval suite for custom adapters. A complete eval covers fo
 
 If the app ships in a non-English locale, run eval against the matching group. English-only eval against a multi-locale app silently ships non-English regressions.
 
+**Express these four axes in the Evaluations framework** (`OS27`). This discipline predates the framework, but you no longer have to hand-roll the harness: each axis becomes a named `Metric`, larger-model grading becomes a `ModelJudgeEvaluator`, the safety red-team set becomes an adversarial dataset, and "any axis regressing blocks ship" becomes an aggregate threshold asserted in a Swift Testing gate. Locale groups become separate datasets over the same `Evaluation`. See `axiom-ai (skills/foundation-models-evaluations-ref.md)`. Human grading stays human — use it to validate the model judge before you trust the judge's scores.
+
 For `examples.generate` CLI usage, see `axiom-ai (skills/foundation-models-adapters-ref.md)`.
 
 ---

@@ -31,6 +31,7 @@ license: MIT
 | Record/Replay/Review workflow (Xcode 26) | See `skills/ui-recording.md` |
 | Test plan multi-configuration replay | See `skills/ui-recording.md` |
 | Enhancing recorded tests for stability | See `skills/ui-recording.md` |
+| Testing a generative AI feature — output isn't deterministic, so `#expect(result == expected)` doesn't hold (`OS27`) | See axiom-ai (`skills/foundation-models-evaluations.md`) for the discipline, then axiom-ai (`skills/foundation-models-evaluations-ref.md`) for the API |
 
 ## Decision Tree
 
@@ -45,6 +46,7 @@ digraph testing {
     what -> "skills/ui-testing.md" [label="UI tests,\nflaky tests,\nrecording"];
     what -> "skills/xctest-automation.md" [label="XCUITest patterns,\nelement queries"];
     what -> "skills/ui-recording.md" [label="Xcode 26\nRecord/Replay/Review"];
+    what -> "axiom-ai (skills/foundation-models-evaluations.md)" [label="generative AI feature\n(nondeterministic output)"];
 }
 ```
 
@@ -59,6 +61,7 @@ digraph testing {
 9. Fix failing tests automatically? → test-debugger (Agent)
 10. Want test quality audit? → testing-auditor (Agent) or `/axiom:audit testing`
 11. Automate without XCUITest / AXe CLI? → simulator-tester (Agent) + See axiom-xcode-mcp (skills/axe-ref.md)
+12. Testing a Foundation Models / generative feature? → See axiom-ai (`skills/foundation-models-evaluations.md`) for the discipline (dataset design, guardrails vs optimization target, judge calibration), then axiom-ai (`skills/foundation-models-evaluations-ref.md`) for the API. The Evaluations framework (`OS27`) runs *inside* Swift Testing via the `.evaluates` trait — it doesn't replace it. A model isn't a pure function, so you score outputs against a dataset and gate on an aggregate metric instead of asserting on one exact string.
 
 ## Swift Testing vs XCTest Quick Guide
 
@@ -122,6 +125,8 @@ digraph testing {
 | "Tests are slow but it's fine" | Fast tests enable TDD. `skills/swift-testing.md` shows how to run without simulator. |
 | "I'll fix the flaky test with a sleep()" | sleep() makes tests slower AND flakier. `skills/ui-testing.md` has condition-based waiting. |
 | "I'll add tests later" | Tests written after implementation miss edge cases. |
+| "I'll test the AI feature by asserting the model returns the right string" | A model isn't a pure function — that test fails on a synonym and passes on a fluent lie. Score a dataset and gate on an aggregate metric: axiom-ai (`skills/foundation-models-evaluations.md`). |
+| "The AI output looked good when I tried it, so it's tested" | Trying a few prompts by hand measures nothing and catches no regression. That's the exact gap the Evaluations framework exists to close. |
 
 ## Example Invocations
 
