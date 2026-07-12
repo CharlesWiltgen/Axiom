@@ -3,14 +3,14 @@
 
 ## Overview
 
-Foundation Models issues manifest as context window exceeded errors, guardrail violations, slow generation, availability failures, and unexpected output. **Core principle** 80% of Foundation Models problems stem from misunderstanding model capabilities (3B parameter device-scale model, not world knowledge), context limits (4096 tokens), or availability requirements—not framework bugs.
+Foundation Models issues manifest as context window exceeded errors, guardrail violations, slow generation, availability failures, and unexpected output. **Core principle** 80% of Foundation Models problems stem from misunderstanding model capabilities (3B parameter device-scale model, not world knowledge), context limits (8,192 tokens on the 27 on-device model, 4,096 on 26 — always read `SystemLanguageModel().contextSize`), or availability requirements—not framework bugs.
 
 ## Red Flags — Suspect Foundation Models Issue
 
 If you see ANY of these, suspect a Foundation Models misunderstanding, not framework breakage:
 - Generation takes >5 seconds
-- Error: `exceededContextWindowSize`
-- Error: `guardrailViolation`
+- Error: `LanguageModelError.contextSizeExceeded`
+- Error: `LanguageModelError.guardrailViolation` / `.refusal`
 - Error: `unsupportedLanguageOrLocale`
 - Model gives hallucinated/wrong output
 - UI freezes during generation
@@ -82,7 +82,7 @@ func text(in entry: Transcript.Entry) -> String {
 let transcriptText = session.transcript.map(text(in:)).joined()
 print("Approximate chars: \(transcriptText.count)")
 print("Rough token estimate: \(transcriptText.count / 3)")
-// 4096 token limit ≈ 12,000 characters
+// 8,192-token window (27 model) ≈ 24,000 characters; 4,096 on 26. Read contextSize.
 
 // Record: "Approaching context limit? Yes/no"
 
@@ -119,8 +119,8 @@ for entry in session.transcript {
 Before changing ANY code, identify ONE of these:
 
 1. If `availability = .unavailable` → Read the `UnavailableReason`: `.deviceNotEligible` (device), `.appleIntelligenceNotEnabled` (opt-in), or `.modelNotReady` (still downloading — retry later). Not a code bug.
-2. If error is `exceededContextWindowSize` → Too many tokens (condense transcript)
-3. If error is `guardrailViolation` → Content policy triggered (not model failure)
+2. If error is `LanguageModelError.contextSizeExceeded` → Too many tokens (condense transcript)
+3. If error is `LanguageModelError.guardrailViolation` → Safety guardrail (not a model failure). `.refusal` is the model itself declining — a different case, different UX
 4. If error is `unsupportedLanguageOrLocale` → Language not supported (check supported list)
 5. If output is hallucinated → Wrong use case (world knowledge vs extraction)
 6. If generation >5 seconds → Not streaming or need optimization
@@ -144,10 +144,10 @@ Foundation Models problem?
 │  │  └─ .appleIntelligenceNotEnabled? → Pattern 1c (Settings check)
 │  │
 ├─ Generation fails?
-│  ├─ exceededContextWindowSize → Context limit
+│  ├─ contextSizeExceeded → Context limit
 │  │  └─ Long conversation or verbose prompts? → Pattern 2a (condense)
 │  │
-│  ├─ guardrailViolation → Content policy
+│  ├─ guardrailViolation / refusal → Safety vs model declined
 │  │  └─ Sensitive or inappropriate content? → Pattern 2b (handle gracefully)
 │  │
 │  ├─ unsupportedLanguageOrLocale → Language issue
@@ -304,7 +304,7 @@ case .unavailable:
 
 **Symptom**:
 ```
-Error: LanguageModelSession.GenerationError.exceededContextWindowSize
+Error: LanguageModelError.contextSizeExceeded
 ```
 
 **Diagnosis**:
@@ -324,7 +324,7 @@ var session = LanguageModelSession()
 
 do {
     let response = try await session.respond(to: prompt)
-} catch LanguageModelSession.GenerationError.exceededContextWindowSize {
+} catch LanguageModelError.contextSizeExceeded {
     // Condense and continue
     session = condensedSession(from: session)
     let response = try await session.respond(to: prompt)
@@ -354,7 +354,7 @@ func condensedSession(from previous: LanguageModelSession) -> LanguageModelSessi
 
 **Symptom**:
 ```
-Error: LanguageModelSession.GenerationError.guardrailViolation
+Error: LanguageModelError.guardrailViolation
 ```
 
 **Diagnosis**:
@@ -368,7 +368,7 @@ Error: LanguageModelSession.GenerationError.guardrailViolation
 do {
     let response = try await session.respond(to: userInput)
     print(response.content)
-} catch LanguageModelSession.GenerationError.guardrailViolation {
+} catch LanguageModelError.guardrailViolation {
     // Show user-friendly message
     print("I can't help with that request")
     // Log for review (but don't show user input to avoid storing harmful content)
@@ -385,7 +385,7 @@ do {
 
 **Symptom**:
 ```
-Error: LanguageModelSession.GenerationError.unsupportedLanguageOrLocale
+Error: LanguageModelError.unsupportedLanguageOrLocale
 ```
 
 **Diagnosis**:
@@ -409,7 +409,7 @@ guard supported.contains(Locale.current.language) else {
 // Also handle errors
 do {
     let response = try await session.respond(to: userInput)
-} catch LanguageModelSession.GenerationError.unsupportedLanguageOrLocale {
+} catch LanguageModelError.unsupportedLanguageOrLocale {
     print("Please use English or another supported language")
 }
 ```
@@ -425,44 +425,63 @@ Unknown error types
 
 **Fix**:
 
-`GenerationError` has **nine** cases, not three. Each carries a `Context` payload (`refusal` carries `(Refusal, Context)`) you can inspect for diagnostics — `context.debugDescription`, or `await refusal.explanation` for the model's own reason. Handle them all:
+The error surface is bigger than three cases, and on `OS27` it lives in **three types**, not one — `LanguageModelSession.GenerationError` is deprecated, and `assetsUnavailable`, `concurrentRequests`, and `decodingFailure` **left the enum**. A migration that renames only the enum silently drops those three. Full old→new table in `axiom-ai (skills/foundation-models-ref.md)`.
+
+Two traps that bite during migration:
+
+⚠️ **`LanguageModelError` lost `recoverySuggestion` and `failureReason`.** The deprecated `GenerationError` implemented all three `LocalizedError` members; the replacement implements only `errorDescription`. If your error UI surfaces `error.recoverySuggestion`, it silently starts rendering **nil** after you migrate — no compile error, no warning. Symptom: error alerts that used to give guidance suddenly show a bare title. Fix: author your own recovery copy per case.
+
+⚠️ **Only `.refusal` can explain itself.** `.guardrailViolation` carries no explanation and no input-vs-output flag — if your code tries to show the user *why* a guardrail fired, there is nothing to show. And `Refusal.explanation` is not a `String`: it's `async throws` and returns a `Response<String>`, so *reading it runs a generation*.
 
 ```swift
-// ✅ GOOD - Handle every GenerationError case
+// ✅ GOOD - Handle the whole OS27 error surface
 do {
     let response = try await session.respond(to: prompt)
     print(response.content)
-} catch LanguageModelSession.GenerationError.exceededContextWindowSize {
+} catch LanguageModelError.contextSizeExceeded {
     // Too many tokens — condense the transcript and retry (see Pattern 2a)
     session = condensedSession(from: session)
-} catch LanguageModelSession.GenerationError.assetsUnavailable {
-    // Model assets not on device yet (downloading) — tell user to try later
-    showMessage("AI model isn't ready yet. Please try again shortly.")
-} catch LanguageModelSession.GenerationError.guardrailViolation {
-    // Content policy triggered (see Pattern 2b)
+} catch LanguageModelError.guardrailViolation {
+    // Safety guardrail tripped (see Pattern 2b)
     showMessage("Cannot generate that content")
-} catch LanguageModelSession.GenerationError.unsupportedGuide {
-    // A @Guide constraint the model can't satisfy — relax/fix the @Guide in your @Generable type
-    showMessage("Couldn't satisfy the requested format. Loosen the @Guide constraints.")
-} catch LanguageModelSession.GenerationError.unsupportedLanguageOrLocale {
-    // Language not supported (see Pattern 2c)
-    showMessage("Language not supported")
-} catch LanguageModelSession.GenerationError.decodingFailure {
-    // Output didn't decode into the requested @Generable type — simplify the type or retry
-    showMessage("Couldn't parse the response. Try again.")
-} catch LanguageModelSession.GenerationError.rateLimited {
-    // Too many requests — back off and retry with delay
-    showMessage("Too many requests. Please wait a moment.")
-} catch LanguageModelSession.GenerationError.concurrentRequests {
-    // A second request was issued while session.isResponding == true.
-    // Serialize calls per session (or use a separate session) — don't fire in parallel.
-    showMessage("A request is already in progress.")
-} catch let LanguageModelSession.GenerationError.refusal(refusal, _) {
-    // Model refused. The Refusal value carries the reason:
+} catch let LanguageModelError.refusal(refusal) {
+    // The MODEL declined — distinct from a guardrail trip. Handle both or one
+    // of them lands in the generic-error dead end.
+    // NOTE: .explanation is async throws and returns Response<String> — reading it
+    // RUNS A GENERATION. It isn't a stored string. (.guardrailViolation has no
+    // explanation at all, so there is nothing equivalent to show there.)
     if let explanation = try? await refusal.explanation {
         print("Refused: \(explanation.content)")
     }
     showMessage("The request was declined.")
+} catch LanguageModelError.unsupportedGenerationGuide {
+    // A @Guide constraint the model can't satisfy — fix the @Generable type, not at runtime
+    showMessage("Couldn't satisfy the requested format. Loosen the @Guide constraints.")
+} catch LanguageModelError.unsupportedLanguageOrLocale {
+    // Language not supported (see Pattern 2c)
+    showMessage("Language not supported")
+} catch LanguageModelError.rateLimited {
+    // Too many requests — back off and retry with delay
+    showMessage("Too many requests. Please wait a moment.")
+} catch LanguageModelError.timeout {
+    // Inference took too long — retryable
+    showMessage("That took too long. Try again.")
+} catch SystemLanguageModel.Error.assetsUnavailable {
+    // Model assets not on device yet (downloading or evicted) — LEFT the old enum
+    showMessage("AI model isn't ready yet. Please try again shortly.")
+} catch LanguageModelSession.Error.concurrentRequests {
+    // A second request while session.isResponding == true — LEFT the old enum.
+    // Serialize calls per session; don't fire in parallel.
+    showMessage("A request is already in progress.")
+} catch LanguageModelSession.Error.transcriptMutationWhileResponding {
+    // NEW in 27, no 26 equivalent — the transcript was mutated mid-response.
+    // Wait for completion before touching it.
+    showMessage("A request is already in progress.")
+} catch let error as GeneratedContent.ParsingError {
+    // Output didn't decode into the requested @Generable type — LEFT the old enum,
+    // and it's a STRUCT now, not an enum case. Inspect error.rawContent to see what
+    // the model actually emitted, and error.underlyingError for the decode failure.
+    showMessage("Couldn't parse the response. Try again.")
 } catch let error as LanguageModelSession.ToolCallError {
     // A tool threw. ToolCallError exposes { tool, underlyingError } so you can
     // distinguish a tool failure from a session/generation failure.
@@ -1182,7 +1201,7 @@ Post-mortem items:
 | Won't start | .unavailable(.deviceNotEligible) | SystemLanguageModel.default.availability | 1a | 5 min |
 | Model not ready | .unavailable(.modelNotReady) | Still downloading — retry later | 1b | 5 min |
 | Not opted in | .unavailable(.appleIntelligenceNotEnabled) | Settings check | 1c | 10 min |
-| Context exceeded | >4096 tokens | Transcript length | 2a | 15 min |
+| Context exceeded | > contextSize (8,192 on 27) | Transcript length | 2a | 15 min |
 | Guardrail error | Content policy | User input type | 2b | 10 min |
 | Language error | Unsupported language | supportedLanguages | 2c | 10 min |
 | Hallucinated output | Wrong use case | Task type check | 3a | 20 min |
@@ -1214,6 +1233,6 @@ Post-mortem items:
 
 ---
 
-**Last Updated**: 2025-12-03
+**Last Updated**: 2026-07-12
 **Version**: 1.0.0
 **Skill Type**: Diagnostic
