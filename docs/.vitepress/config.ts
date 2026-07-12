@@ -415,6 +415,7 @@ export default withMermaid(defineConfig({
             { text: 'Extensions & Widgets', link: '/skills/integration/extensions-widgets' },
             { text: 'Foundation Models (Apple Intelligence)', link: '/skills/integration/foundation-models' },
             { text: 'Foundation Models Custom Adapters', link: '/skills/integration/foundation-models-adapters' },
+            { text: 'Evaluation-Driven Development', link: '/skills/integration/foundation-models-evaluations' },
             { text: 'In-App Purchases (StoreKit 2)', link: '/skills/integration/in-app-purchases' },
             { text: 'Live Activities (ActivityKit)', link: '/skills/integration/live-activities' },
             { text: 'Local Push Connectivity', link: '/skills/integration/local-push-connectivity' },
@@ -704,6 +705,7 @@ export default withMermaid(defineConfig({
             { text: 'Energy Diagnostics', link: '/diagnostic/energy-diag' },
             { text: 'Foundation Models Diagnostics', link: '/diagnostic/foundation-models-diag' },
             { text: 'Foundation Models Custom Adapter Diagnostics', link: '/diagnostic/foundation-models-adapters-diag' },
+            { text: 'Evaluations Diagnostics', link: '/diagnostic/foundation-models-evaluations-diag' },
             { text: 'Isolation Inheritance Diagnostics', link: '/diagnostic/isolation-inheritance-diag' },
             { text: 'MapKit Diagnostics', link: '/diagnostic/mapkit-diag' },
             { text: 'Metal Migration Diagnostics', link: '/diagnostic/metal-migration-diag' },
@@ -728,7 +730,7 @@ export default withMermaid(defineConfig({
 
     footer: {
       message: 'Released under the MIT License',
-      copyright: 'Copyright © 2026 Charles Wiltgen • v27.0.0-beta.20'
+      copyright: 'Copyright © 2026 Charles Wiltgen • v27.0.0-beta.21'
     }
   }
 }))

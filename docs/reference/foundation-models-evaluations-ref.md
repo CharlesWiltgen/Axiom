@@ -41,10 +41,24 @@ Index of the Evaluations API surface this reference documents (names only — se
 ### Agentic / tool-call evaluation
 `ToolCallEvaluator` · `TrajectoryExpectation` · `ToolExpectation` · `ArgumentMatcher`
 
+### Inspecting results
+`EvaluationResult` (`summary` / `detailed` / `groupedSummary`) · `ResultColumn` · `inputColumn` / `responseColumn` / `expectedColumn` · `DataFrameKind`
+
+### Errors
+`EvaluationError` · `SubjectInferenceError` · `EvaluatorError` · `EvaluationResultsError` · `ModelJudgeError`
+
+### Determinism and where it runs
+`GenerationOptions(samplingMode: .greedy)` · why the judge cannot be pinned · device / Simulator / hosted-CI availability · the `PrivateCloudComputeLanguageModel` entitlement requirement
+
+### Persistence
+`saveJSON` / `loadJSON` / `saveJSONLines` / `loadJSONLines` · the lossy-reload trap
+
 ## Documentation Scope
 
 This page documents the `foundation-models-evaluations-ref` skill, which Claude loads automatically when you ask about measuring or testing a Foundation Models feature.
 
+- For the **discipline** — how to design a dataset, calibrate a judge, and hill-climb without fooling yourself — see [foundation-models-evaluations](/skills/integration/foundation-models-evaluations). This page is the API; that one is the method.
+- When the suite itself misbehaves — a metric reading `-1`, a crash after `loadJSON`, a green run that measured nothing — see [foundation-models-evaluations-diag](/diagnostic/foundation-models-evaluations-diag)
 - For building the feature itself, see [foundation-models](/skills/integration/foundation-models)
 - For the core Foundation Models API, see [foundation-models-ref](/reference/foundation-models-ref)
 - The four-axis eval discipline for custom adapters lives in [foundation-models-adapters](/skills/integration/foundation-models-adapters); on the 27 cycle, express those axes as metrics here
