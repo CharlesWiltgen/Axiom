@@ -811,26 +811,61 @@ let response = try await session.respond(
 
 ## Error Handling
 
-### GenerationError Types
+### The error surface lives in three types `OS27`
 
-Catch `LanguageModelSession.GenerationError` cases (9 total; each carries a `Context`, and `refusal` carries `(Refusal, Context)`):
-- **`.exceededContextWindowSize`** — Context limit exceeded. Condense transcript or create a new session.
-- **`.guardrailViolation`** — Content policy triggered. Show a graceful message.
-- **`.unsupportedLanguageOrLocale`** — Language not supported. Check `supportedLanguages`.
-- **`.unsupportedGuide`** — A `@Guide` constraint isn't supported for that type. Simplify the guide.
-- **`.decodingFailure`** — Output couldn't be decoded into the `@Generable` type. Retry or relax the schema.
-- **`.rateLimited`** — Too many requests. Back off and retry.
-- **`.concurrentRequests`** — A request was issued while `isResponding == true`. Serialize requests.
-- **`.assetsUnavailable`** — Model assets unavailable. Treat like an availability failure.
-- **`.refusal(Refusal, Context)`** — The model refused; read the `Refusal` for the reason (`await refusal.explanation`).
+**A single `catch` no longer covers inference.** The 27 SDK deprecated the one-enum `LanguageModelSession.GenerationError` and split its cases across three homes. A migration that only renames the enum silently drops the three that moved out.
 
-Tool failures surface separately as `LanguageModelSession.ToolCallError` (`.tool`, `.underlyingError`), not as a `GenerationError`.
+**`LanguageModelError`** (iOS/macOS/visionOS/**watchOS** 27; not tvOS) — the unified inference error. Every case carries a typed payload struct with **real diagnostic fields**, not just a string. Migration is therefore *not* a mechanical rename: 26-cycle code that only logged `context.debugDescription` is leaving actionable data on the floor.
 
-#### From WWDC 301:3:37, 301:7:06
+| Case | Payload fields | Meaning / fix |
+|---|---|---|
+| `.contextSizeExceeded` | `contextSize: Int`, `tokenCount: Int` | You no longer have to guess the budget — the payload tells you the limit *and* what the transcript actually needed. Condense and start a new session. |
+| `.rateLimited` | `resetDate: Date?` | Throttled. Back off until `resetDate`; **handle nil** — it's optional. |
+| `.guardrailViolation` | *(none — only `debugDescription`)* | Apple's safety **classifier** blocked the prompt or the response. |
+| `.refusal` | *(see below)* | The **model itself** declined. |
+| `.timeout` | *(none)* | Retryable. Not configurable — `GenerationOptions` has no timeout knob. |
+| `.unsupportedLanguageOrLocale` | `languageCode: Locale.LanguageCode` | Preflight with `supportsLocale(_:)`. |
+| `.unsupportedCapability` | `capability: LanguageModelCapabilities.Capability` | Preflight with `model.capabilities.contains(_:)`. |
+| `.unsupportedTranscriptContent` | `unsupportedContent: [Transcript.Entry]` | Names **exactly which entries** to strip. |
+| `.unsupportedGenerationGuide` | `schemaName: String?` | Fix the `@Generable` schema; not recoverable at runtime. |
 
-### `LanguageModelError` migration (OS27)
+**`.refusal` vs `.guardrailViolation` — the distinction is *who said no*.** `.guardrailViolation` is the *safety system*: an Apple-owned classifier ran over the prompt or the response and blocked it. It carries **no explanation and no input-vs-output flag** — you cannot branch on direction, so don't try. `.refusal` is the *model* declining, and it is the only one that can explain itself.
 
-The whole `LanguageModelSession.GenerationError` enum is **deprecated in 27.0** (iOS/iPadOS/macOS/visionOS). The errors split across three homes — a new unified `LanguageModelError` enum (each case carrying a typed payload struct, e.g. `LanguageModelError.ContextSizeExceeded`) plus two type-specific errors:
+⚠️ **`Refusal.explanation` is not a String.** It's an `async throws` computed property returning a `Response<String>` — *reading it runs a generation*:
+
+```swift
+} catch let LanguageModelError.refusal(refusal) {
+    let reason = try await refusal.explanation.content     // generates text; can throw
+    // or stream it: refusal.explanationStream
+}
+```
+
+**Split out of the old enum:**
+- **`SystemLanguageModel.Error.assetsUnavailable`** — assets not on device. Treat as an availability failure. (Note: `SystemLanguageModel` is watchOS-unavailable, unlike `LanguageModelError`.)
+- **`LanguageModelSession.Error`** — two cases: `.concurrentRequests` (a request while `isResponding == true`; serialize) and **`.transcriptMutationWhileResponding`** (new in 27 — don't mutate the transcript mid-response).
+- **`GeneratedContent.ParsingError`** — a **struct**, not an enum case. Carries `rawContent: String` and `underlyingError: (any Error)?`.
+
+**`PrivateCloudComputeLanguageModel.Error`** — three cases: `.networkFailure`, `.serviceUnavailable`, and `.quotaLimitReached` (carrying `resetDate: Date?` and `limitIncreaseSuggestion?` with a `show()`). PCC **quota** ≠ `.rateLimited` **throttling**: quota is an allotment you exhaust and can offer to raise; rate limiting is a speed cap you wait out. Preflight the wall with `pcc.quotaUsage` (`.status`, `.isLimitReached`, `isApproachingLimit`, `.resetDate`).
+
+Tool failures surface separately as `LanguageModelSession.ToolCallError` (`.tool`, `.underlyingError`). Schema construction fails with `GenerationSchema.SchemaError` — a programmer error, never a runtime retry.
+
+⚠️ **The migration silently loses your user-facing recovery copy.** The deprecated `GenerationError` implemented all three `LocalizedError` members — `errorDescription`, `recoverySuggestion`, and `failureReason`. **`LanguageModelError` implements only `errorDescription`.** So any 26-cycle code surfacing `error.recoverySuggestion` to users starts rendering **`nil`** after migration, with no compile error and no warning. Author your own recovery copy per case.
+
+There is **no `isRetryable`** anywhere in the framework, and Apple publishes no retryability guidance. The only wait hints are `resetDate` on `.rateLimited` and on PCC's `.quotaLimitReached`.
+
+### Preflight — check before you call
+
+| Guards against | API |
+|---|---|
+| `.unsupportedLanguageOrLocale` | `model.supportsLocale(_:)` (defaults to `.current`), or `model.supportedLanguages` |
+| `.unsupportedCapability` | `model.capabilities.contains(_:)` — `.vision`, `.guidedGeneration`, `.reasoning`, `.toolCalling` |
+| `.contextSizeExceeded` | `SystemLanguageModel.contextSize` (sync); PCC's is `async throws` |
+| `assetsUnavailable` | `model.availability` / `model.isAvailable` |
+| PCC `.quotaLimitReached` | `pcc.quotaUsage.status` — `.belowLimit(isApproachingLimit:)` / `.limitReached` |
+
+#### Migrating from the 26-cycle `GenerationError`
+
+Deprecated in 27.0 (iOS/iPadOS/macOS/visionOS). It's a deprecation, not an obsoletion — both types resolve in the 27 SDK, and the deprecated cases remain correct on a 26.x deployment floor. Migrate before raising the floor to 27.
 
 | Deprecated `GenerationError` case | Replacement (27) |
 |------------------------------------|------------------|
@@ -840,11 +875,13 @@ The whole `LanguageModelSession.GenerationError` enum is **deprecated in 27.0** 
 | `.unsupportedLanguageOrLocale` | `LanguageModelError.unsupportedLanguageOrLocale(_:)` |
 | `.rateLimited` | `LanguageModelError.rateLimited(_:)` |
 | `.refusal` | `LanguageModelError.refusal(_:)` |
-| `.assetsUnavailable` | `SystemLanguageModel.Error.assetsUnavailable(_:)` |
-| `.decodingFailure` | `GeneratedContent.ParsingError` |
-| `.concurrentRequests` | `LanguageModelSession.Error.concurrentRequests` |
+| `.assetsUnavailable` | **`SystemLanguageModel.Error.assetsUnavailable(_:)`** — left the enum |
+| `.decodingFailure` | **`GeneratedContent.ParsingError`** — left the enum |
+| `.concurrentRequests` | **`LanguageModelSession.Error.concurrentRequests`** — left the enum |
 
-`LanguageModelError` also adds cases with no `GenerationError` equivalent: `.unsupportedCapability`, `.unsupportedTranscriptContent`, `.timeout`. The deprecated cases still compile on a 26.x deployment target; migrate `catch` clauses to the new types before raising the floor to 27. This is a deprecation, not an obsoletion — both error types resolve in the 27 SDK.
+No `GenerationError` equivalent (new in 27): `.timeout`, `.unsupportedCapability`, `.unsupportedTranscriptContent`.
+
+#### From WWDC 301:3:37, 301:7:06
 
 ### Context Window Management
 
@@ -855,7 +892,7 @@ var session = LanguageModelSession()
 do {
     let response = try await session.respond(to: prompt)
     print(response.content)
-} catch LanguageModelSession.GenerationError.exceededContextWindowSize {
+} catch LanguageModelError.contextSizeExceeded {
     // New session, no history
     session = LanguageModelSession()
 }
@@ -867,7 +904,7 @@ do {
 ```swift
 do {
     let response = try await session.respond(to: prompt)
-} catch LanguageModelSession.GenerationError.exceededContextWindowSize {
+} catch LanguageModelError.contextSizeExceeded {
     // New session with some history
     session = newSession(previousSession: session)
 }
@@ -1443,7 +1480,7 @@ Playgrounds can also access types defined in your app (like @Generable structs).
 - **`@Guide`** — Property constraints: `description:`, `.range()`, `.count()`, `.maximumCount()`, `.pattern(Regex)`
 - **`Tool` protocol** — `name`, `description`, `Arguments: ConvertibleFromGeneratedContent`, `Output: PromptRepresentable`, `call(arguments:) → Output` (return `String` for text or `GeneratedContent` for structured — no `ToolOutput` type)
 - **`DynamicGenerationSchema`** — Runtime schema definition with `GeneratedContent` output
-- **`GenerationError`** (9 cases) — `.exceededContextWindowSize`, `.guardrailViolation`, `.unsupportedLanguageOrLocale`, `.unsupportedGuide`, `.decodingFailure`, `.rateLimited`, `.concurrentRequests`, `.assetsUnavailable`, `.refusal(Refusal, Context)`. Tool failures: `ToolCallError` (`.tool`, `.underlyingError`).
+- **Errors (`OS27`)** — `LanguageModelError`: `.contextSizeExceeded`, `.guardrailViolation`, `.refusal`, `.rateLimited`, `.timeout`, `.unsupportedLanguageOrLocale`, `.unsupportedGenerationGuide`, `.unsupportedCapability`, `.unsupportedTranscriptContent`. Split out: `SystemLanguageModel.Error.assetsUnavailable`, `LanguageModelSession.Error.concurrentRequests`, `GeneratedContent.ParsingError` (was `.decodingFailure`). Tool failures: `ToolCallError` (`.tool`, `.underlyingError`). The 26-cycle `LanguageModelSession.GenerationError` (9 cases) is deprecated — see the migration table above.
 
 ### OS27 additions
 
