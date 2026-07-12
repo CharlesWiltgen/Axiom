@@ -154,6 +154,16 @@ if re.search(r'voiceover|accessibility.{0,10}(label|hint|trait|value|issue|audit
 if re.search(r'foundation models|apple intelligence|@generable\b|languagemodelsession|on-device.{0,5}(ai|model|ml)|@guide\b.{0,10}(generat|struct)|private\s*cloud\s*compute|privatecloudcompute', prompt_lower):
     matches.append("axiom-ai")
 
+# AI evaluations (Evaluations framework). Framework-specific tokens fire ungated;
+# bare "eval" wording needs AI/model context or it swallows "evaluate my architecture".
+if "axiom-ai" not in matches and re.search(r'evaluations\s*framework|import\s+evaluations|\.evaluates\b|modeljudgeevaluator|toolcallevaluator|evaluatorsbuilder|metricsaggregator|trajectoryexpectation|toolexpectation|argumentmatcher|samplegenerator|(model|llm)[\s-]*as[\s-]*(a[\s-]*)?judge|judge\s*drift|hill[\s-]?climb|\beval\w*\b.{0,40}(prompt|model|llm|\bai\b|generat|intelligen|summariz|inference|tool\s*call|trajector|agent)|(prompt|model|llm|\bai\b|generat|intelligen|summariz).{0,40}\beval\w*\b|(prompt|instruction|schema|model)\s*change.{0,40}(better|worse|improv|regress|help)|(better|worse|improv|regress).{0,40}(prompt|instruction|schema)\s*change|(regression|quality)\s*suite.{0,30}(\bai\b|model|prompt|llm|generat)', prompt_lower):
+    matches.append("axiom-ai")
+
+# Evaluations diagnostics — the framework fails SILENTLY, so the symptom phrasings
+# look nothing like "write an eval suite". These are unambiguous enough to fire ungated.
+if "axiom-ai" not in matches and re.search(r'aggregatevalue|subjectinferenceerror|evaluatorerrors|missingtranscript|evaluationcontext|structuredtranscript|cohen.{0,3}s?\s*kappa|quadratic.{0,10}kappa|samplingmode|\bgreedy\s*sampling|private.?cloud.?compute.{0,30}entitlement|unsupported\s+recursion.{0,30}evaluators|(metric|score|aggregate)\w*.{0,25}(returns?|reads?|is)\s*[-−]\s*1\b|pass\s*rate.{0,30}(went|going|goes)\s*up|(score|pass\s*rate)\w*.{0,30}(went|go|goes)\s*up.{0,30}(harder|hard|adversarial|edge)', prompt_lower):
+    matches.append("axiom-ai")
+
 # ML
 if re.search(r'coreml|core\s*ml|mltensor|create\s*ml|mlmodel|convert.{0,10}(pytorch|tensorflow|onnx).{0,10}(coreml|ios)|model.{0,10}(quantiz|compress|palettiz)|speech.{0,5}(recogni|analyz|to.text)', prompt_lower):
     matches.append("axiom-ai")

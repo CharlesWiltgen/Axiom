@@ -228,6 +228,29 @@ class TestPositiveRouting(unittest.TestCase):
         self.assertIn("axiom-watchos", routed_skills(
             "Private Cloud Compute quota handling on Apple Watch"))
 
+    def test_ai_evaluations(self):
+        for prompt in (
+            "How do I know if my prompt change actually improved the summarizer?",
+            "Write an eval suite for my AI feature",
+            "Set up a model-as-judge evaluator",
+            "My agent calls the wrong tools, how do I evaluate the trajectory?",
+            "import Evaluations",
+            "My eval scores swing between runs — is that judge drift?",
+        ):
+            self.assertIn("axiom-ai", routed_skills(prompt), prompt)
+
+    def test_ai_evaluations_diagnostics(self):
+        for prompt in (
+            "My eval metric returns -1, what does that mean?",
+            "Our pass rate went up when we added harder test cases",
+            "aggregateValue is giving me weird numbers",
+            "What is SubjectInferenceError?",
+            "I'm getting EvaluationError.missingTranscript",
+            "Cohen's kappa came back negative",
+            "Should I use greedy sampling for a stable eval?",
+        ):
+            self.assertIn("axiom-ai", routed_skills(prompt), prompt)
+
     def test_vision(self):
         self.assertIn("axiom-vision", routed_skills(
             "How do I use Vision framework for text recognition?"))
@@ -595,6 +618,15 @@ class TestPositiveRouting(unittest.TestCase):
 
 class TestNegativeRouting(unittest.TestCase):
     """Known false-positive traps must NOT trigger."""
+
+    def test_generic_evaluate_wording_does_not_fire_ai(self):
+        # "evaluate" is an ordinary English verb — only AI-context eval talk routes to axiom-ai
+        for prompt in (
+            "Evaluate my app's navigation architecture and suggest improvements",
+            "Help me evaluate whether SwiftData or GRDB is the better choice",
+            "Evaluate the performance of my scrolling list",
+        ):
+            self.assertNotIn("axiom-ai", routed_skills(prompt), prompt)
 
     def test_bare_macos_host_mention_does_not_fire_macos(self):
         # Was the original bug: "on macOS 26.3" routed to axiom-macos
