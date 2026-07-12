@@ -1,6 +1,6 @@
 ---
 name: axiom-ai
-description: Use when implementing ANY Apple Intelligence or on-device AI feature. Covers Foundation Models, @Generable, LanguageModelSession, structured output, Tool protocol, iOS 26 AI integration.
+description: Use when implementing, testing, or evaluating ANY Apple Intelligence or on-device AI feature. Covers Foundation Models, @Generable, LanguageModelSession, structured output, Tool protocol, eval suites and model-as-judge scoring.
 license: MIT
 ---
 
@@ -122,12 +122,26 @@ For the full "which path applies to me?" disambiguation (decision tree, the thre
 - Custom safety eval / red-team methodology
 - Adapter × guardrail interaction (safety erosion)
 
-**Measuring feature quality (Evaluations framework, `OS27`)** → `skills/foundation-models-evaluations-ref.md`
+**Evaluation-driven development — the discipline (`OS27`)** → `skills/foundation-models-evaluations.md`
+- "Is this AI feature actually good?" / "Did that prompt change help?" / about to ship on eyeballed outputs
+- Dataset design (golden / edge / adversarial / known-failures, holdout sets, how many samples)
+- Judge calibration — the four judge biases, Cohen's kappa > 0.6 before you trust a score
+- Guardrails vs the optimization target; why passing metrics can be lying metrics
+- Hill-climbing as a controlled experiment (one variable per round)
+
+**Evaluation failures — the suite is lying to you (`OS27`)** → `skills/foundation-models-evaluations-diag.md`
+- A metric reads exactly `-1`, or the pass rate went **up** after adding harder samples
+- Suite green but no tool calls were ever evaluated; CI green but the model was never available
+- SIGABRT after `loadJSON`; SIGTRAP "missing required entitlement" (PCC)
+- Judge scores everything the same; Cohen's kappa negative; scores swing run to run
+- Won't compile: `if/else` in an `evaluators` block, "unsupported recursion for type alias `Evaluators`"
+
+**Evaluations framework API (`OS27`)** → `skills/foundation-models-evaluations-ref.md`
 - Building a regression suite for an AI feature (`Evaluation`, `Metric`, `Evaluator`, run via Swift Testing `.evaluates`)
 - Datasets (`ModelSample`/`ArrayLoader`) + synthesizing more (`makeSamples`/`SampleGenerator`)
-- Model-as-judge for open-ended output (`ModelJudgeEvaluator`, `ScoringScale`)
+- Model-as-judge for open-ended output (`ModelJudgeEvaluator`, `ScoringScale`, `.pairwise`)
 - Agentic tool-call/trajectory evaluation (`ToolCallEvaluator`, `TrajectoryExpectation`)
-- Hill-climbing a prompt/instruction change against an optimization-target metric
+- Inspecting results — which samples failed and why (`detailed`, `ResultColumn`), and the error surface
 
 **Custom adapter training (after Approach Triage rungs 1-4)** → `skills/foundation-models-adapters.md`
 - Decision discipline (when adapter training is justified vs. rungs 1-4)
@@ -154,8 +168,10 @@ For the full "which path applies to me?" disambiguation (decision tree, the thre
 **Automated scanning** → Launch `foundation-models-auditor` agent or `/axiom:audit foundation-models`
 
 Detects anti-patterns AND architectural gaps:
-- Missing availability checks, main-thread `respond()`, manual JSON parsing, missing specific error catches (guardrail / contextWindow), session created per-tap, no streaming for long output, missing `@Guide` constraints, nested non-`@Generable` types, no fallback UI
+- Missing availability checks, main-thread `respond()`, manual JSON parsing, missing specific error catches (guardrail / context size), session created per-tap, no streaming for long output, missing `@Guide` constraints, nested non-`@Generable` types, no fallback UI
 - Prompt-injection risk from direct user-text interpolation, `@Generable` enums without `@frozen` (future-case crash), missing Cancel UX, missing transcript trimming, stale availability cache after Settings toggle, partial-output validation gaps, Tool errors indistinguishable from session errors, no retry on transient errors
+- **Quality (`OS27`)**: an AI feature shipping with **no evaluation suite** at all; a model judge used **without calibration**; an evaluation that runs but **asserts nothing**
+- **Migration (`OS27`)**: deprecated `GenerationError` on a 27 target; a rename-only migration that **drops** `assetsUnavailable` / `concurrentRequests` / `decodingFailure` (they left the enum); error UI reading `recoverySuggestion`, which `LanguageModelError` **no longer implements** and which now silently renders nil
 
 Scores: PRODUCTION-READY / NEEDS HARDENING / FRAGILE
 
@@ -171,8 +187,8 @@ Scores: PRODUCTION-READY / NEEDS HARDENING / FRAGILE
 8. Considering training a custom adapter? → **foundation-models** Approach Triage (rungs 1-4) FIRST; only after documented rung-1-4 failures → foundation-models-adapters
 9. Implementing adapter loading, training pipeline, or runtime selection? → foundation-models-adapters + foundation-models-adapters-ref + axiom-integration (skills/background-assets.md) for delivery
 10. Debugging adapter-specific failures (compatibleAdapterNotFound, tool calls don't fire from adapter, accuracy regression after OS update)? → foundation-models-adapters-diag
-11. Want automated Foundation Models code scan? → foundation-models-auditor (Agent — detects 10 anti-patterns AND completeness gaps including prompt injection, frozen-enum discipline, transcript trimming, Cancel UX; scores PRODUCTION-READY / NEEDS HARDENING / FRAGILE)
-12. Measuring whether an AI feature improved/regressed, or building an eval/regression suite (incl. agentic tool-call eval)? → **foundation-models-evaluations-ref** (`OS27` Evaluations framework)
+11. Want automated Foundation Models code scan? → foundation-models-auditor (Agent — detects 14 anti-patterns AND completeness gaps including prompt injection, frozen-enum discipline, transcript trimming, Cancel UX, missing/uncalibrated eval suites; scores PRODUCTION-READY / NEEDS HARDENING / FRAGILE)
+12. Measuring whether an AI feature improved/regressed, designing an eval dataset, calibrating a model judge, or about to ship on eyeballed outputs? → **foundation-models-evaluations** (discipline) + **foundation-models-evaluations-ref** (API) — `OS27` Evaluations framework
 13. Adding Apple's built-in suggested actions to a messaging/chat/email app (`SuggestedActionsView`, suggested-actions entitlement)? → **skills/suggested-actions.md** (`OS27` — turnkey, system-provided; NOT Foundation Models)
 
 ## Anti-Rationalization
@@ -186,6 +202,8 @@ Scores: PRODUCTION-READY / NEEDS HARDENING / FRAGILE
 | "We need to train a custom adapter to fix the model's outputs" | Most "we need an adapter" requests resolve via rungs 1-4 of the Approach Triage (prompt engineering, `@Generable`/`@Guide`, tool calling, built-in content-tagging adapter). foundation-models has the ladder; foundation-models-adapters is only justified after each rung's failure is documented. |
 | "We trained one adapter, ship it for all our users" | Each `.fmadapter` pins to one base-model version; one adapter does not cover a multi-OS install base. foundation-models-adapters covers per-OS variant strategy and `compatibleAdapterIdentifiers(name:)` runtime selection. |
 | "Skip locale-specific eval, our users are mostly English-speaking" | Apple's 2025 tech report groups eval as English-US / English-outside-US / PFIGSCJK. English-only eval against a multi-locale app ships invisible non-English regressions. foundation-models-adapters covers the four-axis eval requirement. |
+| "The output looked good on the prompts I tried — ship it" | Five good results say nothing about the five hundred that fail, and the model changes under you on every OS update with no code change on your side. foundation-models-evaluations turns the prompts you already tried by hand into a gate. |
+| "Our model judge agrees with me, I spot-checked it" | Your data skews toward decent output, so a judge that always scores high looks aligned on a spot-check and drifts hardest at scale. Apple's own sample judge starts at Cohen's kappa −0.037. foundation-models-evaluations has the calibration protocol. |
 | "Just bundle the .fmadapter file in the app" | Apple's docs explicitly prohibit this. Adapters ship via Background Assets `onDemand` policy. axiom-integration (skills/background-assets.md) covers the delivery half. |
 | "We'll add a custom adapter for our iOS 27 app" | The custom-adapter runtime (`SystemLanguageModel.Adapter`) is obsoleted in 27.0 and does not compile on a 27 deployment target — no replacement in the 27 SDK. foundation-models-adapters covers the pivot: rungs 1-4 or a custom provider (`LanguageModelExecutor`). |
 
@@ -251,8 +269,14 @@ User: "What's the toolkit setup for adapter training?"
 User: "How do we ship a custom adapter to users?"
 → Read: `skills/foundation-models-adapters.md` (runtime lifecycle) + `axiom-integration (skills/background-assets.md)` (delivery)
 
-User: "How do I measure if my prompt change made the tagging feature better?" / "Write an eval suite for my AI feature"
-→ Read: `skills/foundation-models-evaluations-ref.md` (Evaluations framework — Metrics, Swift Testing `.evaluates`, model-as-judge, tool-call eval)
+User: "How do I measure if my prompt change made the tagging feature better?" / "Write an eval suite for my AI feature" / "The output looks good, can we ship?"
+→ Read: `skills/foundation-models-evaluations.md` (the discipline — dataset design, guardrails vs optimization target, hill-climbing) + `skills/foundation-models-evaluations-ref.md` (the API — Metrics, `.evaluates`, model-as-judge, tool-call eval)
+
+User: "My model judge is giving weird scores" / "How do I know I can trust the judge?"
+→ Read: `skills/foundation-models-evaluations.md` (Judge Discipline — the four biases, Cohen's kappa > 0.6 calibration protocol, debugging from rationales)
+
+User: "My eval metric returns -1" / "Our pass rate went up when we added harder test cases" / "The eval suite passes but I don't think it measured anything"
+→ Read: `skills/foundation-models-evaluations-diag.md` (the framework fails silently — a green suite is not evidence a run happened)
 
 User: "Add Apple's suggested actions to my messaging app" / "Show smart/on-device suggested replies for a message thread" / "What's the com.apple.developer.suggested-actions entitlement for?"
 → Read: `skills/suggested-actions.md` (turnkey `SuggestedActionsView`, system-provided — not Foundation Models)
