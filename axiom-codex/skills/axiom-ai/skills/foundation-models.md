@@ -143,30 +143,37 @@ let prompt = """
 ---
 
 ### ❌ Not Handling Generation Errors
-**Why it fails**: `GenerationError` has 9 cases. Handle the ones your app can actually hit, or it will crash in production. The three below are the most common; the remaining six follow.
+**Why it fails**: Inference has many distinct failure modes and a bare `catch` collapses them into "something went wrong", stranding the user. Handle the ones your app can actually hit.
+
+**`OS27` reorganized the error surface, and a single `catch` no longer covers it.** `LanguageModelSession.GenerationError` is deprecated; the cases now live in **three** places, so a migration that only renames the enum silently drops the ones that moved out.
 
 ```swift
 do {
     let response = try await session.respond(to: prompt)
-} catch LanguageModelSession.GenerationError.exceededContextWindowSize {
+} catch LanguageModelError.contextSizeExceeded {
     // Multi-turn transcript grew beyond the context window
-    // → Condense transcript and create new session (see Pattern 5)
-} catch LanguageModelSession.GenerationError.guardrailViolation {
+    // → Condense transcript and create a new session (see Pattern 5)
+} catch LanguageModelError.guardrailViolation {
     // Content policy triggered
-    // → Show graceful message: "I can't help with that request"
-} catch LanguageModelSession.GenerationError.unsupportedLanguageOrLocale {
-    // User input in unsupported language
-    // → Show disclaimer, check SystemLanguageModel.default.supportedLanguages
+    // → Show a graceful message: "I can't help with that request"
+} catch LanguageModelError.refusal {
+    // The model itself declined — distinct from a guardrail trip
+} catch LanguageModelError.unsupportedLanguageOrLocale {
+    // → Check SystemLanguageModel.default.supportedLanguages before calling
+} catch LanguageModelError.rateLimited {
+    // Back off and retry
+} catch SystemLanguageModel.Error.assetsUnavailable {
+    // Model assets not on device (downloading or evicted) → fall back to your non-AI path
+} catch LanguageModelSession.Error.concurrentRequests {
+    // A request was issued while session.isResponding == true → serialize per session
+} catch is GeneratedContent.ParsingError {
+    // Output couldn't be decoded into your @Generable type → surface a retry
 }
 ```
 
-The remaining six cases (each also carries a `Context`):
-- `assetsUnavailable` — model assets aren't on the device (still downloading or evicted); fall back to your non-AI path
-- `unsupportedGuide` — a `@Guide` constraint the model can't satisfy; fix the schema, not at runtime
-- `decodingFailure` — output couldn't be decoded into your `@Generable` type; surface a retry
-- `rateLimited` — too many requests; back off and retry
-- `concurrentRequests` — a request was issued while `session.isResponding == true`; serialize requests per session
-- `refusal(let refusal, _)` — model refused; the `Refusal` value carries the reason to surface or log
+`LanguageModelError` also carries `.timeout`, `.unsupportedCapability`, `.unsupportedTranscriptContent`, and `.unsupportedGenerationGuide` (the old `.unsupportedGuide` — a `@Guide` constraint the model can't satisfy; fix the schema, not at runtime).
+
+Full old→new migration table: `axiom-ai (skills/foundation-models-ref.md)`. On a 26.x deployment floor the deprecated `GenerationError` is still correct — migrate before raising the floor to 27.
 
 ---
 
@@ -177,13 +184,18 @@ The remaining six cases (each also carries a `Context`):
 let pcc = PrivateCloudComputeLanguageModel()
 guard pcc.isAvailable else { /* fall back to SystemLanguageModel */ return }
 do {
-    let response = try await LanguageModelSession(model: pcc).respond(to: prompt)
+    _ = try await LanguageModelSession(model: pcc).respond(to: prompt)
 } catch let error as PrivateCloudComputeLanguageModel.Error {
     switch error {
-    case .quotaLimitReached(let info):     // info.resetDate / .limitIncreaseSuggestion
-        break  // tell the user when access resets; offer the on-device path
+    case .quotaLimitReached(let info):
+        showMessage("Quota reached. Resets: \(info.resetDate?.formatted() ?? "unknown")")
+        info.limitIncreaseSuggestion?.show()
     case .networkFailure, .serviceUnavailable:
-        break  // PCC needs the network — fall back or retry
+        showMessage("Private Cloud Compute unreachable — falling back on-device.")
+    @unknown default:
+        // REQUIRED. It's a non-frozen enum from another module, so in Swift 6 an
+        // exhaustive switch without this is a hard COMPILE ERROR, not a warning.
+        showMessage("Private Cloud Compute unavailable — falling back on-device.")
     }
 }
 ```
@@ -706,10 +718,10 @@ do {
     for try await snapshot in stream {
         self.itinerary = snapshot.content
     }
-} catch LanguageModelSession.GenerationError.guardrailViolation {
+} catch LanguageModelError.guardrailViolation {
     // Partial content may be visible — show non-disruptive error
     self.errorMessage = "Generation stopped by content policy"
-} catch LanguageModelSession.GenerationError.exceededContextWindowSize {
+} catch LanguageModelError.contextSizeExceeded {
     // Too much context — create fresh session and retry
     session = LanguageModelSession()
 }
@@ -846,7 +858,7 @@ See `axiom-ai (skills/foundation-models-ref.md)` for `Tool` protocol reference, 
 for i in 1...100 {
     let response = try await session.respond(to: "Question \(i)")
     // Eventually...
-    // Error: exceededContextWindowSize
+    // Error: LanguageModelError.contextSizeExceeded
 }
 ```
 
@@ -873,7 +885,7 @@ var session = LanguageModelSession()
 do {
     let response = try await session.respond(to: prompt)
     print(response.content)
-} catch LanguageModelSession.GenerationError.exceededContextWindowSize {
+} catch LanguageModelError.contextSizeExceeded {
     // New session, no history
     session = LanguageModelSession()
 }
@@ -888,7 +900,7 @@ var session = LanguageModelSession()
 
 do {
     let response = try await session.respond(to: prompt)
-} catch LanguageModelSession.GenerationError.exceededContextWindowSize {
+} catch LanguageModelError.contextSizeExceeded {
     // New session with condensed history
     session = condensedSession(from: session)
 }
@@ -1012,7 +1024,7 @@ See `axiom-ai (skills/foundation-models-ref.md)` for complete `GenerationOptions
 **When ChatGPT IS appropriate**:
 - World knowledge required (e.g. "Who is the president of France?")
 - Complex reasoning (multi-step logic, math proofs)
-- Very long context (>4096 tokens)
+- Very long context (> the model's `contextSize` — 8,192 on 27, 4,096 on 26)
 
 **Mandatory response**:
 
@@ -1142,7 +1154,7 @@ Swift's type safety prevents entire categories of bugs."
 
 **Why this fails**:
 
-1. **Context overflow**: Complex prompt + large invoice → Exceeds 4096 tokens
+1. **Context overflow**: Complex prompt + large invoice → exceeds the context window (read `contextSize`; 8,192 on 27)
 2. **Poor results**: Model tries to do too much at once, quality suffers
 3. **Slow generation**: One massive response takes 5-8 seconds
 4. **All-or-nothing**: If one field fails, entire generation fails
@@ -1198,7 +1210,7 @@ let items = try await session.respond(
 "I understand the appeal of one simple API call. However, this specific task requires
 a different approach:
 
-1. **Context limits**: Invoice + complex extraction prompt will likely exceed 4096 token
+1. **Context limits**: Invoice + complex extraction prompt will likely exceed the context window (`contextSize` — 8,192 on 27)
    limit. Multiple focused prompts stay well under limit.
 
 2. **Better quality**: Model performs better with focused tasks. 'Extract vendor name'
@@ -1239,8 +1251,8 @@ When `guardrailViolation` fires:
 - Don't show a moralizing error wall. Name the failure neutrally ("Unable to use that description") and offer a constructive next step (suggested alternative prompts).
 - Don't display the user's blocked input back to them — log for review without surfacing harmful content.
 
-When `exceededContextWindowSize` fires:
-- Don't surface "Error 4096 tokens exceeded" — that's developer text, not user text.
+When `LanguageModelError.contextSizeExceeded` fires:
+- Don't surface "Error: context window exceeded" — that's developer text, not user text.
 - Offer "Start a new conversation" or summarize-and-continue as a one-tap action.
 
 ### Retry as a first-class affordance
@@ -1289,7 +1301,7 @@ Before shipping Foundation Models features:
 ### Required Checks
 - [ ] **Availability checked** before creating session
 - [ ] **Using @Generable** for structured output (not manual JSON)
-- [ ] **Handling the `GenerationError` cases your app can hit** (9 total) — at minimum `exceededContextWindowSize`, `guardrailViolation`, and `unsupportedLanguageOrLocale`; plus `assetsUnavailable`, `unsupportedGuide`, `decodingFailure`, `rateLimited`, `concurrentRequests`, and `refusal` where applicable
+- [ ] **Handling the error cases your app can hit** — at minimum `LanguageModelError.contextSizeExceeded`, `.guardrailViolation`, `.refusal`, and `.unsupportedLanguageOrLocale`; plus `.rateLimited`, `.timeout`, `SystemLanguageModel.Error.assetsUnavailable`, `LanguageModelSession.Error.concurrentRequests`, and `GeneratedContent.ParsingError` where applicable. On `OS27` these live in THREE types — a single `catch` on the deprecated `GenerationError` no longer covers the surface
 - [ ] **Streaming for long generations** (>1 second)
 - [ ] **Not blocking UI** (using `Task {}` for async)
 - [ ] **Tools for external data** (not prompting for weather/locations)

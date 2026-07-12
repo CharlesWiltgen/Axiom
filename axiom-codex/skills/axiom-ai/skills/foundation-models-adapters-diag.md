@@ -349,7 +349,7 @@ Regenerate training JSONL with complete tool-call schema (see `axiom-ai (skills/
 
 **Symptom**:
 
-Trivial user prompts (a few words) consume 30-90% of the 4096-token context window. Multi-turn conversations exceed `exceededContextWindowSize` after only 2-3 turns.
+Trivial user prompts (a few words) consume 30-90% of the 4096-token context window. Multi-turn conversations throw `LanguageModelSession.GenerationError.exceededContextWindowSize` after only 2-3 turns. (The 26-cycle spelling is correct here: the adapter runtime is obsoleted in 27.0, so an adapter-using app is on a 26.x floor, where `LanguageModelError` — iOS 27+ — is not available.)
 
 **Cause**:
 

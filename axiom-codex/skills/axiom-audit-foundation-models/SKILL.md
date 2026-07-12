@@ -28,9 +28,9 @@ Skip: `*Tests.swift`, `*Previews.swift`, `*/Pods/*`, `*/Carthage/*`, `*/.build/*
 Glob: **/*.swift, **/*.xcconfig
 Grep for:
   - `import\s+FoundationModels` — files using the framework
-  - `IPHONEOS_DEPLOYMENT_TARGET`, `MACOSX_DEPLOYMENT_TARGET` — must be iOS 26+/macOS 15+
-  - `if #available\(iOS\s+26`, `if #available\(macOS\s+15` — availability gates
-  - `@available\(iOS\s+26`, `@available\(macOS\s+15` — type-level availability
+  - `IPHONEOS_DEPLOYMENT_TARGET`, `MACOSX_DEPLOYMENT_TARGET` — must be iOS 26+/macOS 26+
+  - `if #available\(iOS\s+26`, `if #available\(macOS\s+26` — availability gates
+  - `@available\(iOS\s+26`, `@available\(macOS\s+26` — type-level availability
 ```
 
 ### Step 2: Identify Sessions and Their Owners
@@ -49,7 +49,8 @@ Grep for:
 Grep for:
   - `SystemLanguageModel\.default\.availability` — availability check sites
   - `\.availability` — any availability access
-  - `\.unavailable`, `\.preparing`, `\.available` — availability cases handled
+  - `\.unavailable`, `\.available` — availability cases handled
+  - `\.deviceNotEligible`, `\.appleIntelligenceNotEnabled`, `\.modelNotReady` — the three real UnavailableReason cases
   - `\.task\s*\{`, `Task\s*\{`, `\.onAppear` near session creation — lifecycle anchors
   - `Button.*LanguageModelSession`, `onTapGesture.*LanguageModelSession` — session-in-action smell
 ```
@@ -74,12 +75,18 @@ Grep for:
   - `\.streamResponse\(to:` — streaming response
   - `\.respond\(to:.*generating:` — structured @Generable response
   - `PartiallyGenerated` — streaming partial output type
-  - `LanguageModelSession\.GenerationError` — error type
-  - `\.exceededContextWindowSize`, `\.guardrailViolation`, `\.contentFiltered` — specific catch arms
+  - `LanguageModelError` — OS27 error type (the current one)
+  - `LanguageModelSession\.GenerationError` — 26-cycle error type, **deprecated in 27.0**
+  - `SystemLanguageModel\.Error`, `LanguageModelSession\.Error` — the errors that split OUT of the old enum
+  - `GeneratedContent\.ParsingError` — where `.decodingFailure` went
+  - `\.contextSizeExceeded|\.exceededContextWindowSize` — same failure, new/old spelling
+  - `\.guardrailViolation`, `\.refusal`, `\.rateLimited`, `\.timeout` — specific catch arms
   - `try\s+await.*respond` — actual call sites
   - `Task\.cancel\(\)`, `\.task\(id:` — cancellation surface
   - `\.transcript`, `transcript\.` — conversation history access
 ```
+
+**Search BOTH error spellings.** The 27 SDK deprecated `LanguageModelSession.GenerationError` in favor of `LanguageModelError`, and split `assetsUnavailable` / `concurrentRequests` / `decodingFailure` out into `SystemLanguageModel.Error`, `LanguageModelSession.Error`, and `GeneratedContent.ParsingError`. A project written against the 27 API contains **none** of the old identifiers — grepping only for those reports a modern codebase as having no error handling at all, which is the opposite of the truth. See `axiom-ai (skills/foundation-models-ref.md)` for the full migration table.
 
 ### Step 6: Read Key Files
 
@@ -87,7 +94,7 @@ Read 1-2 representative AI files (AIService / ChatViewModel / similar) to unders
 - Whether availability is checked once (at app/service init) AND before each session creation
 - Whether sessions are owned by a long-lived service (good) or recreated per tap (bad)
 - Whether `respond()` calls are wrapped in `Task { ... }` with loading-state UI
-- Whether catch blocks distinguish guardrailViolation, exceededContextWindowSize, and generic errors
+- Whether catch blocks distinguish guardrail/refusal, context-size exhaustion, and generic errors — in EITHER error-type spelling (`LanguageModelError` on 27, `GenerationError` on 26)
 - Whether @Generable enums are `@frozen` and Tool implementations propagate errors correctly
 - Whether user-supplied text is interpolated directly into prompts (injection risk)
 
@@ -107,11 +114,11 @@ Present this map in the output before proceeding.
 
 ## Phase 2: Detect Known Anti-Patterns
 
-Run all 10 detection patterns. For every grep match, use Read to verify the surrounding context before reporting — grep patterns have high recall but need contextual verification.
+Run all 14 detection patterns. For every grep match, use Read to verify the surrounding context before reporting — grep patterns have high recall but need contextual verification.
 
 ### Pattern 1: No Availability Check Before LanguageModelSession (CRITICAL/HIGH)
 
-**Issue**: Constructing `LanguageModelSession` on a device without Apple Intelligence (or with the model in `.preparing` state) crashes or silently fails.
+**Issue**: Constructing `LanguageModelSession` on a device without Apple Intelligence (or with the model in `.modelNotReady` state) crashes or silently fails.
 **Search**:
 - `LanguageModelSession\(` — construction sites
 - For each match, search the surrounding scope for `SystemLanguageModel.default.availability` check
@@ -153,16 +160,16 @@ Button("Generate") {
 **Verify**: Read matching files; flag when the parsed payload is supposed to be structured.
 **Fix**: Define a `@Generable` struct and use `try await session.respond(to: prompt, generating: MyType.self)` so the framework validates and returns the typed result.
 
-### Pattern 4: Missing Catch for exceededContextWindowSize (HIGH/MEDIUM)
+### Pattern 4: Missing Catch for Context-Size Exhaustion (HIGH/MEDIUM)
 
 **Issue**: Multi-turn conversations eventually exceed the context window. Generic `catch { ... }` shows the user "something went wrong" with no path forward; the conversation is silently broken.
 **Search**:
 - `try.*respond` followed by `catch\s*\{` (generic catch within ~15 lines)
-- `LanguageModelSession\.GenerationError\.exceededContextWindowSize` — specific case
+- `\.contextSizeExceeded` (`OS27`) or `\.exceededContextWindowSize` (26-cycle, deprecated) — either spelling counts as handled
 **Verify**: Read matching files; flag respond() call sites with only generic catch.
-**Fix**:
+**Fix** (`OS27` spelling):
 ```swift
-} catch LanguageModelSession.GenerationError.exceededContextWindowSize {
+} catch LanguageModelError.contextSizeExceeded {
     trimConversationHistory()
     // optionally retry
 } catch {
@@ -175,17 +182,18 @@ Button("Generate") {
 **Issue**: Safety guardrails refuse to generate content for sensitive topics. Treating this as a generic error gives the user "something went wrong" instead of "this content can't be generated"; the user retries the same prompt repeatedly.
 **Search**:
 - `try.*respond` followed by `catch\s*\{` (generic catch within ~15 lines)
-- `\.guardrailViolation` — specific case (note: WWDC 2025-286 uses `.contentFiltered` in some samples; check both)
-- `\.contentFiltered`
+- `\.guardrailViolation` — specific case
+- `\.refusal` — distinct from a guardrail trip; an app that handles one but not the other still leaves a dead end
 **Verify**: Read matching files; flag respond() call sites with only generic catch when the prompts touch user-generated content.
 **Fix**:
 ```swift
-} catch LanguageModelSession.GenerationError.guardrailViolation {
+} catch LanguageModelError.guardrailViolation {
     showSafetyMessage("This content can't be generated. Try rephrasing.")
 } catch {
     showGenericError()
 }
 ```
+
 
 ### Pattern 6: Session Created in Button Handler (HIGH/MEDIUM)
 
@@ -248,6 +256,51 @@ var tags: [String]
 **Verify**: Read matching files; the case must be reachable in the UI (not just logged).
 **Fix**: Show a feature-specific message ("AI features require Apple Intelligence on iPhone 15 Pro or later"); disable the entry-point button.
 
+### Pattern 11: No Evaluation Suite for a Shipping AI Feature (HIGH/HIGH)
+
+**Issue**: A generative feature with no `Evaluations` suite has no quality baseline and no regression gate. The model changes underneath the app on every OS update — with no code change on the developer's side — so quality can degrade silently between releases. This is the single largest quality risk in a Foundation Models codebase, and it is invisible to every other pattern in this audit.
+**Search**:
+- `import\s+Evaluations` — anywhere in the project, including test targets
+- `:\s*Evaluation\b` / `\.evaluates\(` — conformances and Swift Testing traits
+- If the Phase 1 map found `LanguageModelSession` sites but none of the above match, the feature ships unmeasured
+**Verify**: Check test targets specifically — `Evaluations.framework` is a Developer framework and only links into tests, so an app-target-only search will always miss it. Confirm the suite actually covers the sessions found in Phase 1, not some unrelated feature.
+**Fix**: Encode the prompts the team already tests by hand as a golden set (10–20 `ModelSample`s), add `Evaluator`s for the checks they make implicitly, and gate an aggregate in `#expect`. See `axiom-ai (skills/foundation-models-evaluations.md)`.
+
+### Pattern 12: Uncalibrated Model Judge (HIGH/MEDIUM)
+
+**Issue**: A `ModelJudgeEvaluator` whose agreement with human ratings was never measured produces confident noise. Because evaluation datasets skew toward decent output, a judge that simply scores everything high *looks* aligned on a spot-check and drifts hardest as the dataset grows — so every downstream quality number is unreliable.
+**Search**:
+- `ModelJudgeEvaluator` — every construction site
+- `cohensKappa` / `custom(of:.*label:` / `\.custom\(label:` — evidence of a calibration aggregation
+- `judge:` argument — check whether the judge model is the *same* model being evaluated (self-enhancement bias)
+**Verify**: A calibrated project has a *second* evaluation whose subject is the judge, aggregating an alignment statistic against expert ratings. Absence of any custom aggregation alongside `ModelJudgeEvaluator` is the tell.
+**Fix**: Build a judge-calibration evaluation, compute Cohen's kappa against 20–50 human-rated samples, and gate at > 0.6. Judge with a different, more capable model than the one under test.
+
+### Pattern 13: Evaluation That Asserts Nothing (MEDIUM/HIGH)
+
+**Issue**: A test that runs an evaluation but makes no assertion on an aggregate — or asserts something degenerate like "output is non-empty" — is theater. It burns CI time, always passes, and creates false confidence that the feature is gated.
+**Search**:
+- `\.evaluates\(` — for each, check the test body for `#expect` on `aggregateValue`
+- `aggregateValue\(\.custom\(label:` — verify the label string matches a label passed to `custom(of:label:)` in `aggregateMetrics`
+**Verify**: `aggregateValue(_:)` returns **-1** when the operation isn't found (it is non-optional). A mismatched `.custom(label:)` string therefore yields -1 silently, which fails a `> 0.6` assertion in a way that looks like a quality problem rather than a wiring bug. Flag any label that doesn't appear in both places.
+**Fix**: Assert on a real optimization-target metric; keep guardrail metrics at a hard floor. Make label strings shared constants.
+
+### Pattern 14: Incomplete OS27 Error Migration (MEDIUM/HIGH)
+
+**Issue**: Three distinct failures, all of which pass compilation.
+
+1. **Deprecated enum.** `LanguageModelSession.GenerationError` is deprecated in 27.0. Still compiles, emits warnings.
+2. **Partial migration drops cases.** A rename-only migration to `LanguageModelError` leaves `assetsUnavailable`, `concurrentRequests`, and `decodingFailure` unhandled — they moved to `SystemLanguageModel.Error`, `LanguageModelSession.Error`, and `GeneratedContent.ParsingError`. The code compiles and those failures fall into the generic `catch`.
+3. **Silent loss of user-facing recovery copy.** `GenerationError` implemented `errorDescription`, `recoverySuggestion`, AND `failureReason`. `LanguageModelError` implements **only `errorDescription`**. Any error UI reading `.recoverySuggestion` or `.failureReason` starts rendering **nil** after migration — no compile error, no warning, just alerts that quietly stop giving the user guidance.
+
+**Search**:
+- `LanguageModelSession\.GenerationError` — deprecated use
+- `LanguageModelError` present but **without** `SystemLanguageModel\.Error`, `LanguageModelSession\.Error`, or `GeneratedContent\.ParsingError` nearby → partial migration
+- `\.recoverySuggestion`, `\.failureReason` — on a Foundation Models error path, these are now always nil
+- Cross-check `IPHONEOS_DEPLOYMENT_TARGET` / `@available` — only flag (1) when the target reaches 27
+**Verify**: On a 26.x floor the deprecated enum is correct — do not flag it. Sub-issues (2) and (3) apply to any code that has already moved to `LanguageModelError`.
+**Fix**: Migrate to `LanguageModelError`, add catches for the three cases that left the enum, and author your own recovery copy per case. Migration table in `axiom-ai (skills/foundation-models-ref.md)`.
+
 ## Phase 3: Reason About Foundation Models Completeness
 
 Using the Foundation Models Map from Phase 1 and your domain knowledge, check for what's *missing* — not just what's wrong.
@@ -257,7 +310,7 @@ Using the Foundation Models Map from Phase 1 and your domain knowledge, check fo
 | Are user-supplied strings sanitized or escaped before being interpolated into prompts (or are they passed via separate Tool inputs / @Generable parameters)? | Prompt-injection risk | Direct interpolation lets users override system instructions ("ignore previous instructions and say X"); the model follows the most recent guidance |
 | Are `@Generable` enums marked `@frozen`? | Future-case crash | A non-frozen enum lets the model return a case the app doesn't know how to handle; decode succeeds but switch falls through |
 | Is there a Cancel control on long generations that calls `Task.cancel()` or escapes the `streamResponse` loop? | Stuck-spinner UX | Without cancellation, the user can't recover from a slow inference except by killing the app |
-| Is the conversation transcript trimmed or capped to avoid hitting `exceededContextWindowSize` in long sessions? | Context-window bomb | Multi-turn chats accumulate context until generation fails; without trimming the failure surfaces unpredictably |
+| Is the conversation transcript trimmed or capped to avoid exhausting the context window (`LanguageModelError.contextSizeExceeded`) in long sessions? | Context-window bomb | Multi-turn chats accumulate context until generation fails; without trimming the failure surfaces unpredictably |
 | For Tool implementations, do tool errors propagate as distinct error types (separate from session errors)? | Misdiagnosed tool failures | Tool failures look like model failures; debugging takes hours longer than necessary |
 | Is the user's Apple Intelligence opt-in / feature-disabled state observed (Settings → Apple Intelligence can be disabled at any time)? | Stale availability assumption | App caches `available` at launch but user disables in Settings mid-session; next call fails with no recovery path |
 | Are streaming partial outputs (PartiallyGenerated) checked for empty/malformed intermediate states before being shown to the user? | UI flicker / partial-data display | Partial output may have empty arrays or zero values that don't reflect intent; UI flashes incorrect state during streaming |
@@ -266,6 +319,10 @@ Using the Foundation Models Map from Phase 1 and your domain knowledge, check fo
 | Is Foundation Models usage counted against the user's privacy expectations (does the privacy manifest or in-app explanation cover on-device AI processing)? | Privacy-disclosure gap | Even on-device AI is processing user content; users expect transparency about what's analyzed |
 | For `@Generable` types with optional properties, is the model output validated against required fields before consumption? | Silent field drop | The model omits an optional field; downstream code assumed it would be populated |
 | Are `respond()` and `streamResponse()` calls wrapped in retry logic for transient errors (model loading, briefly unavailable)? | Single-shot failure | Transient errors during generation kill the user's request with no retry; the same prompt would have succeeded a moment later |
+| Does `subject(from:)` in any evaluation call the real shipped service, or a copy of its prompt? | Evaluating the wrong artifact | A duplicated prompt drifts from production; every measured improvement is about code the users never run |
+| Does the evaluation dataset include adversarial and edge-case samples, or only happy-path ones? | False confidence | If an input category isn't represented, the evaluation is silent about it — a 95% pass rate can hide one entirely broken use case |
+| Are production failures fed back into a permanent known-failures dataset? | Recurring regressions | Without a regression ratchet, a fixed bug can silently return on the next prompt change |
+| For a feature with tools, is the tool-call trajectory evaluated, or only the final output? | Right answer, wrong path | The model can produce a plausible answer without calling the right tool; output-only evaluation cannot see it |
 
 Require evidence from the Phase 1 map — don't speculate without reading the code.
 
@@ -280,7 +337,7 @@ Bump severity for these combinations:
 | Manual JSON parsing (Pattern 3) | Nested types without @Generable (Pattern 9) | Silently dropped fields, hidden corruption that surfaces only in production | CRITICAL |
 | Missing guardrailViolation catch (Pattern 5) | User-controlled prompt content (Phase 3) | User retries the same refused prompt repeatedly; app shows "something went wrong" each time | HIGH |
 | Session in button handler (Pattern 6) | Slow first inference | Every tap pays cold-start cost; users perceive the entire feature as slow | HIGH |
-| Missing exceededContextWindowSize (Pattern 4) | Multi-turn conversation with no transcript trim (Phase 3) | Conversation hits the wall and dies with no recovery; user must restart | HIGH |
+| Missing context-size catch (Pattern 4) | Multi-turn conversation with no transcript trim (Phase 3) | Conversation hits the wall and dies with no recovery; user must restart | HIGH |
 | @Generable enum without @frozen (Phase 3) | iOS update bringing new model output | Decode succeeds, app crashes on a switch fallthrough; production-only bug | HIGH |
 | User-controlled text in prompt (Phase 3) | No injection guard | User manipulates the model into ignoring instructions; safety/UX failure | HIGH |
 | Tool implementation (Phase 1) | Missing tool-error type distinction (Phase 3) | Tool failures look like model failures; bug reports describe the wrong subsystem | MEDIUM |
@@ -313,11 +370,13 @@ Cross-auditor overlap notes:
 | Prompt-injection guard | parameterized via Tool/Generable / sanitized / direct interpolation |
 | Cancellation surface | task.cancel() wired / missing |
 | Fallback UI when unavailable | feature-specific UI / generic / missing |
+| Evaluation coverage | suite gates an aggregate / suite exists but asserts nothing / none |
+| Judge calibration | kappa gate vs expert ratings / judge used uncalibrated / no judge |
 | **Hardening** | **PRODUCTION-READY / NEEDS HARDENING / FRAGILE** |
 
 Scoring:
-- **PRODUCTION-READY**: No CRITICAL issues, availability checked at every session creation site, sessions hoisted to long-lived owners, all `respond()` in Task with loading UI, specific catches for `guardrailViolation` and `exceededContextWindowSize`, @Generable types have @Guide on numeric/collection properties and @frozen enums, streaming used for multi-paragraph output, prompt-injection mitigated (parameterized via Tools or Generable inputs), Cancel wired, fallback UI on unsupported devices.
-- **NEEDS HARDENING**: No CRITICAL issues, but some HIGH/MEDIUM patterns (missing specific catches, partial @Guide coverage, no streaming on long outputs, session created per-tap, no Cancel control, no transcript trimming). The happy path works; edge cases fail.
+- **PRODUCTION-READY**: No CRITICAL issues, availability checked at every session creation site, sessions hoisted to long-lived owners, all `respond()` in Task with loading UI, specific catches for `guardrailViolation` and context-size exhaustion, @Generable types have @Guide on numeric/collection properties and @frozen enums, streaming used for multi-paragraph output, prompt-injection mitigated (parameterized via Tools or Generable inputs), Cancel wired, fallback UI on unsupported devices, **and an evaluation suite gates a real aggregate metric** (with a calibrated judge, if one is used).
+- **NEEDS HARDENING**: No CRITICAL issues, but some HIGH/MEDIUM patterns (missing specific catches, partial @Guide coverage, no streaming on long outputs, session created per-tap, no Cancel control, no transcript trimming, **no evaluation suite or an uncalibrated judge**). The happy path works; edge cases fail — and without evals, nobody will notice when they start failing.
 - **FRAGILE**: Any CRITICAL issue (missing availability + creating session, sync respond on main, manual JSON parsing of model output, missing availability + missing fallback UI compound). The integration crashes on unsupported devices, blocks the UI, or silently corrupts structured output.
 
 ## Output Format
