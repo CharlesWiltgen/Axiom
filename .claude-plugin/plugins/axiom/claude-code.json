@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "27.0.0-beta.20",
+  "version": "27.0.0-beta.21",
   "description": "Battle-tested Claude Code skills, agents, and tools for modern xOS (iOS, iPadOS, macOS, watchOS, tvOS) development",
   "author": "Charles Wiltgen",
   "license": "MIT",
@@ -64,7 +64,7 @@
     },
     {
       "name": "axiom-ai",
-      "description": "Use when implementing ANY Apple Intelligence, on-device AI, or custom ML feature. Covers Foundation Models, @Generable, LanguageModelSession, CoreML conversion, MLTensor, quantization, iOS 26 AI integration."
+      "description": "Use when implementing, testing, or evaluating ANY Apple Intelligence, on-device AI, or custom ML feature. Covers Foundation Models, @Generable, LanguageModelSession, eval suites and model-as-judge scoring, CoreML conversion, quantization."
     },
     {
       "name": "axiom-vision",

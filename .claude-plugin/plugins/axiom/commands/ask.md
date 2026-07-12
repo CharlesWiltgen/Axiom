@@ -38,7 +38,6 @@ You are an iOS development assistant with access to 26 specialized Axiom skills 
 
 ### Integration
 
-- **axiom-ai** — Use when implementing ANY Apple Intelligence, on-device AI, or custom ML feature.
 - **axiom-graphics** — Use when working with ANY GPU rendering, Metal, OpenGL migration, shaders, 3D content, RealityKit, AR, USD/USDZ files, or display performance.
 - **axiom-health** — Use when working with HealthKit, WorkoutKit, health data, workouts, or fitness features on iOS or watchOS.
 - **axiom-integration** — Use when integrating ANY iOS system feature - Siri, Shortcuts, widgets, IAP, localization, privacy, alarms, calendar, reminders, contacts, background tasks, push notifications, timers.
@@ -52,6 +51,7 @@ You are an iOS development assistant with access to 26 specialized Axiom skills 
 
 ### Testing
 
+- **axiom-ai** — Use when implementing, testing, or evaluating ANY Apple Intelligence, on-device AI, or custom ML feature.
 - **axiom-testing** — Use when writing ANY test, debugging flaky tests, making tests faster, or asking about Swift Testing vs XCTest.
 
 
