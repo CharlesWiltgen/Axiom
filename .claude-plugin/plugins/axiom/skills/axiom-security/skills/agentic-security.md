@@ -171,7 +171,37 @@ This example is a plain custom intent; the property works the same on schema-ado
 
 Review every intent with lock-screen behavior in mind: would you be comfortable with this action running on a device you just lost?
 
+## Proving the Mitigations Hold `OS27`
+
+Every mitigation above is probabilistic or depends on model behavior you don't control. A mitigation you haven't measured is a mitigation you're hoping for. Red-teaming by hand — typing injection attempts into the feature and seeing what happens — measures nothing, catches no regression, and has to be redone from scratch every model release.
+
+A red-team prompt set **is an adversarial evaluation dataset**. Express it in the Evaluations framework and it becomes a CI gate instead of an afternoon:
+
+| Red-team concept | Evaluations construct |
+|---|---|
+| One injection attempt | A `ModelSample` whose prompt carries the poisoned content |
+| "The agent must refuse / must not act" | A safety `Metric` asserted at 100% — a guardrail, never an optimization target |
+| "The injection must not fire the exfiltration tool" | `TrajectoryExpectation(disallowed: [ToolExpectation("sendEmail")])` scored by `ToolCallEvaluator` |
+| "Did it leak the private context?" | `ModelJudgeEvaluator` with a leakage `ScoreDimension` |
+| Regression across model releases | Re-run the suite; a drop is a real finding |
+
+The `disallowed:` case is the one to reach for first — it directly encodes "this untrusted content tried to make the agent act, and the agent must not have." It turns the lethal-trifecta analysis into an executable assertion.
+
+Two cautions specific to safety evals. A safety metric is a **guardrail**, so gate it at 100% and never trade it away for a quality gain — that trade is exactly the failure this skill exists to prevent. And if a model judge grades leakage, validate the judge before you trust it (Cohen's kappa, see below); an unaligned judge that scores generously reports a safety pass you don't have.
+
+Building the suite: see `axiom-ai (skills/foundation-models-evaluations.md)` for the discipline and `axiom-ai (skills/foundation-models-evaluations-ref.md)` for the API.
+
 ## Pressure Scenarios
+
+### Scenario: "We red-teamed it manually before launch — it held up"
+
+**Pressure**: "Two engineers spent a day trying to jailbreak it and couldn't. That's our safety testing."
+
+**Reality**: A manual red-team is a snapshot of two people's imagination on one build. It produces no dataset, no number, and no gate — so the next prompt tweak, model release, or new tool silently un-does it and nobody finds out. Guardrails erode quietly; that's the whole hazard.
+
+**Correct action**: Keep the attempts they wrote. Those are your seed samples. Turn them into an `Evaluation` with a safety `Metric` gated at 100% and a `disallowed:` trajectory expectation on the side-effectful tools, then run it in CI on every prompt or model change.
+
+**Push-back template**: "The day of red-teaming wasn't wasted — it's the seed dataset. Encoding it as an eval takes a few hours and turns a one-off into a gate that re-runs on every change and every model update."
 
 ### Scenario: "The confirmation sheet is annoying — skip it for the demo"
 
@@ -193,6 +223,7 @@ Review every intent with lock-screen behavior in mind: would you be comfortable 
 | "We'll validate inside the tool's implementation" | Good — but the model already chose the action and arguments. `.onToolCall` gives you a single policy checkpoint covering ALL tools before execution. |
 | "Redaction will degrade model quality" | What never enters context can't be exfiltrated. Redact what the task doesn't need; the model only misses data it shouldn't have had. |
 | "Our intent is only called by Siri, so it's trusted" | The model picks the intent and its arguments from context that may be poisoned. Schema risk metadata + auth policy exist precisely for this. |
+| "We tried a bunch of injections by hand and it held" | A manual red-team is a snapshot of one build and two imaginations. It leaves no dataset, no number, and no gate — so the next prompt tweak silently un-does it. Encode the attempts as an adversarial eval suite. |
 
 ## Checklist
 
@@ -214,10 +245,15 @@ Before shipping an agentic feature:
 - [ ] Risky App Intents require device unlock (`authenticationPolicy`)
 - [ ] Schema-adopting intents reviewed — defaults inherited, overrides only stricter
 
+**Measurement** (`OS27`):
+- [ ] Red-team attempts encoded as an adversarial `Evaluation` dataset, not run by hand
+- [ ] Safety metric gated at 100% in CI, and `disallowed:` trajectory expectations cover the side-effectful tools
+- [ ] Suite re-run on every prompt/model change — guardrails erode quietly across model releases
+
 ## Resources
 
-**WWDC**: 2026-347
+**WWDC**: 2026-347, 2026-299
 
-**Docs**: /foundationmodels, /appintents, /appintents/intentauthenticationpolicy
+**Docs**: /foundationmodels, /appintents, /appintents/intentauthenticationpolicy, /evaluations
 
-**Skills**: axiom-ai (skills/foundation-models-ref.md), axiom-integration (skills/app-intents-ref.md), skills/app-attest.md
+**Skills**: axiom-ai (skills/foundation-models-ref.md), axiom-ai (skills/foundation-models-evaluations.md), axiom-ai (skills/foundation-models-evaluations-ref.md), axiom-integration (skills/app-intents-ref.md), skills/app-attest.md
