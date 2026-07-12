@@ -29,7 +29,7 @@ The Codex plugin includes 184 specialized skills covering:
 npx skills add CharlesWiltgen/Axiom -a codex -g
 ```
 
-This installs all <!--ax:skills-->262<!--/ax--> skills globally using [npx skills](https://skills.sh/). The `-g` flag makes skills available across all projects.
+This installs all <!--ax:skills-->264<!--/ax--> skills globally using [npx skills](https://skills.sh/). The `-g` flag makes skills available across all projects.
 
 To install for the current project only (omit `-g`):
 
