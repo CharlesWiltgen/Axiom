@@ -142,6 +142,17 @@ try!|as!
 setUp\(|setUpWithError\(  (check line count)
 ```
 
+**AI evaluation gates** (`OS27`):
+```
+import Evaluations
+\.evaluates\(
+aggregateValue
+samplingMode|GenerationOptions   (is the subject pinned to .greedy?)
+computeStandardDeviation          (is the noise floor even measured?)
+ModelJudgeEvaluator               (judge metrics CANNOT be pinned deterministic)
+\.enabled\(if:                    (is the gate guarded on model availability?)
+```
+
 ### Category 1: Flaky Test Patterns (CRITICAL)
 
 #### 1.1 Sleep Calls
@@ -170,6 +181,19 @@ XCTAssertTrue(element.waitForExistence(timeout: 5))
 **Detection**: Tests that reference results from other test methods, or setUp that depends on test order
 **Issue**: Swift Testing and XCTest randomize order
 **Fix**: Make each test independent
+
+#### 1.4 Ungrounded AI Evaluation Gate (`OS27`)
+**Search**: `\.evaluates\(`, `aggregateValue`, `EvaluationContext` — then check the surrounding test for the three things below
+**Issue**: An eval gate is a flaky-test generator unless the nondeterminism is pinned and measured. A model isn't a pure function, so `#expect(aggregateValue(...) >= 3.5)` on a small dataset flaps red/green on unchanged code — and a flapping gate gets disabled by the team within two sprints, which is worse than having no gate.
+
+Flag a `.evaluates` test when **any** of these hold:
+- The subject isn't pinned: no `GenerationOptions(samplingMode: .greedy)` in the evaluation's `subject(from:)`. Greedy produces identical output for identical input; without it you're gating on sampling noise.
+- The threshold has no recorded noise floor. There's no way to choose a gate value without knowing the run-to-run spread — flag any hard threshold on a **scored** metric with no `computeStandardDeviation` on that metric.
+- The gate is on a **model-judge** metric. `ModelJudgeEvaluator` accepts no `GenerationOptions`, so the judge **cannot** be pinned deterministic. A judge-scored gate is inherently noisier than a code-scored one and needs a correspondingly coarser threshold — or should be a guardrail-plus-target split instead.
+
+**Also flag**: a `.evaluates` test with no availability guard (e.g. `.enabled(if: SystemLanguageModel.default.isAvailable)`). If the model is unavailable on the runner, every sample errors, every metric becomes `.ignore`, and the aggregate is computed over an **empty set** — which passes. A green gate that never ran is the worst outcome in this category.
+
+**Fix**: pin the subject to greedy; put hard gates on pass/fail guardrails (which don't drift); size the scored-metric threshold above the measured noise floor. See `axiom-ai (skills/foundation-models-evaluations.md)` for the discipline and `axiom-ai (skills/foundation-models-evaluations-diag.md)` for the failure modes.
 
 ### Category 2: Test Speed Issues (HIGH)
 
