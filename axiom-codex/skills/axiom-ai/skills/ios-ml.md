@@ -81,11 +81,20 @@ For conversion-time failures (output divergence, `coremltools` import errors, un
 
 Similarly-configured transcribers **share** backing engines and models — so the cap counts *incompatible* work, and a third similarly-configured analyzer may not throw at all. Making your analyzers alike (same locale, same settings) is the cheap fix; reach for it before overriding anything.
 
-`insufficientResources` is a `static var` on `SFSpeechError.Code`, not an enum case, so it will not pattern-match in a `catch`:
+`insufficientResources` (rawValue 16) is a **Swift-only `static var`** on `SFSpeechError.Code` — `SFErrors.h`'s `NS_ERROR_ENUM` declares only 6 real ObjC cases, and this is not one of them. So Swift synthesizes no shorthand member on `SFSpeechError`, and the form you reach for first does **not** compile:
 
 ```swift
+catch SFSpeechError.insufficientResources { … }        // ❌ no member 'insufficientResources'
+```
+
+It *does* pattern-match once you spell the `Code` type. Both of these compile and match at runtime:
+
+```swift
+catch SFSpeechError.Code.insufficientResources { … }
 catch let error as SFSpeechError where error.code == .insufficientResources { … }
 ```
+
+Same trap for `cannotConfigureAudioSystem` (`OS27`), also a Swift-only `static var`.
 
 `SpeechAnalyzer.Options.ignoresResourceLimits` `OS27` opts out of the cap: the system then permits an *unlimited* number of analyzers. It stops **counting**, not managing — you trade an early, predictable `insufficientResources` throw for an **unpredictable error** at some later point once real hardware capacity is exceeded. Apple's examples of when this is safe are narrow: analyzers that share language and settings, or that receive audio on an interleaved schedule. Apple attaches an explicit warning — test across devices, and have a recovery path for when an analyzer fails.
 
@@ -127,6 +136,8 @@ The two `CaptureInputSequenceProvider` entry points are not interchangeable, and
 | `provider(from:in:compatibleWith:)` | Joins a session you own. **Does not reconfigure or alter it** — but you must add its `captureAudioDataOutput` to your session yourself, or you get silence. visionOS-unavailable. |
 
 If your app manages its own audio session (playback, VoIP, recording), `providerWithSession` will stomp it. Use `provider(from:in:)` — that is exactly what Apple offers it for. Don't touch `captureAudioDataOutput`'s sample-buffer delegate or callback queue.
+
+**Swift 6 landmine on `provider(from:in:)`** — the factory is `@concurrent` and `AVCaptureDevice`/`AVCaptureSession` are **non-Sendable**, so calling it from inside an actor fails region-isolation checking. Take the device and session as `sending` parameters and call from a `nonisolated` context; the session local is *consumed*, so reach it back afterwards via `provider.captureSession`. A bare `swiftc -typecheck` will not surface this — it only appears under full strict-concurrency compilation.
 
 #### `AnalyzerInput.buffer` is deprecated in 27
 

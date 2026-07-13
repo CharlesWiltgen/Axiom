@@ -78,6 +78,39 @@ class TestPositiveRouting(unittest.TestCase):
         self.assertIn("axiom-swiftui", routed_skills(
             "My SwiftUI @State view won't update"))
 
+    def test_ai_speech_transcription(self):
+        # REGRESSION GUARD. The OS27 Speech delta was folded into ios-ml.md while the hook's
+        # only speech regex required the literal token `speech` + recogni/analyz/to-text — so
+        # `SpeechTranscriber` did not match its own router row, and 7 of these 8 prompts were
+        # NO MATCH. The content shipped behind a shut door. Do not narrow this without a
+        # replacement path from these phrasings to axiom-ai.
+        for prompt in [
+            "transcribe microphone audio to text",
+            "how do I use SpeechTranscriber",
+            "add live transcription to my app",
+            "dictation in my app",
+            "SpeechAnalyzer throws insufficientResources",
+            "CaptureInputSequenceProvider reconfigures my audio session",
+            "my AVAudioSession breaks after adding transcription",
+            "AssetInventory locale download for transcription",
+            "SpeechAnalyzer Options ignoresResourceLimits",
+            "cannotConfigureAudioSystem error",
+            "AnalyzerInputConverter for mic buffers",
+        ]:
+            self.assertIn("axiom-ai", routed_skills(prompt),
+                          f"expected axiom-ai for: {prompt!r}")
+
+    def test_ai_speech_does_not_swallow_unrelated(self):
+        # `transcrib`/`transcription` must not fire on prompts that merely mention a transcript
+        # or unrelated domains. FoundationModels' `Transcript` legitimately routes to axiom-ai
+        # anyway, so it is excluded here — these are the cases that must NOT become axiom-ai.
+        for prompt in [
+            "My SwiftUI @State view won't update",
+            "Fix my Core Data migration crash",
+        ]:
+            self.assertNotIn("axiom-ai", routed_skills(prompt),
+                             f"speech regex over-matched: {prompt!r}")
+
     def test_swiftui_previews_slow(self):
         for prompt in [
             "My SwiftUI previews take 30 seconds to load",
