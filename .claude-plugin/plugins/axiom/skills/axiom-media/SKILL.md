@@ -37,6 +37,7 @@ license: MIT
 | CarPlay Now Playing template customization + sports mode | See `skills/now-playing-carplay.md` |
 | MusicKit Now Playing | See `skills/now-playing-musickit.md` |
 | DockKit motorized stands / gimbals, subject tracking, custom motor control | See `skills/dockkit.md` |
+| Speech-to-text / transcription (SpeechAnalyzer, mic → transcript) | **Invoke axiom-ai** (`skills/ios-ml.md`) |
 
 ## Decision Tree
 
@@ -90,6 +91,11 @@ digraph media {
 **Now Playing + background audio**:
 - Now Playing metadata/controls → **stay here** (now-playing)
 - Background audio mode / BGTaskScheduler → **invoke axiom-integration** (background-processing reference)
+
+**Speech-to-text + audio capture** (transcribing mic or asset audio):
+- `SpeechAnalyzer` / `SpeechTranscriber`, the ~2-simultaneous-analyzer cap, the `OS27` input providers → **invoke axiom-ai** (`skills/ios-ml.md`)
+- Audio session category/mode, `AVCaptureSession` wiring → **stay here** (avfoundation-ref, camera-capture)
+- **The trap**: `CaptureInputSequenceProvider.providerWithSession(...)` (`OS27`) automatically reconfigures your app's default `AVAudioSession`. If this suite's audio-session setup "randomly breaks" after transcription is added, that's the cause — use `provider(from:in:)` and add its `captureAudioDataOutput` to your own session.
 
 **Photo library + privacy**:
 - Photo picker (PHPicker, PhotosPicker) → **stay here** (photo-library) — no permissions needed
