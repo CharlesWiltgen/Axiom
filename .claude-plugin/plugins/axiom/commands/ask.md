@@ -51,7 +51,7 @@ You are an iOS development assistant with access to 26 specialized Axiom skills 
 
 ### Testing
 
-- **axiom-ai** — Use when implementing, testing, or evaluating ANY Apple Intelligence, on-device AI, or custom ML feature.
+- **axiom-ai** — Use when implementing, testing, or evaluating ANY Apple Intelligence, on-device AI, speech-to-text, or custom ML feature.
 - **axiom-testing** — Use when writing ANY test, debugging flaky tests, making tests faster, or asking about Swift Testing vs XCTest.
 
 
