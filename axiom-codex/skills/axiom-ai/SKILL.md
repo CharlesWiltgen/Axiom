@@ -30,6 +30,7 @@ Use this router when:
 | Computer vision (image analysis, OCR, segmentation) | **/skill axiom-vision** → Vision framework |
 | Cloud API integration (OpenAI, generic HTTP) | **/skill axiom-networking** → URLSession patterns |
 | Cloud Claude integration (Anthropic SDK, Messages API, Claude Agent SDK) | **See `claude-api` skill** (external) → includes automated Opus 4.6 → 4.7 migration |
+| Speech-to-text / transcription (SpeechAnalyzer, SpeechTranscriber, mic → transcript) | **See skills/ios-ml.md** → Speech-to-Text section (the ~2-analyzer cap, `OS27` input providers) |
 | Turnkey Apple Intelligence UI — suggested actions for a messaging conversation (`OS27`) | **See skills/suggested-actions.md** → drop-in `SuggestedActionsView`, entitlement-gated |
 | System AI features (Writing Tools, Genmoji) | No custom code needed — these are system-provided |
 

@@ -168,6 +168,20 @@ if "axiom-ai" not in matches and re.search(r'aggregatevalue|subjectinferenceerro
 if re.search(r'coreml|core\s*ml|mltensor|create\s*ml|mlmodel|convert.{0,10}(pytorch|tensorflow|onnx).{0,10}(coreml|ios)|model.{0,10}(quantiz|compress|palettiz)|speech.{0,5}(recogni|analyz|to.text)', prompt_lower):
     matches.append("axiom-ai")
 
+# Speech / transcription (Speech framework: SpeechAnalyzer, SpeechTranscriber).
+# The ML regex above only fires on the literal token `speech` followed by recogni/analyz/to-text,
+# so the most common entry points fell straight through — `SpeechTranscriber` does not match it,
+# and neither does "transcribe mic audio". Symptom phrasings for this framework rarely contain the
+# word "speech" at all, which is exactly how the OS27 Speech delta shipped behind a shut door.
+# `transcrib`/`transcription` deliberately do NOT match FoundationModels' `Transcript` (no 'b',
+# no 'ion') — and even if they did, that also routes to axiom-ai, so a collision is harmless.
+if "axiom-ai" not in matches and re.search(
+    r'speechtranscriber|speechanalyzer|transcrib|transcription|dictation'
+    r'|insufficientresources|cannotconfigureaudiosystem'
+    r'|captureinputsequenceprovider|assetinputsequenceprovider|analyzerinputconverter'
+    r'|ignoresresourcelimits|assetinventory', prompt_lower):
+    matches.append("axiom-ai")
+
 # Vision
 if re.search(r'vision\s*framework|visionkit|vnrequest|vndetect|vnclassif|vnrecogni|vncoreml|vnimage|vngenerateforeground|vngenerateattention|subject.{0,5}(segment|lift)|hand\s*pose|body\s*pose|text\s*recogni|barcode.{0,5}(scan|detect)|document\s*scan|datascanner', prompt_lower):
     matches.append("axiom-vision")

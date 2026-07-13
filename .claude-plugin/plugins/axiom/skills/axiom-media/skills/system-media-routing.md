@@ -1,7 +1,7 @@
 
 # System Media Routing — Casting Beyond AirPlay `iOS27`
 
-`import AVSystemRouting` — a new framework (`iOS27`, iOS only — not macCatalyst/visionOS/macOS/tvOS/watchOS) that lets a media app route playback to **non-AirPlay system routes**: third-party casting targets such as **Google Cast / Chromecast, DLNA, and other streaming standards**, surfaced in the same system route picker / Control Center as AirPlay.
+`import AVSystemRouting` — a new framework, iOS only (not macCatalyst/visionOS/macOS/tvOS/watchOS), that lets a media app route playback to **non-AirPlay system routes**: third-party casting targets such as **Google Cast / Chromecast, DLNA, and other streaming standards**, surfaced in the same system route picker / Control Center as AirPlay.
 
 Historically iOS exposed only **one** native streaming protocol (AirPlay); supporting Chromecast etc. meant bundling each vendor's SDK and your own cast button. AVSystemRouting replaces that with **one Apple API**: the protocol is supplied by a system **route provider**, and your app drives playback through a uniform interface.
 
@@ -84,20 +84,26 @@ final class RouteCoordinator: AVSystemRouteControllerObserver {
 
 Both `playbackControl` and `dataChannel` exist on every `AVSystemRouteMediaSession` regardless of mode (both are optional); the pairing above is the intended usage, not enforced by the type.
 
+`dataDelegate` is `weak`, so the delegate must be a type you retain — hence a method on a conforming class, not a free function:
+
 ```swift
 @available(iOS 27, *)
 @MainActor                                          // REQUIRED: the controllable is @MainActor-isolated
-func controlPlayback(_ media: AVSystemRouteMediaSession) async throws {
-    // .player mode: a system-provided controller for position / rate / volume + state observation.
-    if let control = media.playbackControl {        // (any AVKit.AVPlaybackUserInterfaceControllable)?
-        control.isPlaying = true                    // settable — "play"
-        control.volume = 0.6                        // 0.0...1.0
-        control.seek(to: .init(seconds: 30, preferredTimescale: 600), tolerance: .zero)
-    }
-    // .application mode: exchange raw protocol bytes with the companion app.
-    if let channel = media.dataChannel {
-        channel.dataDelegate = self                 // AVSystemRouteDataDelegate.receive(_:) async throws
-        try await channel.send(Data(/* protocol frame */))
+final class PlaybackDriver: NSObject, AVSystemRouteDataDelegate {
+    func receive(_ data: Data) async throws { /* companion-app protocol frame */ }
+
+    func controlPlayback(_ media: AVSystemRouteMediaSession) async throws {
+        // .player mode: a system-provided controller for position / rate / volume + state observation.
+        if let control = media.playbackControl {     // (any AVKit.AVPlaybackUserInterfaceControllable)?
+            control.isPlaying = true                 // settable — "play"
+            control.volume = 0.6                     // 0.0...1.0
+            control.seek(to: .init(seconds: 30, preferredTimescale: 600), tolerance: .zero)
+        }
+        // .application mode: exchange raw protocol bytes with the companion app.
+        if let channel = media.dataChannel {
+            channel.dataDelegate = self              // weak — `self` must be retained elsewhere
+            try await channel.send(Data(/* protocol frame */))
+        }
     }
 }
 ```
@@ -107,10 +113,26 @@ Drop the `@MainActor` and Swift 6 rejects every write: *"main actor-isolated pro
 Use the `dataChannel` for the `.application` companion-app model. Note there are two data channels: the route exposes a non-optional `AVSystemRoute.routeDataChannel`, while the started media session exposes the optional `AVSystemRouteMediaSession.dataChannel` used above.
 
 > **Do not use `AVInterfaceControllable` — it was renamed mid-beta.** Apple shipped an `AVInterface*` family
-> in an early 27 beta and deprecated all 15 symbols in the same release (`introduced: 27.0, deprecated: 27.0`).
-> `playbackControl` is typed `(any AVKit.AVPlaybackUserInterfaceControllable)?`, and the old and new protocols
-> are **unrelated types** — so the old name is a **hard type error**, not a deprecation warning:
+> in an early 27 beta and deprecated the whole family in the same release (15 born-deprecated clauses,
+> `introduced: 27.0, deprecated: 27.0`). `playbackControl` is typed
+> `(any AVKit.AVPlaybackUserInterfaceControllable)?`, and the old and new protocols are **unrelated types** —
+> so the old name is a **hard type error**, not a deprecation warning:
 > `error: cannot assign value of type '(any AVPlaybackUserInterfaceControllable)?' to type '(any AVInterfaceControllable)?'`.
+
+## Info.plist — without it, nothing ever appears
+
+`AVSystemRouteController.supportedExtensionAvailable` is gated on **your own Info.plist**, not just on what's
+installed. Apple: *"If neither key is declared, or no installed extension matches the declared support, this
+property is `NO`."* `addObserver` likewise only fires for routes whose extension matches what you declared.
+
+| Key | Type | Pairs with |
+|-----|------|-----------|
+| `MDESupportsUniversalURLPlayback` | Bool | `.player` mode — hand a content URL to the remote system player |
+| `MDESupportedProtocols` | Dict: protocol ID → the remote application's ID | `.application` mode — launch a companion app on the receiver |
+
+**This is the first thing to check when nothing works.** A developer who omits these gets
+`supportedExtensionAvailable == false` forever — even on a device with a provider installed — and will
+otherwise conclude they are region-gated.
 
 ## Does not build for the simulator
 
@@ -122,13 +144,20 @@ module resolution, not at runtime:
 error: no such module 'AVSystemRouting'
 ```
 
-Since the simulator is the default run destination, this is the first thing you hit. Guard the import:
+Since the simulator is the default run destination, this is the first thing you hit. Guarding only the
+`import` is not enough — every AVSystemRouting-typed declaration must sit inside the same `#if`, or the
+simulator build fails with `cannot find 'AVSystemRouteController' in scope`. Isolate the whole feature in
+one file:
 
 ```swift
 #if canImport(AVSystemRouting)
 import AVSystemRouting
+
+// ...every AVSystemRouting-typed declaration lives in here too, not just the import.
 #endif
 ```
+
+Your CI needs a **device** lane for this feature; a simulator-only lane cannot compile it.
 
 ## What `playbackControl` gives you
 
@@ -158,13 +187,16 @@ instructions to you.
 | Gotcha | Why it bites |
 |--------|--------------|
 | `playbackPosition` is **get-only**, and `position` is not "now" | It bundles `position` + `hostTime` + `rate` as one snapshot (an ObjC class, so a reference — not a value type). To show a live time, **extrapolate** from `position` using `rate` and the elapsed mach host time since `hostTime`. Reading `position` as the current time makes your scrubber lag. The old `AVInterface` protocol had a settable `currentPlaybackPosition: CMTime`; this replaced it. |
-| `isPlaying` is **intent, not state** | It stays `true` while `isBuffering` is `true` — it means "resume automatically when data arrives". Do not treat a stall as a pause. |
+| `isPlaying` is **intent, not state** | Apple: it "**should** remain YES while `isBuffering` is YES" — it means "resume automatically when data arrives". Do not treat a stall as a pause. (A "should", so a third-party provider may not comply.) |
+| A mistyped observer signature **silently never fires** | `AVSystemRouteControllerObserver` ships a **default implementation** of `systemRouteController(_:handle:)`. Get the signature subtly wrong and your type still conforms — no compiler error, and your handler is simply never called. A compile probe cannot catch this; check that events actually arrive. |
 | `isReady` is one-way *by contract* | Apple: it "should transition from NO to YES … and **should not** revert". A mid-playback stall shows up as `isBuffering`, not `isReady == false`. It's a provider contract, not an invariant — a defensive consumer should not assume a third-party provider honors it. |
-| Read `seekableTimeRanges` to gate your own scrubber | `requiresLinearPlayback` on a segment is an **indicator** ("must be played sequentially"), not a switch that blocks anything — and it's read-only. The real gate is `seekableTimeRanges`, which per Apple "**typically** excludes segments where `requiresLinearPlayback` is YES". Disable your seek UI from that; do not expect the API to enforce ad-skipping for you. |
-| Live vs DVR is something you **detect**, not set | `timeRange` is read-only. Live **without** DVR = a zero-duration `timeRange` at the live edge with `seekableTimeRanges` nil/empty. Live **with** DVR = a rolling window plus explicit `seekableTimeRanges`. Pair with `containsLiveStreamingContent`. |
+| `nil` and `[]` on `seekableTimeRanges` mean **opposite** things | Apple: "**If `nil`, the entire content defined by `timeRange` is considered seekable**" — but "**an empty array means the entire content … is *not* seekable**." Collapsing the two breaks you in both directions: `?? []` bricks the scrubber on unrestricted content, and `isEmpty ? everything : ranges` lets users scrub straight through ads. Treat `nil` as "all of `timeRange`", `[]` as "nothing". |
+| Nothing enforces the ad gate for you — build it from **three** sources | `requiresLinearPlayback` is named like a switch but is a read-only **indicator**; it blocks nothing. `seekableTimeRanges` is the primary gate — but Apple only says it "**typically** excludes segments where `requiresLinearPlayback` is YES", so a provider may leave it `nil` (= *everything* seekable) while still marking ad segments. Gate on all three: `supportedSeekCapabilities.contains(.seek)` (the route may not support seeking at all), **and** membership in `seekableTimeRanges`, **and** subtract every `requiresLinearPlayback` segment. Trusting `seekableTimeRanges` alone silently opens the ad gate on a non-conforming provider — if ad-skip is a revenue requirement, test against the real receiver. |
+| Live vs DVR is something you **detect**, not set | `timeRange` is read-only. Live **without** DVR = a zero-duration `timeRange` at the live edge. Live **with** DVR = a rolling window plus explicit `seekableTimeRanges`. Pair with `containsLiveStreamingContent`. |
+| `playbackControl` can be `nil`, and `state = .scrubbing` is not decorative | The provider may vend no controls — `guard let control = media.playbackControl else { … }` and keep your local fallback path. While the user drags the scrubber, set `control.state = .scrubbing` (and back to `.normal` on commit) so the remote device knows the difference between a seek and a scrub. |
 | `segments` "should" be contiguous — not "must" | Apple's word is *should* (contiguous, covering the timeline, no gaps or overlaps). A third-party provider may not comply, so don't index into `segments` assuming full coverage. |
 | `AVPlaybackUserInterfaceVideoProviding` and `…ThumbnailControllable` are **unusable** | They appear in the AVKit Swift interface but are `@available(iOS, unavailable)` on **every** platform. Same for `AVExperienceController`, `AVMultiviewManager`, `AVContentSelectionViewController`. Do not adopt them. |
-| In Swift, metadata is the **struct** | `AVPlaybackUserInterfaceContentMetadataTemplate` is `NS_REFINED_FOR_SWIFT` — Swift sees only `AVPlaybackUserInterfaceContentMetadata` (memberwise init). Note `metadata` itself is **read-only** on the controllable. |
+| In Swift, metadata is a **new struct**, not the ObjC class | Both `…ContentMetadataTemplate` and the `…ContentMetadata` *class* are `NS_REFINED_FOR_SWIFT`; the overlay vends a fresh Swift struct `AVPlaybackUserInterfaceContentMetadata` (with a nested `VideoProperties`) and a memberwise init. Read-path trivia mostly — `metadata` is **read-only** on the controllable. |
 
 ## Gate on availability + keep a fallback
 
@@ -176,10 +208,16 @@ if #available(iOS 27, *), AVSystemRouteController.supportedExtensionAvailable {
 }
 ```
 
-`supportedExtensionAvailable` being `false` (no provider installed, or region without third-party routing) is the common case today — design for it.
+`supportedExtensionAvailable` being `false` is the common case today — design for it. When it is `false`, check
+these in order:
+
+1. **Your Info.plist keys are missing** (see above). This is the most common cause and it is entirely on you.
+2. No matching route-provider extension is installed — Apple does not implement Chromecast; the *vendor*
+   ships the extension. Dropping a per-vendor cast SDK is contingent on that extension actually existing.
+3. Region gating (reported EU/DMA-driven).
 
 ## Resources
 
-**Docs**: /avsystemrouting, /avsystemrouting/routing-media-to-third-party-devices
+**Docs**: /avsystemrouting, /avsystemrouting/routing-media-to-third-party-devices, /avkit/avplaybackuserinterfacecontrollable
 
 **Skills**: now-playing, now-playing-carplay, avfoundation-ref
