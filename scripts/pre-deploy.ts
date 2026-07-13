@@ -52,6 +52,7 @@ import {
   findSkillNameCollisions,
 } from "./skill-invocations.ts";
 import { parsePorcelain, resolveStaleness } from "./staleness.ts";
+import { findDashViolations } from "./docs-dashes.ts";
 
 const root = path.resolve(import.meta.dirname!, "..");
 const pluginDir = path.join(root, ".claude-plugin/plugins/axiom");
@@ -1331,33 +1332,22 @@ heading("12i. Docs Dash Convention");
 // (`[text][ref]`) or bare `[text]`. That's exhaustive for VitePress docs (which
 // use inline links); widen the alternation if reference-link heads ever appear.
 //
-// Flags BOTH wrong separators: an em-dash (—) and an ASCII hyphen (-). The check
-// originally caught only the em-dash, so `- **Label** - desc` passed silently —
-// six such violations shipped on docs/skills/machine-learning/speech.md and were
-// only caught by a manual review. The rule wants an en-dash (–, U+2013); anything
-// else in the separator position is drift.
-const dashSepPattern =
-  /^\s*(?:[-*]|\d+\.)\s+(?:\*\*[^*]+\*\*|\[[^\]]+\]\([^)]+\)|`[^`]+`)\s+[—-]\s/;
+// The pattern + scanner live in scripts/docs-dashes.ts so they are UNIT-TESTABLE
+// (scripts/docs-dashes.test.ts). They were inline and untested here, flagging only the
+// em-dash — so an ASCII hyphen in the separator position passed silently and six
+// violations shipped on a docs page, straight through this check. Do not re-inline them.
 const dashViolations: string[] = [];
 function scanDocsDashes(dir: string): void {
   if (!fs.existsSync(dir)) return;
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    // Generated output holds no authored markdown; skip it (and save ~1,263 stats).
+    if (entry.name === ".vitepress") continue;
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) {
       scanDocsDashes(full);
     } else if (entry.name.endsWith(".md")) {
-      const lines = fs.readFileSync(full, "utf8").split("\n");
-      let inFence = false;
-      let inFrontmatter = false;
-      for (let i = 0; i < lines.length; i++) {
-        const trimmed = lines[i].trim();
-        if (i === 0 && trimmed === "---") { inFrontmatter = true; continue; }
-        if (inFrontmatter) { if (trimmed === "---") inFrontmatter = false; continue; }
-        if (trimmed.startsWith("```") || trimmed.startsWith("~~~")) { inFence = !inFence; continue; }
-        if (inFence) continue;
-        if (dashSepPattern.test(lines[i])) {
-          dashViolations.push(`${path.relative(root, full)}:${i + 1}`);
-        }
+      for (const lineNo of findDashViolations(fs.readFileSync(full, "utf8"))) {
+        dashViolations.push(`${path.relative(root, full)}:${lineNo}`);
       }
     }
   }
