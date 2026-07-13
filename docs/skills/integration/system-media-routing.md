@@ -27,12 +27,19 @@ For AirPlay specifically, the existing `AVRoutePickerView` + `AVPlayer` path sti
 - "Support non-AirPlay casting / DLNA as a system route."
 - "Respond when the user picks a third-party media route and control playback."
 - "What's the difference between AVSystemRouteSession `.player` and `.application` modes?"
+- "Why does 'no such module AVSystemRouting' happen when I build for the simulator?"
+- "Why is `supportedExtensionAvailable` always false?"
+- "How do I stop users seeking through an ad on a cast route?"
 
 ## What This Skill Provides
 
 - **Explicit adoption model** – observe `AVSystemRouteController` events, and on an *activate* event start an `AVSystemRouteSession` on the route (playback is **not** auto-routed)
 - **`LaunchMode` guidance** – `.player` (hand a URL to the system media player on the device) vs `.application` (companion app + bidirectional `dataChannel`)
-- **`playbackControl` vs `dataChannel`** – AVKit's `AVInterfaceControllable` for standard playback control/observation, or raw `Data` exchange for custom protocols
+- **`playbackControl` vs `dataChannel`** – AVKit's `AVPlaybackUserInterfaceControllable` for standard playback control/observation, or raw `Data` exchange for custom protocols. (Do **not** use `AVInterfaceControllable`: Apple shipped and deprecated it in the same release, and it is a different, incompatible type.)
+- **What `playbackControl` actually gives you** – which members you set (`isPlaying`, `volume`, `state`, `seek(to:tolerance:)`) versus read (`isReady`, `isBuffering`, `segments`, `seekableTimeRanges`), that it is `@MainActor`-isolated, and that it is `Observable` — so it drives SwiftUI with no KVO glue
+- **Info.plist prerequisites** – `MDESupportsUniversalURLPlayback` / `MDESupportedProtocols`. Without them `supportedExtensionAvailable` is always `false`, even with a provider installed — the most common reason "nothing appears"
+- **The simulator wall** – `AVSystemRouting` is **absent** from the iPhoneSimulator SDK, so you get `no such module` and `#available` cannot help. Covers the `canImport` guard and the device-only CI lane
+- **Ad-gating the scrubber** – `requiresLinearPlayback` enforces nothing; the real gate is `seekableTimeRanges` (where `nil` and `[]` mean **opposite** things)
 - **Consumer vs provider** – your app is the consumer (no extension); a casting-protocol vendor ships the route-provider extension. `AVSystemRouteController.supportedExtensionAvailable` reports whether one is installed
 - **Availability gating** – `#available(iOS 27, *)` plus a `supportedExtensionAvailable` check, with an AirPlay fallback
 
