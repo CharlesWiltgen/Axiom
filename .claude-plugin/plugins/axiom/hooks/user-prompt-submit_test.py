@@ -100,17 +100,6 @@ class TestPositiveRouting(unittest.TestCase):
             self.assertIn("axiom-ai", routed_skills(prompt),
                           f"expected axiom-ai for: {prompt!r}")
 
-    def test_ai_speech_does_not_swallow_unrelated(self):
-        # `transcrib`/`transcription` must not fire on prompts that merely mention a transcript
-        # or unrelated domains. FoundationModels' `Transcript` legitimately routes to axiom-ai
-        # anyway, so it is excluded here — these are the cases that must NOT become axiom-ai.
-        for prompt in [
-            "My SwiftUI @State view won't update",
-            "Fix my Core Data migration crash",
-        ]:
-            self.assertNotIn("axiom-ai", routed_skills(prompt),
-                             f"speech regex over-matched: {prompt!r}")
-
     def test_swiftui_previews_slow(self):
         for prompt in [
             "My SwiftUI previews take 30 seconds to load",
@@ -651,6 +640,23 @@ class TestPositiveRouting(unittest.TestCase):
 
 class TestNegativeRouting(unittest.TestCase):
     """Known false-positive traps must NOT trigger."""
+
+    def test_generic_transcription_wording_does_not_fire_ai(self):
+        # REGRESSION GUARD. "transcribe"/"transcription"/"dictation" are ordinary English words,
+        # not Apple API tokens. The Speech block originally shipped them UNGATED — the only
+        # generic-term rule in the hook not behind `not non_ios` — so every one of these pure
+        # non-iOS prompts routed to axiom-ai. The first version of this test used prompts with no
+        # speech vocabulary at all, so it passed green while the bug shipped: a negative test that
+        # cannot fail is worse than none. These prompts must stay able to catch it.
+        for prompt in (
+            "How do I transcribe audio with Whisper in Python?",
+            "Add dictation to our React web app",
+            "Our Django backend does transcription with ffmpeg",
+            "The interview transcription tool in our Rails app is slow",
+            "Build a meeting transcription feature backed by our Node.js server",
+        ):
+            self.assertNotIn("axiom-ai", routed_skills(prompt),
+                             f"speech regex over-matched a non-iOS prompt: {prompt!r}")
 
     def test_generic_evaluate_wording_does_not_fire_ai(self):
         # "evaluate" is an ordinary English verb — only AI-context eval talk routes to axiom-ai

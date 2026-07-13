@@ -5,11 +5,11 @@ Comprehensive API reference for CoreML model integration, MLTensor operations, c
 ## Overview
 
 This reference covers the complete CoreML API surface for on-device machine learning:
-- **MLModel** - Model loading, prediction, lifecycle
-- **MLTensor** - Pipeline stitching between models (iOS 18+)
-- **coremltools** - Python package for conversion and compression
-- **State management** - KV-cache for LLM inference
-- **MLComputeDevice** - Runtime compute availability
+- **MLModel** – Model loading, prediction, lifecycle
+- **MLTensor** – Pipeline stitching between models (iOS 18+)
+- **coremltools** – Python package for conversion and compression
+- **State management** – KV-cache for LLM inference
+- **MLComputeDevice** – Runtime compute availability
 
 ## When to Use This Reference
 

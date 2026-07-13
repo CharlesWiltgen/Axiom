@@ -5,12 +5,12 @@ Implement speech-to-text with Apple's new SpeechAnalyzer API (iOS 26+). Powers N
 ## Overview
 
 SpeechAnalyzer is Apple's next-generation speech-to-text API:
-- **On-device processing** - Private, no server required
-- **Long-form audio** - Optimized for meetings, lectures, conversations
-- **Distant audio** - Works well with speakers across the room
-- **Volatile results** - Real-time approximate results while processing
-- **Timing metadata** - Sync text with audio playback
-- **Model management** - System handles model downloads and updates
+- **On-device processing** – Private, no server required
+- **Long-form audio** – Optimized for meetings, lectures, conversations
+- **Distant audio** – Works well with speakers across the room
+- **Volatile results** – Real-time approximate results while processing
+- **Timing metadata** – Sync text with audio playback
+- **Model management** – System handles model downloads and updates
 
 ## When to Use This Skill
 
@@ -31,7 +31,7 @@ Use when you need to:
 - "How do I sync transcript text with audio playback?"
 - "Why am I getting `insufficientResources` from SpeechAnalyzer?"
 - "How many transcribers can I run at once?"
-- "Why does transcription work in the simulator but fail on a real iPhone?"
+- "Why does transcription work on my Mac but fail on a real iPhone?"
 - "Why did my audio session break after I added transcription?"
 - "How do I transcribe straight from the mic or a video's audio track on iOS 27?"
 
@@ -80,7 +80,7 @@ func transcribe(fileURL: URL, locale: Locale) async throws -> AttributedString {
 }
 ```
 
-Presets are `.transcription`, `.transcriptionWithAlternatives`, `.timeIndexedTranscriptionWithAlternatives`, `.progressiveTranscription`, `.timeIndexedProgressiveTranscription`. There is no `.offlineTranscription`.
+`SpeechTranscriber`'s presets are `.transcription`, `.transcriptionWithAlternatives`, `.timeIndexedTranscriptionWithAlternatives`, `.progressiveTranscription`, `.timeIndexedProgressiveTranscription`. There is no `.offlineTranscription`.
 
 ### Live Transcription Setup
 
@@ -88,6 +88,7 @@ Presets are `.transcription`, `.transcriptionWithAlternatives`, `.timeIndexedTra
 // 1. Configure transcriber with volatile results
 let transcriber = SpeechTranscriber(
     locale: Locale.current,
+    transcriptionOptions: [],          // required — this init has no defaults
     reportingOptions: [.volatileResults],
     attributeOptions: [.audioTimeRange]
 )
@@ -134,22 +135,22 @@ for try await result in transcriber.results {
 - ❌ Skipping model availability check before use
 - ❌ Not clearing volatile results when finalized arrives
 - ❌ Assuming `insufficientResources` can be caught as `catch SFSpeechError.insufficientResources` — it can't; that shorthand doesn't compile. Spell the `Code` type: `catch SFSpeechError.Code.insufficientResources`
-- ❌ Using `providerWithSession(...)` (iOS 27) when your app owns its audio session — it reconfigures your default `AVAudioSession`. Use `provider(from:in:)` and add its `captureAudioDataOutput` to your own session
+- ❌ Using `providerWithSession(...)` (iOS 27) when your app owns its audio session — it reconfigures your default `AVAudioSession`. Use `provider(from:in:)` and add its `captureAudioDataOutput` to your own session. (On visionOS that escape hatch does not exist — `providerWithSession` is the only option there.)
 - ❌ Reading `AnalyzerInput.buffer` (deprecated iOS 27) for duration or format — each access copies the audio. Read `bufferDuration` / `bufferFormat`
 
 ## Simultaneous Analyses
 
-`SpeechAnalyzer` caps how many backing engines and models it will allocate at once. On **iOS and visionOS** that is roughly **two** ongoing recognition instances; **macOS currently has no limit** — which is why a second transcription can work in the simulator and on a Mac, then fail on a real iPhone. Exceeding the cap throws `SFSpeechError.Code.insufficientResources`.
+`SpeechAnalyzer` caps how many backing engines and models it will allocate at once. Apple puts it at roughly **two** ongoing recognition instances on **iOS and visionOS**, with **currently no limit on macOS** — so the same code can pass on a Mac and fail on a real iPhone. Exceeding the cap throws `SFSpeechError.Code.insufficientResources`.
 
-The cap counts *incompatible* work: similarly-configured transcribers (same locale, same settings) **share** backing engines, so making your analyzers alike is the cheap fix. `SpeechAnalyzer.Options.ignoresResourceLimits` (iOS 27) opts out of the counting — but it does not raise the hardware ceiling, so you trade a clean, early, catchable error for an unpredictable one later. This is from iOS 26; it is not new in 27.
+The cap counts *incompatible* work: transcribers configured similarly (same locale, same settings) **can share** backing engines, so making your analyzers alike is the cheap first fix. `SpeechAnalyzer.Options.ignoresResourceLimits` (iOS 27) opts out of the counting — but it does not raise the hardware ceiling, so you trade a clean, early, catchable error for an unpredictable one later. This dates from iOS 26; it is not new in 27.
 
 ## Platform Support
 
 | Feature | Availability |
 |---------|--------------|
-| SpeechTranscriber | iOS 26+, macOS Tahoe+ (not watchOS) |
-| DictationTranscriber | iOS 26+, macOS Tahoe+ (**not** watchOS, **not** tvOS) |
-| SpeechAnalyzer | iOS 26+, macOS Tahoe+ (not watchOS) |
+| SpeechTranscriber | iOS 26+, macOS 26+ (not watchOS) |
+| DictationTranscriber | iOS 26+, macOS 26+ (**not** watchOS, **not** tvOS) |
+| SpeechAnalyzer | iOS 26+, macOS 26+ (not watchOS) |
 | `CaptureInputSequenceProvider` / `AssetInputSequenceProvider` / `AnalyzerInputConverter` | iOS 27+ (not watchOS) |
 | SFSpeechRecognizer | iOS 10+ (legacy) |
 

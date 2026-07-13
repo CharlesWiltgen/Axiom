@@ -1330,8 +1330,14 @@ heading("12i. Docs Dash Convention");
 // Matches inline links in the `[text](url)` form only — not reference links
 // (`[text][ref]`) or bare `[text]`. That's exhaustive for VitePress docs (which
 // use inline links); widen the alternation if reference-link heads ever appear.
+//
+// Flags BOTH wrong separators: an em-dash (—) and an ASCII hyphen (-). The check
+// originally caught only the em-dash, so `- **Label** - desc` passed silently —
+// six such violations shipped on docs/skills/machine-learning/speech.md and were
+// only caught by a manual review. The rule wants an en-dash (–, U+2013); anything
+// else in the separator position is drift.
 const dashSepPattern =
-  /^\s*(?:[-*]|\d+\.)\s+(?:\*\*[^*]+\*\*|\[[^\]]+\]\([^)]+\)|`[^`]+`)\s+—\s/;
+  /^\s*(?:[-*]|\d+\.)\s+(?:\*\*[^*]+\*\*|\[[^\]]+\]\([^)]+\)|`[^`]+`)\s+[—-]\s/;
 const dashViolations: string[] = [];
 function scanDocsDashes(dir: string): void {
   if (!fs.existsSync(dir)) return;
@@ -1362,7 +1368,7 @@ if (dashViolations.length === 0) {
 } else {
   const CAP = 25;
   for (const v of dashViolations.slice(0, CAP)) {
-    error("docs-dash", `${v} uses em-dash on a list-led inline-heading separator — use en-dash " – " (.claude/rules/documentation-style.md §Dashes)`);
+    error("docs-dash", `${v} uses a wrong separator (em-dash or hyphen) on a list-led inline-heading — use en-dash " – " (.claude/rules/documentation-style.md §Dashes)`);
   }
   if (dashViolations.length > CAP) {
     error("docs-dash", `…and ${dashViolations.length - CAP} more (${dashViolations.length} total) — see documentation-style.md §Dashes`);

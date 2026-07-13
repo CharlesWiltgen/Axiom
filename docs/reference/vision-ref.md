@@ -203,15 +203,15 @@ let uiPoint = CGPoint(
 
 ## Performance Considerations
 
-- **Always use background queue** - Vision is resource intensive
-- **Set `maximumHandCount` appropriately** - Pose computed for all detected hands ≤ max
-- **Check confidence scores** - Low confidence landmarks are unreliable
-- **Downscale images** - 1280x720 sufficient for most real-time use cases
+- **Always use background queue** – Vision is resource intensive
+- **Set `maximumHandCount` appropriately** – Pose computed for all detected hands ≤ max
+- **Check confidence scores** – Low confidence landmarks are unreliable
+- **Downscale images** – 1280x720 sufficient for most real-time use cases
 
 ## Resources
 
-- [Vision Framework (Main Skill)](/skills/computer-vision/vision) - Decision trees and patterns
-- [Vision Diagnostics](/diagnostic/vision-diag) - Troubleshooting guide
+- [Vision Framework (Main Skill)](/skills/computer-vision/vision) – Decision trees and patterns
+- [Vision Diagnostics](/diagnostic/vision-diag) – Troubleshooting guide
 
 ### WWDC Sessions
 

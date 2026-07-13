@@ -26,5 +26,5 @@ Scan Xcode project for build performance optimizations (launches the `build-opti
 - You want to audit your project configuration against best practices
 
 ## Related
-- [/axiom:fix-build](./fix-build.md) - Fix failing builds
-- [build-performance](../../skills/debugging/build-performance.md) - Deep dive into build optimization
+- [/axiom:fix-build](./fix-build.md) – Fix failing builds
+- [build-performance](../../skills/debugging/build-performance.md) – Deep dive into build optimization

@@ -32,5 +32,5 @@ Scan SwiftUI navigation for architecture and correctness issues (launches `swift
 - Implementing a new feature with complex flow
 
 ## Related
-- [/axiom:audit-swiftui-performance](./audit-swiftui-performance.md) - Check navigation performance
-- [swiftui-nav](../../skills/ui-design/swiftui-nav.md) - Comprehensive navigation guide
+- [/axiom:audit-swiftui-performance](./audit-swiftui-performance.md) – Check navigation performance
+- [swiftui-nav](../../skills/ui-design/swiftui-nav.md) – Comprehensive navigation guide

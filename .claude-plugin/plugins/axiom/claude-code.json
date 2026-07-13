@@ -64,7 +64,7 @@
     },
     {
       "name": "axiom-ai",
-      "description": "Use when implementing, testing, or evaluating ANY Apple Intelligence, on-device AI, or custom ML feature. Covers Foundation Models, @Generable, LanguageModelSession, eval suites and model-as-judge scoring, CoreML conversion, quantization."
+      "description": "Use when implementing, testing, or evaluating ANY Apple Intelligence, on-device AI, speech-to-text, or custom ML feature. Covers Foundation Models, @Generable, LanguageModelSession, eval suites, model-as-judge scoring, SpeechTranscriber, CoreML."
     },
     {
       "name": "axiom-vision",

@@ -5,15 +5,15 @@ Guides you through implementing computer vision: subject segmentation, hand/body
 ## Overview
 
 The Vision framework provides computer vision capabilities for:
-- **Subject segmentation** - Isolate foreground objects from backgrounds
-- **Hand pose detection** - 21 landmarks per hand for gesture recognition
-- **Body pose detection** - 18 joints (2D) or 17 joints (3D) for fitness/action classification
-- **Person segmentation** - Separate masks for up to 4 people
-- **Face detection** - Bounding boxes and detailed landmarks
-- **Text recognition** - Fast or accurate OCR with language support
-- **Barcode/QR detection** - 20+ symbologies with revision history
-- **Document scanning** - Edge detection, perspective correction, structured extraction (iOS 26+)
-- **Live scanning** - DataScannerViewController for real-time text/barcode (iOS 16+)
+- **Subject segmentation** – Isolate foreground objects from backgrounds
+- **Hand pose detection** – 21 landmarks per hand for gesture recognition
+- **Body pose detection** – 18 joints (2D) or 17 joints (3D) for fitness/action classification
+- **Person segmentation** – Separate masks for up to 4 people
+- **Face detection** – Bounding boxes and detailed landmarks
+- **Text recognition** – Fast or accurate OCR with language support
+- **Barcode/QR detection** – 20+ symbologies with revision history
+- **Document scanning** – Edge detection, perspective correction, structured extraction (iOS 26+)
+- **Live scanning** – DataScannerViewController for real-time text/barcode (iOS 16+)
 
 ## When to Use This Skill
 
@@ -177,8 +177,8 @@ present(scanner, animated: true) {
 
 ## Related Resources
 
-- [Vision Framework API Reference](/reference/vision-ref) - Complete API docs with code examples
-- [Vision Framework Diagnostics](/diagnostic/vision-diag) - Troubleshooting when things go wrong
+- [Vision Framework API Reference](/reference/vision-ref) – Complete API docs with code examples
+- [Vision Framework Diagnostics](/diagnostic/vision-diag) – Troubleshooting when things go wrong
 
 ### WWDC Sessions
 

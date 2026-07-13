@@ -56,7 +56,7 @@ Diagnoses WHY tests fail, especially intermittent/flaky failures in Swift Testin
   - **Fix**: Wrap in `await confirmation { ... }`
 
 ### HIGH: Shared Mutable State
-- `Tests/CacheTests.swift:12` - `static var testCache`
+- `Tests/CacheTests.swift:12` – `static var testCache`
   - **Root cause**: Parallel tests mutate same collection
   - **Fix**: Use instance property instead
 ```

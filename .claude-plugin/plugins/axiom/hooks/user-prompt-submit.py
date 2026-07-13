@@ -172,14 +172,26 @@ if re.search(r'coreml|core\s*ml|mltensor|create\s*ml|mlmodel|convert.{0,10}(pyto
 # The ML regex above only fires on the literal token `speech` followed by recogni/analyz/to-text,
 # so the most common entry points fell straight through — `SpeechTranscriber` does not match it,
 # and neither does "transcribe mic audio". Symptom phrasings for this framework rarely contain the
-# word "speech" at all, which is exactly how the OS27 Speech delta shipped behind a shut door.
-# `transcrib`/`transcription` deliberately do NOT match FoundationModels' `Transcript` (no 'b',
-# no 'ion') — and even if they did, that also routes to axiom-ai, so a collision is harmless.
+# word "speech" at all, which is exactly how the OS27 Speech delta shipped behind a shut door
+# (9 of 11 representative prompts were NO MATCH at v27.0.0-beta.21).
+#
+# Split deliberately in two: zero-space API tokens are unambiguous and stay ungated, while
+# `transcrib`/`transcription`/`dictation` are ordinary English words and MUST sit behind
+# `not non_ios` like every other generic-term rule in this file — otherwise "transcribe audio with
+# Whisper in Python" and "add dictation to our React app" route to axiom-ai.
+# `speechanalyzer` is intentionally absent: the ML rule above already matches it (`speech`+`analyz`).
 if "axiom-ai" not in matches and re.search(
-    r'speechtranscriber|speechanalyzer|transcrib|transcription|dictation'
+    r'speechtranscriber|speechdetector|dictationtranscriber'
     r'|insufficientresources|cannotconfigureaudiosystem'
-    r'|captureinputsequenceprovider|assetinputsequenceprovider|analyzerinputconverter'
-    r'|ignoresresourcelimits|assetinventory', prompt_lower):
+    r'|captureinputsequenceprovider|assetinputsequenceprovider|analyzerinput'
+    r'|ignoresresourcelimits|assetinventory|assetinstallationrequest', prompt_lower):
+    matches.append("axiom-ai")
+
+# Speech — generic English terms gated (transcribe/dictation are not Apple-only words)
+if not non_ios and "axiom-ai" not in matches and re.search(
+    r'transcrib|transcription|dictation|voice\s*input|speech\s*model'
+    r'|(convert|turn).{0,12}(audio|mic|microphone|recording|speech).{0,12}to.{0,5}text'
+    r'|(live|real.?time|automatic).{0,10}caption', prompt_lower):
     matches.append("axiom-ai")
 
 # Vision
