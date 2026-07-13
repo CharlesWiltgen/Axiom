@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "27.0.0-beta.21",
+  "version": "27.0.0-beta.22",
   "description": "Battle-tested Claude Code skills, agents, and tools for modern xOS (iOS, iPadOS, tvOS, watchOS) development — Swift 6, SwiftUI, Liquid Glass, Apple Intelligence, and more",
   "type": "module",
   "pi": {
