@@ -1,6 +1,6 @@
 {
   "version": "0.2.0",
-  "generatedAt": "2026-07-13T19:33:29.696Z",
+  "generatedAt": "2026-07-13T20:09:32.179Z",
   "skills": {
     "axiom-accessibility": {
       "name": "axiom-accessibility",
@@ -23421,7 +23421,7 @@
     "axiom-media--system-media-routing": {
       "name": "axiom-media--system-media-routing",
       "description": "`import AVSystemRouting` — a new framework, iOS only (not macCatalyst/visionOS/macOS/tvOS/watchOS), that lets a media app route playback to **non-AirPlay system routes**: third-party casting targets such as **Google Cast / Chromecast, DLNA, and other streaming standards**, surfaced in the same system route picker / Control Center as AirPlay.",
-      "content": "\n# System Media Routing — Casting Beyond AirPlay `iOS27`\n\n`import AVSystemRouting` — a new framework, iOS only (not macCatalyst/visionOS/macOS/tvOS/watchOS), that lets a media app route playback to **non-AirPlay system routes**: third-party casting targets such as **Google Cast / Chromecast, DLNA, and other streaming standards**, surfaced in the same system route picker / Control Center as AirPlay.\n\nHistorically iOS exposed only **one** native streaming protocol (AirPlay); supporting Chromecast etc. meant bundling each vendor's SDK and your own cast button. AVSystemRouting replaces that with **one Apple API**: the protocol is supplied by a system **route provider**, and your app drives playback through a uniform interface.\n\n> **Availability is narrow and in flux.** This capability is reported to be driven by the EU Digital Markets Act, so it is **likely region-gated (EU)** and is **beta** as of the Xcode 27 betas. Treat third-party routes as *may or may not be present*: always `#available`-gate, and keep your existing AirPlay / in-app cast path as the fallback. Confirm regional + provider availability before relying on it.\n\n## When to Use\n\n- Your video/music app wants to cast to **non-AirPlay** devices (Chromecast, DLNA, etc.) without bundling a per-vendor cast SDK\n- You want playback to follow a route the user selected from the **system** picker / Control Center, and to control or observe that remote playback\n\nFor AirPlay specifically, the existing route-picker (`AVRoutePickerView`) + `AVPlayer` path still applies — AVSystemRouting is the **add** for third-party protocols.\n\n## Two sides — you almost certainly want the consumer side\n\n| Side | Who | What they build |\n|------|-----|-----------------|\n| **Consumer** (this skill) | Any media app | Adopt `AVSystemRouting` to play to whatever routes exist |\n| **Provider** | A casting-protocol vendor (Google, DLNA stack, …) | A system **route-provider extension** that implements the wire protocol and registers the route. Niche; out of scope here. `AVSystemRouteController.supportedExtensionAvailable` reports whether such a provider is installed. |\n\nThe consumer app builds **no extension** — it adopts the API below.\n\n## Adoption is explicit\n\nPer Apple's docs, playback is **not** auto-routed — you observe route events and, when the user activates a route, attach a session to that route, start it, and drive playback:\n\n```swift\nimport AVSystemRouting\n\n@available(iOS 27, *)\nfinal class RouteCoordinator: AVSystemRouteControllerObserver {\n    private var media: AVSystemRouteMediaSession?\n\n    func startObserving() {\n        // supportedExtensionAvailable is a TYPE property (not on the instance).\n        guard AVSystemRouteController.supportedExtensionAvailable else { return }\n        _ = AVSystemRouteController.shared.addObserver(self)\n    }\n\n    // Return true to accept handling the event.\n    func systemRouteController(\n        _ controller: AVSystemRouteController,\n        handle event: AVSystemRouteEvent\n    ) async -> Bool {\n        switch event.reason {\n        case .activate:\n            let route = event.route                 // protocolType: UTType, routeDisplayName, routeSymbolName\n            let session = AVSystemRouteSession(url: contentURL, mode: .player)\n            guard route.addSession(session) else {  // attach the session to the activated route (Bool = accepted)\n                return false\n            }\n            do {\n                media = try await session.start()   // -> AVSystemRouteMediaSession\n                return true\n            } catch let error as AVSystemRoutingError where error.code == .connectionFailed {\n                report(error)                        // .connectionFailed is AVSystemRoutingError.Code, via error.code\n                return false\n            } catch {\n                return false\n            }\n        case .deactivate:\n            media = nil\n            return true\n        @unknown default:\n            return false\n        }\n    }\n}\n```\n\n`addObserver(_:)` returns a `Bool` (whether the observer was registered). Call `AVSystemRouteController.shared.removeObserver(_:)` to stop.\n\n## LaunchMode — `.player` vs `.application`\n\n`AVSystemRouteSession(url:mode:)` takes a `AVSystemRoute.LaunchMode`:\n\n| Mode | Use when | Intended control surface (per Apple's docs) |\n|------|----------|---------------------------------------------|\n| `.player` | Standard URL-based playback — hand the content URL to the **system media player** on the remote device | `AVSystemRouteMediaSession.playbackControl` |\n| `.application` | The remote device runs a **dedicated companion app**; you need a custom wire protocol | `AVSystemRouteMediaSession.dataChannel` (bidirectional `Data`) |\n\nBoth are declared `nullable`, so both need unwrapping — but the pairing above is not merely conventional: **in `.player` mode `dataChannel` is `nil`** (per the `start()` doc). Note Apple's headers contradict themselves here — each property's own doc comment claims it is \"always non-nil when obtained from a successful call to `start()`\", while `start()` says otherwise for `.player`. Unwrap both and don't rely on either promise.\n\n`dataDelegate` is `weak`, so the delegate must be a type you retain — hence a method on a conforming class, not a free function:\n\n```swift\n@available(iOS 27, *)\n@MainActor                                          // REQUIRED: the controllable is @MainActor-isolated\nfinal class PlaybackDriver: NSObject, AVSystemRouteDataDelegate {\n    func receive(_ data: Data) async throws { /* companion-app protocol frame */ }\n\n    func controlPlayback(_ media: AVSystemRouteMediaSession) async throws {\n        // .player mode: a system-provided controller for position / rate / volume + state observation.\n        if let control = media.playbackControl {     // (any AVKit.AVPlaybackUserInterfaceControllable)?\n            control.isPlaying = true                 // settable — \"play\"\n            control.volume = 0.6                     // 0.0...1.0\n            control.seek(to: .init(seconds: 30, preferredTimescale: 600), tolerance: .zero)\n        }\n        // .application mode: exchange raw protocol bytes with the companion app.\n        if let channel = media.dataChannel {\n            channel.dataDelegate = self              // weak — `self` must be retained elsewhere\n            try await channel.send(Data(/* protocol frame */))\n        }\n    }\n}\n```\n\nDrop the `@MainActor` and Swift 6 rejects every write: *\"main actor-isolated property `isPlaying` can not be mutated from a nonisolated context.\"* `AVPlaybackUserInterfaceControllable` and all five protocols it composes are `@MainActor`.\n\nUse the `dataChannel` for the `.application` companion-app model. Note there are two data channels: the route exposes a non-optional `AVSystemRoute.routeDataChannel`, while the started media session exposes the optional `AVSystemRouteMediaSession.dataChannel` used above.\n\n> **Do not use `AVInterfaceControllable` — it was renamed mid-beta.** Apple shipped an `AVInterface*` family\n> in an early 27 beta and deprecated the whole family in the same release (15 born-deprecated clauses,\n> `introduced: 27.0, deprecated: 27.0`). `playbackControl` is typed\n> `(any AVKit.AVPlaybackUserInterfaceControllable)?`, and the old and new protocols are **unrelated types** —\n> so the old name is a **hard type error**, not a deprecation warning:\n> `error: cannot assign value of type '(any AVPlaybackUserInterfaceControllable)?' to type '(any AVInterfaceControllable)?'`.\n\n## Info.plist — without it, nothing ever appears\n\n`AVSystemRouteController.supportedExtensionAvailable` is gated on **your own Info.plist**, not just on what's\ninstalled. Apple: *\"If neither key is declared, or no installed extension matches the declared support, this\nproperty is `NO`.\"* `addObserver` likewise only fires for routes whose extension matches what you declared.\n\n| Key | Type | Pairs with |\n|-----|------|-----------|\n| `MDESupportsUniversalURLPlayback` | Bool | `.player` mode — hand a content URL to the remote system player |\n| `MDESupportedProtocols` | Dict: protocol ID → the remote application's ID | `.application` mode — launch a companion app on the receiver |\n\n**This is the first thing to check when nothing works.** A developer who omits these gets\n`supportedExtensionAvailable == false` forever — even on a device with a provider installed — and will\notherwise conclude they are region-gated.\n\n## Does not build for the simulator\n\n`AVSystemRouting.framework` **is absent from the iPhoneSimulator SDK** — not gated, *absent*. The umbrella\nheader guards on `!TARGET_OS_SIMULATOR`. `#available(iOS 27, *)` does **not** save you, because this fails at\nmodule resolution, not at runtime:\n\n```\nerror: no such module 'AVSystemRouting'\n```\n\nSince the simulator is the default run destination, this is the first thing you hit. Guarding only the\n`import` is not enough — every AVSystemRouting-typed declaration must sit inside the same `#if`, or the\nsimulator build fails with `cannot find 'AVSystemRouteController' in scope`. Isolate the whole feature in\none file:\n\n```swift\n#if canImport(AVSystemRouting)\nimport AVSystemRouting\n\n// ...every AVSystemRouting-typed declaration lives in here too, not just the import.\n#endif\n```\n\nYour CI needs a **device** lane for this feature; a simulator-only lane cannot compile it.\n\n## What `playbackControl` gives you\n\n`AVPlaybackUserInterfaceControllable` (`@MainActor`) composes five protocols, and all five inherit\n`Observation.Observable` — so state changes drive SwiftUI directly, with no KVO glue. **But not the\nposition readout:** Observation republishes `playbackPosition` only when the provider pushes a new\n*snapshot* (play, pause, seek, scan, buffering) — never per frame. A smooth clock needs\n`TimelineView(.animation)` plus the extrapolation below. Observation alone gives you a readout that\nfreezes between events.\n\n**You receive a conformer; you never write one.** `media.playbackControl` is get-only, and the object is\nvended by the system route provider. So most of this surface is **read**, and only a few members are yours\nto set. Apple's header comments are written as obligations *on the provider* — do not mistake them for\ninstructions to you.\n\n**You set** (this is your remote control): `isPlaying`, `playbackSpeed`, `scanSpeed`, `state`, `isMuted`,\n`volume` (0.0–1.0), `currentAudioOption` / `currentAudioDescriptionOption` / `currentLegibleOption`, and the\n`seek(to:tolerance:)` method.\n\n**You read** (this is the remote device's truth): `isReady`, `isBuffering`, `supportedSeekCapabilities`,\n`containsLiveStreamingContent`, `error`, `timeRange`, `playbackPosition`, `segments`, `currentSegment`,\n`seekableTimeRanges`, `hasAudio`, `audioOptions` / `audioDescriptionOptions` / `legibleOptions`, and\n`metadata`.\n\n`state` is `.normal` / `.scanning` / `.scrubbing`. `supportedSeekCapabilities` is an OptionSet:\n`.scanForward` / `.scanBackward` / `.seek`. Segment types: `.primary`, `.advertisement`, `.bonus`,\n`.credits`, `.intro`, `.recap`, `.trailer`, `.other`.\n\n### Gotchas\n\n| Gotcha | Why it bites |\n|--------|--------------|\n| `playbackPosition` is **get-only**, and `position` is not \"now\" | It bundles `position` + `hostTime` + `rate` as one snapshot (an ObjC class, so a reference — not a value type). To show a live time, **extrapolate**: `position + rate × (now − hostTime)`. `hostTime` is a **`CMTime` on the CoreMedia host clock** — read \"now\" with `CMClockGetTime(CMClockGetHostTimeClock())`. Apple's doc comment says \"mach host time\", which misleads you toward `mach_absolute_time()` + `mach_timebase_info`; that is the wrong API family and a type mismatch. Reading `position` as the current time makes your scrubber lag. The old `AVInterface` protocol had a settable `currentPlaybackPosition: CMTime`; this replaced it. |\n| `isPlaying` is **intent, not state** | Apple: it \"**should** remain YES while `isBuffering` is YES\" — it means \"resume automatically when data arrives\". Do not treat a stall as a pause. (A \"should\", so a third-party provider may not comply.) |\n| A mistyped observer signature **silently never fires** | `AVSystemRouteControllerObserver` ships a **default implementation** of `systemRouteController(_:handle:)`. Get the signature subtly wrong and your type still conforms — no compiler error, and your handler is simply never called. A compile probe cannot catch this; check that events actually arrive. |\n| `isReady` is one-way *by contract* | Apple: it \"should transition from NO to YES … and **should not** revert\". A mid-playback stall shows up as `isBuffering`, not `isReady == false`. It's a provider contract, not an invariant — a defensive consumer should not assume a third-party provider honors it. |\n| `nil` and `[]` on `seekableTimeRanges` mean **opposite** things | Apple: \"**If `nil`, the entire content defined by `timeRange` is considered seekable**\" — but \"**an empty array means the entire content … is *not* seekable**.\" Collapsing the two breaks you in both directions: `?? []` bricks the scrubber on unrestricted content, and `isEmpty ? everything : ranges` lets users scrub straight through ads. Treat `nil` as \"all of `timeRange`\", `[]` as \"nothing\". |\n| Nothing enforces the ad gate for you, and \"don't land in an ad\" is **not** the requirement | `requiresLinearPlayback` is named like a switch but is a read-only **indicator**; it blocks nothing. `seekableTimeRanges` is the primary gate — but Apple only says it \"**typically** excludes segments where `requiresLinearPlayback` is YES\", so a provider may leave it `nil` (= *everything* seekable) while still marking ad segments. A correct gate needs **four** things: (1) `supportedSeekCapabilities.contains(.seek)` — the route may not seek at all; (2) membership in `seekableTimeRanges`; (3) subtract every `requiresLinearPlayback` segment; and (4) **reject a seek that *crosses* an unwatched linear segment, not merely one that lands in it.** (1)–(3) only stop the playhead *landing* inside an ad — a forward seek straight over it still skips the ad, which is the exact failure you were trying to prevent. Clamp such a seek to the start of the crossed segment instead, and keep your own watched-ad ledger, or the rule never releases. If ad-skip is a revenue requirement, test against the real receiver. |\n| The segment API the gate needs | `segments` and `currentSegment` are `[AVPlaybackUserInterfaceTimelineSegment]` / `AVPlaybackUserInterfaceTimelineSegment`. Each carries `timeRange: CMTimeRange`, `segmentType` (`.advertisement`, `.intro`, …), `requiresLinearPlayback: Bool`, `isMarked: Bool`, `identifier: String?`. **`currentSegment` is NOT optional** — a `guard let` on it does not compile. There is no Apple API for `CMTimeRange` set-subtraction; you write it. |\n| Live vs DVR is something you **detect**, not set | `timeRange` is read-only. Live **without** DVR = a zero-duration `timeRange` at the live edge. Live **with** DVR = a rolling window plus explicit `seekableTimeRanges`. Pair with `containsLiveStreamingContent`. |\n| `state = .scrubbing` is not decorative | While the user drags the scrubber, set `control.state = .scrubbing` (and back to `.normal` on commit) so the remote device can distinguish a scrub from a seek. `playbackControl` is declared `nullable` so you must still unwrap it — but do not build a \"provider vended no controls\" fallback path on that: Apple says it is \"always non-nil when obtained from a successful call to `start()`\". |\n| `segments` \"should\" be contiguous — not \"must\" | Apple's word is *should* (contiguous, covering the timeline, no gaps or overlaps). A third-party provider may not comply, so don't index into `segments` assuming full coverage. |\n| `AVPlaybackUserInterfaceVideoProviding` and `…ThumbnailControllable` are **unusable** | They appear in the AVKit Swift interface but are `@available(iOS, unavailable)` on **every** platform. Same for `AVExperienceController`, `AVMultiviewManager`, `AVContentSelectionViewController`. Do not adopt them. |\n| In Swift, metadata is a **new struct**, not the ObjC class | Both `…ContentMetadataTemplate` and the `…ContentMetadata` *class* are `NS_REFINED_FOR_SWIFT`; the overlay vends a fresh Swift struct `AVPlaybackUserInterfaceContentMetadata` (with a nested `VideoProperties`) and a memberwise init. Read-path trivia mostly — `metadata` is **read-only** on the controllable. |\n\n## Gate on availability + keep a fallback\n\n```swift\nif #available(iOS 27, *), AVSystemRouteController.supportedExtensionAvailable {\n    coordinator.startObserving()\n} else {\n    // your existing AirPlay route-picker / in-app cast path\n}\n```\n\n`supportedExtensionAvailable` being `false` is the common case today — design for it. When it is `false`, check\nthese in order:\n\n1. **Your Info.plist keys are missing** (see above). This is the most common cause and it is entirely on you.\n2. No matching route-provider extension is installed — Apple does not implement Chromecast; the *vendor*\n   ships the extension. Dropping a per-vendor cast SDK is contingent on that extension actually existing.\n3. Region gating (reported EU/DMA-driven).\n\n## Resources\n\n**Docs**: /avsystemrouting, /avsystemrouting/routing-media-to-third-party-devices, /avkit/avplaybackuserinterfacecontrollable\n\n**Skills**: now-playing, now-playing-carplay, avfoundation-ref\n",
+      "content": "\n# System Media Routing — Casting Beyond AirPlay `iOS27`\n\n`import AVSystemRouting` — a new framework, iOS only (not macCatalyst/visionOS/macOS/tvOS/watchOS), that lets a media app route playback to **non-AirPlay system routes**: third-party casting targets such as **Google Cast / Chromecast, DLNA, and other streaming standards**, surfaced in the same system route picker / Control Center as AirPlay.\n\nHistorically iOS exposed only **one** native streaming protocol (AirPlay); supporting Chromecast etc. meant bundling each vendor's SDK and your own cast button. AVSystemRouting replaces that with **one Apple API**: the protocol is supplied by a system **route provider**, and your app drives playback through a uniform interface.\n\n> **Availability is narrow and in flux.** This capability is reported to be driven by the EU Digital Markets Act, so it is **likely region-gated (EU)** and is **beta** as of the Xcode 27 betas. Treat third-party routes as *may or may not be present*: always `#available`-gate, and keep your existing AirPlay / in-app cast path as the fallback. Confirm regional + provider availability before relying on it.\n\n## When to Use\n\n- Your video/music app wants to cast to **non-AirPlay** devices (Chromecast, DLNA, etc.) without bundling a per-vendor cast SDK\n- You want playback to follow a route the user selected from the **system** picker / Control Center, and to control or observe that remote playback\n\nFor AirPlay specifically, the existing route-picker (`AVRoutePickerView`) + `AVPlayer` path still applies — AVSystemRouting is the **add** for third-party protocols.\n\n## Two sides — you almost certainly want the consumer side\n\n| Side | Who | What they build |\n|------|-----|-----------------|\n| **Consumer** (this skill) | Any media app | Adopt `AVSystemRouting` to play to whatever routes exist |\n| **Provider** | A casting-protocol vendor (Google, DLNA stack, …) | A system **route-provider extension** that implements the wire protocol and registers the route. Niche; out of scope here. `AVSystemRouteController.supportedExtensionAvailable` reports whether such a provider is installed. |\n\nThe consumer app builds **no extension** — it adopts the API below.\n\n## Adoption is explicit\n\nPer Apple's docs, playback is **not** auto-routed — you observe route events and, when the user activates a route, attach a session to that route, start it, and drive playback:\n\n```swift\nimport AVSystemRouting\n\n@available(iOS 27, *)\nfinal class RouteCoordinator: AVSystemRouteControllerObserver {\n    private var media: AVSystemRouteMediaSession?\n\n    func startObserving() {\n        // supportedExtensionAvailable is a TYPE property (not on the instance).\n        guard AVSystemRouteController.supportedExtensionAvailable else { return }\n        _ = AVSystemRouteController.shared.addObserver(self)\n    }\n\n    // Return true to accept handling the event.\n    func systemRouteController(\n        _ controller: AVSystemRouteController,\n        handle event: AVSystemRouteEvent\n    ) async -> Bool {\n        switch event.reason {\n        case .activate:\n            let route = event.route                 // protocolType: UTType, routeDisplayName, routeSymbolName\n            let session = AVSystemRouteSession(url: contentURL, mode: .player)\n            guard route.addSession(session) else {  // attach the session to the activated route (Bool = accepted)\n                return false\n            }\n            do {\n                media = try await session.start()   // -> AVSystemRouteMediaSession\n                return true\n            } catch let error as AVSystemRoutingError where error.code == .connectionFailed {\n                report(error)                        // .connectionFailed is AVSystemRoutingError.Code, via error.code\n                return false\n            } catch {\n                return false\n            }\n        case .deactivate:\n            media = nil\n            return true\n        @unknown default:\n            return false\n        }\n    }\n}\n```\n\n`addObserver(_:)` returns a `Bool` (whether the observer was registered). Call `AVSystemRouteController.shared.removeObserver(_:)` to stop.\n\n## LaunchMode — `.player` vs `.application`\n\n`AVSystemRouteSession(url:mode:)` takes a `AVSystemRoute.LaunchMode`:\n\n| Mode | Use when | Intended control surface (per Apple's docs) |\n|------|----------|---------------------------------------------|\n| `.player` | Standard URL-based playback — hand the content URL to the **system media player** on the remote device | `AVSystemRouteMediaSession.playbackControl` |\n| `.application` | The remote device runs a **dedicated companion app**; you need a custom wire protocol | `AVSystemRouteMediaSession.dataChannel` (bidirectional `Data`) |\n\nBoth are declared `nullable`, so both need unwrapping — but the pairing above is not merely conventional: **in `.player` mode `dataChannel` is `nil`** (per the `start()` doc). Note Apple's headers contradict themselves here — each property's own doc comment claims it is \"always non-nil when obtained from a successful call to `start()`\", while `start()` says otherwise for `.player`. Unwrap both and don't rely on either promise.\n\n`dataDelegate` is `weak`, so the delegate must be a type you retain — hence a method on a conforming class, not a free function:\n\n```swift\n@available(iOS 27, *)\n@MainActor                                          // REQUIRED: the controllable is @MainActor-isolated\nfinal class PlaybackDriver: NSObject, AVSystemRouteDataDelegate {\n    func receive(_ data: Data) async throws { /* companion-app protocol frame */ }\n\n    func controlPlayback(_ media: AVSystemRouteMediaSession) async throws {\n        // .player mode: a system-provided controller for position / rate / volume + state observation.\n        if let control = media.playbackControl {     // (any AVKit.AVPlaybackUserInterfaceControllable)?\n            control.isPlaying = true                 // settable — \"play\"\n            control.volume = 0.6                     // 0.0...1.0\n            control.seek(to: .init(seconds: 30, preferredTimescale: 600), tolerance: .zero)\n        }\n        // .application mode: exchange raw protocol bytes with the companion app.\n        if let channel = media.dataChannel {\n            channel.dataDelegate = self              // weak — `self` must be retained elsewhere\n            try await channel.send(Data(/* protocol frame */))\n        }\n    }\n}\n```\n\nDrop the `@MainActor` and Swift 6 rejects every write: *\"main actor-isolated property `isPlaying` can not be mutated from a nonisolated context.\"* `AVPlaybackUserInterfaceControllable` and all five protocols it composes are `@MainActor`.\n\nUse the `dataChannel` for the `.application` companion-app model. Note there are two data channels: the route exposes a non-optional `AVSystemRoute.routeDataChannel`, while the started media session exposes the optional `AVSystemRouteMediaSession.dataChannel` used above.\n\n> **Do not use `AVInterfaceControllable` — it was renamed mid-beta.** Apple shipped an `AVInterface*` family\n> in an early 27 beta and deprecated the whole family in the same release (15 born-deprecated clauses,\n> `introduced: 27.0, deprecated: 27.0`). `playbackControl` is typed\n> `(any AVKit.AVPlaybackUserInterfaceControllable)?`, and the old and new protocols are **unrelated types** —\n> so the old name is a **hard type error**, not a deprecation warning:\n> `error: cannot assign value of type '(any AVPlaybackUserInterfaceControllable)?' to type '(any AVInterfaceControllable)?'`.\n\n## Info.plist — without it, nothing ever appears\n\n`AVSystemRouteController.supportedExtensionAvailable` is gated on **your own Info.plist**, not just on what's\ninstalled. Apple: *\"If neither key is declared, or no installed extension matches the declared support, this\nproperty is `NO`.\"* `addObserver` likewise only fires for routes whose extension matches what you declared.\n\n| Key | Type | Pairs with |\n|-----|------|-----------|\n| `MDESupportsUniversalURLPlayback` | Bool | `.player` mode — hand a content URL to the remote system player |\n| `MDESupportedProtocols` | Dict: protocol ID → the remote application's ID | `.application` mode — launch a companion app on the receiver |\n\n**This is the first thing to check when nothing works.** A developer who omits these gets\n`supportedExtensionAvailable == false` forever — even on a device with a provider installed — and will\notherwise conclude they are region-gated.\n\n## Does not build for the simulator\n\n`AVSystemRouting.framework` **is absent from the iPhoneSimulator SDK** — not gated, *absent*. The umbrella\nheader guards on `!TARGET_OS_SIMULATOR`. `#available(iOS 27, *)` does **not** save you, because this fails at\nmodule resolution, not at runtime:\n\n```\nerror: no such module 'AVSystemRouting'\n```\n\nSince the simulator is the default run destination, this is the first thing you hit. Guarding only the\n`import` is not enough — every AVSystemRouting-typed declaration must sit inside the same `#if`, or the\nsimulator build fails with `cannot find 'AVSystemRouteController' in scope`. Isolate the whole feature in\none file:\n\n```swift\n#if canImport(AVSystemRouting)\nimport AVSystemRouting\n\n// ...every AVSystemRouting-typed declaration lives in here too, not just the import.\n#endif\n```\n\nYour CI needs a **device** lane for this feature; a simulator-only lane cannot compile it.\n\n## What `playbackControl` gives you\n\n`AVPlaybackUserInterfaceControllable` (`@MainActor`) composes five protocols, and all five inherit\n`Observation.Observable` — so state changes drive SwiftUI directly, with no KVO glue. **But do not build the\nposition readout on it:** Apple obliges the provider to republish `playbackPosition` on play, pause, seek,\nscan, and buffering changes — that is a *minimum*, not a promise of per-frame updates, so a provider may\npush nothing between events. A smooth clock needs `TimelineView(.animation)` plus the extrapolation below.\n\n**You receive a conformer; you never write one.** `media.playbackControl` is get-only, and the object is\nvended by the system route provider. So most of this surface is **read**, and only a few members are yours\nto set. Apple's header comments are written as obligations *on the provider* — do not mistake them for\ninstructions to you.\n\n**You set** (this is your remote control): `isPlaying`, `playbackSpeed`, `scanSpeed`, `state`, `isMuted`,\n`volume` (0.0–1.0), `currentAudioOption` / `currentAudioDescriptionOption` / `currentLegibleOption`, and the\n`seek(to:tolerance:)` method.\n\n**You read** (this is the remote device's truth): `isReady`, `isBuffering`, `supportedSeekCapabilities`,\n`containsLiveStreamingContent`, `error`, `timeRange`, `playbackPosition`, `segments`, `currentSegment`,\n`seekableTimeRanges`, `hasAudio`, `audioOptions` / `audioDescriptionOptions` / `legibleOptions`, and\n`metadata`.\n\n`state` is `.normal` / `.scanning` / `.scrubbing`. `supportedSeekCapabilities` is an OptionSet:\n`.scanForward` / `.scanBackward` / `.seek`. Segment types: `.primary`, `.advertisement`, `.bonus`,\n`.credits`, `.intro`, `.recap`, `.trailer`, `.other`.\n\n### Gotchas\n\n| Gotcha | Why it bites |\n|--------|--------------|\n| `playbackPosition` is **get-only**, and `position` is not \"now\" | It bundles `position` + `hostTime` + `rate` as one snapshot (an ObjC class, so a reference — not a value type). To show a live time, **extrapolate**: `position + rate × (now − hostTime)`, then **clamp** with `CMTimeClampToRange(_:range: control.timeRange)` or the readout runs past the end when the snapshot goes stale. Read \"now\" with `CMClockGetTime(CMClockGetHostTimeClock())` — `hostTime` is a `CMTime` on that clock. (Apple's \"mach host time\" wording is *accurate*, not a misdirection: per `CMSync.h`, the host time clock **uses** `mach_absolute_time` in different units, and CoreMedia bridges both ways via `CMClockMakeHostTimeFromSystemUnits` / `CMClockConvertHostTimeToSystemUnits` — which is exactly how you correlate the snapshot with `CADisplayLink.targetTimestamp`. You just don't need `mach_timebase_info` yourself.) `rate` already folds in `playbackSpeed`/`scanSpeed` — **do not multiply by them again**. `rate` is 0 when paused, negative on reverse scan; the formula handles both. Suppress extrapolation entirely for live-without-DVR, where `timeRange` is zero-duration. Reading `position` as the current time makes your scrubber lag. |\n| `isPlaying` is **intent, not state** | Apple: it \"**should** remain YES while `isBuffering` is YES\" — it means \"resume automatically when data arrives\". Do not treat a stall as a pause. (A \"should\", so a third-party provider may not comply.) |\n| A mistyped observer signature **silently never fires** | `AVSystemRouteControllerObserver` ships a **default implementation** of `systemRouteController(_:handle:)`. Get the signature subtly wrong and your type still conforms — no compiler error, and your handler is simply never called. A compile probe cannot catch this; check that events actually arrive. |\n| `isReady` is one-way *by contract* | Apple: it \"should transition from NO to YES … and **should not** revert\". A mid-playback stall shows up as `isBuffering`, not `isReady == false`. It's a provider contract, not an invariant — a defensive consumer should not assume a third-party provider honors it. |\n| `nil` and `[]` on `seekableTimeRanges` mean **opposite** things — on VOD | Apple: \"**If `nil`, the entire content … is considered seekable**\"; \"**an empty array means the entire content … is *not* seekable**.\" So `?? []` bricks the scrubber on unrestricted content, and `isEmpty ? everything : ranges` opens it on restricted content. **But not on live**: for live-without-DVR Apple says `seekableTimeRanges` \"**must be nil or empty**\" — there, the two *are* interchangeable. Branch on `containsLiveStreamingContent` before applying the VOD rule. |\n| The segment API | `segments: [AVPlaybackUserInterfaceTimelineSegment]` (nonnull, but **may be empty**) and `currentSegment` (**NOT optional** — a `guard let` does not compile, and it may be a segment that isn't a member of `segments`). Each carries `timeRange: CMTimeRange`, `segmentType` (`.advertisement`, `.intro`, …), `requiresLinearPlayback: Bool`, `isMarked: Bool`, `identifier: String?`. In Swift `seekableTimeRanges` is `[CMTimeRange]?` — **not** the header's `NSArray<NSValue *>`, so don't write `NSValue` unboxing. The class defines no `isEqual:`/`hash`, so `==` and `contains` fall back to **pointer identity** — you cannot match `currentSegment` back into `segments` that way. There is no CoreMedia `CMTimeRange` set-subtraction; you write it. |\n\n#### Ad gating — do not let this skill write your enforcement\n\n**AVKit enforces nothing here, and its data is advisory.** If ad-skip is a revenue requirement, your own ad\nschedule (VAST / SSAI cue-outs / the manifest) is the source of truth. Treat the route's data as *additive*\nand **fail closed** when it is absent or contradictory — this is a third-party provider's data, not yours.\n\nWhat the API actually gives you, and where each signal fails:\n\n| Signal | What it does NOT do |\n|--------|---------------------|\n| `requiresLinearPlayback` | Read-only **indicator**. Blocks nothing. `segments` may be `[]`, so an ad can exist with no linear segment at all. |\n| `seekableTimeRanges` | Apple only says it \"**typically**\" excludes linear segments. It may be `nil` (= all seekable) on a lazy provider that *does* mark ads — and an ad may instead be expressed only as a **hole** in these ranges, with no segment. |\n| `supportedSeekCapabilities.contains(.seek)` | Gates `seek(to:tolerance:)` **only**. |\n\n**The bypass that a seek-only gate misses entirely:** `state`, `scanSpeed`, and `playbackSpeed` are all\nsettable and **never route through `seek(to:tolerance:)`**. `state = .scanning; scanSpeed = 30` crosses a\n60-second ad in two seconds. A route can advertise `.scanForward` **without** `.seek` — so a gate that\n\"disables the scrubber because the route can't seek\" hands the user a fast-forward button straight through\nthe ad break. Any real enforcement must also refuse scan/rate changes while inside a linear segment.\n\n**Traps in the obvious implementations** (each verified against the SDK): clamping a seek back to the start\nof the crossed segment **replays** an ad the user was already part-way through; a direction-agnostic rule\nforce-plays ads on a *rewind*; picking \"the crossed segment\" with `first(where:)` can clamp *past* an earlier\nad, because segment order is only a \"should\"; and a watched-ad ledger keyed on `identifier` collides on\n`nil`, which is permitted.\n\nNone of that is a reason to skip the gate — it is a reason to build it from **your** ad schedule, use the\nroute's signals to enrich it, fail closed on missing data, and test against the real receiver.\n| Live vs DVR is something you **detect**, not set | `timeRange` is read-only. Live **without** DVR = a zero-duration `timeRange` at the live edge. Live **with** DVR = a rolling window plus explicit `seekableTimeRanges`. Pair with `containsLiveStreamingContent`. |\n| `state = .scrubbing` is not decorative | While the user drags the scrubber, set `control.state = .scrubbing` (and back to `.normal` on commit) so the remote device can distinguish a scrub from a seek. `playbackControl` is declared `nullable` so you must still unwrap it — but do not build a \"provider vended no controls\" fallback path on that: Apple says it is \"always non-nil when obtained from a successful call to `start()`\". |\n| `segments` \"should\" be contiguous — not \"must\" | Apple's word is *should* (contiguous, covering the timeline, no gaps or overlaps). A third-party provider may not comply, so don't index into `segments` assuming full coverage. |\n| `AVPlaybackUserInterfaceVideoProviding` and `…ThumbnailControllable` are **unusable** | They appear in the AVKit Swift interface but are `@available(iOS, unavailable)` on **every** platform. Same for `AVExperienceController`, `AVMultiviewManager`, `AVContentSelectionViewController`. Do not adopt them. |\n| In Swift, metadata is a **new struct**, not the ObjC class | Both `…ContentMetadataTemplate` and the `…ContentMetadata` *class* are `NS_REFINED_FOR_SWIFT`; the overlay vends a fresh Swift struct `AVPlaybackUserInterfaceContentMetadata` (with a nested `VideoProperties`) and a memberwise init. Read-path trivia mostly — `metadata` is **read-only** on the controllable. |\n\n## Gate on availability + keep a fallback\n\n```swift\nif #available(iOS 27, *), AVSystemRouteController.supportedExtensionAvailable {\n    coordinator.startObserving()\n} else {\n    // your existing AirPlay route-picker / in-app cast path\n}\n```\n\n`supportedExtensionAvailable` being `false` is the common case today — design for it. When it is `false`, check\nthese in order:\n\n1. **Your Info.plist keys are missing** (see above). This is the most common cause and it is entirely on you.\n2. No matching route-provider extension is installed — Apple does not implement Chromecast; the *vendor*\n   ships the extension. Dropping a per-vendor cast SDK is contingent on that extension actually existing.\n3. Region gating (reported EU/DMA-driven).\n\n## Resources\n\n**Docs**: /avsystemrouting, /avsystemrouting/routing-media-to-third-party-devices, /avkit/avplaybackuserinterfacecontrollable\n\n**Skills**: now-playing, now-playing-carplay, avfoundation-ref\n",
       "skillType": "discipline",
       "source": "axiom",
       "tags": [
@@ -23491,21 +23491,21 @@
           "heading": "What `playbackControl` gives you",
           "level": 2,
           "startLine": 161,
-          "endLine": 204,
-          "charCount": 7031
+          "endLine": 231,
+          "charCount": 9017
         },
         {
           "heading": "Gate on availability + keep a fallback",
           "level": 2,
-          "startLine": 205,
-          "endLine": 222,
+          "startLine": 232,
+          "endLine": 249,
           "charCount": 735
         },
         {
           "heading": "Resources",
           "level": 2,
-          "startLine": 223,
-          "endLine": 228,
+          "startLine": 250,
+          "endLine": 255,
           "charCount": 204
         }
       ]
@@ -44491,7 +44491,7 @@
           40,
           3,
           44,
-          684
+          754
         ],
         "156": [
           5,
@@ -45255,7 +45255,7 @@
         18.454545454545467,
         3.984848484848485,
         44.37499999999997,
-        660.2234848484849
+        660.4886363636365
       ],
       "storedFields": {
         "0": {
@@ -47006,7 +47006,7 @@
               "139": 7,
               "143": 1,
               "149": 2,
-              "155": 2,
+              "155": 3,
               "170": 1,
               "173": 1,
               "182": 7,
@@ -48110,6 +48110,7 @@
               "142": 2,
               "149": 1,
               "154": 2,
+              "155": 1,
               "157": 2,
               "158": 1,
               "166": 1,
@@ -49810,6 +49811,7 @@
               "133": 2,
               "143": 1,
               "151": 2,
+              "155": 1,
               "161": 1,
               "165": 1,
               "166": 2,
@@ -49832,7 +49834,7 @@
             "4": {
               "13": 1,
               "79": 1,
-              "155": 1,
+              "155": 2,
               "163": 1,
               "164": 1,
               "165": 1,
@@ -49985,7 +49987,7 @@
               "141": 3,
               "143": 1,
               "154": 2,
-              "155": 4,
+              "155": 3,
               "157": 2,
               "158": 5,
               "162": 1,
@@ -51362,7 +51364,7 @@
               "149": 3,
               "151": 10,
               "152": 1,
-              "155": 2,
+              "155": 3,
               "156": 1,
               "157": 7,
               "158": 4,
@@ -59181,7 +59183,7 @@
               "149": 3,
               "151": 2,
               "154": 5,
-              "155": 1,
+              "155": 2,
               "156": 10,
               "157": 12,
               "158": 14,
@@ -61395,7 +61397,7 @@
               "77": 1,
               "78": 1,
               "103": 1,
-              "155": 1,
+              "155": 2,
               "163": 1,
               "165": 1,
               "166": 1,
@@ -61495,6 +61497,7 @@
               "64": 2,
               "67": 1,
               "142": 1,
+              "155": 1,
               "157": 1,
               "172": 2,
               "183": 2,
@@ -61546,7 +61549,7 @@
               "136": 1,
               "143": 1,
               "149": 1,
-              "155": 6,
+              "155": 5,
               "157": 5,
               "165": 2,
               "166": 2,
@@ -62037,6 +62040,7 @@
               "128": 1,
               "132": 1,
               "140": 1,
+              "155": 1,
               "172": 1,
               "173": 1,
               "177": 1,
@@ -65909,7 +65913,7 @@
               "152": 5,
               "153": 3,
               "154": 19,
-              "155": 3,
+              "155": 4,
               "156": 1,
               "161": 12,
               "162": 4,
@@ -66302,7 +66306,7 @@
               "149": 4,
               "151": 1,
               "154": 3,
-              "155": 3,
+              "155": 2,
               "156": 1,
               "157": 2,
               "158": 1,
@@ -66537,6 +66541,7 @@
               "92": 1,
               "132": 1,
               "149": 1,
+              "155": 1,
               "157": 1,
               "170": 1,
               "193": 2,
@@ -68404,7 +68409,7 @@
               "126": 2,
               "128": 1,
               "133": 1,
-              "155": 6,
+              "155": 8,
               "156": 34,
               "157": 10,
               "158": 18,
@@ -68815,7 +68820,8 @@
             "4": {
               "11": 3,
               "12": 1,
-              "13": 1
+              "13": 1,
+              "155": 1
             }
           }
         ],
@@ -69385,6 +69391,7 @@
               "143": 3,
               "146": 1,
               "151": 4,
+              "155": 1,
               "157": 4,
               "158": 4,
               "161": 1,
@@ -69924,7 +69931,7 @@
               "148": 1,
               "151": 1,
               "152": 1,
-              "155": 3,
+              "155": 4,
               "156": 1,
               "158": 3,
               "167": 1,
@@ -70328,7 +70335,7 @@
               "114": 1,
               "133": 1,
               "153": 1,
-              "155": 2,
+              "155": 3,
               "157": 1,
               "161": 4,
               "163": 2,
@@ -70980,6 +70987,7 @@
               "130": 1,
               "131": 1,
               "143": 1,
+              "155": 1,
               "202": 1,
               "219": 2,
               "231": 1,
@@ -71571,6 +71579,7 @@
               "151": 4,
               "153": 2,
               "154": 4,
+              "155": 1,
               "156": 2,
               "157": 3,
               "158": 4,
@@ -71668,7 +71677,6 @@
               "103": 1,
               "131": 1,
               "152": 1,
-              "155": 1,
               "185": 1,
               "201": 1,
               "207": 1,
@@ -71756,6 +71764,7 @@
               "30": 1,
               "63": 1,
               "127": 1,
+              "155": 1,
               "161": 6,
               "165": 1,
               "166": 2,
@@ -79471,6 +79480,7 @@
               "54": 2,
               "102": 1,
               "123": 1,
+              "155": 1,
               "162": 2,
               "164": 3,
               "166": 1,
@@ -80807,7 +80817,7 @@
               "141": 1,
               "146": 1,
               "150": 1,
-              "155": 2,
+              "155": 4,
               "161": 2,
               "165": 1,
               "167": 1,
@@ -82514,6 +82524,7 @@
           {
             "4": {
               "114": 1,
+              "155": 1,
               "206": 4
             }
           }
@@ -82554,6 +82565,7 @@
               "104": 1,
               "111": 2,
               "140": 1,
+              "155": 2,
               "157": 2,
               "162": 2,
               "182": 1,
@@ -84982,7 +84994,7 @@
               "145": 1,
               "146": 1,
               "149": 1,
-              "155": 1,
+              "155": 3,
               "157": 1,
               "158": 1,
               "160": 1,
@@ -85251,6 +85263,7 @@
               "149": 2,
               "153": 2,
               "154": 2,
+              "155": 1,
               "161": 3,
               "162": 3,
               "164": 6,
@@ -85898,7 +85911,7 @@
               "138": 1,
               "139": 2,
               "145": 1,
-              "155": 2,
+              "155": 1,
               "158": 1,
               "162": 2,
               "166": 1,
@@ -86065,7 +86078,7 @@
               "146": 4,
               "149": 5,
               "152": 1,
-              "155": 5,
+              "155": 4,
               "156": 1,
               "157": 7,
               "162": 3,
@@ -86689,6 +86702,7 @@
               "137": 1,
               "140": 1,
               "141": 1,
+              "155": 1,
               "171": 2,
               "177": 1,
               "197": 1,
@@ -86981,7 +86995,7 @@
               "146": 2,
               "149": 3,
               "153": 1,
-              "155": 3,
+              "155": 5,
               "156": 3,
               "157": 2,
               "158": 2,
@@ -87879,7 +87893,7 @@
               "150": 2,
               "153": 1,
               "154": 3,
-              "155": 5,
+              "155": 6,
               "156": 1,
               "157": 2,
               "158": 3,
@@ -88925,7 +88939,7 @@
           "extrapola",
           {
             "4": {
-              "155": 1
+              "155": 2
             }
           }
         ],
@@ -89332,6 +89346,7 @@
               "37": 1,
               "45": 1,
               "48": 1,
+              "155": 1,
               "226": 1,
               "246": 1
             }
@@ -91143,6 +91158,7 @@
               "140": 2,
               "143": 1,
               "149": 1,
+              "155": 1,
               "156": 14,
               "157": 3,
               "158": 3,
@@ -91231,7 +91247,6 @@
               "139": 1,
               "144": 2,
               "150": 1,
-              "155": 1,
               "156": 2,
               "157": 3,
               "159": 1,
@@ -91621,6 +91636,7 @@
               "0": 1,
               "45": 1,
               "129": 1,
+              "155": 1,
               "157": 1,
               "201": 1,
               "226": 1,
@@ -94369,7 +94385,7 @@
               "152": 1,
               "153": 2,
               "154": 8,
-              "155": 4,
+              "155": 6,
               "156": 3,
               "157": 2,
               "158": 4,
@@ -94747,7 +94763,7 @@
               "149": 1,
               "151": 2,
               "154": 2,
-              "155": 1,
+              "155": 2,
               "161": 19,
               "162": 6,
               "163": 11,
@@ -94939,7 +94955,7 @@
               "149": 13,
               "151": 1,
               "154": 4,
-              "155": 7,
+              "155": 6,
               "157": 20,
               "158": 7,
               "161": 1,
@@ -96436,7 +96452,7 @@
               "148": 1,
               "149": 5,
               "154": 9,
-              "155": 5,
+              "155": 6,
               "156": 5,
               "157": 3,
               "158": 3,
@@ -96703,7 +96719,6 @@
               "127": 1,
               "129": 1,
               "149": 2,
-              "155": 1,
               "156": 1,
               "158": 1,
               "164": 2,
@@ -96812,6 +96827,7 @@
               "143": 2,
               "151": 1,
               "154": 2,
+              "155": 1,
               "156": 7,
               "158": 5,
               "159": 6,
@@ -96975,6 +96991,7 @@
               "82": 1,
               "84": 2,
               "132": 1,
+              "155": 1,
               "166": 1,
               "176": 1,
               "181": 2,
@@ -97421,6 +97438,7 @@
               "30": 2,
               "55": 1,
               "128": 1,
+              "155": 1,
               "157": 1,
               "167": 1,
               "181": 1,
@@ -99455,7 +99473,7 @@
               "146": 1,
               "149": 4,
               "151": 3,
-              "155": 1,
+              "155": 4,
               "157": 6,
               "158": 4,
               "159": 1,
@@ -100831,7 +100849,7 @@
               "143": 1,
               "144": 1,
               "149": 2,
-              "155": 1,
+              "155": 3,
               "156": 1,
               "157": 1,
               "158": 3,
@@ -101038,7 +101056,7 @@
               "151": 3,
               "152": 2,
               "154": 3,
-              "155": 1,
+              "155": 2,
               "156": 8,
               "157": 9,
               "158": 13,
@@ -102429,7 +102447,7 @@
               "140": 7,
               "141": 9,
               "149": 1,
-              "155": 1,
+              "155": 2,
               "157": 1,
               "162": 5,
               "164": 7,
@@ -103309,7 +103327,7 @@
               "143": 2,
               "144": 2,
               "145": 1,
-              "155": 1,
+              "155": 2,
               "157": 1,
               "158": 2,
               "162": 1,
@@ -103892,7 +103910,7 @@
               "146": 4,
               "153": 5,
               "154": 10,
-              "155": 6,
+              "155": 8,
               "161": 2,
               "163": 1,
               "164": 2,
@@ -103951,7 +103969,7 @@
               "146": 6,
               "153": 2,
               "154": 6,
-              "155": 8,
+              "155": 11,
               "161": 4,
               "163": 1,
               "170": 1,
@@ -104600,7 +104618,7 @@
               "149": 34,
               "150": 1,
               "154": 4,
-              "155": 3,
+              "155": 6,
               "157": 1,
               "158": 3,
               "172": 1,
@@ -106109,7 +106127,7 @@
               "140": 5,
               "141": 47,
               "142": 4,
-              "155": 48,
+              "155": 52,
               "156": 3,
               "158": 1,
               "162": 1,
@@ -106514,7 +106532,7 @@
               "147": 2,
               "149": 1,
               "151": 1,
-              "155": 2,
+              "155": 1,
               "156": 3,
               "157": 2,
               "158": 3,
@@ -106670,7 +106688,7 @@
               "151": 2,
               "153": 1,
               "154": 3,
-              "155": 4,
+              "155": 2,
               "156": 3,
               "157": 6,
               "158": 2,
@@ -107699,7 +107717,8 @@
           "rewind",
           {
             "4": {
-              "20": 1
+              "20": 1,
+              "155": 1
             }
           }
         ],
@@ -108262,6 +108281,7 @@
               "120": 4,
               "123": 5,
               "143": 1,
+              "155": 1,
               "161": 1,
               "165": 1,
               "170": 1,
@@ -112238,7 +112258,7 @@
           }
         ],
         [
-          "republishes",
+          "republish",
           {
             "4": {
               "155": 1
@@ -113072,6 +113092,7 @@
           "replays",
           {
             "4": {
+              "155": 1,
               "157": 1
             }
           }
@@ -113360,7 +113381,6 @@
               "0": 1,
               "79": 1,
               "103": 2,
-              "155": 1,
               "212": 1,
               "228": 1,
               "230": 1,
@@ -113471,7 +113491,7 @@
               "139": 6,
               "144": 2,
               "148": 1,
-              "155": 1,
+              "155": 3,
               "162": 1,
               "165": 1,
               "166": 1,
@@ -114185,7 +114205,7 @@
               "144": 1,
               "147": 1,
               "149": 2,
-              "155": 1,
+              "155": 2,
               "156": 3,
               "157": 10,
               "158": 16,
@@ -116301,6 +116321,7 @@
               "9": 2,
               "13": 1,
               "14": 2,
+              "155": 1,
               "185": 2,
               "253": 1
             }
@@ -118294,7 +118315,6 @@
               "73": 1,
               "76": 1,
               "92": 4,
-              "155": 1,
               "157": 1,
               "167": 1,
               "177": 1,
@@ -118540,7 +118560,6 @@
               "127": 1,
               "129": 1,
               "151": 1,
-              "155": 1,
               "156": 1,
               "157": 2,
               "164": 1,
@@ -119903,6 +119922,7 @@
               "148": 1,
               "150": 2,
               "151": 2,
+              "155": 1,
               "169": 1,
               "194": 1,
               "197": 1,
@@ -123174,6 +123194,7 @@
               "147": 1,
               "149": 4,
               "153": 1,
+              "155": 1,
               "156": 4,
               "157": 4,
               "158": 1,
@@ -123639,7 +123660,7 @@
               "152": 3,
               "153": 2,
               "154": 18,
-              "155": 4,
+              "155": 5,
               "156": 27,
               "157": 15,
               "158": 43,
@@ -123962,7 +123983,6 @@
               "149": 4,
               "151": 15,
               "154": 1,
-              "155": 1,
               "157": 20,
               "158": 5,
               "165": 1,
@@ -124177,7 +124197,7 @@
               "152": 2,
               "153": 3,
               "154": 10,
-              "155": 12,
+              "155": 13,
               "156": 11,
               "157": 10,
               "158": 15,
@@ -124916,6 +124936,7 @@
               "150": 2,
               "151": 3,
               "153": 1,
+              "155": 1,
               "156": 1,
               "157": 4,
               "158": 16,
@@ -125839,14 +125860,6 @@
           }
         ],
         [
-          "unwatched",
-          {
-            "4": {
-              "155": 1
-            }
-          }
-        ],
-        [
           "unwanted",
           {
             "4": {
@@ -126217,18 +126230,10 @@
           }
         ],
         [
-          "unbundled",
+          "unbox",
           {
             "4": {
-              "115": 2
-            }
-          }
-        ],
-        [
-          "unbundle",
-          {
-            "4": {
-              "115": 1
+              "155": 1
             }
           }
         ],
@@ -126247,6 +126252,22 @@
               "107": 1,
               "216": 2,
               "239": 1
+            }
+          }
+        ],
+        [
+          "unbundled",
+          {
+            "4": {
+              "115": 2
+            }
+          }
+        ],
+        [
+          "unbundle",
+          {
+            "4": {
+              "115": 1
             }
           }
         ],
@@ -128490,6 +128511,7 @@
               "17": 2,
               "71": 1,
               "79": 1,
+              "155": 3,
               "246": 2
             }
           }
@@ -136289,7 +136311,7 @@
               "107": 1,
               "115": 16,
               "140": 3,
-              "155": 3,
+              "155": 2,
               "157": 1,
               "160": 2,
               "163": 2,
@@ -136564,6 +136586,7 @@
               "140": 1,
               "152": 1,
               "154": 1,
+              "155": 2,
               "156": 2,
               "157": 10,
               "158": 4,
@@ -136778,7 +136801,6 @@
               "145": 1,
               "146": 2,
               "151": 1,
-              "155": 1,
               "156": 2,
               "157": 11,
               "158": 2,
@@ -136906,7 +136928,7 @@
               "142": 1,
               "144": 3,
               "154": 2,
-              "155": 2,
+              "155": 3,
               "157": 40,
               "158": 13,
               "164": 8,
@@ -137253,6 +137275,7 @@
               "146": 1,
               "149": 1,
               "150": 4,
+              "155": 1,
               "156": 3,
               "157": 5,
               "163": 1,
@@ -137667,6 +137690,7 @@
               "139": 1,
               "142": 1,
               "144": 1,
+              "155": 1,
               "157": 1,
               "162": 1,
               "172": 1,
@@ -138493,7 +138517,6 @@
               "117": 1,
               "137": 9,
               "139": 6,
-              "155": 1,
               "158": 1,
               "177": 3,
               "181": 2,
@@ -139978,7 +140001,6 @@
               "141": 1,
               "144": 1,
               "149": 1,
-              "155": 1,
               "158": 1,
               "161": 1,
               "165": 1,
@@ -140117,6 +140139,7 @@
           "folds",
           {
             "4": {
+              "155": 1,
               "210": 1
             }
           }
@@ -140474,6 +140497,7 @@
               "139": 1,
               "149": 1,
               "150": 1,
+              "155": 1,
               "156": 2,
               "158": 2,
               "173": 5,
@@ -140847,7 +140871,7 @@
               "133": 2,
               "149": 12,
               "151": 1,
-              "155": 2,
+              "155": 3,
               "165": 2,
               "166": 1,
               "167": 12,
@@ -140860,23 +140884,6 @@
               "243": 2,
               "248": 1,
               "256": 1
-            }
-          }
-        ],
-        [
-          "formulae",
-          {
-            "4": {
-              "234": 1
-            }
-          }
-        ],
-        [
-          "formula",
-          {
-            "4": {
-              "185": 1,
-              "234": 1
             }
           }
         ],
@@ -141204,6 +141211,24 @@
               "252": 1,
               "260": 4,
               "261": 2
+            }
+          }
+        ],
+        [
+          "formulae",
+          {
+            "4": {
+              "234": 1
+            }
+          }
+        ],
+        [
+          "formula",
+          {
+            "4": {
+              "155": 1,
+              "185": 1,
+              "234": 1
             }
           }
         ],
@@ -142035,7 +142060,7 @@
               "151": 7,
               "152": 2,
               "154": 9,
-              "155": 2,
+              "155": 3,
               "156": 5,
               "157": 14,
               "158": 5,
@@ -144740,7 +144765,7 @@
               "149": 1,
               "153": 1,
               "154": 5,
-              "155": 3,
+              "155": 4,
               "157": 1,
               "158": 1,
               "161": 1,
@@ -145641,7 +145666,7 @@
               "152": 10,
               "153": 3,
               "154": 1,
-              "155": 12,
+              "155": 11,
               "156": 29,
               "157": 9,
               "158": 17,
@@ -146165,7 +146190,7 @@
               "107": 2,
               "111": 1,
               "146": 1,
-              "155": 4,
+              "155": 3,
               "156": 2,
               "157": 1,
               "168": 1,
@@ -146360,6 +146385,7 @@
               "138": 3,
               "145": 2,
               "149": 3,
+              "155": 1,
               "157": 2,
               "172": 1,
               "177": 1,
@@ -146704,7 +146730,7 @@
               "151": 2,
               "153": 18,
               "154": 17,
-              "155": 24,
+              "155": 29,
               "156": 5,
               "157": 20,
               "158": 30,
@@ -147549,7 +147575,7 @@
               "143": 1,
               "145": 1,
               "149": 1,
-              "155": 7,
+              "155": 8,
               "161": 1,
               "162": 1,
               "163": 2,
@@ -147733,7 +147759,7 @@
               "118": 1,
               "132": 1,
               "149": 1,
-              "155": 2,
+              "155": 1,
               "157": 1,
               "163": 1,
               "164": 1,
@@ -148421,7 +148447,7 @@
               "143": 1,
               "144": 2,
               "151": 1,
-              "155": 2,
+              "155": 4,
               "156": 1,
               "158": 1,
               "161": 3,
@@ -149082,7 +149108,7 @@
               "141": 1,
               "143": 1,
               "148": 1,
-              "155": 2,
+              "155": 3,
               "156": 2,
               "157": 1,
               "158": 1,
@@ -149357,6 +149383,7 @@
               "149": 12,
               "150": 1,
               "152": 1,
+              "155": 1,
               "156": 3,
               "157": 10,
               "158": 2,
@@ -149590,7 +149617,7 @@
               "151": 4,
               "153": 2,
               "154": 1,
-              "155": 2,
+              "155": 3,
               "156": 2,
               "157": 3,
               "158": 1,
@@ -149929,7 +149956,7 @@
               "145": 1,
               "149": 4,
               "152": 1,
-              "155": 2,
+              "155": 3,
               "156": 4,
               "157": 4,
               "158": 5,
@@ -150700,7 +150727,7 @@
               "151": 9,
               "152": 3,
               "154": 26,
-              "155": 3,
+              "155": 2,
               "156": 29,
               "157": 9,
               "158": 27,
@@ -151099,6 +151126,7 @@
               "45": 1,
               "104": 1,
               "149": 1,
+              "155": 1,
               "157": 1,
               "182": 2,
               "201": 1,
@@ -153327,7 +153355,7 @@
               "109": 1,
               "122": 1,
               "149": 3,
-              "155": 1,
+              "155": 2,
               "161": 1,
               "215": 2,
               "222": 1,
@@ -153934,7 +153962,6 @@
               "75": 1,
               "92": 2,
               "129": 1,
-              "155": 1,
               "164": 2,
               "220": 1,
               "246": 1,
@@ -154164,7 +154191,7 @@
               "36": 1,
               "116": 12,
               "117": 2,
-              "155": 2,
+              "155": 4,
               "174": 3,
               "175": 8,
               "176": 11,
@@ -157191,7 +157218,7 @@
               "150": 3,
               "151": 2,
               "154": 6,
-              "155": 1,
+              "155": 2,
               "156": 1,
               "157": 1,
               "158": 2,
@@ -159849,7 +159876,7 @@
               "137": 1,
               "139": 4,
               "149": 1,
-              "155": 3,
+              "155": 2,
               "156": 1,
               "157": 1,
               "158": 3,
@@ -161003,7 +161030,6 @@
               "149": 2,
               "151": 3,
               "154": 1,
-              "155": 1,
               "156": 5,
               "157": 3,
               "158": 4,
@@ -162212,6 +162238,14 @@
           }
         ],
         [
+          "obliges",
+          {
+            "4": {
+              "155": 1
+            }
+          }
+        ],
+        [
           "obelisk",
           {
             "4": {
@@ -162952,7 +162986,7 @@
               "139": 5,
               "143": 12,
               "149": 2,
-              "155": 4,
+              "155": 2,
               "157": 1,
               "160": 1,
               "215": 5,
@@ -163040,6 +163074,7 @@
               "2": 1,
               "114": 2,
               "144": 1,
+              "155": 1,
               "158": 1,
               "174": 2,
               "201": 1,
@@ -163108,6 +163143,14 @@
           }
         ],
         [
+          "outform",
+          {
+            "4": {
+              "172": 1
+            }
+          }
+        ],
+        [
           "outstand",
           {
             "4": {
@@ -163119,6 +163162,7 @@
           "outs",
           {
             "4": {
+              "155": 1,
               "207": 2
             }
           }
@@ -163186,14 +163230,6 @@
               "253": 1,
               "262": 1,
               "263": 1
-            }
-          }
-        ],
-        [
-          "outform",
-          {
-            "4": {
-              "172": 1
             }
           }
         ],
@@ -164639,6 +164675,7 @@
               "143": 1,
               "149": 1,
               "151": 1,
+              "155": 1,
               "157": 1,
               "164": 1,
               "170": 2,
@@ -166261,7 +166298,7 @@
               "145": 1,
               "149": 3,
               "150": 2,
-              "155": 1,
+              "155": 2,
               "156": 1,
               "157": 3,
               "158": 1,
@@ -166814,7 +166851,7 @@
               "152": 11,
               "153": 5,
               "154": 7,
-              "155": 14,
+              "155": 16,
               "156": 15,
               "157": 31,
               "158": 5,
@@ -167248,7 +167285,7 @@
               "148": 1,
               "149": 8,
               "154": 6,
-              "155": 7,
+              "155": 6,
               "156": 5,
               "157": 6,
               "158": 1,
@@ -169105,7 +169142,7 @@
               "149": 23,
               "150": 7,
               "151": 7,
-              "155": 8,
+              "155": 9,
               "156": 4,
               "157": 2,
               "159": 3,
@@ -170135,7 +170172,7 @@
               "152": 1,
               "153": 9,
               "154": 2,
-              "155": 2,
+              "155": 5,
               "156": 2,
               "157": 8,
               "158": 8,
@@ -170388,7 +170425,7 @@
               "149": 16,
               "151": 1,
               "154": 5,
-              "155": 5,
+              "155": 4,
               "156": 1,
               "157": 14,
               "158": 3,
@@ -170992,6 +171029,7 @@
               "90": 11,
               "107": 1,
               "119": 1,
+              "155": 1,
               "157": 1,
               "183": 1,
               "204": 2
@@ -171489,7 +171527,7 @@
               "149": 2,
               "151": 7,
               "154": 11,
-              "155": 2,
+              "155": 3,
               "156": 8,
               "157": 2,
               "158": 14,
@@ -171658,7 +171696,7 @@
               "141": 1,
               "149": 2,
               "151": 1,
-              "155": 4,
+              "155": 2,
               "157": 1,
               "158": 1,
               "161": 1,
@@ -172175,7 +172213,7 @@
               "151": 2,
               "152": 1,
               "154": 1,
-              "155": 4,
+              "155": 3,
               "156": 23,
               "157": 2,
               "158": 6,
@@ -172750,6 +172788,14 @@
           }
         ],
         [
+          "nonnull",
+          {
+            "4": {
+              "155": 1
+            }
+          }
+        ],
+        [
           "nonces",
           {
             "4": {
@@ -172967,6 +173013,7 @@
               "149": 1,
               "152": 1,
               "154": 1,
+              "155": 1,
               "156": 1,
               "157": 2,
               "158": 1,
@@ -173555,7 +173602,7 @@
               "151": 12,
               "153": 5,
               "154": 17,
-              "155": 11,
+              "155": 14,
               "156": 28,
               "157": 27,
               "158": 20,
@@ -174633,7 +174680,7 @@
               "152": 8,
               "153": 3,
               "154": 9,
-              "155": 41,
+              "155": 46,
               "156": 11,
               "157": 54,
               "158": 30,
@@ -175324,7 +175371,6 @@
               "143": 1,
               "144": 4,
               "150": 1,
-              "155": 1,
               "164": 1,
               "165": 1,
               "167": 1,
@@ -179765,7 +179811,7 @@
               "151": 8,
               "152": 3,
               "154": 1,
-              "155": 7,
+              "155": 11,
               "156": 1,
               "158": 3,
               "159": 1,
@@ -181502,6 +181548,7 @@
               "139": 1,
               "140": 1,
               "144": 1,
+              "155": 1,
               "156": 1,
               "157": 5,
               "162": 4,
@@ -181933,7 +181980,6 @@
               "138": 1,
               "139": 5,
               "144": 4,
-              "155": 1,
               "159": 1,
               "160": 1,
               "162": 1,
@@ -182939,7 +182985,6 @@
               "137": 1,
               "141": 1,
               "147": 1,
-              "155": 1,
               "158": 3,
               "170": 2,
               "176": 1,
@@ -183251,7 +183296,7 @@
               "141": 1,
               "143": 1,
               "145": 1,
-              "155": 2,
+              "155": 1,
               "157": 1,
               "162": 1,
               "165": 1,
@@ -183433,7 +183478,7 @@
               "152": 5,
               "153": 4,
               "154": 60,
-              "155": 6,
+              "155": 7,
               "156": 93,
               "157": 49,
               "158": 53,
@@ -185360,7 +185405,6 @@
               "83": 1,
               "107": 1,
               "119": 1,
-              "155": 1,
               "157": 1,
               "167": 1,
               "183": 1,
@@ -185378,7 +185422,6 @@
               "12": 1,
               "24": 1,
               "54": 1,
-              "155": 2,
               "167": 1,
               "168": 1,
               "219": 1,
@@ -185500,6 +185543,7 @@
               "95": 1,
               "133": 1,
               "149": 3,
+              "155": 1,
               "173": 3,
               "174": 5,
               "175": 1,
@@ -185803,7 +185847,7 @@
           "dvr",
           {
             "4": {
-              "155": 3
+              "155": 5
             }
           }
         ],
@@ -187001,7 +187045,7 @@
               "149": 17,
               "150": 2,
               "153": 8,
-              "155": 1,
+              "155": 2,
               "157": 1,
               "175": 1,
               "176": 1,
@@ -188199,7 +188243,7 @@
               "151": 35,
               "153": 8,
               "154": 11,
-              "155": 15,
+              "155": 19,
               "156": 70,
               "157": 59,
               "158": 40,
@@ -189842,7 +189886,7 @@
               "146": 1,
               "149": 3,
               "151": 1,
-              "155": 4,
+              "155": 6,
               "157": 1,
               "158": 1,
               "162": 1,
@@ -190269,7 +190313,7 @@
               "33": 3,
               "51": 1,
               "100": 1,
-              "155": 3,
+              "155": 2,
               "164": 1,
               "167": 1,
               "171": 1,
@@ -190918,7 +190962,7 @@
               "151": 6,
               "152": 2,
               "154": 2,
-              "155": 6,
+              "155": 10,
               "157": 8,
               "158": 6,
               "159": 1,
@@ -191668,7 +191712,7 @@
               "150": 1,
               "151": 3,
               "154": 2,
-              "155": 3,
+              "155": 4,
               "156": 9,
               "157": 7,
               "158": 10,
@@ -197987,6 +198031,7 @@
               "134": 1,
               "140": 1,
               "141": 1,
+              "155": 1,
               "214": 1,
               "224": 1,
               "246": 1
@@ -198072,7 +198117,6 @@
               "76": 1,
               "88": 1,
               "126": 1,
-              "155": 1,
               "162": 1,
               "167": 1,
               "171": 1,
@@ -199691,7 +199735,6 @@
               "124": 13,
               "140": 3,
               "141": 1,
-              "155": 1,
               "162": 1,
               "248": 2
             }
@@ -200074,6 +200117,7 @@
               "110": 2,
               "114": 1,
               "125": 4,
+              "155": 1,
               "196": 1,
               "212": 1,
               "213": 3,
@@ -201574,6 +201618,7 @@
               "146": 1,
               "149": 4,
               "151": 1,
+              "155": 1,
               "156": 1,
               "157": 9,
               "158": 1,
@@ -202223,7 +202268,7 @@
               "152": 2,
               "153": 2,
               "154": 3,
-              "155": 1,
+              "155": 2,
               "159": 1,
               "161": 5,
               "163": 5,
@@ -203011,6 +203056,7 @@
               "108": 1,
               "116": 1,
               "141": 1,
+              "155": 1,
               "157": 2,
               "172": 1,
               "186": 1,
@@ -205020,6 +205066,7 @@
               "129": 1,
               "149": 1,
               "154": 1,
+              "155": 1,
               "161": 2,
               "162": 1,
               "163": 2,
@@ -205261,7 +205308,7 @@
               "150": 14,
               "151": 2,
               "153": 2,
-              "155": 1,
+              "155": 2,
               "156": 4,
               "157": 1,
               "158": 1,
@@ -206435,6 +206482,7 @@
               "140": 1,
               "149": 1,
               "154": 1,
+              "155": 1,
               "156": 2,
               "157": 1,
               "158": 1,
@@ -208373,6 +208421,7 @@
               "16": 1,
               "20": 2,
               "105": 1,
+              "155": 1,
               "172": 1,
               "182": 1,
               "202": 1,
@@ -215349,6 +215398,7 @@
               "17": 1,
               "19": 1,
               "143": 1,
+              "155": 1,
               "252": 1
             }
           }
@@ -216253,7 +216303,7 @@
               "142": 6,
               "147": 2,
               "149": 1,
-              "155": 15,
+              "155": 13,
               "156": 6,
               "157": 6,
               "161": 1,
@@ -216766,7 +216816,7 @@
               "151": 3,
               "153": 1,
               "154": 1,
-              "155": 1,
+              "155": 2,
               "156": 5,
               "157": 2,
               "159": 1,
@@ -217528,6 +217578,14 @@
               "244": 13,
               "245": 6,
               "248": 7
+            }
+          }
+        ],
+        [
+          "vod",
+          {
+            "4": {
+              "155": 2
             }
           }
         ],
@@ -218318,6 +218376,7 @@
               "136": 1,
               "149": 3,
               "152": 1,
+              "155": 1,
               "157": 1,
               "164": 4,
               "166": 4,
@@ -219090,6 +219149,14 @@
           }
         ],
         [
+          "vast",
+          {
+            "4": {
+              "155": 1
+            }
+          }
+        ],
+        [
           "vape",
           {
             "4": {
@@ -219544,7 +219611,7 @@
               "149": 13,
               "150": 2,
               "153": 2,
-              "155": 2,
+              "155": 4,
               "156": 7,
               "157": 4,
               "158": 6,
@@ -220951,7 +221018,7 @@
               "151": 1,
               "153": 1,
               "154": 2,
-              "155": 1,
+              "155": 2,
               "156": 1,
               "157": 2,
               "158": 3,
@@ -223019,7 +223086,7 @@
               "149": 29,
               "151": 6,
               "154": 4,
-              "155": 2,
+              "155": 1,
               "157": 8,
               "158": 13,
               "159": 3,
@@ -223554,7 +223621,7 @@
               "151": 12,
               "153": 4,
               "154": 4,
-              "155": 3,
+              "155": 5,
               "156": 1,
               "158": 1,
               "160": 2,
@@ -225850,6 +225917,7 @@
               "90": 1,
               "124": 1,
               "143": 1,
+              "155": 1,
               "162": 1,
               "164": 1,
               "212": 1,
@@ -225908,7 +225976,7 @@
               "140": 1,
               "141": 1,
               "154": 1,
-              "155": 1,
+              "155": 3,
               "157": 1,
               "158": 2,
               "163": 1,
@@ -226729,7 +226797,7 @@
               "151": 1,
               "153": 2,
               "154": 1,
-              "155": 2,
+              "155": 4,
               "156": 1,
               "157": 3,
               "158": 2,
@@ -227229,7 +227297,7 @@
               "152": 1,
               "153": 6,
               "154": 14,
-              "155": 9,
+              "155": 11,
               "156": 22,
               "157": 9,
               "158": 20,
@@ -227677,7 +227745,7 @@
               "151": 3,
               "152": 1,
               "154": 7,
-              "155": 4,
+              "155": 6,
               "157": 4,
               "158": 4,
               "159": 2,
@@ -228156,7 +228224,7 @@
               "149": 7,
               "151": 2,
               "154": 5,
-              "155": 3,
+              "155": 6,
               "156": 6,
               "157": 8,
               "158": 2,
@@ -229450,7 +229518,7 @@
               "110": 1,
               "128": 2,
               "140": 1,
-              "155": 1,
+              "155": 2,
               "162": 3,
               "201": 7,
               "203": 1,
@@ -232744,6 +232812,7 @@
               "149": 1,
               "150": 1,
               "151": 8,
+              "155": 1,
               "157": 1,
               "162": 3,
               "163": 1,
@@ -233939,7 +234008,6 @@
               "107": 4,
               "108": 1,
               "112": 2,
-              "155": 1,
               "175": 1,
               "176": 2,
               "196": 1,
@@ -234048,6 +234116,7 @@
               "147": 2,
               "149": 4,
               "151": 3,
+              "155": 1,
               "158": 3,
               "166": 8,
               "170": 16,
@@ -234609,6 +234678,7 @@
               "98": 1,
               "129": 1,
               "140": 2,
+              "155": 1,
               "175": 1,
               "202": 1,
               "253": 3
@@ -235778,7 +235848,7 @@
               "149": 4,
               "150": 1,
               "154": 5,
-              "155": 6,
+              "155": 7,
               "156": 6,
               "157": 1,
               "158": 2,
@@ -235988,6 +236058,7 @@
               "57": 2,
               "63": 1,
               "115": 1,
+              "155": 1,
               "160": 1,
               "175": 2,
               "182": 16,
@@ -237703,7 +237774,7 @@
               "148": 2,
               "149": 5,
               "153": 2,
-              "155": 10,
+              "155": 9,
               "158": 17,
               "159": 1,
               "165": 1,
@@ -238910,14 +238981,6 @@
           }
         ],
         [
-          "playhead",
-          {
-            "4": {
-              "155": 1
-            }
-          }
-        ],
-        [
           "playable",
           {
             "4": {
@@ -239078,7 +239141,7 @@
               "149": 74,
               "150": 2,
               "154": 2,
-              "155": 35,
+              "155": 33,
               "176": 3,
               "178": 2,
               "212": 5,
@@ -239213,7 +239276,8 @@
               "141": 1,
               "144": 2,
               "148": 1,
-              "149": 3
+              "149": 3,
+              "155": 1
             }
           }
         ],
@@ -239248,7 +239312,8 @@
               "141": 3,
               "147": 1,
               "148": 1,
-              "149": 12
+              "149": 12,
+              "155": 1
             }
           }
         ],
@@ -241546,6 +241611,7 @@
               "110": 1,
               "131": 1,
               "133": 1,
+              "155": 2,
               "161": 1,
               "162": 1,
               "163": 2,
@@ -242348,7 +242414,7 @@
               "127": 1,
               "145": 1,
               "149": 1,
-              "155": 7,
+              "155": 8,
               "161": 1,
               "162": 1,
               "163": 2,
@@ -242719,6 +242785,7 @@
               "143": 9,
               "144": 7,
               "153": 18,
+              "155": 1,
               "164": 1,
               "168": 1,
               "172": 2,
@@ -245209,7 +245276,7 @@
               "149": 2,
               "150": 5,
               "151": 1,
-              "155": 16,
+              "155": 18,
               "156": 2,
               "165": 1,
               "170": 1,
@@ -245944,7 +246011,7 @@
             "4": {
               "1": 3,
               "107": 1,
-              "155": 1,
+              "155": 2,
               "163": 4,
               "164": 3,
               "243": 6,
@@ -246586,7 +246653,7 @@
               "143": 1,
               "146": 1,
               "153": 5,
-              "155": 11,
+              "155": 10,
               "156": 29,
               "157": 28,
               "158": 10,
@@ -248095,7 +248162,7 @@
               "143": 1,
               "147": 1,
               "149": 4,
-              "155": 2,
+              "155": 1,
               "161": 3,
               "162": 2,
               "163": 3,
@@ -250973,7 +251040,6 @@
               "139": 1,
               "149": 3,
               "151": 1,
-              "155": 1,
               "156": 1,
               "158": 1,
               "159": 2,
@@ -253972,8 +254038,7 @@
           "misleads",
           {
             "4": {
-              "11": 1,
-              "155": 1
+              "11": 1
             }
           }
         ],
@@ -254006,23 +254071,6 @@
           }
         ],
         [
-          "misdirected",
-          {
-            "4": {
-              "207": 1
-            }
-          }
-        ],
-        [
-          "misdiagnosed",
-          {
-            "4": {
-              "71": 1,
-              "75": 1
-            }
-          }
-        ],
-        [
           "misinterpreted",
           {
             "4": {
@@ -254044,6 +254092,31 @@
             "4": {
               "36": 1,
               "52": 1
+            }
+          }
+        ],
+        [
+          "misdirected",
+          {
+            "4": {
+              "207": 1
+            }
+          }
+        ],
+        [
+          "misdirec",
+          {
+            "4": {
+              "155": 1
+            }
+          }
+        ],
+        [
+          "misdiagnosed",
+          {
+            "4": {
+              "71": 1,
+              "75": 1
             }
           }
         ],
@@ -254568,7 +254641,6 @@
               "135": 1,
               "143": 1,
               "154": 1,
-              "155": 1,
               "157": 1,
               "164": 3,
               "166": 11,
@@ -254645,6 +254717,7 @@
               "108": 1,
               "131": 1,
               "139": 1,
+              "155": 1,
               "158": 3,
               "185": 1,
               "195": 1,
@@ -254754,7 +254827,7 @@
               "147": 3,
               "149": 11,
               "154": 1,
-              "155": 1,
+              "155": 2,
               "157": 3,
               "158": 3,
               "162": 1,
@@ -255067,6 +255140,7 @@
               "152": 1,
               "153": 2,
               "154": 4,
+              "155": 1,
               "156": 7,
               "157": 9,
               "158": 1,
@@ -255618,6 +255692,7 @@
               "55": 1,
               "74": 1,
               "78": 2,
+              "155": 1,
               "215": 1
             }
           }
@@ -256199,7 +256274,7 @@
               "152": 2,
               "153": 1,
               "154": 2,
-              "155": 5,
+              "155": 7,
               "156": 2,
               "157": 2,
               "158": 7,
@@ -258040,7 +258115,7 @@
               "151": 15,
               "153": 47,
               "154": 86,
-              "155": 1,
+              "155": 2,
               "156": 5,
               "163": 1,
               "164": 4,
@@ -258868,7 +258943,7 @@
               "144": 4,
               "149": 5,
               "151": 5,
-              "155": 6,
+              "155": 10,
               "156": 1,
               "157": 1,
               "158": 3,
@@ -259399,6 +259474,7 @@
               "111": 9,
               "121": 3,
               "141": 4,
+              "155": 1,
               "166": 4,
               "170": 1,
               "171": 2,
@@ -260157,6 +260233,7 @@
               "144": 7,
               "146": 1,
               "149": 3,
+              "155": 1,
               "157": 3,
               "158": 1,
               "161": 6,
@@ -263576,7 +263653,7 @@
           "merely",
           {
             "4": {
-              "155": 2
+              "155": 1
             }
           }
         ],
@@ -263867,7 +263944,7 @@
               "150": 8,
               "153": 39,
               "154": 34,
-              "155": 20,
+              "155": 21,
               "159": 1,
               "162": 1,
               "197": 1,
@@ -264551,7 +264628,6 @@
               "47": 1,
               "91": 4,
               "118": 1,
-              "155": 1,
               "162": 2,
               "165": 1,
               "171": 1,
@@ -264578,6 +264654,7 @@
               "122": 1,
               "123": 4,
               "124": 1,
+              "155": 1,
               "167": 3,
               "182": 2,
               "187": 1,
@@ -266167,6 +266244,14 @@
           }
         ],
         [
+          "ssai",
+          {
+            "4": {
+              "155": 1
+            }
+          }
+        ],
+        [
           "ssi",
           {
             "4": {
@@ -266294,7 +266379,7 @@
               "141": 1,
               "149": 2,
               "152": 1,
-              "155": 4,
+              "155": 5,
               "156": 1,
               "158": 1,
               "161": 3,
@@ -266974,7 +267059,7 @@
               "150": 1,
               "151": 3,
               "154": 5,
-              "155": 2,
+              "155": 1,
               "156": 13,
               "157": 4,
               "158": 5,
@@ -267523,7 +267608,7 @@
               "152": 4,
               "153": 37,
               "154": 33,
-              "155": 10,
+              "155": 11,
               "156": 48,
               "157": 29,
               "158": 43,
@@ -267804,7 +267889,7 @@
               "130": 1,
               "149": 5,
               "152": 1,
-              "155": 2,
+              "155": 3,
               "182": 1,
               "185": 2,
               "215": 3,
@@ -268141,7 +268226,6 @@
               "126": 1,
               "138": 1,
               "154": 1,
-              "155": 1,
               "161": 1,
               "164": 1,
               "180": 2,
@@ -268210,7 +268294,7 @@
               "148": 4,
               "149": 38,
               "154": 1,
-              "155": 1,
+              "155": 2,
               "160": 1,
               "162": 1,
               "166": 1,
@@ -268824,7 +268908,7 @@
               "151": 2,
               "153": 1,
               "154": 3,
-              "155": 1,
+              "155": 2,
               "156": 2,
               "157": 2,
               "158": 2,
@@ -270236,7 +270320,7 @@
               "150": 3,
               "151": 5,
               "152": 5,
-              "155": 47,
+              "155": 49,
               "156": 5,
               "157": 1,
               "161": 5,
@@ -270912,6 +270996,7 @@
               "151": 1,
               "153": 6,
               "154": 4,
+              "155": 1,
               "156": 1,
               "163": 1,
               "170": 1,
@@ -272121,6 +272206,7 @@
               "149": 4,
               "151": 9,
               "154": 1,
+              "155": 1,
               "161": 1,
               "171": 1,
               "172": 1,
@@ -272347,7 +272433,7 @@
               "149": 4,
               "151": 1,
               "154": 1,
-              "155": 12,
+              "155": 17,
               "156": 1,
               "157": 1,
               "158": 3,
@@ -274015,7 +274101,7 @@
               "144": 2,
               "151": 1,
               "154": 1,
-              "155": 2,
+              "155": 7,
               "182": 4,
               "214": 6,
               "215": 1,
@@ -277330,7 +277416,7 @@
               "149": 3,
               "150": 2,
               "151": 2,
-              "155": 7,
+              "155": 8,
               "157": 8,
               "158": 3,
               "159": 1,
@@ -280519,7 +280605,7 @@
               "146": 2,
               "153": 1,
               "154": 2,
-              "155": 6,
+              "155": 8,
               "185": 2,
               "212": 1,
               "223": 1,
@@ -280569,7 +280655,7 @@
               "123": 1,
               "136": 12,
               "154": 2,
-              "155": 11,
+              "155": 14,
               "157": 1,
               "179": 6,
               "185": 4,
@@ -280760,7 +280846,7 @@
           "seekable",
           {
             "4": {
-              "155": 8
+              "155": 9
             }
           }
         ],
@@ -280769,7 +280855,7 @@
           {
             "4": {
               "149": 8,
-              "155": 13,
+              "155": 15,
               "212": 4
             }
           }
@@ -282539,6 +282625,7 @@
               "149": 2,
               "151": 1,
               "154": 3,
+              "155": 1,
               "157": 1,
               "158": 4,
               "161": 1,
@@ -282653,7 +282740,7 @@
               "151": 1,
               "153": 1,
               "154": 1,
-              "155": 1,
+              "155": 2,
               "157": 4,
               "158": 4,
               "164": 1,
@@ -284181,6 +284268,7 @@
               "140": 1,
               "142": 1,
               "143": 3,
+              "155": 1,
               "157": 1,
               "158": 3,
               "165": 1,
@@ -284235,6 +284323,7 @@
               "142": 1,
               "146": 2,
               "147": 1,
+              "155": 2,
               "156": 3,
               "157": 3,
               "158": 1,
@@ -286887,6 +286976,7 @@
               "116": 7,
               "117": 6,
               "135": 2,
+              "155": 2,
               "158": 2,
               "175": 7,
               "176": 2,
@@ -288256,7 +288346,7 @@
           "scrub",
           {
             "4": {
-              "155": 2,
+              "155": 1,
               "189": 1,
               "226": 1,
               "240": 1
@@ -288280,7 +288370,7 @@
           {
             "4": {
               "2": 1,
-              "155": 3
+              "155": 4
             }
           }
         ],
@@ -288786,7 +288876,7 @@
               "44": 1,
               "56": 1,
               "139": 1,
-              "155": 1,
+              "155": 2,
               "157": 1,
               "202": 2,
               "212": 2,
@@ -288819,7 +288909,7 @@
               "56": 1,
               "58": 1,
               "86": 3,
-              "155": 4,
+              "155": 10,
               "164": 8,
               "168": 2,
               "174": 1,
@@ -289542,7 +289632,7 @@
               "149": 7,
               "152": 1,
               "154": 2,
-              "155": 5,
+              "155": 3,
               "156": 2,
               "157": 5,
               "158": 1,
@@ -290381,7 +290471,7 @@
               "152": 1,
               "153": 1,
               "154": 5,
-              "155": 2,
+              "155": 1,
               "157": 1,
               "158": 2,
               "162": 1,
@@ -290972,7 +291062,7 @@
               "152": 36,
               "153": 5,
               "154": 2,
-              "155": 4,
+              "155": 5,
               "156": 13,
               "157": 1,
               "158": 32,
@@ -291893,7 +291983,7 @@
               "131": 2,
               "141": 1,
               "143": 1,
-              "155": 2,
+              "155": 1,
               "173": 1,
               "220": 1,
               "239": 1,
@@ -292510,6 +292600,7 @@
               "126": 1,
               "129": 13,
               "145": 2,
+              "155": 1,
               "157": 8,
               "166": 1,
               "170": 2,
@@ -293606,7 +293697,7 @@
               "151": 1,
               "153": 8,
               "154": 5,
-              "155": 7,
+              "155": 9,
               "156": 70,
               "157": 15,
               "158": 46,
@@ -296110,7 +296201,7 @@
               "140": 3,
               "141": 2,
               "149": 1,
-              "155": 4,
+              "155": 3,
               "158": 1,
               "162": 4,
               "171": 1,
@@ -296163,6 +296254,7 @@
               "30": 1,
               "134": 1,
               "151": 1,
+              "155": 1,
               "170": 1,
               "171": 1,
               "189": 1,
@@ -298049,7 +298141,6 @@
               "74": 1,
               "115": 1,
               "123": 2,
-              "155": 1,
               "251": 2
             }
           }
@@ -298806,7 +298897,7 @@
               "146": 8,
               "149": 1,
               "152": 3,
-              "155": 6,
+              "155": 10,
               "249": 1
             }
           }
@@ -301658,7 +301749,7 @@
           "crossed",
           {
             "4": {
-              "155": 1,
+              "155": 2,
               "157": 1
             }
           }
@@ -301829,6 +301920,23 @@
               "255": 1,
               "256": 1,
               "263": 1
+            }
+          }
+        ],
+        [
+          "cue",
+          {
+            "4": {
+              "155": 1
+            }
+          }
+        ],
+        [
+          "cues",
+          {
+            "4": {
+              "1": 1,
+              "56": 1
             }
           }
         ],
@@ -302785,7 +302893,7 @@
               "152": 3,
               "153": 7,
               "154": 2,
-              "155": 8,
+              "155": 7,
               "156": 3,
               "161": 1,
               "163": 1,
@@ -302900,15 +303008,6 @@
               "239": 1,
               "262": 7,
               "263": 1
-            }
-          }
-        ],
-        [
-          "cues",
-          {
-            "4": {
-              "1": 1,
-              "56": 1
             }
           }
         ],
@@ -303305,7 +303404,7 @@
               "117": 2,
               "138": 2,
               "147": 6,
-              "155": 5,
+              "155": 8,
               "181": 4,
               "225": 1,
               "228": 1,
@@ -303518,6 +303617,7 @@
               "119": 1,
               "134": 1,
               "154": 1,
+              "155": 2,
               "164": 1,
               "179": 1,
               "192": 5,
@@ -303725,7 +303825,7 @@
             "4": {
               "66": 1,
               "69": 2,
-              "155": 1
+              "155": 4
             }
           }
         ],
@@ -304146,7 +304246,7 @@
               "152": 1,
               "153": 3,
               "154": 1,
-              "155": 6,
+              "155": 7,
               "156": 6,
               "158": 1,
               "160": 1,
@@ -307229,7 +307329,7 @@
               "150": 30,
               "151": 16,
               "153": 1,
-              "155": 1,
+              "155": 3,
               "156": 8,
               "157": 2,
               "158": 6,
@@ -307846,6 +307946,7 @@
               "138": 1,
               "139": 1,
               "144": 1,
+              "155": 1,
               "157": 3,
               "161": 1,
               "168": 1,
@@ -310310,7 +310411,7 @@
               "146": 1,
               "147": 1,
               "152": 1,
-              "155": 4,
+              "155": 5,
               "164": 1,
               "165": 2,
               "167": 1,
@@ -310678,7 +310779,7 @@
               "151": 10,
               "153": 1,
               "154": 4,
-              "155": 3,
+              "155": 7,
               "156": 7,
               "157": 7,
               "158": 11,
@@ -314864,6 +314965,7 @@
               "72": 1,
               "73": 1,
               "122": 1,
+              "155": 1,
               "166": 1
             }
           }
@@ -315128,20 +315230,19 @@
           }
         ],
         [
+          "collaps",
+          {
+            "4": {
+              "230": 2
+            }
+          }
+        ],
+        [
           "collapsible",
           {
             "4": {
               "225": 1,
               "246": 2
-            }
-          }
-        ],
-        [
-          "collaps",
-          {
-            "4": {
-              "155": 1,
-              "230": 2
             }
           }
         ],
@@ -316298,6 +316399,7 @@
               "127": 2,
               "135": 2,
               "138": 1,
+              "155": 1,
               "174": 4,
               "176": 1,
               "177": 1,
@@ -319771,7 +319873,7 @@
               "149": 2,
               "150": 3,
               "153": 2,
-              "155": 3,
+              "155": 5,
               "156": 1,
               "157": 1,
               "158": 1,
@@ -320145,7 +320247,7 @@
               "152": 25,
               "153": 7,
               "154": 12,
-              "155": 12,
+              "155": 14,
               "156": 36,
               "157": 18,
               "158": 11,
@@ -320996,7 +321098,7 @@
               "152": 2,
               "153": 1,
               "154": 8,
-              "155": 17,
+              "155": 18,
               "156": 4,
               "157": 2,
               "158": 6,
@@ -321069,6 +321171,7 @@
               "13": 1,
               "36": 1,
               "52": 1,
+              "155": 1,
               "157": 1,
               "180": 1,
               "181": 1,
@@ -321576,7 +321679,6 @@
               "149": 14,
               "151": 3,
               "154": 1,
-              "155": 1,
               "157": 7,
               "158": 6,
               "162": 1,
@@ -321662,12 +321764,11 @@
           }
         ],
         [
-          "correlate",
+          "correlat",
           {
             "4": {
-              "186": 1,
-              "200": 1,
-              "204": 1
+              "176": 1,
+              "200": 1
             }
           }
         ],
@@ -321681,19 +321782,21 @@
           }
         ],
         [
-          "correlated",
+          "correlate",
           {
             "4": {
-              "40": 1
+              "155": 1,
+              "186": 1,
+              "200": 1,
+              "204": 1
             }
           }
         ],
         [
-          "correlat",
+          "correlated",
           {
             "4": {
-              "176": 1,
-              "200": 1
+              "40": 1
             }
           }
         ],
@@ -322074,7 +322177,7 @@
               "149": 2,
               "151": 1,
               "154": 1,
-              "155": 1,
+              "155": 2,
               "157": 1,
               "158": 2,
               "161": 1,
@@ -322486,7 +322589,7 @@
               "141": 2,
               "147": 6,
               "149": 4,
-              "155": 2,
+              "155": 1,
               "156": 18,
               "157": 24,
               "158": 10,
@@ -327747,19 +327850,20 @@
           }
         ],
         [
-          "agnostic",
-          {
-            "4": {
-              "251": 2,
-              "252": 2
-            }
-          }
-        ],
-        [
           "ag",
           {
             "4": {
               "240": 1
+            }
+          }
+        ],
+        [
+          "agnostic",
+          {
+            "4": {
+              "155": 1,
+              "251": 2,
+              "252": 2
             }
           }
         ],
@@ -328148,6 +328252,7 @@
               "137": 1,
               "141": 1,
               "151": 2,
+              "155": 1,
               "156": 1,
               "157": 1,
               "164": 1,
@@ -328241,7 +328346,7 @@
               "152": 1,
               "153": 6,
               "154": 1,
-              "155": 1,
+              "155": 2,
               "156": 1,
               "157": 1,
               "158": 4,
@@ -329594,7 +329699,7 @@
               "152": 1,
               "153": 6,
               "154": 18,
-              "155": 56,
+              "155": 55,
               "176": 4,
               "178": 3,
               "201": 1,
@@ -330394,7 +330499,7 @@
               "45": 1,
               "87": 1,
               "115": 1,
-              "155": 2,
+              "155": 3,
               "164": 1,
               "166": 1,
               "167": 1,
@@ -331712,7 +331817,7 @@
               "147": 3,
               "148": 1,
               "149": 2,
-              "155": 1,
+              "155": 2,
               "161": 1,
               "164": 1,
               "170": 2,
@@ -334037,7 +334142,7 @@
               "152": 2,
               "153": 2,
               "154": 3,
-              "155": 5,
+              "155": 4,
               "156": 7,
               "157": 8,
               "158": 17,
@@ -335271,6 +335376,7 @@
               "138": 2,
               "139": 5,
               "140": 1,
+              "155": 1,
               "157": 6,
               "162": 3,
               "164": 2,
@@ -335974,7 +336080,7 @@
               "149": 23,
               "153": 6,
               "154": 3,
-              "155": 16,
+              "155": 17,
               "156": 1,
               "157": 2,
               "158": 9,
@@ -338596,7 +338702,7 @@
               "152": 2,
               "153": 7,
               "154": 2,
-              "155": 5,
+              "155": 6,
               "156": 2,
               "157": 6,
               "158": 5,
@@ -340974,7 +341080,6 @@
               "86": 1,
               "122": 1,
               "154": 2,
-              "155": 1,
               "157": 1,
               "158": 2,
               "162": 1,
@@ -341155,6 +341260,7 @@
               "150": 1,
               "151": 1,
               "154": 2,
+              "155": 2,
               "156": 1,
               "157": 1,
               "158": 2,
@@ -341284,6 +341390,7 @@
               "140": 2,
               "141": 5,
               "154": 2,
+              "155": 1,
               "156": 1,
               "158": 2,
               "161": 1,
@@ -341883,7 +341990,7 @@
               "152": 3,
               "153": 2,
               "154": 3,
-              "155": 4,
+              "155": 5,
               "156": 16,
               "157": 5,
               "158": 8,
@@ -342284,7 +342391,7 @@
               "111": 8,
               "115": 1,
               "149": 1,
-              "155": 1,
+              "155": 2,
               "199": 1,
               "201": 1,
               "202": 4
@@ -342455,7 +342562,7 @@
               "45": 2,
               "109": 1,
               "111": 1,
-              "155": 7,
+              "155": 11,
               "162": 1,
               "187": 2,
               "188": 4,
@@ -342518,7 +342625,7 @@
           "advertise",
           {
             "4": {
-              "155": 2,
+              "155": 3,
               "156": 2,
               "159": 1
             }
@@ -342554,7 +342661,8 @@
           {
             "4": {
               "50": 1,
-              "123": 2
+              "123": 2,
+              "155": 1
             }
           }
         ],
@@ -343371,6 +343479,7 @@
               "38": 3,
               "54": 2,
               "65": 1,
+              "155": 1,
               "237": 1,
               "249": 2
             }
@@ -344335,7 +344444,7 @@
               "140": 2,
               "149": 3,
               "151": 1,
-              "155": 2,
+              "155": 3,
               "158": 1,
               "163": 1,
               "165": 1,
@@ -345594,6 +345703,7 @@
               "111": 1,
               "115": 1,
               "146": 1,
+              "155": 1,
               "176": 2,
               "181": 3,
               "186": 1,
@@ -542058,24 +542168,30 @@
           "kvo",
           "glue",
           "but",
+          "do",
           "not",
+          "build",
           "posi",
           "readout",
-          "republishes",
-          "only",
-          "when",
+          "apple",
+          "obliges",
           "provider",
-          "pushes",
-          "new",
-          "snapshot",
+          "republish",
           "play",
           "pause",
           "seek",
           "scan",
           "buffer",
-          "never",
+          "minimum",
+          "promise",
           "per",
           "frame",
+          "updates",
+          "may",
+          "push",
+          "noth",
+          "between",
+          "events",
           "smooth",
           "clock",
           "needs",
@@ -542085,16 +542201,14 @@
           "plus",
           "extrapola",
           "below",
-          "alone",
-          "freezes",
-          "between",
-          "events",
           "receive",
           "conformer",
+          "never",
           "write",
           "one",
           "media",
           "get",
+          "only",
           "object",
           "vended",
           "system",
@@ -542106,12 +542220,10 @@
           "members",
           "yours",
           "set",
-          "apple",
           "header",
           "comments",
           "written",
           "obligations",
-          "do",
           "mistake",
           "them",
           "instructions",
@@ -542166,6 +542278,7 @@
           "bundles",
           "host",
           "rate",
+          "snapshot",
           "obj",
           "class",
           "reference",
@@ -542173,30 +542286,65 @@
           "type",
           "show",
           "extrapolate",
+          "then",
+          "clamp",
           "cm",
-          "core",
-          "doc",
-          "com",
-          "says",
+          "runs",
+          "past",
+          "end",
+          "when",
+          "goes",
+          "stale",
           "mach",
-          "which",
-          "misleads",
-          "toward",
+          "word",
+          "accurate",
+          "misdirec",
+          "sync",
+          "uses",
           "absolute",
+          "different",
+          "units",
+          "core",
+          "bridges",
+          "both",
+          "ways",
+          "via",
+          "make",
+          "convert",
+          "which",
+          "exactly",
+          "how",
+          "correlate",
+          "ca",
+          "display",
+          "link",
+          "target",
+          "timestamp",
+          "just",
+          "don",
+          "need",
           "timebase",
           "info",
-          "wrong",
-          "api",
-          "family",
-          "mismatch",
+          "yourself",
+          "already",
+          "folds",
+          "multiply",
+          "again",
+          "paused",
+          "negative",
+          "reverse",
+          "formula",
+          "handles",
+          "suppress",
+          "entirely",
+          "without",
+          "dvr",
+          "where",
+          "zero",
+          "dura",
           "makes",
           "scrubber",
           "lag",
-          "old",
-          "protocol",
-          "had",
-          "settable",
-          "replaced",
           "intent",
           "should",
           "remain",
@@ -542211,7 +542359,6 @@
           "stall",
           "third",
           "party",
-          "may",
           "comply",
           "mistyped",
           "observer",
@@ -542224,6 +542371,7 @@
           "implementa",
           "handle",
           "subtly",
+          "wrong",
           "still",
           "conforms",
           "compiler",
@@ -542254,100 +542402,151 @@
           "mean",
           "opposite",
           "things",
+          "vod",
           "if",
           "entire",
-          "defined",
           "considered",
           "empty",
           "array",
-          "collaps",
-          "two",
-          "breaks",
-          "both",
-          "directions",
           "bricks",
           "unrestricted",
           "everyth",
-          "lets",
-          "users",
-          "scrub",
-          "straight",
-          "through",
-          "ads",
-          "noth",
-          "enforces",
-          "ad",
-          "gate",
-          "don",
-          "land",
-          "require",
-          "requires",
-          "linear",
-          "named",
-          "like",
-          "switch",
-          "indicator",
-          "blocks",
-          "typically",
-          "excludes",
-          "where",
-          "leave",
-          "mark",
-          "correct",
-          "four",
-          "membership",
-          "subtract",
-          "every",
-          "reject",
-          "crosses",
-          "unwatched",
-          "merely",
-          "lands",
-          "stop",
-          "playhead",
-          "inside",
-          "over",
-          "skips",
-          "exact",
-          "failure",
-          "try",
-          "prevent",
-          "clamp",
-          "such",
-          "start",
-          "crossed",
-          "instead",
-          "keep",
-          "own",
-          "watched",
-          "ledger",
+          "opens",
+          "restricted",
+          "says",
+          "must",
+          "there",
+          "two",
+          "interchangeable",
+          "branch",
+          "before",
+          "apply",
           "rule",
-          "releases",
-          "skip",
-          "revenue",
-          "test",
-          "against",
-          "real",
-          "receiver",
-          "each",
-          "carries",
-          "bool",
-          "marked",
-          "identifier",
-          "str",
+          "api",
+          "nonnull",
           "optional",
           "guard",
           "let",
           "does",
-          "there",
+          "isn",
+          "member",
+          "each",
+          "carries",
+          "requires",
+          "linear",
+          "bool",
+          "marked",
+          "identifier",
+          "str",
+          "ns",
+          "unbox",
+          "defines",
+          "equal",
+          "hash",
+          "fall",
+          "back",
+          "pointer",
+          "identity",
+          "match",
+          "into",
           "subtrac",
+          "ad",
+          "gat",
+          "skill",
+          "enforce",
+          "kit",
+          "enforces",
+          "here",
+          "advisory",
+          "skip",
+          "revenue",
+          "require",
+          "own",
+          "schedule",
+          "vast",
+          "ssai",
+          "cue",
+          "outs",
+          "manifest",
+          "source",
+          "additive",
+          "fail",
+          "closed",
+          "absent",
+          "contradictory",
+          "signal",
+          "fails",
+          "indicator",
+          "blocks",
+          "can",
+          "exist",
+          "typically",
+          "excludes",
+          "lazy",
+          "mark",
+          "ads",
+          "instead",
+          "expressed",
+          "hole",
+          "these",
+          "gates",
+          "bypass",
+          "gate",
+          "misses",
+          "settable",
+          "through",
+          "30",
+          "crosses",
+          "60",
+          "second",
+          "seconds",
+          "disables",
+          "because",
+          "hands",
+          "fast",
+          "button",
+          "straight",
+          "break",
+          "any",
+          "real",
+          "also",
+          "refuse",
+          "inside",
+          "traps",
+          "obvious",
+          "implementations",
+          "verified",
+          "against",
+          "sdk",
+          "start",
+          "crossed",
+          "replays",
+          "part",
+          "direc",
+          "agnostic",
+          "force",
+          "plays",
+          "rewind",
+          "pick",
+          "first",
+          "earlier",
+          "order",
+          "watched",
+          "ledger",
+          "keyed",
+          "collides",
+          "permitted",
+          "none",
+          "reason",
+          "use",
+          "signals",
+          "enrich",
+          "miss",
+          "test",
+          "receiver",
           "vs",
-          "dvr",
           "someth",
           "detect",
-          "without",
-          "zero",
-          "dura",
           "edge",
           "roll",
           "window",
@@ -542355,15 +542554,12 @@
           "pair",
           "decorative",
           "drags",
-          "back",
           "commit",
-          "can",
           "distinguish",
+          "scrub",
           "declared",
           "nullable",
-          "must",
           "unwrap",
-          "build",
           "controls",
           "fallback",
           "path",
@@ -542373,12 +542569,10 @@
           "successful",
           "call",
           "contiguous",
-          "word",
           "cover",
           "gaps",
           "overlaps",
           "index",
-          "into",
           "assum",
           "full",
           "coverage",
@@ -542388,10 +542582,10 @@
           "unusable",
           "they",
           "appear",
-          "kit",
           "@available",
           "os",
           "unavailable",
+          "every",
           "platform",
           "same",
           "experience",
@@ -542399,9 +542593,9 @@
           "manager",
           "selec",
           "adopt",
+          "new",
           "struct",
           "template",
-          "ns",
           "refined",
           "overlay",
           "vends",

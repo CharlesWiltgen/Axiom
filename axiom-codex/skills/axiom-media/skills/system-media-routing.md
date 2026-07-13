@@ -162,11 +162,10 @@ Your CI needs a **device** lane for this feature; a simulator-only lane cannot c
 ## What `playbackControl` gives you
 
 `AVPlaybackUserInterfaceControllable` (`@MainActor`) composes five protocols, and all five inherit
-`Observation.Observable` — so state changes drive SwiftUI directly, with no KVO glue. **But not the
-position readout:** Observation republishes `playbackPosition` only when the provider pushes a new
-*snapshot* (play, pause, seek, scan, buffering) — never per frame. A smooth clock needs
-`TimelineView(.animation)` plus the extrapolation below. Observation alone gives you a readout that
-freezes between events.
+`Observation.Observable` — so state changes drive SwiftUI directly, with no KVO glue. **But do not build the
+position readout on it:** Apple obliges the provider to republish `playbackPosition` on play, pause, seek,
+scan, and buffering changes — that is a *minimum*, not a promise of per-frame updates, so a provider may
+push nothing between events. A smooth clock needs `TimelineView(.animation)` plus the extrapolation below.
 
 **You receive a conformer; you never write one.** `media.playbackControl` is get-only, and the object is
 vended by the system route provider. So most of this surface is **read**, and only a few members are yours
@@ -190,13 +189,41 @@ instructions to you.
 
 | Gotcha | Why it bites |
 |--------|--------------|
-| `playbackPosition` is **get-only**, and `position` is not "now" | It bundles `position` + `hostTime` + `rate` as one snapshot (an ObjC class, so a reference — not a value type). To show a live time, **extrapolate**: `position + rate × (now − hostTime)`. `hostTime` is a **`CMTime` on the CoreMedia host clock** — read "now" with `CMClockGetTime(CMClockGetHostTimeClock())`. Apple's doc comment says "mach host time", which misleads you toward `mach_absolute_time()` + `mach_timebase_info`; that is the wrong API family and a type mismatch. Reading `position` as the current time makes your scrubber lag. The old `AVInterface` protocol had a settable `currentPlaybackPosition: CMTime`; this replaced it. |
+| `playbackPosition` is **get-only**, and `position` is not "now" | It bundles `position` + `hostTime` + `rate` as one snapshot (an ObjC class, so a reference — not a value type). To show a live time, **extrapolate**: `position + rate × (now − hostTime)`, then **clamp** with `CMTimeClampToRange(_:range: control.timeRange)` or the readout runs past the end when the snapshot goes stale. Read "now" with `CMClockGetTime(CMClockGetHostTimeClock())` — `hostTime` is a `CMTime` on that clock. (Apple's "mach host time" wording is *accurate*, not a misdirection: per `CMSync.h`, the host time clock **uses** `mach_absolute_time` in different units, and CoreMedia bridges both ways via `CMClockMakeHostTimeFromSystemUnits` / `CMClockConvertHostTimeToSystemUnits` — which is exactly how you correlate the snapshot with `CADisplayLink.targetTimestamp`. You just don't need `mach_timebase_info` yourself.) `rate` already folds in `playbackSpeed`/`scanSpeed` — **do not multiply by them again**. `rate` is 0 when paused, negative on reverse scan; the formula handles both. Suppress extrapolation entirely for live-without-DVR, where `timeRange` is zero-duration. Reading `position` as the current time makes your scrubber lag. |
 | `isPlaying` is **intent, not state** | Apple: it "**should** remain YES while `isBuffering` is YES" — it means "resume automatically when data arrives". Do not treat a stall as a pause. (A "should", so a third-party provider may not comply.) |
 | A mistyped observer signature **silently never fires** | `AVSystemRouteControllerObserver` ships a **default implementation** of `systemRouteController(_:handle:)`. Get the signature subtly wrong and your type still conforms — no compiler error, and your handler is simply never called. A compile probe cannot catch this; check that events actually arrive. |
 | `isReady` is one-way *by contract* | Apple: it "should transition from NO to YES … and **should not** revert". A mid-playback stall shows up as `isBuffering`, not `isReady == false`. It's a provider contract, not an invariant — a defensive consumer should not assume a third-party provider honors it. |
-| `nil` and `[]` on `seekableTimeRanges` mean **opposite** things | Apple: "**If `nil`, the entire content defined by `timeRange` is considered seekable**" — but "**an empty array means the entire content … is *not* seekable**." Collapsing the two breaks you in both directions: `?? []` bricks the scrubber on unrestricted content, and `isEmpty ? everything : ranges` lets users scrub straight through ads. Treat `nil` as "all of `timeRange`", `[]` as "nothing". |
-| Nothing enforces the ad gate for you, and "don't land in an ad" is **not** the requirement | `requiresLinearPlayback` is named like a switch but is a read-only **indicator**; it blocks nothing. `seekableTimeRanges` is the primary gate — but Apple only says it "**typically** excludes segments where `requiresLinearPlayback` is YES", so a provider may leave it `nil` (= *everything* seekable) while still marking ad segments. A correct gate needs **four** things: (1) `supportedSeekCapabilities.contains(.seek)` — the route may not seek at all; (2) membership in `seekableTimeRanges`; (3) subtract every `requiresLinearPlayback` segment; and (4) **reject a seek that *crosses* an unwatched linear segment, not merely one that lands in it.** (1)–(3) only stop the playhead *landing* inside an ad — a forward seek straight over it still skips the ad, which is the exact failure you were trying to prevent. Clamp such a seek to the start of the crossed segment instead, and keep your own watched-ad ledger, or the rule never releases. If ad-skip is a revenue requirement, test against the real receiver. |
-| The segment API the gate needs | `segments` and `currentSegment` are `[AVPlaybackUserInterfaceTimelineSegment]` / `AVPlaybackUserInterfaceTimelineSegment`. Each carries `timeRange: CMTimeRange`, `segmentType` (`.advertisement`, `.intro`, …), `requiresLinearPlayback: Bool`, `isMarked: Bool`, `identifier: String?`. **`currentSegment` is NOT optional** — a `guard let` on it does not compile. There is no Apple API for `CMTimeRange` set-subtraction; you write it. |
+| `nil` and `[]` on `seekableTimeRanges` mean **opposite** things — on VOD | Apple: "**If `nil`, the entire content … is considered seekable**"; "**an empty array means the entire content … is *not* seekable**." So `?? []` bricks the scrubber on unrestricted content, and `isEmpty ? everything : ranges` opens it on restricted content. **But not on live**: for live-without-DVR Apple says `seekableTimeRanges` "**must be nil or empty**" — there, the two *are* interchangeable. Branch on `containsLiveStreamingContent` before applying the VOD rule. |
+| The segment API | `segments: [AVPlaybackUserInterfaceTimelineSegment]` (nonnull, but **may be empty**) and `currentSegment` (**NOT optional** — a `guard let` does not compile, and it may be a segment that isn't a member of `segments`). Each carries `timeRange: CMTimeRange`, `segmentType` (`.advertisement`, `.intro`, …), `requiresLinearPlayback: Bool`, `isMarked: Bool`, `identifier: String?`. In Swift `seekableTimeRanges` is `[CMTimeRange]?` — **not** the header's `NSArray<NSValue *>`, so don't write `NSValue` unboxing. The class defines no `isEqual:`/`hash`, so `==` and `contains` fall back to **pointer identity** — you cannot match `currentSegment` back into `segments` that way. There is no CoreMedia `CMTimeRange` set-subtraction; you write it. |
+
+#### Ad gating — do not let this skill write your enforcement
+
+**AVKit enforces nothing here, and its data is advisory.** If ad-skip is a revenue requirement, your own ad
+schedule (VAST / SSAI cue-outs / the manifest) is the source of truth. Treat the route's data as *additive*
+and **fail closed** when it is absent or contradictory — this is a third-party provider's data, not yours.
+
+What the API actually gives you, and where each signal fails:
+
+| Signal | What it does NOT do |
+|--------|---------------------|
+| `requiresLinearPlayback` | Read-only **indicator**. Blocks nothing. `segments` may be `[]`, so an ad can exist with no linear segment at all. |
+| `seekableTimeRanges` | Apple only says it "**typically**" excludes linear segments. It may be `nil` (= all seekable) on a lazy provider that *does* mark ads — and an ad may instead be expressed only as a **hole** in these ranges, with no segment. |
+| `supportedSeekCapabilities.contains(.seek)` | Gates `seek(to:tolerance:)` **only**. |
+
+**The bypass that a seek-only gate misses entirely:** `state`, `scanSpeed`, and `playbackSpeed` are all
+settable and **never route through `seek(to:tolerance:)`**. `state = .scanning; scanSpeed = 30` crosses a
+60-second ad in two seconds. A route can advertise `.scanForward` **without** `.seek` — so a gate that
+"disables the scrubber because the route can't seek" hands the user a fast-forward button straight through
+the ad break. Any real enforcement must also refuse scan/rate changes while inside a linear segment.
+
+**Traps in the obvious implementations** (each verified against the SDK): clamping a seek back to the start
+of the crossed segment **replays** an ad the user was already part-way through; a direction-agnostic rule
+force-plays ads on a *rewind*; picking "the crossed segment" with `first(where:)` can clamp *past* an earlier
+ad, because segment order is only a "should"; and a watched-ad ledger keyed on `identifier` collides on
+`nil`, which is permitted.
+
+None of that is a reason to skip the gate — it is a reason to build it from **your** ad schedule, use the
+route's signals to enrich it, fail closed on missing data, and test against the real receiver.
 | Live vs DVR is something you **detect**, not set | `timeRange` is read-only. Live **without** DVR = a zero-duration `timeRange` at the live edge. Live **with** DVR = a rolling window plus explicit `seekableTimeRanges`. Pair with `containsLiveStreamingContent`. |
 | `state = .scrubbing` is not decorative | While the user drags the scrubber, set `control.state = .scrubbing` (and back to `.normal` on commit) so the remote device can distinguish a scrub from a seek. `playbackControl` is declared `nullable` so you must still unwrap it — but do not build a "provider vended no controls" fallback path on that: Apple says it is "always non-nil when obtained from a successful call to `start()`". |
 | `segments` "should" be contiguous — not "must" | Apple's word is *should* (contiguous, covering the timeline, no gaps or overlaps). A third-party provider may not comply, so don't index into `segments` assuming full coverage. |
