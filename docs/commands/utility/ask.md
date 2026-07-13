@@ -36,4 +36,4 @@ Ask a question about iOS/Swift development to get routed to the right Axiom skil
 ```
 
 ## Related
-- [Getting Started](../../getting-started.md) - Learn how to discover skills interactively
+- [Getting Started](../../getting-started.md) – Learn how to discover skills interactively

@@ -37,14 +37,14 @@ Scan for Codable anti-patterns and JSON serialization issues that cause silent d
   - LOW: 1
 
 ### 🔴 High Priority (2 issues)
-- **src/API/Response.swift:45** - Manual JSON building with string interpolation
+- **src/API/Response.swift:45** – Manual JSON building with string interpolation
   ```swift
   let json = "{\"key\": \"\(value)\"}"
   ```
   **Fix**: Use JSONEncoder with Codable type
   **Impact**: Injection vulnerabilities, escaping bugs
 
-- **src/Network/Parser.swift:112** - `try?` swallowing DecodingError
+- **src/Network/Parser.swift:112** – `try?` swallowing DecodingError
   ```swift
   let user = try? decoder.decode(User.self, from: data)
   ```
@@ -52,16 +52,16 @@ Scan for Codable anti-patterns and JSON serialization issues that cause silent d
   **Impact**: Silent data loss, impossible to debug
 
 ### 🟡 Medium Priority (2 issues)
-- **src/Models/User.swift:23** - Date property without explicit strategy
+- **src/Models/User.swift:23** – Date property without explicit strategy
   **Fix**: Set decoder.dateDecodingStrategy = .iso8601
   **Impact**: Prevents timezone bugs
 
-- **src/Legacy/OldAPI.swift:67** - JSONSerialization usage (migrate to Codable)
+- **src/Legacy/OldAPI.swift:67** – JSONSerialization usage (migrate to Codable)
   **Fix**: Use modern Codable
   **Time saved**: Reduce boilerplate by 60%
 
 ### 🟢 Low Priority (1 issue)
-- **src/Utils/Parser.swift:89** - Missing error context in catch block
+- **src/Utils/Parser.swift:89** – Missing error context in catch block
 
 ### Recommendations
 1. **Immediate**: Fix all HIGH severity issues (silent failures, injection risks)

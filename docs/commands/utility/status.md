@@ -47,5 +47,5 @@ Project health dashboard that shows environment status and potential issues at a
 - To get a quick overview of a new codebase
 
 ## Related
-- [/axiom:fix-build](../build/fix-build.md) - Fix environment issues automatically
-- [/axiom:audit](../utility/audit.md) - Run deep scans based on status findings
+- [/axiom:fix-build](../build/fix-build.md) – Fix environment issues automatically
+- [/axiom:audit](../utility/audit.md) – Run deep scans based on status findings

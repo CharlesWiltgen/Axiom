@@ -172,8 +172,8 @@ print("Request took \(elapsed * 1000)ms")
 
 ## Resources
 
-- [Vision Framework (Main Skill)](/skills/computer-vision/vision) - Implementation patterns
-- [Vision Framework API Reference](/reference/vision-ref) - Complete API docs
+- [Vision Framework (Main Skill)](/skills/computer-vision/vision) – Implementation patterns
+- [Vision Framework API Reference](/reference/vision-ref) – Complete API docs
 
 ### Apple Documentation
 

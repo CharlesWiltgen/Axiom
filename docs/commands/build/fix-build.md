@@ -24,5 +24,5 @@ Checks the build environment before looking at code, preventing "rabbit hole" de
 - You suspect a "ghost in the machine" rather than a code error
 
 ## Related
-- [/axiom:optimize-build](./optimize-build.md) - Speed up builds after fixing them
-- [xcode-debugging](../../skills/debugging/xcode-debugging.md) - The manual skill behind this agent
+- [/axiom:optimize-build](./optimize-build.md) – Speed up builds after fixing them
+- [xcode-debugging](../../skills/debugging/xcode-debugging.md) – The manual skill behind this agent

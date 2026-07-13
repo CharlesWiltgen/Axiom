@@ -25,6 +25,6 @@ Scan SwiftUI code for architectural anti-patterns (launches `swiftui-architectur
 - You suspect state bugs from incorrect property wrappers
 
 ## Related
-- [/axiom:audit-swiftui-performance](./audit-swiftui-performance.md) - Performance anti-patterns
-- [/axiom:audit-swiftui-nav](./audit-swiftui-nav.md) - Navigation correctness and architecture
-- [swiftui-architecture](../../skills/ui-design/swiftui-architecture.md) - Refactoring workflows and decision trees
+- [/axiom:audit-swiftui-performance](./audit-swiftui-performance.md) – Performance anti-patterns
+- [/axiom:audit-swiftui-nav](./audit-swiftui-nav.md) – Navigation correctness and architecture
+- [swiftui-architecture](../../skills/ui-design/swiftui-architecture.md) – Refactoring workflows and decision trees

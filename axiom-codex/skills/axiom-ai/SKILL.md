@@ -1,6 +1,6 @@
 ---
 name: axiom-ai
-description: Use when implementing, testing, or evaluating ANY Apple Intelligence or on-device AI feature. Covers Foundation Models, @Generable, LanguageModelSession, structured output, Tool protocol, eval suites and model-as-judge scoring.
+description: Use when implementing, testing, or evaluating ANY Apple Intelligence, on-device AI, or speech-to-text feature. Covers Foundation Models, @Generable, LanguageModelSession, Tool protocol, eval suites, model-as-judge scoring, SpeechTranscriber, CoreML.
 license: MIT
 ---
 
@@ -73,6 +73,10 @@ For the full "which path applies to me?" disambiguation (decision tree, the thre
 **Foundation Models + security** (prompt injection, securing agent tools, confirmation gating):
 - Threat modeling and mitigations for agentic features (`.onToolCall` confirmation, `.historyTransform` spotlighting/redaction, lock-screen intent policy) → **axiom-security (skills/agentic-security.md)**
 - Stay here for the API surface itself (DynamicProfile, tools, sessions)
+
+**Speech-to-text + audio capture** (transcription that fights your audio session):
+- `SpeechAnalyzer` / `SpeechTranscriber`, the ~2-analyzer cap, the `OS27` input providers → **stay here** (`skills/ios-ml.md`)
+- **The trap**: `CaptureInputSequenceProvider.providerWithSession(...)` (`OS27`) reconfigures your app's default `AVAudioSession`. If the app also records or plays back, the capture/session half of the fix lives in **axiom-media** (`avfoundation-ref`, `camera-capture`) — use `provider(from:in:)` and add its `captureAudioDataOutput` to your own session.
 
 ## Routing Logic
 

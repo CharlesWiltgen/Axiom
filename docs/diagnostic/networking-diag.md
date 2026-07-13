@@ -148,10 +148,10 @@ Workaround: [if available]."
 - Network Link Conditioner
 
 ### Command Line
-- `nslookup` - DNS resolution
-- `openssl s_client` - TLS validation
-- `netstat` - Port checking
-- `tcpdump` - Packet capture
+- `nslookup` – DNS resolution
+- `openssl s_client` – TLS validation
+- `netstat` – Port checking
+- `tcpdump` – Packet capture
 
 ## Related Resources
 
