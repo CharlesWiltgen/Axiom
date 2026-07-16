@@ -5,7 +5,7 @@ Systematic diagnosis and resolution of app hangs. A hang occurs when the main th
 
 ## Why xcsym rejected my hang .ips
 
-xcsym's `crash` subcommand explicitly rejects `.ips` files of type `hang` because hang analysis has a different workflow from crash analysis. If xcsym returned `HangError: bug_type=298`, you're in the right place — this skill is the authoritative path for hang diagnosis. See `axiom-tools (skills/xcsym-ref.md)` for the crash-focused workflow.
+xcsym's `crash` subcommand explicitly rejects `.ips` files of type `hang` because hang analysis has a different workflow from crash analysis. If xcsym returned `{"error":"hang_report"}` (bug_type=298), you're in the right place — this skill is the authoritative path for hang diagnosis. See `axiom-tools (skills/xcsym-ref.md)` for the crash-focused workflow.
 
 ## Red Flags — Check This Skill When
 
@@ -111,6 +111,7 @@ START: App hangs reported
 | **Want in-app data** | MetricKit | MXHangDiagnostic with call stacks |
 | **Need precise timing** | System Trace | Nanosecond-level thread analysis |
 | **Re-scope a known hang to app code** | xcprof | Auto-flags candidate stalls; `--start-ms/--end-ms` window + `--user-binary` attribution (see Hang Window Workflow) |
+| **User can reproduce, you can't** | sysdiagnose triggered during the hang | Stackshot has per-thread backtraces of every process (see Getting Hang Data from End Users) |
 
 ## Time Profiler Workflow for Hangs
 
@@ -463,7 +464,30 @@ The watchdog kills apps that hang during key transitions:
 - Debugger attached
 - Development builds (sometimes)
 
-**Watchdog kills are logged as crashes** with exception type `EXC_CRASH (SIGKILL)` and termination reason `Namespace RUNNINGBOARD, Code 3735883980` (hex `0xDEAD10CC` — indicates app held a file lock or SQLite database lock while being suspended).
+**Watchdog kills are logged as crashes** with exception type `EXC_CRASH (SIGKILL)` and termination reason code `0x8badf00d` ("ate bad food"), namespace `SPRINGBOARD` (or `FRONTBOARD`). Don't confuse it with `Namespace RUNNINGBOARD, Code 0xDEAD10CC` — that is a different termination (the app held a file or SQLite lock while being suspended), not a watchdog timeout.
+
+**A hang with no watchdog kill is normal.** Enforcement centers on launch (`scene-create`) and lifecycle transitions; mid-session responsiveness monitoring (`scene-update`) is not guaranteed to fire for every frozen app. Treat a missing watchdog report as no signal — not as evidence the app isn't hanging.
+
+## Getting Hang Data from End Users
+
+A hang raises no signal or exception, so crash SDKs (Bugsnag, Sentry, Crashlytics) report nothing unless their separate app-hang detection is enabled. Two capture paths need no developer tools on the user's device:
+
+### sysdiagnose stackshot — must be captured DURING the hang
+
+sysdiagnose includes a stackshot (`stacks-*.ips`): per-thread backtraces of every running process at the moment of capture — the iOS equivalent of Android's `bugreport` thread dump. It is a snapshot: it only shows the hang if triggered while the app is frozen.
+
+1. While the app is hung — press both volume buttons + the side button together briefly; a short vibration confirms capture started
+2. Wait for the archive to be written (up to ~10 minutes)
+3. Retrieve: Settings > Privacy & Security > Analytics & Improvements > Analytics Data > `sysdiagnose_….tar.gz` — share via AirDrop
+4. Stackshot frames are unsymbolicated (program-counter offsets) — symbolicate against the app and framework dSYMs
+
+A sysdiagnose captured after the app recovers or relaunches shows nothing useful about the hang — the most common reason "sysdiagnose has no stacks for my process".
+
+### Analytics Data .ips reports
+
+The same Settings > Analytics Data list holds `.ips` reports users can share directly: crashes, watchdog kills (`0x8badf00d`), and hang reports. An empty list is no signal (see Watchdog Terminations above).
+
+**Prefer MetricKit for ongoing capture** — MXHangDiagnostic needs no user action at all; see the MetricKit section above and `axiom-performance (skills/metrickit-ref.md)`.
 
 ## Pressure Scenarios
 
