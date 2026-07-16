@@ -987,6 +987,8 @@ struct MyView: View {
 }
 ```
 
+**Swift 6.4 fast path**: when the invalidation check itself compares a large CoW collection with `==` on every update, `isTriviallyIdentical(to:)` (SE-0494) can answer "unchanged?" in O(1) — but `false` means "no information", not "changed", and fresh-built inputs make it a pessimization. Adoption conditions and the trap: `axiom-swift` (skills/swift-modern.md).
+
 ### Pattern 3: Formatter Reuse
 
 **Problem**: Creating formatters repeatedly
