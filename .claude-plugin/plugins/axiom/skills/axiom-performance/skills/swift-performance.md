@@ -1096,6 +1096,7 @@ Scope it to hot modules — these patterns are negligible in UI-level code (see 
 - [ ] Pure Swift code uses `ContiguousArray` over `Array`
 - [ ] Dictionary keys have efficient `hash(into:)` implementations
 - [ ] Lazy evaluation used for short-circuit operations
+- [ ] Hot-path `==` on large CoW collections evaluated for the `isTriviallyIdentical(to:)` O(1) fast path (Swift 6.4, SE-0494; `false` ≠ not-equal, fresh-built inputs pessimize — see `axiom-swift (skills/swift-modern.md)`)
 
 ### Concurrency
 - [ ] Synchronous operations don't use `async`

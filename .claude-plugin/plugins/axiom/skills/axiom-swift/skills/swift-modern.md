@@ -58,6 +58,7 @@ Swift 6.4 ships with Xcode 27 (the toolchain also folds in the 6.3 work). Prefer
 | `class T: ~Sendable` | Explicitly suppress `Sendable` (subclasses can still add it back) | No prior syntax |
 | Second memberwise init | A struct mixing `internal` + `private` stored properties also gets an `internal` memberwise init usable from other files | Hand-written init |
 | `@diagnose(Group, as: …)` | Set one diagnostic group's severity (`ignored` / `warning` / `error`) for a single declaration | Project-wide `-Wwarning`/`-Werror`, blanket suppression |
+| `isTriviallyIdentical(to:)` (SE-0494) | O(1) storage-identity fast path before an O(n) `==` in hot comparison paths | Nothing — layers on `==`, never replaces it (see below) |
 
 ```swift
 // anyAppleOS — one availability token for the whole 27 cycle
@@ -86,6 +87,37 @@ func mustNotRegress() { oldCall() }        // hard-fails the build instead
 `@diagnose` is compiler-gated (needs the Swift 6.4 toolchain), not OS-gated — no `@available` applies. It is the per-declaration counterpart to the whole-module `-Wwarning`/`-Werror <group>` flags.
 
 **Caveat**: `anyAppleOS` requires the Swift 6.4 toolchain (Xcode 27+). For code that must build on older Xcode, keep the explicit per-platform `@available`. Either way, `@available(iOS 27, *)`-style gating remains the authoritative runtime check.
+
+### isTriviallyIdentical(to:) — O(1) equality fast path (SE-0494)
+
+Swift 6.4 adds `isTriviallyIdentical(to:)` to the copy-on-write stdlib types — `String`/`Substring` (and their views), `Array`, `ArraySlice`, `ContiguousArray`, `Dictionary`, `Set` — plus the non-CoW `Unsafe*BufferPointer` family and `UTF8Span`, where identity is pointer+count (`Span`/`RawSpan` spell it `isIdentical(to:)`). It answers "do these two values share the same backing storage?" in O(1).
+
+The contract is asymmetric — this is the entire feature:
+
+| Result | Guarantee |
+|--------|-----------|
+| `true` | Values ARE equal (`==`) — identical storage cannot differ by value |
+| `false` | NO information — values may still be equal (e.g. after a CoW copy) |
+
+Never branch "values differ" on `false`; it only means the fast path didn't apply.
+
+**Availability**: `@_alwaysEmitIntoClient` with no `@available` gate — needs the Swift 6.4 toolchain (Xcode 27) to build, but runs on ANY deployment target. Toolchain-gated, not OS-gated.
+
+**When it pays** — all three must hold; otherwise keep plain `==`:
+
+1. The comparison sits on a hot, repeated path — memoization/cache-invalidation checks, `DynamicProperty.update`, diffing large collections. One-off comparisons don't qualify.
+2. The upstream value is storage-stable — a stored property that mutates occasionally. A computed property or freshly built value has new storage on every access, so the check is always `false`.
+3. The `false` path is deliberate — either recompute is cheap, or you layer the checks:
+
+```swift
+// Memoization invalidation — layered fast path
+func shouldRecompute(_ new: [Order]) -> Bool {
+    if cached.isTriviallyIdentical(to: new) { return false }  // O(1): same storage ⇒ equal
+    return cached != new                                      // false told us nothing — fall back to O(n)
+}
+```
+
+**The pessimization trap**: replacing `==` wholesale when the upstream produces fresh values makes the check always-`false` and triggers the expensive recompute (often O(n log n)) that a `true` from plain `==` would have skipped — a net loss. Even in SE-0494's favorable benchmark (24,000-element array, mutated element at the tail of the comparison order), the measured win was ~13%. Measure the comparison with signposts before and after switching.
 
 ## Swift 6.4 Concurrency Posture
 
@@ -124,9 +156,10 @@ These patterns appear frequently in Claude-generated code:
 11. **Uses `weak var` + `@unchecked Sendable`** — On Swift 6.4, `weak let` lets the class be plain `Sendable` with no escape hatch.
 12. **Ignores an error thrown in `Task { try … }`** — Swift 6.4 warns; handle it in the task (`do/catch`) or save the task and check the result later.
 13. **Puts `[weak self]` on an inner closure nested in an escaping outer closure that already captures `self` strongly** — false safety; Swift 6.4 warns (`[#ImplicitStrongCapture]`). Weaken the OUTER closure (`[weak self]` + `guard let self`), not just the inner. See `axiom-performance (skills/memory-debugging.md)`.
+14. **Treats `isTriviallyIdentical(to:)` returning `false` as "values differ"** — `false` carries no information; the values may still be `==` (e.g. after a CoW copy). Only `true` has meaning. See the SE-0494 section above.
 
 ## Resources
 
 **WWDC**: 2026-262
 
-**Skills**: axiom-performance (skills/swift-performance.md), axiom-concurrency, axiom-swiftui
+**Skills**: axiom-performance (skills/swift-performance.md), axiom-concurrency, axiom-swiftui (skills/swiftui-performance.md)
