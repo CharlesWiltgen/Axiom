@@ -20,24 +20,34 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 import unittest
 
 HOOK = os.path.join(os.path.dirname(__file__), "user-prompt-submit.py")
 
 
-def run_hook(prompt: str) -> dict:
-    """Invoke the hook with the given prompt, return the parsed output.
+def run_hook_in(prompt: str, cwd: str | None = None,
+                env_override: dict | None = None) -> dict:
+    """Invoke the hook with a controlled cwd + environment; return parsed output.
 
-    Returns {} if the hook emitted no match.
+    The hook gates on project type / AXIOM_SESSION_CONTEXT (GH #48), both of
+    which depend on cwd and env — so gate tests must control them. Returns {}
+    when the hook emits no match.
     """
     # Production (hooks.json) invokes the hook as `python3 "<path>"`; tests use
     # sys.executable instead so the suite runs under whatever interpreter is
     # running it (venvs, CI images where `python3` is absent or shadowed). Both
     # resolve to a Python 3 — the hook only uses stdlib, so the choice is moot
     # for behavior; sys.executable is just the more robust spawn target here.
+    env = os.environ.copy()
+    env.pop("AXIOM_SESSION_CONTEXT", None)
+    if env_override:
+        env.update(env_override)
     result = subprocess.run(
         [sys.executable, HOOK],
         input=json.dumps({"prompt": prompt}),
+        cwd=cwd,
+        env=env,
         capture_output=True,
         text=True,
         timeout=5,
@@ -48,6 +58,17 @@ def run_hook(prompt: str) -> dict:
         )
     out = result.stdout.strip() or "{}"
     return json.loads(out)
+
+
+def run_hook(prompt: str) -> dict:
+    """Invoke the hook for a router-matching test, project gate forced open.
+
+    Router tests assert on keyword matching, which is orthogonal to the
+    project-type gate (GH #48). Forcing AXIOM_SESSION_CONTEXT=always makes them
+    hermetic — they exercise matching regardless of where the suite runs, rather
+    than silently depending on the cwd looking like an Apple project.
+    """
+    return run_hook_in(prompt, env_override={"AXIOM_SESSION_CONTEXT": "always"})
 
 
 def routed_skills(prompt: str) -> set[str]:
@@ -995,6 +1016,57 @@ class TestHookIsStandalonePython(unittest.TestCase):
             "These test files lack `from __future__ import annotations`, so the "
             f"suite can't be run under Python 3.9 to validate hook behavior: {missing}"
         )
+
+
+class TestProjectGate(unittest.TestCase):
+    """The hook must stay quiet outside Apple projects and honor the override
+    (GH #48). session-start.py gated already; this hook did not, so it routed on
+    every prompt in every repo. Mirrors TestSessionStartGate in
+    session-start_test.py — both hooks share one gate and must behave alike.
+    """
+
+    ROUTING_PROMPT = "My Xcode build is failing with linker errors"  # → axiom-build
+
+    def _routed(self, payload: dict) -> set:
+        ctx = payload.get("hookSpecificOutput", {}).get("additionalContext", "")
+        return set(re.findall(r"`(axiom-[a-z-]+)`", ctx))
+
+    def test_non_apple_dir_suppresses_routing(self):
+        with tempfile.TemporaryDirectory() as d:
+            os.mkdir(os.path.join(d, ".git"))  # bound the upward walk → hermetic
+            with open(os.path.join(d, "index.js"), "w"):
+                pass
+            self.assertEqual(
+                self._routed(run_hook_in(self.ROUTING_PROMPT, cwd=d)), set())
+
+    def test_apple_dir_routes(self):
+        with tempfile.TemporaryDirectory() as d:
+            with open(os.path.join(d, "App.swift"), "w"):
+                pass
+            self.assertIn(
+                "axiom-build",
+                self._routed(run_hook_in(self.ROUTING_PROMPT, cwd=d)))
+
+    def test_override_never_suppresses_in_apple_dir(self):
+        with tempfile.TemporaryDirectory() as d:
+            with open(os.path.join(d, "App.swift"), "w"):
+                pass
+            self.assertEqual(
+                self._routed(run_hook_in(
+                    self.ROUTING_PROMPT, cwd=d,
+                    env_override={"AXIOM_SESSION_CONTEXT": "never"})),
+                set())
+
+    def test_override_always_routes_in_plain_dir(self):
+        with tempfile.TemporaryDirectory() as d:
+            os.mkdir(os.path.join(d, ".git"))
+            with open(os.path.join(d, "index.js"), "w"):
+                pass
+            self.assertIn(
+                "axiom-build",
+                self._routed(run_hook_in(
+                    self.ROUTING_PROMPT, cwd=d,
+                    env_override={"AXIOM_SESSION_CONTEXT": "always"})))
 
 
 if __name__ == "__main__":
