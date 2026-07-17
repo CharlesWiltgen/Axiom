@@ -490,9 +490,9 @@ NetworkListener(service: .init(name: "MyApp", type: "_myapp._tcp")) { TLS() }
 
 #### Prerequisites for Wi-Fi Aware
 
-- **Declare services in `Info.plist`** under `WiFiAwareServices`, each with a `Publishable`/`Subscribable` role. Read them by name: the `allServices[name]` subscript returns an optional (`nil` if the service isn't declared) — `WASubscribableService.allServices[name]` / `WAPublishableService.allServices[name]`.
+- **Declare services in `Info.plist`** under `WiFiAwareServices`, each with a `Publishable`/`Subscribable` role. Read them by name: the `allServices[name]` subscript returns an optional (`nil` if the service isn't declared) — `WASubscribableService.allServices[name]` / `WAPublishableService.allServices[name]`. Service names must be **IANA-registered and ≤15 characters** — Apple states flatly that an invalid service name in `Info.plist` **crashes the app**.
 - **Devices must be paired first** via AccessorySetupKit. Enumerate paired devices with the `WAPairedDevice.allDevices` async sequence.
-- Both `WASubscribableService` and `WAPublishableService` carry the `WiFiAware` entitlement requirement; iOS 26+ only (macOS/tvOS/watchOS/visionOS unavailable).
+- **Entitlement**: `com.apple.developer.wifi-aware`, an array of `Publish` / `Subscribe`. It is **self-serve** — no Apple approval gate, App Store distribution allowed. iOS/iPadOS only: `WiFiAware.framework` is physically present in the macOS SDKs, but its interface marks all types `@available(macOS, unavailable)` — framework presence in an SDK is not platform support; the interface wins.
 
 A convenience extension gives the leading-dot syntax used below:
 
@@ -563,10 +563,34 @@ Both `WASubscriberBrowser.Devices` and `WAPublisherListener.Devices` expose the 
 | `.selected([device])` | A specific `Sequence<WAPairedDevice>` you choose |
 | `.matching(#Predicate { … })` | Paired devices matching a `Foundation.Predicate` |
 
+#### Performance forecast — decide before connecting `iOS27`
+
+Before opening a datapath, ask whether the link will be fast enough and whether it would degrade the device's normal Wi-Fi. `WAEndpoint.performanceForecast` answers both — pre-connection, there was no other way to ask.
+
+```swift
+if #available(iOS 27, *) {
+    let forecasts = endpoint.performanceForecast   // [WAPerformanceMode: WAPerformanceForecast]
+    guard let forecast = forecasts[.bulk] else {   // EMPTY dict (not nil) when unestimable
+        return  // system couldn't estimate — don't rely on the link
+    }
+    if let infraHit = forecast.localInfrastructureThroughputCapacityRatio {
+        // infraHit forecasts how much of the device's normal Wi-Fi capacity the Aware
+        // datapath would consume — the deciding signal for whether to connect at all.
+        _ = infraHit
+    }
+}
+```
+
+- **Empty dictionary, not `nil`, on failure.** `performanceForecast` returns `[:]` when the system can't estimate; a `nil`-check idiom silently misses it — check for the missing entry.
+- **`WAPerformanceMode` must match on both sides.** `.bulk` (default) or `.realtime` — browser and listener must agree, "or the performance behavior is undefined."
+- **Forecast is worst-case and pre-connection.** It makes pessimistic assumptions about the remote device; `WAPerformanceReport` remains the accurate **post-connection** measurement. `unavailabilityLatencyCeiling` covers only NAN-availability-window latency, not RF/channel conditions.
+- `WAPerformanceForecast` is `Sendable` but **not** `Codable` (unlike 26's `WAPerformanceReport`).
+
 #### Wi-Fi Aware features
 - Peer-to-peer without infrastructure (no Wi-Fi router needed)
 - Discovery limited to already-paired devices
 - Low latency, high throughput
+- Pre-connection performance forecast (iOS 27+)
 - iOS 26+ (connection-level `wifiAware` secret derivation is iOS 26.4+)
 
 ---

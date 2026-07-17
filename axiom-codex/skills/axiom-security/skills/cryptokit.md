@@ -37,6 +37,7 @@ Signs you're making this harder or less secure than it needs to be:
 - ❌ Using AES-128 when AES-256 costs nothing extra — Grover's algorithm halves symmetric key strength on quantum computers. AES-128 drops to 64-bit security. AES-256 drops to 128-bit — still safe. The performance difference is negligible.
 - ❌ Force-unwrapping crypto operations — `AES.GCM.open` and signature verification throw on failure. Force-unwrapping masks authentication failures and turns security errors into crashes. Always use `try`/`catch`.
 - ❌ Storing raw private keys in UserDefaults — Readable from device backups, accessible on jailbroken devices, visible in plaintext in the app's plist. Use Keychain for software keys, Secure Enclave for hardware-bound keys.
+- ❌ Leaving copied key material in a plain buffer — Bytes you copy into a `SymmetricKey` linger in memory, exposed to swapping or a memory dump. On iOS 27+, `SymmetricKey.init(copyingWithZeroing: inout MutableRawSpan)` copies **and zeroes the source** in one step. Below 27 there is no one-call equivalent — wipe the buffer yourself with `memset_s` (C11 Annex K, guaranteed not dead-store-eliminated); a plain loop or array fill can be optimized away, silently defeating the wipe. Also keep the buffer uniquely owned: `withUnsafeMutableBytes` on a shared copy-on-write `[UInt8]` scrubs a fresh copy and leaves the original secret intact.
 
 ## Do You Actually Need CryptoKit?
 

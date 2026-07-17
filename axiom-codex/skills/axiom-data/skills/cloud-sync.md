@@ -377,6 +377,26 @@ func performInitialSync(batchSize: Int = 200) async throws {
 
 CKSyncEngine handles incremental sync automatically — it fetches only changes since the last sync token. Ensure you persist `stateSerialization` so the engine doesn't re-fetch everything on next launch.
 
+### CKSyncEngine change-batch cap (250 records)
+
+Each request the engine sends is bounded by a **server limit of 250 records — saves plus deletes combined**. A hand-assembled batch that exceeds it fails the whole request with `CKError.limitExceeded`. In `nextRecordZoneChangeBatch(_:syncEngine:)`, build the batch with the failable initializer that stops at the limit instead of assembling one yourself — the remainder stays in `pendingRecordZoneChanges` and the engine requests it in the next batch.
+
+```swift
+func nextRecordZoneChangeBatch(
+    _ context: CKSyncEngine.SendChangesContext,
+    syncEngine: CKSyncEngine
+) async -> CKSyncEngine.RecordZoneChangeBatch? {
+    let changes = syncEngine.state.pendingRecordZoneChanges
+        .filter { context.options.scope.contains($0) }
+    // Failable async init — stops when the 250-record cap is reached.
+    return await CKSyncEngine.RecordZoneChangeBatch(pendingChanges: changes) { recordID in
+        self.record(for: recordID)   // CKRecord to save, or nil to skip
+    }
+}
+```
+
+This cap is a server-side limit (applies on every CKSyncEngine OS version, iOS 17+), not new-in-27 API — it was merely undocumented before. The 200-record `resultsLimit` in the initial-sync **query** above is a fetch limit on a different axis; it sits under 250 by coincidence, not because one bound implies the other.
+
 ### Performance Guidelines
 
 | Dataset Size | Strategy | Notes |
