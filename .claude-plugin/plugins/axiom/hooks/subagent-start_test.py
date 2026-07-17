@@ -14,21 +14,34 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
 import unittest
 
 HOOK = os.path.join(os.path.dirname(__file__), "subagent-start.py")
 
 
-def run_hook(payload: dict) -> dict:
-    """Invoke the hook with the given payload, return the parsed output ({} if no inject)."""
+def run_hook_in(payload: dict, cwd: str | None = None,
+                env_override: dict | None = None) -> dict:
+    """Invoke the hook with a controlled cwd + environment; return parsed output.
+
+    The hook gates on project type / AXIOM_SESSION_CONTEXT (GH #48), both of
+    which depend on cwd and env — so gate tests must control them. Returns {}
+    when the hook injects nothing.
+    """
     # Production (hooks.json) invokes the hook as `python3 "<path>"`; tests use
     # sys.executable so the suite runs under whatever interpreter is running it
     # (venvs, CI images without a bare `python3`). Both are a Python 3; the hook
     # is stdlib-only, so the choice is behavior-neutral — sys.executable is just
     # the more robust spawn target for the test process.
+    env = os.environ.copy()
+    env.pop("AXIOM_SESSION_CONTEXT", None)
+    if env_override:
+        env.update(env_override)
     result = subprocess.run(
         [sys.executable, HOOK],
         input=json.dumps(payload),
+        cwd=cwd,
+        env=env,
         capture_output=True,
         text=True,
         timeout=5,
@@ -39,6 +52,17 @@ def run_hook(payload: dict) -> dict:
         )
     out = result.stdout.strip() or "{}"
     return json.loads(out)
+
+
+def run_hook(payload: dict) -> dict:
+    """Invoke the hook for an injection/skip test, project gate forced open.
+
+    Injection and agent-type skip tests are orthogonal to the project-type gate
+    (GH #48). Forcing AXIOM_SESSION_CONTEXT=always makes them hermetic — they
+    exercise agent-type logic regardless of where the suite runs, rather than
+    silently depending on the cwd looking like an Apple project.
+    """
+    return run_hook_in(payload, env_override={"AXIOM_SESSION_CONTEXT": "always"})
 
 
 def injected_context(agent_type: str) -> str:
@@ -104,6 +128,53 @@ class TestSubagentStartSkips(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 0)
         json.loads(result.stdout.strip() or "{}")  # must parse
+
+
+class TestSubagentStartProjectGate(unittest.TestCase):
+    """The hook must stay quiet outside Apple projects and honor the override
+    (GH #48). A general-purpose subagent injects skill awareness in an Apple
+    project but must inject NOTHING in a non-Apple one. Mirrors the gate tests in
+    session-start_test.py / user-prompt-submit_test.py — all three hooks share
+    one gate and must behave alike.
+    """
+
+    AGENT = "general-purpose"  # a non-skip-listed agent that normally injects
+
+    def _injects(self, payload: dict) -> bool:
+        ctx = payload.get("hookSpecificOutput", {}).get("additionalContext", "")
+        return "Axiom iOS development skills" in ctx
+
+    def test_non_apple_dir_suppresses_injection(self):
+        with tempfile.TemporaryDirectory() as d:
+            os.mkdir(os.path.join(d, ".git"))  # bound the upward walk → hermetic
+            with open(os.path.join(d, "index.js"), "w"):
+                pass
+            self.assertFalse(
+                self._injects(run_hook_in({"agent_type": self.AGENT}, cwd=d)))
+
+    def test_apple_dir_injects(self):
+        with tempfile.TemporaryDirectory() as d:
+            with open(os.path.join(d, "App.swift"), "w"):
+                pass
+            self.assertTrue(
+                self._injects(run_hook_in({"agent_type": self.AGENT}, cwd=d)))
+
+    def test_override_never_suppresses_in_apple_dir(self):
+        with tempfile.TemporaryDirectory() as d:
+            with open(os.path.join(d, "App.swift"), "w"):
+                pass
+            self.assertFalse(self._injects(run_hook_in(
+                {"agent_type": self.AGENT}, cwd=d,
+                env_override={"AXIOM_SESSION_CONTEXT": "never"})))
+
+    def test_override_always_injects_in_plain_dir(self):
+        with tempfile.TemporaryDirectory() as d:
+            os.mkdir(os.path.join(d, ".git"))
+            with open(os.path.join(d, "index.js"), "w"):
+                pass
+            self.assertTrue(self._injects(run_hook_in(
+                {"agent_type": self.AGENT}, cwd=d,
+                env_override={"AXIOM_SESSION_CONTEXT": "always"})))
 
 
 if __name__ == "__main__":

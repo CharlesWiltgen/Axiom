@@ -16,9 +16,14 @@ stdout. Never exits non-zero — a hook failure must not block the prompt.
 from __future__ import annotations
 
 import json
+import os
 import re
 import sys
 
+# Drain stdin FIRST — before the project gate below — so a gated-off invocation
+# still consumes the prompt payload the parent wrote to our stdin. Exiting with
+# the pipe undrained risks EPIPE / a pipe-buffer stall on the writer side for a
+# large paste; this repo has hit that hook-stdin class before (GH #24).
 try:
     input_data = json.load(sys.stdin)
     prompt = input_data.get("prompt", "")
@@ -29,6 +34,28 @@ except Exception:
 if not prompt or len(prompt) < 5:
     print("{}")
     sys.exit(0)
+
+# Project-type gate (GH #48). session-start.py already skips non-Apple projects
+# and honors AXIOM_SESSION_CONTEXT; this hook did not, so it fired routing on
+# every prompt in every repo — injecting Axiom skill suggestions into Python,
+# docs, and other non-Apple projects even with AXIOM_SESSION_CONTEXT=never set.
+# Fail-open in BOTH directions: a missing module or a detection error falls
+# through to keyword matching rather than silencing a real Apple project
+# (resolve_context_decision is itself fail-open). CPython already puts this
+# script's own dir on sys.path[0] regardless of cwd, so the sibling import
+# normally resolves; the explicit insert only hardens the unusual invocation
+# (-c / -m / symlink) where sys.path[0] is not this file's directory.
+_hook_dir = os.path.dirname(os.path.abspath(__file__))
+if _hook_dir not in sys.path:
+    sys.path.insert(0, _hook_dir)
+try:
+    from project_detect import resolve_context_decision
+
+    if not resolve_context_decision(os.getcwd(), os.environ.get("AXIOM_SESSION_CONTEXT")):
+        print("{}")
+        sys.exit(0)
+except Exception:
+    pass  # fail-open: detection unavailable → proceed with keyword matching
 
 # Cap at 2000 chars — iOS keywords appear early, avoids regex on huge pastes
 prompt_lower = prompt[:2000].lower()
