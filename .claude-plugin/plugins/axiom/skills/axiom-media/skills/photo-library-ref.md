@@ -573,6 +573,26 @@ func saveToAlbum(_ image: UIImage, album: PHAssetCollection) async throws {
 
 ---
 
+## CloudKit Server-Side Asset Export `OS27`
+
+Export a photo-library asset directly into CloudKit — the CloudKit **server** copies it on save, with no local download/re-upload round-trip. This is the **producer** half; the CloudKit consumer (`CKAsset(importing:)`) and its data-safety edges live in axiom-data `cloudkit-ref` → "Server-side asset copy".
+
+```swift
+import CloudKit   // for CKAsset.ExportedAssetID
+
+// All Apple platforms at 27 except watchOS (no producer there):
+@available(anyAppleOS 27, *)
+@available(watchOS, unavailable)
+func exportedID(for resource: PHAssetResource) async throws -> CKAsset.ExportedAssetID {
+    try await PHAssetResourceManager.default().exportedAssetID(for: resource)
+}
+```
+
+- `PHAssetResource.dataSize: Int?` (`OS27`) reports the resource's byte size (nil when unknown) — gate or skip oversized exports before the round-trip.
+- Requires network + a **cloud-enabled** photo library. A local-only library throws `PHPhotosError.requestNotSupportedForAsset` (3306). The call honors cancellation (`CancellationError`).
+- **Apple doc bug (27.0b)**: the doc comment says to gate on `PHAssetResource.TypeGroup.coreComponents`, which does NOT exist anywhere in the 27 SDK. Gate on `PHAssetResourceType` and handle the throw — quoting the doc verbatim yields non-compiling code.
+- The returned `ExportedAssetID` is device-bound and expires in days — hand it straight to `CKAsset(importing:)`; never persist or transmit it.
+
 ## PHFetchResult
 
 Ordered list of assets from a fetch.
