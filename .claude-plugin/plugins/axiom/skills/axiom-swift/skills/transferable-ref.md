@@ -449,7 +449,10 @@ UTType.jpeg            // public.jpeg
 UTType.pdf             // com.adobe.pdf
 UTType.mpeg4Movie      // public.mpeg-4
 UTType.commaSeparatedText  // public.comma-separated-values-text
+UTType.markdown            // net.daringfireball.markdown (OS27)
 ```
+
+**`UTType.markdown` `OS27`** — system-declared identifier `net.daringfireball.markdown`, conforming to `public.utf8-plain-text` (UTF-8 text, **not** `public.plain-text` — the distinction matters for `Transferable` conformance matching). Before 27, apps hand-rolled their own Markdown `UTExportedTypeDeclarations`, so two apps' Markdown types did not interoperate; it is now system-declared and shared across `Transferable`, `fileImporter`/`fileExporter`, `.draggable`, and `DocumentGroup`. Gate with `if #available` when the deployment target is below 27. All platforms.
 
 ### Declaring Custom Types
 
@@ -503,6 +506,10 @@ Custom types should conform to system types for broader compatibility:
 ```
 
 Common conformance parents: `public.data`, `public.content`, `public.text`, `public.image`
+
+#### `UTType(identifier:allowUndeclared:)` `OS27`
+
+A failable init that, with `allowUndeclared: true`, returns a `UTType` **keeping the identity** of an identifier the system does not know — for round-tripping an identifier from another subsystem without losing it. **Gotcha**: that undeclared type has no conformances or tags, so it silently **fails every `conforms(to:)` check**. With `allowUndeclared: false` it behaves identically to `UTType(_:)`. All platforms.
 
 ---
 
