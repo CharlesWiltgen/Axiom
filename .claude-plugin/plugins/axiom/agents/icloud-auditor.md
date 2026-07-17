@@ -131,7 +131,7 @@ Present this map in the output before proceeding.
 
 ## Phase 2: Detect Known Anti-Patterns
 
-Run all 6 detection patterns. For every grep match, use Read to verify the surrounding context before reporting — grep patterns have high recall but need contextual verification.
+Run all 8 detection patterns. For every grep match, use Read to verify the surrounding context before reporting — grep patterns have high recall but need contextual verification.
 
 ### Pattern 1: Missing NSFileCoordinator on Ubiquitous I/O (CRITICAL/HIGH)
 
@@ -189,6 +189,26 @@ Run all 6 detection patterns. For every grep match, use Read to verify the surro
 - Manual `serverChangeToken` plumbing
 **Verify**: Read deployment target (Info.plist or project settings). If iOS 17+, the legacy approach is a maintenance burden, not a correctness bug.
 **Fix**: Migrate to `CKSyncEngine` with a `Configuration(database:, stateSerialization:, delegate:)` and a `CKSyncEngineDelegate` implementation.
+
+### Pattern 7: CKSyncEngine Change Batch Over the 250-Record Cap (HIGH/MEDIUM)
+
+**Issue**: Each request the engine sends is capped at **250 records (saves + deletes combined)**. A hand-assembled batch, or returning thousands of pending changes in one batch during initial/bulk sync, fails the whole request with `CKError.limitExceeded`.
+**Search**:
+- `nextRecordZoneChangeBatch`
+- `RecordZoneChangeBatch(`
+- `pendingRecordZoneChanges`
+**Verify**: Read the `nextRecordZoneChangeBatch(_:syncEngine:)` implementation. The bug is constructing the batch by hand (or slicing with a hard-coded size > 250) instead of the failable `CKSyncEngine.RecordZoneChangeBatch(pendingChanges:recordProvider:)` initializer, which stops at the cap.
+**Fix**: `return await CKSyncEngine.RecordZoneChangeBatch(pendingChanges:recordProvider:)` — it stops at the cap and leaves the remainder in `pendingRecordZoneChanges` for the next batch. Treat `.limitExceeded` as retry-with-smaller-batch. (Server-side limit; applies on every CKSyncEngine version, iOS 17+.)
+
+### Pattern 8: Persisted or Shipped ExportedAssetID (HIGH/LOW) `OS27`
+
+**Issue**: `CKAsset.ExportedAssetID` (the Photos → CloudKit server-copy path) is `Codable` but **device-bound and expires in days**. Encoding it to disk, a network payload, or another device breaks silently — the later `CKAsset(importing:)` fails with `CKError.assetNotAvailable`.
+**Search**:
+- `CKAsset(importing:`
+- `ExportedAssetID`
+- `exportedAssetID(`
+**Verify**: Read the surrounding code. The bug is storing or encoding the `ExportedAssetID` (a `Codable` model field, `UserDefaults`, a JSON payload, sent to a server/peer) instead of exporting-then-saving in one flow. Also flag any read of `fileURL` on an imported asset — it is always `nil`.
+**Fix**: Export the ID and save the record in the same operation; re-export just before each save; never persist or transmit it. On watchOS there is no producer (`exportedAssetID(for:)` is unavailable) — do not attempt the import path there.
 
 ## Phase 3: Reason About iCloud Completeness
 
@@ -299,6 +319,8 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details.
 - Legacy CKDatabase APIs in code paths gated by deployment-target checks (`if #available(iOS 17, *)`)
 - One-shot `NSMetadataQuery` that's stopped after first result
 - Apps that explicitly opt out of multi-device support (single-device productivity apps)
+- A transient `CKAsset(importing:)` whose `ExportedAssetID` is exported and saved in the same flow and never stored (Pattern 8 is about persisting/shipping the ID, not using it)
+- A `nextRecordZoneChangeBatch` that already returns `CKSyncEngine.RecordZoneChangeBatch(pendingChanges:recordProvider:)` (the failable initializer already enforces the 250 cap — Pattern 7)
 
 ## Related
 

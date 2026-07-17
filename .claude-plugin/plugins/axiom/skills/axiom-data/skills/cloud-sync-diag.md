@@ -328,6 +328,26 @@ operation.perRecordSaveBlock = { recordID, result in
 
 ---
 
+### CKSyncEngine batch cap — CKError.limitExceeded
+
+**Symptom**: A CKSyncEngine send fails with `CKError.limitExceeded` during heavy initial or bulk sync.
+
+**Cause**: A single change batch exceeded the server's **250-record cap (saves + deletes combined)**.
+
+**Fix**: Never hand-assemble a batch. In `nextRecordZoneChangeBatch(_:syncEngine:)` use `CKSyncEngine.RecordZoneChangeBatch(pendingChanges:recordProvider:)` — its failable async init stops at the cap and leaves the remainder in `pendingRecordZoneChanges`. Applies on every CKSyncEngine OS version (iOS 17+); the cap was undocumented before 27. See `cloud-sync` → "CKSyncEngine change-batch cap".
+
+### Server-side asset import errors `OS27`
+
+Errors specific to `CKAsset(importing:)` (Photos → CloudKit server copy). See `cloudkit-ref` → "Server-side asset copy".
+
+| Error | Code | Meaning | Fix |
+|-------|------|---------|-----|
+| `CKError.unknownItem` | 11 | Source asset no longer on the server | Re-export from Photos; do not reuse a stale `ExportedAssetID` |
+| `CKError.assetNotAvailable` | 35 | `ExportedAssetID` invalid or expired (valid days only, device-bound) | Re-export just before save; never persist or transmit the ID |
+| `PHPhotosError.requestNotSupportedForAsset` | 3306 | Photo library is local-only (not cloud-enabled) | Require iCloud Photos; fall back to a local file-URL CKAsset |
+
+---
+
 ## Common iCloud Drive Errors
 
 ### Upload Errors
