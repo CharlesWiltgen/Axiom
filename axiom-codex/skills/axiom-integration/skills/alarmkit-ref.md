@@ -117,6 +117,8 @@ func requestAlarmAuthorization() async -> Bool {
 }
 ```
 
+> **Scheduling while `.notDetermined` implicitly prompts.** Calling `requestAuthorization()` first is the clean path — you control when the prompt appears — but it is not a hard prerequisite: the first `schedule(...)` from a `.notDetermined` state triggers the system permission prompt itself.
+
 ### Checking Current State
 
 `authorizationState` is a **synchronous** property -- read it directly, no `await`:
@@ -265,6 +267,24 @@ let config = AlarmManager.AlarmConfiguration.alarm(
 )
 ```
 
+### App Entity Association `iOS27`
+
+Attach an `AppIntents.EntityIdentifier` to bind the alarm/timer to one of your `AppEntity` instances, so Siri / Apple Intelligence can act on a **firing** alarm by voice ("snooze it"). It is an additive `appEntityIdentifier:` parameter on all three `AlarmConfiguration` factories (`init`, `.timer`, `.alarm`) — gate it with `if #available`.
+
+```swift
+if #available(iOS 27, *) {
+    let config = AlarmManager.AlarmConfiguration.alarm(
+        schedule: schedule,
+        attributes: attributes,
+        appEntityIdentifier: EntityIdentifier(for: workoutEntity),  // your AppEntity instance
+        stopIntent: StopWorkoutIntent(),
+        sound: .default
+    )
+}
+```
+
+**Not** `NSUserActivity.appEntityIdentifier` — a same-named but unrelated, pre-existing API in a different framework. This one lives on `AlarmManager.AlarmConfiguration` (iOS 27, macCatalyst unavailable).
+
 ---
 
 ## Part 4: Customizing Alarm UI
@@ -347,6 +367,8 @@ let presentation = AlarmPresentation(
 ```swift
 let alarms = try AlarmManager.shared.alarms
 ```
+
+> **A fired one-shot alarm leaves no trace in `alarms`.** When a one-time alarm fires and is stopped, the system **deletes** it from the daemon's store — so `alarms` (and `alarmUpdates`) cannot distinguish an alarm that *fired* from one that was *cancelled*; both are simply absent. To know a one-shot fired, persist your own copy at schedule time and diff against the live set.
 
 ### Countdown / Pause / Resume / Stop / Cancel
 
@@ -536,6 +558,8 @@ struct AlarmListView: View {
 | Handle `maximumLimitReached` | Scheduling throws when the app's alarm cap is exceeded |
 | Don't supply a `stopButton` | Deprecated in iOS 26.1; the system provides stop. Use `stopIntent` for custom stop logic |
 | `authorizationState` is synchronous | Read it directly; only `requestAuthorization()` is `async` |
+| Attach `appEntityIdentifier` (iOS 27+) | Bind an alarm to your `AppEntity` so Siri / Apple Intelligence can act on it by voice; gate with `if #available` |
+| Persist your own copy of one-shot alarms | A fired-and-stopped one-time alarm is deleted from `alarms`; diff a stored copy to detect that it fired |
 
 ---
 

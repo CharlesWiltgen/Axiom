@@ -15,6 +15,7 @@ non-zero — a hook failure must not block subagent startup.
 from __future__ import annotations
 
 import json
+import os
 import sys
 
 try:
@@ -23,6 +24,27 @@ try:
 except Exception:
     print("{}")
     sys.exit(0)
+
+# Project-type gate (GH #48). Like session-start.py / user-prompt-submit.py, stay
+# silent in non-Apple projects and honor AXIOM_SESSION_CONTEXT — otherwise a
+# generic subagent (general-purpose, Explore, ...) spun up in a Python or docs
+# repo gets Axiom iOS routing pressure injected into its context. Fail-open in
+# BOTH directions: a missing module or detection error falls through to injection
+# rather than silencing a real Apple project (resolve_context_decision is itself
+# fail-open). stdin is already drained above, so this early exit leaves no unread
+# pipe. CPython puts this script's dir on sys.path[0] regardless of cwd; the
+# explicit insert only hardens the unusual -c / -m / symlink invocation.
+_hook_dir = os.path.dirname(os.path.abspath(__file__))
+if _hook_dir not in sys.path:
+    sys.path.insert(0, _hook_dir)
+try:
+    from project_detect import resolve_context_decision
+
+    if not resolve_context_decision(os.getcwd(), os.environ.get("AXIOM_SESSION_CONTEXT")):
+        print("{}")
+        sys.exit(0)
+except Exception:
+    pass  # fail-open: detection unavailable → proceed with skill injection
 
 # Skip agents that won't benefit from Axiom skills
 skip_types = {

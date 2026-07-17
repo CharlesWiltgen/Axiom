@@ -135,6 +135,24 @@ let plaintext = try AES.GCM.open(sealedBox, using: key)
 let plaintext = try AES.GCM.open(sealedBox, using: key, authenticating: associatedData)
 ```
 
+### In-Place AEAD & Span APIs `OS27`
+
+For hot paths that must avoid a heap `Data` copy of the plaintext, 27 adds **in-place** AEAD over `MutableRawSpan` — encrypt/decrypt within your own buffer, no `SealedBox` allocation. Identical shape on `ChaChaPoly`.
+
+```swift
+if #available(iOS 27, *) {
+    // `buffer` (MutableRawSpan) holds plaintext on entry, ciphertext on return.
+    try AES.GCM.seal(inPlace: &buffer, using: key, nonce: nonce,
+                     authenticating: aad, tag: &tagOut)   // seal WRITES tag (inout OutputRawSpan)
+    try AES.GCM.open(inPlace: &buffer, using: key, nonce: nonce,
+                     authenticating: aad, tag: tagIn)      // open READS tag (RawSpan)
+}
+```
+
+- **Nonce-from-bytes constraints differ and look identical.** `AES.GCM.Nonce(copying:)` throws if the input is **< 12 bytes**; `ChaChaPoly.Nonce(copying:)` throws if it is **≠ 12 bytes**. Easy to swap and get wrong.
+- **`SymmetricKey.init(copyingWithZeroing: inout MutableRawSpan)` wipes the source** key material after copying — a zeroization primitive with no `Data`-based equivalent. `SymmetricKey.bytes` exposes the key as a `RawSpan`.
+- **Split availability within CryptoKit — do not blanket-gate.** `seal/open(inPlace:)`, `SymmetricKey.bytes`, `SymmetricKey.init(copyingWithZeroing:)`, the `Nonce.init(copying:)` overloads, and the HMAC/HKDF span overloads need `@available(iOS 27, *)`. But `SymmetricKey.init(copying: RawSpan)` and `HashFunction.update(bytes:)` / `.hash(bytes:)` (every SHA2/SHA3 plus `Insecure.MD5`/`SHA1`) keep iOS 13 availability — **no guard**.
+
 ### AES-GCM SealedBox Construction
 
 ```swift
@@ -352,6 +370,23 @@ privateKey.integrityCheckedRepresentation  // Data (seed + SHA3-256 hash)
 let pk = try MLKEM768.PrivateKey(seedRepresentation: seedData, publicKey: publicKey)
 let pk = try MLKEM768.PrivateKey(integrityCheckedRepresentation: data)
 ```
+
+### One-Time Decapsulation Keys `OS27`
+
+When a KEM private key will decapsulate exactly once, `OneTimePrivateKey` is a **faster** single-use variant — Apple: "can only decapsulate once but it does so faster." `MLKEM768`, `MLKEM1024`, and `XWingMLKEM768X25519` each expose one.
+
+```swift
+if #available(iOS 27, *) {
+    let privateKey = try MLKEM768.OneTimePrivateKey.generate()
+    send(privateKey.publicKey)                            // sender encapsulates against this
+    let shared = try privateKey.decapsulate(encapsulated) // `encapsulated: Data` from sender; consumes the key
+    _ = shared
+    // a second `privateKey.decapsulate(...)` will not compile
+}
+```
+
+- **Single-use is a compile-time guarantee.** The type is `~Copyable` and `decapsulate` is `consuming`, so the compiler refuses a second call — you cannot accidentally reuse the key.
+- **Cannot be serialized or persisted, by construction.** There is no `seedRepresentation` / `integrityCheckedRepresentation` / `rawRepresentation` on a one-time key. Generate → publish `publicKey` → decapsulate once → gone. Keep the copyable iOS-26 `PrivateKey` (above) when the key must be stored or reused.
 
 ---
 
