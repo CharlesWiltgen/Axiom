@@ -861,6 +861,7 @@ struct MarkdownApp: App {
 - `FileWrapperDocumentReader`/`FileWrapperDocumentWriter` are the convenience path; conform to `DocumentReader`/`DocumentWriter` directly for custom I/O (e.g. streaming a package format) and report progress through the `Subprogress` parameter (the `OS27` `ProgressManager` system — see `axiom-concurrency (skills/swift-concurrency.md)`).
 - `apply(snapshot:previous:)` and `snapshot(contentType:)` run on `@MainActor` so they touch your model safely; the reader/writer bodies run off it.
 - `DocumentGroup` also surfaces in axiom-macos (skills/windows.md) for the Mac document-app shell (menus, `DocumentGroupLaunchScene`).
+- **Declare the real content type**: this example uses `[.plainText]`, but for a Markdown app prefer the system-declared `UTType.markdown` (`OS27`, `net.daringfireball.markdown`, conforms to `public.utf8-plain-text`) so documents interoperate across apps — gate with `if #available` below a 27 target. See `axiom-swift (skills/transferable-ref.md)`.
 
 ---
 
