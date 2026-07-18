@@ -38,7 +38,7 @@ Signs you're making this harder than it needs to be:
 - ❌ Assuming `.authorized` after user grants access (could be `.limited`)
 - ❌ Conforming a `@MainActor` type to `PHPhotoLibraryChangeObserver` without `nonisolated` on the method — and silencing the resulting error with `@preconcurrency` or an isolated conformance, both of which build clean and trap at runtime
 - ❌ Passing a `@MainActor`-isolated closure to `performChanges` — it inherits isolation and traps on PhotoKit's serial queue; write `{ @Sendable in }`
-- ❌ Wrapping `PHImageManager.requestImage` in `withCheckedContinuation` — the handler is called 1+ times with `.opportunistic` delivery, so the second call is a double-resume crash
+- ❌ Wrapping `PHImageManager.requestImage(for:targetSize:contentMode:options:)` in `withCheckedContinuation` — its handler is documented "called one or more times", so the second call is a double-resume crash. Not a blanket ban: `requestImageDataAndOrientation` is documented "called exactly once" and *is* continuation-safe
 
 ## Mandatory First Steps
 
