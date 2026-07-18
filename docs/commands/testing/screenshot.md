@@ -66,10 +66,22 @@ Or invoke the simulator-tester agent with natural language:
 - "Send a test push notification"
 - "Record a video of the app"
 
+## Physical Devices and Scriptable Recording
+
+`/axiom:screenshot` targets the **simulator**. To capture a **physical device**, or to record video with a clean auto-stop instead of Ctrl+C, use `devicectl device capture` — one `-d <udid>` selector works for both a simulator and a device (Xcode 26.6+):
+
+```bash
+xcrun devicectl device capture screenshot   -d <udid> --destination shot.png    # .png required
+xcrun devicectl device capture screen-record -d <udid> --destination clip.mp4 --duration 5
+```
+
+See the [Device Control reference](/reference/device-control-ref) (Screen capture) for codecs, mask policy, and the `simctl` / `axe` fallbacks.
+
 ## Related
 
 - **`/axiom:test-simulator`** – Full simulator testing with scenarios
 - **`simulator-tester` agent** – Automated testing with visual verification
+- [Device Control reference](/reference/device-control-ref) – Unified `devicectl` capture for simulators and physical devices, plus fallbacks
 - **`axiom-swift` skill** – Add navigation for better screenshot targeting
 
 ## Example
