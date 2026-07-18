@@ -10,15 +10,15 @@ apple_platforms: iOS 26+, iPadOS 26+, macOS Tahoe+
 
 Performance optimization for SwiftUI using the new SwiftUI Instrument in Instruments 26. Covers long view body updates, unnecessary view updates, and the Cause & Effect Graph.
 
-## When to Use This Skill
+## When to Use
 
-Use this skill when you're:
+Use this skill when:
 - App feels less responsive (hitches, hangs, delayed scrolling)
 - Animations pause or jump during execution
 - Scrolling performance is poor
 - Profiling reveals SwiftUI is the bottleneck
 - Views are updating more frequently than expected
-- Need to understand cause-and-effect of SwiftUI updates
+- You need to understand cause-and-effect of SwiftUI updates
 
 **Core principle:** Ensure your view bodies update quickly and only when needed.
 
@@ -64,57 +64,6 @@ Questions you can ask Claude that will draw from this skill:
 - 30-minute diagnostic protocol
 - Time cost comparison (guess vs diagnose)
 - Verification before shipping
-
-## Key Pattern
-
-### The Two Performance Problems
-
-```
-Problem 1: Long View Body Updates
-├─ One view body too slow → misses frame deadline
-└─ Solution: Move expensive work to model layer
-
-Problem 2: Unnecessary View Updates
-├─ Many fast updates add up → misses deadline
-└─ Solution: Granular dependencies, per-item view models
-```
-
-### Fixing Long View Bodies
-
-```swift
-// ❌ WRONG — Creating formatters in view body
-var distance: String {
-    let formatter = MeasurementFormatter() // Expensive!
-    return formatter.string(from: measurement)
-}
-
-// ✅ CORRECT — Cache formatter, pre-calculate
-@Observable
-class LocationFinder {
-    private let formatter = MeasurementFormatter() // Created once
-    private var distanceCache: [ID: String] = [:]  // Pre-calculated
-
-    func distanceString(for id: ID) -> String {
-        distanceCache[id] ?? "Unknown"  // Fast lookup
-    }
-}
-```
-
-### Fixing Unnecessary Updates
-
-```swift
-// ❌ WRONG — All views depend on whole array
-func isFavorite(_ landmark: Landmark) -> Bool {
-    favoritesCollection.landmarks.contains(landmark) // Array dependency
-}
-
-// ✅ CORRECT — Each view depends only on its view model
-@Observable
-class LandmarkViewModel {
-    var isFavorite: Bool = false
-}
-// Tapping button updates only that view model → only one view body runs
-```
 
 ## Documentation Scope
 

@@ -18,13 +18,14 @@ Use this skill when:
 - "Check if my Foundation usage is current"
 - "How do I write availability for all Apple platforms with anyAppleOS?" (iOS 27)
 - "How do I silence a deprecation warning in just one function?" (iOS 27)
+- "When should I use isTriviallyIdentical(to:) instead of ==?" (Swift 6.4)
 
 ## What This Skill Provides
 
 - **Modern API replacements** – 11 common outdated patterns with modern equivalents and Swift version requirements
 - **Modern syntax** – Shorthand syntax, static member lookup, expression returns
 - **Foundation modernization** – URL APIs, date parsing, name formatting, sort patterns
-- **Swift 6.4 language features (iOS 27)** – `anyAppleOS` availability, `weak let`, `~Sendable`, the unhandled-`Task`-error warning
+- **Swift 6.4 language features (iOS 27)** – `anyAppleOS` availability, `weak let`, `~Sendable`, the unhandled-`Task`-error warning, and the `isTriviallyIdentical(to:)` O(1) equality fast path (SE-0494) with guidance on when it helps and when it backfires
 - **Claude hallucination corrections** – patterns Claude generates incorrectly
 
 ## Philosophy

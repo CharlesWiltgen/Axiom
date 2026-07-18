@@ -16,7 +16,8 @@ Use this skill when:
 - Writing framework code with performance requirements
 - Optimizing tight loops or frequently called methods
 
-**Do NOT use for**:
+### Do NOT use for
+
 - First-step optimization (use performance-profiling first)
 - SwiftUI performance (use swiftui-performance)
 - Premature optimization
@@ -51,45 +52,7 @@ From WWDC 2024-10217 — the organizing mental model for all optimizations:
 8. **Memory Layout** – Struct padding, exclusivity checks, cache-friendly data structures
 9. **Span Types** – Safe zero-copy memory access with OutputSpan for initialization
 
-### Eliminate Copying
-
-```swift
-// ❌ Expensive copy
-func process(_ data: ImageData) { ... }
-
-// ✅ Zero-cost borrowing
-func process(borrowing data: ImageData) { ... }
-```
-
-### Actor Batching
-
-```swift
-// ❌ 10,000 actor hops (~1 second)
-for _ in 0..<10000 {
-    await counter.increment()
-}
-
-// ✅ Single hop (~0.1ms)
-await counter.incrementBatch(10000)
-```
-
-### Generic Specialization
-
-```swift
-// ❌ Dynamic dispatch
-func render(shapes: [any Shape]) { ... }
-
-// ✅ Static dispatch (10x faster)
-func render<S: Shape>(shapes: [S]) { ... }
-```
-
-### Code Review Checklist
-
-- Large structs (>64 bytes) use indirect storage
-- Collections use `reserveCapacity` when size known
-- Prefer `unowned` over `weak` when lifetime guaranteed
-- Use `some` instead of `any` where possible
-- Batch actor calls in loops
+Each topic ships with before/after code patterns, measured costs, and a code-review checklist — those live in the skill itself.
 
 ## Related
 
