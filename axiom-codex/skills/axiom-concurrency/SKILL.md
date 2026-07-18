@@ -28,7 +28,8 @@ license: MIT
 | Crash signature `_swift_task_checkIsolatedSwift` | See `skills/isolation-inheritance-diag.md` |
 | Core Data `context.perform` runtime crash inside @MainActor class | See `skills/isolation-inheritance-diag.md` |
 | Combine `.map`/`.sink` crash from receive(on:) placement | See `skills/isolation-inheritance-diag.md` |
-| Delegate method crash from isolation inheritance (CLLocationManager, NSDocument, AVAudioPlayerDelegate, WKNavigationDelegate) | See `skills/isolation-inheritance-diag.md` |
+| Delegate method crash from isolation inheritance (CLLocationManager, NSDocument, AVAudioPlayerDelegate, WKNavigationDelegate, PHPhotoLibraryChangeObserver) | See `skills/isolation-inheritance-diag.md` |
+| PhotoKit `performChanges` block traps on PhotoKit's queue | See `skills/isolation-inheritance-diag.md` |
 | Actor reentrancy / stale state across await | See `skills/isolation-inheritance-diag.md` |
 | Swift Concurrency Instruments template | See `skills/concurrency-profiling.md` |
 | Actor contention diagnosis | See `skills/concurrency-profiling.md` |

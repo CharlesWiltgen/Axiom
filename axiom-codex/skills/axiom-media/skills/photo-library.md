@@ -36,6 +36,9 @@ Signs you're making this harder than it needs to be:
 - ❌ Decoding a full-resolution image into memory — a 48MP / RAW / panorama photo is a ~190 MB decompressed bitmap; loading it whole gets the app jetsammed (the "crashes on big photos" report). Downsample with ImageIO.
 - ❌ Using PhotoKit APIs when you only need to pick photos (over-engineering)
 - ❌ Assuming `.authorized` after user grants access (could be `.limited`)
+- ❌ Conforming a `@MainActor` type to `PHPhotoLibraryChangeObserver` without `nonisolated` on the method — and silencing the resulting error with `@preconcurrency` or an isolated conformance, both of which build clean and trap at runtime
+- ❌ Passing a `@MainActor`-isolated closure to `performChanges` — it inherits isolation and traps on PhotoKit's serial queue; write `{ @Sendable in }`
+- ❌ Wrapping `PHImageManager.requestImage` in `withCheckedContinuation` — the handler is called 1+ times with `.opportunistic` delivery, so the second call is a double-resume crash
 
 ## Mandatory First Steps
 
@@ -445,10 +448,13 @@ class PhotoLibraryManager {
 // Register for changes
 PHPhotoLibrary.shared().register(self)
 
-// In delegate
-func photoLibraryDidChange(_ changeInstance: PHChange) {
-    // User may have modified their limited selection
-    // Refresh your photo grid
+// The callback arrives on an arbitrary serial queue — `nonisolated` is required
+// on a @MainActor type. See Pattern 6 for the full observer.
+nonisolated func photoLibraryDidChange(_ changeInstance: PHChange) {
+    Task { @MainActor in
+        // User may have modified their limited selection — refresh your photo grid
+        self.refreshGrid()
+    }
 }
 ```
 
@@ -469,14 +475,16 @@ func saveImageToLibrary(_ image: UIImage) async throws {
         throw PhotoError.permissionDenied
     }
 
-    try await PHPhotoLibrary.shared().performChanges {
+    // @Sendable is required if this is ever called from a @MainActor context —
+    // a bare block inherits the caller's isolation and traps on PhotoKit's queue
+    try await PHPhotoLibrary.shared().performChanges { @Sendable in
         PHAssetCreationRequest.creationRequestForAsset(from: image)
     }
 }
 
 // With metadata preservation
 func savePhotoData(_ data: Data, metadata: [String: Any]? = nil) async throws {
-    try await PHPhotoLibrary.shared().performChanges {
+    try await PHPhotoLibrary.shared().performChanges { @Sendable in
         let request = PHAssetCreationRequest.forAsset()
 
         // Write data to temp file for addResource
@@ -530,12 +538,17 @@ func loadImage(from item: PhotosPickerItem) async -> UIImage? {
 ```
 
 **Loading with progress**:
-```swift
-func loadImageWithProgress(from item: PhotosPickerItem) async -> UIImage? {
-    let progress = Progress()
 
-    return await withCheckedContinuation { continuation in
-        _ = item.loadTransferable(type: TransferableImage.self) { result in
+`loadTransferable`'s handler fires **exactly once**, so wrapping it in a continuation is safe. `PHImageManager.requestImage` is the opposite — it can call back repeatedly, and the same wrapper double-resumes and crashes (see Red Flags).
+
+```swift
+func loadImage(
+    from item: PhotosPickerItem,
+    onProgress: @escaping @Sendable (Progress) -> Void
+) async -> UIImage? {
+    await withCheckedContinuation { continuation in
+        // loadTransferable returns the real Progress — surface it, don't discard it
+        let progress = item.loadTransferable(type: TransferableImage.self) { result in
             switch result {
             case .success(let transferable):
                 continuation.resume(returning: transferable?.image)
@@ -543,6 +556,7 @@ func loadImageWithProgress(from item: PhotosPickerItem) async -> UIImage? {
                 continuation.resume(returning: nil)
             }
         }
+        onProgress(progress)
     }
 }
 ```
@@ -553,13 +567,17 @@ func loadImageWithProgress(from item: PhotosPickerItem) async -> UIImage? {
 
 **Use case**: Keep your gallery UI in sync with Photos app.
 
+`PHPhotoLibraryChangeObserver` is **nonisolated** — the callback arrives on an arbitrary serial queue. Under Swift 6, conforming a `@MainActor` type without marking the method `nonisolated` is a compile error, and two of the compiler's three fix-its (`@preconcurrency`, isolated conformance) build clean but crash on device with `_dispatch_assert_queue_fail`. See axiom-concurrency (skills/isolation-inheritance-diag.md).
+
 ```swift
 import Photos
 
-class PhotoGalleryViewModel: NSObject, ObservableObject, PHPhotoLibraryChangeObserver {
-    @Published var photos: [PHAsset] = []
+@MainActor
+@Observable
+final class PhotoGalleryModel: NSObject, PHPhotoLibraryChangeObserver {
+    private(set) var photos: [PHAsset] = []
 
-    private var fetchResult: PHFetchResult<PHAsset>?
+    @ObservationIgnored private var fetchResult: PHFetchResult<PHAsset>?
 
     override init() {
         super.init()
@@ -574,26 +592,29 @@ class PhotoGalleryViewModel: NSObject, ObservableObject, PHPhotoLibraryChangeObs
     func fetchPhotos() {
         let options = PHFetchOptions()
         options.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
-        fetchResult = PHAsset.fetchAssets(with: .image, options: options)
-
-        photos = fetchResult?.objects(at: IndexSet(0..<(fetchResult?.count ?? 0))) ?? []
+        let result = PHAsset.fetchAssets(with: .image, options: options)
+        fetchResult = result
+        photos = result.objects(at: IndexSet(0..<result.count))
     }
 
-    func photoLibraryDidChange(_ changeInstance: PHChange) {
-        guard let fetchResult = fetchResult,
-              let changes = changeInstance.changeDetails(for: fetchResult) else {
-            return
-        }
-
-        DispatchQueue.main.async {
-            self.fetchResult = changes.fetchResultAfterChanges
-            self.photos = changes.fetchResultAfterChanges.objects(at:
-                IndexSet(0..<changes.fetchResultAfterChanges.count)
-            )
+    // nonisolated matches the protocol's real signature — NOT a workaround
+    nonisolated func photoLibraryDidChange(_ changeInstance: PHChange) {
+        Task { @MainActor in
+            guard let current = self.fetchResult,
+                  let changes = changeInstance.changeDetails(for: current) else { return }
+            let after = changes.fetchResultAfterChanges
+            self.fetchResult = after
+            self.photos = after.objects(at: IndexSet(0..<after.count))
         }
     }
 }
 ```
+
+The example replaces the whole array for clarity. Three things to change for a real gallery:
+
+- **Don't materialize the whole library.** `result.objects(at:)` allocates every `PHAsset` up front — a large spike on a 50k-photo library (see Anti-Pattern 5). `PHFetchResult` is already a lazy random-access collection that fetches in chunks; hold it and index into it from your cell provider, or set `options.fetchLimit`.
+- **If you drive a collection view with `insertedIndexes` / `removedIndexes` / `changedIndexes`,** assign `fetchResultAfterChanges` to your stored result *before* applying those deltas, or the data source and the batch update disagree.
+- **`Task { @MainActor in }` does not guarantee ordering.** Two rapid library changes can land out of order. If you apply incremental deltas rather than replacing wholesale, serialize the hops (an `AsyncStream` consumed by one task) so they cannot interleave.
 
 **Cost**: 30 min implementation
 
@@ -774,31 +795,33 @@ func downsampledImage(from data: Data, maxPixel: CGFloat) -> UIImage? {
 
 Before shipping photo library features:
 
-**Permission Strategy**:
+#### Permission Strategy
 - ☑ Using PHPicker/PhotosPicker for simple selection (no permission needed)
 - ☑ Only requesting .readWrite if building gallery UI
 - ☑ Only requesting .addOnly if only saving photos
 - ☑ Info.plist usage descriptions present
 
-**Limited Library**:
+#### Limited Library
 - ☑ Handling `.limited` status (not treating as denied)
 - ☑ Offering `presentLimitedLibraryPicker()` for users to add photos
 - ☑ UI explains limited access to users
 
-**Image Loading**:
+#### Image Loading
 - ☑ All loading is async (no UI blocking)
 - ☑ Custom Transferable handles JPEG/HEIF (not just PNG)
 - ☑ Error handling for failed loads
 - ☑ Loading indicator for large files
 
-**Saving Photos**:
+#### Saving Photos
 - ☑ Using .addOnly when full access not needed
 - ☑ Using performChanges for atomic operations
 - ☑ Handling save failures gracefully
 
-**Photo Library Changes**:
+#### Photo Library Changes
 - ☑ Registered as PHPhotoLibraryChangeObserver if displaying library
-- ☑ Updating UI on main thread after changes
+- ☑ `photoLibraryDidChange` marked `nonisolated`, hopping to `@MainActor` inside
+- ☑ No `@preconcurrency` / isolated conformance used to silence the isolation error
+- ☑ `performChanges` blocks written `{ @Sendable in }` when called from an isolated context
 - ☑ Unregistering observer in deinit
 
 ## Resources
@@ -807,4 +830,4 @@ Before shipping photo library features:
 
 **Docs**: /photosui/phpickerviewcontroller, /photosui/photospicker, /photos/phphotolibrary
 
-**Skills**: skills/photo-library-ref.md, skills/camera-capture.md
+**Skills**: skills/photo-library-ref.md, skills/camera-capture.md, axiom-concurrency/skills/isolation-inheritance-diag.md
