@@ -16,6 +16,7 @@ Use this skill when:
 - Xcode Organizer reports hang diagnostics
 - MetricKit delivers MXHangDiagnostic payloads
 - App is killed by the watchdog during launch or transitions
+- A user can reproduce a freeze you can't, and you need their device to capture evidence
 
 **Not a hang?** If animations stutter but the app stays responsive, that's a hitch -- see [swiftui-performance](/skills/ui-design/swiftui-performance). If the app feels slow but responds to touches, that's lag -- see [performance-profiling](/skills/debugging/performance-profiling).
 
@@ -26,6 +27,8 @@ Use this skill when:
 - "Xcode Organizer shows hang reports -- how do I read them?"
 - "My app gets killed on launch with a watchdog termination."
 - "How do I find what's blocking my main thread?"
+- "What can end users run on iOS to capture per-thread stacks during a hang?"
+- "Why doesn't our crash reporter show anything for this freeze?"
 
 ## What This Skill Provides
 
@@ -59,6 +62,10 @@ Time limits for key app transitions (launch ~20s, background ~5s, foreground ~10
 ### Field Diagnostics
 
 How to use Xcode Organizer hang reports and MetricKit hang diagnostics (the typed `DiagnosticReport` stream on the 27 platforms, MXHangDiagnostic earlier) to diagnose hangs that only occur in production. Covers the Xcode 27 Organizer's hang-fix recommendations and calibrated hang-rate Metric Goals.
+
+### End-User Capture
+
+How to get hang evidence from users' devices without developer tools -- triggering a sysdiagnose during the hang (its stackshot records per-thread backtraces of every process), sharing `.ips` reports from Settings > Analytics Data, and why crash SDKs stay silent on hangs (a hang raises no exception).
 
 ### Prevention Checklist
 
