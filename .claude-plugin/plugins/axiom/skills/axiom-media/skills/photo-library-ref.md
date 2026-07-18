@@ -353,14 +353,16 @@ PHPhotoLibrary.shared().presentLimitedLibraryPicker(from: viewController) { iden
 
 ### Performing Changes
 
+Change blocks run on **PhotoKit's own serial queue**. `performChanges` takes a `dispatch_block_t`, which imports as non-`Sendable`, so a bare block written inside a `@MainActor` type inherits that isolation and traps at runtime. Mark the block `@Sendable` whenever the enclosing context is isolated — the snippets below and elsewhere in this file omit it only because they sit at file scope. See axiom-concurrency (skills/isolation-inheritance-diag.md).
+
 ```swift
 // Async changes
-try await PHPhotoLibrary.shared().performChanges {
+try await PHPhotoLibrary.shared().performChanges { @Sendable in
     // Create, update, or delete assets
 }
 
 // With completion handler
-PHPhotoLibrary.shared().performChanges({
+PHPhotoLibrary.shared().performChanges({ @Sendable in
     // Changes
 }) { success, error in
     // Handle result
@@ -369,8 +371,11 @@ PHPhotoLibrary.shared().performChanges({
 
 ### Change Observer
 
+The callback arrives on an **arbitrary serial queue**. On a `@MainActor` type the method must be `nonisolated` — see axiom-concurrency (skills/isolation-inheritance-diag.md) for why `@preconcurrency` and isolated conformance build clean and crash.
+
 ```swift
-class PhotoObserver: NSObject, PHPhotoLibraryChangeObserver {
+@MainActor
+final class PhotoObserver: NSObject, PHPhotoLibraryChangeObserver {
 
     override init() {
         super.init()
@@ -381,13 +386,10 @@ class PhotoObserver: NSObject, PHPhotoLibraryChangeObserver {
         PHPhotoLibrary.shared().unregisterChangeObserver(self)
     }
 
-    func photoLibraryDidChange(_ changeInstance: PHChange) {
-        // Handle changes
-        guard let changes = changeInstance.changeDetails(for: fetchResult) else { return }
-
-        DispatchQueue.main.async {
-            // Update UI with new fetch result
-            let newResult = changes.fetchResultAfterChanges
+    nonisolated func photoLibraryDidChange(_ changeInstance: PHChange) {
+        Task { @MainActor in
+            guard let changes = changeInstance.changeDetails(for: self.fetchResult) else { return }
+            self.fetchResult = changes.fetchResultAfterChanges
         }
     }
 }
@@ -724,34 +726,30 @@ Represents changes to the photo library.
 ### Getting Change Details
 
 ```swift
-func photoLibraryDidChange(_ changeInstance: PHChange) {
-    guard let changes = changeInstance.changeDetails(for: fetchResult) else { return }
+// nonisolated — PhotoKit calls this on an arbitrary serial queue
+nonisolated func photoLibraryDidChange(_ changeInstance: PHChange) {
+    Task { @MainActor in
+        guard let changes = changeInstance.changeDetails(for: self.fetchResult) else { return }
 
-    // Check what changed
-    let hasIncrementalChanges = changes.hasIncrementalChanges
-    let insertedIndexes = changes.insertedIndexes
-    let removedIndexes = changes.removedIndexes
-    let changedIndexes = changes.changedIndexes
+        // Assign the new fetch result BEFORE applying deltas, or the data
+        // source and the batch update disagree
+        self.fetchResult = changes.fetchResultAfterChanges
 
-    // Get new fetch result
-    let newResult = changes.fetchResultAfterChanges
+        guard changes.hasIncrementalChanges else {
+            self.collectionView.reloadData()
+            return
+        }
 
-    // Update collection view
-    DispatchQueue.main.async {
-        if hasIncrementalChanges {
-            collectionView.performBatchUpdates {
-                if let removed = removedIndexes {
-                    collectionView.deleteItems(at: removed.map { IndexPath(item: $0, section: 0) })
-                }
-                if let inserted = insertedIndexes {
-                    collectionView.insertItems(at: inserted.map { IndexPath(item: $0, section: 0) })
-                }
-                if let changed = changedIndexes {
-                    collectionView.reloadItems(at: changed.map { IndexPath(item: $0, section: 0) })
-                }
+        self.collectionView.performBatchUpdates {
+            if let removed = changes.removedIndexes {
+                self.collectionView.deleteItems(at: removed.map { IndexPath(item: $0, section: 0) })
             }
-        } else {
-            collectionView.reloadData()
+            if let inserted = changes.insertedIndexes {
+                self.collectionView.insertItems(at: inserted.map { IndexPath(item: $0, section: 0) })
+            }
+            if let changed = changes.changedIndexes {
+                self.collectionView.reloadItems(at: changed.map { IndexPath(item: $0, section: 0) })
+            }
         }
     }
 }
@@ -768,9 +766,10 @@ import SwiftUI
 import Photos
 
 @MainActor
-class PhotoGalleryViewModel: ObservableObject {
-    @Published var assets: [PHAsset] = []
-    @Published var authorizationStatus: PHAuthorizationStatus = .notDetermined
+@Observable
+final class PhotoGalleryViewModel {
+    private(set) var assets: [PHAsset] = []
+    private(set) var authorizationStatus: PHAuthorizationStatus = .notDetermined
 
     func requestAccess() async {
         authorizationStatus = await PHPhotoLibrary.requestAuthorization(for: .readWrite)
@@ -795,7 +794,7 @@ class PhotoGalleryViewModel: ObservableObject {
 }
 
 struct PhotoGalleryView: View {
-    @StateObject private var viewModel = PhotoGalleryViewModel()
+    @State private var viewModel = PhotoGalleryViewModel()
 
     var body: some View {
         Group {
@@ -825,4 +824,4 @@ struct PhotoGalleryView: View {
 
 **Docs**: /photosui/phpickerviewcontroller, /photosui/photospicker, /photos/phphotolibrary, /photos/phasset, /photos/phimagemanager
 
-**Skills**: skills/photo-library.md, skills/camera-capture.md
+**Skills**: skills/photo-library.md, skills/camera-capture.md, axiom-concurrency/skills/isolation-inheritance-diag.md

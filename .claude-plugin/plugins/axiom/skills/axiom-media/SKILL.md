@@ -19,6 +19,7 @@ license: MIT
 | Camera freezes, black preview, rotation | See `skills/camera-capture-diag.md` |
 | Photo pickers, library access | See `skills/photo-library.md` |
 | PHPicker, PhotosPicker API reference | See `skills/photo-library-ref.md` |
+| PhotoKit + Swift 6 strict concurrency, `nonisolated` observer, `performChanges` isolation, `_dispatch_assert_queue_fail` | See axiom-concurrency (skills/isolation-inheritance-diag.md) |
 | Audio, AVFoundation, spatial audio | See `skills/avfoundation-ref.md` |
 | Video write/export/playback, sample-buffer engine, resumable export, Apple Log 2, iOS 27 deprecations (`OS27`) | See `skills/avfoundation-video-ref.md` |
 | Audio recognition, ShazamKit | See `skills/shazamkit.md` |
