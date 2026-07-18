@@ -94,9 +94,9 @@ This is a **diagnostic skill** -- it enforces systematic troubleshooting workflo
 
 ## Related
 
-- [camera-capture](/skills/integration/camera-capture) -- Camera implementation patterns and session setup
-- [camera-capture-ref](/reference/camera-capture-ref) -- Complete AVFoundation camera API reference
-- [photo-library](/skills/integration/photo-library) -- Photo picking and library access
+- [camera-capture](/skills/integration/camera-capture) – Camera implementation patterns and session setup
+- [camera-capture-ref](/reference/camera-capture-ref) – Complete AVFoundation camera API reference
+- [photo-library](/skills/integration/photo-library) – Photo picking and library access
 
 ## Resources
 

@@ -94,9 +94,9 @@ This page documents the `axiom-media` skill. It provides complete API documentat
 
 ## Related
 
-- [camera-capture](/skills/integration/camera-capture) -- Implementation patterns and session setup
-- [camera-capture-diag](/diagnostic/camera-capture-diag) -- Troubleshooting camera issues
-- [photo-library-ref](/reference/photo-library-ref) -- Photo library and picker API reference
+- [camera-capture](/skills/integration/camera-capture) – Implementation patterns and session setup
+- [camera-capture-diag](/diagnostic/camera-capture-diag) – Troubleshooting camera issues
+- [photo-library-ref](/reference/photo-library-ref) – Photo library and picker API reference
 
 ## Resources
 

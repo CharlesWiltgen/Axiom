@@ -30,17 +30,17 @@ Use this reference when:
 
 ## What's Covered
 
-- **Entity API** -- Creation, properties (isEnabled, isAnchored, scene), hierarchy methods, 10 Entity subclasses (ModelEntity, AnchorEntity, PerspectiveCamera, lights, TriggerVolume)
-- **Component catalog** -- 20+ built-in components including Transform, ModelComponent, CollisionComponent, PhysicsBodyComponent, AnchoringComponent, InputTargetComponent, AccessibilityComponent
-- **MeshResource generators** -- Box, sphere, plane, cylinder, cone, text
-- **System protocol** -- SceneUpdateContext, EntityQuery (has/and/not), 8 scene event types (Update, DidAddEntity, CollisionEvents)
-- **RealityView API** -- Initializers (basic, update, placeholder, attachments), RealityViewContent, gesture integration (tap, drag, rotate, magnify)
-- **Model3D API** -- Simple display, phase handling, URL loading
-- **Material system** -- SimpleMaterial, PhysicallyBasedMaterial (full PBR), UnlitMaterial, OcclusionMaterial, VideoMaterial, TextureResource loading
-- **Animation** -- Transform animation with timing functions, USD animation playback, AnimationPlaybackController
-- **Audio** -- AudioFileResource, SpatialAudioComponent, AmbientAudioComponent, ChannelAudioComponent, playback control
-- **RealityRenderer** -- Low-level Metal integration for rendering RealityKit content to Metal textures
-- **RealityKit 27 additions** -- Navigation mesh pathfinding, level of detail, soft shadows, projective textures, physical space lighting (visionOS/macOS), lightmaps, Gaussian splats (visionOS), custom reverb meshes, ARKit object tracking, cloth simulation (`ClothBodyComponent`, iOS/macOS/visionOS 27), ComputeGraph framework (programmatic node graphs)
+- **Entity API** – Creation, properties (isEnabled, isAnchored, scene), hierarchy methods, 10 Entity subclasses (ModelEntity, AnchorEntity, PerspectiveCamera, lights, TriggerVolume)
+- **Component catalog** – 20+ built-in components including Transform, ModelComponent, CollisionComponent, PhysicsBodyComponent, AnchoringComponent, InputTargetComponent, AccessibilityComponent
+- **MeshResource generators** – Box, sphere, plane, cylinder, cone, text
+- **System protocol** – SceneUpdateContext, EntityQuery (has/and/not), 8 scene event types (Update, DidAddEntity, CollisionEvents)
+- **RealityView API** – Initializers (basic, update, placeholder, attachments), RealityViewContent, gesture integration (tap, drag, rotate, magnify)
+- **Model3D API** – Simple display, phase handling, URL loading
+- **Material system** – SimpleMaterial, PhysicallyBasedMaterial (full PBR), UnlitMaterial, OcclusionMaterial, VideoMaterial, TextureResource loading
+- **Animation** – Transform animation with timing functions, USD animation playback, AnimationPlaybackController
+- **Audio** – AudioFileResource, SpatialAudioComponent, AmbientAudioComponent, ChannelAudioComponent, playback control
+- **RealityRenderer** – Low-level Metal integration for rendering RealityKit content to Metal textures
+- **RealityKit 27 additions** – Navigation mesh pathfinding, level of detail, soft shadows, projective textures, physical space lighting (visionOS/macOS), lightmaps, Gaussian splats (visionOS), custom reverb meshes, ARKit object tracking, cloth simulation (`ClothBodyComponent`, iOS/macOS/visionOS 27), ComputeGraph framework (programmatic node graphs)
 
 ## Documentation Scope
 
@@ -52,10 +52,10 @@ This page documents the `axiom-graphics` skill. For architecture patterns, ECS g
 
 ## Related
 
-- [RealityKit](/skills/games/realitykit) -- ECS architecture patterns and best practices
-- [RealityKit Diagnostics](/diagnostic/realitykit-diag) -- Troubleshooting invisible entities, physics, and rendering
-- [SceneKit API Reference](/reference/scenekit-ref) -- SceneKit equivalents for migration reference
-- [SpriteKit API Reference](/reference/spritekit-ref) -- 2D game framework (complements RealityKit's 3D)
+- [RealityKit](/skills/games/realitykit) – ECS architecture patterns and best practices
+- [RealityKit Diagnostics](/diagnostic/realitykit-diag) – Troubleshooting invisible entities, physics, and rendering
+- [SceneKit API Reference](/reference/scenekit-ref) – SceneKit equivalents for migration reference
+- [SpriteKit API Reference](/reference/spritekit-ref) – 2D game framework (complements RealityKit's 3D)
 
 ## Resources
 

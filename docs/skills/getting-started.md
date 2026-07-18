@@ -33,23 +33,23 @@ The skill asks 2-3 targeted questions about your project -- your current focus (
 
 A browsable reference of all Axiom skills organized by category:
 
-- **Debugging and Troubleshooting** -- Build failures, memory leaks, UI issues, performance profiling
-- **Concurrency** -- Swift 6 actor isolation, Sendable, data races
-- **UI and Design** -- Liquid Glass, SwiftUI layout, navigation, architecture
-- **Persistence** -- SwiftData, SQLiteData, GRDB, migrations
-- **Networking** -- Network.framework, connection diagnostics
-- **Apple Intelligence** -- Foundation Models, on-device AI
-- **Integrations** -- App Intents, widgets, StoreKit, AVFoundation
-- **Testing** -- UI testing, Recording UI Automation
+- **Debugging and Troubleshooting** – Build failures, memory leaks, UI issues, performance profiling
+- **Concurrency** – Swift 6 actor isolation, Sendable, data races
+- **UI and Design** – Liquid Glass, SwiftUI layout, navigation, architecture
+- **Persistence** – SwiftData, SQLiteData, GRDB, migrations
+- **Networking** – Network.framework, connection diagnostics
+- **Apple Intelligence** – Foundation Models, on-device AI
+- **Integrations** – App Intents, widgets, StoreKit, AVFoundation
+- **Testing** – UI testing, Recording UI Automation
 
 ### Quick Decision Trees
 
 Common starting points based on your situation:
 
-- **"My build is failing"** -- Start with xcode-debugging, then build-debugging for dependency issues
-- **"App is slow"** -- Start with performance-profiling, then swiftui-performance or memory-debugging
-- **"Memory leak"** -- Start with memory-debugging, add objc-block-retain-cycles for Objective-C
-- **"Code quality check"** -- Run audit commands (`/axiom:audit-accessibility`, `/axiom:audit-concurrency`, `/axiom:audit-memory`)
+- **"My build is failing"** – Start with xcode-debugging, then build-debugging for dependency issues
+- **"App is slow"** – Start with performance-profiling, then swiftui-performance or memory-debugging
+- **"Memory leak"** – Start with memory-debugging, add objc-block-retain-cycles for Objective-C
+- **"Code quality check"** – Run audit commands (`/axiom:audit-accessibility`, `/axiom:audit-concurrency`, `/axiom:audit-memory`)
 
 ### Audit Commands
 
@@ -57,6 +57,6 @@ Quick-win commands that scan your codebase automatically and report issues witho
 
 ## Related
 
-- [Skills index](/skills/) -- Full browsable list of all Axiom skills
-- [Agents](/agents/) -- Autonomous agents that scan code and report issues
-- [Commands](/commands/) -- Explicit commands for common workflows
+- [Skills index](/skills/) – Full browsable list of all Axiom skills
+- [Agents](/agents/) – Autonomous agents that scan code and report issues
+- [Commands](/commands/) – Explicit commands for common workflows

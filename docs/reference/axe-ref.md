@@ -69,7 +69,7 @@ This page documents the `axiom-xcode-mcp` reference skill -- the complete AXe CL
 
 ## Related
 
-- [UI Testing](/skills/ui-design/ui-testing) -- Xcode UI testing with Recording UI Automation
+- [UI Testing](/skills/ui-design/ui-testing) – Xcode UI testing with Recording UI Automation
 
 ## Resources
 

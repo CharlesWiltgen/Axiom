@@ -43,7 +43,7 @@ Use when you're experiencing:
 
 - **GPU Frame Capture** (Cmd+Opt+Shift+G) -- inspect buffers, textures, draw call sequence, shader variables
 - **Metal System Trace** (Instruments) -- GPU/CPU timeline analysis, synchronization stalls
-- **Shader Debugger** -- step through shader execution, inspect per-pixel/vertex values
+- **Shader Debugger** – step through shader execution, inspect per-pixel/vertex values
 
 ## Related
 

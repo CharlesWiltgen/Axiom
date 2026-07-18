@@ -26,19 +26,19 @@ Use this reference when:
 
 ## What's Covered
 
-- **Core architecture mapping** -- SCNScene/SCNNode/SCNView to Entity/RealityViewContent/RealityView, file format conversion (.scn to .usdz)
-- **Geometry and rendering mapping** -- SCNGeometry to MeshResource, SCNMaterial to PhysicallyBasedMaterial, shader modifiers to ShaderGraphMaterial/CustomMaterial
-- **Transform and hierarchy mapping** -- Position, rotation, scale, parent-child methods with API equivalents
-- **Lighting mapping** -- All 7 SCNLight types to RealityKit light components, with notes on missing equivalents (area, IES)
-- **Camera mapping** -- SCNCamera to PerspectiveCamera, field of view, clipping planes
-- **Physics mapping** -- SCNPhysicsBody to PhysicsBodyComponent, collision categories to CollisionGroup, contact delegate to event subscriptions
-- **Animation mapping** -- SCNAction to entity.move(), SCNTransaction (no direct equivalent), CAAnimation to entity.playAnimation()
-- **Scene graph API** -- SCNScene properties, SCNNode creation and configuration, hierarchy methods
-- **Materials API** -- All lighting models (PBR, Blinn, Phong, Lambert, constant, shadowOnly), material properties
-- **Physics API** -- Body properties, compound and concave shapes, all 4 joint types (hinge, ball socket, slider, cone twist)
-- **Animation API** -- Full SCNAction catalog, timing functions, SCNAnimationPlayer
-- **Constraints** -- All 7 constraint types (lookAt, billboard, distance, replicator, acceleration, slider, IK)
-- **Scene configuration** -- SCNView properties (antialiasing, frame rate, camera control, debug options)
+- **Core architecture mapping** – SCNScene/SCNNode/SCNView to Entity/RealityViewContent/RealityView, file format conversion (.scn to .usdz)
+- **Geometry and rendering mapping** – SCNGeometry to MeshResource, SCNMaterial to PhysicallyBasedMaterial, shader modifiers to ShaderGraphMaterial/CustomMaterial
+- **Transform and hierarchy mapping** – Position, rotation, scale, parent-child methods with API equivalents
+- **Lighting mapping** – All 7 SCNLight types to RealityKit light components, with notes on missing equivalents (area, IES)
+- **Camera mapping** – SCNCamera to PerspectiveCamera, field of view, clipping planes
+- **Physics mapping** – SCNPhysicsBody to PhysicsBodyComponent, collision categories to CollisionGroup, contact delegate to event subscriptions
+- **Animation mapping** – SCNAction to entity.move(), SCNTransaction (no direct equivalent), CAAnimation to entity.playAnimation()
+- **Scene graph API** – SCNScene properties, SCNNode creation and configuration, hierarchy methods
+- **Materials API** – All lighting models (PBR, Blinn, Phong, Lambert, constant, shadowOnly), material properties
+- **Physics API** – Body properties, compound and concave shapes, all 4 joint types (hinge, ball socket, slider, cone twist)
+- **Animation API** – Full SCNAction catalog, timing functions, SCNAnimationPlayer
+- **Constraints** – All 7 constraint types (lookAt, billboard, distance, replicator, acceleration, slider, IK)
+- **Scene configuration** – SCNView properties (antialiasing, frame rate, camera control, debug options)
 
 ## Documentation Scope
 
@@ -50,9 +50,9 @@ This page documents the `axiom-graphics` skill. For SceneKit development pattern
 
 ## Related
 
-- [SceneKit](/skills/games/scenekit) -- SceneKit patterns, deprecation context, and migration decision tree
-- [RealityKit](/skills/games/realitykit) -- ECS architecture for the modern replacement
-- [RealityKit API Reference](/reference/realitykit-ref) -- API details for migration targets
+- [SceneKit](/skills/games/scenekit) – SceneKit patterns, deprecation context, and migration decision tree
+- [RealityKit](/skills/games/realitykit) – ECS architecture for the modern replacement
+- [RealityKit API Reference](/reference/realitykit-ref) – API details for migration targets
 
 ## Resources
 

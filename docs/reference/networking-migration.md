@@ -29,12 +29,12 @@ Questions you can ask Claude that will draw from this reference:
 
 ## What's Covered
 
-- **BSD sockets to NWConnection** -- Mapping table for socket/connect/send/recv/bind/listen/accept to their NWConnection equivalents, with complete before/after code examples
-- **NWConnection to NetworkConnection** -- Completion handlers to async/await, stateUpdateHandler to async sequences, manual JSON to built-in Coder protocol
-- **URLSession StreamTask to NetworkConnection** -- When to migrate (need UDP, custom protocols) vs when to stay (HTTP, WebSocket, caching)
-- **API mapping tables** -- Side-by-side equivalences for each migration path
-- **Line count reductions** -- Quantified improvements (20 to 10 lines, 30 to 15 lines)
-- **Memory management changes** -- Why `[weak self]` is eliminated with async/await
+- **BSD sockets to NWConnection** – Mapping table for socket/connect/send/recv/bind/listen/accept to their NWConnection equivalents, with complete before/after code examples
+- **NWConnection to NetworkConnection** – Completion handlers to async/await, stateUpdateHandler to async sequences, manual JSON to built-in Coder protocol
+- **URLSession StreamTask to NetworkConnection** – When to migrate (need UDP, custom protocols) vs when to stay (HTTP, WebSocket, caching)
+- **API mapping tables** – Side-by-side equivalences for each migration path
+- **Line count reductions** – Quantified improvements (20 to 10 lines, 30 to 15 lines)
+- **Memory management changes** – Why `[weak self]` is eliminated with async/await
 
 ## Documentation Scope
 
