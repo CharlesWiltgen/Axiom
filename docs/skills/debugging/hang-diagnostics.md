@@ -5,7 +5,7 @@ description: Systematic diagnosis and resolution of app hangs, watchdog terminat
 
 # Hang Diagnostics
 
-Systematic diagnosis and resolution of app hangs -- when the main thread is blocked for more than 1 second, making the app unresponsive to user input.
+Systematic diagnosis and resolution of app hangs — when the main thread is blocked for more than 1 second, making the app unresponsive to user input.
 
 ## When to Use
 
@@ -18,13 +18,13 @@ Use this skill when:
 - App is killed by the watchdog during launch or transitions
 - A user can reproduce a freeze you can't, and you need their device to capture evidence
 
-**Not a hang?** If animations stutter but the app stays responsive, that's a hitch -- see [swiftui-performance](/skills/ui-design/swiftui-performance). If the app feels slow but responds to touches, that's lag -- see [performance-profiling](/skills/debugging/performance-profiling).
+**Not a hang?** If animations stutter but the app stays responsive, that's a hitch — see [swiftui-performance](/skills/ui-design/swiftui-performance). If the app feels slow but responds to touches, that's lag — see [performance-profiling](/skills/debugging/performance-profiling).
 
 ## Example Prompts
 
 - "My app freezes for a few seconds when loading data."
 - "Users are seeing 'app not responding' dialogs."
-- "Xcode Organizer shows hang reports -- how do I read them?"
+- "Xcode Organizer shows hang reports — how do I read them?"
 - "My app gets killed on launch with a watchdog termination."
 - "How do I find what's blocking my main thread?"
 - "What can end users run on iOS to capture per-thread stacks during a hang?"
@@ -65,7 +65,7 @@ How to use Xcode Organizer hang reports and MetricKit hang diagnostics (the type
 
 ### End-User Capture
 
-How to get hang evidence from users' devices without developer tools -- triggering a sysdiagnose during the hang (its stackshot records per-thread backtraces of every process), sharing `.ips` reports from Settings > Analytics Data, and why crash SDKs stay silent on hangs (a hang raises no exception).
+How to get hang evidence from users' devices without developer tools — triggering a sysdiagnose during the hang (its stackshot records per-thread backtraces of every process), sharing `.ips` reports from Settings > Analytics Data, and why crash SDKs stay silent on hangs (a hang raises no exception).
 
 ### Prevention Checklist
 
@@ -73,9 +73,9 @@ A pre-ship verification checklist covering file I/O, dispatch patterns, formatte
 
 ## Related
 
-- [performance-profiling](/skills/debugging/performance-profiling) -- Instruments workflows for CPU, memory, and general performance
-- [swift-concurrency](/skills/concurrency/swift-concurrency) -- Async/await patterns to replace blocking code
-- [energy](/skills/debugging/energy) -- Battery drain diagnosis (hangs and energy issues share root causes)
+- [performance-profiling](/skills/debugging/performance-profiling) – Instruments workflows for CPU, memory, and general performance
+- [swift-concurrency](/skills/concurrency/swift-concurrency) – Async/await patterns to replace blocking code
+- [energy](/skills/debugging/energy) – Battery drain diagnosis (hangs and energy issues share root causes)
 
 ## Resources
 
