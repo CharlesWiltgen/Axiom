@@ -14,6 +14,7 @@ Use this reference when:
 - Your workflow depends on the Xcode **MCP bridge** (`xcrun mcpbridge`) and breaks whenever Xcode isn't running, and you want an Xcode-independent path
 - You're deciding between `devicectl` and `simctl` for a given operation
 - You need to script Face ID / Touch ID, orientation, appearance, or simulated location
+- You want to screenshot or screen-record a simulator or a physical device from the command line
 - You're parsing `devicectl --json-output` in CI and need the stable keys
 - You want to know what the Xcode 27 Device Hub GUI offers and how it maps to the CLI
 
@@ -24,6 +25,7 @@ Use this reference when:
 - "What's the difference between devicectl and simctl?"
 - "What is Device Hub in Xcode 27, and do I need to open Xcode to use it?"
 - "How do I list physical devices and simulators together from the command line?"
+- "How do I record a video of a physical device from the command line?"
 - "Which device operations still require the Xcode MCP server?"
 
 ## What's Covered
@@ -39,6 +41,11 @@ Use this reference when:
 - devicectl-vs-simctl division of labor (interaction vs lifecycle)
 - Verified simulator-capable subcommand matrix
 - Face ID / Touch ID as a CI primitive; the `CoreDeviceError 1001` "device-only" signal
+
+### Screen capture
+- `devicectl device capture screenshot` / `screen-record` – unified sim + device path (Xcode 26.6+)
+- Codec, mask-policy, and `--duration` auto-stop options, and the `.png` / `.mp4` extension rules
+- Simulator-only fallbacks (`simctl io`, `axe`) and when to reach for them
 
 ### Device Hub (Xcode 27 GUI)
 - Compact vs full window, the interactive canvas

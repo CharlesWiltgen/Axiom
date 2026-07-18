@@ -18,6 +18,7 @@ This suite covers Axiom itself — how to use it, what's available, and the tool
 | "How do I drive/validate the sim UI?" / "What is xcui?" / "How do I script accessibility checks?" | [skills/xcui-ref.md](skills/xcui-ref.md) |
 | "How do I analyze a trace / CPU or network profile?" / "What is xcprof?" / "Why does the profiler report no findings?" | [skills/xcprof-ref.md](skills/xcprof-ref.md) |
 | "How do I control a simulator/device without Xcode running?" / "What is Device Hub?" / "devicectl vs simctl?" | [skills/device-control-ref.md](skills/device-control-ref.md) |
+| "How do I capture a screenshot or record video of a sim or device from the CLI?" | [skills/device-control-ref.md](skills/device-control-ref.md) (Screen capture) |
 
 ## Using Axiom Skills
 
@@ -116,7 +117,7 @@ But when in doubt for iOS/Swift work: **check first, decide later.**
 
 On Xcode 27, **Device Hub** — a standalone app that auto-launches on build-and-run — replaces the `Simulator.app` GUI and manages simulators *and* physical devices in one place (Xcode 26 and earlier keep Simulator.app). Every operation has an Xcode-independent CLI counterpart, so the Axiom tools and scripts are unaffected.
 
-For the full tool map (Device Hub / devicectl / simctl / xcui vs the Xcode-bound mcpbridge), the verified subcommand matrix, and the Device Hub GUI reference, see `skills/device-control-ref.md`.
+For the full tool map (Device Hub / devicectl / simctl / xcui vs the Xcode-bound mcpbridge), the verified subcommand matrix, the unified `devicectl device capture` screenshot/screen-record path (works on sim and device, Xcode 26.6+), and the Device Hub GUI reference, see `skills/device-control-ref.md`.
 
 ## Resources
 

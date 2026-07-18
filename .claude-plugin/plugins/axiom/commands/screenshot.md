@@ -47,6 +47,21 @@ Then ask: "Is the text still clipped?"
 ```
 Claude will capture and describe the current UI state.
 
+## Physical devices & scriptable recording
+
+This command shoots a **simulator** screenshot via `simctl`. To capture a **physical
+device**, or to record video with a clean auto-stop (no Ctrl+C), use the unified
+`devicectl device capture` path — one `-d <udid>` selector works for both sim and device
+(Xcode 26.6+):
+
+```bash
+xcrun devicectl device capture screenshot   -d <udid> --destination shot.png    # .png required
+xcrun devicectl device capture screen-record -d <udid> --destination clip.mp4 --duration 5
+```
+
+See the `axiom-tools` device-control reference (Screen capture) for codecs, mask policy,
+and the simctl/axe fallbacks.
+
 ## For More Control
 
 For advanced simulator testing (location, push notifications, video recording, etc.), use:

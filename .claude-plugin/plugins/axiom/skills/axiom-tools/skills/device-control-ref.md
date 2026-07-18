@@ -9,7 +9,7 @@ dev/CI loop needs no running Xcode and no MCP bridge.
 
 | Tool | Owns | Needs Xcode running? |
 |------|------|----------------------|
-| `devicectl` (CLI) | configure + interact with a booted sim OR physical device through one `-d <udid>` selector; install/launch/inspect; stable `--json-output` | No |
+| `devicectl` (CLI) | configure + interact with a booted sim OR physical device through one `-d <udid>` selector; install/launch/inspect; capture screenshots + screen recordings; stable `--json-output` | No |
 | `simctl` (CLI) | simulator lifecycle (create/boot/shutdown/erase) + sim-only state: push, privacy permissions, media, `status_bar`, `openurl`, `ui appearance` | No |
 | `xcui` (Axiom) | drive in-app UI + accessibility tree (tap/assert, VoiceOver order); toggle a11y settings | No |
 | `xclog` (Axiom) | capture simulator/device console | No |
@@ -74,6 +74,7 @@ CI order is unchanged at the front: simctl or xcodebuild boots the sim → devic
 | Subcommand | On simulator | Use |
 |------------|--------------|-----|
 | `device info displays` | works (verified) | bounds, pointScale, nativeSize, `framebufferMaskIdentifier` (exact JSON keys) |
+| `device capture screenshot` / `screen-record` | works (verified) | PNG / H.264 `.mp4` capture, sim or device — see Screen capture below |
 | `device orientation get` (also `set`, `rotate`) | works (`get` verified) | orientation without entering the app |
 | `device settings biometrics [--enable\|--disable]` | works (verified) | enroll / unenroll Face ID / Touch ID |
 | `device simulate biometrics --success\|--failure` | works (verified) | drive a match / no-match |
@@ -104,6 +105,44 @@ ERROR: The capability "Get Lock State" is not supported by this device.
 
 `info lockState` is confirmed device-only; `info files`, `copy`, and `profile *` are reported
 device-only on simulators. In CI, treat `CoreDeviceError 1001` as "skip on simulator", not a failure.
+
+## Screen capture — screenshot & video
+
+`devicectl device capture` is the **unified** capture path: one `-d <udid>` selector across
+simulators and physical devices, the same stable `--json-output`, and — for video — a
+`--duration` auto-stop that makes it the only script/CI-friendly recorder of the options here.
+Present and verified on **both Xcode 26.6 and 27.0** (not new in 27 — another instance of the
+"materially identical across 26 and 27" CLI).
+
+```bash
+# Screenshot — destination MUST end in .png
+xcrun devicectl device capture screenshot -d <udid> --destination shot.png
+
+# Screen recording — destination MUST end in .mp4; --duration auto-stops (else Ctrl+C)
+xcrun devicectl device capture screen-record -d <udid> --destination clip.mp4 --duration 5
+```
+
+| Flag | screenshot | screen-record | Notes |
+|------|------------|---------------|-------|
+| `--destination` | `.png` only | `.mp4` only | wrong extension is a hard error, not a coercion |
+| `--display-unique-id` | yes | yes | pick from `device info displays`; omit = primary display |
+| `--codec` | — | `h264` (default), `hevc` | |
+| `--mask-policy` | — | `ignored` (default), `premultipliedAlpha`, `black` | bezel mask for non-rectangular displays |
+| `--duration <s>` | — | auto-stop after N seconds | omit = record until SIGINT |
+
+Verified on a booted iOS 26.5 simulator (screenshot → 1206×2622 PNG; screen-record → h264
+`.mp4`) with both the 26.6 and 27.0 toolchains. The physical-device path uses the same command
+and `-d` selector by design; it was not re-verified here against wired hardware.
+
+### Fallbacks (simulator-only)
+
+Reach for these only when devicectl capture doesn't fit — none reach a physical device:
+
+| Tool | Use | Watch out |
+|------|-----|-----------|
+| `simctl io <udid> screenshot [--type png] <file>` | sim PNG; `-` writes to stdout | sim only |
+| `simctl io <udid> recordVideo [--codec h264\|hevc] [--mask ignored\|alpha\|black] <file>` | sim video to a `.mov` | default codec is `hevc` (devicectl defaults `h264`); stop with SIGINT; sim only |
+| `axe record-video --output f.mp4` / `axe stream-video` | sim video / live preview stream (mjpeg, jpeg, ffmpeg, bgra) | sim only; `record-video` stops on Ctrl+C — see `axiom-xcode-mcp (skills/axe-ref.md)` |
 
 ## Device Hub (OS27)
 
