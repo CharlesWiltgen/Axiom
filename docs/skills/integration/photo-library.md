@@ -100,9 +100,9 @@ This page documents the `axiom-media` skill -- privacy-forward photo access patt
 
 ## Related
 
-- [photo-library-ref](/reference/photo-library-ref) -- Complete PhotoKit and picker API reference
-- [camera-capture](/skills/integration/camera-capture) -- Custom camera UI with AVCaptureSession
-- [camera-capture-diag](/diagnostic/camera-capture-diag) -- Troubleshooting camera issues
+- [photo-library-ref](/reference/photo-library-ref) – Complete PhotoKit and picker API reference
+- [camera-capture](/skills/integration/camera-capture) – Custom camera UI with AVCaptureSession
+- [camera-capture-diag](/diagnostic/camera-capture-diag) – Troubleshooting camera issues
 
 ## Resources
 

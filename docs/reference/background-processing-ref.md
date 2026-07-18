@@ -34,17 +34,17 @@ Questions you can ask Claude that will draw from this reference:
 
 ## What's Covered
 
-- **BGTaskScheduler registration** -- Info.plist configuration, handler registration timing, identifier matching
-- **BGAppRefreshTask** -- ~30s runtime, scheduling with earliestBeginDate, continuous refresh pattern
-- **BGProcessingTask** -- Multi-minute runtime, requiresExternalPower and requiresNetworkConnectivity constraints, progress checkpointing
-- **BGContinuedProcessingTask (iOS 26+, watchOS 27)** -- User-initiated work with system progress UI, dynamic registration, wildcard identifiers, GPU access
-- **Async submission (OS 27)** -- `submitTaskRequest(_:)` replacing the deprecated synchronous `submit(_:)`
-- **beginBackgroundTask** -- ~30s finalization window, proper endBackgroundTask cleanup
-- **Background URLSession** -- Discretionary downloads, sessionSendsLaunchEvents, delegate lifecycle
-- **Silent push notifications** -- Payload format, APNS priority, rate limiting behavior
-- **SwiftUI integration** -- `.backgroundTask(.appRefresh)` and `.backgroundTask(.urlSession)` modifiers
-- **Testing** -- LLDB simulate launch/expiration commands, console log filters, getPendingTaskRequests
-- **System constraints** -- 7 scheduling factors, thermal state, Low Power Mode detection
+- **BGTaskScheduler registration** – Info.plist configuration, handler registration timing, identifier matching
+- **BGAppRefreshTask** – ~30s runtime, scheduling with earliestBeginDate, continuous refresh pattern
+- **BGProcessingTask** – Multi-minute runtime, requiresExternalPower and requiresNetworkConnectivity constraints, progress checkpointing
+- **BGContinuedProcessingTask (iOS 26+, watchOS 27)** – User-initiated work with system progress UI, dynamic registration, wildcard identifiers, GPU access
+- **Async submission (OS 27)** – `submitTaskRequest(_:)` replacing the deprecated synchronous `submit(_:)`
+- **beginBackgroundTask** – ~30s finalization window, proper endBackgroundTask cleanup
+- **Background URLSession** – Discretionary downloads, sessionSendsLaunchEvents, delegate lifecycle
+- **Silent push notifications** – Payload format, APNS priority, rate limiting behavior
+- **SwiftUI integration** – `.backgroundTask(.appRefresh)` and `.backgroundTask(.urlSession)` modifiers
+- **Testing** – LLDB simulate launch/expiration commands, console log filters, getPendingTaskRequests
+- **System constraints** – 7 scheduling factors, thermal state, Low Power Mode detection
 
 ## Documentation Scope
 

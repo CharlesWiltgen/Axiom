@@ -32,17 +32,17 @@ Use this reference when:
 
 ## What's Covered
 
-- **GLSL to MSL type mappings** -- vec4 to float4, sampler2D to texture2d + sampler, matrix types, precision qualifiers
-- **GLSL to MSL built-in variable mappings** -- gl_Position, gl_FragCoord, gl_VertexID and their MSL attribute equivalents
-- **GLSL to MSL function mappings** -- texture(), mod(), inversesqrt(), atan() and their MSL counterparts
-- **Complete vertex/fragment shader conversion examples** -- Side-by-side GLSL and MSL with struct definitions, uniform buffers, and texture sampling
-- **HLSL to MSL type and semantic mappings** -- SV_Position, SV_Target, dispatch thread IDs
-- **Metal Shader Converter** -- Apple's tool for converting DXIL bytecode to Metal libraries, with workflow and options
-- **OpenGL API to Metal API tables** -- View/context setup, resource creation, state management, draw commands, primitive types
-- **Complete setup examples** -- MTKView (recommended), CAMetalLayer (custom control), compute shader pipeline
-- **Buffer storage modes** -- Shared, private, managed (macOS) with use case guidance
-- **Buffer alignment** -- Critical float3/SIMD3 alignment rules for CPU-GPU shared structs
-- **Metal 4 ML and neural rendering** -- MetalFX denoising best practices, quantized Metal tensors and MX scale formats (27 cycle), TensorOps in-shader networks, MSL 4.1
+- **GLSL to MSL type mappings** – vec4 to float4, sampler2D to texture2d + sampler, matrix types, precision qualifiers
+- **GLSL to MSL built-in variable mappings** – gl_Position, gl_FragCoord, gl_VertexID and their MSL attribute equivalents
+- **GLSL to MSL function mappings** – texture(), mod(), inversesqrt(), atan() and their MSL counterparts
+- **Complete vertex/fragment shader conversion examples** – Side-by-side GLSL and MSL with struct definitions, uniform buffers, and texture sampling
+- **HLSL to MSL type and semantic mappings** – SV_Position, SV_Target, dispatch thread IDs
+- **Metal Shader Converter** – Apple's tool for converting DXIL bytecode to Metal libraries, with workflow and options
+- **OpenGL API to Metal API tables** – View/context setup, resource creation, state management, draw commands, primitive types
+- **Complete setup examples** – MTKView (recommended), CAMetalLayer (custom control), compute shader pipeline
+- **Buffer storage modes** – Shared, private, managed (macOS) with use case guidance
+- **Buffer alignment** – Critical float3/SIMD3 alignment rules for CPU-GPU shared structs
+- **Metal 4 ML and neural rendering** – MetalFX denoising best practices, quantized Metal tensors and MX scale formats (27 cycle), TensorOps in-shader networks, MSL 4.1
 
 ## Documentation Scope
 
@@ -53,9 +53,9 @@ This page documents the `axiom-graphics` skill. For migration strategy and plann
 
 ## Related
 
-- [Metal Migration](/skills/games/metal-migration) -- Migration strategy, phased approach, and anti-patterns
-- [Metal Migration Diagnostics](/diagnostic/metal-migration-diag) -- Troubleshooting black screen, shader errors, GPU crashes
-- [RealityKit API Reference](/reference/realitykit-ref) -- RealityKit uses Metal under the hood
+- [Metal Migration](/skills/games/metal-migration) – Migration strategy, phased approach, and anti-patterns
+- [Metal Migration Diagnostics](/diagnostic/metal-migration-diag) – Troubleshooting black screen, shader errors, GPU crashes
+- [RealityKit API Reference](/reference/realitykit-ref) – RealityKit uses Metal under the hood
 
 ## Resources
 

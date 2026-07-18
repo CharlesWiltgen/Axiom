@@ -61,8 +61,8 @@ This page documents the `axiom-performance` reference skill -- the complete Metr
 
 ## Related
 
-- [app-store-connect-ref](/reference/app-store-connect-ref) -- Web dashboard crash and metrics analysis
-- [xctrace-ref](/reference/xctrace-ref) -- CLI Instruments profiling for development
+- [app-store-connect-ref](/reference/app-store-connect-ref) – Web dashboard crash and metrics analysis
+- [xctrace-ref](/reference/xctrace-ref) – CLI Instruments profiling for development
 
 ## Resources
 

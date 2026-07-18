@@ -48,9 +48,9 @@ This page documents the `axiom-media` reference skill -- CarPlay-specific patter
 
 ## Related
 
-- [now-playing](/skills/integration/now-playing) -- Core Now Playing patterns (the foundation CarPlay builds on)
-- [now-playing-musickit](/reference/now-playing-musickit) -- MusicKit automatic Now Playing for Apple Music content
-- [avfoundation-ref](/reference/avfoundation-ref) -- AVAudioSession configuration for background audio
+- [now-playing](/skills/integration/now-playing) – Core Now Playing patterns (the foundation CarPlay builds on)
+- [now-playing-musickit](/reference/now-playing-musickit) – MusicKit automatic Now Playing for Apple Music content
+- [avfoundation-ref](/reference/avfoundation-ref) – AVAudioSession configuration for background audio
 
 ## Resources
 

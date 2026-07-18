@@ -50,8 +50,8 @@ This page documents the `axiom-shipping` reference skill -- the complete guide C
 
 ## Related
 
-- [metrickit-ref](/reference/metrickit-ref) -- Programmatic field metrics collection
-- [xctrace-ref](/reference/xctrace-ref) -- CLI-based Instruments profiling
+- [metrickit-ref](/reference/metrickit-ref) – Programmatic field metrics collection
+- [xctrace-ref](/reference/xctrace-ref) – CLI-based Instruments profiling
 
 ## Resources
 

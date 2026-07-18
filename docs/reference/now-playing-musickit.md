@@ -47,9 +47,9 @@ This page documents the `axiom-media` reference skill -- MusicKit-specific Now P
 
 ## Related
 
-- [now-playing](/skills/integration/now-playing) -- Core Now Playing patterns (manual MPNowPlayingInfoCenter setup)
-- [now-playing-carplay](/reference/now-playing-carplay) -- CarPlay Now Playing with CPNowPlayingTemplate customization
-- [avfoundation-ref](/reference/avfoundation-ref) -- AVAudioSession and AVPlayer for non-MusicKit audio content
+- [now-playing](/skills/integration/now-playing) – Core Now Playing patterns (manual MPNowPlayingInfoCenter setup)
+- [now-playing-carplay](/reference/now-playing-carplay) – CarPlay Now Playing with CPNowPlayingTemplate customization
+- [avfoundation-ref](/reference/avfoundation-ref) – AVAudioSession and AVPlayer for non-MusicKit audio content
 
 ## Resources
 

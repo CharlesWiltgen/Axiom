@@ -15,12 +15,12 @@ Axiom provides comprehensive Apple platform development workflows:
 #### Total: <!--ax:skills-->264<!--/ax--> skills + <!--ax:commands-->15<!--/ax--> commands + <!--ax:agents-->41<!--/ax--> agents
 
 ### 🤖 Apple Intelligence
-- **Foundation Models** -- Implement on-device AI with structured output and tool calling
-- **Foundation Models Diagnostics** -- Fix context exceeded, guardrail violations, and availability issues
-- **Foundation Models Reference** -- Complete API guide with all 26 WWDC 2025 code examples
-- **App Intents Reference** -- Integrate with Siri, Apple Intelligence, Shortcuts, and Spotlight
-- **SwiftUI 26 Reference** -- iOS 26 SwiftUI features including Liquid Glass and performance improvements
-- **Apple Documentation Access** -- 20 official Apple guides + 32 Swift compiler diagnostics from Xcode
+- **Foundation Models** – Implement on-device AI with structured output and tool calling
+- **Foundation Models Diagnostics** – Fix context exceeded, guardrail violations, and availability issues
+- **Foundation Models Reference** – Complete API guide with all 26 WWDC 2025 code examples
+- **App Intents Reference** – Integrate with Siri, Apple Intelligence, Shortcuts, and Spotlight
+- **SwiftUI 26 Reference** – iOS 26 SwiftUI features including Liquid Glass and performance improvements
+- **Apple Documentation Access** – 20 official Apple guides + 32 Swift compiler diagnostics from Xcode
 
 ### 🎨 UI & Design Skills
 - **Human Interface Guidelines** – Quick design decisions and checklists for HIG compliance

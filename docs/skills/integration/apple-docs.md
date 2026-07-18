@@ -44,8 +44,8 @@ Official explanations with code examples for concurrency errors (actor isolation
 ## How It Works
 
 Apple bundles for-LLM markdown documentation inside Xcode at two locations:
-- **AdditionalDocumentation** -- Framework guides with implementation patterns
-- **Swift diagnostics** -- Compiler error/warning explanations with before/after code
+- **AdditionalDocumentation** – Framework guides with implementation patterns
+- **Swift diagnostics** – Compiler error/warning explanations with before/after code
 
 Axiom's MCP server reads these files at runtime from the local Xcode installation. They stay current when Xcode updates.
 
@@ -66,7 +66,7 @@ This page documents the `axiom-apple-docs` router skill. The router maps user qu
 
 ## Related
 
-- [apple-docs-research](/skills/integration/apple-docs-research) -- Research Apple frameworks via WWDC transcripts and sosumi.ai
-- [foundation-models](/skills/integration/foundation-models) -- Axiom's opinionated Foundation Models guidance
-- [swift-concurrency](/skills/concurrency/swift-concurrency) -- Axiom's Swift 6 concurrency patterns
-- [liquid-glass](/skills/ui-design/liquid-glass) -- Axiom's Liquid Glass implementation guidance
+- [apple-docs-research](/skills/integration/apple-docs-research) – Research Apple frameworks via WWDC transcripts and sosumi.ai
+- [foundation-models](/skills/integration/foundation-models) – Axiom's opinionated Foundation Models guidance
+- [swift-concurrency](/skills/concurrency/swift-concurrency) – Axiom's Swift 6 concurrency patterns
+- [liquid-glass](/skills/ui-design/liquid-glass) – Axiom's Liquid Glass implementation guidance

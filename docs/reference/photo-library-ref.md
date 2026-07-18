@@ -87,9 +87,9 @@ This page documents the `axiom-media` skill. It provides complete API documentat
 
 ## Related
 
-- [photo-library](/skills/integration/photo-library) -- Implementation patterns for photo picking and library access
-- [camera-capture-ref](/reference/camera-capture-ref) -- AVFoundation camera API reference
-- [camera-capture](/skills/integration/camera-capture) -- Custom camera UI patterns
+- [photo-library](/skills/integration/photo-library) – Implementation patterns for photo picking and library access
+- [camera-capture-ref](/reference/camera-capture-ref) – AVFoundation camera API reference
+- [camera-capture](/skills/integration/camera-capture) – Custom camera UI patterns
 
 ## Resources
 

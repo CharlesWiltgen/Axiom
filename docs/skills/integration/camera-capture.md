@@ -110,9 +110,9 @@ This page documents the `axiom-media` skill -- AVFoundation camera patterns Clau
 
 ## Related
 
-- [camera-capture-diag](/diagnostic/camera-capture-diag) -- Troubleshooting camera issues (black preview, rotation, slow capture)
-- [camera-capture-ref](/reference/camera-capture-ref) -- Complete AVFoundation camera API reference
-- [photo-library](/skills/integration/photo-library) -- Photo picking and library access (use instead if you just need photo selection)
+- [camera-capture-diag](/diagnostic/camera-capture-diag) – Troubleshooting camera issues (black preview, rotation, slow capture)
+- [camera-capture-ref](/reference/camera-capture-ref) – Complete AVFoundation camera API reference
+- [photo-library](/skills/integration/photo-library) – Photo picking and library access (use instead if you just need photo selection)
 
 ## Resources
 

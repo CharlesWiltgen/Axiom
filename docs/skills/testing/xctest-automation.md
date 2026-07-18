@@ -28,11 +28,11 @@ Use this skill when:
 
 ### Three Pillars of Reliable UI Tests
 
-1. **Stable element identification** -- Always use `accessibilityIdentifier` instead of localized labels. The skill provides SwiftUI and UIKit patterns.
+1. **Stable element identification** – Always use `accessibilityIdentifier` instead of localized labels. The skill provides SwiftUI and UIKit patterns.
 
-2. **Condition-based waiting** -- Never use `sleep()`. The skill provides reusable wait functions for element appearance, disappearance, and hittability using `XCTNSPredicateExpectation`.
+2. **Condition-based waiting** – Never use `sleep()`. The skill provides reusable wait functions for element appearance, disappearance, and hittability using `XCTNSPredicateExpectation`.
 
-3. **Clean test isolation** -- No shared state between tests. Each test creates its own preconditions, with launch arguments for resetting state.
+3. **Clean test isolation** – No shared state between tests. Each test creates its own preconditions, with launch arguments for resetting state.
 
 ### Common Interactions
 
@@ -56,8 +56,8 @@ Four common mistakes with corrections:
 
 ## Related
 
-- [ui-recording](/skills/testing/ui-recording) -- Record UI tests in Xcode 26 instead of writing them from scratch
-- [swift-testing](/skills/testing/swift-testing) -- Swift Testing for unit tests (keep XCUITest for UI tests)
+- [ui-recording](/skills/testing/ui-recording) – Record UI tests in Xcode 26 instead of writing them from scratch
+- [swift-testing](/skills/testing/swift-testing) – Swift Testing for unit tests (keep XCUITest for UI tests)
 
 ## Resources
 

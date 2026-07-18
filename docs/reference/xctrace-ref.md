@@ -72,10 +72,10 @@ This page documents the `axiom-performance` reference skill -- the complete xctr
 
 ## Related
 
-- [xcprof](/reference/xcprof-ref) -- Structured Axiom wrapper over this CLI: gated capture + token-lean analysis
-- [performance-profiling](/skills/debugging/performance-profiling) -- Instruments decision trees and profiling workflows
-- [metrickit-ref](/reference/metrickit-ref) -- Field performance metrics via MetricKit
-- [app-store-connect-ref](/reference/app-store-connect-ref) -- Production crash and metrics dashboards
+- [xcprof](/reference/xcprof-ref) – Structured Axiom wrapper over this CLI: gated capture + token-lean analysis
+- [performance-profiling](/skills/debugging/performance-profiling) – Instruments decision trees and profiling workflows
+- [metrickit-ref](/reference/metrickit-ref) – Field performance metrics via MetricKit
+- [app-store-connect-ref](/reference/app-store-connect-ref) – Production crash and metrics dashboards
 
 ## Resources
 

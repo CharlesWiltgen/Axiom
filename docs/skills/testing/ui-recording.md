@@ -28,11 +28,11 @@ Use this skill when:
 
 ### Three-Phase Workflow
 
-1. **Record** -- Interact with your app in the Simulator while Xcode generates Swift test code for taps, text input, swipes, gestures, and hardware button presses.
+1. **Record** – Interact with your app in the Simulator while Xcode generates Swift test code for taps, text input, swipes, gestures, and hardware button presses.
 
-2. **Replay** -- Run the same tests across devices, languages, and configurations using test plans. Supports light/dark mode, multiple locales, and timeout enforcement.
+2. **Replay** – Run the same tests across devices, languages, and configurations using test plans. Supports light/dark mode, multiple locales, and timeout enforcement.
 
-3. **Review** -- Watch video recordings of each test in the test report, see screenshots at failure points, and analyze the action timeline.
+3. **Review** – Watch video recordings of each test in the test report, see screenshots at failure points, and analyze the action timeline.
 
 ### Enhancing Recorded Code
 
@@ -53,8 +53,8 @@ Ready-to-use patterns for login flows, navigation flows, and form validation tha
 
 ## Related
 
-- [xctest-automation](/skills/testing/xctest-automation) -- Comprehensive XCUITest patterns for element queries, waiting strategies, and CI/CD integration
-- [swift-testing](/skills/testing/swift-testing) -- Swift Testing framework for unit tests (use XCUITest for UI tests)
+- [xctest-automation](/skills/testing/xctest-automation) – Comprehensive XCUITest patterns for element queries, waiting strategies, and CI/CD integration
+- [swift-testing](/skills/testing/swift-testing) – Swift Testing framework for unit tests (use XCUITest for UI tests)
 
 ## Resources
 
