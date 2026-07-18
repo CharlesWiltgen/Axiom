@@ -20,6 +20,8 @@ Use when you're experiencing:
 - Combine `.map` / `.filter` / `.sink` operators crashing when the publisher emits off-main
 - `NotificationCenter.default.publisher(...).sink` crashes when notifications are posted from background threads
 - Delegate methods (`CLLocationManagerDelegate`, `NSDocument`, `AVAudioPlayerDelegate`, `WKNavigationDelegate`) on `@MainActor` classes crashing on framework callback
+- PhotoKit `PHPhotoLibrary.performChanges` blocks crashing when called from a `@MainActor` type
+- `PHPhotoLibraryChangeObserver` conformance errors where the compiler's `@preconcurrency` fix-it produces a clean build that still crashes
 - `MainActor.assumeIsolated` crashes when the caller turns out not to be on main
 - State staleness or precondition failures after `await` inside actors (reentrancy)
 
@@ -31,6 +33,9 @@ Use when you're experiencing:
 - "My Combine pipeline crashes when the publisher emits on a background thread"
 - "Should I use `@Sendable in` or `.receive(on:)` to fix this isolation crash?"
 - "`MainActor.assumeIsolated` is crashing — but my class is `@MainActor`, what's wrong?"
+- "My PhotoKit `performChanges` block crashes but the build has zero warnings"
+- "Xcode offers three fix-its for my `PHPhotoLibraryChangeObserver` error — which one is correct?"
+- "Is `@preconcurrency` on a conformance a real fix or does it just hide the crash?"
 
 ## Diagnostic Workflow
 
@@ -110,7 +115,9 @@ nonisolated func locationManager(_ manager: CLLocationManager, didUpdateLocation
 }
 ```
 
-Same pattern for `NSDocument.autosavesInPlace`, `AVAudioPlayerDelegate`, `WKNavigationDelegate`, and any SDK delegate that does not document main-thread delivery.
+Same pattern for `NSDocument.autosavesInPlace`, `AVAudioPlayerDelegate`, `WKNavigationDelegate`, `PHPhotoLibraryChangeObserver`, and any SDK delegate that does not document main-thread delivery.
+
+For `@objc` protocols like `PHPhotoLibraryChangeObserver`, the compiler cannot see the SDK's call site, so its own fix-it menu includes two options (`@preconcurrency` and isolated conformance) that build clean and still trap on device. Only `nonisolated` on the method is correct.
 
 ### Pattern 3 — `MainActor.assumeIsolated` Misuse
 
@@ -130,6 +137,8 @@ After every `await` inside an actor method, other tasks can mutate the actor's s
 | Combine `.map` crashes before `.receive(on:)` | Move `.receive(on: .main)` before `.map`, OR `@Sendable` on `.map` | 1 min |
 | `NotificationCenter` `.sink` crashes when posted off-main | Add `.receive(on: DispatchQueue.main)` before `.sink` | 1 min |
 | Delegate method on `@MainActor` class crashes | `nonisolated` method + `Task { @MainActor in }` | 3 min |
+| PhotoKit `performChanges { ... }` crashes from `@MainActor` | `performChanges { @Sendable in ... }`, mutate state after the `await` | 2 min |
+| `PHPhotoLibraryChangeObserver` conformance error | Take the `nonisolated` fix-it, never `@preconcurrency` | 3 min |
 | `assumeIsolated` crashes | Replace with `await MainActor.run { }` | 2 min |
 | Stale state after `await` in actor | Re-check after suspension | 5 min |
 
