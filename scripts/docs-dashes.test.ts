@@ -36,6 +36,11 @@ describe("isDashViolation — wrong separators (must flag)", () => {
     ["* **Star bullet** - description", "asterisk bullet"],
     ["1. **Numbered** - description", "numbered list item"],
     ["  - **Nested** - description", "indented / nested item"],
+    // A RUN of wrong separators must also flag — a single-char match let ` -- ` through
+    // (past the very check hardened for the single hyphen). See Axiom-b6p.
+    ["- **Double hyphen** -- description", "ASCII double hyphen run"],
+    ["- [energy](/skills/debugging/energy) -- Battery drain", "double hyphen, link head (the b6p case)"],
+    ["- `code` --- description", "triple hyphen run, code head"],
   ];
 
   for (const [line, label] of wrong) {

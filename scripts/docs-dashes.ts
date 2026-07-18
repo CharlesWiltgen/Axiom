@@ -42,7 +42,10 @@ const WRONG_SEP = "[\\-\\u2010\\u2011\\u2012\\u2014\\u2015\\u2212]";
  */
 export const dashSepPattern = new RegExp(
   "^\\s*(?:[-*]|\\d+\\.)\\s+(?:\\*\\*[^*]+\\*\\*|\\[[^\\]]+\\]\\([^)]+\\)|`[^`]+`)\\s+" +
-    WRONG_SEP + "\\s",
+    // `+` matches a RUN of wrong separators, so ` -- ` / ` --- ` are caught, not just a
+    // single wrong char — the single-char form let ` -- ` through the very check hardened
+    // for the single hyphen. The trailing `\s` still excludes `-5` / `-v`. (Axiom-b6p)
+    WRONG_SEP + "+\\s",
 );
 
 /** True when a single line is a list-led inline-heading separator using the wrong dash. */
