@@ -1,6 +1,6 @@
 {
   "name": "axiom-mcp",
-  "version": "27.0.0-beta.23",
+  "version": "27.0.0-beta.24",
   "description": "MCP server for Axiom — Apple-platform development skills, agents, and tools",
   "type": "module",
   "main": "dist/index.js",
