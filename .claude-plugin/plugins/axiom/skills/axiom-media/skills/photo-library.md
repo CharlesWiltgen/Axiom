@@ -817,7 +817,7 @@ Before shipping photo library features:
 - ☑ Using performChanges for atomic operations
 - ☑ Handling save failures gracefully
 
-#### Photo Library Changes
+#### Observing Library Changes
 - ☑ Registered as PHPhotoLibraryChangeObserver if displaying library
 - ☑ `photoLibraryDidChange` marked `nonisolated`, hopping to `@MainActor` inside
 - ☑ No `@preconcurrency` / isolated conformance used to silence the isolation error
