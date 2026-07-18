@@ -10,6 +10,20 @@ body; plain .py avoids that and is directly lintable/testable.
 
 Reads a JSON payload on stdin, writes a JSON response on stdout. Never exits
 non-zero — a hook failure must not block subagent startup.
+
+RESERVED AGENT-TYPE SUFFIX: an agent whose type ends in `-noskills` receives no
+injection. It is reserved for agents that must measure un-assisted behavior —
+A/B testing a skill's value needs a control arm that genuinely lacks the skill.
+The SubagentStart payload exposes only `agent_type` (no prompt text, no
+per-invocation env), so agent naming is the only channel available for this.
+Name an agent `-noskills` only when you intend it; the suppression is silent
+apart from a stderr note.
+
+SCOPE: this suppresses THIS hook only. Axiom's PostToolUse hooks still fire for
+such an agent — `posttool-bash-hints.py` appends skill hints to Bash output and
+`swift-guardrails.py` can block a Write/Edit citing an Axiom rule — and their
+payloads carry no `agent_type` to gate on. An agent that must stay clean should
+also be denied Bash/Write/Edit in its own definition.
 """
 
 from __future__ import annotations
@@ -73,6 +87,20 @@ if agent_type in skip_types:
 # Also skip any agent type containing known non-iOS plugin prefixes
 skip_prefixes = ("beads:", "plugin-dev:", "superpowers-lab:", "superpowers-developing-for-claude-code:")
 if any(agent_type.startswith(p) for p in skip_prefixes):
+    print("{}")
+    sys.exit(0)
+
+# Reserved "-noskills" suffix (see module docstring): the agent is deliberately
+# measuring UNSKILLED behavior, so injecting the roster would corrupt it. The
+# SubagentStart payload carries only agent_type — never the prompt — so a prompt
+# saying "do not use Axiom skills" cannot suppress this hook. A naming convention
+# is the only discriminator available. Announce on stderr so a surprise
+# suppression is debuggable; stderr is advisory and does not affect the stdout
+# contract at exit 0.
+if agent_type.endswith("-noskills"):
+    sys.stderr.write(
+        f"axiom: no skill injection for '{agent_type}' (reserved -noskills suffix)\n"
+    )
     print("{}")
     sys.exit(0)
 
