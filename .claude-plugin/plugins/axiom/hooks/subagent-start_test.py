@@ -106,6 +106,40 @@ class TestSubagentStartSkips(unittest.TestCase):
         self.assertEqual(run_hook({"agent_type": "plugin-dev:future-tool"}), {})
         self.assertEqual(run_hook({"agent_type": "superpowers-lab:whatever"}), {})
 
+    def test_noskills_suffix_agent_emits_empty(self):
+        # Reserved "-noskills" suffix: an agent measuring UNSKILLED behavior
+        # (preflight's RED phase). Injecting skill awareness would contaminate
+        # the measurement, so the hook must stay silent.
+        self.assertEqual(run_hook({"agent_type": "red-noskills"}), {})
+        self.assertEqual(run_hook({"agent_type": "concurrency-noskills"}), {})
+        self.assertEqual(run_hook({"agent_type": "some-plugin:foo-noskills"}), {})
+
+    def test_noskills_suffix_requires_the_hyphen(self):
+        # Pins "-noskills", not "noskills". Without this case the suffix check
+        # would pass just as well as `endswith("noskills")`, and an agent named
+        # e.g. "mynoskills" would silently lose injection.
+        self.assertIn("axiom-", injected_context("mynoskills"))
+        self.assertIn("axiom-", injected_context("noskills"))
+
+    def test_noskills_elsewhere_in_name_still_injects(self):
+        # Only the trailing token counts — a name merely containing the word
+        # keeps its skills.
+        self.assertIn("axiom-", injected_context("noskills-comparison-agent"))
+
+    def test_noskills_skip_is_announced_on_stderr(self):
+        # Silent suppression is a debugging trap: {} is indistinguishable from
+        # every other skip. The stderr note must not pollute the stdout contract.
+        env = os.environ.copy()
+        env["AXIOM_SESSION_CONTEXT"] = "always"
+        result = subprocess.run(
+            [sys.executable, HOOK],
+            input=json.dumps({"agent_type": "red-noskills"}),
+            env=env, capture_output=True, text=True, timeout=5,
+        )
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(json.loads(result.stdout.strip() or "{}"), {})
+        self.assertIn("-noskills", result.stderr)
+
     def test_malformed_payload_emits_empty(self):
         result = subprocess.run(
             [sys.executable, HOOK],
