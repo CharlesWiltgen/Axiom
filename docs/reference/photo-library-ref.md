@@ -17,6 +17,7 @@ Use this reference when:
 - Requesting images from PHImageManager with delivery modes
 - Creating assets with PHAssetCreationRequest including deferred photo proxies
 - Implementing PHPhotoLibraryChangeObserver for library sync
+- Checking which PhotoKit types are `Sendable` and which callbacks fire once vs repeatedly
 
 ## Example Prompts
 
@@ -29,6 +30,9 @@ Questions you can ask Claude that will draw from this reference:
 - "What are the PHImageRequestOptions delivery modes?"
 - "How do I save a deferred photo proxy to the library?"
 - "What properties does PHAsset have?"
+- "Is PHFetchResult Sendable?"
+- "Does requestImage call its handler more than once?"
+- "How do I write a PHPhotoLibraryChangeObserver under Swift 6?"
 
 ## What's Covered
 
@@ -41,6 +45,9 @@ Questions you can ask Claude that will draw from this reference:
 - PHFetchResult access patterns and enumeration
 - PHImageManager image/video requests, delivery modes, and secondary degraded images (iOS 17+)
 - PHChange handling with incremental updates for collection views
+- Sendable annotations across PHAsset, PHObject, PHFetchResult, PHChange, and PHPhotoLibrary
+- Isolation requirements for `photoLibraryDidChange` and `performChanges` change blocks
+- Callback arity per PHImageManager request method (`requestImage` fires one or more times; `requestImageDataAndOrientation` fires exactly once)
 
 ## Documentation Scope
 
@@ -90,6 +97,7 @@ This page documents the `axiom-media` skill. It provides complete API documentat
 - [photo-library](/skills/integration/photo-library) – Implementation patterns for photo picking and library access
 - [camera-capture-ref](/reference/camera-capture-ref) – AVFoundation camera API reference
 - [camera-capture](/skills/integration/camera-capture) – Custom camera UI patterns
+- [isolation-inheritance-diag](/diagnostic/isolation-inheritance-diag) – Diagnosing isolation crashes from PhotoKit callbacks under Swift 6
 
 ## Resources
 

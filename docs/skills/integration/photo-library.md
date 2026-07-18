@@ -1,6 +1,6 @@
 ---
 name: photo-library
-description: PhotosPicker, PHPickerViewController, photo selection, limited library access, save to camera roll, PHPhotoLibrary permissions, Transferable image loading
+description: PhotosPicker, PHPickerViewController, photo selection, limited library access, save to camera roll, PHPhotoLibrary permissions, Transferable image loading, PHPhotoLibraryChangeObserver, Swift 6 strict concurrency isolation
 ---
 
 # Photo Library
@@ -17,6 +17,7 @@ Use this skill when you're:
 - Loading images from PhotosPickerItem with Transferable
 - Observing photo library changes for a gallery UI
 - Requesting the appropriate permission level
+- Using PhotoKit from a `@MainActor` type under Swift 6 strict concurrency
 
 **Note:** If you need a custom camera UI, use [camera-capture](/skills/integration/camera-capture) instead. Photo pickers require no camera permission.
 
@@ -31,6 +32,10 @@ Questions you can ask Claude that will draw from this skill:
 - "How do I handle limited photo access?"
 - "How do I load an image from PhotosPickerItem?"
 - "User granted limited access but can't see photos"
+- "Why does my `photoLibraryDidChange` need to be `nonisolated`?"
+- "My photo gallery crashes with `_dispatch_assert_queue_fail` after the Swift 6 migration"
+- "Do I still need to re-fetch PHAssets by localIdentifier inside a change block?"
+- "My app closes when a user opens a 48MP photo"
 
 ## What This Skill Provides
 
@@ -57,6 +62,12 @@ Questions you can ask Claude that will draw from this skill:
 - Saving photos and videos with PHAssetCreationRequest
 - Observing library changes with PHPhotoLibraryChangeObserver
 - Limited library picker for expanding user selection
+
+### Swift 6 Strict Concurrency
+- `nonisolated` change observer with a `Task { @MainActor in }` hop, and why the compiler's `@preconcurrency` fix-it ships a crash
+- `performChanges { @Sendable in }` when the call site is actor-isolated
+- Which PhotoKit types are `Sendable`, and why re-fetching by `localIdentifier` is about staleness rather than isolation
+- Ordering and fetch-result laziness caveats for gallery UIs
 
 ### Pressure Scenarios
 - Over-requesting permissions when picker suffices
@@ -92,7 +103,7 @@ PhotosPicker(
 
 ## Documentation Scope
 
-This page documents the `axiom-media` skill -- privacy-forward photo access patterns Claude uses when helping you implement photo selection and library features. The skill contains 6 core patterns, anti-patterns, a shipping checklist, and pressure scenarios.
+This page documents the `axiom-media` skill — privacy-forward photo access patterns Claude uses when helping you implement photo selection and library features. The skill contains 6 core patterns, anti-patterns, a shipping checklist, and pressure scenarios.
 
 **For API reference:** See [photo-library-ref](/reference/photo-library-ref) for comprehensive PHPickerViewController, PhotosPicker, PHPhotoLibrary, PHAsset, and PHImageManager API coverage.
 
@@ -103,6 +114,7 @@ This page documents the `axiom-media` skill -- privacy-forward photo access patt
 - [photo-library-ref](/reference/photo-library-ref) – Complete PhotoKit and picker API reference
 - [camera-capture](/skills/integration/camera-capture) – Custom camera UI with AVCaptureSession
 - [camera-capture-diag](/diagnostic/camera-capture-diag) – Troubleshooting camera issues
+- [isolation-inheritance-diag](/diagnostic/isolation-inheritance-diag) – Diagnosing the `_dispatch_assert_queue_fail` crashes PhotoKit callbacks cause under Swift 6
 
 ## Resources
 
