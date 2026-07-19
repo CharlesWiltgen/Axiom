@@ -397,6 +397,27 @@ final class PhotoObserver: NSObject, PHPhotoLibraryChangeObserver {
 
 ---
 
+## Sendability
+
+These types carry `NS_SWIFT_SENDABLE` in the SDK (verified iOS 26 and 27) and cross isolation boundaries without a diagnostic:
+
+| Type | Sendable |
+|------|----------|
+| `PHAsset`, `PHObject`, `PHObjectPlaceholder` | yes |
+| `PHFetchResult`, `PHChange`, `PHPhotoLibrary` | yes |
+| `PHImageManager`, `PHCollection`, `PHAssetCollection` | yes |
+
+**Do not add `@unchecked Sendable` boxes or `@retroactive` conformances for these.** The conformance already exists. Note the compiler does NOT block either shape (verified by compile):
+
+| Shape | Diagnostic |
+|-------|------------|
+| `extension PHObject: @retroactive @unchecked Sendable {}` | warning — "conformance … already stated in the type's module 'Photos'"; builds, module's conformance wins |
+| `struct Box: @unchecked Sendable { let c: PHChange }` | **none** — compiles silently |
+
+So it merges, becomes house style, and normalizes `@unchecked` for the next type that genuinely needs checking. This is a common wrong reflex — LLM baselines invent these boxes unprompted because the annotations postdate most training data.
+
+Re-fetching by `localIdentifier` is still often right, but for **staleness** (a `PHAsset` is a snapshot; one held across library changes can target the wrong state) — never for isolation. See axiom-concurrency (skills/isolation-inheritance-diag.md).
+
 ## PHAsset
 
 Represents an asset in the photo library.
