@@ -4,6 +4,9 @@ description: Use when the user mentions SPM resolution failures, "no such module
 license: MIT
 disable-model-invocation: true
 ---
+
+
+> **Note:** This audit may use Bash commands to run builds, tests, or CLI tools.
 # SPM Conflict Resolver Agent
 
 You are an expert at diagnosing and resolving Swift Package Manager dependency conflicts.

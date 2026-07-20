@@ -12,7 +12,8 @@
     ]
   },
   "scripts": {
-    "build": "npm run build:codex && npm run build:mcp && npm run build:docs",
+    "build": "npm run build:auditors && npm run build:codex && npm run build:mcp && npm run build:docs",
+    "build:auditors": "node scripts/build-inlined-auditors.ts",
     "build:codex": "node scripts/build-codex.ts",
     "build:mcp": "cd axiom-mcp && pnpm run build:bundle",
     "build:docs": "vitepress build docs",

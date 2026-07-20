@@ -8,6 +8,14 @@ license: MIT
 
 This suite covers Axiom itself — how to use it, what's available, and the tools that ship with it.
 
+<!-- AXIOM_AUDITOR_INLINE_BEGIN — auto-maintained by scripts/build-inlined-auditors.ts; do not hand-edit -->
+> **Not on Claude Code?** Where this router says "Launch `some-auditor` agent", read that auditor's file in this suite and follow it inline — the same procedure, needing only file search and read.
+>
+> Homed in another suite: `axiom-accessibility/skills/accessibility-auditor.md`, `axiom-concurrency/skills/concurrency-auditor.md`, `axiom-performance/skills/energy-auditor.md`, `axiom-performance/skills/memory-auditor.md`, `axiom-testing/skills/test-failure-analyzer.md`.
+>
+> Agents that need Bash — builds, tests, simulators, crash symbolication — stay Claude Code-only; there is no inline equivalent for those.
+<!-- AXIOM_AUDITOR_INLINE_END -->
+
 ## Routing
 
 | Question | Read |

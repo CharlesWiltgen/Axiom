@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import matter from 'gray-matter';
 import { CODEX_EXCLUDED_SUITES, isEmittableAgent } from './codex-exclude.js';
 import { translateHooksToCodex, shouldCopyHookScript } from './codex-hooks.js';
+import { isGeneratedSubSkill, parseAgentTools } from './inline-auditors.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const root = path.dirname(path.dirname(__filename));
@@ -115,13 +116,22 @@ for (const skill of skillEntries) {
   fs.mkdirSync(destDir, { recursive: true });
   fs.copyFileSync(skill.sourcePath, path.join(destDir, 'SKILL.md'));
 
-  // Copy skills/ directory if it exists (skill suites)
+  // Copy skills/ directory if it exists (skill suites).
+  //
+  // Router-inlined auditors are SKIPPED here. They exist so harnesses that
+  // install via the Agent-Skills spec can reach an auditor's procedure at all;
+  // Codex already gets every auditor as a first-class `axiom-audit-*` skill
+  // from the agent-conversion pass below, with proper frontmatter and
+  // disable-model-invocation. Copying them too would ship each procedure twice
+  // in one plugin (~459 KB) under two different names.
   const refsDir = path.join(path.dirname(skill.sourcePath), 'skills');
   if (fs.existsSync(refsDir)) {
     const destRefs = path.join(destDir, 'skills');
     fs.mkdirSync(destRefs, { recursive: true });
     for (const ref of fs.readdirSync(refsDir)) {
-      fs.copyFileSync(path.join(refsDir, ref), path.join(destRefs, ref));
+      const refPath = path.join(refsDir, ref);
+      if (isGeneratedSubSkill(fs.readFileSync(refPath, 'utf8'))) continue;
+      fs.copyFileSync(refPath, path.join(destRefs, ref));
     }
   }
 
@@ -236,12 +246,16 @@ for (const file of fs.readdirSync(SOURCE_HOOKS)) {
 // --- Convert agents to on-demand Codex skills ---
 const SOURCE_AGENTS = path.join(root, '.claude-plugin/plugins/axiom/agents');
 
-// Agents that require Bash/Edit/Write tools — these need interactive capabilities
-// and should note that in their description
-const AGENTS_NEEDING_BASH = new Set([
-  'build-fixer', 'build-optimizer', 'crash-analyzer', 'performance-profiler',
-  'screenshot-validator', 'simulator-tester', 'test-debugger', 'test-runner',
-]);
+// Agents that declare Bash need interactive capabilities, and their Codex skill
+// says so. Derived from the agent's own tools: declaration rather than a
+// hand-maintained list — the previous hardcoded set listed 8 agents while 11
+// actually declare Bash (iap-implementation, spm-conflict-resolver and
+// triage-analyzer were missing their note), and any new Bash agent would have
+// silently missed it too.
+function agentNeedsBash(content: string): boolean {
+  const parsed = parseAgentTools(content);
+  return parsed.kind === 'ok' && parsed.tools.includes('Bash');
+}
 
 // Map agent names to Codex skill names (axiom- prefix + verb-first naming)
 const AGENT_NAME_MAP: Record<string, string> = {
@@ -304,7 +318,7 @@ for (const file of agentFiles) {
     typeof fm.description === 'string' ? fm.description : ''
   );
 
-  const needsBash = AGENTS_NEEDING_BASH.has(agentName);
+  const needsBash = agentNeedsBash(content);
   const bashNote = needsBash
     ? '\n\n> **Note:** This audit may use Bash commands to run builds, tests, or CLI tools.\n'
     : '';

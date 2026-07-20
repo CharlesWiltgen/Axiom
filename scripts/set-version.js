@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
 import { VERSION_RE, VERSION_CORE } from './version-regex.js';
 import { DOC_STAT_FILES, docStatValues, applyDocStats, checkMarkerSpec } from './doc-stats.js';
+import { isGeneratedSubSkill } from './inline-auditors.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -208,9 +209,14 @@ try {
           // Skill suite: count each skills/*.md as a skill, not the SKILL.md
           suiteCount++;
           for (const ref of fs.readdirSync(refsDir)) {
-            if (ref.endsWith('.md')) {
-              skillNames.push(ref.replace(/\.md$/, ''));
-            }
+            if (!ref.endsWith('.md')) continue;
+            // Router-inlined auditors are generated mirrors of agents (already
+            // counted in the agent total) — see scripts/inline-auditors.ts.
+            // Counting them here would inflate the advertised skill count with
+            // duplicated content rather than new capability.
+            const refContent = fs.readFileSync(path.join(refsDir, ref), 'utf8');
+            if (isGeneratedSubSkill(refContent)) continue;
+            skillNames.push(ref.replace(/\.md$/, ''));
           }
         } else {
           // Standalone skill

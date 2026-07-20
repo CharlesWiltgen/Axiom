@@ -51,6 +51,21 @@ import {
   checkSkillInvocations,
   findSkillNameCollisions,
 } from "./skill-invocations.ts";
+import {
+  AUDITOR_HOMES,
+  auditAreaByAgent,
+  deriveSuiteReferences,
+  findInlineDrift,
+  findRouterNoteDrift,
+  generatedSourceAgent,
+  isGeneratedSubSkill,
+  isScanAgent,
+  renderInlinedAuditor,
+  renderRouterNote,
+  routerNoteTargets,
+  upsertRouterNote,
+  validateHomeCoverage,
+} from "./inline-auditors.ts";
 import { parsePorcelain, resolveStaleness } from "./staleness.ts";
 import { findDashViolations } from "./docs-dashes.ts";
 
@@ -256,7 +271,16 @@ function checkSkillsIn(dir: string): void {
       // Count content units: suites count skills/, standalone count SKILL.md
       const refsDir = path.join(fullPath, "skills");
       if (fs.existsSync(refsDir) && fs.statSync(refsDir).isDirectory()) {
-        const childMds = fs.readdirSync(refsDir).filter((f: string) => f.endsWith(".md"));
+        // Router-inlined auditors are generated mirrors of agents (counted in
+        // the agent total) — excluded so the advertised skill count reflects
+        // capability, not duplication. See scripts/inline-auditors.ts.
+        const childMds = fs
+          .readdirSync(refsDir)
+          .filter((f: string) => f.endsWith(".md"))
+          .filter(
+            (f: string) =>
+              !isGeneratedSubSkill(fs.readFileSync(path.join(refsDir, f), "utf8")),
+          );
         skillContentCount += childMds.length;
         subSkillFilesChecked += childMds.length;
         for (const f of childMds) {
@@ -1099,6 +1123,129 @@ if (!fs.existsSync(auditCmdPath)) {
       `  ✓ ${frontmatter.length} audit areas in sync across frontmatter, body table, docs page, sidebar ` +
         `(${sidebarGroups.length} groups, same order; ${bodyRows.length} agent refs resolve; ` +
         `${inlineSections.length} prose sections + ${bodyRows.length} agent descriptions verified)`,
+    );
+  }
+}
+
+// ── 12d-bis. Router-Inlined Auditor Parity ──
+//
+// axiom-6gh: `npx skills add` discovers only the router skills, so every
+// harness installing via the Agent-Skills spec (44 of 45 supported agents)
+// gets routers pointing at audit agents it cannot resolve. The fix inlines
+// each pure-scan agent's procedure at <router>/skills/<agent>.md, which DOES
+// ride along on install.
+//
+// Those files are generated from agents/ by scripts/build-inlined-auditors.ts
+// and committed — same convention as axiom-codex/. This check regenerates in
+// memory and fails on any difference, so a hand-edit or an un-rebuilt agent
+// change cannot ship. It also fails when a NEW pure-scan agent has no entry in
+// AUDITOR_HOMES, which would otherwise leave it silently unreachable on those
+// 44 harnesses — the exact bug this mechanism exists to fix.
+//
+// Logic lives in scripts/inline-auditors.ts (pure functions). Tests in
+// scripts/inline-auditors.test.ts run on every predeploy via `node --test`.
+
+heading("12d-bis. Router-Inlined Auditor Parity");
+
+const inlineAgentsDir = path.join(pluginDir, "agents");
+const inlineSkillsDir = path.join(pluginDir, "skills");
+
+if (!fs.existsSync(inlineAgentsDir)) {
+  error("auditor-inline", `${inlineAgentsDir} not found`);
+} else {
+  const agentContents: Record<string, string> = {};
+  for (const file of fs.readdirSync(inlineAgentsDir)) {
+    if (!file.endsWith(".md")) continue;
+    agentContents[file.replace(/\.md$/, "")] = fs.readFileSync(
+      path.join(inlineAgentsDir, file),
+      "utf8",
+    );
+  }
+
+  const coverageErrors = validateHomeCoverage(agentContents);
+  for (const msg of coverageErrors) error("auditor-inline", `(coverage) ${msg}`);
+
+  // The `/axiom:audit <area>` names come from the canonical table in
+  // commands/audit.md — deriving them from the agent filename produced five
+  // commands that do not exist.
+  const auditAreas = fs.existsSync(auditCmdPath)
+    ? auditAreaByAgent(parseBodyTable(fs.readFileSync(auditCmdPath, "utf8")))
+    : {};
+
+  const expected: Record<string, string> = {};
+  for (const agentName of Object.keys(AUDITOR_HOMES)) {
+    const content = agentContents[agentName];
+    if (!content || !isScanAgent(content)) continue; // reported by coverage check
+    expected[agentName] = renderInlinedAuditor(agentName, content, auditAreas);
+  }
+
+  // Walk the tree for files carrying the GENERATED marker and key them by the
+  // agent each names in its own marker — NOT by AUDITOR_HOMES. Keying by the
+  // map would make `actual` ⊆ `expected` by construction, so an orphan left
+  // behind by a renamed or deleted agent could never be detected and would
+  // ship indefinitely (invisible to the skill count too, which excludes
+  // generated files).
+  const actual: Record<string, string> = {};
+  const suiteContents: Record<string, string[]> = {};
+  const unattributable: string[] = [];
+  for (const suite of fs.readdirSync(inlineSkillsDir)) {
+    const suiteDir = path.join(inlineSkillsDir, suite);
+    if (!fs.statSync(suiteDir, { throwIfNoEntry: false })?.isDirectory()) continue;
+    const files: string[] = [];
+    const routerMd = path.join(suiteDir, "SKILL.md");
+    if (fs.existsSync(routerMd)) files.push(fs.readFileSync(routerMd, "utf8"));
+    const subDir = path.join(suiteDir, "skills");
+    if (fs.existsSync(subDir)) {
+      for (const f of fs.readdirSync(subDir)) {
+        if (!f.endsWith(".md")) continue;
+        const content = fs.readFileSync(path.join(subDir, f), "utf8");
+        files.push(content);
+        if (!isGeneratedSubSkill(content)) continue;
+        const source = generatedSourceAgent(content);
+        if (source) actual[source] = content;
+        else unattributable.push(`${suite}/skills/${f}`);
+      }
+    }
+    suiteContents[suite] = files;
+  }
+  for (const rel of unattributable) {
+    error(
+      "auditor-inline",
+      `(orphan) ${rel} carries a GENERATED marker naming no readable source agent`,
+    );
+  }
+
+  const driftErrors = findInlineDrift({ expected, actual });
+  for (const msg of driftErrors) error("auditor-inline", `(drift) ${msg}`);
+
+  // The generated files are only reachable if each suite tells a non-Claude-Code
+  // reader they exist, so the note is part of the fix, not decoration. Targets
+  // are DERIVED from what each suite actually mentions (router + sub-skills),
+  // so a reference added anywhere earns a pointer without hand-maintaining a list.
+  const noteTargets = routerNoteTargets(deriveSuiteReferences(suiteContents));
+  const expectedNotes: Record<string, string> = {};
+  const actualNotes: Record<string, string> = {};
+  for (const suite of Object.keys(suiteContents)) {
+    const routerPath = path.join(inlineSkillsDir, suite, "SKILL.md");
+    if (!fs.existsSync(routerPath)) continue;
+    const current = fs.readFileSync(routerPath, "utf8");
+    actualNotes[suite] = current;
+    const target = noteTargets[suite];
+    if (!target) continue;
+    expectedNotes[suite] = upsertRouterNote(current, renderRouterNote(target));
+  }
+  const noteErrors = findRouterNoteDrift(expectedNotes, actualNotes);
+  for (const msg of noteErrors) error("auditor-inline", `(router-note) ${msg}`);
+
+  if (
+    coverageErrors.length === 0 &&
+    driftErrors.length === 0 &&
+    noteErrors.length === 0
+  ) {
+    console.log(
+      `  ✓ ${Object.keys(expected).length} auditor procedures inlined into router suites, ` +
+        `all matching agents/; ${Object.keys(noteTargets).length} routers carry the ` +
+        `harness-awareness note (reachable on non-Claude-Code harnesses)`,
     );
   }
 }

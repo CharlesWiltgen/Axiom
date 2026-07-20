@@ -276,7 +276,7 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details.
 
 For storage decision framework: `axiom-data (skills/storage.md)`
 For storage debugging (missing files, persistence failures): `axiom-data (skills/storage-diag.md)`
-For file protection details: `axiom-data (skills/file-protection-ref.md)`
+For file protection details: `axiom-security (skills/file-protection-ref.md)`
 For storage purging policies: `axiom-data (skills/storage-management-ref.md)`
 For iCloud Drive coordination: `icloud-auditor` agent
 For sensitive-data and credentials in Keychain: `security-privacy-scanner` agent

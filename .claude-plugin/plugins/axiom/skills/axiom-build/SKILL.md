@@ -8,6 +8,15 @@ license: MIT
 
 **You MUST use this skill for ANY build, environment, or Xcode-related issue before debugging application code.**
 
+<!-- AXIOM_AUDITOR_INLINE_BEGIN — auto-maintained by scripts/build-inlined-auditors.ts; do not hand-edit -->
+> **Not on Claude Code?** Where this router says "Launch `some-auditor` agent", read that auditor's file in this suite and follow it inline — the same procedure, needing only file search and read.
+>
+> Available here: `skills/modernization-helper.md`.
+> Homed in another suite: `axiom-security/skills/security-privacy-scanner.md`.
+>
+> Agents that need Bash — builds, tests, simulators, crash symbolication — stay Claude Code-only; there is no inline equivalent for those.
+<!-- AXIOM_AUDITOR_INLINE_END -->
+
 ## When to Use
 
 Use this router when you encounter:
