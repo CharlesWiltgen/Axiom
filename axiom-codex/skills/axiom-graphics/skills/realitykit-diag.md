@@ -25,7 +25,7 @@ Stop and check these before reaching for any other fix. Each is the root cause o
 | Red flag | What it means | Fix |
 |----------|---------------|-----|
 | Debugging gestures/physics without `.showPhysics` on first | You're guessing blind. No visible shape = no `CollisionComponent`, full stop | Enable debug visualization, fix collision, *then* debug input/physics |
-| Model renders solid black or invisibly dark in a non-AR scene | PBR materials have no light to reflect. AR applies real-world lighting automatically; non-AR does not | Add an `ImageBasedLightComponent` (IBL) or `DirectionalLightComponent` — non-AR scenes are unlit by default |
+| Model renders solid black or invisibly dark in a non-AR scene | PBR materials have no light to reflect. AR applies real-world lighting automatically; non-AR does not | Add an `ImageBasedLightComponent` (IBL) or `DirectionalLightComponent` — non-AR scenes are unlit by default. No pre-baked IBL asset? On `OS27` generate one at runtime with `SkyboxGenerator` + `ImageBasedLightTextureGenerator` (realitykit-ref Part 10) |
 | Two entities won't collide / object won't fall onto floor | Bodies and colliders only interact within the *same anchor*; or you have two `.static` bodies | Same anchor + `.dynamic` (the faller) vs `.static` (the floor). Two `.static` never collide |
 | Custom component or System "does nothing" | It was never registered, so RealityKit silently ignores it | `registerComponent()` / `registerSystem()` in app init, before any scene loads |
 | Component edits don't stick | Components are value types; mutating a fetched copy is a no-op | Read-modify-write: fetch, mutate, assign back to `entity.components[...]` |
@@ -405,6 +405,9 @@ Entities not appearing on other devices
 | Calling generateCollisionShapes every frame | Performance degradation | Call once during setup |
 | Soft shadows not appearing despite `lightSize` `OS27` | 10-20 min | `Shadow.quality` must be `.medium` or `.high` — `.low` always renders hard shadows |
 | Treating `computePath` nil and empty alike `OS27` | 10-15 min | nil = no valid path exists; empty array = already at destination |
+| `import RealityCoreRenderer` / `ShaderGraph` / `RealityCoreDeformation` / `RealityCoreTextureProcessing` `OS27` | 5-10 min | Hard compile error ("implementation detail of 'RealityKit'"). Use `import RealityKit`. Note `import ComputeGraph` **is** correct — it is a real framework |
+| Autocompleted `LowLevelMesh` where `LowLevelMeshResource` was meant (or the reverse) `OS27` | 20-40 min | Near-identical names, unrelated APIs. The 26-era types are entity-attached; the 27 `*Resource` types belong to the standalone renderer. If it takes an `Entity`, it is the 26-era one |
+| `try graph.validate()` on a `ShaderGraph` `OS27` | 5-10 min | `validate()` returns `Bool`, not throws. Ignoring the result accepts a broken graph silently |
 
 ---
 

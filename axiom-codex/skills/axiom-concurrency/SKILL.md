@@ -54,6 +54,7 @@ digraph concurrency {
 
 1. Data races / actor isolation / @MainActor / Sendable / Swift 6 migration? → `skills/swift-concurrency.md`
 1a. Need specific API syntax (actor definition, TaskGroup, AsyncStream, continuations)? → `skills/swift-concurrency-ref.md`
+1b. NotificationCenter observer, `userInfo` casting, or Sendable errors unpacking a notification? → `skills/swift-concurrency-ref.md` (Typed Notifications — `MainActorMessage`/`AsyncMessage`, iOS 26+)
 2. Writing async/await code? → `skills/swift-concurrency.md`
 3. assumeIsolated / @preconcurrency? → `skills/assume-isolated.md`
 3a. Warning-free Swift 6 build that crashes in production with `_dispatch_assert_queue_fail` or `_swift_task_checkIsolatedSwift`? → `skills/isolation-inheritance-diag.md`
