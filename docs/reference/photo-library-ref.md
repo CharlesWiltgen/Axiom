@@ -33,10 +33,14 @@ Questions you can ask Claude that will draw from this reference:
 - "Is PHFetchResult Sendable?"
 - "Does requestImage call its handler more than once?"
 - "How do I write a PHPhotoLibraryChangeObserver under Swift 6?"
+- "How do I strip location metadata from photos the user picks?"
+- "How do I present the shared album creation sheet?"
 
 ## What's Covered
 
 - PHPickerViewController configuration, filters, delegate, and embedded mode (iOS 17+)
+- Picker metadata stripping and search seeding (iOS 27) — `PHPickerMetadataOptions`, `PHPickerSearchText`, `photosPickerMetadataOptions(_:)`, `photosPickerSearchText(_:)`
+- Shared album sheets (iOS 27) — `photosSharedAlbumCreationSheet` / `…PostingSheet` / `…CustomizationSheet`, `PHSharedAlbumCreationResult`, `PHSharedAlbumCreationSharingPolicy`
 - PhotosPicker styles (presentation, inline, compact), selection behaviors, disabled capabilities, and HDR preservation
 - PhotosPickerItem loading with Transferable and custom transfer representations
 - PHPhotoLibrary authorization statuses, access levels (.readWrite, .addOnly), and limited library picker

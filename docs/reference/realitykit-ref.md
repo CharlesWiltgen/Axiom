@@ -27,6 +27,10 @@ Use this reference when:
 - "What events can I subscribe to in RealityKit?"
 - "How do I set up spatial audio on an entity?"
 - "What Entity subclasses are available?"
+- "How do I render RealityKit content from my own Metal command buffer?"
+- "Can I build a shader graph in Swift instead of Reality Composer Pro?"
+- "How do I generate an image-based light at runtime from an HDR?"
+- "Why won't `import RealityCoreRenderer` compile?"
 
 ## What's Covered
 
@@ -41,6 +45,20 @@ Use this reference when:
 - **Audio** – AudioFileResource, SpatialAudioComponent, AmbientAudioComponent, ChannelAudioComponent, playback control
 - **RealityRenderer** – Low-level Metal integration for rendering RealityKit content to Metal textures
 - **RealityKit 27 additions** – Navigation mesh pathfinding, level of detail, soft shadows, projective textures, physical space lighting (visionOS/macOS), lightmaps, Gaussian splats (visionOS), custom reverb meshes, ARKit object tracking, cloth simulation (`ClothBodyComponent`, iOS/macOS/visionOS 27), ComputeGraph framework (programmatic node graphs)
+
+### Renderer layer (iOS 27)
+
+Reached through `import RealityKit` — the defining submodules cannot be imported directly.
+
+- **Frame loop** – `LowLevelRenderer` (`output`, `cameras`, `time`, `colorMatch`, `render(using:_:)`), `Configuration`, `Camera` / `CameraArray`, `RenderState`
+- **Resource context** – `LowLevelRenderContext`, `…Standalone`, `…Lighting`, `…ShaderGraph`
+- **Resources** – `LowLevelMeshResource`, `LowLevelTextureResource`, `LowLevelBufferResource`, `LowLevelInstanceTransformResource`
+- **Materials and pipeline** – `LowLevelMaterialResource`, `LowLevelArgumentTable`, `LowLevelRenderPipelineState`, `LowLevelRenderTarget.Descriptor`
+- **Draw, cull, sort** – `LowLevelMeshPart`, `LowLevelMeshInstance`, `LowLevelMeshInstanceArray`, `cullMeshInstances`, `sortMeshInstances`
+- **Name-collision table** – the 26-era `LowLevelMesh` / `LowLevelTexture` / `LowLevelBuffer` / `LowLevelInstanceData` versus their 27 `*Resource` counterparts
+- **ShaderGraph in Swift** – `ShaderGraph`, `NodeLibrary`, `NodeDefinition`, `Node`, `Edge`, `ShaderGraphMaterial.Program` / `Program.Descriptor`
+- **GPU mesh deformation** – `LowLevelDeformationContext`, `LowLevelDeformation`
+- **Runtime skybox and IBL** – `SkyboxGenerator`, `ImageBasedLightTextureGenerator`, `TextureSamplingQuality`
 
 ## Documentation Scope
 

@@ -35,6 +35,9 @@ Questions you can ask Claude that will draw from this skill:
 - "Why does my `photoLibraryDidChange` need to be `nonisolated`?"
 - "My photo gallery crashes with `_dispatch_assert_queue_fail` after the Swift 6 migration"
 - "Do I still need to re-fetch PHAssets by localIdentifier inside a change block?"
+- "How do I stop picked photos carrying GPS coordinates to my backend?" (iOS 27)
+- "How do I let users create or post to a shared album from my app?" (iOS 27)
+- "How do I restrict which image formats get decoded from untrusted data?" (iOS 27)
 - "My app closes when a user opens a 48MP photo"
 
 ## What This Skill Provides
@@ -105,9 +108,8 @@ PhotosPicker(
 
 This page documents the `axiom-media` skill — privacy-forward photo access patterns Claude uses when helping you implement photo selection and library features. The skill contains 6 core patterns, anti-patterns, a shipping checklist, and pressure scenarios.
 
-**For API reference:** See [photo-library-ref](/reference/photo-library-ref) for comprehensive PHPickerViewController, PhotosPicker, PHPhotoLibrary, PHAsset, and PHImageManager API coverage.
-
-**For camera capture:** See [camera-capture](/skills/integration/camera-capture) if you need to build a custom camera UI.
+- [photo-library-ref](/reference/photo-library-ref) – API reference: comprehensive PHPickerViewController, PhotosPicker, PHPhotoLibrary, PHAsset, and PHImageManager coverage
+- [camera-capture](/skills/integration/camera-capture) – reach for this instead when you need to build a custom camera UI rather than pick existing photos
 
 ## Related
 

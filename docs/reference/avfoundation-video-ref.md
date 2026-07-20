@@ -15,7 +15,7 @@ Use this reference when:
 - Adopting the concurrency-native sample-buffer `Receiver` pipeline
 - Adding iOS 27 resumable export or segment-based writing
 - Capturing in Apple Log / Apple Log 2, or detaching playback from system audio
-- Driving simulator/device state from CI (see also the [Device Hub workflow](/reference/) in axiom-build)
+- Driving simulator/device state from CI (see also [Device Control](/reference/device-control-ref) for Device Hub, `devicectl`, and `simctl`)
 
 ## Example Prompts
 
@@ -27,6 +27,8 @@ Questions you can ask Claude that draw from this reference:
 - "Show me the segment-based writing flow with `AVAssetWritingPlanner`."
 - "How do I enqueue sample buffers with backpressure on the new `Receiver`?"
 - "How do I record in Apple Log 2?"
+- "Why did my processed frame lose its colour tagging?"
+- "How do I copy attachments from a source pixel buffer to a destination?"
 
 ## What's Covered
 
@@ -43,6 +45,7 @@ These predate iOS 27 — they're the *targets* of the iOS 27 Swift deprecations,
 - **Segment-based writing** – `AVAssetWritingPlanner` (`init(directoryForTemporaryFiles:)`, `plan(_:segmentHandler:)`, `executePlan()`), `AVAssetVideoTrackPlan`
 - **Concurrency-native rendering** – `AVSampleBufferVideoRenderer.Receiver` (and audio mirror): `sampleBufferReceiver(adding:)` on `AVSampleBufferRenderSynchronizer`, `enqueue(_:)` → `EnqueueResult`, `renderingEventsAfterFinishedEnqueuing`
 - **Apple Log 2** – `AVVideoLogTransferFunctionKey`, `AVVideoLogTransferFunction_AppleLog` / `_AppleLog2`
+- **Typed buffer attachments** – `CVAttachmentAccess` / `CVAttachmentContainer`, `propagate(from:)`, `copy()`, `attachedMode(of:)`, `CVPixelBufferAttachmentKeyDefinitions` and `CMSampleBufferAttachmentKeyDefinitions` — replacing untyped `CMSetAttachment` / `kCVImageBuffer*` keys (Swift-native buffer types only)
 - **Detach playback from system audio** – `AVPlayer.setDisconnectedFromSystemAudio(_:)` (iOS/tvOS/watchOS/visionOS 27, not macOS)
 
 ### Swift-only deprecations → migration

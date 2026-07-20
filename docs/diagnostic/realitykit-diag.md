@@ -29,6 +29,9 @@ Use when you're experiencing:
 - "My 3D model looks too dark, like there's no lighting"
 - "Physics objects pass through each other"
 - "Multiplayer entities don't appear on the other device"
+- "`import RealityCoreRenderer` fails with 'implementation detail of RealityKit'" (iOS 27)
+- "Is it `LowLevelMesh` or `LowLevelMeshResource`?" (iOS 27)
+- "My model is dark and I have no pre-baked environment asset" (iOS 27)
 
 ## Diagnostic Workflow
 
