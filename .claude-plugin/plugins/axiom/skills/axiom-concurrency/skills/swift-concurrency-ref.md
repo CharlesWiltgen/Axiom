@@ -1444,6 +1444,81 @@ let task = Task {
 // Cancel task in deinit — no manual observer removal needed
 ```
 
+This still hands you an untyped `Notification`. For notifications a **framework** declares, prefer the typed API below.
+
+### Typed Notifications (iOS 26+)
+
+`Notification.userInfo` is `[AnyHashable: Any]?` — every read is a cast that can silently return `nil`, and the payload is not `Sendable`, so unpacking it under strict concurrency is where the errors start. iOS 26 replaced this for framework notifications with two protocols carrying **typed stored properties**:
+
+| Protocol | Isolation and delivery | Use when |
+|---|---|---|
+| `NotificationCenter.MainActorMessage` | Observer closure is **already `@MainActor`-isolated**; delivered **synchronously** on post | UI-adjacent notifications (keyboard, lifecycle, orientation) |
+| `NotificationCenter.AsyncMessage` | `Sendable`; observer is `async`, also consumable as an `AsyncSequence`; delivered **asynchronously** | Background/system signals (power state, thermal state) |
+
+**Async delivery is not ordered against your own work.** Apple: *"Asynchronous delivery isn't suitable for messages with time-critical deliveries, such as a message that must have its observers called before a certain action takes place."* If observers must run before you proceed, `AsyncMessage` is the wrong protocol — that is the deciding factor between the two, not merely which isolation you prefer.
+
+The payoff is clearest on keyboard avoidance — the most-written notification boilerplate in iOS:
+
+```swift
+// BEFORE — three casts, each of which can silently fail
+NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillShowNotification,
+                                       object: nil, queue: .main) { note in
+    guard let frame = note.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect,
+          let duration = note.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double
+    else { return }
+    animate(to: frame, over: duration)
+}
+
+// AFTER — typed properties, closure is already on the main actor
+@available(iOS 26, *)
+@MainActor
+func observeKeyboard(on screen: UIScreen) -> NotificationCenter.ObservationToken {
+    NotificationCenter.default.addObserver(of: screen,
+                                          for: UIResponder.KeyboardWillShowMessage.self) { message in
+        animate(to: message.endFrame, over: message.animationDuration)   // no casts, no optionals
+    }
+}
+```
+
+`KeyboardWillShowMessage` also carries `beginFrame`, `animationCurve`, `isLocal`, and `screen`. Do **not** reach for `UIScreen.main` as the subject — it is deprecated in iOS 26; take the screen from context (`view.window?.windowScene?.screen`).
+
+**The isolation win is compiler-visible, not stylistic.** The BEFORE block warns — *"call to main actor-isolated global function in a synchronous nonisolated context"* — because `queue: .main` schedules on the main *thread* without making the closure main-actor *isolated*. The AFTER block compiles clean: `MainActorMessage` observers are `@MainActor` by signature, so the hop is expressed in the type system instead of assumed.
+
+**`AsyncMessage` as a stream** — the typed replacement for `notifications(named:)`:
+
+```swift
+@available(iOS 26, *)
+func watchPowerState() async {
+    for await message in NotificationCenter.default.messages(
+        of: ProcessInfo.processInfo,
+        for: ProcessInfo.PowerStateDidChangeMessage.self
+    ) {
+        _ = message
+    }
+}
+```
+
+`messages(of:for:bufferSize:)` takes an explicit `bufferSize` that defaults to **10** — raise it if your consumer is slower than the post rate.
+
+**Lifecycle — this is the part that actually changes.** `addObserver` returns a `NotificationCenter.ObservationToken`, and observation is tied to the token's lifetime: Apple states it *"automatically de-registers the observer if the token goes out of scope."* Retain the token for as long as you want the observation, and dropping it is a complete teardown. `removeObserver(_:)` still exists for stopping early, but it is no longer the thing standing between you and a leak — which is the opposite of the old `addObserver(forName:)` contract, where forgetting to remove leaked the observer.
+
+**Posting** works both ways: `post(_ message:)` and `post(_ message:subject:)`. `MainActorMessage.post` is itself `@MainActor`.
+
+#### Coverage — check before you migrate
+
+The protocols are **iOS 26**, but each framework adopts them separately, and a framework that has not adopted them has no typed API to migrate to. Conforming frameworks as of 27:
+
+| Cycle | Frameworks |
+|---|---|
+| 26 | UIKit (72 messages — all keyboard, app lifecycle, orientation, accessibility status), Foundation (31 — `ProcessInfo` power/thermal, `UndoManager`, `NSMetadataQuery`), GameController, HealthKit, EventKit, ManagedSettings, LiveCommunicationKit, AVFoundation (playback only, from 26.4) |
+| 27 | Adds Accessibility, AVFAudio, CoreData, CoreTelephony, ExternalAccessory, MessageUI |
+
+**AVFoundation's single conformer is playback-side** (`AVPlayerInterstitialEventMonitor.ScheduleRequestCompleted`, 26.4). **Capture has none** — `AVCaptureSession` interruption and runtime-error notifications are still untyped, as is all of PhotoKit. For those, keep `notifications(named:)`; there is nothing typed to adopt.
+
+**Custom types**: conform your own payload to either protocol. Interop with existing `Notification` posters is what Apple calls "optional interoperability", and it works by **conversion**, not by sharing a post — `makeMessage(_:)` reads a `Notification`'s `userInfo` into your typed properties, and `makeNotification(_:)` writes them back out. Supply both and an observer of your message type receives posts made the old way, and vice versa, so migration can be incremental.
+
+All three requirements have **default implementations**, which is the trap: take the default `name` and it will not match your existing `Notification.Name`, so the bridge silently never connects. Declaring `static var name` explicitly is what wires a typed message to notifications already being posted.
+
 ### Timer to AsyncSequence
 
 ```swift
