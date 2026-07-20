@@ -27,6 +27,7 @@ Questions you can ask Claude that will draw from this skill:
 - "What purpose string should I use for reading workouts?"
 - "Users say they denied permission but the sheet keeps not appearing — what's happening?"
 - "Should I enable Clinical Health Records capability if I might use it later?"
+- "How do I find the earliest date I'm authorized to read a HealthKit sample type?" (iOS 27)
 
 ## What This Skill Provides
 

@@ -177,6 +177,21 @@ store.requestPerObjectReadAuthorization(
 
 This is the only authorization path that always shows a sheet (per WWDC 2022-10005: "Doing so will always display an authorization prompt in your app with a list of all the prescriptions that match your predicate").
 
+## Earliest Authorized Read Date `OS27`
+
+`HKHealthStore.earliestAuthorizedSampleDate(for:)` returns, per requested type, the earliest `Date` the app is authorized to read:
+
+```swift
+@available(anyAppleOS 27, *)
+func authorizedWindow(_ store: HKHealthStore) async throws -> [HKObjectType: Date] {
+    try await store.earliestAuthorizedSampleDate(
+        for: [HKQuantityType(.stepCount), HKQuantityType(.heartRate)]
+    )
+}
+```
+
+`async`/`throws`, all platforms at 27. Because a denied read and a genuinely-empty read are indistinguishable (see `HKAuthorizationStatus Is Write-Only` above), this is the one signal that gives you a *read floor* for a type — use it to bound a query predicate instead of paging back through data the app can't see. The SDK ships no doc comment for it in beta 4; the contract here is read from the signature, so confirm the exact semantics against Apple's docs once published.
+
 ## App Store Privacy
 
 - The **Privacy Manifest** (`PrivacyInfo.xcprivacy`) does not currently require HealthKit-specific declarations in Apple's published manifest documentation. Check App Store Connect's data-collection questionnaire at submission — it asks separately about health and fitness data categories.

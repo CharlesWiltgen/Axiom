@@ -491,15 +491,16 @@ func consumeIDs(_ x: consuming UniqueArray<Int>) { _ = x.count }
 
 `Ref`/`MutableRef` are the single-value analog of `Span`/`MutableSpan`: non-escapable, so the borrow can't outlive its source. On the concurrency side, `withTaskCancellationShield` is usable now and the single-resume `Continuation` is present but limited in this beta — see `swift-concurrency-ref`.
 
+Paren-free optional existentials and opaque types now compile under Swift 6.4 — `var overlay: any Drawable?` and `some P?` no longer have to be written `(any Drawable)?`.
+
 ### Still forthcoming (re-check each beta)
 
-Other 6.4 stdlib features are **not yet usable** in the current Xcode 27 beta (confirmed by compile-probe, build swiftlang-6.4.0.25.4):
+Other 6.4 stdlib features are **not yet usable** as of Xcode 27 beta 4 (confirmed by compile-probe, build swiftlang-6.4.0.27.1):
 
 | Feature | State in beta |
 |---------|---------------|
 | `Dictionary.mapKeyedValues` | Absent |
 | `FilePath` as a stdlib type | Still requires `import System` |
-| Paren-free `any P?` / `some P?` | Still must be written `(any P)?` |
 | `for`-loop borrowing iteration | Shipped as `BorrowingSequence` / `BorrowingIteratorProtocol` (renamed from "Iterable"), but gated behind `-enable-experimental-feature BorrowingSequence` — present, not yet shippable |
 
 Treat these as forthcoming; re-probe on each new beta and fold what flips.

@@ -756,7 +756,7 @@ Asset packs upload **independently of app builds** via:
 
 The Foundation Models framework's adapter loading hooks directly into Background Assets. This section captures the cross-framework API surface.
 
-**Status (27 SDK)**: the custom-adapter runtime — `SystemLanguageModel.Adapter`, `SystemLanguageModel(adapter:guardrails:)`, and `compatibleAdapterIdentifiers(name:)` — is retroactively **deprecated from 26.4 and obsoleted at 27.0** in the 27 SDK (iOS / macOS / visionOS; no deprecation appears in the 26.5 SDK). Compile-verified: building with the 27 SDK for an iOS 27 deployment target fails ("'Adapter' was obsoleted in iOS 27.0"); deployment targets of 26.x still compile. Apple states no replacement in the beta 1 interface — treat adapter delivery as a 26-era surface and re-check later betas. The Background Assets delivery mechanics below are unaffected; only the FM-side consumption API is going away.
+**Status (27 SDK)**: the custom-adapter runtime — `SystemLanguageModel.Adapter`, `SystemLanguageModel(adapter:guardrails:)`, and `compatibleAdapterIdentifiers(name:)` — is retroactively **deprecated from 26.4 and obsoleted at 27.0** in the 27 SDK (iOS / macOS / visionOS; no deprecation appears in the 26.5 SDK). Compile-verified: building with the 27 SDK for an iOS 27 deployment target fails ("'Adapter' was obsoleted in iOS 27.0"); deployment targets of 26.x still compile. Apple still states no replacement through the beta 4 interface — treat adapter delivery as a 26-era surface and re-check later betas. The Background Assets delivery mechanics below are unaffected; only the FM-side consumption API is going away.
 
 ### SystemLanguageModel.Adapter.compatibleAdapterIdentifiers(name:)
 

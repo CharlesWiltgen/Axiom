@@ -265,7 +265,7 @@ Configure your manifest URL via the extension and host the `.aar` files yourself
 
 **Use when**: Shipping a custom `.fmadapter` package trained with Apple's Foundation Models Adapter Training Toolkit. For the training and runtime API, see `axiom-ai (skills/foundation-models-adapters.md)` and `axiom-ai (skills/foundation-models-adapters-ref.md)`.
 
-> **27 SDK status**: the `SystemLanguageModel.Adapter` runtime is retroactively deprecated from 26.4 and **obsoleted at 27.0** in the 27 SDK — this pattern compiles only for pre-27 deployment targets, and beta 1 names no replacement. The Background Assets delivery side is unaffected.
+> **27 SDK status**: the `SystemLanguageModel.Adapter` runtime is retroactively deprecated from 26.4 and **obsoleted at 27.0** in the 27 SDK — this pattern compiles only for pre-27 deployment targets, and as of beta 4 still names no replacement. The Background Assets delivery side is unaffected.
 
 ```swift
 import BackgroundAssets

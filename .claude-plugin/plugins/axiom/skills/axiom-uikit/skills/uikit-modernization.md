@@ -61,6 +61,7 @@ You no longer own a fixed canvas — you express preferences the user and system
 | `UIMenuElement.preferredImageVisibility` | `iOS27` | Liquid Glass may hide menu images by default; opt an item back in |
 | `CMMotionManager.deviceMotionBody` | `iOS27`/`watchOS27`/`visionOS27` | assign a `UIView` as the motion reference frame (Body protocols) |
 | `CLLocationManager.headingBody` | `iOS27`/`macOS27`/`watchOS27` | replaces the deprecated `headingOrientation` |
+| `UITraitCollection.systemPrefersReducedResourceUsage` (+ `UITraitSystemPrefersReducedResourceUsage`, `.systemPrefersReducedResourceUsageDidChange`) | `iOS27`/`tvOS27`/`visionOS27` | system asks the app to cut discretionary work under resource pressure — react via `registerForTraitChanges`; see `axiom-performance (energy.md)` for the response playbook |
 
 `UIView` conforms to the CoreMotion/CoreLocation Body protocols, so you set `motionManager.deviceMotionBody = view` / `locationManager.headingBody = view` directly.
 
