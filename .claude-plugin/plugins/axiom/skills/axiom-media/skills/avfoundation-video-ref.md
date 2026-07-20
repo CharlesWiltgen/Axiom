@@ -123,6 +123,37 @@ let settings: [String: Any] = [
 
 Values: `AVVideoLogTransferFunction_AppleLog`, `AVVideoLogTransferFunction_AppleLog2`.
 
+### Typed buffer attachments (`OS27`)
+
+Swift-typed replacement for the untyped `CMSetAttachment` / `CVBufferSetAttachment` + `kCVImageBuffer*` CFString surface, where a wrong value type fails **silently**. CoreVideo is the substrate; CoreMedia typealiases it and adds 20 typed sample-buffer keys — one feature, not two.
+
+The payoff: a processed frame that silently loses its color tagging because nobody propagated attachments.
+
+```swift
+@available(anyAppleOS 27, *)
+func tagOutput(_ src: CVReadOnlyPixelBuffer, _ dst: inout CVMutablePixelBuffer) {
+    dst.attachments.propagate(from: src.attachments)     // carries colorPrimaries, transferFunction, ...
+    let primaries = src.attachments.colorPrimaries       // CVImageColorPrimaries?  (typed, not CFString)
+    let disparity = src.attachments.horizontalDisparityAdjustment  // Int32 — NOT optional
+}
+```
+
+**The gate is a type, not a platform.** Typed `.attachments` exists only on the Swift-native buffers (`CVReadOnlyPixelBuffer`, `CVMutablePixelBuffer`, `CMReadySampleBuffer`, `CMReadOnlyDataBlockBuffer`, `CMMutableDataBlockBuffer`). The classic CFType `CMSampleBuffer` does **not** get it and keeps the untyped `CMAttachmentBearerAttachments` (`Any` values). Adopting typed attachments means first adopting the iOS 26 Swift-native buffer types.
+
+| Trap | Rule |
+|---|---|
+| `CVAttachmentAccess` is `~Escapable` | Its lifetime is tied to the buffer. You cannot store or return `buffer.attachments` — **compile error**. Use `.copy()` → `CVAttachmentContainer` (Sendable) to outlive the buffer |
+| `propagate(from:)` ≠ `copy()` | `propagate` copies only keys marked propagating; `copy()` copies both |
+| Propagation mode is a compiler-enforced phantom type | `CVAttachmentKeyDefinition<ShouldPropagate, V>` vs `<ShouldNotPropagate, V>`. Overriding requires the raw subscript with a `(value, mode)` tuple |
+| Optionality differs by key kind | `CVAttachmentKeyDefinition` → `V?`; `…WithDefault` → **non-optional `V`** |
+| "Absent" vs "present but default" | Only `attachedMode(of:)` distinguishes them — it tests presence without decoding |
+
+**Availability trap**: `postDecodeProcessingSequenceMetadata` / `…FrameMetadata` are **macOS-only** (`@available(iOS, unavailable)` and the same for tvOS/watchOS/visionOS). The symbolgraph reports `introduced: 27` on all five platforms and puts the unavailability in a sibling `isUnconditionallyUnavailable: true` field — read `introduced` alone and you will document an unavailable API as shipping.
+
+**`CMReadySampleBuffer` is an iOS 26 type**, not 27 — the Sendable sample-buffer migration landed in 26 and 27 only builds typed attachments on top of it.
+
+Custom keys are first-class: extend the `*AttachmentKeyDefinitions` enum and conform `CVAttachmentValueRepresentable`. For a `RawRepresentable` whose `RawValue` is itself attachment-representable, the two protocol requirements come from a default implementation — but you must still **declare** the conformance, exactly as Apple's own types do. Omitting it is a compile error, not free inference.
+
 ### Detach playback from system audio (`OS27`, not macOS)
 
 `@available(iOS 27, tvOS 27, watchOS 27, visionOS 27, *)`, `@available(macOS, unavailable)`, `@available(macCatalyst, unavailable)` — note the inverse platform set (watchOS yes, macOS/Catalyst no):
