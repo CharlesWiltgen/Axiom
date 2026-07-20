@@ -111,6 +111,20 @@ Content here.
 Common patterns.
 `,
     );
+
+    // Generated inline-auditor sub-skill — must be EXCLUDED from the bundle.
+    // MCP ships every auditor as a first-class agent, so the inlined copy would
+    // double-count and trip pre-deploy's mcp-fidelity check. The marker matches
+    // GENERATED_PREFIX in scripts/inline-auditors.ts.
+    await writeFile(
+      join(tmpDir, 'skills', 'axiom-test-suite', 'skills', 'codable-auditor.md'),
+      `<!-- GENERATED from agents/codable-auditor.md by scripts/build-inlined-auditors.ts — do not edit. -->
+
+# Codable Auditor
+
+Generated auditor procedure.
+`,
+    );
   });
 
   afterAll(async () => {
@@ -123,5 +137,16 @@ Common patterns.
     expect(bundle.skills['axiom-test-suite']).toBeDefined();
     expect(bundle.skills['axiom-test-suite--patterns']).toBeDefined();
     expect(bundle.skills['axiom-test-suite--patterns']?.description).toBe('Common patterns.');
+  });
+
+  it('excludes generated inline-auditor sub-skills from the bundle', async () => {
+    const bundle = await generateBundle(tmpDir);
+
+    // The hand-written reference file is still bundled...
+    expect(bundle.skills['axiom-test-suite--patterns']).toBeDefined();
+    // ...but the generated inline-auditor copy is NOT — MCP delivers that
+    // procedure as an agent, so bundling it would double-count (mirrors
+    // build-codex.ts, and satisfies pre-deploy's mcp-fidelity source==bundle count).
+    expect(bundle.skills['axiom-test-suite--codable-auditor']).toBeUndefined();
   });
 });

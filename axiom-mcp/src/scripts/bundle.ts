@@ -74,6 +74,13 @@ export async function generateBundle(pluginPath: string): Promise<BundleV2> {
               if (!refFile.endsWith('.md')) continue;
               try {
                 const refContent = await readFile(join(refsDir, refFile), 'utf-8');
+                // Skip generated inline-auditor sub-skills. They exist only so
+                // Agent-Skills-spec harnesses (which have no agents) can reach an
+                // auditor procedure; MCP already ships every auditor as a first-class
+                // agent, so bundling the inlined copies would double-count and trip the
+                // pre-deploy mcp-fidelity check. Mirrors build-codex.ts. Marker string is
+                // kept in sync with GENERATED_PREFIX in scripts/inline-auditors.ts.
+                if (refContent.startsWith('<!-- GENERATED from agents/')) continue;
                 const refSkill = applyAnnotations(
                   parseReferenceFile(refContent, refFile, entry),
                   annotations,
