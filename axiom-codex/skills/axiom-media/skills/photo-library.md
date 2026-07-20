@@ -350,7 +350,7 @@ picker.moveAsset(withIdentifier: "assetID", afterAssetWithIdentifier: "otherID")
 
 ### Pattern 2b: Options Menu & HDR Support (iOS 17+)
 
-The picker now shows an Options menu letting users choose to strip location metadata from photos. This works automatically with PhotosPicker and PHPicker.
+The picker now shows an Options menu letting users choose to strip location metadata from photos. This works automatically with PhotosPicker and PHPicker. It is **user**-controlled — to strip metadata unconditionally, see Pattern 2c.
 
 **Preserving HDR content**:
 
@@ -386,6 +386,42 @@ config.preferredAssetRepresentationMode = .current  // Don't transcode
 ```
 
 **Cinematic mode videos**: Picker returns rendered version with depth effects baked in. To get original with decision points, use PhotoKit with library access instead.
+
+### Pattern 2c: Metadata Stripping & Search Seeding `OS27`
+
+Available on iOS/macOS/visionOS 27 — **not tvOS/watchOS**, so gate with `@available(iOS 27, macOS 27, visionOS 27, *)`. Do not reach for `anyAppleOS 27` here; it would claim two platforms where these APIs do not exist.
+
+Pattern 2b's Options menu is *user*-controlled: the user may or may not strip location. `metadataOptions` is *developer*-controlled and unconditional — the strip happens before your app ever sees the asset, so there is no item-provider work to write and nothing to forget.
+
+```swift
+// SwiftUI
+PhotosPicker(selection: $selectedItems, matching: .images) {
+    Text("Select Photo")
+}
+.photosPickerMetadataOptions([.removeLocation, .removeCaptions])
+
+// UIKit
+var config = PHPickerConfiguration()
+config.metadataOptions = [.removeLocation, .removeCaptions]
+```
+
+**The default is empty** — nothing is stripped. The privacy win is opt-in, so an app that never sets this keeps forwarding GPS coordinates to its backend exactly as before. In Swift the empty set is `[]`; the header's `PHPickerMetadataOptionsNone` is the ObjC spelling and `.none` is explicitly unavailable ("use [] to construct an empty option set").
+
+**Seeding the picker's search field**:
+```swift
+// SwiftUI — String overload, or PHPickerSearchText for the typed form
+.photosPickerSearchText("beach sunset")
+
+// UIKit
+config.searchText = PHPickerSearchText("beach sunset")
+
+// Live update on an already-presented picker (extends the iOS 17 updatePicker path)
+var update = PHPickerConfiguration.Update()
+update.searchText = PHPickerSearchText("golden retriever")
+picker.updatePicker(using: update)
+```
+
+**Cost**: 2 min. One line to remove location metadata from every picked asset.
 
 ### Pattern 3: Handling Limited Library Access
 
@@ -500,6 +536,64 @@ func savePhotoData(_ data: Data, metadata: [String: Any]? = nil) async throws {
 ```
 
 **Cost**: 15 min implementation
+
+### Pattern 4b: Shared Albums `OS27`
+
+Three system sheets for creating, posting to, and customizing shared albums — iOS/macOS/visionOS 27, **not tvOS/watchOS**. Each has a SwiftUI modifier and a UIKit view controller.
+
+```swift
+// Create — onCompletion receives PHSharedAlbumCreationResult? (albumIdentifier + albumURL)
+.photosSharedAlbumCreationSheet(
+    isPresented: $creating,
+    defaultTitle: "Trip Photos",
+    defaultSharingPolicy: .private,
+    photoLibrary: .shared()
+) { result in
+    guard let result else { return }   // nil == user cancelled
+    albumID = result.albumIdentifier
+}
+
+// Post — completion is Result<String, any Error>; the String is the album identifier
+.photosSharedAlbumPostingSheet(
+    isPresented: $posting,
+    items: selectedItems,
+    defaultAlbumIdentifier: albumID,
+    photoLibrary: .shared()
+) { result in ... }
+
+// Customize — no-ops silently unless albumIdentifier is non-nil BEFORE isPresented flips true
+.photosSharedAlbumCustomizationSheet(
+    isPresented: $customizing,
+    albumIdentifier: albumID,
+    photoLibrary: .shared()
+) { ... }
+```
+
+**Behavioral traps** — all straight from Apple's own doc comments, but buried in per-parameter Remarks where they are easy to miss:
+
+| Trap | Consequence |
+|---|---|
+| Cancel is **silent** on the creation and customization sheets | `isPresented` → false, `onCompletion` never fires. Teardown in the completion handler never runs. (The posting sheet documents no cancel behavior, and its `Result<String, _>` has no channel to signal one — treat it as unspecified) |
+| Completion/dismiss ordering is **inverted between siblings** | Creation: `onCompletion` fires *before* `isPresented` → false. Customization: `isPresented` → false *before* `onCompletion`. Code assuming one ordering breaks on the other |
+| Customization no-ops on a nil identifier | Both `isPresented == true` AND a non-nil `albumIdentifier` are required, and the id must be set *by the time* the sheet presents |
+| Customization is system-photo-library-only | Stated repeatedly in the ObjC header (not in the SwiftUI modifier's doc comment); a custom `PHPhotoLibrary` silently does nothing |
+| UIKit VCs never self-dismiss | All three delegates. You dismiss |
+| The UIKit creation delegate is **tri-state** | success = `creationResult` non-nil; failure = `error` non-nil; **cancel = both nil** |
+
+**Apple's doc comments are wrong here.** The creation sheet's prose says the completion receives a `String` identifier — the real parameter is `PHSharedAlbumCreationResult?`. The delegate header references an `albumIdentifier` property on the view controller that does not exist (it is `creationResult`). Read the signatures, not the prose.
+
+**Default sharing policy is `.private`** (invite/approval required). `.public` lets anyone with the link in without approval — an explicit opt-in you should surface in your own UI, not silently pass through. Note the label differs between layers: SwiftUI takes `defaultSharingPolicy:`, the UIKit configuration property is `defaultPolicy`.
+
+**Migration**: `View.postToPhotosSharedAlbumSheet(...)` shipped in iOS 26.0 (iOS-only) and is **deprecated in 27**. The replacement `photosSharedAlbumPostingSheet(...)` widens to iOS/macOS/visionOS and breaks the signature two ways — a mechanical find-and-replace will not compile:
+
+```
+old (iOS 26.0, deprecated 27):
+  postToPhotosSharedAlbumSheet(isPresented:items:photoLibrary:defaultAlbumIdentifier:completion:)
+new:                                                          ^^^^^^^^^^^^^^^^^^^^^^ ^^^^^^^^^^^^ swapped
+  photosSharedAlbumPostingSheet(isPresented:items:defaultAlbumIdentifier:photoLibrary:completion:)
+```
+
+The completion type also changes from `Result<Void, any Error>` to `Result<String, any Error>` (the `String` is the album identifier).
 
 ### Pattern 5: Loading Images from PhotosPickerItem
 
@@ -642,6 +736,8 @@ PhotosPicker(selection: $item, matching: .images) {
 
 **Why it matters**: PHPicker and PhotosPicker handle privacy automatically. Requesting library access when you only need to pick photos is a privacy violation and may cause App Store rejection.
 
+**"Automatically" covers *access*, not *metadata*.** The picker keeps your app out of the library, but the asset it hands back still carries the photo's GPS coordinates and captions. If you upload picked photos, you are shipping the user's location to your backend. On OS 27, `.photosPickerMetadataOptions([.removeLocation, .removeCaptions])` strips it in one line — see Pattern 2c.
+
 ### Anti-Pattern 2: Ignoring Limited Status
 
 **Wrong**:
@@ -742,6 +838,22 @@ func downsampledImage(from data: Data, maxPixel: CGFloat) -> UIImage? {
 
 `CGImageSourceCreateThumbnailAtIndex` decodes directly at the target size — it never materializes the full bitmap. Pick a `maxPixel` matching your display (e.g. 2048 for a full-screen attachment), and downsample again to your upload target before sending over the network.
 
+**Harden untrusted sources with an allowlist `OS27`.** Image-decoder bugs are a recurring iOS attack vector, and by default `CGImageSource` will reach for *any* decoder ImageIO ships. When the bytes came from the network or another app, restrict which formats can be parsed:
+
+```swift
+let src = CGImageSourceCreateWithData(untrustedData as CFData, [
+    kCGImageSourceShouldCache: false,
+    kCGImageSourceAllowableTypes: ["public.jpeg", "public.png"] as CFArray
+] as CFDictionary)
+```
+
+- Unknown UTIs are **silently ignored** — a typo does not error, it just fails to widen the allowlist. Verify against the system-declared identifiers.
+- Unspecified = every supported format (today's behavior).
+- **Intersects** with the process-wide `CGImageSourceSetAllowableTypes`: only formats permitted by *both* get decoded.
+- Not to be confused with that function, which dates to iOS 17.2, applies process-wide, and can only be called once. The 27 addition is the **per-source** key — the first way to harden a single untrusted asset without committing the whole process.
+
+There is no Swift-native ImageIO to migrate to: the `ImageIO.swiftmodule` added in 27 exposes **zero** public API. Keep writing the C-style `CGImageSource` calls.
+
 **Why it matters**: "Slow to load" is a UX problem (show a placeholder). "Crashes on big photos" is a *memory* problem (downsample) — different fix. Conflating them leaves the crash in place.
 
 ## Pressure Scenarios
@@ -806,6 +918,10 @@ Before shipping photo library features:
 - ☑ Handling `.limited` status (not treating as denied)
 - ☑ Offering `presentLimitedLibraryPicker()` for users to add photos
 - ☑ UI explains limited access to users
+
+#### Privacy & Untrusted Input
+- ☑ Picked assets that leave the device have location/captions stripped (`metadataOptions` `OS27`) or are scrubbed manually on older targets
+- ☑ `CGImageSource` over untrusted bytes passes `kCGImageSourceAllowableTypes` `OS27`
 
 #### Image Loading
 - ☑ All loading is async (no UI blocking)

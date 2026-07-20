@@ -500,7 +500,7 @@ if let result = arView.raycast(from: screenPoint,
 | `UnlitMaterial` | No lighting response | Color or texture, always fully lit |
 | `OcclusionMaterial` | Invisible but occludes | AR content hiding behind real objects |
 | `VideoMaterial` | Video playback on surface | AVPlayer-driven |
-| `ShaderGraphMaterial` | Custom shader graph | Reality Composer Pro |
+| `ShaderGraphMaterial` | Custom shader graph | Reality Composer Pro, or authored in Swift via `ShaderGraph` (`OS27`) |
 | `CustomMaterial` | Metal shader functions | Full Metal control |
 
 ### PhysicallyBasedMaterial
@@ -828,6 +828,12 @@ The 27 releases are a major RealityKit cycle. Full API detail lives in axiom-gra
 | Custom reverb meshes | Raytraced acoustics in immersive spaces |
 | Decals, occlusion culling, bloom, tone mapping, clipping, render layers | Rendering control without custom Metal |
 | Mesh deformers, skeleton retargeting, animation graphs, behavior trees | Character pipelines — author graphs in Reality Composer Pro 3 |
+| Low-level renderer (`LowLevelRenderer`) | Drive RealityKit's shading from **your own** `MTLCommandBuffer`, with no `Entity` or `RealityView` — see realitykit-ref Part 11 |
+| ShaderGraph in Swift (`ShaderGraph` → `ShaderGraphMaterial.Program`) | Author a shader graph in code instead of Reality Composer Pro — new capability in 27, not a refactor |
+| Runtime skybox + IBL (`SkyboxGenerator`, `ImageBasedLightTextureGenerator`) | Generate an environment/IBL from an equirectangular HDR at runtime instead of shipping a pre-baked asset |
+| GPU mesh deformation (`LowLevelDeformation`) | Blend shapes and skinning on your own compute encoder — the custom-renderer sibling of `MeshDeformerComponent` |
+
+The last four reach RealityKit's *renderer* layer directly. They arrive through `import RealityKit` — the submodules that define them cannot be imported on their own.
 
 Reality Composer Pro 3 is the authoring companion for most of these (light baking, navmesh authoring, particle/character graphs that run at runtime via `ComputeGraphComponent`). For reading, editing, and exporting USD files in Swift, see the new USDKit framework — axiom-graphics (skills/usdkit.md).
 

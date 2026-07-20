@@ -85,6 +85,14 @@ For 3D content in non-game SwiftUI apps, AR experiences, and spatial computing, 
 - Gesture not responding, performance issues
 - Material problems, physics issues
 
+### HDR Tone Mapping & Color
+
+**HDR drawing and color metadata** → See skills/hdr-color-ref.md
+- HDR images washed out, clipped, or dark when drawn into a `CGContext`
+- Choosing a tone-mapping method (`CGContentToneMappingInfo` vs `CGToneMapping`)
+- Headroom Adaptive Gain Curve metadata on ICC profiles (`OS27`)
+- Persisting `CGColor` / `CGColorSpace` (`Codable` in `OS27`)
+
 ### USD Authoring (USDKit) `OS27`
 
 **USD file work in Swift** → See skills/usdkit.md
@@ -113,7 +121,9 @@ For 3D content in non-game SwiftUI apps, AR experiences, and spatial computing, 
 15. Read/edit/export a USD or USDZ file in Swift? → usdkit
 16. ML in the render pipeline (denoising, Metal tensors)? → metal-migration-ref (Part 6)
 17. Frame drops in long play sessions? → display-performance (Part 12)
-18. Building a 3D game? → Use axiom-games router instead
+18. HDR image looks washed out / clipped when drawn? → hdr-color-ref
+19. Choosing a tone-mapping method, or reading HAGC metadata? → hdr-color-ref
+20. Building a 3D game? → Use axiom-games router instead
 
 ## Anti-Rationalization
 
@@ -128,6 +138,7 @@ For 3D content in non-game SwiftUI apps, AR experiences, and spatial computing, 
 | "I'll parse the USD file myself / bundle OpenUSD" | USDKit is system-provided USD on the 27 releases. `skills/usdkit.md` covers stages, editing, and compressed export. |
 | "I'll write my own pathfinding over the scene graph" | RealityKit 27 ships navigation meshes with costs and off-mesh connections. `skills/realitykit-ref.md` Part 10. |
 | "The frame drop only happens after an hour of play, can't trace that" | The 27 releases record Metal metrics continuously — collect after the fact with metalperftrace. `skills/display-performance.md` Part 12. |
+| "I'll use `CGContentToneMappingInfo` — it's the modern Swift enum" | It cannot express Headroom Adaptive Gain Curve; only the C-imported `CGToneMapping` can. Newer spelling, narrower capability. `skills/hdr-color-ref.md` Part 1. |
 
 ## Critical Patterns
 
@@ -235,3 +246,9 @@ User: "My game's frame rate drops after an hour of play"
 
 User: "How do I run a neural network inside my Metal shader?"
 → See `skills/metal-migration-ref.md` (Part 6)
+
+User: "My HDR photo looks washed out when I draw it into a CGContext"
+→ See `skills/hdr-color-ref.md`
+
+User: "How do I check whether an image's ICC profile carries a gain curve?"
+→ See `skills/hdr-color-ref.md`

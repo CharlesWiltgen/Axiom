@@ -707,6 +707,91 @@ func setUpCloth(simulationRoot: Entity, cloth: Entity) {
 
 The runtime `ComputeGraphComponent` family above *runs* compute node graphs; the new **`ComputeGraph`** framework (`import ComputeGraph`) is the programmatic, code-level way to *build and drive* one — the Swift counterpart to authoring a graph visually in Reality Composer Pro 3. Two core types: `ComputeNodeGraph` (the graph *description*) and `ComputeGraphSimulation` (the runtime — `simulationRate`, `advance(_:)`). Plus the node-description enums: `Topology` (`.point`/`.triangle`/`.quad`/`.octagon`/`.strip`/`.instances`), `BinaryOperation` / `UnaryOperation` / `StandardLibraryFunction` (node math), `AddressSpace`, `CoordinateSpace`, `ElementGrouping`, `Sorting`, `StripOrientation`, `ElementSpawnParameters`, `PortReference`. Available on iOS/macOS/visionOS/tvOS 27 (not watchOS). Most apps author graphs in RCP 3 and run them via `ComputeGraphComponent`; reach for the framework only when you need to generate or mutate graphs at build/runtime.
 
+### ShaderGraph in Swift (`OS27`, not watchOS)
+
+27 is the first cycle where you can **author** a shader graph in code. `ShaderGraphMaterial` existed in 26 but was opaque — load an asset made in Reality Composer Pro, then `setParameter(name:)` and nothing more. 27 adds `ShaderGraphMaterial.Program` (+ `Program.Descriptor`) and `PortalMaterial.Program`, both built from a `ShaderGraph` you construct yourself.
+
+Everything nests under `ShaderGraph`: `NodeLibrary` (`.materialX138` / `.materialX139` / `.default`, with `definition(named:)` and `makeNode(from:)`), `NodeDefinition` (+ `.Input` / `.Output` / `.SemanticType` / `.Availability`), `Node` and its nested `Node.NodeData` (`.definition` / `.graph` for subgraphs / `.constant`), `Edge`, `Value` (24 cases), `DataType` (28 cases), `TextureCoordinate`. Graph ops: `addNode`, `addEdge`, `connect`, `validate()`, `encode()`.
+
+```swift
+import RealityKit   // NOT `import ShaderGraph` — see the import rule in Part 11
+
+@available(iOS 27, macOS 27, visionOS 27, tvOS 27, *)
+func makeMaterial() async throws -> ShaderGraphMaterial {
+    let library = ShaderGraph.NodeLibrary(version: .default)   // .default is a Version, not a library
+    let graph = try ShaderGraph(named: "MyShader", inputs: [], outputs: [], nodeLibrary: library)
+
+    guard let def = library.definition(named: "ND_atan2_float") else { throw MyError.unknownNode }
+    let node = try library.makeNode(from: def)                 // makeNode is on NodeLibrary
+    try graph.addNode(node)                                    // throws; returns the assigned name
+
+    guard graph.validate() else { throw MyError.invalidGraph }  // returns Bool — does NOT throw
+    let descriptor = try ShaderGraphMaterial.Program.Descriptor(inferredFrom: graph)
+    return try await ShaderGraphMaterial(program: .init(descriptor: descriptor))
+}
+```
+
+| Gotcha | Consequence |
+|---|---|
+| `validate()` returns `Bool` | It does not throw. `try graph.validate()` is a compile error, and ignoring the result silently accepts a broken graph |
+| `definition(named:)` returns an **Optional** | An unknown or misspelled MaterialX name yields `nil`, not an error |
+| `init(named:inputs:outputs:)` is deprecated in the SDK that introduces it | Use the `nodeLibrary:` overload |
+| `validate()` runs the compiler **front end only** | Apple: a graph that passes may still fail later during Metal library generation. It is not a green light |
+| `connect` has String-keyed and Node-keyed overloads | Mixing the two in one call fails to typecheck |
+| `functionConstantInputs` bake in at `Program` compile time | Cannot change afterward — recompile the program |
+| `arguments` / `results` are **virtual nodes** | Connect *from* `arguments`, *to* `results` |
+
+Node names follow the MaterialX convention (`ND_atan2_float`), and each definition carries a `group` (`"math"`, `"texture"`) because Apple expects you to build a node-picker UI on it.
+
+**Do not use the ShaderGraph module's `_Proto_*` types**, `MaterialDecodingConfiguration` (an empty struct), `MaterialXVersion`, `MaterialXTarget`, or `MaterialXAvailability` — module-public but dead, referenced by nothing but their own protocol conformances. This applies to the **ShaderGraph** module specifically; `RealityCoreDeformation` ships its own separate `_Proto_*` family, and that one is live.
+
+### GPU Mesh Deformation (`OS27`, not watchOS)
+
+**`MeshDeformerComponent` (in the catalog above) is the mainstream path.** This is the custom-renderer escape hatch: raw `MTLBuffer`s encoded into your own `MTLComputeCommandEncoder`, with no `Entity`, `Component`, or `MeshResource` in any signature. Zero type overlap with the ECS deformation stack — reach for it only if you already own the render loop.
+
+| Type | Role |
+|---|---|
+| `LowLevelDeformationContext` | Per-`MTLDevice` owner. `makePipeline(_:)` (sync and async), `makeDeformation(pipeline:descriptor:)` |
+| `LowLevelDeformation` | Encodes blend-shape, skinning, and renormalization passes. `encode(into:) throws` |
+| `LowLevelDeformation.Mesh` / `.BlendShape` / `.Skinning` / `.Renormalization` | The working surface — `setVertices`, the `set*Offsets` setters, and the `replace*` validators live here, not on `LowLevelDeformation` itself |
+
+| Gotcha | Consequence |
+|---|---|
+| `encode(into:)` throws if the encoder uses **concurrent dispatch** | Needs a serial compute encoder |
+| Compile the `Pipeline` once and reuse it | But re-bind `input`/`output` vertices *every* frame |
+| The `replace*` closures validate on return and **throw** | Joint indices vs `jointTransformCount`, adjacencies vs `indexCount / 3`, triangle indices vs `vertexCount`, and `replaceAdjacencyEndIndices` vs `renormalizing.adjacenciesCount` |
+| Buffer shapes are exact | Blend-shape offsets = `targetCount × vertexCount`; weights = `targetCount` floats |
+
+Unlike cloth, this is **not** experimental — no deprecation annotations, and it ships on tvOS too. The cloth source-break caveat does not transfer.
+
+### Runtime Skybox and IBL Generation (`OS27`, not watchOS)
+
+Elsewhere the guidance for a model that renders black is "add an image-based light," followed by `EnvironmentResource(named:)` loading a **pre-baked** asset. This is how you *produce* one at runtime, in Metal, from an equirectangular HDR.
+
+| Type | Purpose |
+|---|---|
+| `SkyboxGenerator` | Equirectangular `MTLTexture` → skybox cube (with mipmaps) |
+| `ImageBasedLightTextureGenerator` | Skybox cube → diffuse irradiance + specular pre-filtered cubes, the shape `EnvironmentResource` consumes |
+| `TextureSamplingQuality` | `.low` (**default**) / `.normal` / `.high` / `.veryHigh` |
+
+```swift
+@available(iOS 27, macOS 27, visionOS 27, tvOS 27, *)
+func makeSkybox(device: MTLDevice, commandBuffer: MTLCommandBuffer,
+                equirect: MTLTexture) throws -> MTLTexture {
+    let generator = SkyboxGenerator(device: device)
+    let descriptor = try generator.makeDescriptor(fromEquirectangular: equirect)  // allocates mipmaps
+    let cube = device.makeTexture(descriptor: descriptor)!
+    try generator.generateSkybox(using: commandBuffer, fromEquirectangular: equirect,
+                                 quality: .high, into: cube)   // pass quality explicitly
+    return cube
+}
+```
+
+- **The skybox cube must have mipmaps** — the IBL generators require a mipmapped source. `makeDescriptor(fromEquirectangular:)` allocates them, so hand-rolling a descriptor is where this goes wrong.
+- **`.low` is the silent default** on all three `generate*` calls and it bands gradients. Pass a quality explicitly. (The `make*Descriptor` methods take no quality.)
+- Throws if the destination's pixel format does not support shader writes on this device.
+- Each `generate*` takes an `MTLCommandBuffer` you own, so it composes with your other GPU work.
+
 ### Soft Shadows
 
 `lightSize` (diameter in meters) on `SpotLightComponent.Shadow` produces a penumbra (spotlights only — `DirectionalLightComponent.Shadow` did not gain these members). Quality must be `.medium` or `.high` — `.low` always renders hard shadows regardless of `lightSize`.
@@ -846,6 +931,73 @@ let bookshelf = Audio.Material(absorption: absorption, scattering: scattering)
 | `ARReferenceObject.usdzFile` | USDZ file backing a reference object |
 | `ARFrame.metadataObjects` | `AVMetadataObject`s detected in the frame (`API_UNAVAILABLE(visionos)`) |
 | `ARFaceTrackingConfiguration.environmentTexturingEnabled` | Environment texturing during face tracking |
+
+---
+
+## Part 11: Low-Level Renderer (`OS27`, not watchOS)
+
+RealityKit's renderer decoupled from `Entity` and `RealityView`, driven from **your** `MTLCommandBuffer`. Apple: "You are responsible for creating and committing the Metal command buffer; the renderer only encodes into it." It still handles camera constants, per-instance transforms, MSAA resolve, tone mapping, and color-gamut conversion.
+
+**This is not Part 9's `RealityRenderer`.** `RealityRenderer` takes an entity list and renders it for you (`updateAndRender(deltaTime:cameraOutput:)`). `LowLevelRenderer` has no entities at all — you build mesh/material/buffer *resources* and submit draws inside a render callback. Pick Part 9 when you want RealityKit's scene graph rendered into a texture; pick Part 11 when you have your own renderer and want RealityKit's shading in it.
+
+### The import rule (governs all four new submodules)
+
+`RealityCoreRenderer`, `ShaderGraph`, `RealityCoreDeformation`, and `RealityCoreTextureProcessing` live in `System/Library/SubFrameworks/` and are re-exported from RealityKit. **A direct import is a hard compile error**: `"…is an implementation detail of 'RealityKit'; import 'RealityKit' instead"`. Reach all four through `import RealityKit`.
+
+Do not generalize this to `ComputeGraph` — that one *is* a real top-level framework and `import ComputeGraph` is correct.
+
+### Type catalog
+
+| Theme | Types |
+|---|---|
+| Frame loop | `LowLevelRenderer` (`.output`, `.cameras`, `.time`, `.colorMatch`, `render(using:_:)`), `Configuration`, `Camera` / `CameraArray`, `RenderState` (`~Copyable, ~Escapable`; exposes `MTLRenderCommandEncoder`) |
+| Resource context | `LowLevelRenderContext` (protocol), `…Standalone`, `…Lighting`, `…ShaderGraph` (bridges the ShaderGraph module) |
+| Resources | `LowLevelMeshResource` (custom vertex formats), `LowLevelTextureResource`, `LowLevelBufferResource`, `LowLevelBufferSlice`, `LowLevelInstanceTransformResource` |
+| Materials | `LowLevelMaterialResource` = `GeometryModifier` + `SurfaceShader` + `LightingFunction`; `LowLevelArgumentTable`, `LowLevelMaterialParameterMapping` |
+| Pipeline / targets | `LowLevelRenderPipelineState` (compiled once, async, immutable), `LowLevelRenderTarget.Descriptor` |
+| Draw submission | `LowLevelMeshPart` → `LowLevelMeshInstance` → `LowLevelMeshInstanceArray` |
+| Cull / sort | `BoundingSphereBox`, `LowLevelRenderer.cullMeshInstances(…)`, `LowLevelRenderer.sortMeshInstances(…)` |
+
+### Frame shape
+
+```swift
+import RealityKit
+
+@available(iOS 27, macOS 27, visionOS 27, tvOS 27, *)
+func drawFrame(_ renderer: LowLevelRenderer,
+               _ commandBuffer: MTLCommandBuffer,
+               colorTexture: MTLTexture) {
+    renderer.output.color = .init(texture: colorTexture)
+    renderer.time = Float(CACurrentMediaTime())   // .time is Float, not Double
+
+    renderer.render(using: commandBuffer) { state in
+        state.render(meshInstancesArrayIndex: 0, meshInstanceIndex: 0)
+    }
+    // You commit the command buffer. The renderer never does.
+}
+```
+
+### Naming-collision trap
+
+The 26-era types and the 27 renderer resources coexist in one file under `import RealityKit`, with near-identical names and unrelated purposes. The 26 types are entity-attached procedural geometry; the 27 `*Resource` types belong to the standalone renderer.
+
+| 26-era (RealityFoundation) | 27 (RealityCoreRenderer) |
+|---|---|
+| `LowLevelMesh` | `LowLevelMeshResource` |
+| `LowLevelTexture` | `LowLevelTextureResource` |
+| `LowLevelBuffer` | `LowLevelBufferResource` |
+| `LowLevelInstanceData` | `LowLevelInstanceTransformResource` |
+
+Autocomplete will happily offer the wrong one. Two reliable tells: the 26-era types are `@MainActor` classes that bridge to resources (`MeshResource.init(from: LowLevelMesh)`, `.lowLevelMesh`), while every 27 `*Resource` is minted from a `LowLevelRenderContext` (for example `makeInstanceTransformResource(instanceCapacity:)`). If you are constructing it from a render context, it is the 27 API.
+
+### Semantics worth knowing
+
+- GPU instancing composes transforms as `meshInstance.transform * instanceTransforms[i]` — final world transform, in that order.
+- `LowLevelRenderPipelineState` compiles once, asynchronously, and is immutable. Hoist it out of the frame loop.
+- `Camera.Projection.perspective(…)` defaults to `reverseZ: true`. Match your depth comparison to it.
+- `RenderState` is `~Copyable, ~Escapable` — it cannot outlive the render callback. Do not stash it.
+
+Availability: macOS/macCatalyst/iOS/visionOS/tvOS 27, with no `unavailable` clauses (RealityKit does not ship on watchOS).
 
 ---
 
