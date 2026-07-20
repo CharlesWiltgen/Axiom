@@ -36,16 +36,16 @@ Questions you can ask Claude that draw from this reference:
 - `CGContextDrawImageApplyingToneMapping` / `CGContext.draw(_:in:by:options:)`
 - Why the newer Swift enum is the *narrower* of the two
 
-### Headroom Adaptive Gain Curve (`OS27`)
+### Headroom Adaptive Gain Curve (iOS 27)
 
 - `ColorSyncProfile.headroomAdaptiveGainCurve`, `.headroomAdaptiveGainCurveMetadata`
 - `adding(headroomAdaptiveGainCurve:)` and `adding(headroomAdaptiveGainCurveMetadata:options:)`
 - `ColorSyncProfileContainsHeadroomAdaptiveGainCurve` for detection
 - The validating-constructor tree: `ColorVolumeTransform`, `ToneMapping`, `Method`, `AlternateCurve`, `ControlPoints`, `ComponentMix`
 - Curve semantics — control-point ranges, gain in stops, PCHIP interpolation, the free-style mix formula
-- The platform asymmetry: metadata ships on visionOS, the draw-time method does not
+- Why an omitted platform in an ObjC `API_AVAILABLE` clause means *inferred from iOS*, not unavailable — both halves ship on all five platforms at 27
 
-### Codable color (`OS27`)
+### Codable color (iOS 27)
 
 - `CGColor`, `CGColorSpace`, `CGInterpolationQuality` conformances
 - Which geometry types only gained `@retroactive` (and so are not new)

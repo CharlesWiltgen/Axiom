@@ -29,6 +29,8 @@ Use this skill when:
 - "How do I make entities tappable in visionOS?"
 - "How do I set up AR plane detection with RealityKit?"
 - "What materials does RealityKit support?"
+- "Can I use RealityKit's shading inside my own Metal renderer?" (iOS 27)
+- "How do I build a ShaderGraphMaterial without Reality Composer Pro?" (iOS 27)
 
 ## What This Skill Provides
 
