@@ -1007,4 +1007,4 @@ extension CameraManager: AVCapturePhotoCaptureDelegate {
 
 **Docs**: /avfoundation/avcapturesession, /avfoundation/avcapturedevice, /avfoundation/avcapturephotosettings, /avfoundation/avcapturedevice/rotationcoordinator, /avfoundation/avprovideostorage, /avfoundation/avcapturesmartframingmonitor
 
-**Skills**: skills/camera-capture.md, skills/camera-capture-diag.md
+**Skills**: skills/camera-capture.md, skills/camera-capture-diag.md, skills/avfoundation-video-ref.md (typed buffer attachments, `OS27`)

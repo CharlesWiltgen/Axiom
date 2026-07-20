@@ -62,6 +62,10 @@ config = PHPickerConfiguration(photoLibrary: .shared())
 config.preferredAssetRepresentationMode = .automatic  // default
 // .current - original format
 // .compatible - converted to compatible format
+
+// Metadata stripping + search seeding (OS27; iOS/macOS/visionOS only)
+config.metadataOptions = [.removeLocation, .removeCaptions]  // default []
+config.searchText = PHPickerSearchText("beach sunset")
 ```
 
 ### Filter Options
@@ -249,6 +253,40 @@ PhotosPicker(
 | `.automatic` | System decides format |
 | `.current` | Original format, preserves HDR |
 | `.compatible` | Force compatible format |
+
+### Picker Modifiers `OS27`
+
+iOS/macOS/visionOS 27 only — unavailable on tvOS/watchOS.
+
+```swift
+.photosPickerMetadataOptions([.removeLocation, .removeCaptions])
+.photosPickerSearchText("beach sunset")          // String overload
+.photosPickerSearchText(PHPickerSearchText(...)) // typed overload
+```
+
+| API | Type | Default |
+|---|---|---|
+| `PHPickerMetadataOptions` | OptionSet: `.removeLocation`, `.removeCaptions` (`.none` is unavailable in Swift — use `[]`) | `[]` |
+| `PHPickerSearchText` | `init(_ string: String)` | `nil` |
+| `PHPickerConfiguration.Update.searchText` | live update via `updatePicker(using:)` | `nil` |
+
+### Shared Album Sheets `OS27`
+
+```swift
+.photosSharedAlbumCreationSheet(isPresented:defaultTitle:defaultSharingPolicy:photoLibrary:onCompletion:)
+.photosSharedAlbumPostingSheet(isPresented:items:defaultAlbumIdentifier:photoLibrary:completion:)
+.photosSharedAlbumCustomizationSheet(isPresented:albumIdentifier:photoLibrary:onCompletion:)
+```
+
+| Type | Members |
+|---|---|
+| `PHSharedAlbumCreationResult` | `albumIdentifier: String`, `albumURL: URL` |
+| `PHSharedAlbumCreationSharingPolicy` | `.private` (default, approval required), `.public` |
+| `PHSharedAlbumCreationConfiguration` | `photoLibrary`, `defaultTitle`, `defaultPolicy` |
+
+Completion types: creation → `PHSharedAlbumCreationResult?`; posting → `Result<String, any Error>`; customization → `Void`. Cancel fires no completion on creation and customization (posting is undocumented). UIKit equivalents: `PHSharedAlbumCreationViewController`, `PHSharedAlbumPostingViewController`, `PHSharedAlbumCustomizationViewController` — none self-dismiss.
+
+Deprecated in 27: `postToPhotosSharedAlbumSheet` (iOS 26.0) → `photosSharedAlbumPostingSheet`. Two breaks: `photoLibrary:` and `defaultAlbumIdentifier:` swap order, and the completion type changes `Result<Void, _>` → `Result<String, _>`.
 
 ### Loading Images from PhotosPickerItem
 
