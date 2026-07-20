@@ -657,6 +657,7 @@ export default withMermaid(defineConfig({
           text: 'Games',
           items: [
             { text: 'SpriteKit API', link: '/reference/spritekit-ref' },
+            { text: 'HDR Tone Mapping & Color', link: '/reference/hdr-color-ref' },
             { text: 'Metal Migration API', link: '/reference/metal-migration-ref' },
             { text: 'RealityKit API', link: '/reference/realitykit-ref' },
             { text: 'SceneKit API', link: '/reference/scenekit-ref' }
