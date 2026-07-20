@@ -33,6 +33,7 @@ Use this reference when:
 - Isolation patterns (@MainActor, nonisolated, #isolation, sending, gotcha table)
 - Continuations (withCheckedContinuation, resume-exactly-once, bridging, gotcha table)
 - Migration patterns (DispatchQueue to actor, DispatchGroup to TaskGroup, callbacks to async, gotcha table)
+- Typed notifications (`MainActorMessage` / `AsyncMessage`, iOS 26+ — replacing `userInfo` casting, observation-token lifetime, per-framework coverage)
 - API quick reference table with Swift version requirements
 
 ## Documentation Scope

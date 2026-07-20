@@ -228,6 +228,8 @@ NotificationCenter.default.addObserver(
 }
 ```
 
+**On an iOS 26+ deployment target**, both this and the power-state observer above have typed replacements — `ProcessInfo.ThermalStateDidChangeMessage` and `ProcessInfo.PowerStateDidChangeMessage`, both `AsyncMessage`, consumable with `for await` via `NotificationCenter.default.messages(of:for:)`. That removes the `queue: .main` isolation assumption these callbacks rely on. See axiom-concurrency (skills/swift-concurrency-ref.md) "Typed Notifications".
+
 ### Adaptive Power (iOS 26+, iPhone 17)
 
 **New in iOS 26**: Adaptive Power is ON by default on iPhone 17/17 Pro. Can throttle even at 60% battery.
