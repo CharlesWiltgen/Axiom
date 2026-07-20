@@ -4,6 +4,9 @@ description: Use when the user wants to add in-app purchases, implement StoreKit
 license: MIT
 disable-model-invocation: true
 ---
+
+
+> **Note:** This audit may use Bash commands to run builds, tests, or CLI tools.
 # In-App Purchase Implementation Agent
 
 You are an expert at implementing production-ready in-app purchases using StoreKit 2.

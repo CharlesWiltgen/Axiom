@@ -8,6 +8,15 @@ license: MIT
 
 **You MUST use this skill for ANY accessibility work including VoiceOver, Dynamic Type, color contrast, WCAG compliance, and UX flow auditing.**
 
+<!-- AXIOM_AUDITOR_INLINE_BEGIN — auto-maintained by scripts/build-inlined-auditors.ts; do not hand-edit -->
+> **Not on Claude Code?** Where this router says "Launch `some-auditor` agent", read that auditor's file in this suite and follow it inline — the same procedure, needing only file search and read.
+>
+> Available here: `skills/accessibility-auditor.md`.
+> Homed in another suite: `axiom-concurrency/skills/concurrency-auditor.md`, `axiom-data/skills/swiftdata-auditor.md`, `axiom-swiftui/skills/swiftui-nav-auditor.md`, `axiom-swiftui/skills/ux-flow-auditor.md`.
+>
+> Agents that need Bash — builds, tests, simulators, crash symbolication — stay Claude Code-only; there is no inline equivalent for those.
+<!-- AXIOM_AUDITOR_INLINE_END -->
+
 ## Quick Reference
 
 | Symptom / Task | Reference |

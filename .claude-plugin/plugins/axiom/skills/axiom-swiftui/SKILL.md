@@ -8,6 +8,15 @@ license: MIT
 
 **You MUST use this skill for ANY SwiftUI work including views, state, navigation, layout, animations, architecture, gestures, and debugging.**
 
+<!-- AXIOM_AUDITOR_INLINE_BEGIN — auto-maintained by scripts/build-inlined-auditors.ts; do not hand-edit -->
+> **Not on Claude Code?** Where this router says "Launch `some-auditor` agent", read that auditor's file in this suite and follow it inline — the same procedure, needing only file search and read.
+>
+> Available here: `skills/swiftui-architecture-auditor.md`, `skills/swiftui-layout-auditor.md`, `skills/swiftui-nav-auditor.md`, `skills/swiftui-performance-analyzer.md`, `skills/textkit-auditor.md`, `skills/ux-flow-auditor.md`.
+> Homed in another suite: `axiom-design/skills/liquid-glass-auditor.md`.
+>
+> Agents that need Bash — builds, tests, simulators, crash symbolication — stay Claude Code-only; there is no inline equivalent for those.
+<!-- AXIOM_AUDITOR_INLINE_END -->
+
 ## Quick Reference
 
 | Symptom / Task | Reference |
