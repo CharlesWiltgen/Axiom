@@ -60,7 +60,7 @@ Subscriptions can now be sold to groups (a customer buys multiple seats and shar
 
 - **Requires StoreKit 2**; available for all auto-renewable subscriptions.
 - **On by default** for most new and existing StoreKit 2 subscriptions. If your subscription has Family Sharing enabled, group/organization sales are **opted out by default** so you control how the two options interact.
-- For group purchases, your own in-app UI triggers the StoreKit 2 purchase flow: get the number of seats requested from the customer and pass it into the StoreKit 2 purchase request. **No purchase-option symbol for the seat count ships in the Xcode 27 beta 1 SDK** — re-check later betas before writing code against this.
+- For group purchases, your own in-app UI triggers the StoreKit 2 purchase flow: get the number of seats requested from the customer and pass it into the StoreKit 2 purchase request. **No dedicated purchase-option symbol for the seat count ships as of the Xcode 27 beta 4 SDK** (only the general `.quantity(_:)` option) — re-check later betas before writing code against this.
 - When seat assignments complete (either purchase type), **the App Store assigns a transaction for each member** — your existing `Transaction.updates` / entitlement flow grants access per member. Member transactions surface as `Transaction.OwnershipType.assigned` (`"ASSIGNED"`); seat revocations as `Transaction.revocationType == .assignmentRevocation` (`"ASSIGNMENT_REVOKE"`; `revocationType` is a 26.4 field); the storefront platform for managed distribution appears as `AppStore.Platform.managed`. All three ship back-deployed in the 27 SDK.
 - By default group purchases use Apple's included seat management (invite-link generation, acceptance tracking, seat lifecycle such as cancellations). Custom invitation flows will be powered by new App Store Server API endpoints (not yet named).
 - App Store Server API **Group management endpoints** let you query all the groups a customer is in and all the members in a group — supported for volume purchasing and for group purchases using the included seat management flows.
@@ -399,7 +399,7 @@ if let offer = transaction.offer {
 
 #### From WWDC 2025-241:8:00
 
-Server-signed payloads can additionally carry `offerType: 5` (retention offer, WWDC 2026) — no client `OfferType` case exists for it in the 27 beta 1 SDK; see Retention Messaging API below.
+Server-signed payloads can additionally carry `offerType: 5` (retention offer, WWDC 2026) — no client `OfferType` case exists for it as of the 27 beta 4 SDK; see Retention Messaging API below.
 
 ### Current Entitlements
 
@@ -1463,7 +1463,7 @@ Seat revocations from group/volume purchasing surface as `ASSIGNMENT_REVOKE` —
 
 Retention messages appear in the subscription cancellation flow. The ASC-configuration side (views, message/image rules, retention offers, save-rate guidance) lives in `axiom-shipping (skills/app-store-ref.md)` Part 11; this is the server surface.
 
-**Retention offers in signed payloads** — redeeming a retention offer surfaces as a new `offerType` value of `5` in the signed transaction and renewal info, with the usual offer fields (`offerIdentifier`, `offerDiscountType`, `offerPeriod`) populated as expected. There is no corresponding `Transaction.OfferType` case in the Xcode 27 beta 1 SDK (`.winBack`, raw value 4, is the last named case) — match the raw value server-side.
+**Retention offers in signed payloads** — redeeming a retention offer surfaces as a new `offerType` value of `5` in the signed transaction and renewal info, with the usual offer fields (`offerIdentifier`, `offerDiscountType`, `offerPeriod`) populated as expected. There is no corresponding `Transaction.OfferType` case as of the Xcode 27 beta 4 SDK (`.winBack`, raw value 4, is the last named case) — match the raw value server-side.
 
 **Real-time Retention Messaging** — your server answers a server-to-server HTTP request from the App Store at cancellation time. Requires passing a sandbox performance test before production, and access is granted via an interest form. The Retention Messaging API lives at `https://api.storekit.apple.com/inApps/v1/messaging`:
 

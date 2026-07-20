@@ -485,6 +485,37 @@ displayLink.add(to: .current, forMode: .default)
 
 **From WWDC22-10083**: Up to **20% battery savings** by aligning secondary animation frame rates with primary content.
 
+### Pattern 7: Respond to the System Resource-Pressure Signal `OS27`
+
+**Problem**: The system can now tell your app it prefers *reduced resource usage* — under thermal, battery, or performance pressure. An app that ignores the hint keeps spending power the device is actively trying to reclaim.
+
+`systemPrefersReducedResourceUsage` surfaces the same signal on every UI layer. The SwiftUI environment value is all-platform (`@available(anyAppleOS 27, *)`); the UIKit trait and typed notification live wherever UIKit does (iOS/macCatalyst/tvOS/visionOS 27 — not watchOS). When it reads `true`, cut discretionary work: pause non-essential animations, lower frame rates, defer prefetching and background refresh, drop to lower-fidelity assets.
+
+#### ✅ SwiftUI — read the environment value
+```swift
+@available(anyAppleOS 27, *)
+struct Dashboard: View {
+    @Environment(\.systemPrefersReducedResourceUsage) private var reduceUsage
+    var body: some View {
+        LiveTicker()
+            .animation(reduceUsage ? nil : .default, value: reduceUsage)
+    }
+}
+```
+
+#### ✅ UIKit — read the trait and react to changes
+```swift
+@available(iOS 27, tvOS 27, visionOS 27, *)
+@MainActor func configure(_ vc: UIViewController) {
+    applyPowerBudget(vc.traitCollection.systemPrefersReducedResourceUsage)
+    vc.registerForTraitChanges([UITraitSystemPrefersReducedResourceUsage.self]) { (v: UIViewController, _) in
+        applyPowerBudget(v.traitCollection.systemPrefersReducedResourceUsage)
+    }
+}
+```
+
+For app-level reactions outside a view hierarchy, observe the typed notification `.systemPrefersReducedResourceUsageDidChange` (a `NotificationCenter.MainActorMessage`) — `NotificationCenter.default.addObserver(of: UIApplication.shared, for: .systemPrefersReducedResourceUsageDidChange) { _ in … }`. See `axiom-concurrency (swift-concurrency-ref)` for the typed-notification observing idiom.
+
 ---
 
 ## Audit Checklists

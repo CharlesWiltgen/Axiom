@@ -33,6 +33,7 @@ Questions you can ask Claude that will draw from this skill:
 - "How do I use Power Profiler to find energy issues?"
 - "My app uses too much energy in the background."
 - "What's causing high CPU usage?"
+- "How should my app respond when the system prefers reduced resource usage?" (iOS 27)
 
 ## What This Skill Provides
 

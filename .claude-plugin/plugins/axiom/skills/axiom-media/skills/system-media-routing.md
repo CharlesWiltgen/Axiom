@@ -112,12 +112,12 @@ Drop the `@MainActor` and Swift 6 rejects every write: *"main actor-isolated pro
 
 Use the `dataChannel` for the `.application` companion-app model. Note there are two data channels: the route exposes a non-optional `AVSystemRoute.routeDataChannel`, while the started media session exposes the optional `AVSystemRouteMediaSession.dataChannel` used above.
 
-> **Do not use `AVInterfaceControllable` — it was renamed mid-beta.** Apple shipped an `AVInterface*` family
-> in an early 27 beta and deprecated the whole family in the same release (15 born-deprecated clauses,
-> `introduced: 27.0, deprecated: 27.0`). `playbackControl` is typed
-> `(any AVKit.AVPlaybackUserInterfaceControllable)?`, and the old and new protocols are **unrelated types** —
-> so the old name is a **hard type error**, not a deprecation warning:
-> `error: cannot assign value of type '(any AVPlaybackUserInterfaceControllable)?' to type '(any AVInterfaceControllable)?'`.
+> **Use `AVPlaybackUserInterface*`, not the early-beta `AVInterface*` names.** Apple shipped an `AVInterface*`
+> family in an early 27 beta, then removed it — as of Xcode 27 beta 4 those names no longer exist in the SDK.
+> `playbackControl` is typed `(any AVKit.AVPlaybackUserInterfaceControllable)?`. Older code or AI-suggested
+> snippets that still reference `AVInterfaceControllable` (from an outdated SDK or stale training data) fail
+> with `cannot find type 'AVInterfaceControllable' in scope` — replace the whole `AVInterface*` family with
+> its `AVPlaybackUserInterface*` equivalent.
 
 ## Info.plist — without it, nothing ever appears
 
