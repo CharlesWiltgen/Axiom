@@ -93,7 +93,7 @@ Use this router when:
 - Launch-phase model (pre-main / main→first frame / extended launch)
 - Cold vs warm vs hot/resume vs notification launch — how to reproduce each
 - App Launch instrument workflow, `dyld Activity`, measurement hygiene
-- Pre-main fixes (frameworks, `+load`, mergeable libraries), main-thread deferral, priority inversion
+- Pre-main fixes: linkage strategy (static vs dynamic vs mergeable, `MERGED_BINARY_TYPE`/`MERGEABLE_LIBRARY`), `+load`, main-thread deferral, priority inversion
 - `XCTApplicationLaunchMetric` regression test, `MXAppLaunchMetric` field histograms, custom "app is interactive" signpost
 - Push-notification launch path (tap→first pixel / tap→interactive targets)
 
@@ -229,6 +229,7 @@ Use this router when:
 | "Launch feels slow — I'll trim some startup code" | Launch has 3 phases (pre-main / main→first frame / extended) and a watchdog. app-launch tells you which phase to profile, with measurement hygiene so the number means something. |
 | "Launch is fine, it's fast on my phone" | Measure on your oldest supported device with a Release build. app-launch has the full hygiene checklist — newest-device numbers hide the regression. |
 | "Resume from the app switcher is slow too" | Resume isn't a launch — never measure it as one. app-launch distinguishes cold/warm/hot/notification and how to reproduce each. |
+| "Too many frameworks — I'll just statically link everything" | Static copies the library into every binary that links it (app + each extension), duplicates its global state, and breaks on Obj-C categories without `-ObjC`. app-launch has the static/dynamic/mergeable tradeoff and the `DYLD_PRINT_STATISTICS` check that tells you whether pre-main is even your problem. |
 | "UI locks up when network requests finish — that's slow" | Multiple callbacks completing at once = main thread contention = concurrency issue. Cross-route to axiom-concurrency. |
 | "I'll just add print statements to debug this" | Print-debug cycles cost 3-5 min each (build + run + reproduce). An LLDB breakpoint costs 30 seconds. axiom-build (skills/lldb.md) has the commands. |
 | "I can't see what the app is logging" | xclog captures print() + os_log from the simulator with structured JSON. `/axiom:console`. |
@@ -310,6 +311,9 @@ User: "Xcode Organizer says my launch time regressed"
 → See skills/app-launch.md
 
 User: "How do I reduce pre-main / dyld time?"
+→ See skills/app-launch.md
+
+User: "Should I use mergeable libraries / statically link my frameworks?"
 → See skills/app-launch.md
 
 User: "App is slow to come up after tapping a push notification"

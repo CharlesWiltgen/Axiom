@@ -89,7 +89,7 @@ matches = []
 # token (e.g. "code sign" + "python") stays gated here; on Claude Code the
 # description layer still routes it. When adding a new router token below, only add
 # it here too if it clears the inclusion criterion.
-non_ios_keyword = re.search(r'typescript|react(?!\s*native)|angular|vue\.js|django|flask|rails|node\.js|nodejs|npm |yarn |webpack|docker|kubernetes|python\b|java\b(?!script)|kotlin|android|flutter|unreal|godot|steam\s*deck|shopify|woocommerce|\bsaas\b', prompt_lower)
+non_ios_keyword = re.search(r'typescript|react(?!\s*native)|angular|vue\.js|django|flask|rails|node\.js|nodejs|npm |yarn |webpack|docker|kubernetes|python\b|java\b(?!script)|kotlin|android|flutter|unreal|godot|steam\s*deck|shopify|woocommerce|\bsaas\b|\brust\b|golang|\bgo\s+(module|routine)|electron|deno|\bphp\b|laravel|symfony|\bruby\b|\brails\b|elixir|dotnet|\.net\b|asp\.net|\bc#|csharp|svelte|nuxt|next\.js|nextjs|express\.js|expressjs|spring\s*boot', prompt_lower)
 ios_signal = re.search(r'\bswift\b|swiftui|swiftdata|\bxcode|xcworkspace|xcodeproj|\bobjective-c\b|\bobjc\b|\bios\b|ipados|watchos|tvos|visionos|\biphone|\bipad|apple\s*(watch|tv)|vision\s*pro|uikit|appkit|cocoapod|swift\s*package|testflight|app\s*store\s*connect|provisioning\s*profile|\bxcrun\b|\blldb\b', prompt_lower)
 non_ios = bool(non_ios_keyword) and not ios_signal
 
@@ -139,11 +139,11 @@ if not non_ios and "axiom-concurrency" not in matches and re.search(r'main threa
     matches.append("axiom-concurrency")
 
 # Performance
-if re.search(r'memory leak|retain cycle|instruments\b.{0,10}(profil|trace|template)|time profiler|allocations\b.{0,5}(instrument|tool|track)|app launch.{0,5}(time|perf|slow|template|instrument)|launch time|pre-?main\b|dyld\b|static initializer|first frame|extended launch|xctapplicationlaunchmetric|mxapplaunchmetric|\bcold launch\b|\bwarm launch\b|\b\d{1,3}\s*fps\b|drops?.{0,10}to.{0,5}\d+\s*fps|frame\s*rate.{0,15}(drop|low|stutter|janky|tank)|fps.{0,10}(drop|low|stutter|tank)|metrickit|mxmetric\w*|mxdiagnostic\w*|\bmetricmanager\b|statereporting|reportablemetadata|state reporter\b|per-?state metrics|crashreportextension|crash\s*report(er|ing)?\s*extension|crashedprocess|(top functions|run comparisons?).{0,40}(instruments?\b|profil|trace)|(instruments?\b|profil|trace).{0,40}(top functions|run comparisons?)', prompt_lower):
+if re.search(r'memory leak|retain cycle|instruments\b.{0,10}(profil|trace|template)|time profiler|allocations\b.{0,5}(instrument|tool|track)|app launch.{0,5}(time|perf|slow|template|instrument)|launch times?\b|mergeable\s+librar|pre-?main\b|dyld\b|static initializer|first frame|extended launch|xctapplicationlaunchmetric|mxapplaunchmetric|\bcold launch\b|\bwarm launch\b|\b\d{1,3}\s*fps\b|drops?.{0,10}to.{0,5}\d+\s*fps|frame\s*rate.{0,15}(drop|low|stutter|janky|tank)|fps.{0,10}(drop|low|stutter|tank)|metrickit|mxmetric\w*|mxdiagnostic\w*|\bmetricmanager\b|statereporting|reportablemetadata|state reporter\b|per-?state metrics|crashreportextension|crash\s*report(er|ing)?\s*extension|crashedprocess|(top functions|run comparisons?).{0,40}(instruments?\b|profil|trace)|(instruments?\b|profil|trace).{0,40}(top functions|run comparisons?)', prompt_lower):
     matches.append("axiom-performance")
 
 # Performance — generic terms gated
-if not non_ios and "axiom-performance" not in matches and re.search(r'performance.{0,10}(slow|issue|bad|poor)|profil.{0,5}(app|cpu|memory)|battery drain|energy.{0,5}(issue|audit)|memory.{0,5}(grow|pressure|warning)|(slow|slug|sluggish).{0,15}(launch|startup)|launch.{0,15}(slow|sluggish|regress|too long)|startup.{0,5}(time|slow|perf)|slow.{0,20}(after|when).{0,5}(tapping|tap).{0,15}(push|notification)|state reporting\b', prompt_lower):
+if not non_ios and "axiom-performance" not in matches and re.search(r'performance.{0,10}(slow|issue|bad|poor)|profil.{0,5}(app|cpu|memory)|battery drain|energy.{0,5}(issue|audit)|memory.{0,5}(grow|pressure|warning)|(slow|slug|sluggish).{0,15}(launch|startup)|launch.{0,15}(slow|sluggish|regress|too long)|startup.{0,5}(time|slow|perf)|(optimi[sz]e|speed\s*up)\w*\b.{0,15}\blaunch(?!\s*(day|date|week|checklist|e-?mail|plan|campaign|part(y|ner)|timeline|event|strateg|announce|cost|price|config|window|template|script|argument|option|flag|funnel|customer))\b|(optimi[sz]e|speed\s*up|reduce|trim|shorten|improve|cut|fix)\w*\b.{0,25}\b(app|application|cold|warm|first|initial)\s+(launch|start-?up)\b|(optimi[sz]e|speed\s*up|reduce|trim|shorten|improve)\w*\b.{0,25}\blaunch\s*(times?|path|phase|speed|perf\w*|sequence)\b|\bapp\w*\b.{0,30}\d+\s*(ms|sec\w*|second\w*|minute\w*)\s+to\s+launch\b|slow.{0,20}(after|when).{0,5}(tapping|tap).{0,15}(push|notification)|state reporting\b', prompt_lower):
     matches.append("axiom-performance")
 
 # Networking
@@ -269,7 +269,7 @@ if re.search(r'apple\s*pay|pkpayment|pkpaymentauthorization|passkit|\bpkpass\b|w
     matches.append("axiom-payments")
 
 # Design
-if re.search(r'human interface|hig\b|liquid glass|glass\s*[-]?\s*effect\b|glasseffectcontainer|glasseffectlayer|sf symbol|symbol.{0,5}(effect|variablevalue|render)|typography.{0,10}(ios|swift|app)|design.{0,5}(system|pattern|token)|app.{0,5}(entry|launch|onboard)|authentication.{0,5}(flow|screen|ui)|concentric.{0,10}(corner|rectangle)|corner.{0,12}concentric', prompt_lower):
+if re.search(r'human interface|hig\b|liquid glass|glass\s*[-]?\s*effect\b|glasseffectcontainer|glasseffectlayer|sf symbol|symbol.{0,5}(effect|variablevalue|render)|typography.{0,10}(ios|swift|app)|design.{0,5}(system|pattern|token)|app.{0,5}(entry|onboard)|launch\s*(screen|image|storyboard)\b|app\s*launch\s*(experience|animation|sequence)\b|authentication.{0,5}(flow|screen|ui)|concentric.{0,10}(corner|rectangle)|corner.{0,12}concentric', prompt_lower):
     matches.append("axiom-design")
 
 # UIKit
