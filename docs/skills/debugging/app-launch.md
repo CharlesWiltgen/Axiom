@@ -23,6 +23,7 @@ Use this skill when:
 - "My app takes about 3 seconds to launch on an older iPhone."
 - "Xcode Organizer says my launch time regressed — how do I find what changed?"
 - "How do I reduce pre-main / dyld time?"
+- "Should I statically link my frameworks, or use mergeable libraries?"
 - "My app is slow to open after tapping a push notification."
 - "How do I write a launch performance regression test?"
 
@@ -58,7 +59,7 @@ Three phases, mapped to the App Life Cycle timeline in Instruments:
 
 ### Fixes by phase
 
-- **Pre-main** – consolidate/static-link frameworks, mergeable libraries, move `+load` work to `+initialize`, no `dlopen` on the launch path
+- **Pre-main** – a linkage-strategy walkthrough (static vs dynamic vs mergeable, when each is the right answer, and why static linking isn't free), the `MERGED_BINARY_TYPE` / `MERGEABLE_LIBRARY` settings and their gotchas, moving `+load` work to `+initialize`, and keeping `dlopen` off the launch path
 - **Main → first frame** – defer non-critical work out of the delegate / `App.init` / `viewDidLoad` / `View.body`, load only first-screen data, watch SwiftData/Core Data stack cost, fix priority inversions, flatten the first view hierarchy
 - **First frame → interactive** – placeholders + async load, signpost the tail, no speculative pre-warming
 
