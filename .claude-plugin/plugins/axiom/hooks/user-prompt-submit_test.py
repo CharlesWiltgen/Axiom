@@ -194,6 +194,28 @@ class TestPositiveRouting(unittest.TestCase):
         self.assertIn("axiom-performance", routed_skills(
             "How do I write an XCTApplicationLaunchMetric test?"))
 
+    def test_performance_launch_optimization_framing(self):
+        # Optimization framing carries no slowness word — must still route
+        for prompt in (
+            "Can you help me optimize launch?",
+            "help me optimize my app launch",
+            "how do I speed up app launch",
+            "reduce my app's launch time",
+            "trim the critical launch path",
+            "my app takes 3 seconds to launch",
+            "should I use mergeable libraries?",
+            "profile my launch path with the App Launch instrument",
+        ):
+            self.assertIn("axiom-performance", routed_skills(prompt), prompt)
+
+    def test_performance_launch_not_stolen_by_design(self):
+        # "app launch" is launch performance, not app-composition
+        for prompt in (
+            "help me optimize my app launch",
+            "how do I speed up app launch",
+        ):
+            self.assertNotIn("axiom-design", routed_skills(prompt), prompt)
+
     def test_performance_metrickit(self):
         self.assertIn("axiom-performance", routed_skills(
             "How do I set up MetricKit in my app?"))
@@ -522,6 +544,22 @@ class TestPositiveRouting(unittest.TestCase):
         self.assertIn("axiom-design", routed_skills(
             "How do I apply Liquid Glass and SF Symbol effects?"))
 
+    def test_design_app_entry_and_launch_screen(self):
+        # Entry-point / launch-screen composition stays with axiom-design
+        self.assertIn("axiom-design", routed_skills(
+            "How should I structure my app entry point with @main?"))
+        self.assertIn("axiom-design", routed_skills(
+            "What should my launch screen show while auth resolves?"))
+        self.assertIn("axiom-design", routed_skills(
+            "Design an app onboarding flow"))
+        # Apple names the same asset three ways — all must route, or they fall through to nothing
+        self.assertIn("axiom-design", routed_skills(
+            "How do I set my app's launch image?"))
+        self.assertIn("axiom-design", routed_skills(
+            "Customize the app launch storyboard"))
+        self.assertIn("axiom-design", routed_skills(
+            "Design my app launch experience"))
+
     def test_uikit(self):
         self.assertIn("axiom-uikit", routed_skills(
             "How do I bridge UIViewController to SwiftUI with UIViewRepresentable?"))
@@ -678,6 +716,65 @@ class TestNegativeRouting(unittest.TestCase):
         ):
             self.assertNotIn("axiom-ai", routed_skills(prompt),
                              f"speech regex over-matched a non-iOS prompt: {prompt!r}")
+
+    def test_generic_launch_wording_does_not_fire_performance(self):
+        # REGRESSION GUARD, same shape as the transcription trap above. "launch" and "startup" are
+        # ordinary English with a product-launch sense and a company sense; the launch-perf rules
+        # must stay anchored on an app/perf noun rather than leaning on `non_ios`, which is a
+        # technology-name list and matches almost none of these.
+        for prompt in (
+            "Reduce startup latency of my Node server",
+            "How do I speed up startup of the dev server?",
+            "Trim the launch configuration in launch.json",
+            "Cut launch costs for the satellite program",
+            "Our dev container takes 8 seconds to launch",
+            "Speed up the product launch timeline",
+            "Reduce launch friction for new customers on our website",
+            "How do I improve our startup's onboarding funnel?",
+            "Advice to speed up startup fundraising",
+            "Cut the launch checklist down to one page",
+            "Improve the launch day support plan",
+            "Draft a press release for our app launch next Tuesday",
+            "Build an app launch checklist for the go-to-market team",
+        ):
+            self.assertNotIn("axiom-performance", routed_skills(prompt),
+                             f"launch regex over-matched a non-perf prompt: {prompt!r}")
+
+    def test_non_ios_gate_covers_unlisted_stacks(self):
+        # The gate is a denylist, so a stack missing from it leaks through every `not non_ios`
+        # rule. These are generic-term prompts that only the keyword list can suppress.
+        # Known residual (Axiom-wzb): bare "Go" is not listed and cannot be, because `\bgo\b`
+        # would swallow "how do I go about optimizing app launch". Short/common-word stack
+        # names are what motivate inverting the gate rather than extending it.
+        for prompt in (
+            "Improve startup performance of my Rust CLI",
+            "Our Electron app startup is slow",
+            "Speed up startup time for the .NET worker",
+            "Why is my Laravel app slow?",
+            "Profile CPU usage in our Ruby on Rails app",
+        ):
+            self.assertEqual(set(), routed_skills(prompt),
+                             f"non-iOS stack leaked past the gate: {prompt!r}")
+
+    def test_non_ios_gate_yields_to_ios_signal(self):
+        # Suppression must be cancelable — a genuine iOS prompt that merely mentions another
+        # stack still has to route, or the denylist becomes a footgun.
+        self.assertIn("axiom-performance", routed_skills(
+            "My Swift app links a Rust library and launch time regressed"))
+        self.assertIn("axiom-performance", routed_skills(
+            "Xcode says my iOS app startup time is slow after adding a .NET backend call"))
+
+    def test_lifecycle_on_app_launch_does_not_fire_performance(self):
+        # "on app launch" is a lifecycle qualifier ("at startup, once"), not a perf complaint.
+        # These belong to data/integration/design, and a bare `app launch` rule steals them.
+        for prompt in (
+            "Show onboarding on first app launch",
+            "Seed the database on first app launch",
+            "Restore the last opened document on app launch",
+            "Request notification permission on app launch",
+        ):
+            self.assertNotIn("axiom-performance", routed_skills(prompt),
+                             f"launch regex stole a lifecycle prompt: {prompt!r}")
 
     def test_generic_evaluate_wording_does_not_fire_ai(self):
         # "evaluate" is an ordinary English verb — only AI-context eval talk routes to axiom-ai
