@@ -162,10 +162,48 @@ One throwaway launch, then (by default) five measured iterations with statistics
 
 ### Phase 1 — Pre-main
 
-- **Reduce dynamic framework count.** Consolidate small frameworks; statically link what you can. Use **mergeable libraries** (Xcode 15+) to keep many-small-modules ergonomics in debug while shipping a merged binary with static-like launch cost in release.
+- **Reduce dynamic framework count.** Consolidate small frameworks; change linkage where you can — see the strategy table below.
 - **Move `+load` work to `+initialize`** (lazy, first message) or to an explicit init API you call after launch.
 - **Don't force Swift globals/type properties eager.** Let them stay lazy. If a framework you own does heavy module-load work, expose an init-early API instead.
 - **No `dlopen`/`NSBundle.load` on the launch path.**
+
+#### Linkage strategy — static vs dynamic vs mergeable
+
+Apple publishes **no numeric threshold** here — only that "each additional third-party framework that your app loads adds to the launch time", and that built-in frameworks "have a much lower impact on launch, because they use shared memory with other processes that use the same framework". Note dyld "caches a lot of this work in a launch closure when the user installs the app", so per-library cost is not paid in full on every launch. Measure with `DYLD_PRINT_STATISTICS=1` before deciding.
+
+| Linkage | Launch cost | Choose it when |
+|---|---|---|
+| Static (`.a`, static framework) | None at load — code is in the app binary at build time, and unreferenced code can be dead-stripped | The module is used by one binary and doesn't need to be shared |
+| Dynamic (embedded `.framework`/`.dylib`) | dyld load + symbol resolution per library, partly amortized by the launch closure | Genuinely shared between app and extensions, or loaded conditionally |
+| **Mergeable** (Xcode 15+) | Static-like in optimized builds, dynamic in unoptimized ones | You want many small modules for build times without paying for them at launch — the default answer for first-party modules |
+
+**Static linking is not free.** A static library is copied into *every* binary that links it: link it into both the app and three extensions and you ship four copies, and any global state in it is four separate copies too. When two dynamic frameworks each statically link the same library, both copies load into one process — this does *not* fail at link time; it surfaces at runtime as duplicated global state and the Obj-C runtime's "Class X is implemented in both …, one of the two will be used" warning, with a nondeterministic winner. Static libraries containing Obj-C categories need `-ObjC` in Other Linker Flags or the categories vanish — which force-loads every class and category from those libraries, giving back much of the dead-stripping benefit above.
+
+**Mergeable libraries**, in Apple's words, get "app launch times similar to static linking in release builds, without losing dynamically linked build times in debug builds". Configure two settings:
+
+| Setting | Goes on | Value | Effect |
+|---|---|---|---|
+| `MERGED_BINARY_TYPE` ("Create Merged Binary") | the *merging* target — only executables, dynamic libraries, and frameworks qualify | `automatic` | Every direct dependency that builds a dynamic library/framework is built mergeable and merged into this binary in optimized builds, reexported in unoptimized ones |
+| `MERGED_BINARY_TYPE` | the merging target | `manual` | Only dependencies that opt in via `MERGEABLE_LIBRARY` are merged |
+| `MERGEABLE_LIBRARY` ("Build Mergeable Library") | each *dependency* target you build | `YES` | Links mergeable in optimized builds, normal-dynamic-to-be-reexported otherwise. **No effect on static libraries** — it applies to dynamic libraries and frameworks only |
+
+A **direct dependency** meets *both* of Apple's criteria: it is listed in the target's Link Binary with Libraries phase, **and** it is the product of another target in your project. Anything else — a pre-built library, or a dependency's own dependencies — is indirect. Under the hood merging is the linker's `-make_mergeable` (`-merge_framework`/`-merge-l` when merging, `-reexport_framework`/`-reexport-l` when not); you should not need to set these by hand.
+
+For a large dependency graph, Apple's recommended structure is a **group library**: an intermediate framework target with `MERGED_BINARY_TYPE = automatic` that the mergeable libraries hang off, with the app depending only on that one target.
+
+Mergeable-library gotchas:
+
+| Gotcha | Consequence |
+|---|---|
+| `automatic` covers **direct** dependencies only | Xcode does not build *indirect* dependencies — a dependency's own dependencies — as mergeable. `MERGEABLE_LIBRARY` only helps for dependency targets in your project; you cannot set it on someone else's binary |
+| Pre-built XCFrameworks | Merge under `automatic` *or* `manual` if the vendor already shipped `MergeableMetadata`, and not at all if they didn't. Mergeability is baked in at vendor build time, not chosen by you |
+| Merging is keyed on **optimization, not configuration name** | Apple defines a debug build as unoptimized (`-O0`/`-Onone`, flagged by `IS_UNOPTIMIZED_BUILD`). A config *named* Release that still sets `-Onone` will not merge; a custom optimized "Profile" config will. Verify against an actually-optimized build |
+| Dependency shared by app *and* an extension | Merging puts a copy in each binary. Apple explicitly flags this — keep it dynamic if extension binary size matters more than the app's launch |
+| `SKIP_MERGEABLE_LIBRARY_BUNDLE_HOOK = YES` | Removes the hook that keeps the library's resource bundle findable, so `Bundle(for:)` stops returning it. Leave it off if you look up resources that way |
+| Mergeable XCFrameworks (`MergeableMetadata`) | Require Xcode 15+; older Xcode fails the build outright |
+| Debug and release layouts differ | In unoptimized builds Xcode copies dependency binaries into a location inside the merged product and adds an extra `@rpath` for them — expect the product structure to change between configurations |
+
+**When not to bother.** Pre-main carries a floor of system work you cannot remove. If `DYLD_PRINT_STATISTICS` shows dyld is a small slice of your launch, relinking the whole project buys you nothing — the time is in Phase 2. Restructure linkage only when pre-main is measurably the dominant phase.
 
 ### Phase 2 — main → first frame
 
@@ -227,6 +265,6 @@ In Instruments: File → New → choose **App Launch** template → select your 
 
 **WWDC**: 2019-423, 2019-411, 2021-10181, 2022-110362, 2023-10268, 2024-10181
 
-**Docs**: /xcode/reducing-your-app-s-launch-time, /metrickit/mxapplaunchmetric, /xctest/xctapplicationlaunchmetric, /uikit/about-the-app-launch-sequence
+**Docs**: /xcode/reducing-your-app-s-launch-time, /xcode/configuring-your-project-to-use-mergeable-libraries, /metrickit/mxapplaunchmetric, /xctest/xctapplicationlaunchmetric, /uikit/about-the-app-launch-sequence
 
 **Skills**: performance-profiling, xctrace-ref, metrickit-ref, hang-diagnostics, axiom-concurrency, axiom-integration
