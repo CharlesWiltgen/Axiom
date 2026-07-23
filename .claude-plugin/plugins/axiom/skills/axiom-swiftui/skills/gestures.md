@@ -592,6 +592,48 @@ var body: some View {
 
 ---
 
+## Pattern 8: Pointer and Hover
+
+A pointer now reaches every app: iPad trackpads and mice, Mac windows (Catalyst, iOS-on-Mac), and iPhone Mirroring — even a phone-only app gets hovered. Touch-only interaction models leave pointer users without affordances.
+
+### Hover Reactions
+
+```swift
+Button("Delete") { remove() }
+    .onHover { hovering in
+        isHighlighted = hovering            // iOS 13.4 / macOS 10.15
+    }
+
+Canvas { context, size in draw(context) }
+    .onContinuousHover { phase in           // location while the pointer moves
+        switch phase {
+        case .active(let point): cursorPoint = point
+        case .ended: cursorPoint = nil
+        }
+    }
+```
+
+`onHover` fires on entry/exit; `onContinuousHover` streams the location (`HoverPhase.active(CGPoint)` / `.ended`). Neither fires for touch — treat hover as an enhancement, never the only path to a capability.
+
+### System Hover Effects
+
+```swift
+Image(systemName: "trash")
+    .hoverEffect(.highlight)    // .automatic, .highlight, .lift
+```
+
+`hoverEffect` applies the system's iPad pointer treatment (shape morphing/lift) with no manual state. Prefer it over hand-rolled `onHover` styling for standard controls — it matches what users see everywhere else.
+
+`pointerStyle` (custom cursor shapes) is macOS-only — gate it with `#if os(macOS)`; there is no iOS equivalent.
+
+### Keyboard Affordances That Pair With Pointer
+
+- `.keyboardShortcut(.defaultAction)` (Return) and `.keyboardShortcut(.cancelAction)` (Escape) on a presentation's primary/cancel buttons make sheets and dialogs keyboard-complete — pointer users are usually keyboard users.
+- `onModifierKeysChanged(mask:initial:_:)` observes ⌘/⇧/⌥ state — the hook for modifier-extended selection and drag variants on iPad and Mac.
+- UIKit-side pointer and hardware-keyboard APIs (`UIPointerInteraction`, `UIKeyCommand`) live in axiom-uikit (skills/uikit-modernization.md); mouse/keyboard as *game* input (`GCMouse`, `GCKeyboard`) lives in axiom-games (skills/game-input.md).
+
+---
+
 ## Common Pitfalls
 
 ### Pitfall 1: Forgetting to Reset GestureState
@@ -932,9 +974,9 @@ func testDragGesture() throws {
 
 **WWDC**: 2019-237, 2020-10043, 2021-10018
 
-**Docs**: /swiftui/composing-swiftui-gestures, /swiftui/gesturestate, /swiftui/gesture
+**Docs**: /swiftui/composing-swiftui-gestures, /swiftui/gesturestate, /swiftui/gesture, /swiftui/view/onhover(perform:), /swiftui/view/hovereffect(_:), /swiftui/hoverphase
 
-**Skills**: axiom-accessibility, skills/swiftui-performance.md, axiom-testing
+**Skills**: axiom-accessibility, skills/swiftui-performance.md, axiom-testing, axiom-uikit (skills/uikit-modernization.md), axiom-games (skills/game-input.md)
 
 ---
 

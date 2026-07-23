@@ -11,6 +11,7 @@ Comprehensive SwiftUI gesture patterns with composition, state management, and a
 - Debugging gesture conflicts or unresponsive gestures
 - Making gestures accessible with VoiceOver
 - Cross-platform gesture handling (iOS, macOS, visionOS)
+- Reacting to pointer hover (`onHover`, `hoverEffect`) on iPad, Mac, and iPhone Mirroring
 
 ## Key Features
 
@@ -48,6 +49,11 @@ Comprehensive SwiftUI gesture patterns with composition, state management, and a
 - macOS mouse and trackpad
 - visionOS spatial gestures
 - Platform-specific threshold tuning
+
+### Pointer and Hover
+- `onHover` / `onContinuousHover` reactions, system `hoverEffect` styles
+- Default/cancel keyboard shortcuts and modifier-key observation
+- macOS-only `pointerStyle` gating
 
 ## Common Pitfalls
 
