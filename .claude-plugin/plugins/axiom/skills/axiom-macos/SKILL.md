@@ -21,6 +21,7 @@ license: MIT
 | Modernizing AppKit: mouseDown replacement, control events, status-item sessions, state restoration, concentric corners, touch (`OS27`) | See `skills/appkit-modernization.md` |
 | Screen recording, sharing, or capture (ScreenCaptureKit) | See `skills/screencapturekit.md` |
 | SCStream / SCContentFilter / screenshots / file recording API | See `skills/screencapturekit-ref.md` |
+| Bring an iOS app to Mac: Catalyst adoption, Designed for iPad, Mac availability opt-out | See `skills/ios-apps-on-mac.md` |
 | Apple Pay on Mac / Catalyst | See `axiom-payments/skills/apple-pay.md` (Catalyst section) |
 
 ## Cross-Suite Routes
@@ -71,6 +72,7 @@ digraph macos {
     what -> "skills/direct-distribution.md" [label="distribution/notarization/updates"];
     what -> "skills/appkit-interop.md" [label="AppKit bridging"];
     what -> "skills/appkit-modernization.md" [label="modernize AppKit\n(input/restoration/27 look)"];
+    what -> "skills/ios-apps-on-mac.md" [label="iOS app to Mac\n(Catalyst / Designed for iPad)"];
     what -> "skills/screencapturekit.md" [label="screen capture/\nrecording/sharing"];
     what -> "axiom-swiftui" [label="cross-platform SwiftUI"];
     what -> "axiom-security" [label="Keychain/encryption"];

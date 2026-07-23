@@ -76,6 +76,18 @@ Questions you can ask Claude that will draw from these skills:
   - *"How do I host an `NSTextView` inside SwiftUI and keep bindings synced?"*
   - *"My SwiftUI cells inside `NSCollectionView` cause scroll jank. What's the right reuse pattern?"*
 
+- **[iOS Apps on Mac](/skills/macos/ios-apps-on-mac)** – Designed for iPad vs Mac Catalyst, Mac App Store availability opt-out, Catalyst adoption checklist, runtime-detection traps
+  - *"Should I ship my iPad app as Designed for iPad or build with Mac Catalyst?"*
+  - *"Why does my iOS app on Apple silicon report `isMacCatalystApp` as true?"*
+
+- **[AppKit Modernization](/skills/macos/appkit-modernization)** – Control events, state restoration, status-item sessions, concentric corners, touch on macOS 27
+  - *"What replaces my `mouseDown` override in a modern AppKit app?"*
+  - *"How do I restore window state after relaunch on macOS 27?"*
+
+- **[ScreenCaptureKit](/skills/macos/screencapturekit)** – Screen recording, sharing pickers, SCStream capture, screenshots
+  - *"How do I record a single window to a file with ScreenCaptureKit?"*
+  - *"How do I let users pick what to share with SCContentSharingPicker?"*
+
 ## Related
 
 - **[axiom-swiftui](/skills/ui-design/)** – Cross-platform SwiftUI patterns (state, layout, animations, navigation fundamentals) that the macOS-specific patterns build on
