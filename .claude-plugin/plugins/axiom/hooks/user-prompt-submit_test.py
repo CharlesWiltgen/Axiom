@@ -98,6 +98,14 @@ class TestPositiveRouting(unittest.TestCase):
     def test_swiftui(self):
         self.assertIn("axiom-swiftui", routed_skills(
             "My SwiftUI @State view won't update"))
+        self.assertIn("axiom-swiftui", routed_skills(
+            "How do I make a half-height sheet with presentationDetents?"))
+        self.assertIn("axiom-swiftui", routed_skills(
+            "Why does my popover show as a sheet on iPhone?"))
+        self.assertIn("axiom-swiftui", routed_skills(
+            "My sheet with a medium detent goes full screen in landscape"))
+        self.assertIn("axiom-swiftui", routed_skills(
+            "How do I add a hoverEffect for iPad pointer users?"))
 
     def test_ai_speech_transcription(self):
         # REGRESSION GUARD. The OS27 Speech delta was folded into ios-ml.md while the hook's
@@ -324,6 +332,13 @@ class TestPositiveRouting(unittest.TestCase):
         self.assertIn("axiom-shipping", routed_skills(
             "How do I set up Retention Messaging for my subscription?"))
         self.assertIn("axiom-shipping", routed_skills(
+            "My upload was rejected because a launch screen is required on the iOS 27 SDK"))
+        self.assertIn("axiom-shipping", routed_skills(
+            "Do I need UILaunchScreen in my Info.plist now?"))
+        # Verbatim docs-page prompt: qualifier BEFORE "launch screen"
+        self.assertIn("axiom-shipping", routed_skills(
+            "Why was my upload rejected for a missing launch screen?"))
+        self.assertIn("axiom-shipping", routed_skills(
             "Add a Product Page Header video for my app"))
         self.assertIn("axiom-shipping", routed_skills(
             "Submit creative assets through the Asset Library in App Store Connect"))
@@ -467,6 +482,8 @@ class TestPositiveRouting(unittest.TestCase):
     def test_games(self):
         self.assertIn("axiom-games", routed_skills(
             "My SpriteKit SKScene physics aren't working"))
+        self.assertIn("axiom-games", routed_skills(
+            "How do I read GCMouse deltas for camera look in my iPad game?"))
 
     def test_game_input(self):
         self.assertIn("axiom-games", routed_skills(
@@ -490,6 +507,10 @@ class TestPositiveRouting(unittest.TestCase):
     def test_graphics(self):
         self.assertIn("axiom-graphics", routed_skills(
             "How do I migrate from OpenGL to Metal shaders?"))
+        self.assertIn("axiom-graphics", routed_skills(
+            "My MTKView content stretches when the iPad window resizes"))
+        self.assertIn("axiom-graphics", routed_skills(
+            "When do I update CAMetalLayer drawableSize?"))
 
     def test_graphics_os27(self):
         self.assertIn("axiom-graphics", routed_skills(
@@ -520,6 +541,14 @@ class TestPositiveRouting(unittest.TestCase):
         # Must require intent-qualifier; bare "macos" alone must NOT fire
         self.assertIn("axiom-macos", routed_skills(
             "How do I build a Mac app with NSToolbar and sandboxing?"))
+        self.assertIn("axiom-macos", routed_skills(
+            "Should I add a Mac Catalyst destination or ship Designed for iPad?"))
+        self.assertIn("axiom-macos", routed_skills(
+            "Why does my iOS app on Apple silicon report isMacCatalystApp true?"))
+        self.assertIn("axiom-macos", routed_skills(
+            "How do I build a multi-column table with TableColumn on iPad?"))
+        self.assertIn("axiom-macos", routed_skills(
+            "Should my detail panel be an inspector column on iPad?"))
         self.assertIn("axiom-macos", routed_skills(
             "How do I capture a window with ScreenCaptureKit and SCStream?"))
         self.assertIn("axiom-macos", routed_skills(
@@ -567,6 +596,21 @@ class TestPositiveRouting(unittest.TestCase):
             "How do I add a PencilKit canvas with PKToolPicker and persist the PKDrawing?"))
         self.assertIn("axiom-uikit", routed_skills(
             "How do I handle Apple Pencil Pro barrel roll and squeeze in my drawing app?"))
+        self.assertIn("axiom-uikit", routed_skills(
+            "My custom pinch gesture stops working when the app runs in iPhone Mirroring"))
+        self.assertIn("axiom-uikit", routed_skills(
+            "Do I need UIApplicationSupportsIndirectInputEvents in my Info.plist?"))
+        self.assertIn("axiom-uikit", routed_skills(
+            "How do I set a minimum window size with UISceneSizeRestrictions?"))
+        self.assertIn("axiom-uikit", routed_skills(
+            "Where do I set windowScene.sizeRestrictions to stop tiny windows?"))
+        self.assertIn("axiom-uikit", routed_skills(
+            "My UIKeyCommand doesn't show in the iPad hold-Command HUD"))
+        self.assertIn("axiom-uikit", routed_skills(
+            "What goes in UIApplicationSceneManifest for a single-window app?"))
+        # AirPlay/TV screen mirroring is a media concern, not the iPhone Mirroring feature
+        self.assertNotIn("axiom-uikit", routed_skills(
+            "How do I detect screen mirroring to Apple TV over AirPlay?"))
 
     def test_swift(self):
         self.assertIn("axiom-swift", routed_skills(
