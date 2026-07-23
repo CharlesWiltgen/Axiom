@@ -295,21 +295,28 @@ class TimerViewModel: ObservableObject {
 
 ## Part 4: AsyncTimerSequence (Swift Concurrency)
 
-### ContinuousClock.timer
+`AsyncTimerSequence` is **not in the SDK or the standard library** — it ships in the [swift-async-algorithms](https://github.com/apple/swift-async-algorithms) package. Add that package and `import AsyncAlgorithms`; there is no `Clock.timer(interval:)` method on `ContinuousClock`/`SuspendingClock`. Requires iOS 16 / macOS 13 / watchOS 9 / tvOS 16. Pick the clock with the `clock:` argument.
+
+### ContinuousClock
 
 ```swift
+import AsyncAlgorithms
+
 // Monotonic clock — does NOT pause when app suspends
-for await _ in ContinuousClock().timer(interval: .seconds(1)) {
+for await _ in AsyncTimerSequence(interval: .seconds(1), clock: .continuous) {
     await updateData()
 }
 // Loop exits when task is cancelled
 ```
 
-### SuspendingClock.timer
+### SuspendingClock
 
 ```swift
-// Suspending clock — pauses when app suspends
-for await _ in SuspendingClock().timer(interval: .seconds(1)) {
+import AsyncAlgorithms
+
+// Suspending clock — pauses when app suspends.
+// `.repeating(every:)` defaults to SuspendingClock.
+for await _ in AsyncTimerSequence.repeating(every: .seconds(1)) {
     await processItem()
 }
 ```
@@ -321,9 +328,11 @@ for await _ in SuspendingClock().timer(interval: .seconds(1)) {
 ### Task Cancellation
 
 ```swift
+import AsyncAlgorithms
+
 // Timer automatically stops when task is cancelled
 let timerTask = Task {
-    for await _ in ContinuousClock().timer(interval: .seconds(1)) {
+    for await _ in AsyncTimerSequence(interval: .seconds(1), clock: .continuous) {
         await fetchLatestData()
     }
 }
@@ -335,9 +344,11 @@ timerTask.cancel()
 ### Background Polling with Structured Concurrency
 
 ```swift
+import AsyncAlgorithms
+
 func startPolling() async {
     do {
-        for try await _ in ContinuousClock().timer(interval: .seconds(30)) {
+        for try await _ in AsyncTimerSequence(interval: .seconds(30), clock: .continuous) {
             try Task.checkCancellation()
             let data = try await api.fetchUpdates()
             await MainActor.run { updateUI(with: data) }
@@ -369,7 +380,7 @@ try await Task.sleep(until: .now + .seconds(1), clock: .continuous)
 | Need | Use |
 |------|-----|
 | One-shot delay before action | `Task.sleep(for:)` |
-| Repeating action | `ContinuousClock().timer(interval:)` |
+| Repeating action | `AsyncTimerSequence(interval:clock:)` (swift-async-algorithms) |
 | Delay with cancellation | `Task.sleep(for:)` in a Task |
 | Retry with backoff | `Task.sleep(for:)` in a loop |
 
