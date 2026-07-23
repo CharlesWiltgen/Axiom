@@ -28,6 +28,7 @@ Questions you can ask Claude that will draw from this skill:
 - "I keep getting rejected, what am I missing?"
 - "What's the pre-submission checklist for App Store?"
 - "Do I need a privacy manifest?"
+- "Why was my upload rejected for a missing launch screen? (iOS 27 SDK)"
 - "My app update was rejected for metadata issues"
 
 ## What This Skill Provides
