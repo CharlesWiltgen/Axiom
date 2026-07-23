@@ -283,6 +283,8 @@ And never delete on `errSecInteractionNotAllowed` — it means "try again when t
 
 `SecAccessControl` gates individual keychain items behind biometric authentication or device passcode.
 
+**iPhone Mirroring caveat** When the app runs mirrored on a Mac, biometric requests fail by default — the iPhone's Face ID/Touch ID sensors are not accessible from the Mac (TN3210). For `LAContext.evaluatePolicy` flows, use `.deviceOwnerAuthenticationWithBiometricsOrCompanion` (iOS 18) so approval happens on the Mac; with no companion nearby it behaves exactly like `.deviceOwnerAuthenticationWithBiometrics`. For `SecAccessControl`-gated items, combine `.companion` (iOS 18) with a biometry flag via `.or` so the item stays readable under Mirroring. See axiom-uikit (skills/uikit-modernization.md) for the full Mirroring compatibility list.
+
 ### Creating a Biometric-Gated Item
 
 ```swift
