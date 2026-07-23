@@ -15,6 +15,7 @@ Use this skill when:
 - Handling game controller input (polling vs change handlers)
 - Letting players customize the controller Home button action (new in the 27 releases)
 - Reading spatial accessory input on visionOS 27
+- Reading mouse deltas and keyboard state for gameplay (iPad pointer, iPhone Mirroring)
 
 ## Example Prompts
 
@@ -24,6 +25,8 @@ Use this skill when:
 - "How do I handle game controller input alongside touch?"
 - "How do I let players remap the controller Home button?"
 - "How do I track a spatial accessory on Vision Pro?"
+- "How do I read GCMouse deltas for camera look in my iPad game?"
+- "How do I handle WASD keyboard input with GCKeyboard?"
 
 ## What This Skill Provides
 
@@ -45,6 +48,9 @@ Use this skill when:
 ### GameController 27 Additions
 - `GCControllerHomeButtonSettingsManager` (iOS/macOS/visionOS 27)
 - visionOS 27 spatial accessories: `GCSpatialAccessory`, typed connect/disconnect messages, anchor-timestamp-aligned input
+
+### Mouse and Keyboard as Game Input
+- `GCMouse` delta-based look/aim, scroll as a direction pad, `GCKeyboard.coalesced` key handlers — same connect/handler pattern as controllers
 
 ## Related
 
