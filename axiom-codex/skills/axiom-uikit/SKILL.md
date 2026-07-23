@@ -25,6 +25,7 @@ license: MIT
 | @Published properties, Combine ↔ async/await | See `skills/combine-patterns.md` |
 | When to use Combine vs async/await | See `skills/combine-patterns.md` |
 | UIScene lifecycle required, resizable apps, size classes, tab sidebar `OS27` | See `skills/uikit-modernization.md` |
+| iPhone Mirroring compat: indirect input, companion Face ID, portrait trap | See `skills/uikit-modernization.md` |
 | TextKit 2 architecture, NSTextLayoutManager | See `skills/textkit-ref.md` |
 | Writing Tools integration (iOS 26) | See `skills/textkit-ref.md` |
 | Viewport rendering surfaces, attachment reuse, collapsible text `OS27` | See `skills/textkit-ref.md` |
@@ -54,6 +55,7 @@ digraph uikit {
 ```
 
 0. Scene-lifecycle migration, "app won't launch on 27", resizability, size classes, tab sidebar? → `skills/uikit-modernization.md`
+0b. App misbehaves in iPhone Mirroring (gestures dead, Face ID blocked, layout stuck portrait)? → `skills/uikit-modernization.md`
 1. UIViewRepresentable / UIViewControllerRepresentable / UIHostingController? → `skills/uikit-bridging.md`
 2. "Unable to simultaneously satisfy constraints" / layout bugs? → `skills/auto-layout-debugging.md`
 3. CAAnimation completion missing / spring physics wrong / animation jank? → `skills/uikit-animation-debugging.md`
@@ -124,3 +126,6 @@ User: "My SwiftUI view has a memory leak from a Combine subscription"
 
 User: "How do I embed SwiftUI in my UIKit app?"
 → Read: `skills/uikit-bridging.md`
+
+User: "My custom pinch gesture stops working when the app runs in iPhone Mirroring"
+→ Read: `skills/uikit-modernization.md`

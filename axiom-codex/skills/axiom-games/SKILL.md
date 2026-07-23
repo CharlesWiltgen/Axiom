@@ -68,6 +68,8 @@ These topics are part of the broader games/3D domain but live in separate skill 
 
 **Windowing and orientation (OS27):**
 - Every app resizes at 27, iPhone included. `UIRequiresFullScreen` now means discrete snap-resizing for games (not a fullscreen opt-out); orientation lock is a preference; minimum size via `sizeRestrictions` → See axiom-uikit (skills/uikit-modernization.md)
+- Game runs in iPhone Mirroring: trackpad/mouse input reaches custom gestures as indirect events, and the scene always reports portrait → See axiom-uikit (skills/uikit-modernization.md)
+- Metal drawable sizing, render-target reallocation, and quality throttling during live resize → See axiom-graphics (skills/resizable-rendering.md)
 
 ## Decision Tree
 
@@ -146,6 +148,7 @@ Scores: PERFORMANT / DEGRADED / UNPLAYABLE
 - `TCTouchController.isSupported` gate + connect/render/touch-routing setup
 - Half-screen collider shapes for movement and camera (never small circles)
 - Safe-area-adjusted anchor offsets for fullscreen games
+- GCMouse delta look/aim + GCKeyboard key state (iPad pointer, iPhone Mirroring)
 - Controller Home button settings + visionOS spatial accessories `OS27`
 
 ## Anti-Rationalization

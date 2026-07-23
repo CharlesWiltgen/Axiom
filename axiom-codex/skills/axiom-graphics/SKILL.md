@@ -15,6 +15,7 @@ Use this router when:
 - Porting DirectX code to Metal
 - Converting GLSL/HLSL shaders to Metal Shading Language
 - Setting up MTKView or CAMetalLayer
+- Rendering breaks or blurs when the window resizes or moves between screens
 - Debugging GPU rendering issues (black screen, wrong colors, crashes)
 - Evaluating translation layers (MetalANGLE, MoltenVK)
 - Optimizing GPU performance or fixing thermal throttling
@@ -52,6 +53,14 @@ Use this router when:
 - Wrong colors or coordinate systems
 - Performance regressions
 - Time-cost analysis per diagnostic path
+
+### Rendering Surfaces Under Window Resizing
+
+**Any rendering surface in a resizable window** → See skills/resizable-rendering.md
+- MTKView `drawableSizeWillChange` (projection + render-target reallocation, live-resize throttling)
+- CAMetalLayer manual `drawableSize`/`contentsScale` ownership
+- Per-surface adaptation table: video layers, maps, charts, Canvas, web views, PDF, SpriteKit/SceneKit
+- displayScale-keyed cache invalidation when a scene moves between screens (Mirroring, external display)
 
 ### Display Performance
 
@@ -123,7 +132,8 @@ For 3D content in non-game SwiftUI apps, AR experiences, and spatial computing, 
 17. Frame drops in long play sessions? → display-performance (Part 12)
 18. HDR image looks washed out / clipped when drawn? → hdr-color-ref
 19. Choosing a tone-mapping method, or reading HAGC metadata? → hdr-color-ref
-20. Building a 3D game? → Use axiom-games router instead
+20. Rendering stretches, blurs, or letterboxes when the window resizes or moves screens? → resizable-rendering
+21. Building a 3D game? → Use axiom-games router instead
 
 ## Anti-Rationalization
 
@@ -138,6 +148,7 @@ For 3D content in non-game SwiftUI apps, AR experiences, and spatial computing, 
 | "I'll parse the USD file myself / bundle OpenUSD" | USDKit is system-provided USD on the 27 releases. `skills/usdkit.md` covers stages, editing, and compressed export. |
 | "I'll write my own pathfinding over the scene graph" | RealityKit 27 ships navigation meshes with costs and off-mesh connections. `skills/realitykit-ref.md` Part 10. |
 | "The frame drop only happens after an hour of play, can't trace that" | The 27 releases record Metal metrics continuously — collect after the fact with metalperftrace. `skills/display-performance.md` Part 12. |
+| "I'll size my render target from the screen bounds" | Windows resize continuously at 27 and scenes move between screens with different scales. Size from the drawable/view + trait scale — `skills/resizable-rendering.md`. |
 | "I'll use `CGContentToneMappingInfo` — it's the modern Swift enum" | It cannot express Headroom Adaptive Gain Curve; only the C-imported `CGToneMapping` can. Newer spelling, narrower capability. `skills/hdr-color-ref.md` Part 1. |
 
 ## Critical Patterns
@@ -186,6 +197,12 @@ For 3D content in non-game SwiftUI apps, AR experiences, and spatial computing, 
 - USDStageComponent / USDPlayer RealityKit bridge
 
 ## Example Invocations
+
+User: "My MTKView content stretches when the iPad window resizes"
+→ See `skills/resizable-rendering.md`
+
+User: "My cached thumbnails look blurry in iPhone Mirroring"
+→ See `skills/resizable-rendering.md`
 
 User: "Should I use MetalANGLE or rewrite in native Metal?"
 → See `skills/metal-migration.md`
