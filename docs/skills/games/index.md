@@ -102,6 +102,7 @@ Working with USD/USDZ 3D scene files in Swift (new in the 27 releases): opening 
 - "How do I handle game controller input?"
 - "How do I set up SpriteKit with SwiftUI?"
 - "Objects pass through walls in my game"
+- "My game's layout breaks when the window is resized (iOS 27)"
 - "Audit my SpriteKit code for issues"
 - "How do I migrate from SceneKit to RealityKit?"
 - "My RealityKit entities aren't loading"
