@@ -410,6 +410,7 @@ Run this entire checklist before every submission. Check every item, not just th
 ### 1. Build Configuration
 
 - [ ] Built with current required SDK (iOS 18 SDK / Xcode 16 as of 2025; iOS 26 SDK / Xcode 26 required starting April 28, 2026)
+- [ ] Launch screen declared if building with the iOS 27 SDK or later — Info.plist must contain one of `UILaunchScreen`, `UILaunchStoryboardName`, `UILaunchScreens`, `UILaunchStoryboards`; App Store Connect validates at upload, iPhone AND iPad apps, App Store and alternative marketplaces alike (TN3208)
 - [ ] `ITSAppUsesNonExemptEncryption` set in Info.plist (`NO` if only HTTPS)
 - [ ] App tested on physical device with latest shipping iOS version
 - [ ] App works over IPv6-only network (Apple review network is IPv6)
@@ -495,6 +496,12 @@ Run this entire checklist before every submission. Check every item, not just th
 - [ ] Accessibility Nutrition Labels declared (becoming required for new submissions)
 - [ ] External AI service consent modal (if app sends personal data to external AI)
 - [ ] SDK minimum version met (Xcode 16/iOS 18 SDK now; Xcode 26/iOS 26 SDK starting April 28, 2026)
+
+### 9. New for the 27 cycle
+
+- [ ] Launch-screen key present when built with the iOS 27 SDK or later (see Build Configuration above; TN3208). The simplest storyboard-free path is a `UILaunchScreen` dictionary with `UIColorName`/`UIImageName`
+- [ ] Scene lifecycle adopted — an app built against the 27 SDK with only a `UIApplicationDelegate` won't launch (see axiom-uikit (skills/uikit-modernization.md))
+- [ ] Mac availability reviewed in App Store Connect — compatible iOS apps are offered on the Mac App Store automatically, opt-out if the Mac experience is broken (see axiom-macos (skills/ios-apps-on-mac.md))
 
 ---
 
