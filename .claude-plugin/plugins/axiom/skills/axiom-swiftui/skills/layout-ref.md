@@ -756,7 +756,7 @@ Image(systemName: "star")
 
 ## Window APIs
 
-By the 27 cycle every app is resizable — iPhone apps included (iPhone Mirroring on Mac, iPhone-only apps on iPad). Assume an arbitrary, changing scene size; don't assume a fixed aspect ratio or canvas. Express *preferences* (minimum size, content resizability), not absolute control. The UIKit-side scene migration (`UIScreen.main` → scene geometry, `UIRequiresFullScreen` → `sizeRestrictions`, scene-lifecycle mandate) lives in `axiom-uikit (skills/uikit-modernization.md)`.
+By the 27 cycle every app is resizable — iPhone apps included (iPhone Mirroring on Mac, iPhone-only apps on iPad). Assume an arbitrary, changing scene size; don't assume a fixed aspect ratio or canvas. Express *preferences* (minimum size, content resizability), not absolute control. The UIKit-side scene migration (`UIScreen.main` → scene geometry, `UIRequiresFullScreen` → `sizeRestrictions`, scene-lifecycle mandate) and iPhone Mirroring compatibility (indirect trackpad/mouse input to custom gestures, companion Face ID approval on the Mac, the always-portrait orientation trap) live in `axiom-uikit (skills/uikit-modernization.md)`.
 
 ### onInteractiveResizeChange
 
