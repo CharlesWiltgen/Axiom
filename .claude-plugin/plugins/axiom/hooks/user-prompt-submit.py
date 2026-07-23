@@ -98,7 +98,7 @@ if not non_ios and re.search(r'build (fail|error|broken)|xcodebuild|simulator (c
     matches.append("axiom-build")
 
 # UI
-if re.search(r'swiftui|@state\b|@binding\b|@observable\b|@environment\b|navigationstack|navigationsplitview|layout.{0,10}(break|bug|wrong|issue)|preview.{0,5}(crash|fail|not |won.t|broken)|view.{0,10}(not|won.t|doesn.t).{0,10}(updat|render|show|appear)|tabview|scroll.{0,20}(jank|lag|slow|stutter)', prompt_lower):
+if re.search(r'swiftui|@state\b|@binding\b|@observable\b|@environment\b|navigationstack|navigationsplitview|layout.{0,10}(break|bug|wrong|issue)|preview.{0,5}(crash|fail|not |won.t|broken)|view.{0,10}(not|won.t|doesn.t).{0,10}(updat|render|show|appear)|tabview|scroll.{0,20}(jank|lag|slow|stutter)|presentationdetents?|\bdetents?\b|presentation(compactadaptation|sizing|backgroundinteraction)|popover.{0,20}(sheet|iphone|compact|anchor)|sheet.{0,20}(detent|resiz|medium|half|landscape.{0,15}full)|onhover|hovereffect|oncontinuoushover|pointerstyle', prompt_lower):
     matches.append("axiom-swiftui")
 
 # UI — preview construction (separate from preview-crash routing above)
@@ -226,7 +226,7 @@ if re.search(r'vision\s*framework|visionkit|vnrequest|vndetect|vnclassif|vnrecog
     matches.append("axiom-vision")
 
 # Games/Graphics
-if re.search(r'spritekit|scenekit|realitykit|skscene|skspritenode|skphysics|realityview|arview|game.{0,5}(loop|scene|physics)|touchcontroller|tctouch|tcbutton|tcthumbstick|tccontrol|gccontroller|gcvirtualcontroller|gcspatialaccessory|extendedgamepad|gamecontroller', prompt_lower):
+if re.search(r'spritekit|scenekit|realitykit|skscene|skspritenode|skphysics|realityview|arview|game.{0,5}(loop|scene|physics)|touchcontroller|tctouch|tcbutton|tcthumbstick|tccontrol|gccontroller|gcvirtualcontroller|gcspatialaccessory|extendedgamepad|gamecontroller|gcmouse|gckeyboard', prompt_lower):
     matches.append("axiom-games")
 
 # Games — generic input terms gated
@@ -234,7 +234,7 @@ if not non_ios and "axiom-games" not in matches and re.search(r'game\s*controlle
     matches.append("axiom-games")
 
 # Graphics (Metal/GPU — separate from games)
-if re.search(r'metal\b.{0,10}(shader|render|migrat|buffer|texture|pipeline)|opengl.{0,10}(migrat|metal|convert)|gpu.{0,10}(render|compute)|promoti|variable.{0,5}refresh.{0,5}rate|usdkit|usdz\b|gaussian\s*splat|metalperftrace|mtltensor|tensorops|metalfx|projective\s*texture|reverb\s*mesh|realitykit|realityview', prompt_lower):
+if re.search(r'metal\b.{0,10}(shader|render|migrat|buffer|texture|pipeline)|opengl.{0,10}(migrat|metal|convert)|gpu.{0,10}(render|compute)|promoti|variable.{0,5}refresh.{0,5}rate|usdkit|usdz\b|gaussian\s*splat|metalperftrace|mtltensor|tensorops|metalfx|projective\s*texture|reverb\s*mesh|realitykit|realityview|drawablesize|cametallayer|mtkview', prompt_lower):
     matches.append("axiom-graphics")
 
 # Graphics — generic terms gated
@@ -242,7 +242,7 @@ if not non_ios and "axiom-graphics" not in matches and re.search(r'nav(igation)?
     matches.append("axiom-graphics")
 
 # App Store / Shipping
-if re.search(r'app store.{0,10}(reject|review|submiss|connect|metadata)|testflight|privacy manifest|app review|export compliance|age rating|app.{0,5}(submit|upload|distribut)|app\s*clip|asset\s*librar\w*.{0,40}(app\s*store|connect|review)|(app\s*store|connect).{0,40}asset\s*librar|creative\s*assets?.{0,60}(app\s*store|connect|submi|review)|(app\s*store|connect).{0,60}creative\s*assets?', prompt_lower):
+if re.search(r'app store.{0,10}(reject|review|submiss|connect|metadata)|testflight|privacy manifest|app review|export compliance|age rating|app.{0,5}(submit|upload|distribut)|app\s*clip|asset\s*librar\w*.{0,40}(app\s*store|connect|review)|(app\s*store|connect).{0,40}asset\s*librar|creative\s*assets?.{0,60}(app\s*store|connect|submi|review)|(app\s*store|connect).{0,60}creative\s*assets?|uilaunchscreen|launch\s*screen.{0,25}(requir|reject|submi|store|missing|mandat|validat)|(missing|no|without)\s+launch\s*screen', prompt_lower):
     matches.append("axiom-shipping")
 
 # Shipping — generic commerce terms gated
@@ -252,7 +252,7 @@ if not non_ios and "axiom-shipping" not in matches and re.search(r'retention\s*m
 # macOS
 # Note: bare "macos"/"mac os" is intentionally NOT matched — it fires on host-OS
 # version mentions ("on macOS 26.3"). Require intent-qualifying terms instead.
-if re.search(r'mac\s*app(?:lication)?s?\b|macos.{0,15}(app|build|sandbox|develop|distribut|notariz|menubar|window|toolbar|sign)|appkit|screencapturekit|scstream\b|scshareablecontent|sccontentfilter|sccontentsharingpicker|scscreenshotmanager|screcordingoutput|nstoolbar|nsviewrepresentable|nshostingcontroller|nshostingview|nshostingmenu|nshostingscene|nsgesturerecognizerrepresentable|nsviewcontrollerrepresentable|nscontrol\b|nsstatusitem|status\s*items?\b.{0,40}(window|menu|keyboard|expand)|menu\s*bar.{0,15}status\s*item|nswindowrestoration|encoderestorablestate|nsrefreshcontroller|nstextselectionmanager|nsglasseffect|cornerconfiguration|concentric.{0,10}corner|corner.{0,12}concentric|windowgroup|menubarextra|utilitywindow|commandmenu|commandgroup|focusedscenevalue|app\s*sandbox|sandbox.{0,10}(violat|entitlement|bookmark)|security.{0,5}scoped|notariz|notarytool|developer\s*id|hardened\s*runtime|sparkle.{0,5}(update|framework|auto)|\.dmg\b|distribut.{0,10}outside|menu\s*bar.{0,5}(extra|command|item)', prompt_lower):
+if re.search(r'mac\s*app(?:lication)?s?\b|macos.{0,15}(app|build|sandbox|develop|distribut|notariz|menubar|window|toolbar|sign)|appkit|screencapturekit|scstream\b|scshareablecontent|sccontentfilter|sccontentsharingpicker|scscreenshotmanager|screcordingoutput|nstoolbar|nsviewrepresentable|nshostingcontroller|nshostingview|nshostingmenu|nshostingscene|nsgesturerecognizerrepresentable|nsviewcontrollerrepresentable|nscontrol\b|nsstatusitem|status\s*items?\b.{0,40}(window|menu|keyboard|expand)|menu\s*bar.{0,15}status\s*item|nswindowrestoration|encoderestorablestate|nsrefreshcontroller|nstextselectionmanager|nsglasseffect|cornerconfiguration|concentric.{0,10}corner|corner.{0,12}concentric|windowgroup|menubarextra|utilitywindow|commandmenu|commandgroup|focusedscenevalue|app\s*sandbox|sandbox.{0,10}(violat|entitlement|bookmark)|security.{0,5}scoped|notariz|notarytool|developer\s*id|hardened\s*runtime|sparkle.{0,5}(update|framework|auto)|\.dmg\b|distribut.{0,10}outside|menu\s*bar.{0,5}(extra|command|item)|\bcatalyst\b|maccatalyst|designed\s*for\s*ip(?:ad|hone)|ios\s*apps?\s*on\s*(?:apple\s*silicon|mac)|isiosapponmac|tablecolumn|swiftui\s*table|multi.?column\s*table|\.inspector\b|inspector\s*(column|panel|pane)', prompt_lower):
     matches.append("axiom-macos")
 
 # watchOS
@@ -273,7 +273,7 @@ if re.search(r'human interface|hig\b|liquid glass|glass\s*[-]?\s*effect\b|glasse
     matches.append("axiom-design")
 
 # UIKit
-if re.search(r'uikit|uiview\b|uiviewcontroller|auto\s*layout|nslayoutconstraint|uiviewrepresentable|uihostingcontroller|combine\b.{0,10}(publisher|subscriber|sink|assign)|textkit|nstextlayoutmanager|uilabel|uitableview|uicollectionview|pencilkit|pkcanvasview|pktoolpicker|pkdrawing|apple\s*pencil|paperkit|papermarkup|uicornerconfiguration|cornerconfiguration|encoderestorablestate', prompt_lower):
+if re.search(r'uikit|uiview\b|uiviewcontroller|auto\s*layout|nslayoutconstraint|uiviewrepresentable|uihostingcontroller|combine\b.{0,10}(publisher|subscriber|sink|assign)|textkit|nstextlayoutmanager|uilabel|uitableview|uicollectionview|pencilkit|pkcanvasview|pktoolpicker|pkdrawing|apple\s*pencil|paperkit|papermarkup|uicornerconfiguration|cornerconfiguration|encoderestorablestate|iphone\s*mirroring|indirectinputevents|(uiscene)?sizerestrictions|uipointerinteraction|uihovergesture|uikeycommand|discoverabilitytitle|uiapplicationscenemanifest|scene\s*manifest', prompt_lower):
     matches.append("axiom-uikit")
 
 # Swift language
