@@ -87,8 +87,8 @@ Run all 10 existing detection patterns. For every grep match, use Read to verify
 
 **Pattern**: UIRequiresFullScreen set to true in Info.plist
 **Search**: `UIRequiresFullScreen` in `*.plist` files
-**Issue**: Disables all multitasking on iPad. Apple rejects apps that use this unnecessarily.
-**Fix**: Remove and support adaptive layouts with size classes
+**Issue**: Deprecated key (TN3192), and it no longer opts out of resizing — at 27 every app resizes, iPhone included; the key only switches games to discrete snap-resizing. Fixed-canvas layouts break.
+**Fix**: Remove the key, set `windowScene.sizeRestrictions?.minimumSize` as the usable floor, and adapt layout to arbitrary scene sizes
 
 ### 4. Size Class as Orientation Proxy (HIGH)
 
@@ -244,7 +244,7 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details
 
 - GeometryReader as root view of a screen (no siblings to collapse)
 - `UIScreen.main` used only for one-time setup (e.g., launch screen)
-- `UIRequiresFullScreen` for camera-only or AR apps (legitimate use)
+- `UIRequiresFullScreen` in games that want discrete snap-resizing (its one remaining role at 27)
 - Small fixed frames (<100pt) for icons/badges
 - `VStack { ForEach }` with <20 items (lazy overhead not worth it)
 - Size class checks that genuinely adapt layout (not inferring orientation)
