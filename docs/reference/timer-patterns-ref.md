@@ -16,7 +16,7 @@ Use this reference when:
 - "What's the API for Timer.publish in Combine?"
 - "How do I schedule a DispatchSourceTimer with leeway?"
 - "What RunLoop modes are available for Timer?"
-- "How do I use ContinuousClock.timer for async polling?"
+- "How do I run a repeating async timer with AsyncTimerSequence?"
 - "What's the platform availability for AsyncTimerSequence?"
 
 ## What's Covered
@@ -24,7 +24,7 @@ Use this reference when:
 - Timer API (scheduledTimer, tolerance, RunLoop modes, invalidate lifecycle)
 - DispatchSourceTimer API (makeTimerSource, schedule, activate, suspend/resume/cancel, state machine)
 - Combine Timer (Timer.publish, autoconnect, RunLoop mode parameter)
-- AsyncTimerSequence (ContinuousClock.timer, SuspendingClock.timer, structured concurrency)
+- AsyncTimerSequence (swift-async-algorithms package, ContinuousClock/SuspendingClock, structured concurrency)
 - Task.sleep patterns (one-shot delays vs repeating timers)
 - LLDB timer inspection commands
 - Platform availability matrix
