@@ -15,6 +15,7 @@ flowchart LR
     subgraph skills_d["Skills"]
         swiftui_debugging["swiftui-debugging"]:::discipline
         swiftui_nav["swiftui-nav"]:::discipline
+        swiftui_presentations["swiftui-presentations"]:::discipline
         swiftui_performance["swiftui-performance"]:::discipline
         swiftui_layout["swiftui-layout"]:::discipline
         swiftui_gestures["swiftui-gestures"]:::discipline
@@ -101,6 +102,14 @@ flowchart LR
 - **[SwiftUI Navigation](/skills/ui-design/swiftui-nav)** – NavigationStack, NavigationSplitView, NavigationPath, deep linking, state restoration
   - *"How do I implement programmatic navigation?"*
   - *"My navigation state is lost when switching tabs"*
+
+- **[SwiftUI Presentations](/skills/ui-design/swiftui-presentations)** – Sheets with detents, popover adaptation, presentationSizing, non-modal background interaction
+  - *"How do I make a half-height sheet with presentationDetents?"*
+  - *"Why does my popover show as a sheet on iPhone?"*
+
+- **[Resizable Rendering](/skills/ui-design/resizable-rendering)** – Metal drawable sizing, per-surface resize behavior, displayScale-keyed cache invalidation
+  - *"My MTKView content stretches when the iPad window resizes"*
+  - *"My cached thumbnails are blurry in iPhone Mirroring"*
 
 - **[SwiftUI Layout](/skills/ui-design/swiftui-layout)** – Adaptive layouts with ViewThatFits, AnyLayout, size classes, iOS 26 free-form windows
   - *"My layout breaks on iPad. How do I make it adaptive?"*
