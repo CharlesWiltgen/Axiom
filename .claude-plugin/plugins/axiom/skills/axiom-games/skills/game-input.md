@@ -1,12 +1,13 @@
 # Game Input: Touch Controls and Game Controllers
 
-Guide to player input for games on Apple platforms: on-screen touch controls with the TouchController framework (iOS/iPadOS), unified GCController handling, and the GameController framework's 27-cycle additions.
+Guide to player input for games on Apple platforms: on-screen touch controls with the TouchController framework (iOS/iPadOS), unified GCController handling, mouse/keyboard as game input, and the GameController framework's 27-cycle additions.
 
 ## When to Use This Skill
 
 - Adding touch controls to a controller-based game (including Mac/console ports)
 - Designing on-screen control layouts that adapt across iPhone and iPad
 - Handling game controller input (polling vs change handlers)
+- Reading mouse deltas or keyboard state for gameplay (GCMouse/GCKeyboard — iPad pointer, iPhone Mirroring)
 - Letting players customize the controller Home button action `OS27`
 - Reading spatial accessory input `visionOS27`
 
@@ -311,6 +312,33 @@ final class AccessoryCoordinator {
 When you hold a generic `GCDevice` rather than the enumeration above, test capabilities with `conforms(to:)` against a `GCDeviceType` such as `.spatialAccessory`.
 
 To align buffered input with the accessory's tracked pose, pass an ARKit accessory anchor timestamp (`ar_accessory_anchor_get_timestamp`) to `inputState(forSpatialAccessoryAnchorTimestamp:)` — it returns the buffered input state closest to that anchor sample. This requires a running ARKit session with accessory tracking; the timestamp comes from the accessory anchors it delivers.
+
+## 8. Mouse and Keyboard as Game Input (GCMouse / GCKeyboard)
+
+iPad mice/trackpads, Catalyst, and iPhone Mirroring put a real mouse and keyboard in front of your game. GameController treats them like controllers (iOS 14) — same connect-notification + handler pattern as `GCController`, raw deltas instead of UIKit gestures:
+
+```swift
+NotificationCenter.default.addObserver(
+    forName: .GCMouseDidConnect, object: nil, queue: .main) { note in
+    guard let mouse = note.object as? GCMouse, let input = mouse.mouseInput else { return }
+    input.mouseMovedHandler = { _, deltaX, deltaY in
+        look(dx: deltaX, dy: deltaY)               // deltas, not cursor position
+    }
+    input.leftButton.pressedChangedHandler = { _, _, pressed in fire(pressed) }
+    input.scroll.valueChangedHandler = { _, x, y in zoom(y) }   // scroll is a direction pad
+}
+
+if let keys = GCKeyboard.coalesced?.keyboardInput {
+    keys.keyChangedHandler = { _, _, keyCode, pressed in
+        if keyCode == .keyW { moveForward(pressed) }
+    }
+    let sprinting = keys.button(forKeyCode: .leftShift)?.isPressed ?? false
+}
+```
+
+- `GCMouse.current` / `GCMouse.mice()` mirror `GCController.current`/`controllers()`; buttons beyond left are optional (`rightButton`, `middleButton`, `auxiliaryButtons`).
+- All physical keyboards coalesce into one `GCKeyboard.coalesced` object — one connect notification, one handler set.
+- Use `GCMouse` for pointer-*driven gameplay* (camera look, aiming); use `UIPointerInteraction`/hover for UI chrome — see axiom-uikit (skills/uikit-modernization.md). Under iPhone Mirroring, translated input reaches these APIs like any indirect input; validate on a real Mirroring session (same skill).
 
 ## Gotchas
 
