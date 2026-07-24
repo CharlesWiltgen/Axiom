@@ -19,6 +19,7 @@ Use this skill when:
 - "What accessibility level should I use for keychain items?"
 - "How do I share keychain items between my app and its widget?"
 - "How do I add Face ID protection to a keychain item?"
+- "Why does my biometric-gated keychain item fail in iPhone Mirroring?"
 - "My keychain items disappear after reinstalling the app"
 
 ## What This Skill Provides
