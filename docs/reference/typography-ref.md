@@ -29,6 +29,8 @@ Questions you can ask Claude that will draw from this reference:
 - "How do I use SF Mono for code?"
 - "What font widths are available in SF Pro?"
 - "How do I support Dynamic Type in my app?"
+- "Why does the same text style render smaller on the Mac?"
+- "Why does Chinese text clip in my fixed-height rows?"
 
 ## What's Covered
 
@@ -60,6 +62,8 @@ Questions you can ask Claude that will draw from this reference:
 - Minimum sizes for legibility
 - Line height and tracking
 - Internationalization considerations
+- Mac typographic density (measured text-style sizes vs iOS)
+- CJK density in compact widths (line height, per-character wrapping, `typesettingLanguage`, Hangul word priority)
 
 ## Key Pattern
 

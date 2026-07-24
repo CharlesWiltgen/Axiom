@@ -24,6 +24,8 @@ Questions you can ask Claude that will draw from this reference:
 - "How do I declare a custom UTType?"
 - "How do I accept dropped files in my view?"
 - "How do I add copy/paste support for my custom type?"
+- "How do file promises work when dragging to Finder?"
+- "My drop target stops working after the window resizes mid-drag"
 
 ## What's Covered
 
@@ -37,6 +39,8 @@ Questions you can ask Claude that will draw from this reference:
 - **Clipboard** – `.copyable`, `.pasteDestination`, `.cuttable`, `PasteButton`
 - **UTType declarations** – System types, custom types, Info.plist entries
 - **UIKit bridging** – NSItemProvider.loadTransferable, UIActivityViewController
+- **Promised files** – NSFilePromiseProvider / NSFilePromiseReceiver for drags to Finder (Mac)
+- **Drop-target correctness under reflow** – keeping drop handling live through mid-drag window resizes
 
 ## Key Patterns
 
