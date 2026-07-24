@@ -31,6 +31,7 @@ license: MIT
 | Navigation still broken after debugging | See `skills/nav-diag.md` |
 | Navigation API reference | See `skills/nav-ref.md` |
 | Layout breaks on iPad/rotation | See `skills/layout.md` |
+| State lost on resize/rotation (scroll, selection, focus, drafts) | See `skills/layout.md` (State Survives the Transition) |
 | Layout API reference | See `skills/layout-ref.md` |
 | Performance/lag/slow scroll | See `skills/swiftui-performance.md` |
 | Architecture/testability | See `skills/architecture.md` |
