@@ -20,6 +20,7 @@ Covers tool selection (ViewThatFits vs AnyLayout vs onGeometryChange), size clas
 - "Designer wants different layout for portrait vs landscape"
 - "Preparing app for iOS 26 window resizing"
 - "Should my iPhone app look like iPad in a wide window?" (iOS 27)
+- "My scroll position / selection / draft is lost when the window resizes"
 
 ## Key Patterns
 
@@ -40,6 +41,7 @@ Covers tool selection (ViewThatFits vs AnyLayout vs onGeometryChange), size clas
 - Unconstrained `GeometryReader` — Greedy sizing breaks siblings
 - Size class as orientation proxy — iPad is `.regular` in both orientations
 - Injecting `.regular` to fake iPad on a wide iPhone window — `.phone` idiom stays `.compact`; drive layout from geometry
+- Separate phone/tablet state trees — crossing the size-class boundary abandons scroll, selection, focus, and drafts; the skill maps each state type to the mechanism that survives adaptation
 
 ## iOS 26 Changes
 
