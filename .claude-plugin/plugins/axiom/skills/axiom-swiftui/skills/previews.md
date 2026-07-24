@@ -360,6 +360,12 @@ The canvas renders on the Mac by default, but you can target a **connected physi
 
 ---
 
+## Resize Mode `OS27`
+
+Xcode 27's preview canvas gains the same resize mode as Device Hub: click the "enter resize mode" icon, then drag the device's edges to resize it freely (WWDC 2026-278). This is the fastest iteration loop for adaptivity work — exercise your breakpoints, `ViewThatFits` fallbacks, and size-class transitions live without installing on multiple simulators. When the layout settles, confirm on real hardware: Apple's guidance is resizable previews/simulator first, then iPhone Mirroring and iPad on real devices. The testing matrix for resizable apps lives in axiom-testing (skills/ui-testing.md).
+
+---
+
 ## When NOT to Use Previews
 
 Previews are not always the right tool. Recognize the boundary:
