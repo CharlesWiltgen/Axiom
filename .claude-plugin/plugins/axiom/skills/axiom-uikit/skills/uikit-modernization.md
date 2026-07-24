@@ -49,6 +49,16 @@ The connect/foreground/background arc is the easy part; these are the edges apps
   ```
 
   `UISceneSessionActivationRequest(role:)` and `(session:)` target a specific role or an existing session; attaching a `userActivity` is how content reaches the new scene. A scene's `activationConditions` tune which existing scene the system picks for a given target.
+- **Drag creates windows** — with `UIApplicationSupportsMultipleScenes`, a drag item carrying an `NSUserActivity` lets the user open that content as a new window by dropping it at the iPad screen edge (UIKit ships the item-provider conformance — `NSUserActivity+NSItemProvider.h`):
+
+  ```swift
+  let activity = NSUserActivity(activityType: "com.example.detail")
+  activity.userInfo = ["id": document.id]
+  let item = UIDragItem(itemProvider: NSItemProvider(object: activity))
+  ```
+
+  The `activityType` must also be listed in Info.plist under `NSUserActivityTypes` — without it the drag silently creates no window. Route the activity in `scene(_:willConnectTo:options:)` exactly as for an activation request. SwiftUI's `.onDrag` can vend the same `NSItemProvider`. Pair the activity with your data representations on one item so a drop into another app still transfers content.
+- **Per-window undo** — `UIResponder.undoManager` resolves up the responder chain, and SwiftUI's `@Environment(\.undoManager)` is per-window. The multi-window bug is holding one `UndoManager` in a shared model singleton: ⌘Z in one window then undoes edits made in another. Keep the manager scene-scoped — use the environment/responder-chain instance, or own one per scene root, and register undo actions against the manager of the window where the edit happened.
 - **Per-scene restoration** — return the window's state from `stateRestorationActivity(for:)`; at the next connect, read it back from `session.stateRestorationActivity` inside `scene(_:willConnectTo:options:)`. This is the UIKit peer of SwiftUI's `@SceneStorage` — per window, not per app.
 
   ```swift
@@ -145,12 +155,13 @@ Standard drag interactions (`UIDragInteraction`/`UIDropInteraction`, SwiftUI `Tr
 
 Iterate in Device Hub's resizable simulator (see axiom-tools (skills/device-control-ref.md)), then validate in **actual iPhone Mirroring on macOS 27** — Apple's guidance is resizable simulator first, real devices and Mirroring to confirm. TN3210's checklist includes verifying that pinch, rotate, and scroll gestures work with a trackpad or mouse.
 
-## Desktop-class input — pointer and hardware keyboard
+## Desktop-class input — pointer, hardware keyboard, Pencil
 
-The same environments that resize your windows also bring pointers and hardware keyboards (iPad, Catalyst, iOS-on-Mac, Mirroring). UIKit's opt-in surface:
+The same environments that resize your windows also bring pointers, hardware keyboards, and (on iPad) the Pencil. UIKit's opt-in surface:
 
 - **Pointer effects** — `UIPointerInteraction` (iOS 13.4) gives views the system hover treatment; return a `UIPointerStyle` from the delegate to shape the region. `UIHoverGestureRecognizer` (iOS 13) tracks pointer movement over a view (plus Pencil hover `zOffset` from iOS 16.1).
 - **Key commands** — register `UIKeyCommand`s on responders (or via `UIMenuBuilder`, which doubles as the iPad menu bar). The iPad hold-⌘ shortcut HUD shows each command's `discoverabilityTitle`, falling back to its `title`; a command with neither is invisible to discovery.
+- **Scribble** — Pencil handwriting into text fields is automatic for anything conforming to `UITextInput` (iOS 14, iPad): `UITextField`, `UITextView`, SwiftUI `TextField` all work with zero code. The work is only at the edges: `UIScribbleInteraction` (delegate) disables or tunes writing per view — e.g. suppress it on a field with a custom input view; `UIIndirectScribbleInteraction` makes UI that doesn't *look* like a text field writable (a tap-to-edit title, a canvas that should accept handwritten labels) by vending virtual writable "elements". A custom text editor must conform to `UITextInput` to participate at all.
 - SwiftUI equivalents (`onHover`, `hoverEffect`, `keyboardShortcut`) live in axiom-swiftui (skills/gestures.md Pattern 8).
 
 ```swift
@@ -170,7 +181,7 @@ override var keyCommands: [UIKeyCommand]? {
 |-----|-------|-----|
 | `UITabBarController.prominentTabIdentifier` | `iOS27`/`visionOS27` | mark one tab always-visible/prominent |
 | `UITabBarControllerSidebar.preferredPlacement` (`.sidebar`) + `Placement` | `iOS27`/`visionOS27` | iPhone can now opt a tab bar into a sidebar (the `sidebar` object itself is iOS 18) |
-| `UINavigationItem.barMinimizationSafeAreaAdjustment` | `iOS27`/`tvOS27`/`visionOS27` | tune safe-area behavior when the bar minimizes |
+| `UINavigationItem.navigationBarMinimization` (`UIBarMinimization`: `minimizationBehavior`/`safeAreaAdjustment`/`restorationBehavior`) | `iOS27`/`tvOS27`/`visionOS27` | control how the nav bar minimizes on scroll; SwiftUI peers are the `toolbarMinimization*` modifiers — see axiom-swiftui (skills/toolbars.md) Pattern 12 |
 | `UIMenuElement.preferredImageVisibility` | `iOS27` | Liquid Glass may hide menu images by default; opt an item back in |
 | `CMMotionManager.deviceMotionBody` | `iOS27`/`watchOS27`/`visionOS27` | assign a `UIView` as the motion reference frame (Body protocols) |
 | `CLLocationManager.headingBody` | `iOS27`/`macOS27`/`watchOS27` | replaces the deprecated `headingOrientation` |
@@ -190,6 +201,6 @@ Xcode 27 ships an app-modernization agent skill that rewrites `UIScreen.main` ca
 
 **WWDC**: 2025-243, 2026-278
 
-**Docs**: /uikit/app-and-environment, /uikit/uiscenedelegate, /uikit/uiwindowscene, /uikit/uiscenesizerestrictions, /uikit/transitioning-to-the-uikit-scene-based-life-cycle, /uikit/uitabbarcontroller, /uikit/uitabbarcontrollersidebar, /uikit/uimenuelement, /technotes/tn3192-migrating-your-app-from-the-deprecated-uirequiresfullscreen-key, /technotes/tn3210-optimizing-your-app-for-iphone-mirroring, /technotes/tn3208-preparing-your-apps-launch-screen-to-meet-app-store-requirements, /bundleresources/information-property-list/uiapplicationscenemanifest, /bundleresources/information-property-list/uilaunchscreen, /bundleresources/information-property-list/uiapplicationsupportsindirectinputevents, /uikit/uipangesturerecognizer/allowedscrolltypesmask, /localauthentication/lapolicy, /uikit/drag-and-drop
+**Docs**: /uikit/app-and-environment, /uikit/uiscenedelegate, /uikit/uiwindowscene, /uikit/uiscenesizerestrictions, /uikit/transitioning-to-the-uikit-scene-based-life-cycle, /uikit/uitabbarcontroller, /uikit/uitabbarcontrollersidebar, /uikit/uimenuelement, /technotes/tn3192-migrating-your-app-from-the-deprecated-uirequiresfullscreen-key, /technotes/tn3210-optimizing-your-app-for-iphone-mirroring, /technotes/tn3208-preparing-your-apps-launch-screen-to-meet-app-store-requirements, /bundleresources/information-property-list/uiapplicationscenemanifest, /bundleresources/information-property-list/uilaunchscreen, /bundleresources/information-property-list/uiapplicationsupportsindirectinputevents, /uikit/uipangesturerecognizer/allowedscrolltypesmask, /localauthentication/lapolicy, /uikit/drag-and-drop, /uikit/uiscribbleinteraction, /uikit/uiindirectscribbleinteraction, /uikit/uiresponder/undomanager
 
 **Skills**: skills/uikit-bridging.md, axiom-xcode-mcp, axiom-swiftui (size-class-driven adaptive layout), axiom-security (skills/keychain.md), axiom-swift (skills/transferable-ref.md)
