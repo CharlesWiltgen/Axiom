@@ -119,6 +119,7 @@ export default withMermaid(defineConfig({
           text: 'UI & Design',
           items: [
             { text: 'liquid-glass-auditor', link: '/agents/liquid-glass-auditor' },
+            { text: 'resize-auditor', link: '/agents/resize-auditor' },
             { text: 'swiftui-architecture-auditor', link: '/agents/swiftui-architecture-auditor' },
             { text: 'swiftui-layout-auditor', link: '/agents/swiftui-layout-auditor' },
             { text: 'swiftui-performance-analyzer', link: '/agents/swiftui-performance-analyzer' },
@@ -245,6 +246,7 @@ export default withMermaid(defineConfig({
           text: 'UI & Design',
           items: [
             { text: '/axiom:audit liquid-glass', link: '/commands/ui-design/audit-liquid-glass' },
+            { text: '/axiom:audit resize', link: '/commands/ui-design/audit-resize' },
             { text: '/axiom:audit swiftui-architecture', link: '/commands/ui-design/audit-swiftui-architecture' },
             { text: '/axiom:audit swiftui-layout', link: '/commands/ui-design/audit-swiftui-layout' },
             { text: '/axiom:audit swiftui-nav', link: '/commands/ui-design/audit-swiftui-nav' },
