@@ -222,6 +222,55 @@ VStack {
 
 ---
 
+## Pattern 5: ScrollView Fallback for Non-Shrinkable Content
+
+**Use when:** Content has a real minimum size — a form, a button stack, fixed-size artwork — and the window can shrink below it. At 27 every window can: clipping the confirm button off-screen is a resize bug, not an edge case.
+
+```swift
+ViewThatFits(in: .vertical) {
+    CheckoutForm()                    // fits when the window is tall enough
+    ScrollView { CheckoutForm() }     // fallback: same content, scrollable
+}
+```
+
+The `ScrollView` variant must come **last** — a ScrollView compresses to any proposed size, so as the first child it would always "fit" and win. When the fixed variant fits, you keep non-scrolling behavior (Spacer-based centering, no bounce).
+
+If the content should simply always scroll, skip `ViewThatFits`:
+
+```swift
+ScrollView { CheckoutForm() }
+    .scrollBounceBehavior(.basedOnSize)   // no bounce while everything fits
+```
+
+**Watch view identity:** the two `ViewThatFits` branches are different subtrees, so `@State` inside `CheckoutForm` dies when the fit flips mid-resize — keep drafts and focus in the model (see State Survives the Transition below).
+
+---
+
+## Pattern 6: Readable Width for Text Columns
+
+**Use when:** A text column is constrained to the window edges — in a wide window it becomes an unreadable 1,200-point line. SwiftUI has no `readableContentGuide`; this is the worked equivalent:
+
+```swift
+ScrollView {
+    ArticleBody()
+        .frame(maxWidth: 680, alignment: .leading)  // cap the column
+        .frame(maxWidth: .infinity)                 // center the capped column
+        .padding(.horizontal)
+}
+```
+
+The two-frame idiom is the whole trick: the inner frame caps line length, the outer frame re-expands to claim the window width so the column centers instead of hugging the leading edge.
+
+Larger type earns a wider column — scale the cap with Dynamic Type instead of hardcoding:
+
+```swift
+@ScaledMetric(relativeTo: .body) private var readableWidth: CGFloat = 680
+```
+
+UIKit's `readableContentGuide` does all of this automatically, including the Dynamic Type response — see axiom-uikit (skills/adaptive-layout.md). Apply the cap to *text columns*, not to grids or media, which should keep using the full width.
+
+---
+
 ## Size Class Truth Table (iPad)
 
 | Configuration | Horizontal | Vertical |
@@ -446,4 +495,4 @@ content
 
 **WWDC**: 2025-208, 2024-10074, 2022-10056, 2026-278
 
-**Skills**: skills/layout-ref.md, skills/debugging.md, axiom-design (skills/liquid-glass.md), axiom-uikit (skills/uikit-modernization.md)
+**Skills**: skills/layout-ref.md, skills/debugging.md, axiom-design (skills/liquid-glass.md), axiom-uikit (skills/uikit-modernization.md), axiom-uikit (skills/adaptive-layout.md)
