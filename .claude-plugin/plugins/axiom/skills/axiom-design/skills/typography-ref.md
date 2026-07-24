@@ -150,8 +150,17 @@ Text("Custom scaled text")
 
 **macOS**
 - No Dynamic Type support in AppKit
-- Text style sizes optimized for macOS control sizes
-- Catalyst apps use iOS sizes × 77% (legacy) or macOS-optimized sizes ("Optimize Interface for Mac")
+- Text styles resolve to a **denser Mac scale** — the same semantic style is materially smaller:
+
+| Style | iOS (Large) | macOS |
+|---|---|---|
+| largeTitle | 34 | 26 |
+| title2 | 22 | 17 |
+| body | 17 | 13 |
+| footnote | 13 | 10 |
+
+- This density difference is part of responsiveness, not a quirk: a hardcoded 17pt reads as body on iOS but as a title on the Mac, and a layout sized around iOS line heights wastes vertical space at Mac density. Use text styles everywhere and both the sizes and the information density adapt per idiom for free.
+- Catalyst apps use iOS sizes × 77% ("Scale Interface to Match iPad") or true macOS metrics ("Optimize Interface for Mac") — see axiom-macos (skills/ios-apps-on-mac.md) for choosing
 
 **watchOS**
 - Smaller text styles optimized for watch faces
@@ -418,6 +427,20 @@ Justified paragraphs use improved line breaking algorithm:
 - Reduces stretched-out lines
 - More even interword spacing
 - Automatic in TextKit 2
+
+### CJK Density in Compact Widths
+
+CJK text behaves differently under width pressure than Latin, and both differences bite hardest in narrow, resizable windows:
+
+- **Taller lines** — CJK glyphs need more vertical room than Latin at the same point size: the system CJK fonts carry taller vertical metrics than SF, and metrics follow the script when the content language is declared (below). A row height or label frame hardcoded against Latin metrics clips Chinese/Japanese and crowds Korean. Never fix text heights; let text styles and self-sizing determine them.
+- **Per-character wrapping** — CJK break opportunities are far denser than Latin's even with iOS 17's semantic-boundary preference (Line Breaking above), so a narrow column fills edge-to-edge with no ragged margin. Layouts that rely on Latin's ragged right edge for visual breathing room read denser than designed in CJK; test compact widths with real CJK content, not lorem ipsum.
+- **Korean word integrity** — set `lineBreakStrategy = .hangulWordPriority` (UIKit `NSParagraphStyle`, iOS 14) to keep Hangul words whole where space allows.
+- **Declare the content language** when it differs from the UI locale, so line height and spacing adapt to the script rather than the locale:
+
+```swift
+Text(verbatim: chineseQuote)
+    .typesettingLanguage(.init(languageCode: .chinese))  // iOS 17 / macOS 14
+```
 
 ### Text Clipping Prevention
 
