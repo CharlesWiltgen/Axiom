@@ -493,6 +493,8 @@ struct RootView: View {
 
 > "Scene lifecycle events are app-wide concerns handled centrally, not scattered across features."
 
+(UIKit-side scene edges — `sceneDidDisconnect` teardown, activation requests, per-scene `NSUserActivity` restoration, external-display scene roles — live in axiom-uikit (skills/uikit-modernization.md).)
+
 ## Understanding ScenePhase (Apple Documentation)
 
 ScenePhase indicates a scene's operational state. How you interpret the value depends on **where it's read**.
