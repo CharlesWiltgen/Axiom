@@ -31,6 +31,8 @@ license: MIT
 | Color contrast (WCAG AA/AAA) | See `skills/accessibility-diag.md` |
 | Touch target sizes (< 44x44pt) | See `skills/accessibility-diag.md` |
 | Keyboard navigation (iPadOS/macOS) | See `skills/accessibility-diag.md` |
+| Button Shapes, Large Content Viewer, Full Keyboard Access, Switch Control | See `skills/accessibility-diag.md` |
+| VoiceOver order broken after resize / column collapse; table & grid semantics | See `skills/accessibility-diag.md` |
 | Reduce Motion support | See `skills/accessibility-diag.md` |
 | Assistive Access (cognitive, iOS 17+) | See `skills/accessibility-diag.md` |
 | Accessibility Inspector workflows | See `skills/accessibility-diag.md` |
@@ -60,6 +62,7 @@ digraph accessibility {
     what -> "skills/accessibility-diag.md" [label="color contrast"];
     what -> "skills/accessibility-diag.md" [label="touch targets"];
     what -> "skills/accessibility-diag.md" [label="keyboard nav"];
+    what -> "skills/accessibility-diag.md" [label="resizable window / desktop-class"];
     what -> "skills/accessibility-diag.md" [label="Reduce Motion"];
     what -> "skills/accessibility-diag.md" [label="Assistive Access"];
     what -> "skills/accessibility-diag.md" [label="custom control techniques"];
@@ -134,6 +137,12 @@ User: "How do I support Assistive Access?"
 → See `skills/accessibility-diag.md`
 
 User: "How do I prepare my tvOS app for Large Text?"
+→ See `skills/accessibility-diag.md`
+
+User: "VoiceOver reads my screen in the wrong order after the window resizes"
+→ See `skills/accessibility-diag.md`
+
+User: "How do I support Button Shapes / the Large Content Viewer in my custom controls?"
 → See `skills/accessibility-diag.md`
 
 User: "VoiceOver stops reading at the end of each page in my book app"
