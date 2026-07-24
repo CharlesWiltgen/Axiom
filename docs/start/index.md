@@ -10,9 +10,9 @@ Axiom provides comprehensive Apple platform development workflows:
 - **<!--ax:reference-->81<!--/ax--> reference skills** – Comprehensive API guides with code examples
 - **<!--ax:diagnostic-->26<!--/ax--> diagnostic skills** – Systematic troubleshooting with decision trees
 - **<!--ax:commands-->15<!--/ax--> commands** – Quick automated scans for common issues
-- **<!--ax:agents-->41<!--/ax--> agents** – Autonomous code scanning and natural language automation
+- **<!--ax:agents-->42<!--/ax--> agents** – Autonomous code scanning and natural language automation
 
-#### Total: <!--ax:skills-->269<!--/ax--> skills + <!--ax:commands-->15<!--/ax--> commands + <!--ax:agents-->41<!--/ax--> agents
+#### Total: <!--ax:skills-->269<!--/ax--> skills + <!--ax:commands-->15<!--/ax--> commands + <!--ax:agents-->42<!--/ax--> agents
 
 ### 🤖 Apple Intelligence
 - **Foundation Models** – Implement on-device AI with structured output and tool calling
