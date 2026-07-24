@@ -405,6 +405,65 @@ iOS and visionOS only; on those, "top bar" is the navigation bar.
 
 **How the three fit together** Rank ordinary items with `.visibilityPriority`, reserve `.topBarPinnedTrailing` for the one control that must never leave the bar, and use `ToolbarOverflowMenu` for actions that belong in the menu from the start.
 
+**Overflowed items need names** An item that collapses into the overflow menu renders as a menu row. Build items with `Label` (or set `accessibilityLabel`) — an icon-only `Image` button that was legible in the bar becomes a nameless menu row, and VoiceOver falls back to the SF Symbol's derived name at best. Any item that *can* overflow must carry text.
+
+---
+
+## Pattern 12: Bar Minimization on Scroll (OS27)
+
+Navigation and bottom bars can minimize as the user scrolls — the SwiftUI counterpart of UIKit's `UINavigationItem.navigationBarMinimization` (`UIBarMinimization`; see axiom-uikit (skills/uikit-modernization.md)). Three modifiers, each scoped by `ToolbarPlacement`:
+
+```swift
+NavigationStack {
+    List(articles) { ArticleRow($0) }
+        .navigationTitle("Reader")
+}
+.toolbarMinimizationBehavior(.onScrollDown, for: .navigationBar)
+.toolbarMinimizationSafeAreaAdjustment(.enabled, for: .navigationBar)
+.toolbarMinimizationRestoration(.atScrollEdge, for: .navigationBar)
+```
+
+| Modifier | Values | Controls |
+|---|---|---|
+| `toolbarMinimizationBehavior` | `.automatic`, `.onScrollDown`, `.onScrollUp`, `.never` | whether/when the bar minimizes |
+| `toolbarMinimizationSafeAreaAdjustment` | `.automatic`, `.enabled`, `.disabled` | whether the content safe area tracks the minimized bar |
+| `toolbarMinimizationRestoration` | `.automatic`, `.atScrollEdge` | when the full bar returns |
+
+All three are `@available(anyAppleOS 27, *)`. The tab bar has its own earlier peer: `.tabBarMinimizeBehavior(.onScrollDown)` (iOS 26). Use `.never` for screens where the bar carries state the user must always see; use the safe-area adjustment when content should reclaim the freed space rather than leave a gap.
+
+---
+
+## Pattern 13: EditButton and editMode
+
+`EditButton` toggles the environment's `editMode` binding; `List` reacts by enabling its `onDelete`/`onMove` affordances:
+
+```swift
+NavigationStack {
+    List {
+        ForEach(items) { ItemRow($0) }
+            .onDelete { items.remove(atOffsets: $0) }
+            .onMove { items.move(fromOffsets: $0, toOffset: $1) }
+    }
+    .toolbar { EditButton() }
+}
+```
+
+Custom views participate by reading the same binding:
+
+```swift
+@Environment(\.editMode) private var editMode
+
+var body: some View {
+    if editMode?.wrappedValue.isEditing == true {
+        DeleteBadge()
+    }
+}
+```
+
+- `EditButton` is unavailable on macOS, tvOS, and watchOS (visionOS inherits iOS availability). Edit mode is a touch idiom — a modal "now you may rearrange" state. On the Mac, expose the same operations directly: context menus, drag to reorder, the Delete key, and menu commands (axiom-macos (skills/menus-and-commands.md)).
+- In a resizable/desktop-class context (iPad pointer, iOS app on Mac), keep `EditButton` for touch users but don't make it the *only* path — swipe-to-delete plus a context-menu Delete covers both idioms.
+- Titled `EditButton` labels ("Edit"/"Done") are system-provided and localize for free.
+
 ---
 
 ## ToolbarItemPlacement Reference
@@ -557,6 +616,6 @@ Before merging toolbar code:
 
 **WWDC**: 2020-10146, 2021-10054, 2022-10054, 2024-10148, 2025-219, 2026-269
 
-**Docs**: /swiftui/toolbar(content:), /swiftui/toolbaritem, /swiftui/toolbaritemgroup, /swiftui/toolbarspacer, /swiftui/toolbaritemplacement, /swiftui/toolbaritemplacement/topbarpinnedtrailing, /swiftui/toolbarrole, /swiftui/customizabletoolbarcontent, /swiftui/toolbaroverflowmenu, /swiftui/toolbaritemvisibilitypriority
+**Docs**: /swiftui/toolbar(content:), /swiftui/toolbaritem, /swiftui/toolbaritemgroup, /swiftui/toolbarspacer, /swiftui/toolbaritemplacement, /swiftui/toolbaritemplacement/topbarpinnedtrailing, /swiftui/toolbarrole, /swiftui/customizabletoolbarcontent, /swiftui/toolbaroverflowmenu, /swiftui/toolbaritemvisibilitypriority, /swiftui/view/toolbarminimizationbehavior(_:for:), /swiftui/editbutton, /swiftui/editmode
 
 **Skills**: axiom-swiftui (skills/nav.md), axiom-macos (skills/windows.md), axiom-macos (skills/menus-and-commands.md), axiom-design (skills/liquid-glass.md)
