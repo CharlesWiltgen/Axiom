@@ -921,6 +921,79 @@ ScrollView {
 
 ---
 
+## Alignment Guides
+
+### alignmentGuide
+
+Shift where one view aligns within its stack — no nesting, no manual offsets:
+
+```swift
+HStack(alignment: .firstTextBaseline) {
+    Image(systemName: "quote.opening")
+        .alignmentGuide(.firstTextBaseline) { d in d[.bottom] * 0.8 }
+    Text("Quoted text")
+}
+```
+
+The closure receives `ViewDimensions`: read existing guides (`d[.leading]`, `d[.firstTextBaseline]`, `d[VerticalAlignment.center]`) plus `d.width`/`d.height`, and return the offset (in the view's own coordinates) where *this view's* guide should sit. Only the modified view moves — siblings keep their defaults.
+
+**Gotcha:** the modifier only participates in the alignment the container is actually using. `.alignmentGuide(.leading) { ... }` inside `HStack(alignment: .top)` does nothing *in that stack* — `HStack` aligns vertically; leading/trailing guides matter in `VStack`/`ZStack`. (An outer `.leading`-aligned container still picks the explicit guide up — explicit guides propagate upward through nesting.)
+
+### Custom Alignments
+
+A **custom alignment** expresses your own semantic line with its own `defaultValue(in:)` — like the built-ins it propagates through nested containers, so views in different subtrees can line up along a line the built-ins don't name:
+
+```swift
+extension VerticalAlignment {
+    private struct ValueRow: AlignmentID {
+        static func defaultValue(in d: ViewDimensions) -> CGFloat {
+            d[.firstTextBaseline]
+        }
+    }
+    static let valueRow = VerticalAlignment(ValueRow.self)
+}
+
+// Container opts in:
+HStack(alignment: .valueRow) {
+    VStack { icon; Text(label).alignmentGuide(.valueRow) { $0[.firstTextBaseline] } }
+    Text(value)   // uses defaultValue — its first baseline
+}
+```
+
+`defaultValue(in:)` supplies the guide for views that don't set it explicitly. This is the tool for "align the value column across unrelated rows" and "align a detail pane element with a sidebar element" — cases where the views don't share an immediate parent.
+
+---
+
+## Text Under Width Pressure
+
+When a window narrows, text is what gives. These modifiers control *how* it gives — they are the difference between a title that truncates sensibly and a layout where the wrong view collapses:
+
+| Modifier | Effect | Default |
+|---|---|---|
+| `layoutPriority(_:)` | which sibling keeps its space when width runs out | `0` |
+| `lineLimit(_:)` | cap wrapping before truncation kicks in | unlimited |
+| `truncationMode(_:)` | which end drops: `.head` / `.middle` / `.tail` | `.tail` |
+| `allowsTightening(_:)` | permit slight inter-character compression before truncating | `false` |
+| `minimumScaleFactor(_:)` | shrink the font down to the factor before truncating | `1.0` |
+
+```swift
+HStack {
+    Text(document.title)
+        .layoutPriority(1)            // the title wins the space fight
+    Spacer()
+    Text(document.path)
+        .lineLimit(1)
+        .truncationMode(.middle)      // both ends of a path carry signal
+        .allowsTightening(true)
+}
+```
+
+- Without `layoutPriority`, an HStack squeezes children roughly equally — the label you care about truncates while a timestamp keeps its full width. Priority is relative among siblings; `1` vs the default `0` is all it takes.
+- `.middle` truncation is for identifiers whose ends both matter (paths, URLs, account numbers). `.head` is for values where the tail matters ("…/Invoices/March").
+- `minimumScaleFactor` trades legibility for fit — use small reductions and never as a substitute for supporting Dynamic Type: if accessibility text sizes routinely trigger scaling, the layout needs a different arrangement (see skills/layout.md Pattern 2), not smaller text.
+
+---
+
 ## Lazy Container Gotchas
 
 ### Recycling Behavior
@@ -961,6 +1034,6 @@ LazyVStack {
 
 **WWDC**: 2025-208, 2024-10074, 2023-10057, 2022-10056, 2026-278
 
-**Docs**: /swiftui/layout, /swiftui/viewthatfits, /swiftui/view/oninteractiveresizechange(_:), /technotes/tn3192-migrating-your-app-from-the-deprecated-uirequiresfullscreen-key
+**Docs**: /swiftui/layout, /swiftui/viewthatfits, /swiftui/view/oninteractiveresizechange(_:), /swiftui/view/alignmentguide(_:computevalue:), /swiftui/alignmentid, /swiftui/view/layoutpriority(_:), /technotes/tn3192-migrating-your-app-from-the-deprecated-uirequiresfullscreen-key
 
 **Skills**: skills/layout.md, skills/debugging.md, axiom-uikit (skills/uikit-modernization.md)
