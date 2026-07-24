@@ -1,0 +1,3 @@
+interface:
+  display_name: "Audit Resize"
+  short_description: "The user mentions window resizing support, resizable-window readiness, iPhone Mirroring compatibility, scene-lifecycl..."

@@ -89,6 +89,7 @@ Run these only when their framework signals are present in the codebase:
 | `NSUbiquitousKeyValueStore` or `CKContainer` or `CloudKit` | icloud-auditor |
 | `registerMigration` or `DatabaseMigrator` or `ALTER TABLE` | database-schema-auditor |
 | `NSTextLayoutManager` or `TextKit` | textkit-auditor |
+| `UIScreen.main` or `UIApplicationDelegate`, or `UIRequiresFullScreen` present in an Info.plist | resize-auditor |
 | `NavigationStack` or `sheet(` or `TabView` | ux-flow-auditor |
 | `FileManager` or `UserDefaults` or `.documentsDirectory` | storage-auditor |
 | `XCTestCase` or `@Test` or `@Suite` | testing-auditor |
