@@ -28,6 +28,8 @@ Use this skill when:
 - "Why does Face ID fail when my app runs through iPhone Mirroring?"
 - "My UIKeyCommand doesn't show in the iPad hold-Command HUD"
 - "What goes in UIApplicationSceneManifest for a single-window app?"
+- "What should I clean up in sceneDidDisconnect?"
+- "How do I open a new window from UIKit code?"
 - "Why was my upload rejected for a missing launch screen?"
 - "What's the View Annotations API for Siri?"
 
@@ -35,6 +37,7 @@ Use this skill when:
 
 - The **scene-lifecycle requirement** at iOS 27 (apps without a `UISceneDelegate` no longer launch) and the migration path
 - **Info.plist configuration** – the `UIApplicationSceneManifest` structure, the launch-screen key validated at upload on the 27 SDK (TN3208), and destinations-vs-device-checks
+- **Scene lifecycle edges** – `sceneDidDisconnect` teardown semantics, `UISceneSessionActivationRequest` window opening, per-scene `NSUserActivity` restoration, external-display scene roles, and the `displayGamut`/`legibilityWeight`/`activeAppearance` traits
 - A **don't/do table** for replacing `UIScreen.main`, `screen.scale`, `screen.bounds`, idiom, and orientation with scene/trait/size-class equivalents
 - The new iOS 27 additive APIs — `prominentTabIdentifier`, `UITabBarControllerSidebar.preferredPlacement`, `barMinimizationSafeAreaAdjustment`, `UIMenuElement.preferredImageVisibility`, `deviceMotionBody`/`headingBody`
 - **iPhone Mirroring compatibility** – the always-portrait orientation trap, indirect trackpad/mouse input reaching custom gesture recognizers (`UIApplicationSupportsIndirectInputEvents`, scroll-type masks), companion Face ID approval on the Mac (iOS 18), and cross-device drag and drop

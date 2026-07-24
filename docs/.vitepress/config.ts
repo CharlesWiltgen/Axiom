@@ -332,6 +332,7 @@ export default withMermaid(defineConfig({
             { text: 'SwiftUI Debugging', link: '/skills/ui-design/swiftui-debugging' },
             { text: 'SwiftUI Gestures', link: '/skills/ui-design/swiftui-gestures' },
             { text: 'Toolbars', link: '/skills/ui-design/toolbars' },
+            { text: 'UIKit Adaptive Layout', link: '/skills/ui-design/uikit-adaptive-layout' },
             { text: 'UIKit-SwiftUI Bridging', link: '/skills/ui-design/uikit-bridging' },
             { text: 'UIKit Animation Debugging', link: '/skills/ui-design/uikit-animation-debugging' },
             { text: 'UIKit Modernization', link: '/skills/ui-design/uikit-modernization' },

@@ -111,6 +111,10 @@ flowchart LR
   - *"My MTKView content stretches when the iPad window resizes"*
   - *"My cached thumbnails are blurry in iPhone Mirroring"*
 
+- **[UIKit Adaptive Layout](/skills/ui-design/uikit-adaptive-layout)** – Layout guides, width-conditional constraint sets, environment-driven compositional layout, self-sizing cells
+  - *"How do I vary my collection view's column count with the window width?"*
+  - *"How do I switch constraints when the size class changes?"*
+
 - **[SwiftUI Layout](/skills/ui-design/swiftui-layout)** – Adaptive layouts with ViewThatFits, AnyLayout, size classes, iOS 26 free-form windows
   - *"My layout breaks on iPad. How do I make it adaptive?"*
   - *"Should I use GeometryReader or onGeometryChange?"*
