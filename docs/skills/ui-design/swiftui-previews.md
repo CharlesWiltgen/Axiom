@@ -34,6 +34,7 @@ Questions you can ask Claude that will draw from this skill:
 - "Should I even bother previewing this view, or just use the simulator?"
 - "Why is my preview hitting production analytics?"
 - "How do I share expensive setup across multiple previews?"
+- "Can I resize the preview canvas freely to test my adaptive layout?" (Xcode 27)
 
 ## What This Skill Provides
 
