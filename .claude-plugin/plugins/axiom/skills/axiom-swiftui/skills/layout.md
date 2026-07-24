@@ -279,6 +279,47 @@ NavigationSplitView {
 
 ---
 
+## State Survives the Transition
+
+Apple's guideline above is about *layout* reverting; the same bar applies to *state*. A resize or a stack↔split adaptation must not cost the user their place — scroll position, selection, focus, a half-typed draft, playing media. State survives when two things are true:
+
+1. **It lives in your model, not in the view tree.** Anything held in `@State` inside a view that only exists in one layout branch dies when the branch switches.
+2. **View identity is preserved across the change.** `if wide { HStack {...} } else { VStack {...} }` destroys and recreates the children — with their scroll positions, focus, and in-flight text — even if your model is intact. Use `AnyLayout`/`ViewThatFits` (see Tool Selection and Patterns 1-2 above; the `swiftui-layout-auditor` flags this as identity loss).
+
+#### Where each kind of state lives
+
+| State | Mechanism that survives adaptation |
+|-------|-----------------------------------|
+| Navigation path / detail selection | selection + path bindings in your model — `NavigationSplitView` translates selection to push/pop when it collapses to compact width (skills/nav-ref.md 2.5) |
+| Scroll position | `scrollPosition(id:)` binding you own (skills/containers-ref.md) |
+| Table sort | `sortOrder` binding in your model; per-window Table state such as column customization persists via `@SceneStorage` — see axiom-macos (skills/swiftui-differences.md) |
+| Search text / filters | the `searchable(text:)` binding and filter state in your model, not recreated per layout branch (skills/search-ref.md) |
+| Expanded outline nodes | per-node `isExpanded` bindings — derive them from an expansion `Set` in your model (skills/containers-ref.md) |
+| Inspector / sheet visibility | one `isPresented` binding driving whichever container the size class picks (skills/presentations.md) |
+| Editing drafts | draft text in the model; a `TextField`'s un-bound view-local state dies with view identity |
+| Media playback | the player object owned by the model — a player created in a view body is recreated on every re-render, and even a `@State`-held player dies when identity changes |
+| Focus | `@FocusState` resets when the focused view's identity changes — one more reason to switch layout, not view trees |
+
+The pattern behind every row is the audit question to ask of any adaptive screen: **"if this window were resized right now, which of the user's context would I still have?"** Anything whose only copy lives in a size-class-conditional view branch is the wrong answer.
+
+#### The two-state-trees trap
+
+```swift
+// ❌ Separate "phone UI" and "pad UI" each owning state
+if hSize == .compact {
+    PhoneBrowser()     // its own @State: selection, scroll, search
+} else {
+    PadBrowser()       // a second, unrelated copy
+}
+// Crossing the size-class boundary abandons everything the user was doing.
+
+// ✅ One model, two renderings
+BrowserView(model: model)   // selection/scroll/search live in model;
+                            // the view varies layout inside, identity intact
+```
+
+---
+
 ## Anti-Patterns
 
 ### ❌ Device Orientation Observer
