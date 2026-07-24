@@ -60,6 +60,7 @@ Grouped to mirror the sidebar exactly — same group names, same group order, sa
 | Area | What It Checks |
 |------|----------------|
 | `liquid-glass` | iOS 26 adoption opportunities, toolbar improvements |
+| `resize` | Scene-lifecycle gaps, UIScreen.main, fixed-canvas rendering, iPhone Mirroring input |
 | `swiftui-architecture` | Logic in views, MVVM/TCA boundary violations |
 | `swiftui-layout` | GeometryReader misuse, deprecated screen APIs, hardcoded breakpoints |
 | `swiftui-nav` | NavigationStack issues, path management, deep linking |

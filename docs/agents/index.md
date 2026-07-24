@@ -1,6 +1,6 @@
 # Autonomous Agents
 
-Axiom includes <!--ax:agents-->41<!--/ax--> autonomous agents that automatically detect and diagnose common iOS development issues.
+Axiom includes <!--ax:agents-->42<!--/ax--> autonomous agents that automatically detect and diagnose common iOS development issues.
 
 ## What Are Agents?
 
@@ -75,6 +75,7 @@ Agents are autonomous problem-solvers that:
 
 ### UI & Design
 - **liquid-glass-auditor** – Identifies iOS 26+ Liquid Glass adoption opportunities and completeness gaps (glass effects, toolbar prominence, migration from old blur effects, Regular vs Clear variant discipline for media surfaces, glass-on-glass nesting, missing `if #available` gates, accessibility re-check after adoption, `.tabRole(.search)`); scores ADOPTED / PARTIAL / NOT ADOPTED
+- **resize-auditor** – Scans UIKit code, Info.plist, and the scene manifest for iOS 27 resize readiness (app-delegate-only lifecycle, UIScreen.main, UIRequiresFullScreen, orientation-derived layout, fixed-canvas rendering surfaces, iPhone Mirroring input gaps); scores RESIZE-READY / PARTIAL / FIXED-CANVAS
 - **swiftui-architecture-auditor** – Scans SwiftUI architecture and completeness (untestable logic in views, async boundary violations, inconsistent patterns, missing separation of concerns)
 - **swiftui-layout-auditor** – Scans SwiftUI layout for anti-patterns and adaptivity gaps (GeometryReader misuse, missing multitasking support, identity loss, near-edge fixed sizing)
 - **swiftui-performance-analyzer** – Detects SwiftUI performance issues and context-dependent problems (expensive operations amplified in scrolling cells, unnecessary rebuilds, missing lazy loading)
