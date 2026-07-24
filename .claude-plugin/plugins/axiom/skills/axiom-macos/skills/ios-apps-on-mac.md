@@ -54,6 +54,7 @@ A Catalyst app that ships the raw iPad layout in a Mac window reads as a port. T
 - **Window chrome** — configure `UIWindowScene.titlebar` (`UITitlebar`): `titleVisibility`, `toolbarStyle`, and an `NSToolbar` (via `NSToolbar+UIKitAdditions`, with sidebar-tracking separator items). Move primary actions from in-content buttons into the toolbar.
 - **Settings window** — Mac users expect a Settings scene, not an in-app settings screen (see skills/settings.md).
 - **Pointer and keyboard** — hover via `UIHoverGestureRecognizer`, full keyboard navigation, right-click context menus. Remove touch-only assumptions (swipe-only actions, long-press-only menus).
+- **Printing** — Mac users expect ⌘P wherever printable content appears. `UIPrintInteractionController` + the `UIPrintFormatter` family (`UIViewPrintFormatter`, `UIMarkupTextPrintFormatter`) work in Catalyst and present the system print panel; wire File > Print to it — a `UIKeyCommand` for ⌘P in the menu builder, or `CommandGroup(replacing: .printItem)` in a SwiftUI-lifecycle app. An app with visible documents and a dead ⌘P reads as a port.
 - **AppKit where needed** — Catalyst apps may call AppKit APIs marked available in Mac Catalyst; bridge patterns live in skills/appkit-interop.md.
 
 Distribution is normal Mac distribution — Mac App Store, or Developer ID + notarization (skills/direct-distribution.md).
@@ -70,6 +71,6 @@ Distribution is normal Mac distribution — Mac App Store, or Developer ID + not
 
 ## Resources
 
-**Docs**: /apple-silicon/running-your-ios-apps-in-macos, /apple-silicon/adapting-ios-code-to-run-in-the-macos-environment, /apple-silicon/providing-touch-gesture-equivalents-using-touch-alternatives, /uikit/mac-catalyst, /uikit/uimenubuilder, /foundation/processinfo
+**Docs**: /apple-silicon/running-your-ios-apps-in-macos, /apple-silicon/adapting-ios-code-to-run-in-the-macos-environment, /apple-silicon/providing-touch-gesture-equivalents-using-touch-alternatives, /uikit/mac-catalyst, /uikit/uimenubuilder, /uikit/uiprintinteractioncontroller, /foundation/processinfo
 
 **Skills**: skills/windows.md, skills/menus-and-commands.md, skills/settings.md, skills/appkit-interop.md, skills/direct-distribution.md, axiom-uikit (skills/uikit-modernization.md), axiom-design (skills/typography-ref.md)
