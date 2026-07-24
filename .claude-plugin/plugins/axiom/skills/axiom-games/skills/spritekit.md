@@ -98,10 +98,10 @@ enum ZLayer {
 
 | Mode | Behavior | Use When |
 |------|----------|----------|
-| `.aspectFill` | Fills view, crops edges | Full-bleed games (most games) |
-| `.aspectFit` | Fits in view, letterboxes | Puzzle games needing exact layout |
-| `.resizeFill` | Stretches to fill | Almost never — distorts |
-| `.fill` | Matches view size exactly | Scene adapts to any ratio |
+| `.aspectFill` | Scales scene to fill view, preserving aspect ratio; crops edges | Full-bleed games (most games) |
+| `.aspectFit` | Scales scene to fit view, preserving aspect ratio; letterboxes | Fixed boards needing exact layout |
+| `.fill` | Scales x and y independently to match view | Almost never — distorts |
+| `.resizeFill` | No scaling — the scene's `size` is changed to match the view | Extend-world resizable windows (below) |
 
 ```swift
 class GameScene: SKScene {
@@ -111,6 +111,25 @@ class GameScene: SKScene {
     }
 }
 ```
+
+### Resizable Windows: Extend the World or Letterbox
+
+At 27 every window resizes — iPhone Mirroring, iPad windowing, iOS-on-Mac (see axiom-uikit (skills/uikit-modernization.md)) — so the view hosting your scene changes size *during play*, not just at launch. Two strategies survive this; pick one deliberately:
+
+- **Extend the world** — `scaleMode = .resizeFill`. The scene's size tracks the view 1:1, points stay square, and a wider window shows *more world*. The camera governs what the player sees (see Camera Node Pattern below); backgrounds and spawn logic must cover the largest size you allow, and anything positioned against scene edges must be recomputed on resize.
+- **Letterbox** — `scaleMode = .aspectFit`. The board stays exact; a mismatched window shows bars. Right for puzzle/board games where geometry *is* the gameplay. (`.aspectFill` is the same decision with cropping instead of bars — make sure nothing gameplay-critical lives in the croppable margins.)
+
+`didChangeSize(_:)` is the hook for the extend-world work — it fires whenever the scene's size changes, including every step of a live window resize:
+
+```swift
+override func didChangeSize(_ oldSize: CGSize) {
+    // re-anchor HUD (scoreLabel is a camera child — camera-centered coordinates)
+    scoreLabel.position = CGPoint(x: 0, y: size.height / 2 - 50)
+    // extend/reposition edge-anchored backgrounds, respawn bounds, physics walls
+}
+```
+
+Keep it cheap — it runs repeatedly while the user drags. For the expensive reactions (regenerating parallax layers, rebuilding physics boundaries), do the work only when the resize settles: while the drag is in progress, throttle the game loop — pause the simulation or drop `preferredFramesPerSecond` — then rebuild once. `UIWindowSceneGeometry.isInteractivelyResizing` / SwiftUI `.onInteractiveResizeChange` distinguish the drag from the settled size (axiom-swiftui (skills/layout-ref.md)); Metal/rendering surfaces under live resize are axiom-graphics (skills/resizable-rendering.md).
 
 ### Camera Node Pattern
 
