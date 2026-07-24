@@ -106,6 +106,11 @@ class TestPositiveRouting(unittest.TestCase):
             "My sheet with a medium detent goes full screen in landscape"))
         self.assertIn("axiom-swiftui", routed_skills(
             "How do I add a hoverEffect for iPad pointer users?"))
+        # State-loss-on-adaptation, both word orders
+        self.assertIn("axiom-swiftui", routed_skills(
+            "My scroll position is lost when the iPad window resizes"))
+        self.assertIn("axiom-swiftui", routed_skills(
+            "Rotating the phone resets my selection and focus"))
 
     def test_ai_speech_transcription(self):
         # REGRESSION GUARD. The OS27 Speech delta was folded into ios-ml.md while the hook's
@@ -358,6 +363,14 @@ class TestPositiveRouting(unittest.TestCase):
         self.assertIn("axiom-integration", routed_skills(
             "How should I structure my subscription group architecture?"))
 
+    def test_testing_resizable(self):
+        self.assertIn("axiom-testing", routed_skills(
+            "How do I test my app at different window sizes automatically?"))
+        self.assertIn("axiom-testing", routed_skills(
+            "How do I run my UI tests in RTL with AppleLanguages?"))
+        self.assertIn("axiom-testing", routed_skills(
+            "Is there a pseudolocalization pass I can automate?"))
+
     def test_payments_os27(self):
         self.assertIn("axiom-payments", routed_skills(
             "How do I adopt the posterGeneric pass style?"))
@@ -608,6 +621,14 @@ class TestPositiveRouting(unittest.TestCase):
             "My UIKeyCommand doesn't show in the iPad hold-Command HUD"))
         self.assertIn("axiom-uikit", routed_skills(
             "What goes in UIApplicationSceneManifest for a single-window app?"))
+        self.assertIn("axiom-uikit", routed_skills(
+            "How do I use compositional layout to change column count with window width?"))
+        self.assertIn("axiom-uikit", routed_skills(
+            "Should my text column use readableContentGuide?"))
+        self.assertIn("axiom-uikit", routed_skills(
+            "What should I clean up in sceneDidDisconnect?"))
+        self.assertIn("axiom-uikit", routed_skills(
+            "How do I open a new window from UIKit with UISceneSessionActivationRequest?"))
         # AirPlay/TV screen mirroring is a media concern, not the iPhone Mirroring feature
         self.assertNotIn("axiom-uikit", routed_skills(
             "How do I detect screen mirroring to Apple TV over AirPlay?"))
