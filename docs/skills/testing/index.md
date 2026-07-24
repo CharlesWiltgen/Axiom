@@ -49,7 +49,7 @@ Recording interactions as Swift code with Xcode 26. Record, replay across device
 XCUITest patterns for running, writing, and debugging UI tests with xcodebuild and xcresulttool.
 
 ### [UI Testing](/skills/ui-design/ui-testing)
-XCUITest patterns for reliable UI tests. Condition-based waiting, Recording UI Automation (WWDC 2025), cross-device testing.
+XCUITest patterns for reliable UI tests. Condition-based waiting, Recording UI Automation (WWDC 2025), cross-device testing, the resizable-app testing matrix with RTL/pseudolocalization automation.
 
 ## Quick Comparison
 

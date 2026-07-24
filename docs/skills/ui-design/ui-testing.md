@@ -17,6 +17,7 @@ Use this skill when you're:
 - Recording interactions with Xcode 26's Recording UI Automation
 - Tests fail on iPad but pass on iPhone
 - Want to test across multiple network conditions
+- Testing a resizable app: window-dimension matrix, RTL/pseudolocalization passes, live-resize checks
 
 **Core principle:** Wait for conditions, not arbitrary timeouts. Flaky tests come from guessing how long operations take.
 
@@ -31,6 +32,8 @@ Questions you can ask Claude that will draw from this skill:
 - "How do I write tests that aren't flaky?"
 - "How do I test my app under slow network conditions?"
 - "How do I test slow-network or offline behavior in CI without sudo or the Network Link Conditioner GUI?"
+- "How do I run my UI tests in RTL with AppleLanguages?"
+- "How do I test my app at different window sizes automatically?"
 
 ## What This Skill Provides
 
