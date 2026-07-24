@@ -186,7 +186,7 @@ Using the Layout Strategy Map from Phase 1 and your domain knowledge, check for 
 | Are there views that use fixed widths close to the smallest device width (320pt iPhone SE)? | Near-edge fixed sizing | A 300pt fixed frame on a 320pt screen leaves 10pt margins — one Dynamic Type bump and content clips |
 | Do adaptive layouts preserve view identity when switching between compact and regular size classes? | Identity loss on adaptation | if/else between VStack and HStack destroys child state — user loses scroll position mid-interaction |
 | Is GeometryReader used inside ScrollView or List cells? | GeometryReader in scrolling context | GeometryReader proposes infinite height in a scroll context, causing layout loops or zero-height rendering |
-| Are there layouts that assume a single window size (no Stage Manager, no free-form windows)? | Missing iOS 26 free-form window support | iOS 26 introduces resizable windows — layouts that assume fixed dimensions will break |
+| Are there layouts that assume a single window size (no Stage Manager, no free-form windows)? | Missing resizable-window support | iOS 26 introduced free-form resizing; at 27 every window resizes, iPhone included — layouts that assume fixed dimensions will break |
 | Does the app handle landscape orientation on iPhone, or only portrait? | Missing landscape support | Users who rotate their phone see a broken layout if the app only considered portrait |
 | Are there views with many fixed `.frame()` calls that could use flexible alternatives? | Over-constrained layout | Fixed dimensions fight SwiftUI's flexible layout system — harder to maintain, more breakage |
 
@@ -208,6 +208,7 @@ Bump severity for these combinations:
 | Size class as orientation proxy | iPhone Pro Max user | Wrong layout in landscape on large iPhone | MEDIUM |
 
 Also note overlaps with other auditors:
+- UIScreen.main / UIRequiresFullScreen → co-detected by resize-auditor (UIKit/plist/scene-manifest side; run both on mixed codebases, dedupe by file:line)
 - Non-lazy ForEach → compound with swiftui-performance-analyzer (launch lag)
 - GeometryReader in List cells → compound with swiftui-performance-analyzer (double layout pass)
 - Fixed dimensions + Dynamic Type → compound with accessibility-auditor (text clipping)

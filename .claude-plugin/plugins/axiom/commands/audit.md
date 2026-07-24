@@ -1,6 +1,6 @@
 ---
 description: Smart audit selector - analyzes your project and suggests relevant audits
-argument: "area (optional) - Which audit to run: all, memory, concurrency, accessibility, energy, swiftui-performance, swiftui-architecture, swiftui-nav, swiftui-layout, swift-performance, swift-simplify, core-data, swiftdata, database-schema, networking, codable, icloud, storage, liquid-glass, textkit, testing, build, spritekit, security, modernization, camera, foundation-models, screenshots, ux-flow"
+argument: "area (optional) - Which audit to run: all, memory, concurrency, accessibility, energy, swiftui-performance, swiftui-architecture, swiftui-nav, swiftui-layout, swift-performance, swift-simplify, core-data, swiftdata, database-schema, networking, codable, icloud, storage, liquid-glass, textkit, testing, build, spritekit, security, modernization, camera, foundation-models, screenshots, ux-flow, resize"
 disable-model-invocation: true
 ---
 
@@ -40,6 +40,7 @@ If no area specified → analyze project and suggest relevant audits
 | swiftdata | swiftdata-auditor | @Model struct, missing VersionedSchema models, relationship defaults, migration timing, N+1 |
 | foundation-models | foundation-models-auditor | Missing availability checks, main thread blocking, manual JSON parsing, guardrail handling |
 | swiftui-layout | swiftui-layout-auditor | GeometryReader misuse, deprecated screen APIs, hardcoded breakpoints, identity loss |
+| resize | resize-auditor | Scene-lifecycle gaps, UIScreen.main, UIRequiresFullScreen, orientation-derived layout, fixed-canvas rendering, Mirroring input |
 | database-schema | database-schema-auditor | Unsafe ALTER TABLE, DROP operations, missing idempotency, FK misuse, transaction safety |
 | screenshots | screenshot-validator | Placeholder text, wrong dimensions, debug indicators, broken UI, competitor references |
 | ux-flow | ux-flow-auditor | Dead-end views, dismiss traps, buried CTAs, missing empty/loading/error states, accessibility dead ends |
@@ -86,6 +87,7 @@ When running multiple audits (either user-requested or from smart suggestions):
    - ux-flow → Dead ends, dismiss traps, missing states, UX defects
    - swiftui-performance → Expensive operations, missing lazy
    - swiftui-layout → GeometryReader misuse, hardcoded breakpoints, identity loss
+   - resize → scene-lifecycle gaps, UIScreen.main, fixed-canvas assumptions
    - swift-performance → ARC overhead, allocations
    - foundation-models → Availability checks, error handling, session lifecycle
 
@@ -189,6 +191,7 @@ If no area argument:
    - Find @Model classes → suggest swiftdata audit
    - Find LanguageModelSession / @Generable / FoundationModels imports → suggest foundation-models audit
    - Find GeometryReader / layout patterns → suggest swiftui-layout audit
+   - Find UIScreen.main / UIRequiresFullScreen / app-delegate-only lifecycle → suggest resize audit
    - Find registerMigration / ALTER TABLE / DatabaseMigrator → suggest database-schema audit
    - Find screenshots folder (Screenshots/, screenshots/, marketing/) → suggest screenshots audit
    - Find NavigationStack/sheet/TabView → suggest ux-flow audit
