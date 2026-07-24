@@ -1050,6 +1050,42 @@ A single `xcodebuild test` runs on **one** destination with **whatever network t
 
 ---
 
+## Testing Resizable Apps
+
+At 27 every window resizes continuously — iPhone included — so the test matrix is **dimensions and transitions, not device models**. A device list covers points; resizing sweeps the space between them.
+
+### The dimension matrix
+
+Cover at minimum: narrow portrait-shaped, narrow landscape-shaped, very short and wide, tall and narrow, regular-width squarish, full-window, and a small floating window — plus the *transitions* between them while scrolling, editing text, playing media, and with a presentation up (state must survive; the per-state-type mechanisms live in axiom-swiftui (skills/layout.md, State Survives the Transition)).
+
+### What automates, what doesn't
+
+| Dimension | Path |
+|---|---|
+| Localization length + RTL | launch arguments (below) — fully automatable in XCUITest |
+| Dynamic Type sizes | `xcui a11y set --toggle dynamic-type ...` on the simulator — see axiom-tools (skills/xcui-ref.md) |
+| Orientation | `XCUIDevice.shared.orientation` in tests |
+| Continuous free resize | GUI only — Device Hub resize mode and Xcode 27 preview resize mode (see axiom-tools (skills/device-control-ref.md)); no public window-resize API in XCUITest, and none in xcui, simctl, or devicectl — live-resize behavior is a manual pass |
+| Multi-window | no direct XCUITest API — exercise through the UI (drag out a second window) or verify per-scene state isolation in unit tests of the model |
+| iPhone Mirroring | real hardware only — Apple's guidance is to validate on actual Mirroring after simulator iteration (WWDC 2026-278); the Mirroring-specific behaviors to check (indirect-input translation, companion-auth fallback) are in axiom-uikit (skills/uikit-modernization.md) |
+
+### RTL and pseudolocalization launch arguments
+
+All Apple-documented; pass per scheme (Options tab: App Language pseudolanguages) or per test:
+
+```swift
+let app = XCUIApplication()
+app.launchArguments += ["-NSDoubleLocalizedStrings", "YES"]      // double-length strings
+app.launchArguments += ["-AppleTextDirection", "YES",
+                        "-NSForceRightToLeftWritingDirection", "YES"]  // forced RTL
+app.launchArguments += ["-AppleLanguages", "(ar)", "-AppleLocale", "ar_SA"]  // real locale
+app.launch()
+```
+
+`-NSShowNonLocalizedStrings YES` surfaces untranslated keys; `-NSShowNonLocalizableStrings YES` surfaces hardcoded ones. Run the layout-critical flows once double-length and once RTL — a layout that only broke at 30-40% longer German strings is a real regression a device-model matrix never catches.
+
+---
+
 ## Simulator control from CI: devicectl
 
 `devicectl` drives simulators and physical devices through one `-d <udid>` interface with a stable `--json-output`, so the same script drives a real iPhone in the dev loop and a simulator in CI with no branching. **Parse `--json-output <path>`, never stdout** — devicectl guarantees the JSON file is stable across releases; its stdout is not. CI order is unchanged at the front: simctl or `xcodebuild` boots the sim → devicectl configures it → run tests.

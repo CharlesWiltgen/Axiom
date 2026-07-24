@@ -98,7 +98,7 @@ if not non_ios and re.search(r'build (fail|error|broken)|xcodebuild|simulator (c
     matches.append("axiom-build")
 
 # UI
-if re.search(r'swiftui|@state\b|@binding\b|@observable\b|@environment\b|navigationstack|navigationsplitview|layout.{0,10}(break|bug|wrong|issue)|preview.{0,5}(crash|fail|not |won.t|broken)|view.{0,10}(not|won.t|doesn.t).{0,10}(updat|render|show|appear)|tabview|scroll.{0,20}(jank|lag|slow|stutter)|presentationdetents?|\bdetents?\b|presentation(compactadaptation|sizing|backgroundinteraction)|popover.{0,20}(sheet|iphone|compact|anchor)|sheet.{0,20}(detent|resiz|medium|half|landscape.{0,15}full)|onhover|hovereffect|oncontinuoushover|pointerstyle', prompt_lower):
+if re.search(r'swiftui|@state\b|@binding\b|@observable\b|@environment\b|navigationstack|navigationsplitview|layout.{0,10}(break|bug|wrong|issue)|preview.{0,5}(crash|fail|not |won.t|broken)|view.{0,10}(not|won.t|doesn.t).{0,10}(updat|render|show|appear)|tabview|scroll.{0,20}(jank|lag|slow|stutter)|presentationdetents?|\bdetents?\b|presentation(compactadaptation|sizing|backgroundinteraction)|popover.{0,20}(sheet|iphone|compact|anchor)|sheet.{0,20}(detent|resiz|medium|half|landscape.{0,15}full)|onhover|hovereffect|oncontinuoushover|pointerstyle|(scroll\s*position|selection|focus|draft|state)\w*\s*(is\s*|gets\s*|was\s*)?(lost|reset\w*|jumps?|cleared)\w*.{0,30}(rotat|resiz|window|split|size\s*class)|(rotat|resiz)\w*.{0,30}(los\w+|reset\w*|clears?|clearing)\s.{0,20}(scroll|selection|focus|state|draft)', prompt_lower):
     matches.append("axiom-swiftui")
 
 # UI — preview construction (separate from preview-crash routing above)
@@ -155,7 +155,7 @@ if not non_ios and "axiom-networking" not in matches and re.search(r'api.{0,5}(c
     matches.append("axiom-networking")
 
 # Testing
-if re.search(r'xctest|xcuitest|swift\s*testing|@test\b|@suite\b|#expect\b|ui\s*test.{0,10}(fail|flak|slow|crash|record)|test.{0,10}(without simulator|faster|speed)', prompt_lower):
+if re.search(r'xctest|xcuitest|swift\s*testing|@test\b|@suite\b|#expect\b|ui\s*test.{0,10}(fail|flak|slow|crash|record)|test.{0,10}(without simulator|faster|speed)|pseudoloc|nsdoublelocalizedstrings|appletextdirection|applelanguages|test\w*.{0,25}(resiz|window\s*sizes|rtl|right.to.left)|(resiz|rtl).{0,20}test', prompt_lower):
     matches.append("axiom-testing")
 
 # Integration
@@ -273,7 +273,7 @@ if re.search(r'human interface|hig\b|liquid glass|glass\s*[-]?\s*effect\b|glasse
     matches.append("axiom-design")
 
 # UIKit
-if re.search(r'uikit|uiview\b|uiviewcontroller|auto\s*layout|nslayoutconstraint|uiviewrepresentable|uihostingcontroller|combine\b.{0,10}(publisher|subscriber|sink|assign)|textkit|nstextlayoutmanager|uilabel|uitableview|uicollectionview|pencilkit|pkcanvasview|pktoolpicker|pkdrawing|apple\s*pencil|paperkit|papermarkup|uicornerconfiguration|cornerconfiguration|encoderestorablestate|iphone\s*mirroring|indirectinputevents|(uiscene)?sizerestrictions|uipointerinteraction|uihovergesture|uikeycommand|discoverabilitytitle|uiapplicationscenemanifest|scene\s*manifest', prompt_lower):
+if re.search(r'uikit|uiview\b|uiviewcontroller|auto\s*layout|nslayoutconstraint|uiviewrepresentable|uihostingcontroller|combine\b.{0,10}(publisher|subscriber|sink|assign)|textkit|nstextlayoutmanager|uilabel|uitableview|uicollectionview|pencilkit|pkcanvasview|pktoolpicker|pkdrawing|apple\s*pencil|paperkit|papermarkup|uicornerconfiguration|cornerconfiguration|encoderestorablestate|iphone\s*mirroring|indirectinputevents|(uiscene)?sizerestrictions|uipointerinteraction|uihovergesture|uikeycommand|discoverabilitytitle|uiapplicationscenemanifest|scene\s*manifest|readablecontentguide|uilayoutguide|layoutmarginsguide|nscollectionlayout|compositional\s*layout|self.?sizing\s*cell|systemlayoutsizefitting|scenediddisconnect|staterestorationactivity|activatescenesession|uiscenesessionactivationrequest|activeappearance', prompt_lower):
     matches.append("axiom-uikit")
 
 # Swift language
