@@ -32,6 +32,8 @@ Questions you can ask Claude that will draw from this skill:
 - "Why does the spacer between my toolbar items disappear when the bar overflows?"
 - "What does Apple's HIG say about Cancel and Done buttons in a sheet?"
 - "How do I control which toolbar items collapse into the overflow menu? (iOS 27)"
+- "How do I make the navigation bar minimize as the user scrolls? (iOS 27)"
+- "How do I wire up EditButton and editMode for my List?"
 
 ## What This Skill Provides
 
@@ -52,6 +54,8 @@ Questions you can ask Claude that will draw from this skill:
 - Toolbar visibility, background material, and color scheme per bar
 - macOS `windowToolbarStyle` on the Scene (not the View)
 - Toolbar overflow & visibility priority — `ToolbarOverflowMenu`, `.visibilityPriority`, `.topBarPinnedTrailing` (iOS 27)
+- Bar minimization on scroll — `toolbarMinimizationBehavior`, safe-area adjustment, and restoration, per `ToolbarPlacement` (iOS 27)
+- `EditButton`/`editMode` wiring for List editing, and the direct-manipulation alternatives on the Mac
 
 ### HIG sheet button rules
 
@@ -106,4 +110,4 @@ The `.primaryAction` placement adapts across platforms — top-trailing on iOS a
 
 **WWDC**: 2020-10146, 2021-10054, 2022-10054, 2024-10148, 2025-219, 2026-269
 
-**Docs**: /swiftui/toolbar, /swiftui/toolbaritem, /swiftui/toolbaritemgroup, /swiftui/toolbarspacer, /swiftui/toolbaritemplacement, /swiftui/toolbarrole, /swiftui/customizabletoolbarcontent, /swiftui/toolbaritemplacement/topbarpinnedtrailing, /swiftui/toolbaroverflowmenu, /swiftui/toolbaritemvisibilitypriority
+**Docs**: /swiftui/toolbar, /swiftui/toolbaritem, /swiftui/toolbaritemgroup, /swiftui/toolbarspacer, /swiftui/toolbaritemplacement, /swiftui/toolbarrole, /swiftui/customizabletoolbarcontent, /swiftui/toolbaritemplacement/topbarpinnedtrailing, /swiftui/toolbaroverflowmenu, /swiftui/toolbaritemvisibilitypriority, /swiftui/view/toolbarminimizationbehavior(_:for:), /swiftui/editbutton

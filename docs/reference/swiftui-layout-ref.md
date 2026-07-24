@@ -27,6 +27,11 @@ Complete guide to all SwiftUI layout APIs for building adaptive interfaces, base
 - **Dynamic Type** – dynamicTypeSize.isAccessibilitySize
 - **ScaledMetric** – Scaled dimensions for accessibility
 
+### Alignment & Text Under Width Pressure
+- **alignmentGuide** – Per-view guide adjustment within a stack (iOS 13+)
+- **Custom alignments** – `AlignmentID` semantic lines that align views across nested containers
+- **layoutPriority / truncationMode / allowsTightening / minimumScaleFactor** – Controlling which text gives way, and how, when a window narrows
+
 ### Window APIs
 - **Resizable windows everywhere** – iPhone apps resize too (Mac mirroring, iPhone-only on iPad)
 - **onInteractiveResizeChange** – Throttle work during a live resize drag (iOS 26+)

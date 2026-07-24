@@ -28,6 +28,7 @@ Use this skill when:
 - "My frame rate is dropping, how do I optimize?"
 - "How do I integrate SpriteKit with SwiftUI?"
 - "Objects are passing through walls in my game"
+- "My game distorts or letterboxes when the window is resized (iOS 27)"
 
 ## What This Skill Provides
 
@@ -36,6 +37,7 @@ Use this skill when:
 - Anchor point mechanics for sprites and scenes
 - Node tree hierarchy with z-ordering layers
 - Camera node pattern for viewport control and HUD
+- Scale-mode selection, and the resizable-window strategy (iOS 27): extend the world with `.resizeFill` + `didChangeSize`, or letterbox with `.aspectFit`, with resize-throttling guidance
 
 ### Physics Engine
 - Bitmask discipline (the #1 source of SpriteKit bugs)

@@ -30,6 +30,9 @@ Use this skill when:
 - "What goes in UIApplicationSceneManifest for a single-window app?"
 - "What should I clean up in sceneDidDisconnect?"
 - "How do I open a new window from UIKit code?"
+- "How do I let users drag an item out to open it as a new window on iPad?"
+- "Cmd-Z in one window undoes edits made in another window"
+- "How do I disable Scribble on one text field?"
 - "Why was my upload rejected for a missing launch screen?"
 - "What's the View Annotations API for Siri?"
 
@@ -37,11 +40,11 @@ Use this skill when:
 
 - The **scene-lifecycle requirement** at iOS 27 (apps without a `UISceneDelegate` no longer launch) and the migration path
 - **Info.plist configuration** – the `UIApplicationSceneManifest` structure, the launch-screen key validated at upload on the 27 SDK (TN3208), and destinations-vs-device-checks
-- **Scene lifecycle edges** – `sceneDidDisconnect` teardown semantics, `UISceneSessionActivationRequest` window opening, per-scene `NSUserActivity` restoration, external-display scene roles, and the `displayGamut`/`legibilityWeight`/`activeAppearance` traits
+- **Scene lifecycle edges** – `sceneDidDisconnect` teardown semantics, `UISceneSessionActivationRequest` window opening, drag-to-create-window (drag items carrying an `NSUserActivity`, gated on `NSUserActivityTypes`), per-window undo scoping, per-scene `NSUserActivity` restoration, external-display scene roles, and the `displayGamut`/`legibilityWeight`/`activeAppearance` traits
 - A **don't/do table** for replacing `UIScreen.main`, `screen.scale`, `screen.bounds`, idiom, and orientation with scene/trait/size-class equivalents
-- The new iOS 27 additive APIs — `prominentTabIdentifier`, `UITabBarControllerSidebar.preferredPlacement`, `barMinimizationSafeAreaAdjustment`, `UIMenuElement.preferredImageVisibility`, `deviceMotionBody`/`headingBody`
+- The new iOS 27 additive APIs — `prominentTabIdentifier`, `UITabBarControllerSidebar.preferredPlacement`, `navigationBarMinimization`, `UIMenuElement.preferredImageVisibility`, `deviceMotionBody`/`headingBody`
 - **iPhone Mirroring compatibility** – the always-portrait orientation trap, indirect trackpad/mouse input reaching custom gesture recognizers (`UIApplicationSupportsIndirectInputEvents`, scroll-type masks), companion Face ID approval on the Mac (iOS 18), and cross-device drag and drop
-- **Desktop-class input** – `UIPointerInteraction` pointer effects, `UIHoverGestureRecognizer`, and `UIKeyCommand` with `discoverabilityTitle` for the hold-⌘ shortcut HUD
+- **Desktop-class input** – `UIPointerInteraction` pointer effects, `UIHoverGestureRecognizer`, `UIKeyCommand` with `discoverabilityTitle` for the hold-⌘ shortcut HUD, and Scribble (`UIScribbleInteraction` / `UIIndirectScribbleInteraction`) for Pencil handwriting
 - Apple Intelligence touchpoints (menu "Ask Siri", View Annotations, drag-and-drop resource loading)
 - How to let Xcode 27's app-modernization agent do the mechanical rewrites
 

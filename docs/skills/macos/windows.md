@@ -29,6 +29,9 @@ Questions you can ask Claude that will draw from this skill:
 - "Why does my app quit when I close the main window?"
 - "My `.defaultSize` is ignored on relaunch — is that a bug?"
 - "How do I make a floating Inspector window that stays above the main app?"
+- "How do I show a subtitle under the window title?"
+- "How do I get the draggable document proxy icon in my title bar?"
+- "My window content is blurry after moving to another display"
 
 ## What This Skill Provides
 
@@ -48,6 +51,11 @@ Questions you can ask Claude that will draw from this skill:
 - `.defaultSize`, `.defaultPosition` (macOS 13+), `.defaultWindowPlacement` (macOS 15+)
 - Why `defaultSize` is ignored once the user has resized — and why that's correct
 - `.windowResizability(.automatic / .contentSize / .contentMinSize)`
+
+### Window Chrome and Displays
+- `navigationTitle` / `navigationSubtitle` (macOS 11+; iOS 26+) and the `navigationDocument` proxy icon
+- UIKit/AppKit peers: `UIDocumentProperties`, `NSWindow.title`/`.subtitle`/`.representedURL`
+- Windows moving between displays with different scales — `\.displayScale`, `viewDidChangeBackingProperties`, scale-keyed cache invalidation
 
 ### Toolbar and Window Styles
 - `.windowStyle(.automatic / .hiddenTitleBar / .titleBar)`

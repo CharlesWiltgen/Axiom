@@ -21,12 +21,13 @@ Use this skill when:
 - "Why does my iOS app on Apple silicon report `isMacCatalystApp` as true?"
 - "What breaks when my iPhone app runs on a Mac?"
 - "Should I use Optimize Interface for Mac?"
+- "How do I support ⌘P printing in my Catalyst app?"
 
 ## What This Skill Provides
 
 - A **decision tree** across the three paths: run unmodified, Catalyst, or a native SwiftUI/AppKit target
 - **Designed for iPad mechanics** – opt-out availability on the Mac App Store, single-touch synthesis, Touch Alternatives, hardware-gated frameworks that error at runtime, the idiom staying `.pad`/`.phone`
-- **Catalyst adoption checklist** – interface-idiom choice (77% iPad scaling vs native Mac controls), `UIMenuBuilder` menu bar, `UITitlebar`/`NSToolbar` window chrome, Settings scene, hover and keyboard support
+- **Catalyst adoption checklist** – interface-idiom choice (77% iPad scaling vs native Mac controls), `UIMenuBuilder` menu bar, `UITitlebar`/`NSToolbar` window chrome, Settings scene, hover and keyboard support, ⌘P printing (`UIPrintInteractionController`)
 - The **three runtime checks** disambiguated — `targetEnvironment(macCatalyst)` vs `isMacCatalystApp` vs `isiOSAppOnMac`
 
 ## Related

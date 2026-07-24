@@ -55,6 +55,14 @@ Diagnostic workflows for VoiceOver testing, Dynamic Type support, color contrast
 - Generated subtitles (iOS/macOS 27) — automatic on-device transcription/translation; your job is the subtitle-selection UI
 - Live subtitle style preview (iOS 26.4+) — `AVPlayerLayer`/`AVLegibleMediaOptionsMenuController`, `MACaptionAppearance` profiles
 
+#### Resizable Windows & Desktop-Class
+- VoiceOver reading order surviving layout changes (column collapse, resize)
+- Table and grid navigation semantics (SwiftUI `Table`, `UIAccessibilityContainerDataTable`)
+- Toolbar-overflow accessible names
+- Button Shapes support in custom controls
+- Large Content Viewer adoption for custom bars
+- Full Keyboard Access and Switch Control depth testing
+
 #### Assistive Access
 - Assistive Access support (iOS 17+, cognitive disabilities)
 

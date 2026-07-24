@@ -21,6 +21,8 @@ Covers tool selection (ViewThatFits vs AnyLayout vs onGeometryChange), size clas
 - "Preparing app for iOS 26 window resizing"
 - "Should my iPhone app look like iPad in a wide window?" (iOS 27)
 - "My scroll position / selection / draft is lost when the window resizes"
+- "My form's Confirm button is clipped off-screen when the window is short"
+- "Text lines are unreadably wide in a large window"
 
 ## Key Patterns
 
@@ -32,6 +34,8 @@ Covers tool selection (ViewThatFits vs AnyLayout vs onGeometryChange), size clas
 | Switch H↔V with animation | `AnyLayout` |
 | Read container size | `onGeometryChange` |
 | Custom layout algorithm | `Layout` protocol |
+| Keep non-shrinkable content reachable in small windows | `ViewThatFits` + `ScrollView` fallback |
+| Cap text line length in wide windows | Readable-width frame idiom |
 
 ### Anti-Patterns Prevented
 
