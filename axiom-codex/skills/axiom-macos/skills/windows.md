@@ -405,6 +405,31 @@ Settings {
 #endif
 ```
 
+### Window Title, Subtitle, and Document Proxy
+
+The title bar is data-bearing chrome — title, a secondary line, and (for document-shaped content) a proxy the user can drag:
+
+```swift
+DetailView(project: project)
+    .navigationTitle(project.name)
+    .navigationSubtitle("\(project.trackCount) tracks")   // macOS 11+; iOS 26+
+    .navigationDocument(project.fileURL)                  // document proxy in the title bar
+```
+
+- `navigationSubtitle` renders alongside/below the title (macOS 11, Mac Catalyst 14; iPhone and iPad from iOS 26). Use it for context that would otherwise clutter the content — item counts, sync state, the open folder.
+- `navigationDocument` (iOS 16 / macOS 13) takes any `Transferable`; pass a file `URL` and the Mac title bar gets the classic **proxy icon** (hover-revealed since macOS 11) — draggable into Finder/other apps, ⌘-click shows the path menu. `DocumentGroup` apps get this for free; this modifier is for document-shaped windows outside `DocumentGroup`.
+- Peers when you're not in SwiftUI scenes: `NSWindow.title`/`.subtitle`/`.representedURL` (AppKit), `UINavigationItem.documentProperties` (`UIDocumentProperties`, iOS 16) for the iPad desktop-class document header with its share/drag menu.
+
+### Displays with Different Scales
+
+A window can open on — or be dragged to — a display with a different scale factor or color gamut, so "the screen's scale" is per-window state that changes at runtime:
+
+```swift
+@Environment(\.displayScale) private var displayScale   // updates when the window moves
+```
+
+AppKit's signals are `viewDidChangeBackingProperties` / `NSWindow.didChangeBackingPropertiesNotification`. Never cache scale at launch, and key rasterized image/layer caches by the scale they were rendered at — the stale-cache failure modes and invalidation pattern are in axiom-graphics (skills/resizable-rendering.md).
+
 ---
 
 ## Common Mistakes
@@ -420,6 +445,7 @@ Settings {
 | Menu bar extra not visible | Missing `LSUIElement` or wrong style | Check Info.plist; use `.menuBarExtraStyle(.window)` for rich content |
 | UtilityWindow not floating | Using plain `Window` | Use `UtilityWindow` (macOS 15+) for floating panels |
 | Keyboard shortcut not working | Applied at view level | Apply `.keyboardShortcut()` at scene level for window-opening shortcuts |
+| Blurry content after moving window to another display | Scale cached at launch | Read `\.displayScale` / `viewDidChangeBackingProperties`; rebuild scale-keyed caches |
 
 ---
 
@@ -427,7 +453,7 @@ Settings {
 
 **WWDC**: 2022-10061, 2024-10149
 
-**Docs**: /swiftui/windowgroup, /swiftui/window, /swiftui/utilitywindow, /swiftui/menubarextra, /swiftui/settings, /swiftui/documentgroup, /swiftui/openwindowaction, /swiftui/dismisswindowaction, /swiftui/windowstyle, /swiftui/windowtoolbarstyle
+**Docs**: /swiftui/windowgroup, /swiftui/window, /swiftui/utilitywindow, /swiftui/menubarextra, /swiftui/settings, /swiftui/documentgroup, /swiftui/openwindowaction, /swiftui/dismisswindowaction, /swiftui/windowstyle, /swiftui/windowtoolbarstyle, /swiftui/view/navigationsubtitle(_:), /swiftui/view/navigationdocument(_:), /appkit/nswindow/subtitle, /uikit/uidocumentproperties
 
 **HIG**: /windows, /designing-for-macos
 

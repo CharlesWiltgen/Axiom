@@ -995,6 +995,75 @@ Rendering captions entirely yourself? `AVCaptionRenderer.captionPreview(forProfi
 
 ---
 
+## 11. Resizable Windows & Desktop-Class Accessibility
+
+Resizable windows (iPad windowing, iPhone Mirroring, iOS apps on the Mac) change *which* assistive tech drives the app and *when* layout transforms happen. These are the gaps the standard VoiceOver/Dynamic Type passes miss.
+
+### Reading Order Must Survive Layout Changes
+
+VoiceOver reads in layout order. When a resize collapses `NavigationSplitView` columns into a stack, or an `HStack` becomes a `VStack`, the reading order changes with it — an order that made sense side-by-side can interleave nonsensically stacked.
+
+```swift
+// Fix order within a container when visual order ≠ reading order
+Header().accessibilitySortPriority(2)     // higher reads first
+Sidebar().accessibilitySortPriority(1)
+Detail().accessibilitySortPriority(0)     // default
+
+// Keep a region's children together across reflows
+InspectorPanel()
+    .accessibilityElement(children: .contain)
+```
+
+Test the reading order **after each layout transform** (resize through your breakpoints in the simulator, swipe through everything), not just at the design size. UIKit peers: `accessibilityElements` (explicit order) on the container.
+
+### Tables and Grids Need Two-Axis Semantics
+
+A VoiceOver user navigates a data table by structure, not by eye. SwiftUI `Table` carries tabular semantics — row context and column headers; a `LazyVGrid` exposes nothing — VoiceOver reads its cells as a flat sequence with no row/column context. When a wide layout upgrades a list into a grid or multi-column table, don't silently downgrade the VoiceOver experience:
+
+- UIKit custom grids: adopt `UIAccessibilityContainerDataTable` + `UIAccessibilityContainerDataTableCell` so VoiceOver exposes row/column navigation and headers.
+- SwiftUI: prefer `Table` for genuinely tabular data on wide layouts (see axiom-macos (skills/swiftui-differences.md)); for a `LazyVGrid`, make each cell self-describing ("Track 3 of 12, Blue in Green") because the grid position is invisible to VoiceOver.
+
+### Toolbar Overflow Loses Names
+
+Items that collapse into the toolbar's overflow ("…") menu render as menu rows. An icon-only item becomes a nameless row — unusable visually *and* silent under VoiceOver. Every toolbar item that can overflow needs a `Label` or `accessibilityLabel` (see axiom-swiftui (skills/toolbars.md) Pattern 11).
+
+### Button Shapes
+
+The Button Shapes setting (Accessibility → Display & Text Size) asks controls to show a visible affordance instead of relying on tint alone. System controls comply automatically; **custom controls that look like plain text** must add their own:
+
+```swift
+@Environment(\.accessibilityShowButtonShapes) private var showButtonShapes
+
+Button("Details", action: show)
+    .background(showButtonShapes ? Color.secondary.opacity(0.2) : .clear,
+                in: Capsule())
+```
+
+UIKit: `UIAccessibility.buttonShapesEnabled` + `buttonShapesEnabledStatusDidChangeNotification`.
+
+### Large Content Viewer (Enlarged Content)
+
+Bars don't grow at accessibility Dynamic Type sizes — the Large Content Viewer is the system's answer: long-press a bar item and a magnified HUD shows it. System tab bars and navigation bars support it automatically; **custom bottom bars and custom toolbars don't** until you adopt it:
+
+```swift
+CustomTabButton(icon: "waveform")
+    .accessibilityShowsLargeContentViewer {
+        Label("Recordings", systemImage: "waveform")
+    }
+```
+
+UIKit: set `showsLargeContentViewer = true` and `largeContentTitle`/`largeContentImage` on the item view, and add a `UILargeContentViewerInteraction` to the bar (iOS 13). If a custom bar's items are unlabeled icons at fixed size, this is the difference between usable and not at XXXL text.
+
+### Full Keyboard Access & Switch Control Depth
+
+Section 5 covers focus basics; FKA (Settings → Accessibility → Keyboards) and Switch Control both drive the app through the **accessibility element tree**, which raises the bar beyond Tab order:
+
+- Custom actionable views need `isAccessibilityElement = true` plus a proper trait (`.button`) — without the trait, FKA and Switch Control may not offer them as stops at all. `accessibilityRespondsToUserInteraction` (iOS 13) disambiguates elements that carry a label but shouldn't be focus stops (or vice versa).
+- Gesture-only functionality (swipe rows, drag handles, pinch) must also exist as `accessibilityCustomActions` — Switch Control surfaces them in its action menu, which is the supported path for a switch user to reach a swipe action.
+- Depth test: with FKA on, complete your app's three core flows end-to-end using only Tab/arrows/Space. Then repeat with Switch Control auto-scanning. Reachable-but-not-activatable elements and unreachable modal content are the two classic failures.
+
+---
+
 ## Accessibility Inspector Workflow
 
 ### 1. Launch Accessibility Inspector
@@ -1322,7 +1391,7 @@ After making fixes:
 
 **WWDC**: 2026-219, 2026-220, 2026-221, 2026-256
 
-**Docs**: /accessibility/voiceover, /uikit/uifont/scaling_fonts_automatically, /uikit/uiaccessibilityreadingcontent, /swiftui/view/accessibilitylinkedgroup(id:in:), /avfoundation/avplayerlayer, /avkit/avlegiblemediaoptionsmenucontroller, /mediaaccessibility
+**Docs**: /accessibility/voiceover, /uikit/uifont/scaling_fonts_automatically, /uikit/uiaccessibilityreadingcontent, /swiftui/view/accessibilitylinkedgroup(id:in:), /avfoundation/avplayerlayer, /avkit/avlegiblemediaoptionsmenucontroller, /mediaaccessibility, /uikit/uilargecontentviewerinteraction, /uikit/uiaccessibilitycontainerdatatable, /swiftui/view/accessibilitysortpriority(_:), /swiftui/view/accessibilityshowslargecontentviewer(_:)
 
 ---
 
