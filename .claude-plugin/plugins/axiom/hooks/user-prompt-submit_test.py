@@ -492,6 +492,32 @@ class TestPositiveRouting(unittest.TestCase):
         self.assertNotIn("axiom-accessibility", routed_skills(
             "How do I style the subtitle label in my table row?"))
 
+    def test_tier3_adaptive_layout_gaps(self):
+        # 2026-07-23 audit tier-3 batch (Axiom-e28.12): small adaptive-layout topics
+        self.assertIn("axiom-swiftui", routed_skills(
+            "How do I use alignmentGuide to line up baselines across rows?"))
+        self.assertIn("axiom-swiftui", routed_skills(
+            "Wire up toolbarMinimizationBehavior so the nav bar shrinks on scroll"))
+        self.assertIn("axiom-uikit", routed_skills(
+            "Use UIScribbleInteraction to disable handwriting on one field"))
+        self.assertIn("axiom-uikit", routed_skills(
+            "Cmd-Z in one window undoes edits made in another window"))
+        self.assertIn("axiom-accessibility", routed_skills(
+            "Support Button Shapes in my custom SwiftUI control"))
+        self.assertIn("axiom-accessibility", routed_skills(
+            "Full Keyboard Access can't reach my custom control"))
+        self.assertIn("axiom-accessibility", routed_skills(
+            "Adopt the Large Content Viewer for my custom tab bar"))
+        self.assertIn("axiom-swift", routed_skills(
+            "Dragging to Finder needs an NSFilePromiseProvider, right?"))
+        self.assertIn("axiom-macos", routed_skills(
+            "How do I show a navigationSubtitle under the window title on iPad?"))
+        self.assertIn("axiom-games", routed_skills(
+            "My game letterboxes when the window resizes"))
+        # "switch control flow" is a programming phrase, not the assistive tech
+        self.assertNotIn("axiom-accessibility", routed_skills(
+            "Refactor this switch control flow into polymorphism"))
+
     def test_games(self):
         self.assertIn("axiom-games", routed_skills(
             "My SpriteKit SKScene physics aren't working"))

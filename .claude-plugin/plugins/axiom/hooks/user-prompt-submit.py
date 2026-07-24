@@ -98,7 +98,7 @@ if not non_ios and re.search(r'build (fail|error|broken)|xcodebuild|simulator (c
     matches.append("axiom-build")
 
 # UI
-if re.search(r'swiftui|@state\b|@binding\b|@observable\b|@environment\b|navigationstack|navigationsplitview|layout.{0,10}(break|bug|wrong|issue)|preview.{0,5}(crash|fail|not |won.t|broken)|view.{0,10}(not|won.t|doesn.t).{0,10}(updat|render|show|appear)|tabview|scroll.{0,20}(jank|lag|slow|stutter)|presentationdetents?|\bdetents?\b|presentation(compactadaptation|sizing|backgroundinteraction)|popover.{0,20}(sheet|iphone|compact|anchor)|sheet.{0,20}(detent|resiz|medium|half|landscape.{0,15}full)|onhover|hovereffect|oncontinuoushover|pointerstyle|(scroll\s*position|selection|focus|draft|state)\w*\s*(is\s*|gets\s*|was\s*)?(lost|reset\w*|jumps?|cleared)\w*.{0,30}(rotat|resiz|window|split|size\s*class)|(rotat|resiz)\w*.{0,30}(los\w+|reset\w*|clears?|clearing)\s.{0,20}(scroll|selection|focus|state|draft)', prompt_lower):
+if re.search(r'swiftui|@state\b|@binding\b|@observable\b|@environment\b|navigationstack|navigationsplitview|layout.{0,10}(break|bug|wrong|issue)|preview.{0,5}(crash|fail|not |won.t|broken)|view.{0,10}(not|won.t|doesn.t).{0,10}(updat|render|show|appear)|tabview|scroll.{0,20}(jank|lag|slow|stutter)|presentationdetents?|\bdetents?\b|presentation(compactadaptation|sizing|backgroundinteraction)|popover.{0,20}(sheet|iphone|compact|anchor)|sheet.{0,20}(detent|resiz|medium|half|landscape.{0,15}full)|onhover|hovereffect|oncontinuoushover|pointerstyle|alignmentguide|layoutpriority|toolbarminimiz\w*|(scroll\s*position|selection|focus|draft|state)\w*\s*(is\s*|gets\s*|was\s*)?(lost|reset\w*|jumps?|cleared)\w*.{0,30}(rotat|resiz|window|split|size\s*class)|(rotat|resiz)\w*.{0,30}(los\w+|reset\w*|clears?|clearing)\s.{0,20}(scroll|selection|focus|state|draft)', prompt_lower):
     matches.append("axiom-swiftui")
 
 # UI — preview construction (separate from preview-crash routing above)
@@ -174,7 +174,7 @@ if re.search(r'avcapture|phpicker|photospicker|photo.{0,5}(library|picker|captur
     matches.append("axiom-media")
 
 # Accessibility
-if re.search(r'voiceover|accessibility.{0,10}(label|hint|trait|value|issue|audit|fix)|dynamic type|color contrast|wcag|a11y|accessib.{0,10}(element|identif|action)|speak\s*screen|spoken\s*content|accessibility\s*reader|larger\s*text\b|accessibility\s*nutrition|\bdirect\s*touch|activation\s*point|(subtitle|caption)\s*(styl|font|color|appearance|preview)|generated\s*subtitle|(subtitle|caption)s?.{0,15}(video|player|avplayer)', prompt_lower):
+if re.search(r'voiceover|accessibility.{0,10}(label|hint|trait|value|issue|audit|fix)|dynamic type|color contrast|wcag|a11y|accessib.{0,10}(element|identif|action)|speak\s*screen|spoken\s*content|accessibility\s*reader|larger\s*text\b|accessibility\s*nutrition|\bdirect\s*touch|activation\s*point|button\s*shapes?\b|large\s*content\s*viewer|uilargecontentviewer|full\s*keyboard\s*access|switch\s*control\b(?!\s*(flow|statement|logic))|accessibilitysortpriority|(subtitle|caption)\s*(styl|font|color|appearance|preview)|generated\s*subtitle|(subtitle|caption)s?.{0,15}(video|player|avplayer)', prompt_lower):
     matches.append("axiom-accessibility")
 
 # AI
@@ -226,11 +226,11 @@ if re.search(r'vision\s*framework|visionkit|vnrequest|vndetect|vnclassif|vnrecog
     matches.append("axiom-vision")
 
 # Games/Graphics
-if re.search(r'spritekit|scenekit|realitykit|skscene|skspritenode|skphysics|realityview|arview|game.{0,5}(loop|scene|physics)|touchcontroller|tctouch|tcbutton|tcthumbstick|tccontrol|gccontroller|gcvirtualcontroller|gcspatialaccessory|extendedgamepad|gamecontroller|gcmouse|gckeyboard', prompt_lower):
+if re.search(r'spritekit|scenekit|realitykit|skscene|skspritenode|skphysics|realityview|arview|game.{0,5}(loop|scene|physics)|touchcontroller|tctouch|tcbutton|tcthumbstick|tccontrol|gccontroller|gcvirtualcontroller|gcspatialaccessory|extendedgamepad|gamecontroller|gcmouse|gckeyboard|didchangesize|resizefill', prompt_lower):
     matches.append("axiom-games")
 
 # Games — generic input terms gated
-if not non_ios and "axiom-games" not in matches and re.search(r'game\s*controller|virtual\s*controller|\bgamepads?\b|spatial\s*accessor|controller.{0,12}home\s*button|touch\s*controls?\b.{0,40}(game|gaming|\bport(ed|ing)?\b|controller|thumbstick|joystick|on.?screen)|(game|gaming|\bport(ed|ing)?\b|controller|thumbstick|joystick|on.?screen).{0,40}touch\s*controls?\b', prompt_lower):
+if not non_ios and "axiom-games" not in matches and re.search(r'game\s*controller|virtual\s*controller|\bgamepads?\b|spatial\s*accessor|controller.{0,12}home\s*button|letterbox\w*.{0,30}(game|scene|resiz|window)|(game|scene|window)\w*.{0,30}letterbox\w*|touch\s*controls?\b.{0,40}(game|gaming|\bport(ed|ing)?\b|controller|thumbstick|joystick|on.?screen)|(game|gaming|\bport(ed|ing)?\b|controller|thumbstick|joystick|on.?screen).{0,40}touch\s*controls?\b', prompt_lower):
     matches.append("axiom-games")
 
 # Graphics (Metal/GPU — separate from games)
@@ -252,7 +252,7 @@ if not non_ios and "axiom-shipping" not in matches and re.search(r'retention\s*m
 # macOS
 # Note: bare "macos"/"mac os" is intentionally NOT matched — it fires on host-OS
 # version mentions ("on macOS 26.3"). Require intent-qualifying terms instead.
-if re.search(r'mac\s*app(?:lication)?s?\b|macos.{0,15}(app|build|sandbox|develop|distribut|notariz|menubar|window|toolbar|sign)|appkit|screencapturekit|scstream\b|scshareablecontent|sccontentfilter|sccontentsharingpicker|scscreenshotmanager|screcordingoutput|nstoolbar|nsviewrepresentable|nshostingcontroller|nshostingview|nshostingmenu|nshostingscene|nsgesturerecognizerrepresentable|nsviewcontrollerrepresentable|nscontrol\b|nsstatusitem|status\s*items?\b.{0,40}(window|menu|keyboard|expand)|menu\s*bar.{0,15}status\s*item|nswindowrestoration|encoderestorablestate|nsrefreshcontroller|nstextselectionmanager|nsglasseffect|cornerconfiguration|concentric.{0,10}corner|corner.{0,12}concentric|windowgroup|menubarextra|utilitywindow|commandmenu|commandgroup|focusedscenevalue|app\s*sandbox|sandbox.{0,10}(violat|entitlement|bookmark)|security.{0,5}scoped|notariz|notarytool|developer\s*id|hardened\s*runtime|sparkle.{0,5}(update|framework|auto)|\.dmg\b|distribut.{0,10}outside|menu\s*bar.{0,5}(extra|command|item)|\bcatalyst\b|maccatalyst|designed\s*for\s*ip(?:ad|hone)|ios\s*apps?\s*on\s*(?:apple\s*silicon|mac)|isiosapponmac|tablecolumn|swiftui\s*table|multi.?column\s*table|\.inspector\b|inspector\s*(column|panel|pane)', prompt_lower):
+if re.search(r'mac\s*app(?:lication)?s?\b|macos.{0,15}(app|build|sandbox|develop|distribut|notariz|menubar|window|toolbar|sign)|appkit|screencapturekit|scstream\b|scshareablecontent|sccontentfilter|sccontentsharingpicker|scscreenshotmanager|screcordingoutput|nstoolbar|nsviewrepresentable|nshostingcontroller|nshostingview|nshostingmenu|nshostingscene|nsgesturerecognizerrepresentable|nsviewcontrollerrepresentable|nscontrol\b|nsstatusitem|status\s*items?\b.{0,40}(window|menu|keyboard|expand)|menu\s*bar.{0,15}status\s*item|nswindowrestoration|encoderestorablestate|nsrefreshcontroller|nstextselectionmanager|nsglasseffect|cornerconfiguration|concentric.{0,10}corner|corner.{0,12}concentric|windowgroup|menubarextra|utilitywindow|commandmenu|commandgroup|focusedscenevalue|app\s*sandbox|sandbox.{0,10}(violat|entitlement|bookmark)|security.{0,5}scoped|notariz|notarytool|developer\s*id|hardened\s*runtime|sparkle.{0,5}(update|framework|auto)|\.dmg\b|distribut.{0,10}outside|menu\s*bar.{0,5}(extra|command|item)|\bcatalyst\b|maccatalyst|designed\s*for\s*ip(?:ad|hone)|ios\s*apps?\s*on\s*(?:apple\s*silicon|mac)|isiosapponmac|tablecolumn|swiftui\s*table|multi.?column\s*table|\.inspector\b|inspector\s*(column|panel|pane)|navigationsubtitle|navigationdocument|uidocumentproperties|proxy\s*icon|uiprintinteraction\w*|nsprintoperation|backingscalefactor', prompt_lower):
     matches.append("axiom-macos")
 
 # watchOS
@@ -273,11 +273,11 @@ if re.search(r'human interface|hig\b|liquid glass|glass\s*[-]?\s*effect\b|glasse
     matches.append("axiom-design")
 
 # UIKit
-if re.search(r'uikit|uiview\b|uiviewcontroller|auto\s*layout|nslayoutconstraint|uiviewrepresentable|uihostingcontroller|combine\b.{0,10}(publisher|subscriber|sink|assign)|textkit|nstextlayoutmanager|uilabel|uitableview|uicollectionview|pencilkit|pkcanvasview|pktoolpicker|pkdrawing|apple\s*pencil|paperkit|papermarkup|uicornerconfiguration|cornerconfiguration|encoderestorablestate|iphone\s*mirroring|indirectinputevents|(uiscene)?sizerestrictions|uipointerinteraction|uihovergesture|uikeycommand|discoverabilitytitle|uiapplicationscenemanifest|scene\s*manifest|readablecontentguide|uilayoutguide|layoutmarginsguide|nscollectionlayout|compositional\s*layout|self.?sizing\s*cell|systemlayoutsizefitting|scenediddisconnect|staterestorationactivity|activatescenesession|uiscenesessionactivationrequest|activeappearance', prompt_lower):
+if re.search(r'uikit|uiview\b|uiviewcontroller|auto\s*layout|nslayoutconstraint|uiviewrepresentable|uihostingcontroller|combine\b.{0,10}(publisher|subscriber|sink|assign)|textkit|nstextlayoutmanager|uilabel|uitableview|uicollectionview|pencilkit|pkcanvasview|pktoolpicker|pkdrawing|apple\s*pencil|paperkit|papermarkup|uicornerconfiguration|cornerconfiguration|encoderestorablestate|iphone\s*mirroring|indirectinputevents|(uiscene)?sizerestrictions|uipointerinteraction|uihovergesture|uikeycommand|discoverabilitytitle|uiapplicationscenemanifest|scene\s*manifest|readablecontentguide|uilayoutguide|layoutmarginsguide|nscollectionlayout|compositional\s*layout|self.?sizing\s*cell|systemlayoutsizefitting|scenediddisconnect|staterestorationactivity|activatescenesession|uiscenesessionactivationrequest|activeappearance|uiscribble\w*|\bscribble\b.{0,30}(handwrit|pencil|text|disable)|per.?(window|scene)\s*undo|undo\s*manager.{0,35}(window|scene)|(window|scene).{0,35}undo\s*manager|undo\w*\s.{0,20}(another|other|wrong)\s*window', prompt_lower):
     matches.append("axiom-uikit")
 
 # Swift language
-if re.search(r'noncopyable|~copyable|consuming\s+func|borrowing\s+func|transferable\b|draggable|dropdestinat|deep\s*link.{0,5}debug|swift.{0,5}(idiom|modern|pattern|style|convention)', prompt_lower):
+if re.search(r'noncopyable|~copyable|consuming\s+func|borrowing\s+func|transferable\b|draggable|dropdestinat|file\s*promis\w*|nsfilepromise\w*|deep\s*link.{0,5}debug|swift.{0,5}(idiom|modern|pattern|style|convention)', prompt_lower):
     matches.append("axiom-swift")
 
 # Location
