@@ -8,7 +8,7 @@ The same catalog available to other MCP clients:
 
 - **<!--ax:skills-->269<!--/ax--> skills** – searchable iOS development guidance
 - **<!--ax:agents-->42<!--/ax--> agents** – autonomous code scanning and fixing
-- **<!--ax:commands-->15<!--/ax--> commands** – structured workflows
+- **<!--ax:commands-->17<!--/ax--> commands** – structured workflows
 
 ## Prerequisites
 

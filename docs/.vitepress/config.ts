@@ -207,7 +207,8 @@ export default withMermaid(defineConfig({
           items: [
             { text: '/axiom:audit build', link: '/commands/build/audit-build' },
             { text: '/axiom:fix-build', link: '/commands/build/fix-build' },
-            { text: '/axiom:optimize-build', link: '/commands/build/optimize-build' }
+            { text: '/axiom:optimize-build', link: '/commands/build/optimize-build' },
+            { text: '/axiom:resolve-deps', link: '/commands/build/resolve-deps' }
           ]
         },
         {
@@ -223,6 +224,7 @@ export default withMermaid(defineConfig({
             { text: '/axiom:audit swift-performance', link: '/commands/debugging/audit-swift-performance' },
             { text: '/axiom:audit swift-simplify', link: '/commands/debugging/audit-swift-simplify' },
             { text: '/axiom:compare-traces', link: '/commands/debugging/compare-traces' },
+            { text: '/axiom:modernize', link: '/commands/debugging/modernize' },
             { text: '/axiom:profile', link: '/commands/debugging/profile' }
           ]
         },
