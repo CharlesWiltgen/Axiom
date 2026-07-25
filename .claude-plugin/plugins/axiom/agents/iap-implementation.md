@@ -13,7 +13,8 @@ description: |
   assistant: [Launches iap-implementation agent]
   </example>
 
-  Explicit command: Users can also invoke this agent directly with `/axiom:audit iap-implementation`
+  This agent writes code; it has no `/axiom:audit` form. To review existing
+  IAP code instead, use `/axiom:audit iap` (the iap-auditor agent).
 model: sonnet
 color: blue
 tools:

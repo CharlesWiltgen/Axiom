@@ -2,7 +2,7 @@
 
 # In-App Purchase Auditor
 
-**Claude Code** — launch the `iap-auditor` agent. It runs this procedure in an isolated context with its own model tier.
+**Claude Code** — launch the `iap-auditor` agent, or run `/axiom:audit iap`. It runs this procedure in an isolated context with its own model tier.
 
 **Every other harness** — follow this file inline. It is the same procedure, and it needs only file search and read.
 

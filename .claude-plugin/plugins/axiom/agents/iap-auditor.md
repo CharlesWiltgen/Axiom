@@ -27,6 +27,8 @@ description: |
   user: "My restore purchases isn't working properly"
   assistant: [Launches iap-auditor agent]
   </example>
+
+  Explicit command: Users can also invoke this agent directly with `/axiom:audit iap`
 model: sonnet
 background: true
 color: green

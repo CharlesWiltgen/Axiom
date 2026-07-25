@@ -28,7 +28,7 @@ description: |
   assistant: [Launches security-privacy-scanner agent]
   </example>
 
-  Explicit command: Users can also invoke this agent directly with `/axiom:audit security` or `/axiom:audit privacy`
+  Explicit command: Users can also invoke this agent directly with `/axiom:audit security` — which covers privacy too (Privacy Manifests, sensitive-data storage and logging)
 model: sonnet
 background: true
 color: red

@@ -1,6 +1,6 @@
 ---
 description: Smart audit selector - analyzes your project and suggests relevant audits
-argument: "area (optional) - Which audit to run: all, memory, concurrency, accessibility, energy, swiftui-performance, swiftui-architecture, swiftui-nav, swiftui-layout, swift-performance, swift-simplify, core-data, swiftdata, database-schema, grdb-performance, networking, codable, icloud, storage, liquid-glass, textkit, testing, test-failures, build, spritekit, security, modernization, camera, foundation-models, screenshots, ux-flow, resize"
+argument: "area (optional) - Which audit to run: all, memory, concurrency, accessibility, energy, swiftui-performance, swiftui-architecture, swiftui-nav, swiftui-layout, swift-performance, swift-simplify, core-data, swiftdata, database-schema, grdb-performance, networking, codable, icloud, storage, liquid-glass, textkit, testing, test-failures, build, spritekit, security, modernization, camera, foundation-models, iap, screenshots, ux-flow, resize"
 disable-model-invocation: true
 ---
 
@@ -40,6 +40,7 @@ If no area specified → analyze project and suggest relevant audits
 | camera | camera-auditor | Deprecated camera APIs, missing interruption handlers, threading violations |
 | swiftdata | swiftdata-auditor | @Model struct, missing VersionedSchema models, relationship defaults, migration timing, N+1 |
 | foundation-models | foundation-models-auditor | Missing availability checks, main thread blocking, manual JSON parsing, guardrail handling |
+| iap | iap-auditor | Missing transaction.finish(), weak receipt validation, missing restore, subscription status tracking, StoreKit test config gaps |
 | swiftui-layout | swiftui-layout-auditor | GeometryReader misuse, deprecated screen APIs, hardcoded breakpoints, identity loss |
 | resize | resize-auditor | Scene-lifecycle gaps, UIScreen.main, UIRequiresFullScreen, orientation-derived layout, fixed-canvas rendering, Mirroring input |
 | database-schema | database-schema-auditor | Unsafe ALTER TABLE, DROP operations, missing idempotency, FK misuse, transaction safety |
