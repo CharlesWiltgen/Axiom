@@ -30,6 +30,7 @@ When run without arguments, analyzes your project and recommends relevant audits
 
 Grouped to mirror the sidebar exactly — same group names, same group order, same items in the same order within each group.
 
+<!-- AXIOM_AUDIT_DOCS_BEGIN — generated from scripts/audit-areas.json -->
 ### Build
 | Area | What It Checks |
 |------|----------------|
@@ -101,7 +102,7 @@ Grouped to mirror the sidebar exactly — same group names, same group order, sa
 |------|----------------|
 | `screenshots` | Placeholder text, wrong dimensions, debug indicators |
 | `security` | API keys in code, insecure storage, Privacy Manifests, ATS violations |
-
+<!-- AXIOM_AUDIT_DOCS_END -->
 ## Priority Levels
 
 1. **CRITICAL** – `core-data`, `swiftdata`, `database-schema`, `storage`, `icloud` (data corruption/loss risk)

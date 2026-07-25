@@ -1,10 +1,12 @@
 ---
 description: Smart audit selector - analyzes your project and suggests relevant audits
 argument-hint: "[area]"
-# Not a Claude Code field — Axiom's own canonical audit-area registry,
-# validated against the body table, docs page, and sidebar by
-# scripts/audit-parity.ts. `argument-hint` above is the real user-facing hint.
-argument: "area (optional) - Which audit to run: all, memory, concurrency, accessibility, energy, swiftui-performance, swiftui-architecture, swiftui-nav, swiftui-layout, swift-performance, swift-simplify, core-data, swiftdata, database-schema, grdb-performance, networking, codable, icloud, storage, liquid-glass, textkit, testing, test-failures, build, spritekit, security, modernization, camera, foundation-models, iap, screenshots, ux-flow, resize"
+# Not a Claude Code field — Axiom's own audit-area registry. GENERATED from
+# scripts/audit-areas.json by scripts/build-audit-areas.ts; do not hand-edit.
+# `argument-hint` above is the real user-facing hint.
+# AXIOM_AUDIT_ARGUMENT_BEGIN
+argument: "area (optional) - Which audit to run: all, build, codable, core-data, energy, memory, modernization, swift-performance, swift-simplify, test-failures, testing, concurrency, liquid-glass, resize, swiftui-architecture, swiftui-layout, swiftui-nav, swiftui-performance, textkit, ux-flow, camera, foundation-models, iap, networking, database-schema, grdb-performance, icloud, storage, swiftdata, accessibility, spritekit, screenshots, security"
+# AXIOM_AUDIT_ARGUMENT_END
 disable-model-invocation: true
 ---
 
@@ -17,40 +19,42 @@ If no area specified → analyze project and suggest relevant audits
 
 ## Available Audits
 
+<!-- AXIOM_AUDIT_TABLE_BEGIN — generated from scripts/audit-areas.json -->
 | Area | Agent | Detects |
 |------|-------|---------|
-| accessibility | accessibility-auditor | VoiceOver labels, Dynamic Type, color contrast, WCAG compliance |
-| concurrency | concurrency-auditor | Swift 6 data races, unsafe Task captures, actor isolation |
+| build | build-optimizer | Build time optimization opportunities |
+| codable | codable-auditor | JSON serialization issues, Sendable violations |
+| core-data | core-data-auditor | Thread safety, schema migrations, N+1 queries |
 | energy | energy-auditor | Timer abuse, polling patterns, continuous location, animation leaks, background mode misuse |
 | memory | memory-auditor | Retain cycles, leaks, Timer/observer patterns |
-| swiftui-performance | swiftui-performance-analyzer | Expensive body, formatters, whole-collection dependencies, missing lazy |
-| swiftui-architecture | swiftui-architecture-auditor | Logic in view, MVVM/TCA patterns, boundary violations |
-| swiftui-nav | swiftui-nav-auditor | NavigationStack issues, path management, deep linking |
+| modernization | modernization-helper | ObservableObject→@Observable, @StateObject→@State, deprecated APIs |
 | swift-performance | swift-performance-analyzer | ARC issues, allocation patterns, generic specialization |
 | swift-simplify | swift-simplifier | Behavior-preserving Swift simplifications — guard/optional cleanups, if/switch expressions, collection idioms, redundant boilerplate, dead availability guards |
-| core-data | core-data-auditor | Thread safety, schema migrations, N+1 queries |
-| networking | networking-auditor | Deprecated APIs (SCNetworkReachability), anti-patterns |
-| codable | codable-auditor | JSON serialization issues, Sendable violations |
-| icloud | icloud-auditor | iCloud integration issues, entitlements |
-| storage | storage-auditor | File protection, storage strategies, data management |
-| liquid-glass | liquid-glass-auditor | iOS 26 adoption opportunities, toolbar improvements |
-| textkit | textkit-auditor | TextKit issues, text rendering problems |
-| testing | testing-auditor | Flaky tests, slow tests, Swift Testing migration, test quality |
 | test-failures | test-failure-analyzer | Root-cause diagnosis for a failing or intermittent test — missing await confirmation, @MainActor gaps, shared suite state, missing .serialized |
-| build | build-optimizer | Build time optimization opportunities |
-| spritekit | spritekit-auditor | Physics bitmask issues, draw call waste, node accumulation, action leaks |
-| security | security-privacy-scanner | API keys in code, insecure storage, Privacy Manifests, ATS violations |
-| modernization | modernization-helper | ObservableObject→@Observable, @StateObject→@State, deprecated APIs |
+| testing | testing-auditor | Flaky tests, slow tests, Swift Testing migration, test quality |
+| concurrency | concurrency-auditor | Swift 6 data races, unsafe Task captures, actor isolation |
+| liquid-glass | liquid-glass-auditor | iOS 26 adoption opportunities, toolbar improvements |
+| resize | resize-auditor | Scene-lifecycle gaps, UIScreen.main, UIRequiresFullScreen, orientation-derived layout, fixed-canvas rendering, Mirroring input |
+| swiftui-architecture | swiftui-architecture-auditor | Logic in view, MVVM/TCA patterns, boundary violations |
+| swiftui-layout | swiftui-layout-auditor | GeometryReader misuse, deprecated screen APIs, hardcoded breakpoints, identity loss |
+| swiftui-nav | swiftui-nav-auditor | NavigationStack issues, path management, deep linking |
+| swiftui-performance | swiftui-performance-analyzer | Expensive body, formatters, whole-collection dependencies, missing lazy |
+| textkit | textkit-auditor | TextKit issues, text rendering problems |
+| ux-flow | ux-flow-auditor | Dead-end views, dismiss traps, buried CTAs, missing empty/loading/error states, accessibility dead ends |
 | camera | camera-auditor | Deprecated camera APIs, missing interruption handlers, threading violations |
-| swiftdata | swiftdata-auditor | @Model struct, missing VersionedSchema models, relationship defaults, migration timing, N+1 |
 | foundation-models | foundation-models-auditor | Missing availability checks, main thread blocking, manual JSON parsing, guardrail handling |
 | iap | iap-auditor | Missing transaction.finish(), weak receipt validation, missing restore, subscription status tracking, StoreKit test config gaps |
-| swiftui-layout | swiftui-layout-auditor | GeometryReader misuse, deprecated screen APIs, hardcoded breakpoints, identity loss |
-| resize | resize-auditor | Scene-lifecycle gaps, UIScreen.main, UIRequiresFullScreen, orientation-derived layout, fixed-canvas rendering, Mirroring input |
+| networking | networking-auditor | Deprecated APIs (SCNetworkReachability), anti-patterns |
 | database-schema | database-schema-auditor | Unsafe ALTER TABLE, DROP operations, missing idempotency, FK misuse, transaction safety |
 | grdb-performance | grdb-performance-auditor | Raw SQL string interpolation, missing FK indexes, missing PRAGMA optimize, app-group WAL and suspension defense, INSERT OR REPLACE misused as upsert, observation on WITHOUT ROWID tables |
+| icloud | icloud-auditor | iCloud integration issues, entitlements |
+| storage | storage-auditor | File protection, storage strategies, data management |
+| swiftdata | swiftdata-auditor | @Model struct, missing VersionedSchema models, relationship defaults, migration timing, N+1 |
+| accessibility | accessibility-auditor | VoiceOver labels, Dynamic Type, color contrast, WCAG compliance |
+| spritekit | spritekit-auditor | Physics bitmask issues, draw call waste, node accumulation, action leaks |
 | screenshots | screenshot-validator | Placeholder text, wrong dimensions, debug indicators, broken UI, competitor references |
-| ux-flow | ux-flow-auditor | Dead-end views, dismiss traps, buried CTAs, missing empty/loading/error states, accessibility dead ends |
+| security | security-privacy-scanner | API keys in code, insecure storage, Privacy Manifests, ATS violations |
+<!-- AXIOM_AUDIT_TABLE_END -->
 
 ## Direct Dispatch
 

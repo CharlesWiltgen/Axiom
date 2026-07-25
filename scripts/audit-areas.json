@@ -1,0 +1,273 @@
+{
+  "//": "Canonical registry of /axiom:audit areas. Edit here, then run `npm run build:audit-areas`. Four surfaces are generated from this file: the argument list and body table in commands/audit.md (for-LLM), the docs page table (for-humans), and the VitePress sidebar. `detects` is model-facing routing text; `docsDetects` is human prose — they differ on purpose per the docs-are-human / source-is-for-LLM split.",
+  "groupOrder": [
+    "Build",
+    "Debugging",
+    "Testing",
+    "Concurrency",
+    "UI & Design",
+    "Integration",
+    "Storage",
+    "Accessibility",
+    "Games",
+    "Shipping"
+  ],
+  "areas": [
+    {
+      "area": "build",
+      "agent": "build-optimizer",
+      "group": "Build",
+      "detects": "Build time optimization opportunities",
+      "docsDetects": "Build time optimization opportunities",
+      "docPath": "/commands/build/audit-build"
+    },
+    {
+      "area": "codable",
+      "agent": "codable-auditor",
+      "group": "Debugging",
+      "detects": "JSON serialization issues, Sendable violations",
+      "docsDetects": "Manual JSON building, error swallowing, Sendable violations",
+      "docPath": "/commands/debugging/audit-codable"
+    },
+    {
+      "area": "core-data",
+      "agent": "core-data-auditor",
+      "group": "Debugging",
+      "detects": "Thread safety, schema migrations, N+1 queries",
+      "docsDetects": "Thread safety, schema migrations, N+1 queries",
+      "docPath": "/commands/debugging/audit-core-data"
+    },
+    {
+      "area": "energy",
+      "agent": "energy-auditor",
+      "group": "Debugging",
+      "detects": "Timer abuse, polling patterns, continuous location, animation leaks, background mode misuse",
+      "docsDetects": "Timer abuse, polling patterns, continuous location, animation leaks",
+      "docPath": "/commands/debugging/audit-energy"
+    },
+    {
+      "area": "memory",
+      "agent": "memory-auditor",
+      "group": "Debugging",
+      "detects": "Retain cycles, leaks, Timer/observer patterns",
+      "docsDetects": "Retain cycles, Timer/observer leaks, closure captures",
+      "docPath": "/commands/debugging/audit-memory"
+    },
+    {
+      "area": "modernization",
+      "agent": "modernization-helper",
+      "group": "Debugging",
+      "detects": "ObservableObject→@Observable, @StateObject→@State, deprecated APIs",
+      "docsDetects": "ObservableObject→@Observable, @StateObject→@State, deprecated APIs",
+      "docPath": "/commands/debugging/audit-modernization"
+    },
+    {
+      "area": "swift-performance",
+      "agent": "swift-performance-analyzer",
+      "group": "Debugging",
+      "detects": "ARC issues, allocation patterns, generic specialization",
+      "docsDetects": "ARC issues, allocation patterns, generic specialization",
+      "docPath": "/commands/debugging/audit-swift-performance"
+    },
+    {
+      "area": "swift-simplify",
+      "agent": "swift-simplifier",
+      "group": "Debugging",
+      "detects": "Behavior-preserving Swift simplifications — guard/optional cleanups, if/switch expressions, collection idioms, redundant boilerplate, dead availability guards",
+      "docsDetects": "Behavior-preserving Swift clarity — guard/optional cleanups, if/switch expressions, collection idioms, boilerplate",
+      "docPath": "/commands/debugging/audit-swift-simplify"
+    },
+    {
+      "area": "test-failures",
+      "agent": "test-failure-analyzer",
+      "group": "Testing",
+      "detects": "Root-cause diagnosis for a failing or intermittent test — missing await confirmation, @MainActor gaps, shared suite state, missing .serialized",
+      "docsDetects": "Why a specific test fails or flakes — missing `await confirmation`, `@MainActor` gaps, shared suite state",
+      "docPath": "/commands/testing/audit-test-failures"
+    },
+    {
+      "area": "testing",
+      "agent": "testing-auditor",
+      "group": "Testing",
+      "detects": "Flaky tests, slow tests, Swift Testing migration, test quality",
+      "docsDetects": "Flaky tests, slow tests, Swift Testing migration",
+      "docPath": "/commands/testing/audit-testing"
+    },
+    {
+      "area": "concurrency",
+      "agent": "concurrency-auditor",
+      "group": "Concurrency",
+      "detects": "Swift 6 data races, unsafe Task captures, actor isolation",
+      "docsDetects": "Swift 6 data races, unsafe Task captures, actor isolation",
+      "docPath": "/commands/concurrency/audit-concurrency"
+    },
+    {
+      "area": "liquid-glass",
+      "agent": "liquid-glass-auditor",
+      "group": "UI & Design",
+      "detects": "iOS 26 adoption opportunities, toolbar improvements",
+      "docsDetects": "iOS 26 adoption opportunities, toolbar improvements",
+      "docPath": "/commands/ui-design/audit-liquid-glass"
+    },
+    {
+      "area": "resize",
+      "agent": "resize-auditor",
+      "group": "UI & Design",
+      "detects": "Scene-lifecycle gaps, UIScreen.main, UIRequiresFullScreen, orientation-derived layout, fixed-canvas rendering, Mirroring input",
+      "docsDetects": "Scene-lifecycle gaps, UIScreen.main, fixed-canvas rendering, iPhone Mirroring input",
+      "docPath": "/commands/ui-design/audit-resize"
+    },
+    {
+      "area": "swiftui-architecture",
+      "agent": "swiftui-architecture-auditor",
+      "group": "UI & Design",
+      "detects": "Logic in view, MVVM/TCA patterns, boundary violations",
+      "docsDetects": "Logic in views, MVVM/TCA boundary violations",
+      "docPath": "/commands/ui-design/audit-swiftui-architecture"
+    },
+    {
+      "area": "swiftui-layout",
+      "agent": "swiftui-layout-auditor",
+      "group": "UI & Design",
+      "detects": "GeometryReader misuse, deprecated screen APIs, hardcoded breakpoints, identity loss",
+      "docsDetects": "GeometryReader misuse, deprecated screen APIs, hardcoded breakpoints",
+      "docPath": "/commands/ui-design/audit-swiftui-layout"
+    },
+    {
+      "area": "swiftui-nav",
+      "agent": "swiftui-nav-auditor",
+      "group": "UI & Design",
+      "detects": "NavigationStack issues, path management, deep linking",
+      "docsDetects": "NavigationStack issues, path management, deep linking",
+      "docPath": "/commands/ui-design/audit-swiftui-nav"
+    },
+    {
+      "area": "swiftui-performance",
+      "agent": "swiftui-performance-analyzer",
+      "group": "UI & Design",
+      "detects": "Expensive body, formatters, whole-collection dependencies, missing lazy",
+      "docsDetects": "Expensive body, formatters, missing lazy containers",
+      "docPath": "/commands/ui-design/audit-swiftui-performance"
+    },
+    {
+      "area": "textkit",
+      "agent": "textkit-auditor",
+      "group": "UI & Design",
+      "detects": "TextKit issues, text rendering problems",
+      "docsDetects": "TextKit issues, text rendering problems",
+      "docPath": "/commands/ui-design/audit-textkit"
+    },
+    {
+      "area": "ux-flow",
+      "agent": "ux-flow-auditor",
+      "group": "UI & Design",
+      "detects": "Dead-end views, dismiss traps, buried CTAs, missing empty/loading/error states, accessibility dead ends",
+      "docsDetects": "Dead-end views, dismiss traps, missing empty/loading/error states",
+      "docPath": "/commands/ui-design/audit-ux-flow"
+    },
+    {
+      "area": "camera",
+      "agent": "camera-auditor",
+      "group": "Integration",
+      "detects": "Deprecated camera APIs, missing interruption handlers, threading violations",
+      "docsDetects": "Deprecated camera APIs, missing interruption handlers",
+      "docPath": "/commands/integration/audit-camera"
+    },
+    {
+      "area": "foundation-models",
+      "agent": "foundation-models-auditor",
+      "group": "Integration",
+      "detects": "Missing availability checks, main thread blocking, manual JSON parsing, guardrail handling",
+      "docsDetects": "Availability checks, main-thread blocking, guardrail handling",
+      "docPath": "/commands/integration/audit-foundation-models"
+    },
+    {
+      "area": "iap",
+      "agent": "iap-auditor",
+      "group": "Integration",
+      "detects": "Missing transaction.finish(), weak receipt validation, missing restore, subscription status tracking, StoreKit test config gaps",
+      "docsDetects": "Missing `transaction.finish()`, weak receipt validation, missing restore, subscription tracking",
+      "docPath": "/commands/integration/audit-iap"
+    },
+    {
+      "area": "networking",
+      "agent": "networking-auditor",
+      "group": "Integration",
+      "detects": "Deprecated APIs (SCNetworkReachability), anti-patterns",
+      "docsDetects": "Deprecated APIs (SCNetworkReachability), anti-patterns",
+      "docPath": "/commands/integration/audit-networking"
+    },
+    {
+      "area": "database-schema",
+      "agent": "database-schema-auditor",
+      "group": "Storage",
+      "detects": "Unsafe ALTER TABLE, DROP operations, missing idempotency, FK misuse, transaction safety",
+      "docsDetects": "Unsafe ALTER TABLE, DROP operations, FK integrity",
+      "docPath": "/commands/storage/audit-database-schema"
+    },
+    {
+      "area": "grdb-performance",
+      "agent": "grdb-performance-auditor",
+      "group": "Storage",
+      "detects": "Raw SQL string interpolation, missing FK indexes, missing PRAGMA optimize, app-group WAL and suspension defense, INSERT OR REPLACE misused as upsert, observation on WITHOUT ROWID tables",
+      "docsDetects": "SQL string interpolation, missing FK indexes, `PRAGMA optimize`, app-group WAL and suspension defense, silent observation staleness",
+      "docPath": "/commands/storage/audit-grdb-performance"
+    },
+    {
+      "area": "icloud",
+      "agent": "icloud-auditor",
+      "group": "Storage",
+      "detects": "iCloud integration issues, entitlements",
+      "docsDetects": "iCloud entitlements, file coordination, CloudKit errors",
+      "docPath": "/commands/storage/audit-icloud"
+    },
+    {
+      "area": "storage",
+      "agent": "storage-auditor",
+      "group": "Storage",
+      "detects": "File protection, storage strategies, data management",
+      "docsDetects": "File protection, backup exclusions, storage strategies",
+      "docPath": "/commands/storage/audit-storage"
+    },
+    {
+      "area": "swiftdata",
+      "agent": "swiftdata-auditor",
+      "group": "Storage",
+      "detects": "@Model struct, missing VersionedSchema models, relationship defaults, migration timing, N+1",
+      "docsDetects": "@Model correctness, VersionedSchema, relationship defaults",
+      "docPath": "/commands/storage/audit-swiftdata"
+    },
+    {
+      "area": "accessibility",
+      "agent": "accessibility-auditor",
+      "group": "Accessibility",
+      "detects": "VoiceOver labels, Dynamic Type, color contrast, WCAG compliance",
+      "docsDetects": "VoiceOver, Dynamic Type, WCAG compliance",
+      "docPath": "/commands/accessibility/audit-accessibility"
+    },
+    {
+      "area": "spritekit",
+      "agent": "spritekit-auditor",
+      "group": "Games",
+      "detects": "Physics bitmask issues, draw call waste, node accumulation, action leaks",
+      "docsDetects": "Physics bitmask issues, draw call waste, action leaks",
+      "docPath": "/commands/games/audit-spritekit"
+    },
+    {
+      "area": "screenshots",
+      "agent": "screenshot-validator",
+      "group": "Shipping",
+      "detects": "Placeholder text, wrong dimensions, debug indicators, broken UI, competitor references",
+      "docsDetects": "Placeholder text, wrong dimensions, debug indicators",
+      "docPath": "/commands/shipping/audit-screenshots"
+    },
+    {
+      "area": "security",
+      "agent": "security-privacy-scanner",
+      "group": "Shipping",
+      "detects": "API keys in code, insecure storage, Privacy Manifests, ATS violations",
+      "docsDetects": "API keys in code, insecure storage, Privacy Manifests, ATS violations",
+      "docPath": "/commands/shipping/audit-security"
+    }
+  ]
+}
