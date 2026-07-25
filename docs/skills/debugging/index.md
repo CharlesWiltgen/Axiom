@@ -48,7 +48,7 @@ flowchart LR
 - **[Accessibility Diagnostics](/diagnostic/accessibility-diag)** – WCAG compliance, VoiceOver testing, Dynamic Type support, App Store Review preparation
   - *"App Store rejected my app for VoiceOver issues. How do I fix missing labels?"*
   - *"How do I test my app for color contrast and Dynamic Type support?"*
-  - **Command** [`/axiom:audit-accessibility`](/commands/accessibility/audit-accessibility) for quick WCAG compliance scanning
+  - **Command** [`/axiom:audit accessibility`](/commands/accessibility/audit-accessibility) for quick WCAG compliance scanning
 
 - **[Xcode Debugging](/skills/debugging/xcode-debugging)** – Environment-first diagnostics for mysterious Xcode issues, prevents 30+ minute rabbit holes
   - *"My build is failing with 'BUILD FAILED' but no error details. I haven't changed anything."*
@@ -62,7 +62,7 @@ flowchart LR
 - **[Memory Debugging](/skills/debugging/memory-debugging)** – Systematic leak diagnosis with 5 patterns covering 90% of real-world issues
   - *"My app crashes after 10-15 minutes of use with no error messages. How do I find the leak?"*
   - *"View controllers don't deallocate after dismiss. How do I find the retain cycle?"*
-  - **Command** [`/axiom:audit-memory`](/commands/debugging/audit-memory) for quick triage scanning
+  - **Command** [`/axiom:audit memory`](/commands/debugging/audit-memory) for quick triage scanning
 
 - **[Code Signing](/skills/debugging/code-signing)** – Certificate management, provisioning profiles, entitlements, CI/CD signing, fastlane match
   - *"My build fails with 'No signing certificate found'"*

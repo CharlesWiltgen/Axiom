@@ -1,11 +1,11 @@
-# /axiom:audit-codable
+# /axiom:audit codable
 
 Scan for Codable anti-patterns and JSON serialization issues that cause silent data loss and production bugs.
 
 ## Command
 
 ```bash
-/axiom:audit-codable
+/axiom:audit codable
 ```
 
 ## What It Checks
@@ -73,19 +73,19 @@ Scan for Codable anti-patterns and JSON serialization issues that cause silent d
 
 **Scan specific files:**
 ```bash
-/axiom:audit-codable src/Network/
-/axiom:audit-codable APIClient.swift
+/axiom:audit codable src/Network/
+/axiom:audit codable APIClient.swift
 ```
 
 **Before major releases:**
 ```bash
-/axiom:audit-codable
+/axiom:audit codable
 ```
 Review all HIGH priority issues before shipping.
 
 **During code review:**
 ```bash
-/axiom:audit-codable NewFeature/
+/axiom:audit codable NewFeature/
 ```
 Catch Codable anti-patterns early.
 

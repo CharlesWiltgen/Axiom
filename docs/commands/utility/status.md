@@ -38,7 +38,7 @@ Project health dashboard that shows environment status and potential issues at a
 
 💡 Suggested Actions
    Based on findings:
-   - Run /axiom:audit-memory to check the 3 potential memory patterns
+   - Run /axiom:audit memory to check the 3 potential memory patterns
 ```
 
 ## When to Use

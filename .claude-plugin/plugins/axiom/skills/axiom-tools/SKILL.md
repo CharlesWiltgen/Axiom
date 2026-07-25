@@ -109,7 +109,7 @@ Examples:
 ## Backward Compatibility
 
 - Direct skill invocation still works: `/skill axiom-concurrency`
-- Commands work unchanged: `/axiom:fix-build`, `/axiom:audit-accessibility`
+- Commands work unchanged: `/axiom:fix-build`, `/axiom:audit accessibility`
 - Agents work via routing or direct command invocation
 
 ## When Axiom Skills Don't Apply

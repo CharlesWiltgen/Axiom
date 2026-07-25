@@ -1,11 +1,11 @@
-# /axiom:audit-swiftui-performance
+# /axiom:audit swiftui-performance
 
 Scan SwiftUI code for performance anti-patterns that cause frame drops (launches `swiftui-performance-analyzer` agent).
 
 ## Command
 
 ```bash
-/axiom:audit-swiftui-performance
+/axiom:audit swiftui-performance
 ```
 
 ## What It Checks
@@ -30,5 +30,5 @@ Scan SwiftUI code for performance anti-patterns that cause frame drops (launches
 - Device gets hot during simple usage
 
 ## Related
-- [/axiom:audit-swiftui-nav](./audit-swiftui-nav.md) – Check navigation correctness
+- [/axiom:audit swiftui-nav](./audit-swiftui-nav.md) – Check navigation correctness
 - [swiftui-performance](../../skills/ui-design/swiftui-performance.md) – Optimization guide

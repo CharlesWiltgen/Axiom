@@ -14,9 +14,9 @@ Automatically scans for security and privacy issues — both known anti-patterns
 **Explicit command:**
 ```bash
 /axiom:audit security
-# or
-/axiom:audit privacy
 ```
+
+Covers privacy too — Privacy Manifests, sensitive-data storage, and logging. There is no separate `privacy` area.
 
 ## What It Does
 

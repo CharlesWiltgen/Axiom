@@ -35,17 +35,17 @@ Agents are autonomous problem-solvers that:
 **Explicit commands** — For direct invocation:
 
 ```bash
-/axiom:audit-accessibility
-/axiom:audit-memory
-/axiom:audit-swiftui-performance
-/axiom:audit-concurrency
-/axiom:audit-core-data
-/axiom:audit-iap
-/axiom:audit-liquid-glass
-/axiom:audit-networking
-/axiom:audit-swiftui-nav
-/axiom:audit-icloud
-/axiom:audit-storage
+/axiom:audit accessibility
+/axiom:audit memory
+/axiom:audit swiftui-performance
+/axiom:audit concurrency
+/axiom:audit core-data
+/axiom:audit iap
+/axiom:audit liquid-glass
+/axiom:audit networking
+/axiom:audit swiftui-nav
+/axiom:audit icloud
+/axiom:audit storage
 /axiom:fix-build
 /axiom:optimize-build
 /axiom:audit screenshots
@@ -118,7 +118,7 @@ Agents are autonomous problem-solvers that:
 ## Why Agents?
 
 **Before** (Commands):
-- User must remember `/axiom:audit-accessibility`
+- User must remember `/axiom:audit accessibility`
 - Manual invocation every time
 - Duplication between command and skill implementations
 

@@ -111,7 +111,7 @@ This page documents the `axiom-concurrency` (swift-concurrency reference) skill 
 ## Related
 
 - [concurrency-auditor](/agents/concurrency-auditor) – Autonomous agent scanning for concurrency violations
-- [/axiom:audit-concurrency](/commands/concurrency/audit-concurrency) – Quick scan for unsafe patterns
+- [/axiom:audit concurrency](/commands/concurrency/audit-concurrency) – Quick scan for unsafe patterns
 - [swift-performance](/skills/concurrency/swift-performance) – CPU and threading performance optimization
 - [swiftdata](/skills/persistence/swiftdata) – SwiftData's @MainActor requirements
 
