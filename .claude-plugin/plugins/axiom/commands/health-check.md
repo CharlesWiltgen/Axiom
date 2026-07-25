@@ -1,6 +1,6 @@
 ---
 description: Run a comprehensive health check — auto-detects relevant auditors, runs them in parallel, produces a unified report
-argument: "Optional. 'diff' scopes to files changed vs origin/main merge-base. 'skip <auditor>' excludes auditors. Anything else is freeform emphasis. All combinable, e.g. 'diff skip camera focus on memory leaks'."
+argument-hint: [diff] [skip <auditor>] [freeform emphasis]
 disable-model-invocation: true
 ---
 

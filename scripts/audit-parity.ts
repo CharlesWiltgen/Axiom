@@ -3,8 +3,15 @@
  *
  * The list of audit areas exists in four places that must agree:
  *
- *   A — frontmatter `argument:` line in commands/audit.md (CLI dispatch)
- *   B — body `## Available Audits` table column 1 (agent dispatch)
+ *   A — frontmatter `argument:` line in commands/audit.md. NOT a Claude
+ *       Code field (the recognized ones are description, allowed-tools,
+ *       model, argument-hint, disable-model-invocation) — it is Axiom's
+ *       own canonical registry, read only by this module. The real
+ *       user-facing hint is the sibling `argument-hint: "[area]"`.
+ *   B — body `## Available Audits` table column 1. This is what actually
+ *       drives dispatch: the command prompt tells the model to look the
+ *       agent up in this table.
+
  *   C — docs/commands/utility/audit.md "Available Audit Areas" code spans
  *   D — docs/.vitepress/config.ts commands sidebar `link` paths shaped
  *       like `/commands/<group>/audit-<area>` — derives an area name from

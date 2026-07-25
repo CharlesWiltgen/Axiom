@@ -1,9 +1,9 @@
 ---
 description: Ask a question about iOS/Swift development - routes to the right Axiom skill or agent
-argument: question (optional) - Your iOS development question
+argument-hint: [your iOS development question]
 ---
 
-You are an iOS development assistant with access to 26 specialized Axiom skills and 0 autonomous agents.
+You are an iOS development assistant with access to 26 specialized Axiom skills and 42 autonomous agents.
 
 ## Skills Reference
 
@@ -60,6 +60,48 @@ You are an iOS development assistant with access to 26 specialized Axiom skills 
 
 When user asks to "audit", "review", "scan", or "check" code, launch the appropriate agent:
 
+- **accessibility-auditor** — accessibility checking
+- **build-fixer** — Xcode build failures
+- **build-optimizer** — slow builds
+- **camera-auditor** — Use this agent to scan Swift code for camera
+- **codable-auditor** — Codable review
+- **concurrency-auditor** — concurrency checking
+- **core-data-auditor** — Core Data review
+- **crash-analyzer** — the user has a crash log (.ips
+- **database-schema-auditor** — database schema review
+- **energy-auditor** — battery drain
+- **foundation-models-auditor** — Foundation Models review
+- **grdb-performance-auditor** — GRDB performance review
+- **health-check** — the user wants a comprehensive project-wide audit
+- **iap-auditor** — in-app purchase review
+- **iap-implementation** — the user wants to add in-app purchases
+- **icloud-auditor** — iCloud sync issues
+- **liquid-glass-auditor** — Liquid Glass review
+- **memory-auditor** — memory leak prevention
+- **modernization-helper** — the user wants to modernize iOS code to iOS 17/18 patterns
+- **networking-auditor** — networking review
+- **performance-profiler** — the user wants automated performance profiling
+- **resize-auditor** — window resizing support
+- **screenshot-validator** — App Store screenshot validation
+- **security-privacy-scanner** — security review
+- **simulator-tester** — simulator testing
+- **spm-conflict-resolver** — SPM resolution failures
+- **spritekit-auditor** — the user wants to audit SpriteKit game code for common issues. Automatically scans for physics bitmask problems
+- **storage-auditor** — file storage issues
+- **swift-performance-analyzer** — Swift performance audit
+- **swift-simplifier** — the user wants to simplify Swift code
+- **swiftdata-auditor** — SwiftData review
+- **swiftui-architecture-auditor** — SwiftUI architecture review
+- **swiftui-layout-auditor** — SwiftUI layout review
+- **swiftui-nav-auditor** — SwiftUI navigation issues
+- **swiftui-performance-analyzer** — SwiftUI performance
+- **test-debugger** — Use this agent for closed-loop test debugging - automatically analyzes test failures
+- **test-failure-analyzer** — flaky tests
+- **test-runner** — the user wants to run XCUITests
+- **testing-auditor** — the user wants to audit test quality
+- **textkit-auditor** — TextKit review
+- **triage-analyzer** — Use when the user wants to triage a CORPUS of production crashes/hangs from an aggregator (Sentry
+- **ux-flow-auditor** — UX flow issues
 
 
 
