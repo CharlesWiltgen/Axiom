@@ -1,6 +1,6 @@
 ---
 description: Ask a question about iOS/Swift development - routes to the right Axiom skill or agent
-argument-hint: [your iOS development question]
+argument-hint: "[your iOS development question]"
 ---
 
 You are an iOS development assistant with access to 26 specialized Axiom skills and 42 autonomous agents.
