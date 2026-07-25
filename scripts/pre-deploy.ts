@@ -45,6 +45,9 @@ import {
   parseInlineAuditReferences,
   validateInlineReferences,
   validateAgentDescriptionParity,
+  validateAdvertisedAreas,
+  parseAdvertisedAuditAreas,
+  validateAdvertisedCommands,
   AGENT_FRONTMATTER_KEYS,
 } from "./audit-parity.ts";
 import {
@@ -1112,17 +1115,94 @@ if (!fs.existsSync(auditCmdPath)) {
     error("audit-parity", `(agent-desc) ${msg}`);
   }
 
+  // The inverse of validateParity: every `/axiom:audit <area>` an agent
+  // advertises must resolve to a registered area. validateParity anchors
+  // on the frontmatter list and diffs the other sources against it, so an
+  // area missing from all four at once reads as a consistent world —
+  // which is how `grdb-performance` and `test-failures` both shipped
+  // advertising commands that dispatched nowhere, and how the generated
+  // inline sub-skills silently lost their command lines.
+  //
+  // Reads EVERY agent, not just bodyRows — an agent with this bug is by
+  // definition absent from the body table. Seeds from agentFileContents
+  // so the 31 table-listed agents aren't read from disk twice.
+  const allAgentFiles: Record<string, string> = { ...agentFileContents };
+  if (fs.existsSync(agentsDirParity)) {
+    for (const f of fs.readdirSync(agentsDirParity)) {
+      if (!f.endsWith(".md")) continue;
+      const name = f.replace(/\.md$/, "");
+      if (name in allAgentFiles) continue;
+      allAgentFiles[name] = fs.readFileSync(
+        path.join(agentsDirParity, f),
+        "utf8",
+      );
+    }
+  } else {
+    error("audit-parity", `${agentsDirParity} not found`);
+  }
+
+  // Exemptions are `<agent>:<area>` pairs — keying by agent alone would
+  // silently bless every future unregistered area that agent advertises,
+  // including typos unrelated to the reason the carve-out was granted.
+  // Each is a pending product decision (tracked: Axiom-vi8), not a
+  // permanent fact; validateAdvertisedAreas reports a stale entry, so an
+  // exemption cannot outlive the violation it was granted for.
+  const advertisedExempt = [
+    // iap-implementation is an implementation agent (Write/Edit/Bash), not
+    // a scan agent, so it is not in the auditor set and "audit
+    // iap-implementation" does not describe an audit. Sibling iap-auditor
+    // — a real scan agent — advertises no command at all, so this reads as
+    // a paste onto the wrong agent. Decide: move the claim to iap-auditor,
+    // or drop it.
+    "iap-implementation:iap-implementation",
+    // security-privacy-scanner advertises `/axiom:audit security`
+    // (registered) OR `/axiom:audit privacy` (not registered; audit.md has
+    // no alias handling). Decide: add alias support, or drop `privacy`.
+    "security-privacy-scanner:privacy",
+  ];
+  const advertisedErrors = validateAdvertisedAreas({
+    registered: frontmatter,
+    agentFiles: allAgentFiles,
+    exempt: advertisedExempt,
+  });
+  for (const msg of advertisedErrors) {
+    error("audit-parity", `(advertised) ${msg}`);
+  }
+  const advertisingAgents = Object.values(allAgentFiles).filter(
+    (c) => parseAdvertisedAuditAreas(c).length > 0,
+  ).length;
+
+  // Same blind spot, one namespace over: `/axiom:audit <area>` validates
+  // its argument above, but agents advertise a whole family of other
+  // commands in the same "Explicit command:" convention and nothing
+  // checked that the COMMAND itself exists. `/axiom:resolve-deps` and
+  // `/axiom:modernize` both shipped as ghosts — promised by an agent,
+  // registered nowhere, and one had already propagated into a skill that
+  // told readers to type it.
+  const registeredCommands = (claudeCode?.commands ?? []).map((c: string) =>
+    path.basename(c, ".md"),
+  );
+  const advertisedCmdErrors = validateAdvertisedCommands({
+    registered: registeredCommands,
+    agentFiles: allAgentFiles,
+  });
+  for (const msg of advertisedCmdErrors) {
+    error("audit-parity", `(advertised-cmd) ${msg}`);
+  }
+
   if (
     parityErrors.length === 0 &&
     groupedErrors.length === 0 &&
     missingAgents === 0 &&
     inlineDrifts === 0 &&
-    agentDescErrors.length === 0
+    agentDescErrors.length === 0 &&
+    advertisedErrors.length === 0
   ) {
     console.log(
       `  ✓ ${frontmatter.length} audit areas in sync across frontmatter, body table, docs page, sidebar ` +
         `(${sidebarGroups.length} groups, same order; ${bodyRows.length} agent refs resolve; ` +
-        `${inlineSections.length} prose sections + ${bodyRows.length} agent descriptions verified)`,
+        `${inlineSections.length} prose sections + ${bodyRows.length} agent descriptions verified; ` +
+        `${advertisingAgents} agents advertise a command, ${advertisedExempt.length} exempt)`,
     );
   }
 }

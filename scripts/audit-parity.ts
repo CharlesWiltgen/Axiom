@@ -382,7 +382,11 @@ export function parseAgentDescription(content: string): string | null {
   // a single regex — easier to reason about and avoids `m`-flag traps
   // where `$` matches end of every line.
   for (let i = 0; i < fmLines.length; i++) {
-    if (/^description:\s*\|\s*$/.test(fmLines[i])) {
+    // Accept every YAML block-scalar header: `|`, `|-`, `|+`, `>`, `>-`,
+    // `>+`. A `|`-only test sends `|-` down the single-line branch, which
+    // returns the literal "|-" as the description — silently dropping the
+    // real text and everything derived from it.
+    if (/^description:\s*[|>][-+]?\s*$/.test(fmLines[i])) {
       const body: string[] = [];
       for (let j = i + 1; j < fmLines.length; j++) {
         // Stop at the next KNOWN top-level agent key. A column-0 `user:` /
@@ -593,6 +597,211 @@ export function validateParity(args: {
     for (const [area, count] of Object.entries(dupes)) {
       errors.push(`Duplicate audit area '${area}' appears ${count}× in ${name}`);
     }
+  }
+
+  return errors;
+}
+
+/**
+ * The `all` meta-target dispatches to health-check rather than a regular
+ * audit area, so it is deliberately absent from the area list. Agents may
+ * still advertise it.
+ */
+const META_AUDIT_AREAS = new Set(["all"]);
+
+/**
+ * Extract every audit area an agent advertises in its frontmatter
+ * description, e.g. "invoke this agent directly with `/axiom:audit
+ * security` or `/axiom:audit privacy`" → ["security", "privacy"].
+ *
+ * Frontmatter only. Agent bodies routinely name other auditors in prose
+ * ("compound with `/axiom:audit concurrency`"); only the frontmatter
+ * description is the agent's own dispatch contract.
+ *
+ * Order-preserving and deduplicated.
+ */
+export function parseAdvertisedAuditAreas(content: string): string[] {
+  const description = parseAgentDescription(content);
+  if (!description) return [];
+
+  const seen = new Set<string>();
+  const areas: string[] = [];
+  // `[^\S\r\n]+` — horizontal whitespace only. A bare `\s+` crosses line
+  // breaks, so prose ending a line on "/axiom:audit" captures the first
+  // word of the next line and reports it as an unregistered area.
+  for (const m of description.matchAll(/\/axiom:audit[^\S\r\n]+([a-z][a-z0-9-]*)/g)) {
+    const area = m[1];
+    if (seen.has(area)) continue;
+    seen.add(area);
+    areas.push(area);
+  }
+  return areas;
+}
+
+export interface AdvertisedAreaArgs {
+  /** Canonical registered areas — the frontmatter `argument:` list. */
+  registered: string[];
+  /** Map of agent name → file content. Caller reads files. */
+  agentFiles: Record<string, string>;
+  /** Allowed violations, each as `"<agent>:<area>"`. Keyed by the PAIR,
+   * not the agent — an agent-scoped exemption silently blesses every
+   * future unregistered area that agent ever advertises, including
+   * typos unrelated to the reason it was granted. Each entry must
+   * correspond to a real violation, or it is reported as stale. */
+  exempt?: string[];
+}
+
+/**
+ * Validate the INVERSE of `validateParity`: every `/axiom:audit <area>`
+ * an agent advertises must resolve to a registered area.
+ *
+ * `validateParity` anchors on the frontmatter list and diffs the other
+ * three sources against it, so it only detects drift BETWEEN sources. An
+ * area absent from all four at once presents as a perfectly consistent
+ * world. `grdb-performance` and `test-failures` both shipped that way:
+ * the agent promised a command that dispatched nowhere, and
+ * build-inlined-auditors.ts silently dropped the command line from the
+ * generated sub-skill because it derives that line from the same table.
+ *
+ * Exemptions are checked for staleness so a carve-out can't quietly
+ * outlive the violation it was granted for.
+ */
+export function validateAdvertisedAreas(args: AdvertisedAreaArgs): string[] {
+  // An unparseable registry is one error, reported by validateParity.
+  // Proceeding would turn it into one bogus error per advertising agent
+  // and bury the real one. Mirrors validateParity's own empty-list skip.
+  if (args.registered.length === 0) return [];
+
+  const errors: string[] = [];
+  const registered = new Set(args.registered);
+  const exempt = new Set(args.exempt ?? []);
+  const exemptUsed = new Set<string>();
+
+  for (const [agent, content] of Object.entries(args.agentFiles)) {
+    for (const area of parseAdvertisedAuditAreas(content)) {
+      if (registered.has(area) || META_AUDIT_AREAS.has(area)) continue;
+      const key = `${agent}:${area}`;
+      if (exempt.has(key)) {
+        exemptUsed.add(key);
+        continue;
+      }
+      errors.push(
+        `agent '${agent}' advertises \`/axiom:audit ${area}\` but '${area}' is not a registered audit area — ` +
+          `the command will not dispatch, and build-inlined-auditors.ts will omit it from the generated sub-skill. ` +
+          `Register it in commands/audit.md (frontmatter argument: + body table), docs/commands/utility/audit.md, ` +
+          `and the docs sidebar; or add '${key}' to the exempt list with a reason.`,
+      );
+    }
+  }
+
+  for (const key of exempt) {
+    if (exemptUsed.has(key)) continue;
+    const agent = key.slice(0, key.indexOf(":"));
+    if (!Object.hasOwn(args.agentFiles, agent)) {
+      errors.push(
+        `stale exemption: '${key}' is in the advertised-area exempt list but there is no such agent file — remove it`,
+      );
+      continue;
+    }
+    errors.push(
+      `stale exemption: '${key}' is in the advertised-area exempt list but that agent no longer advertises that unregistered area — remove it`,
+    );
+  }
+
+  return errors;
+}
+
+/**
+ * Extract every `/axiom:<command>` an agent advertises in its frontmatter
+ * description — the COMMAND name only, not its argument. So
+ * "`/axiom:audit memory`" yields `["audit"]`, and an agent advertising
+ * two arguments of the same command yields it once.
+ *
+ * Complements `parseAdvertisedAuditAreas`, which validates the argument
+ * of the one command that takes an area. Together they cover both halves
+ * of `/axiom:audit <area>`; this one alone covers the rest of the family
+ * (`/axiom:fix-build`, `/axiom:profile`, …).
+ *
+ * Order-preserving and deduplicated. Frontmatter only, for the same
+ * reason as `parseAdvertisedAuditAreas` — bodies cross-reference other
+ * commands in prose.
+ */
+export function parseAdvertisedCommands(content: string): string[] {
+  const description = parseAgentDescription(content);
+  if (!description) return [];
+
+  const seen = new Set<string>();
+  const commands: string[] = [];
+  for (const m of description.matchAll(/\/axiom:([a-z][a-z0-9-]*)/g)) {
+    const command = m[1];
+    if (seen.has(command)) continue;
+    seen.add(command);
+    commands.push(command);
+  }
+  return commands;
+}
+
+export interface AdvertisedCommandArgs {
+  /** Registered command names, e.g. derived from the plugin manifest's
+   * `commands` array. */
+  registered: string[];
+  /** Map of agent name → file content. Caller reads files. */
+  agentFiles: Record<string, string>;
+  /** Allowed violations as `"<agent>:<command>"` pairs. Keyed by the
+   * pair for the same reason as `AdvertisedAreaArgs.exempt`. */
+  exempt?: string[];
+}
+
+/**
+ * Validate that every `/axiom:<command>` an agent advertises resolves to
+ * a registered command.
+ *
+ * Same blind-spot class as `validateAdvertisedAreas`, one namespace over:
+ * an agent's "Explicit command:" line is the only place some commands are
+ * named, so a command that was renamed, never created, or dropped from
+ * the manifest leaves the agent promising something that cannot run —
+ * and nothing else in the build notices, because no other source claims
+ * that command exists either.
+ */
+export function validateAdvertisedCommands(
+  args: AdvertisedCommandArgs,
+): string[] {
+  if (args.registered.length === 0) return [];
+
+  const errors: string[] = [];
+  const registered = new Set(args.registered);
+  const exempt = new Set(args.exempt ?? []);
+  const exemptUsed = new Set<string>();
+
+  for (const [agent, content] of Object.entries(args.agentFiles)) {
+    for (const command of parseAdvertisedCommands(content)) {
+      if (registered.has(command)) continue;
+      const key = `${agent}:${command}`;
+      if (exempt.has(key)) {
+        exemptUsed.add(key);
+        continue;
+      }
+      errors.push(
+        `agent '${agent}' advertises \`/axiom:${command}\` but no such command is registered — ` +
+          `there is no commands/${command}.md in the plugin manifest, so the command cannot run. ` +
+          `Create it and add it to claude-code.json's commands array; or drop the claim from the agent; ` +
+          `or add '${key}' to the exempt list with a reason.`,
+      );
+    }
+  }
+
+  for (const key of exempt) {
+    if (exemptUsed.has(key)) continue;
+    const agent = key.slice(0, key.indexOf(":"));
+    if (!Object.hasOwn(args.agentFiles, agent)) {
+      errors.push(
+        `stale exemption: '${key}' is in the advertised-command exempt list but there is no such agent file — remove it`,
+      );
+      continue;
+    }
+    errors.push(
+      `stale exemption: '${key}' is in the advertised-command exempt list but that agent no longer advertises that unregistered command — remove it`,
+    );
   }
 
   return errors;

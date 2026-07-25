@@ -28,6 +28,10 @@ import {
   parseAgentDescription,
   hasSubstantiveOverlap,
   validateAgentDescriptionParity,
+  parseAdvertisedAuditAreas,
+  validateAdvertisedAreas,
+  parseAdvertisedCommands,
+  validateAdvertisedCommands,
 } from "./audit-parity.ts";
 
 // ── Fixtures ──────────────────────────────────────────────────────────────
@@ -875,6 +879,451 @@ body`;
         { area: "ghost", agent: "ghost-agent", detects: "stuff" },
       ],
       agentFiles: {},
+    });
+    assert.deepEqual(errs, []);
+  });
+});
+
+// ── Agent-advertised command reachability (the inverse check) ─────────────
+//
+// validateParity anchors on the frontmatter `argument:` list and diffs the
+// other three sources against it, so it only sees drift BETWEEN sources. An
+// area missing from all four at once looks perfectly consistent. Two agents
+// shipped for months advertising `/axiom:audit <area>` for an area that was
+// registered nowhere, so the command silently did not dispatch — and the
+// generated inline sub-skill dropped the command line for the same reason.
+// These tests pin the inverse direction: every command an agent advertises
+// must resolve to a registered area.
+
+describe("parseAdvertisedAuditAreas", () => {
+  it("extracts the area from an agent's explicit-command line", () => {
+    const agent = `---
+name: grdb-performance-auditor
+description: |
+  Use this agent when the user mentions GRDB performance review.
+
+  Explicit command: Users can also invoke this agent directly with \`/axiom:audit grdb-performance\`
+---
+body`;
+    assert.deepEqual(parseAdvertisedAuditAreas(agent), ["grdb-performance"]);
+  });
+
+  it("extracts every area when an agent advertises several", () => {
+    const agent = `---
+name: security-privacy-scanner
+description: |
+  Explicit command: invoke directly with \`/axiom:audit security\` or \`/axiom:audit privacy\`
+---
+body`;
+    assert.deepEqual(parseAdvertisedAuditAreas(agent), ["security", "privacy"]);
+  });
+
+  it("deduplicates repeated mentions of the same area", () => {
+    const agent = `---
+name: dup
+description: |
+  Run \`/axiom:audit memory\`. Really, run \`/axiom:audit memory\`.
+---
+body`;
+    assert.deepEqual(parseAdvertisedAuditAreas(agent), ["memory"]);
+  });
+
+  it("returns nothing for an agent that advertises no audit command", () => {
+    const agent = `---
+name: build-fixer
+description: |
+  Explicit command: Users can also invoke this agent directly with \`/axiom:fix-build\`
+---
+body`;
+    assert.deepEqual(parseAdvertisedAuditAreas(agent), []);
+  });
+
+  it("ignores /axiom:audit mentions in the body, reading frontmatter only", () => {
+    // The body routinely discusses other auditors in prose; only the
+    // frontmatter description is the agent's own dispatch contract.
+    const agent = `---
+name: memory-auditor
+description: |
+  Explicit command: \`/axiom:audit memory\`
+---
+See also \`/axiom:audit concurrency\` for data races.`;
+    assert.deepEqual(parseAdvertisedAuditAreas(agent), ["memory"]);
+  });
+});
+
+describe("validateAdvertisedAreas", () => {
+  const registered = ["memory", "concurrency", "grdb-performance"];
+
+  it("returns no errors when every advertised area is registered", () => {
+    const errs = validateAdvertisedAreas({
+      registered,
+      agentFiles: {
+        "memory-auditor": `---
+name: memory-auditor
+description: |
+  Explicit command: \`/axiom:audit memory\`
+---
+body`,
+      },
+    });
+    assert.deepEqual(errs, []);
+  });
+
+  it("flags an agent advertising an area registered nowhere", () => {
+    // The exact bug: agent claims the command, no source declares the area.
+    const errs = validateAdvertisedAreas({
+      registered,
+      agentFiles: {
+        "test-failure-analyzer": `---
+name: test-failure-analyzer
+description: |
+  Explicit command: \`/axiom:audit test-failures\`
+---
+body`,
+      },
+    });
+    assert.equal(errs.length, 1);
+    assert.match(errs[0], /test-failure-analyzer/);
+    assert.match(errs[0], /test-failures/);
+  });
+
+  it("flags each unregistered area separately when an agent advertises several", () => {
+    const errs = validateAdvertisedAreas({
+      registered,
+      agentFiles: {
+        "security-privacy-scanner": `---
+name: security-privacy-scanner
+description: |
+  Explicit command: \`/axiom:audit security\` or \`/axiom:audit privacy\`
+---
+body`,
+      },
+    });
+    assert.equal(errs.length, 2);
+    assert.ok(errs.some((e) => /security/.test(e)));
+    assert.ok(errs.some((e) => /privacy/.test(e)));
+  });
+
+  it("treats the 'all' meta-target as registered — it dispatches to health-check", () => {
+    const errs = validateAdvertisedAreas({
+      registered,
+      agentFiles: {
+        "health-check": `---
+name: health-check
+description: |
+  Explicit command: \`/axiom:health-check\` or \`/axiom:audit all\`
+---
+body`,
+      },
+    });
+    assert.deepEqual(errs, []);
+  });
+
+  it("honours an exemption keyed by agent:area", () => {
+    const errs = validateAdvertisedAreas({
+      registered,
+      exempt: ["iap-implementation:iap-implementation"],
+      agentFiles: {
+        "iap-implementation": `---
+name: iap-implementation
+description: |
+  Explicit command: \`/axiom:audit iap-implementation\`
+---
+body`,
+      },
+    });
+    assert.deepEqual(errs, []);
+  });
+
+  it("does not let an exemption for one area cover a different unregistered area", () => {
+    // Agent-scoped exemptions silently bless unrelated future typos. The
+    // exemption is granted for `privacy`; `gdpr` must still be reported.
+    const errs = validateAdvertisedAreas({
+      registered,
+      exempt: ["security-privacy-scanner:privacy"],
+      agentFiles: {
+        "security-privacy-scanner": `---
+name: security-privacy-scanner
+description: |
+  Run \`/axiom:audit privacy\` or \`/axiom:audit gdpr\`
+---
+body`,
+      },
+    });
+    assert.equal(errs.length, 1);
+    assert.match(errs[0], /advertises `\/axiom:audit gdpr`/);
+    // Not `/privacy/` — the agent's own NAME contains "privacy", so that
+    // would pass on the agent reference rather than on the exempted area.
+    assert.doesNotMatch(errs[0], /audit privacy/);
+  });
+
+  it("clears an exemption whose agent mixes a registered and an unregistered area", () => {
+    // The shipped shape: `memory` registered, `privacy` exempt. The
+    // registered area short-circuits before the exempt branch, so this
+    // exercises different control flow than a single-area fixture.
+    const errs = validateAdvertisedAreas({
+      registered,
+      exempt: ["scanner:privacy"],
+      agentFiles: {
+        "scanner": `---
+name: scanner
+description: |
+  Run \`/axiom:audit memory\` or \`/axiom:audit privacy\`
+---
+body`,
+      },
+    });
+    assert.deepEqual(errs, []);
+  });
+
+  it("flags a stale exemption when the agent no longer advertises the area", () => {
+    // The regression that matters: someone registers the area and forgets
+    // to drop the exemption, silently re-opening the hole.
+    const errs = validateAdvertisedAreas({
+      registered,
+      exempt: ["memory-auditor:memory"],
+      agentFiles: {
+        "memory-auditor": `---
+name: memory-auditor
+description: |
+  Run \`/axiom:audit memory\`
+---
+body`,
+      },
+    });
+    assert.equal(errs.length, 1);
+    assert.match(errs[0], /stale exemption/);
+    assert.match(errs[0], /memory-auditor:memory/);
+  });
+
+  it("distinguishes a stale exemption for an agent that no longer exists", () => {
+    // "advertises no unregistered area — remove it" would point at a file
+    // that is gone. Right remedy, wrong diagnosis.
+    const errs = validateAdvertisedAreas({
+      registered,
+      exempt: ["ghost-agent:some-area"],
+      agentFiles: {},
+    });
+    assert.equal(errs.length, 1);
+    assert.match(errs[0], /ghost-agent/);
+    assert.match(errs[0], /no such agent file/);
+  });
+
+  it("reports nothing when the registry failed to parse", () => {
+    // An unparseable `argument:` line is one real error; it must not
+    // become one bogus error per advertising agent.
+    const errs = validateAdvertisedAreas({
+      registered: [],
+      agentFiles: {
+        "memory-auditor": `---
+name: memory-auditor
+description: |
+  Run \`/axiom:audit memory\`
+---
+body`,
+      },
+    });
+    assert.deepEqual(errs, []);
+  });
+});
+
+describe("parseAdvertisedAuditAreas — parsing boundaries", () => {
+  it("does not run past a line break onto the next word", () => {
+    // `\s` matches newlines. With a bare `\s+`, prose that ends a line on
+    // "/axiom:audit" swallows the first word of the following line and
+    // reports it as an unregistered area.
+    const agent = `---
+name: x
+description: |
+  Not reachable via /axiom:audit
+  because it writes code.
+---
+body`;
+    assert.deepEqual(parseAdvertisedAuditAreas(agent), []);
+  });
+
+  it("stops at trailing punctuation outside the area name", () => {
+    const agent = `---
+name: x
+description: |
+  Run \`/axiom:audit memory\`, then \`/axiom:audit energy\`.
+---
+body`;
+    assert.deepEqual(parseAdvertisedAuditAreas(agent), ["memory", "energy"]);
+  });
+
+  it("reads a description written with a chomped block scalar", () => {
+    // `|-` / `|+` / `>` fall through a `|`-only test to the single-line
+    // branch, yielding the literal "|-" and silently dropping every
+    // advertised command. Nothing else catches that for an agent absent
+    // from the audit table — which is exactly this check's population.
+    const agent = `---
+name: x
+description: |-
+  Explicit command: \`/axiom:audit memory\`
+---
+body`;
+    assert.deepEqual(parseAdvertisedAuditAreas(agent), ["memory"]);
+  });
+});
+
+// ── Advertised slash-command reachability (the general case) ──────────────
+//
+// validateAdvertisedAreas covers the ARGUMENT of `/axiom:audit <area>`.
+// Agents advertise a whole family of other commands in the same
+// "Explicit command:" frontmatter convention — /axiom:fix-build,
+// /axiom:profile, /axiom:resolve-deps — and nothing validated that the
+// COMMAND itself exists. Two ghosts shipped that way.
+
+describe("parseAdvertisedCommands", () => {
+  it("extracts the command name, not the argument", () => {
+    const agent = `---
+name: x
+description: |
+  Explicit command: \`/axiom:audit memory\`
+---
+body`;
+    assert.deepEqual(parseAdvertisedCommands(agent), ["audit"]);
+  });
+
+  it("extracts every distinct command an agent advertises", () => {
+    const agent = `---
+name: modernization-helper
+description: |
+  Invoke with \`/axiom:audit modernization\` or \`/axiom:modernize\`
+---
+body`;
+    assert.deepEqual(parseAdvertisedCommands(agent), ["audit", "modernize"]);
+  });
+
+  it("deduplicates a command advertised with several arguments", () => {
+    const agent = `---
+name: x
+description: |
+  \`/axiom:audit security\` or \`/axiom:audit privacy\`
+---
+body`;
+    assert.deepEqual(parseAdvertisedCommands(agent), ["audit"]);
+  });
+
+  it("reads frontmatter only, ignoring command mentions in the body", () => {
+    const agent = `---
+name: x
+description: |
+  \`/axiom:fix-build\`
+---
+See also \`/axiom:profile\` for traces.`;
+    assert.deepEqual(parseAdvertisedCommands(agent), ["fix-build"]);
+  });
+
+  it("does not run past a line break onto the next word", () => {
+    const agent = `---
+name: x
+description: |
+  There is no /axiom:
+  modernize command.
+---
+body`;
+    assert.deepEqual(parseAdvertisedCommands(agent), []);
+  });
+});
+
+describe("validateAdvertisedCommands", () => {
+  const registered = ["audit", "fix-build", "profile"];
+
+  it("returns no errors when every advertised command is registered", () => {
+    const errs = validateAdvertisedCommands({
+      registered,
+      agentFiles: {
+        "build-fixer": `---
+name: build-fixer
+description: |
+  Explicit command: \`/axiom:fix-build\`
+---
+body`,
+      },
+    });
+    assert.deepEqual(errs, []);
+  });
+
+  it("flags a command that exists in no manifest entry", () => {
+    // The exact ghost: agent promises it, no command file, no manifest row.
+    const errs = validateAdvertisedCommands({
+      registered,
+      agentFiles: {
+        "spm-conflict-resolver": `---
+name: spm-conflict-resolver
+description: |
+  Explicit command: \`/axiom:resolve-deps\`
+---
+body`,
+      },
+    });
+    assert.equal(errs.length, 1);
+    assert.match(errs[0], /spm-conflict-resolver/);
+    assert.match(errs[0], /resolve-deps/);
+  });
+
+  it("flags only the ghost when an agent advertises one real and one ghost command", () => {
+    const errs = validateAdvertisedCommands({
+      registered,
+      agentFiles: {
+        "modernization-helper": `---
+name: modernization-helper
+description: |
+  \`/axiom:audit modernization\` or \`/axiom:modernize\`
+---
+body`,
+      },
+    });
+    assert.equal(errs.length, 1);
+    assert.match(errs[0], /\/axiom:modernize/);
+  });
+
+  it("honours an exemption keyed by agent:command", () => {
+    const errs = validateAdvertisedCommands({
+      registered,
+      exempt: ["spm-conflict-resolver:resolve-deps"],
+      agentFiles: {
+        "spm-conflict-resolver": `---
+name: spm-conflict-resolver
+description: |
+  \`/axiom:resolve-deps\`
+---
+body`,
+      },
+    });
+    assert.deepEqual(errs, []);
+  });
+
+  it("flags a stale exemption", () => {
+    const errs = validateAdvertisedCommands({
+      registered,
+      exempt: ["build-fixer:fix-build"],
+      agentFiles: {
+        "build-fixer": `---
+name: build-fixer
+description: |
+  \`/axiom:fix-build\`
+---
+body`,
+      },
+    });
+    assert.equal(errs.length, 1);
+    assert.match(errs[0], /stale exemption/);
+  });
+
+  it("reports nothing when the registry failed to parse", () => {
+    const errs = validateAdvertisedCommands({
+      registered: [],
+      agentFiles: {
+        "build-fixer": `---
+name: build-fixer
+description: |
+  \`/axiom:resolve-deps\`
+---
+body`,
+      },
     });
     assert.deepEqual(errs, []);
   });
