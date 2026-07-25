@@ -31,6 +31,8 @@ Questions you can ask Claude that will draw from this skill:
 - "I'm importing thousands of records and need custom migration logic."
 - "My query is slow (10+ seconds). How do I profile and optimize it?"
 - "I need GROUP BY with HAVING clause. Raw SQL seems easier than type-safe queries."
+- "My sync overwrites rows the user just edited. How do I insert new rows without touching existing ones?"
+- "Should I encrypt my SQLite database, or is iOS file protection enough?"
 
 ## What This Skill Provides
 
@@ -43,6 +45,11 @@ Questions you can ask Claude that will draw from this skill:
 - Codable structs for fetch/insert
 - FetchableRecord and PersistableRecord protocols
 - Mapping to/from database rows
+
+### Upsert
+- `upsert` and `upsertAndFetch` for insert-or-update in one statement
+- Scoping which columns a conflict updates (`UpsertUpdateStrategy`)
+- Why `INSERT OR REPLACE` is not an upsert, and what it silently destroys
 
 ### Querying
 - Raw SQL with fetchAll, fetchOne
@@ -66,6 +73,11 @@ Questions you can ask Claude that will draw from this skill:
 - database.trace for logging
 - Index creation
 - Transaction batching
+
+### Encryption at Rest
+- When SQLCipher is the answer and when file-level Data Protection already is
+- What adopting SQLCipher costs (CocoaPods vs a forked SPM package)
+- Why a SQLCipher build invalidates the system-SQLite version floors used elsewhere
 
 ## Key Pattern
 

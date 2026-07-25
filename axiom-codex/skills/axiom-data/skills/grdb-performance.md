@@ -6,7 +6,7 @@ Performant, idiomatic SQLite + GRDB for Swift on Apple platforms. Use SQLite del
 
 **Core principle** GRDB is a SQLite *toolkit*, not an ORM. Performance comes from understanding how SQLite actually works, then choosing GRDB idioms that don't fight it.
 
-**Requires** Swift 6.1+, GRDB 7+. All SQLite features in this skill are available on Axiom's iOS 18+/macOS 15+ floor.
+**Requires** Swift 6.1+, Xcode 16.3+, GRDB 7.9+ (current 7.11.1). All SQLite features in this skill are available on Axiom's iOS 18+/macOS 15+ floor. Guidance that needs a later 7.x is marked at the point of use.
 
 ## When to Use
 
@@ -278,6 +278,11 @@ Storage: ~half. Speed: nearly 2× for suitable schemas.
 - with large rows (>2 KB-ish) — rowid tables are actually faster
 - when you need AUTOINCREMENT, `sqlite3_last_insert_rowid()`, or incremental BLOB I/O
 
+**Two gotchas before adopting it.** Both bite the same tables the win case describes — small rows, text primary key, i.e. settings and key-value stores.
+
+- **`WITHOUT ROWID` tables are never observed.** SQLite's update hook doesn't fire for them, so a `ValueObservation` on such a table delivers its initial value and then goes silent permanently — no error, no warning. No GRDB setting fixes this; the writer must call `notifyChanges(in:)` itself. See §10. If the table is observed, keep it a rowid table.
+- **Upsert needs GRDB 7.11+.** GRDB generated wrong SQL for upsert against `WITHOUT ROWID` tables before 7.11.0.
+
 ### Generated columns
 
 Generated columns are computed from other columns. Two flavors:
@@ -420,6 +425,65 @@ Defaults:
 - Changes delivered on `@MainActor`, asynchronously after commit
 - Only commits trigger notifications — uncommitted changes are invisible
 - External-process writes are *not* detected (see `grdb-app-groups.md` §7)
+- **In-process writes GRDB didn't compile are not detected either** — see below
+
+### The in-process blind spot
+
+Stale observations are not only a cross-process problem. GRDB documents six categories of undetected change; four of them fire **inside your own process**, with no error and no notification — the view just stops updating.
+
+| Undetected change | Remedy |
+|---|---|
+| Statements GRDB didn't compile and execute — raw SQLite C API, or a write performed by a custom function that a `SELECT` invokes | `DatabaseEventObservationStrategy`, below |
+| Writes to a `WITHOUT ROWID` table | `notifyChanges(in:)` — the strategy flag does **not** help |
+| Rows deleted as duplicates by an `ON CONFLICT REPLACE` clause | `notifyChanges(in:)` |
+| Schema changes, and writes to system tables like `sqlite_master` | `notifyChanges(in:)` |
+
+The remaining two — read-only transactions, and writes from external connections — are the cross-process story in `grdb-app-groups.md` §7.
+
+#### `WITHOUT ROWID` is the trap worth naming
+
+SQLite's update hook never fires for a `WITHOUT ROWID` table, so GRDB has nothing to filter and nothing to report: a `ValueObservation` delivers its initial value and then stays silent forever. **If a table is observed, don't make it `WITHOUT ROWID`** — and note that §7 recommends `WITHOUT ROWID` for exactly the small-row, text-PK tables (settings, key-value stores) that people go on to observe.
+
+If a table genuinely must be both, every writer has to announce its own writes:
+
+```swift
+try dbQueue.write { db in
+    try Setting(key: "theme", value: "dark").upsert(db)
+    try db.notifyChanges(in: Setting.all())   // observers see nothing without this
+}
+```
+
+`notifyChanges(in:)` is also the remedy for the `ON CONFLICT REPLACE` and schema-change rows above.
+
+#### `DatabaseEventObservationStrategy` — GRDB 7.11+
+
+For the first row only — writes GRDB didn't compile — a `TransactionObserver` can opt out of the filtering:
+
+```swift
+final class UniversalObserver: TransactionObserver {
+    var databaseEventObservationStrategy: DatabaseEventObservationStrategy {
+        var strategy = DatabaseEventObservationStrategy.default
+        strategy.requiresDatabaseEventKind = false   // observe C-API / function writes too
+        return strategy
+    }
+
+    // Required by the protocol, but never called while the flag is false
+    func observes(eventsOfKind eventKind: DatabaseEventKind) -> Bool { false }
+
+    func databaseDidChange(with event: DatabaseEvent) {
+        // handle the change
+    }
+
+    func databaseDidCommit(_ db: Database) { }
+    func databaseDidRollback(_ db: Database) { }
+}
+```
+
+`databaseDidCommit(_:)` and `databaseDidRollback(_:)` have **no** default implementation — omit them and the type doesn't conform. GRDB's own doc-comment example omits them, because doc comments aren't compiled.
+
+**The flag is not free.** With `requiresDatabaseEventKind = false`, SQLite's [truncate optimization](https://www.sqlite.org/lang_delete.html#the_truncate_optimization) is disabled **on every table in the database**, for as long as the observer is attached. An unqualified `DELETE FROM t` stops being an O(1) page drop and becomes a per-row delete that notifies per row.
+
+Reach for it only when you actually have indirect writers. The cheaper fixes are routing those writes back through GRDB, or announcing them with `notifyChanges(in:)`.
 
 ### `.immediate` scheduling — only for fast queries
 
@@ -494,6 +558,11 @@ Cross-link `sqlitedata.md` for SQLiteData-specific patterns and decisions.
 | Backup `.sqlite` alone | Lost or corrupted backup | `dbQueue.vacuum(into:)`, or copy all 3 files atomically with no writer active | §3 |
 | Stored generated column for indexable lookups | Wasted disk; ALTER TABLE limitations | Use VIRTUAL + index | §7 |
 | String concatenation in WHERE for case-insensitive | Index ignored | `LOWER()` expression index | §6 |
+| `INSERT OR REPLACE` (`.replace` policy) used as an upsert | Unlisted columns silently reset to defaults; `ON DELETE CASCADE` eats child rows; rowid changes; observers miss the duplicate-row deletion | `upsert` / `upsertAndFetch`, with `updating:` to scope the conflict update | `grdb.md` — Upsert |
+| Fetch-then-branch instead of upsert | Race window between the read and the write under concurrent writers | Single `upsert` statement | `grdb.md` — Upsert |
+| `ValueObservation` on a `WITHOUT ROWID` table | Initial value arrives, then no update ever — silently | Use a rowid table, or call `notifyChanges(in:)` in every writer | §7, §10 |
+| `requiresDatabaseEventKind = false` left on by default | Truncate optimization disabled database-wide; `DELETE FROM t` degrades to per-row | Only attach such an observer when indirect writers exist; prefer routing writes through GRDB | §10 |
+| `WITHOUT ROWID` + upsert on GRDB < 7.11 | Wrong SQL generated for the upsert | Bump to GRDB 7.11+ | §7 |
 
 ## 13 — When to profile, when to read
 
