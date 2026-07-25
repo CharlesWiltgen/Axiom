@@ -229,6 +229,7 @@ export default withMermaid(defineConfig({
         {
           text: 'Testing',
           items: [
+            { text: '/axiom:audit test-failures', link: '/commands/testing/audit-test-failures' },
             { text: '/axiom:audit testing', link: '/commands/testing/audit-testing' },
             { text: '/axiom:run-tests', link: '/commands/testing/run-tests' },
             { text: '/axiom:screenshot', link: '/commands/testing/screenshot' },
@@ -267,6 +268,7 @@ export default withMermaid(defineConfig({
           text: 'Storage',
           items: [
             { text: '/axiom:audit database-schema', link: '/commands/storage/audit-database-schema' },
+            { text: '/axiom:audit grdb-performance', link: '/commands/storage/audit-grdb-performance' },
             { text: '/axiom:audit icloud', link: '/commands/storage/audit-icloud' },
             { text: '/axiom:audit storage', link: '/commands/storage/audit-storage' },
             { text: '/axiom:audit swiftdata', link: '/commands/storage/audit-swiftdata' }
