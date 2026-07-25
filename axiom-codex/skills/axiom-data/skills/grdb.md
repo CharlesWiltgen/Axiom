@@ -7,7 +7,7 @@ Direct SQLite access using [GRDB.swift](https://github.com/groue/GRDB.swift) —
 
 **Core principle** Type-safe Swift wrapper around raw SQL with full SQLite power when you need it.
 
-**Requires** iOS 13+, Swift 5.7+
+**Requires** GRDB 7.9+, Swift 6.1+, Xcode 16.3+ — GRDB 7.9 raised the toolchain floor. Features added later in the 7.x line are marked inline.
 **License** MIT (free and open source)
 
 ## When to Use GRDB
@@ -56,6 +56,9 @@ These are real questions developers ask that this skill is designed to answer:
 
 #### 5. "I need to fetch tasks grouped by due date with completion counts, ordered by priority. Raw SQL seems easier than type-safe queries."
 → The skill demonstrates when GRDB's raw SQL is clearer than type-safe wrappers
+
+#### 6. "My sync writes server rows over the top of edits the user just made locally. How do I insert new rows without touching existing ones?"
+→ The skill covers upsert conflict strategies and why `INSERT OR REPLACE` makes this worse
 
 ---
 
@@ -154,6 +157,62 @@ try dbQueue.write { db in
     try track.delete(db)
 }
 ```
+
+## Upsert (Insert or Update)
+
+`upsert` writes a row that may or may not already exist, in a single statement. It is the right primitive for sync, import, and cache-fill code — no fetch-then-branch race window, and none of the data loss `INSERT OR REPLACE` causes.
+
+**Requires SQLite 3.35+** (iOS 15+/macOS 12+) — satisfied on Axiom's floor.
+
+```swift
+// On conflict, overwrite every column with the inserted values
+try player.upsert(db)
+
+// Same, and return the stored row (requires FetchableRecord)
+let stored = try player.upsertAndFetch(db)
+```
+
+### Controlling which columns a conflict updates
+
+The `updating:` parameter takes `UpsertUpdateStrategy` — `.allColumns` (default) or `.noColumnUnlessSpecified`. The strategy parameter is **GRDB 7.10+**; the closure form works on any GRDB 7.
+
+| Goal | Call |
+|---|---|
+| Overwrite everything (default) | `upsertAndFetch(db)` |
+| Overwrite everything except one column | `upsertAndFetch(db) { _ in [Column("score").noOverwrite] }` |
+| Never overwrite an existing row's values | `upsertAndFetch(db, updating: .noColumnUnlessSpecified)` |
+| Update only the columns you name | `upsertAndFetch(db, updating: .noColumnUnlessSpecified) { … }` |
+
+```swift
+// Import that must not clobber locally-edited rows
+let existing = try player.upsertAndFetch(db, updating: .noColumnUnlessSpecified)
+
+// Refresh only `name` from the server; leave every other column untouched
+let refreshed = try player.upsertAndFetch(db, updating: .noColumnUnlessSpecified) { excluded in
+    [Column("name").set(to: excluded[Column("name")])]
+}
+```
+
+`excluded` is SQLite's `excluded` pseudo-table — the values that *would* have been inserted.
+
+**`.noColumnUnlessSpecified` still rewrites the row.** No column value changes, and `upsertAndFetch` correctly returns the stored row — but because the statement needs a `RETURNING` clause to produce it, GRDB emits a self-assignment of the first primary-key column (`SET "id" = "id"`). Any `AFTER UPDATE` trigger fires, and observers see a change event. The data is safe; the side effects are not zero.
+
+**`.allColumns` covers the columns the *record* encodes**, minus the primary key and conflict target — not every column in the table. A column the record doesn't encode is never touched. The hazard is therefore in the record type, not the schema: add a property to the record and it silently joins the overwrite set. For a table the user also edits locally, prefer `.noColumnUnlessSpecified` with explicit assignments over a `.noOverwrite` list that each new property can quietly defeat.
+
+### ❌ `INSERT OR REPLACE` is not an upsert
+
+`INSERT OR REPLACE` — GRDB's `.replace` conflict policy — **deletes the existing row, then inserts a new one**. Consequences:
+
+- Columns absent from the insert reset to their defaults — silent data loss
+- `ON DELETE CASCADE` fires, taking child rows with it
+- The rowid changes, invalidating anything holding it
+- Transaction observers never see the duplicate-row deletion, so observations go stale
+
+Use `upsert`. Choose `.replace` only when delete-then-insert is genuinely the semantics you want.
+
+### `WITHOUT ROWID` tables
+
+Two constraints, both covered in `skills/grdb-performance.md` §7: upsert against a `WITHOUT ROWID` table needs **GRDB 7.11+**, and such tables are **never observed** — `ValueObservation` on one goes silent after its initial value. Settings and key-value stores are the common case for all three of "`WITHOUT ROWID`", "upsert target", and "observed", so check before combining them.
 
 ## Raw SQL Queries
 
@@ -534,6 +593,10 @@ let rows = try Row.fetchAll(db, sql: "SELECT * FROM tracks WHERE genre = ?", arg
 // Write
 try db.execute(sql: "INSERT INTO tracks VALUES (?, ?, ?)", arguments: [id, title, artist])
 
+// Insert or update in one statement
+try track.upsert(db)
+_ = try track.upsertAndFetch(db, updating: .noColumnUnlessSpecified)  // don't overwrite values
+
 // Transaction
 try dbQueue.write { db in
     // All or nothing
@@ -545,11 +608,21 @@ ValueObservation.tracking { db in
 }.publisher(in: dbQueue)
 ```
 
+## Encryption at Rest (SQLCipher)
+
+GRDB encrypts with SQLCipher v3.4+. This is a *different* protection than the Data Protection classes in `skills/grdb-app-groups.md` §4 — Data Protection is enforced by the file system and keyed to the device passcode; SQLCipher encrypts the database file itself with a passphrase you manage.
+
+**The setup cost is real.** CocoaPods is the smooth path (`pod 'GRDB.swift/SQLCipher'` plus `pod 'SQLCipher'`, and it must be the *only* active GRDB pod in the project or you get linker/runtime conflicts with the system SQLite). For **SPM you must fork GRDB and edit `Package.swift`** — 7.10.0 shrank that diff to an auditable minimum but did not remove the fork. Instructions are in `Package.swift` itself, in comments marked `GRDB+SQLCipher`.
+
+**This changes the SQLite version floor everywhere else.** A SQLCipher build vendors its own SQLite, so the system-SQLite version table in `skills/sql-json-ref.md` §1 no longer describes your build — check the version SQLCipher actually ships, not the OS's.
+
+Keep the passphrase in the Keychain, never in source or `UserDefaults`. See axiom-security.
+
 ## Resources
 
 **GitHub**: groue/GRDB.swift, groue/GRDBQuery
 
-**Docs**: sqlite.org/docs.html
+**Docs**: sqlite.org/docs.html, sqlite.org/lang_upsert.html, sqlcipher.net
 
 **Skills**: axiom-data (skills/database-migration.md), axiom-data (skills/sqlitedata.md), axiom-data (skills/swiftdata.md)
 
@@ -694,13 +767,17 @@ try Track.filter(Column("genre") == "Rock").fetchAll(db)
 ```
 **Fix** Create indexes on frequently queried columns
 
-### ❌ N+1 queries
+### ✅ N+1 *reads* are not a mistake here
+
 ```swift
 for track in tracks {
-    let album = try Album.fetchOne(db, key: track.albumId)  // N queries!
+    let album = try Album.fetchOne(db, key: track.albumId)  // fine in SQLite
 }
 ```
-**Fix** Use JOIN or batch fetch
+
+The N+1 rule is a client/server-database rule. SQLite runs in-process, so each query is a function call, not a network round trip — sqlite.org documents rendering a 50-entry timeline in under 25 ms with 200+ statements. Don't contort code into a mega-JOIN to avoid this shape. See `skills/grdb-performance.md` §1.
+
+The write case *is* a mistake, and it's the first entry above: N inserts outside one transaction means N commits.
 
 ## tvOS
 
@@ -710,6 +787,6 @@ for track in tracks {
 
 ---
 
-**Targets:** iOS 13+, Swift 5.7+
-**Framework:** GRDB.swift 6.0+
+**Targets:** Axiom floor — iOS 18+/macOS 15+
+**Framework:** GRDB.swift 7.9+ (current 7.11.1), Swift 6.1+, Xcode 16.3+
 **History:** See git log for changes
