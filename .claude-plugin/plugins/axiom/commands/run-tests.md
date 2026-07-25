@@ -2,15 +2,8 @@
 name: run-tests
 description: Run XCUITests and parse results using the test-runner agent
 disable-model-invocation: true
-arguments:
-  - name: scheme
-    description: Test scheme name (optional - will discover available schemes if not provided)
-    required: false
-  - name: target
-    description: Specific test class or method to run (optional)
-    required: false
-allowed_tools:
-  - Task
+argument-hint: [scheme] [test-class-or-method]
+allowed-tools: Task
 ---
 
 # Run Tests Command

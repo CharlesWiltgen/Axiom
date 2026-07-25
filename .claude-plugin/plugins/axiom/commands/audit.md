@@ -1,5 +1,9 @@
 ---
 description: Smart audit selector - analyzes your project and suggests relevant audits
+argument-hint: "[area]"
+# Not a Claude Code field — Axiom's own canonical audit-area registry,
+# validated against the body table, docs page, and sidebar by
+# scripts/audit-parity.ts. `argument-hint` above is the real user-facing hint.
 argument: "area (optional) - Which audit to run: all, memory, concurrency, accessibility, energy, swiftui-performance, swiftui-architecture, swiftui-nav, swiftui-layout, swift-performance, swift-simplify, core-data, swiftdata, database-schema, grdb-performance, networking, codable, icloud, storage, liquid-glass, textkit, testing, test-failures, build, spritekit, security, modernization, camera, foundation-models, iap, screenshots, ux-flow, resize"
 disable-model-invocation: true
 ---

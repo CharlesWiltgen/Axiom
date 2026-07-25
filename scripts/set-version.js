@@ -161,10 +161,44 @@ function generateAgentsSection(agents) {
   return markdown;
 }
 
+// Read agents from disk — name + description from each agent's frontmatter.
+//
+// Agents are deliberately NOT listed in claude-code.json (see
+// .claude/rules/skill-descriptions.md: only router skills go in the
+// manifest, to stay under the description budget). Reading
+// `claudeCode.agents` therefore always yielded [], so /axiom:ask shipped
+// claiming "0 autonomous agents" with an empty Agents Reference — the
+// natural-language entry point could not route to any of them.
+function readAgentsFromDisk(agentsDir) {
+  if (!fs.existsSync(agentsDir)) return [];
+  return fs.readdirSync(agentsDir)
+    .filter((f) => f.endsWith('.md'))
+    .map((f) => {
+      const content = fs.readFileSync(path.join(agentsDir, f), 'utf8');
+      const fm = content.match(/^---\n([\s\S]*?)\n---/);
+      const name = f.replace(/\.md$/, '');
+      if (!fm) return { name, description: '' };
+      // description is a `|` block scalar in every agent; take its first
+      // non-empty line, which is the trigger sentence.
+      const lines = fm[1].split('\n');
+      let description = '';
+      for (let i = 0; i < lines.length; i++) {
+        if (!/^description:\s*[|>][-+]?\s*$/.test(lines[i])) continue;
+        for (let j = i + 1; j < lines.length; j++) {
+          if (/^[a-zA-Z][\w-]*:/.test(lines[j])) break;
+          const text = lines[j].trim();
+          if (text) { description = text; break; }
+        }
+        break;
+      }
+      return { name, description };
+    });
+}
+
 // Generate complete ask.md from template
-function generateAskMd(claudeCode) {
+function generateAskMd(claudeCode, agentsDir) {
   const skills = claudeCode.skills || [];
-  const agents = claudeCode.agents || [];
+  const agents = readAgentsFromDisk(agentsDir);
 
   // Group skills by category
   const categories = categorizeSkills(skills);
@@ -304,9 +338,9 @@ try {
     label: '.claude-plugin/plugins/axiom/claude-code.json'
   });
 
-  // Generate ask.md from template + manifest data
+  // Generate ask.md from template + manifest skills + on-disk agents
   const askMdPath = path.join(pluginDir, 'commands/ask.md');
-  const askMdContent = generateAskMd(claudeCode);
+  const askMdContent = generateAskMd(claudeCode, agentsDir);
   updates.push({
     path: askMdPath,
     content: askMdContent,
