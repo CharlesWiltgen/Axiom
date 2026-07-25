@@ -92,11 +92,11 @@ deinit {
 
 This page documents the `axiom-performance` skill — systematic leak diagnosis workflows Claude uses when helping you debug memory issues. The skill contains complete Instruments setup, pattern recognition, heap analysis techniques, and production crisis handling.
 
-**For quick scanning:** Use [/axiom:audit-memory](/commands/debugging/audit-memory) to scan your codebase for the 6 most common leak patterns automatically.
+**For quick scanning:** Use [/axiom:audit memory](/commands/debugging/audit-memory) to scan your codebase for the 6 most common leak patterns automatically.
 
 ## Related
 
-- [/axiom:audit-memory](/commands/debugging/audit-memory) – Quick automated scan for leak patterns in code
+- [/axiom:audit memory](/commands/debugging/audit-memory) – Quick automated scan for leak patterns in code
 - [memory-auditor](/agents/memory-auditor) – Autonomous agent for codebase-wide leak detection
 - [performance-profiling](/skills/debugging/performance-profiling) – Broader profiling including CPU and energy
 - [swift-concurrency](/skills/concurrency/swift-concurrency) – Actor patterns that prevent some leak types

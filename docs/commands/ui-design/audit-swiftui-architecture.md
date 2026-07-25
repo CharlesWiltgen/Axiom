@@ -1,11 +1,11 @@
-# /axiom:audit-swiftui-architecture
+# /axiom:audit swiftui-architecture
 
 Scan SwiftUI code for architectural anti-patterns (launches `swiftui-architecture-auditor` agent).
 
 ## Command
 
 ```bash
-/axiom:audit-swiftui-architecture
+/axiom:audit swiftui-architecture
 ```
 
 ## What It Checks
@@ -25,6 +25,6 @@ Scan SwiftUI code for architectural anti-patterns (launches `swiftui-architectur
 - You suspect state bugs from incorrect property wrappers
 
 ## Related
-- [/axiom:audit-swiftui-performance](./audit-swiftui-performance.md) – Performance anti-patterns
-- [/axiom:audit-swiftui-nav](./audit-swiftui-nav.md) – Navigation correctness and architecture
+- [/axiom:audit swiftui-performance](./audit-swiftui-performance.md) – Performance anti-patterns
+- [/axiom:audit swiftui-nav](./audit-swiftui-nav.md) – Navigation correctness and architecture
 - [swiftui-architecture](../../skills/ui-design/swiftui-architecture.md) – Refactoring workflows and decision trees

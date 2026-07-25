@@ -13,7 +13,7 @@ Automatically audits in-app purchase code to find both known anti-patterns and m
 
 **Explicit command:**
 ```bash
-/axiom:audit-iap
+/axiom:audit iap
 ```
 
 ## What It Does

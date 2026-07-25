@@ -49,7 +49,7 @@ Common starting points based on your situation:
 - **"My build is failing"** – Start with xcode-debugging, then build-debugging for dependency issues
 - **"App is slow"** – Start with performance-profiling, then swiftui-performance or memory-debugging
 - **"Memory leak"** – Start with memory-debugging, add objc-block-retain-cycles for Objective-C
-- **"Code quality check"** – Run audit commands (`/axiom:audit-accessibility`, `/axiom:audit-concurrency`, `/axiom:audit-memory`)
+- **"Code quality check"** – Run audit commands (`/axiom:audit accessibility`, `/axiom:audit concurrency`, `/axiom:audit memory`)
 
 ### Audit Commands
 

@@ -1,11 +1,11 @@
-# /axiom:audit-swiftui-nav
+# /axiom:audit swiftui-nav
 
 Scan SwiftUI navigation for architecture and correctness issues (launches `swiftui-nav-auditor` agent).
 
 ## Command
 
 ```bash
-/axiom:audit-swiftui-nav
+/axiom:audit swiftui-nav
 ```
 
 ## What It Checks
@@ -32,5 +32,5 @@ Scan SwiftUI navigation for architecture and correctness issues (launches `swift
 - Implementing a new feature with complex flow
 
 ## Related
-- [/axiom:audit-swiftui-performance](./audit-swiftui-performance.md) – Check navigation performance
+- [/axiom:audit swiftui-performance](./audit-swiftui-performance.md) – Check navigation performance
 - [swiftui-nav](../../skills/ui-design/swiftui-nav.md) – Comprehensive navigation guide

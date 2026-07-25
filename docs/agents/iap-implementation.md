@@ -11,10 +11,7 @@ Implements complete StoreKit 2 IAP solution following testing-first workflow wit
 - "Add premium upgrade to my app"
 - "Implement restore purchases"
 
-**Explicit command:**
-```bash
-/axiom:implement-iap
-```
+**Explicit command:** none — this agent writes code and is reached by asking for it in natural language. To *review* existing IAP code instead, use [`/axiom:audit iap`](/commands/integration/audit-iap).
 
 ## What It Implements
 
