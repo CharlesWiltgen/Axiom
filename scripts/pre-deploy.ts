@@ -36,12 +36,7 @@ import { MCP_TOOL_BINARIES } from "../axiom-mcp/src/tools/binaries.ts";
 import {
   parseFrontmatterAreas,
   parseBodyTable,
-  parseDocAreas,
-  parseSidebarAreas,
   parseSidebarGroups,
-  parseDocGroups,
-  validateParity,
-  validateGroupedParity,
   parseInlineAuditReferences,
   validateInlineReferences,
   validateAgentDescriptionParity,
@@ -50,6 +45,16 @@ import {
   validateAdvertisedCommands,
   AGENT_FRONTMATTER_KEYS,
 } from "./audit-parity.ts";
+import {
+  MARKERS,
+  renderArgumentList,
+  renderBodyTable,
+  renderDocsTables,
+  spliceRegion,
+  validateRegistry,
+  validateSidebarAgainstRegistry,
+  type AuditRegistry,
+} from "./audit-areas.ts";
 import {
   checkSkillInvocations,
   findSkillNameCollisions,
@@ -1037,27 +1042,61 @@ if (!fs.existsSync(auditCmdPath)) {
   const docContent = fs.readFileSync(auditDocPath, "utf8");
   const cfgContent = fs.readFileSync(sidebarConfigPath, "utf8");
 
+  // frontmatter is still parsed (not derived from the registry) so the
+  // advertised-area check below validates against what the file actually
+  // ships, not against what it was supposed to ship.
   const frontmatter = parseFrontmatterAreas(cmdContent);
   const bodyRows = parseBodyTable(cmdContent);
-  const body = bodyRows.map((r) => r.area);
-  const docAreas = parseDocAreas(docContent);
-  const sidebar = parseSidebarAreas(cfgContent);
 
-  const parityErrors = validateParity({
-    frontmatter,
-    body,
-    docs: docAreas,
-    sidebar,
-  });
+  // The frontmatter list, the body table, and the docs page are now
+  // GENERATED from scripts/audit-areas.json, so they cannot disagree with
+  // each other by construction — the old A↔B↔C set-parity and grouped-parity
+  // checks are replaced by a single staleness check against the registry.
+  // Same "generate in memory, diff against committed" pattern as the
+  // inlined auditors (12d-bis) and the Codex variant (12f).
+  const registryPath = path.join(root, "scripts/audit-areas.json");
+  let auditRegistry: AuditRegistry | undefined;
+  const parityErrors: string[] = [];
+  try {
+    auditRegistry = JSON.parse(fs.readFileSync(registryPath, "utf8"));
+  } catch (e: unknown) {
+    parityErrors.push(`scripts/audit-areas.json unreadable: ${(e as Error).message}`);
+  }
+
+  if (auditRegistry) {
+    for (const msg of validateRegistry(auditRegistry)) {
+      parityErrors.push(`audit-areas.json: ${msg}`);
+    }
+
+    const generated: Array<[string, string, string, "html" | "hash", string]> = [
+      [auditCmdPath, cmdContent, MARKERS.argument, "hash", renderArgumentList(auditRegistry)],
+      [auditCmdPath, cmdContent, MARKERS.bodyTable, "html", renderBodyTable(auditRegistry)],
+      [auditDocPath, docContent, MARKERS.docsTable, "html", renderDocsTables(auditRegistry)],
+    ];
+    for (const [file, content, marker, style, rendered] of generated) {
+      const spliced = spliceRegion(content, marker, rendered, style);
+      const rel = path.relative(root, file);
+      if (spliced === null) {
+        parityErrors.push(`${rel}: ${marker} markers missing or malformed`);
+      } else if (spliced !== content) {
+        parityErrors.push(
+          `${rel} region ${marker} is stale relative to scripts/audit-areas.json — run \`npm run build:audit-areas\``,
+        );
+      }
+    }
+  }
   for (const msg of parityErrors) error("audit-parity", msg);
 
-  // Grouped parity: enforce same group names, same group order, same
-  // items per group, same item order. Catches drifts that set parity
-  // doesn't (e.g. axiom-imz: 27=27 set parity but 5-vs-8 group counts).
+  // The sidebar is NOT generated — each of its groups interleaves audit
+  // entries with unrelated commands, so the audit rows are not a
+  // spliceable region. It stays hand-maintained and is checked against
+  // the registry directly, which is what the old docs↔sidebar grouped
+  // parity was approximating.
   const sidebarGroups = parseSidebarGroups(cfgContent);
-  const docGroups = parseDocGroups(docContent);
-  const groupedErrors = validateGroupedParity(sidebarGroups, docGroups);
-  for (const msg of groupedErrors) error("audit-parity", `(grouped) ${msg}`);
+  const groupedErrors = auditRegistry
+    ? validateSidebarAgainstRegistry(auditRegistry, sidebarGroups)
+    : [];
+  for (const msg of groupedErrors) error("audit-parity", `(sidebar) ${msg}`);
 
   // E: agent file existence — needs filesystem access so it stays here.
   // Read agent file contents into a map so the description-parity check
@@ -1190,8 +1229,9 @@ if (!fs.existsSync(auditCmdPath)) {
     advertisedErrors.length === 0
   ) {
     console.log(
-      `  ✓ ${frontmatter.length} audit areas in sync across frontmatter, body table, docs page, sidebar ` +
-        `(${sidebarGroups.length} groups, same order; ${bodyRows.length} agent refs resolve; ` +
+      `  ✓ ${frontmatter.length} audit areas generated from scripts/audit-areas.json into ` +
+        `frontmatter + body table + docs page; sidebar checked against it ` +
+        `(${sidebarGroups.length} groups; ${bodyRows.length} agent refs resolve; ` +
         `${inlineSections.length} prose sections + ${bodyRows.length} agent descriptions verified; ` +
         `${advertisingAgents} agents advertise a command, ${advertisedExempt.length} exempt)`,
     );
