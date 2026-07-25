@@ -2,7 +2,7 @@
 
 # GRDB Performance Auditor
 
-**Claude Code** — launch the `grdb-performance-auditor` agent. It runs this procedure in an isolated context with its own model tier.
+**Claude Code** — launch the `grdb-performance-auditor` agent, or run `/axiom:audit grdb-performance`. It runs this procedure in an isolated context with its own model tier.
 
 **Every other harness** — follow this file inline. It is the same procedure, and it needs only file search and read.
 
@@ -153,6 +153,42 @@ Run the six detection patterns. For every grep match, use Read to verify the sur
 **Verify**: Read matching files; confirm it's a class declaration (not a struct named Record or similar).
 **Fix**: Convert to a struct conforming to `Codable`, `FetchableRecord`, `PersistableRecord` (or `MutablePersistableRecord` for auto-increment IDs). See `axiom-data (skills/grdb-performance.md)` §8.
 
+### Pattern 9: `INSERT OR REPLACE` Used as an Upsert (HIGH/MEDIUM)
+
+**Gating**: Library == Raw GRDB or Both.
+**Issue**: `INSERT OR REPLACE` — and GRDB's `.replace` conflict policy — **deletes the existing row and inserts a new one**. Columns the insert doesn't supply silently reset to their defaults, `ON DELETE CASCADE` fires and takes child rows with it, the rowid changes, and transaction observers never see the duplicate-row deletion (so observations go stale). Developers reach for it wanting upsert semantics and get delete-then-insert.
+**Search**:
+- `INSERT\s+OR\s+REPLACE` — raw SQL form
+- `REPLACE\s+INTO` — the shorthand alias
+- `persistenceConflictPolicy` — record-level policy declaration
+- `onConflict:\s*\.replace` — per-call conflict resolution
+**Verify**: Read matching files. For `persistenceConflictPolicy`, check whether the declared policy is `.replace` for insert (`PersistenceConflictPolicy(insert: .replace, ...)`) — other policies are not this finding. Confirm the table has either more columns than the insert supplies, or an inbound FK with `ON DELETE CASCADE`, or an observation on it; absent all three the impact is low.
+**Fix**: `try record.upsert(db)`, or `upsertAndFetch(db, updating: .noColumnUnlessSpecified)` to leave existing values alone. See `axiom-data (skills/grdb.md)` — Upsert.
+**Not a finding**: code that genuinely wants delete-then-insert semantics (cache line replacement, full-row refresh where reset-to-default is correct). Say so in the report rather than flagging blindly.
+
+### Pattern 10: Observation on a `WITHOUT ROWID` Table (HIGH/MEDIUM)
+
+**Gating**: Library == Raw GRDB, SQLiteData, or Both. SQLiteData's `@FetchAll` rides GRDB's observation, so it is affected identically.
+**Issue**: SQLite's update hook never fires for `WITHOUT ROWID` tables. A `ValueObservation` on such a table delivers its initial value and then **goes silent permanently** — no error, no warning, no retry. `DatabaseEventObservationStrategy` does not fix it (there is no filtered event to unfilter).
+**Search** — this detector needs correlation, run it in three steps:
+1. `WITHOUT\s+ROWID` — collect the table names each one declares
+2. For each such table, find the record type bound to it: `databaseTableName\s*=\s*"<table>"`, `@Table\("<table>")`, or a type whose name matches the table by GRDB's default convention
+3. Grep for observation of those types or tables: `ValueObservation`, `DatabaseRegionObservation`, `@FetchAll`, `@FetchOne`, `@Query` — matching the record type name or table name
+**Verify**: Read both sides. Report only when an observation demonstrably targets a `WITHOUT ROWID` table. Also grep the writers for `notifyChanges\(in:` — if every writer to that table already calls it, the observation works and this is not a finding.
+**Fix**: Make the table a rowid table (drop `WITHOUT ROWID`), or have every writer call `try db.notifyChanges(in: <Table>.all())` inside the same write. See `axiom-data (skills/grdb-performance.md)` §7 and §10.
+**Limitation in report**: "Record-to-table binding resolved by explicit `databaseTableName` / `@Table` only. Types relying on GRDB's default naming convention are matched heuristically — verify manually."
+
+### Pattern 11: `WITHOUT ROWID` Upsert Below GRDB 7.11 (HIGH/HIGH)
+
+**Gating**: Library == Raw GRDB or Both, **AND** at least one `WITHOUT ROWID` table found in Pattern 10 step 1.
+**Issue**: GRDB generated wrong SQL for upsert against `WITHOUT ROWID` tables before **7.11.0**.
+**Search**:
+- Glob `**/Package.resolved`, `**/Package.swift`, `**/*.podspec`, `**/Podfile.lock` — read the resolved GRDB version
+- `\.upsert\(`, `upsertAndFetch\(` — upsert call sites
+**Verify**: Resolve the GRDB version first. If it is 7.11.0 or later, skip this pattern entirely. If below 7.11.0 (or unresolvable), check whether any upsert call site targets a record bound to a `WITHOUT ROWID` table from Pattern 10.
+**Fix**: Upgrade to GRDB 7.11.0+.
+**Note**: report an unresolvable GRDB version as a LOW-confidence finding with the reason, not as a clean pass.
+
 ## Phase 3: Reason About Performance Completeness
 
 Using the Framework Map from Phase 1, check for what's *missing*:
@@ -169,6 +205,8 @@ Using the Framework Map from Phase 1, check for what's *missing*:
 | Are SQLite transactions for batch operations inside `db.write { }` or `inTransaction { }`? | Slow batch writes; non-atomic on failure | Each statement outside a transaction commits separately; 1000 inserts = 1000 syncs |
 | Are FK columns explicitly indexed (DSL `belongsTo` auto-indexes; raw SQL doesn't)? | Slow JOINs across FK relationships | Often the largest performance bug in a GRDB codebase |
 | Is `PRAGMA optimize=0x10002` applied on connection open, with periodic `PRAGMA optimize`? | Stale-statistics performance degradation | Biggest cheap perf win available |
+| Does any code write through the raw SQLite C API (`sqlite3_exec`, `sqlite3_step`, `db.sqliteConnection`) or from a custom `DatabaseFunction` invoked by a `SELECT`? | Writes GRDB never observes | Observations go stale silently; needs `notifyChanges(in:)` or `requiresDatabaseEventKind = false` |
+| Are records upserted with the default `.allColumns` strategy against tables the user also edits locally? | Server sync clobbering local edits | `.allColumns` overwrites every column the *record* encodes — adding a property silently widens the blast radius |
 
 Require evidence from the Phase 1 map — don't speculate without reading the code.
 
@@ -184,6 +222,9 @@ Bump severity for these combinations:
 | No `PRAGMA optimize` hookup (Pattern 3) | Schema with > 5 CREATE INDEX statements (countable via Pattern 6 scan) | Planner picks wrong index on real-user data distributions | HIGH |
 | Missing FK index (Pattern 2) + Missing `PRAGMA optimize` (Pattern 3) | Co-occurring | Compound slowdown — query planner can't pick a usable index because none exists with current stats | HIGH |
 | `databaseSelection` as `static let` (Pattern 7) + Swift package built with Swift 6 mode | Co-occurring with `swift-tools-version: 6.0` or higher in `Package.swift` | Hard compile error blocking build | CRITICAL |
+| Observation on `WITHOUT ROWID` (Pattern 10) | That table is the app's settings or session store, i.e. its value drives UI on every launch | UI renders a stale value indefinitely with no error path | CRITICAL |
+| `INSERT OR REPLACE` (Pattern 9) | An inbound FK to the replaced table declares `ON DELETE CASCADE` | Each "update" silently deletes child rows | CRITICAL |
+| `INSERT OR REPLACE` (Pattern 9) | An observation targets the replaced table | Observers miss the deletion *and* the row's unlisted columns reset — two silent failures at once | HIGH |
 
 Cross-auditor overlap notes:
 - Migration safety → compound with `database-schema-auditor`
@@ -206,6 +247,9 @@ Cross-auditor overlap notes:
 | Pattern 6 (prefix-redundant indexes) | N matches |
 | Pattern 7 (databaseSelection stored property) | N matches |
 | Pattern 8 (Record subclass — optional) | N matches |
+| Pattern 9 (`INSERT OR REPLACE` as upsert) | N matches |
+| Pattern 10 (observation on `WITHOUT ROWID`) | N matches |
+| Pattern 11 (`WITHOUT ROWID` upsert < 7.11) | N matches / GRDB version |
 | Phase 3 completeness gaps | N |
 | Compound severity bumps | N |
 | **Health** | **SAFE / FRAGILE / DANGEROUS** |
@@ -213,7 +257,7 @@ Cross-auditor overlap notes:
 Scoring:
 - **SAFE**: No CRITICAL issues. All gating-applicable patterns clean. `PRAGMA optimize` configured. If app-group: WAL + suspension defense both wired.
 - **FRAGILE**: No CRITICAL issues, but missing `PRAGMA optimize`, or some MEDIUM/LOW Phase-2 matches, or 1-2 Phase-3 completeness gaps.
-- **DANGEROUS**: Any CRITICAL issue — SQL interpolation in production code, missing WAL on app-group DB, missing suspension defense on app-group DB, or `databaseSelection` as `static let` with Swift 6 strict concurrency.
+- **DANGEROUS**: Any CRITICAL issue — SQL interpolation in production code, missing WAL on app-group DB, missing suspension defense on app-group DB, `databaseSelection` as `static let` with Swift 6 strict concurrency, or a silent-staleness compound from Phase 4 (observation on `WITHOUT ROWID`, or `INSERT OR REPLACE` across a cascading FK).
 
 ## Output Format
 
@@ -268,6 +312,10 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details.
 - Missing `PRAGMA optimize` in SQLiteData-only apps (SQLiteData handles it internally; gated out at Phase 1)
 - Missing WAL for read-only `DatabaseQueue` against bundled resources — read-only intent + no app-group
 - Anti-patterns in `*Tests.swift` files (excluded by file filter, but reaffirm if accidentally surfaced)
+- `INSERT OR REPLACE` where delete-then-insert is the intended semantics — full-row cache replacement, or a table with no unlisted columns, no cascading FK, and no observation (Pattern 9)
+- A `WITHOUT ROWID` table that is written but never observed — the schema choice is correct there, and §7 recommends it (Pattern 10)
+- A `WITHOUT ROWID` table whose every writer already calls `notifyChanges(in:)` — the observation works as intended (Pattern 10)
+- Upsert against `WITHOUT ROWID` on GRDB 7.11.0+ — fixed upstream; check the resolved version before flagging (Pattern 11)
 
 **Phase-3 caveats (not Phase-2 false positives):**
 
