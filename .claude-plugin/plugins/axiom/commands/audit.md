@@ -1,6 +1,6 @@
 ---
 description: Smart audit selector - analyzes your project and suggests relevant audits
-argument: "area (optional) - Which audit to run: all, memory, concurrency, accessibility, energy, swiftui-performance, swiftui-architecture, swiftui-nav, swiftui-layout, swift-performance, swift-simplify, core-data, swiftdata, database-schema, networking, codable, icloud, storage, liquid-glass, textkit, testing, build, spritekit, security, modernization, camera, foundation-models, screenshots, ux-flow, resize"
+argument: "area (optional) - Which audit to run: all, memory, concurrency, accessibility, energy, swiftui-performance, swiftui-architecture, swiftui-nav, swiftui-layout, swift-performance, swift-simplify, core-data, swiftdata, database-schema, grdb-performance, networking, codable, icloud, storage, liquid-glass, textkit, testing, test-failures, build, spritekit, security, modernization, camera, foundation-models, screenshots, ux-flow, resize"
 disable-model-invocation: true
 ---
 
@@ -32,6 +32,7 @@ If no area specified → analyze project and suggest relevant audits
 | liquid-glass | liquid-glass-auditor | iOS 26 adoption opportunities, toolbar improvements |
 | textkit | textkit-auditor | TextKit issues, text rendering problems |
 | testing | testing-auditor | Flaky tests, slow tests, Swift Testing migration, test quality |
+| test-failures | test-failure-analyzer | Root-cause diagnosis for a failing or intermittent test — missing await confirmation, @MainActor gaps, shared suite state, missing .serialized |
 | build | build-optimizer | Build time optimization opportunities |
 | spritekit | spritekit-auditor | Physics bitmask issues, draw call waste, node accumulation, action leaks |
 | security | security-privacy-scanner | API keys in code, insecure storage, Privacy Manifests, ATS violations |
@@ -42,6 +43,7 @@ If no area specified → analyze project and suggest relevant audits
 | swiftui-layout | swiftui-layout-auditor | GeometryReader misuse, deprecated screen APIs, hardcoded breakpoints, identity loss |
 | resize | resize-auditor | Scene-lifecycle gaps, UIScreen.main, UIRequiresFullScreen, orientation-derived layout, fixed-canvas rendering, Mirroring input |
 | database-schema | database-schema-auditor | Unsafe ALTER TABLE, DROP operations, missing idempotency, FK misuse, transaction safety |
+| grdb-performance | grdb-performance-auditor | Raw SQL string interpolation, missing FK indexes, missing PRAGMA optimize, app-group WAL and suspension defense, INSERT OR REPLACE misused as upsert, observation on WITHOUT ROWID tables |
 | screenshots | screenshot-validator | Placeholder text, wrong dimensions, debug indicators, broken UI, competitor references |
 | ux-flow | ux-flow-auditor | Dead-end views, dismiss traps, buried CTAs, missing empty/loading/error states, accessibility dead ends |
 

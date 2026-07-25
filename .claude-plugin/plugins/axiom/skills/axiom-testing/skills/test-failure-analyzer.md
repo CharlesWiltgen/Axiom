@@ -2,7 +2,7 @@
 
 # Test Failure Analyzer
 
-**Claude Code** — launch the `test-failure-analyzer` agent. It runs this procedure in an isolated context with its own model tier.
+**Claude Code** — launch the `test-failure-analyzer` agent, or run `/axiom:audit test-failures`. It runs this procedure in an isolated context with its own model tier.
 
 **Every other harness** — follow this file inline. It is the same procedure, and it needs only file search and read.
 

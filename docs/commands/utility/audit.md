@@ -49,6 +49,7 @@ Grouped to mirror the sidebar exactly — same group names, same group order, sa
 ### Testing
 | Area | What It Checks |
 |------|----------------|
+| `test-failures` | Why a specific test fails or flakes — missing `await confirmation`, `@MainActor` gaps, shared suite state |
 | `testing` | Flaky tests, slow tests, Swift Testing migration |
 
 ### Concurrency
@@ -79,6 +80,7 @@ Grouped to mirror the sidebar exactly — same group names, same group order, sa
 | Area | What It Checks |
 |------|----------------|
 | `database-schema` | Unsafe ALTER TABLE, DROP operations, FK integrity |
+| `grdb-performance` | SQL string interpolation, missing FK indexes, `PRAGMA optimize`, app-group WAL and suspension defense, silent observation staleness |
 | `icloud` | iCloud entitlements, file coordination, CloudKit errors |
 | `storage` | File protection, backup exclusions, storage strategies |
 | `swiftdata` | @Model correctness, VersionedSchema, relationship defaults |
@@ -102,7 +104,7 @@ Grouped to mirror the sidebar exactly — same group names, same group order, sa
 ## Priority Levels
 
 1. **CRITICAL** – `core-data`, `swiftdata`, `database-schema`, `storage`, `icloud` (data corruption/loss risk)
-2. **HIGH** – `concurrency`, `memory`, `energy`, `networking`, `security`, `testing` (crashes, App Store rejection)
+2. **HIGH** – `concurrency`, `memory`, `energy`, `networking`, `security`, `testing`, `test-failures`, `grdb-performance` (crashes, App Store rejection)
 3. **MEDIUM** – `swiftui-architecture`, `ux-flow`, `swiftui-performance`, `swiftui-layout`, `swift-performance`, `foundation-models` (architecture, performance, UX)
 4. **LOW** – `accessibility`, `liquid-glass`, `codable`, `modernization`, `camera`, `screenshots`, `swift-simplify` (enhancement opportunities)
 
