@@ -2,7 +2,7 @@
 name: run-tests
 description: Run XCUITests and parse results using the test-runner agent
 disable-model-invocation: true
-argument-hint: [scheme] [test-class-or-method]
+argument-hint: "[scheme] [test-class-or-method]"
 allowed-tools: Task
 ---
 

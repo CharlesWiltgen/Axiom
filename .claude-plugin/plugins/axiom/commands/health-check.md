@@ -1,6 +1,6 @@
 ---
 description: Run a comprehensive health check — auto-detects relevant auditors, runs them in parallel, produces a unified report
-argument-hint: [diff] [skip <auditor>] [freeform emphasis]
+argument-hint: "[diff] [skip <auditor>] [freeform emphasis]"
 disable-model-invocation: true
 ---
 
