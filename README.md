@@ -9,7 +9,7 @@ Axiom gives AI coding assistants deep Apple OS development expertise — the kin
 <!-- AXIOM_STATS_BEGIN — auto-maintained by scripts/set-version.js; do not hand-edit -->
 - **269 skills** covering UI, data, concurrency, performance, networking, accessibility, and more
 - **42 agents** that autonomously scan for issues (memory leaks, concurrency violations, build problems)
-- **15 commands** for quick audits and diagnostics
+- **17 commands** for quick audits and diagnostics
 <!-- AXIOM_STATS_END -->
 - **xclog** — a built-in console capture tool that gives AI assistants access to simulator and device logs
 - **xcsym** — a built-in crash symbolication tool for `.ips`, MetricKit, and Apple's legacy `.crash` text crashes, with automatic dSYM discovery and pattern categorization
