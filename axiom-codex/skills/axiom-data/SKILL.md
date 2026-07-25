@@ -37,8 +37,8 @@ Use this skill when working with:
 | SwiftData migration crashes, data loss | See `skills/swiftdata-migration-diag.md` |
 | Migrating from Realm to SwiftData | See `skills/realm-migration-ref.md` |
 | SwiftData vs SQLiteData decision | See `skills/sqlitedata-migration.md` |
-| GRDB queries, ValueObservation, DatabaseMigrator | See `skills/grdb.md` |
-| GRDB performance, indexes, EXPLAIN QUERY PLAN, cursors | See `skills/grdb-performance.md` |
+| GRDB queries, upsert, ValueObservation, DatabaseMigrator, encryption | See `skills/grdb.md` |
+| GRDB performance, indexes, EXPLAIN QUERY PLAN, cursors, observation not firing | See `skills/grdb-performance.md` |
 | Full-text search (FTS5) in GRDB or SQLiteData | See `skills/sqlite-fts-ref.md` |
 | Storing or querying JSON inside a SQLite column (JSON1, JSONB) | See `skills/sql-json-ref.md` |
 | GRDB shared across app + widget/extension (App Group) | See `skills/grdb-app-groups.md` |
@@ -71,7 +71,7 @@ Use this skill when working with:
 **iCloud audit** → Launch `icloud-auditor` agent or `/axiom:audit icloud` (entitlement checks, file coordination, incomplete CKError matrix coverage, missing account-change observation, polling vs CKSubscriptions, SwiftData + CloudKit unsupported features, compound risks like uncoordinated I/O across extensions)
 **Storage audit** → Launch `storage-auditor` agent or `/axiom:audit storage` (wrong file locations, missing backup exclusions, sensitive data on disk vs Keychain, missing App Group containers, unbounded cache growth, orphan files, compound risks like user data in tmp/ + critical content)
 **Database schema audit** → Launch `database-schema-auditor` agent or `/axiom:audit database-schema` (unsafe ALTER TABLE, DROP operations, missing idempotency, FK constraints declared but not enforced, incomplete upgrade paths, compound risks like INSERT OR REPLACE on FK-referenced tables)
-**GRDB performance audit** → Launch `grdb-performance-auditor` agent or `/axiom:audit grdb-performance` (raw SQL string interpolation, missing FK indexes in raw SQL, missing PRAGMA optimize for raw-GRDB apps, journal mode mismatch for app-group DBs, missing observesSuspensionNotifications for shared DBs, prefix-redundant indexes in raw SQL, legacy Record subclass)
+**GRDB performance audit** → Launch `grdb-performance-auditor` agent or `/axiom:audit grdb-performance` (raw SQL string interpolation, missing FK indexes in raw SQL, missing PRAGMA optimize for raw-GRDB apps, journal mode mismatch for app-group DBs, missing observesSuspensionNotifications for shared DBs, prefix-redundant indexes in raw SQL, legacy Record subclass, INSERT OR REPLACE misused as upsert, observation on WITHOUT ROWID tables, WITHOUT ROWID upsert below GRDB 7.11)
 **SwiftData audit** → Launch `swiftdata-auditor` agent or `/axiom:audit swiftdata` (struct models, missing schema registration, array relationships without defaults, background context misuse, N+1 patterns, stale predicates, CloudKit conformance gaps, compound risks like struct model + array relationship)
 
 ## Decision Tree

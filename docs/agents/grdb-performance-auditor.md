@@ -5,7 +5,7 @@ Scans GRDB and SQLite code for performance and correctness anti-patterns. Pairs 
 ## What It Does
 
 - Framework detection (Raw GRDB / SQLiteData / Both) to gate detectors and avoid false positives
-- Detects 7 high-confidence patterns: raw SQL string interpolation, missing FK indexes (raw SQL), missing `PRAGMA optimize` for raw-GRDB apps, journal mode mismatch for app-group DBs, missing `observesSuspensionNotifications` for shared DBs, prefix-redundant indexes (raw SQL), `databaseSelection` declared as stored property (Swift 6 compile error)
+- Detects 10 high-confidence patterns: raw SQL string interpolation, missing FK indexes (raw SQL), missing `PRAGMA optimize` for raw-GRDB apps, journal mode mismatch for app-group DBs, missing `observesSuspensionNotifications` for shared DBs, prefix-redundant indexes (raw SQL), `databaseSelection` declared as stored property (Swift 6 compile error), `INSERT OR REPLACE` misused as an upsert, `ValueObservation` on a `WITHOUT ROWID` table (silent permanent staleness), and `WITHOUT ROWID` upsert below GRDB 7.11
 - Includes 1 optional modernization detector: legacy `Record` subclass migration
 - Identifies completeness gaps (missing `vacuum(into:)` backup, missing `Configuration.busyMode` for shared DBs, untransacted batch operations, FTS5 normalization mismatches)
 - Correlates findings that compound into higher severity (raw SQL interpolation + user input → CRITICAL injection vector; missing FK index + Pattern-3 stats gap → compound slowdown)
