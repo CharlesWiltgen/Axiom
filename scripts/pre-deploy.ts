@@ -1144,22 +1144,13 @@ if (!fs.existsSync(auditCmdPath)) {
   // Exemptions are `<agent>:<area>` pairs — keying by agent alone would
   // silently bless every future unregistered area that agent advertises,
   // including typos unrelated to the reason the carve-out was granted.
-  // Each is a pending product decision (tracked: Axiom-vi8), not a
-  // permanent fact; validateAdvertisedAreas reports a stale entry, so an
-  // exemption cannot outlive the violation it was granted for.
-  const advertisedExempt = [
-    // iap-implementation is an implementation agent (Write/Edit/Bash), not
-    // a scan agent, so it is not in the auditor set and "audit
-    // iap-implementation" does not describe an audit. Sibling iap-auditor
-    // — a real scan agent — advertises no command at all, so this reads as
-    // a paste onto the wrong agent. Decide: move the claim to iap-auditor,
-    // or drop it.
-    "iap-implementation:iap-implementation",
-    // security-privacy-scanner advertises `/axiom:audit security`
-    // (registered) OR `/axiom:audit privacy` (not registered; audit.md has
-    // no alias handling). Decide: add alias support, or drop `privacy`.
-    "security-privacy-scanner:privacy",
-  ];
+  // validateAdvertisedAreas reports a stale entry, so an exemption cannot
+  // outlive the violation it was granted for.
+  //
+  // Empty, and worth keeping that way: the two original entries were both
+  // resolved rather than tolerated (Axiom-vi8). An entry here should mean
+  // "decision pending", never "known-broken forever".
+  const advertisedExempt: string[] = [];
   const advertisedErrors = validateAdvertisedAreas({
     registered: frontmatter,
     agentFiles: allAgentFiles,

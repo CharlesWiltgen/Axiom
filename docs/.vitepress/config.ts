@@ -263,6 +263,7 @@ export default withMermaid(defineConfig({
           items: [
             { text: '/axiom:audit camera', link: '/commands/integration/audit-camera' },
             { text: '/axiom:audit foundation-models', link: '/commands/integration/audit-foundation-models' },
+            { text: '/axiom:audit iap', link: '/commands/integration/audit-iap' },
             { text: '/axiom:audit networking', link: '/commands/integration/audit-networking' }
           ]
         },

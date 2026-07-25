@@ -74,6 +74,7 @@ Grouped to mirror the sidebar exactly — same group names, same group order, sa
 |------|----------------|
 | `camera` | Deprecated camera APIs, missing interruption handlers |
 | `foundation-models` | Availability checks, main-thread blocking, guardrail handling |
+| `iap` | Missing `transaction.finish()`, weak receipt validation, missing restore, subscription tracking |
 | `networking` | Deprecated APIs (SCNetworkReachability), anti-patterns |
 
 ### Storage
