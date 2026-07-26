@@ -73,6 +73,23 @@ class ContentViewModel {
 3. Add `@ObservationIgnored` to properties that shouldn't trigger updates
 4. Update consuming views (see patterns below)
 
+**Do NOT apply this pattern to `GroupSession` (SharePlay/GroupActivities)**
+
+`GroupSession` is a framework-owned `final class` conforming to `ObservableObject`. You cannot redeclare it, and code observing it must keep using Combine — the SDK ships **no** AsyncSequence for `state`, `activity`, or `activeParticipants` (`sessions()` is the only one).
+
+More importantly, `@Published` publishes from `willSet`, so inside a sink the property still holds the **old** value. The standard late-joiner catch-up depends on exactly that timing:
+
+```swift
+groupSession.$activeParticipants
+    .sink { activeParticipants in
+        // groupSession.activeParticipants is still the OLD set here
+        let newParticipants = activeParticipants.subtracting(groupSession.activeParticipants)
+        // send current state to joiners only
+    }
+```
+
+Rewriting this against `@Observable` or an AsyncSequence makes `subtracting` return an empty set. There is no crash and no warning — late joiners silently never receive state, and the bug only appears with 3+ participants on a device that joined late. Leave Combine observation of `GroupSession` alone and say why.
+
 ### Pattern 2: @StateObject → @State (HIGH)
 
 **Why migrate**: Simpler, consistent with value types, works with @Observable
@@ -505,9 +522,11 @@ Codebase is already using modern patterns!
 ```
 Is model a class with published properties?
 ├─ YES: Does it conform to ObservableObject?
-│  ├─ YES: Target iOS 17+?
-│  │  ├─ YES → Migrate to @Observable
-│  │  └─ NO → Keep ObservableObject
+│  ├─ YES: Is it a type you declare (not a framework class)?
+│  │  ├─ NO → Keep as-is; report why (e.g. GroupSession)
+│  │  └─ YES: Target iOS 17+?
+│  │     ├─ YES → Migrate to @Observable
+│  │     └─ NO → Keep ObservableObject
 │  └─ NO: Already modern or not observable
 └─ NO: Check if it's a struct (usually fine)
 
@@ -540,9 +559,11 @@ Is view using @EnvironmentObject?
 - Combine publishers (not the same as @Published)
 - Already migrated code using @Observable
 - Apple protocol families unrelated to Observation — classes conforming to `AppIntent`, `EntityQuery`, `AppEntity`, `WidgetConfiguration`, `TimelineProvider`, or other App Intents / WidgetKit protocols are NOT `ObservableObject` and should not be flagged for `@Observable` migration
+- `GroupSession` and code observing it (SharePlay/GroupActivities) — a framework-owned `ObservableObject` you cannot redeclare, whose `@Published` willSet timing the participant-delta pattern depends on. See Pattern 1. Migrating it silently breaks late-joiner state catch-up.
 
 **Check before reporting**:
 - Verify file is in your project, not dependencies
 - Check deployment target constraints
 - Confirm model is actually used in SwiftUI views
 - Confirm the class actually conforms to `ObservableObject` — do not flag classes just because they are classes
+- Confirm the type is yours to change — framework classes conforming to `ObservableObject` cannot be migrated regardless of deployment target
