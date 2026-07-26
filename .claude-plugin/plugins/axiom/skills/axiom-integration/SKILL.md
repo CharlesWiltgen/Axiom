@@ -47,6 +47,9 @@ license: MIT
 | Weather data, forecasts, attribution (WeatherKit) | See `skills/weatherkit.md` |
 | VoIP calls, CallKit, VoIP push, caller ID/blocking | See `skills/callkit-livecommunicationkit.md` |
 | CallKit / LiveCommunicationKit / IdentityLookup API reference | See `skills/callkit-livecommunicationkit-ref.md` |
+| SharePlay, GroupActivities, shared sessions, spatial Personas | See `skills/shareplay.md` |
+| GroupActivities API reference (GroupSession, messenger, journal) | See `skills/shareplay-ref.md` |
+| SharePlay coordinated audio/video playback | Use axiom-media (`skills/shareplay-playback.md`) instead |
 | Suggested actions for a messaging conversation (`SuggestedActionsView`, `com.apple.developer.suggested-actions` entitlement, `OS27`) | Use axiom-ai (skills/suggested-actions.md) instead — Apple-Intelligence-backed; the entitlement/capability is the integration half |
 | AlarmKit (iOS 26+) | See `skills/alarmkit-ref.md` |
 | Timer patterns, scheduling | See `skills/timer-patterns.md` |
@@ -182,6 +185,9 @@ digraph integration {
 | "I'll use URLSession for the asset download" | URLSession doesn't integrate with App Store install progress, charging-aware scheduling, or per-app quota — and can't reach Apple-hosted asset packs at all. Background Assets is the supported channel. |
 | "On-Demand Resources still works fine" | The entire `NSBundleResourceRequest` family is deprecated in the 27 SDKs ("Use Background Assets instead"). Migrate ODR tags to asset packs. See `skills/background-assets.md`. |
 | "Just request full Calendar access" | Most apps only need to add events — EventKitUI does that with zero permissions. |
+| "SharePlay is just a message channel between participants" | `GroupSession` is not `Sendable`, observation is Combine-only, and the late-joiner delta depends on `@Published` willSet timing. Migrating it to `@Observable` silently breaks catch-up. |
+| "The person who started the SharePlay session is the host" | There is no host. Every participant is equal — the framework has no owner or turn-taking concept. `lifetimePolicy` is the only related control, and it lives on the activity. |
+| "One messenger, I'll pick reliable or unreliable per message" | `deliveryMode` is a `let` fixed at init and no `send` overload takes a mode. Mixed protocols need two `GroupSessionMessenger` instances. |
 | "I'll request Bluetooth permission and scan for the accessory" | AccessorySetupKit (iOS 18+) pairs in one tap with no broad Bluetooth prompt and grants scoped BT+Wi-Fi access. See `skills/accessorysetupkit.md`. |
 | "I'll process the VoIP push, then report the call when ready" | iOS terminates your app and stops delivering VoIP pushes if a push doesn't report a call *before* completion. Report first, fetch after. See `skills/callkit-livecommunicationkit.md`. |
 | "No internet on this network, so I'll keep my own socket open in the background" | iOS suspends the app and the socket dies. Local Push Connectivity runs a system-managed provider extension for exactly this. See `skills/local-push-connectivity.md`. |
