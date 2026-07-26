@@ -275,6 +275,22 @@ class TestPositiveRouting(unittest.TestCase):
         self.assertIn("axiom-integration", routed_skills(
             "My VoIP app gets killed — how do I report a CallKit call from a PushKit push?"))
 
+    def test_integration_shareplay(self):
+        self.assertIn("axiom-integration", routed_skills(
+            "How do I add SharePlay to my app?"))
+        self.assertIn("axiom-integration", routed_skills(
+            "My GroupSession never activates — what am I missing?"))
+        self.assertIn("axiom-integration", routed_skills(
+            "Should I call prepareForActivation or activate?"))
+        self.assertIn("axiom-integration", routed_skills(
+            "How do I send state to a participant who joined late with GroupSessionMessenger?"))
+        self.assertIn("axiom-integration", routed_skills(
+            "How do I share files during a group activity with GroupSessionJournal?"))
+        self.assertIn("axiom-integration", routed_skills(
+            "How do I set up spatial Personas for my visionOS app?"))
+        self.assertIn("axiom-integration", routed_skills(
+            "Build a Listen Together experience for my music app"))
+
     def test_media(self):
         self.assertIn("axiom-media", routed_skills(
             "How do I use AVCaptureSession for camera preview?"))
@@ -288,6 +304,18 @@ class TestPositiveRouting(unittest.TestCase):
             "My ProRes recording drops frames"))
         self.assertIn("axiom-media", routed_skills(
             "Should I adopt deferred start for high resolution photo capture?"))
+
+    def test_media_shareplay_playback(self):
+        self.assertIn("axiom-media", routed_skills(
+            "How do I sync playback across SharePlay participants?"))
+        self.assertIn("axiom-media", routed_skills(
+            "How do I adopt AVDelegatingPlaybackCoordinator with my custom audio engine?"))
+        self.assertIn("axiom-media", routed_skills(
+            "My coordinated playback drifts between devices"))
+        self.assertIn("axiom-media", routed_skills(
+            "When should I begin an AVCoordinatedPlaybackSuspension?"))
+        self.assertIn("axiom-media", routed_skills(
+            "How do I call coordinateWithSession on my player?"))
         self.assertIn("axiom-media", routed_skills(
             "How do I show a CarPlay map panel for route choices on iOS 27?"))
         self.assertIn("axiom-media", routed_skills(
