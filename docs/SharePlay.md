@@ -10,17 +10,13 @@ apple_platforms: iOS 15+, macOS 12+, tvOS 15+, visionOS 1+ (not watchOS)
 
 SharePlay gives your app a private, system-provided realtime channel between people already together on a FaceTime or Messages call — no account system, no invitations, and no transport of your own to build and operate.
 
-Axiom's coverage is compile-verified against the iOS 27 SDK and split across three pages. This one is the map.
+## The three SharePlay skills
 
-## Which page do I need?
+Axiom's SharePlay coverage is three skills. Each one's examples show the kind of question it answers, not the limit of what it covers.
 
-| You're doing this | Go here |
-|---|---|
-| Adding SharePlay, or a session never arrives | [SharePlay](/skills/integration/shareplay) |
-| Late joiners get no state; participants appear twice | [SharePlay](/skills/integration/shareplay) |
-| Syncing audio or video across participants | [Coordinated Playback](/skills/integration/shareplay-playback) |
-| Adapting a custom audio engine (not `AVPlayer`) | [Coordinated Playback](/skills/integration/shareplay-playback) |
-| Looking up a signature, availability, or a deprecation | [GroupActivities Reference](/reference/shareplay-ref) |
+- **[shareplay](/skills/integration/shareplay)** – Session lifecycle, activation, distributed state, and a short spatial section for visionOS. *Examples*: adding SharePlay at all; a session that never arrives; late joiners getting no state; participants appearing twice.
+- **[shareplay-playback](/skills/integration/shareplay-playback)** – The media timeline, which AVFoundation owns rather than your messenger. *Examples*: syncing audio or video across participants; adapting a custom audio engine instead of `AVPlayer`.
+- **[shareplay-ref](/reference/shareplay-ref)** – Full API surface, availability matrix, and deprecation table. *Examples*: looking up a signature, an availability floor, or a deprecation.
 
 ## Example Prompts
 
@@ -33,7 +29,7 @@ Axiom's coverage is compile-verified against the iOS 27 SDK and split across thr
 
 ## Five things that bite everyone
 
-These cut across all three pages. Each one produces code that looks correct, compiles, and is wrong.
+These cut across all three skills. Each one produces code that looks correct, compiles, and is wrong.
 
 **`GroupSession` is not `Sendable`, and Combine is not legacy here.** It's a framework `ObservableObject` you cannot redeclare. There is no AsyncSequence for `state`, `activity`, or `activeParticipants`. Worse, the standard late-joiner delta depends on `@Published` publishing from `willSet` — so migrating it to `@Observable`, or even adding a reflexive `.receive(on:)`, silently returns an empty set and late joiners never receive state. No crash, no warning.
 
@@ -58,9 +54,6 @@ These cut across all three pages. Each one produces code that looks correct, com
 
 ## Related
 
-- [SharePlay](/skills/integration/shareplay) – Session lifecycle, activation, distributed state, and a short spatial section for visionOS
-- [SharePlay Coordinated Playback](/skills/integration/shareplay-playback) – The media timeline, which AVFoundation owns rather than your messenger
-- [GroupActivities Reference](/reference/shareplay-ref) – Full API surface, availability matrix, and the deprecation table
 - [swift-concurrency](/skills/concurrency/swift-concurrency) – Isolation rules governing how you own a `GroupSession`
 
 ## Resources
