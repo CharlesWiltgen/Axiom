@@ -18,9 +18,11 @@ flowchart LR
         camera_capture["camera-capture"]:::discipline
         photo_library["photo-library"]:::discipline
         now_playing["now-playing"]:::discipline
+        shareplay["SharePlay"]:::discipline
+        shareplay_playback["SharePlay Playback"]:::discipline
         background_processing["background-processing"]:::discipline
         push_notifications["push-notifications"]:::discipline
-        shazamkit["shazamkit"]:::discipline
+        shazamkit["ShazamKit"]:::discipline
         core_location["core-location"]:::discipline
         haptics["haptics"]:::discipline
         localization["localization"]:::discipline
@@ -30,12 +32,13 @@ flowchart LR
 
     subgraph skills_r["References"]
         app_intents_ref["app-intents-ref"]:::reference
-        storekit_ref["storekit-ref"]:::reference
+        storekit_ref["StoreKit reference"]:::reference
         avfoundation_ref["avfoundation-ref"]:::reference
         extensions_widgets_ref["extensions-widgets-ref"]:::reference
         push_notifications_ref["push-notifications-ref"]:::reference
         core_location_ref["core-location-ref"]:::reference
-        shazamkit_ref["shazamkit-ref"]:::reference
+        shazamkit_ref["ShazamKit reference"]:::reference
+        shareplay_ref["SharePlay reference"]:::reference
     end
     axiom_integration --> skills_r
 
@@ -269,6 +272,31 @@ MPNowPlayingInfoCenter for media apps:
 - **MPNowPlayingSession** – Automatic management (iOS 16+)
 
 **When to use** Audio/video apps needing Lock Screen controls and Now Playing display
+
+---
+
+### [SharePlay](/SharePlay)
+
+GroupActivities sessions shared through FaceTime and Messages:
+- **Session lifecycle** – Activities, activation, joining, and teardown
+- **Distributed state** – Messenger for commands, journal for files
+- **Swift 6 isolation** – `GroupSession` is not `Sendable`, and observation is Combine-only
+- **Late joiners** – Catching up someone who arrives mid-session
+
+**When to use** Any shared, synchronized experience between people already on a FaceTime or Messages call
+
+See the [SharePlay overview](/SharePlay) for the map across all three pages, or go straight to the [GroupActivities reference](/reference/shareplay-ref).
+
+---
+
+### [SharePlay Coordinated Playback](./shareplay-playback)
+
+AVFoundation playback coordination for shared media:
+- **Clock agreement** – `hostClockTime` rather than broadcasting positions
+- **Custom engines** – Adapting a non-`AVPlayer` engine via `AVDelegatingPlaybackCoordinator`
+- **Suspensions** – Interruptions, stalls, and scrubbing without desyncing the group
+
+**When to use** Audio or video that must stay in sync across every participant
 
 ---
 

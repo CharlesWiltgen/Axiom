@@ -440,6 +440,9 @@ export default withMermaid(defineConfig({
             { text: 'Privacy UX', link: '/skills/integration/privacy-ux' },
             { text: 'Push Notifications', link: '/skills/integration/push-notifications' },
             { text: 'Screen Capture (ScreenCaptureKit)', link: '/skills/integration/screen-capture' },
+            { text: 'SharePlay (overview)', link: '/SharePlay' },
+            { text: 'SharePlay', link: '/skills/integration/shareplay' },
+            { text: 'SharePlay Coordinated Playback', link: '/skills/integration/shareplay-playback' },
             { text: 'ShazamKit', link: '/skills/integration/shazamkit' },
             { text: 'Suggested Actions (Apple Intelligence)', link: '/skills/integration/suggested-actions' },
             { text: 'System Media Routing (Casting)', link: '/skills/integration/system-media-routing' },
@@ -645,6 +648,7 @@ export default withMermaid(defineConfig({
             { text: 'Now Playing: MusicKit', link: '/reference/now-playing-musickit' },
             { text: 'Photo Library', link: '/reference/photo-library-ref' },
             { text: 'Push Notifications', link: '/reference/push-notifications-ref' },
+            { text: 'SharePlay (GroupActivities)', link: '/reference/shareplay-ref' },
             { text: 'ShazamKit', link: '/reference/shazamkit-ref' },
             { text: 'StoreKit 2 (In-App Purchases)', link: '/reference/storekit-ref' },
             { text: 'Tap to Pay on iPhone', link: '/reference/tap-to-pay-ref' },
@@ -742,7 +746,7 @@ export default withMermaid(defineConfig({
 
     footer: {
       message: 'Released under the MIT License',
-      copyright: 'Copyright © 2026 Charles Wiltgen • v27.0.0-beta.34'
+      copyright: 'Copyright © 2026 Charles Wiltgen • v27.0.0-beta.35'
     }
   }
 }))
