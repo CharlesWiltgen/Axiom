@@ -45,6 +45,17 @@ export default withMermaid(defineConfig({
     ],
 
     sidebar: {
+      '/SharePlay': [
+        {
+          text: 'SharePlay',
+          items: [
+            { text: 'Overview', link: '/SharePlay' },
+            { text: 'SharePlay', link: '/skills/integration/shareplay' },
+            { text: 'Coordinated Playback', link: '/skills/integration/shareplay-playback' },
+            { text: 'GroupActivities Reference', link: '/reference/shareplay-ref' }
+          ]
+        }
+      ],
       '/tools/': [
         {
           text: 'Tools',
