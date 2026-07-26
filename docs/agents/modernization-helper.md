@@ -53,6 +53,15 @@ Scans for legacy iOS patterns and provides migration paths to modern iOS 17/18+ 
 Full migration requires iOS 17+
 ```
 
+## What It Won't Migrate
+
+Some `ObservableObject` conformances are deliberately left alone:
+
+- **Framework-owned classes** – you can't redeclare a type you don't own, whatever your deployment target.
+- **`GroupSession` (SharePlay)** – beyond being framework-owned, code observing it must stay on Combine. There is no AsyncSequence for `state`, `activity`, or `activeParticipants`, and the standard late-joiner catch-up depends on `@Published` publishing from `willSet` — inside the sink the property still holds the previous value, which is what makes the participant delta work. Migrating it returns an empty delta with no crash and no warning, so late joiners silently never receive state.
+
+When the agent skips something for these reasons, it says so rather than staying quiet.
+
 ## Related
 
 - [swiftui-architecture](/skills/ui-design/swiftui-architecture) – Modern SwiftUI architecture patterns
