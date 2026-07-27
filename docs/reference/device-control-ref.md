@@ -27,6 +27,8 @@ Use this reference when:
 - "How do I list physical devices and simulators together from the command line?"
 - "How do I record a video of a physical device from the command line?"
 - "Which device operations still require the Xcode MCP server?"
+- "Which devicectl JSON keys are deprecated, and what replaced them?"
+- "How do I tell whether a device has Developer Mode enabled from the command line?"
 
 ## What's Covered
 
@@ -38,6 +40,9 @@ Use this reference when:
 - Unified `list devices` inventory (physical + simulated, `Reality` column)
 - Install / launch / inspect by `-d <udid>`
 - `--json-output` stability contract and the keys to parse
+- The `properties` dictionary that supersedes the deprecated `hardwareProperties` / `deviceProperties` / `connectionProperties` keys, and `--omit-deprecated-fields-in-json`
+- `properties.hardware.reality`, `.deviceType`, `.platform`; `properties.connection.state`, `.pairingState`, `.transportType`; `properties.state.developerModeStatus`, `.bootState`
+- Which of those fields are always present and which drop out on an unreachable device
 - devicectl-vs-simctl division of labor (interaction vs lifecycle)
 - Verified simulator-capable subcommand matrix
 - Face ID / Touch ID as a CI primitive; the `CoreDeviceError 1001` "device-only" signal
@@ -64,3 +69,4 @@ This page documents the `device-control-ref` reference skill (in the `axiom-tool
 
 - [xcui](/reference/xcui-ref) – validates the on-screen UI that `devicectl` sets up; the two compose
 - [simulator-tester](/agents/simulator-tester) – the agent that applies device state and asserts on the result
+- [watch-device-diag](/diagnostic/watch-device-diag) – applies these fields to a specific hard case: an Apple Watch that Xcode will not install to, launch, or attach to
