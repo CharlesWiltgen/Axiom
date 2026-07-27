@@ -25,6 +25,7 @@ license: MIT
 | Smart Stack widgets, complications, ClockKit→WidgetKit, RelevanceKit | See `skills/smart-stack-and-complications.md` |
 | Controls on watch surfaces, Live Activities on watch | See `skills/controls-and-live-activities.md` |
 | Watch Connectivity (WCSession), paired-device data transfer, Family Setup | See `skills/watch-connectivity.md` |
+| Xcode won't install/launch/attach to a Watch; Watch missing or `unavailable` in Device Hub / devicectl | See `skills/watch-device-diag.md` |
 | Background tasks, freshness scheduling, TN3135 networking limits | See `skills/background-and-networking.md` |
 | BGTaskScheduler migration, deprecated WK background scheduling `OS27` | See `skills/background-and-networking.md` |
 | Foundation Models / Private Cloud Compute on the watch `OS27` | See `skills/platform-basics.md` |
@@ -73,6 +74,12 @@ These topics overlap with watchOS development but live in separate suites:
 1. **Use axiom-watchos** for watch complications, Smart Stack placement, watch-side Live Activity presentation, RelevanceKit
 2. **Use axiom-integration** for iOS/iPadOS widgets, core ActivityKit API, App Intents
 
+**watch-device-diag vs watch-connectivity**: Two independent connections fail in ways that look identical. Decide which before writing any code:
+1. **Use watch-device-diag** for the Mac/Xcode → Watch link (CoreDevice): install, launch, LLDB attach, a Watch that is missing or `unavailable`
+2. **Use watch-connectivity** for the iPhone app ↔ watchOS app link (`WCSession`): transfer-API choice, delivery semantics, background-task completion
+3. **When unsure, start with watch-device-diag.** Run the app without the debugger attached — if it behaves correctly, the fault is the tunnel and no `WCSession` change will help. Redesigning `WCSession` to compensate for a broken debugger tunnel is the most expensive mistake in watchOS work
+4. **`isReachable == false` is not a transport failure** — it is the expected value across ordinary lifecycle transitions and routes to watch-connectivity, not here
+
 **axiom-watchos vs axiom-health**: For workouts on Apple Watch:
 1. **Use axiom-watchos** for watch-specific presentation: Always On display, Smart Stack placement, background mode coordination
 2. **Use axiom-health** for `HKWorkoutSession` lifecycle, `HKLiveWorkoutBuilder`, recovery, multi-device mirroring
@@ -90,6 +97,7 @@ digraph watchos {
     what -> "skills/smart-stack-and-complications.md" [label="complications, Smart Stack, RelevanceKit"];
     what -> "skills/controls-and-live-activities.md" [label="controls, watch Live Activities"];
     what -> "skills/watch-connectivity.md" [label="WCSession, paired-device transfer"];
+    what -> "skills/watch-device-diag.md" [label="Xcode can't reach the Watch"];
     what -> "skills/background-and-networking.md" [label="background tasks, BGTaskScheduler, networking limits"];
     what -> "skills/platform-basics.md" [label="Foundation Models / PCC on watch"];
     what -> "skills/modernization.md" [label="WatchKit/ClockKit migration"];
@@ -104,6 +112,6 @@ digraph watchos {
 
 **WWDC**: 2021-10003, 2022-10133, 2023-10138, 2023-10029, 2023-10309, 2024-10098, 2024-10157, 2024-10205, 2025-334
 
-**Docs**: /watchos-apps/building-a-watchos-app, /watchos-apps/creating-independent-watchos-apps, /watchconnectivity, /widgetkit/creating-accessory-widgets-and-watch-complications, /widgetkit/converting-a-clockkit-app, /relevancekit, /technotes/tn3135-low-level-networking-on-watchos, /technotes/tn3157-updating-your-watchos-project-for-swiftui-and-widgetkit
+**Docs**: /watchos-apps/building_a_watchos_app, /watchos-apps/creating-independent-watchos-apps, /watchconnectivity, /widgetkit/creating-accessory-widgets-and-watch-complications, /widgetkit/converting-a-clockkit-app, /relevancekit, /technotes/tn3135-low-level-networking-on-watchos, /technotes/tn3157-updating-your-watchos-project-for-swiftui-and-widgetkit
 
 **Skills**: axiom-swiftui, axiom-design, axiom-accessibility, axiom-health, axiom-integration, axiom-concurrency, axiom-ai, axiom-vision, axiom-media

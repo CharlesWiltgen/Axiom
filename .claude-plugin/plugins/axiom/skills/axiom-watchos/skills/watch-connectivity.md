@@ -12,6 +12,7 @@ Use when:
 
 #### Related Skills
 
+- Use `watch-device-diag.md` **first** when you are not certain the problem is your code — Xcode's connection to the Watch and your app's `WCSession` are separate layers, and redesigning `WCSession` to compensate for a broken debugger tunnel is the most expensive mistake in watchOS development
 - Use `platform-basics.md` for independent-app configuration and `WKRunsIndependentlyOfCompanionApp`
 - Use `background-and-networking.md` for URLSession background tasks and TN3135 networking limits — which often replace Watch Connectivity entirely
 - Use `smart-stack-and-complications.md` for widget timeline reloads driven by incoming transfers
@@ -66,7 +67,7 @@ Five methods, five jobs. Pick by primary purpose:
 |---|---|---|---|---|
 | `updateApplicationContext(_:)` | No | **Yes** — new context replaces old | Next launch | State snapshots where only the latest matters (current song, settings, last sync time) |
 | `transferUserInfo(_:)` | Yes | No — FIFO | Next launch (background) | Events that all matter in order (new messages, appointments, score updates) |
-| `transferCurrentComplicationUserInfo(_:)` | Yes | No — FIFO | Immediately (50/day limit) | Complication refresh triggers — the only method that wakes the watch for complications |
+| `transferCurrentComplicationUserInfo(_:)` | Yes | No — FIFO | Immediately (50/day limit) | Complication refresh triggers — the only Watch Connectivity method that wakes the watch for complications (widget push on watchOS 26+ is the higher-frequency alternative outside WC) |
 | `transferFile(_:metadata:)` | Yes | No — FIFO | On receipt (background) | File payloads (images, audio clips, large JSON) |
 | `sendMessage(_:replyHandler:errorHandler:)` | No | — | Only if both apps are reachable/active | Live request-response while both apps run |
 
@@ -199,16 +200,59 @@ private func completeBackgroundTasks() {
 ```swift
 let s = WCSession.default
 
-s.activationState         // .notActivated / .inactive / .activated
-s.isPaired                // iOS only — is any watch paired
-s.isWatchAppInstalled     // iOS only — does the paired watch have the companion
-s.isComplicationEnabled   // is a complication on an active watch face
-s.isReachable             // both apps active and reachable right now
+s.activationState          // .notActivated / .inactive / .activated
+s.isPaired                 // iOS only — is any watch paired
+s.isWatchAppInstalled      // iOS only — does the paired watch have the companion
+s.isCompanionAppInstalled  // watchOS only (watchOS 6+) — the mirror of isWatchAppInstalled
+s.isComplicationEnabled    // is a complication on an active watch face
+s.isReachable              // both apps active and reachable right now
+s.hasContentPending        // queued data still waiting to be delivered
 ```
+
+`isPaired`/`isWatchAppInstalled` are unavailable on watchOS and `isCompanionAppInstalled` is unavailable on iOS — the pair is deliberately asymmetric, so a shared diagnostics view needs `#if os(...)` around each.
 
 **Guard every send against the right precondition.** `transferUserInfo` works offline, but `sendMessage` fails if `isReachable == false`. Check `isComplicationEnabled` before spending one of the 50 daily complication transfers.
 
-**`isReachable` is a hint, not a delivery guarantee.** It can read `true` while a `sendMessage`/`sendMessageData` still fails or never arrives — don't gate sends on it as proof of delivery. Always pass the `errorHandler`, and for data that must arrive use the queued/background APIs (`transferUserInfo` / `updateApplicationContext` / `transferFile`). For genuine real-time, low-latency needs when both devices share a network, a direct HTTP/SSE channel is a known escape hatch around Watch Connectivity's reliability limits.
+**`isReachable` is not a connection status, and `false` is usually normal.** It means only that the counterpart is available *right now* for interactive messaging. The two directions are not symmetric: from the iPhone it normally requires the Watch app to be running and reachable, while from the Watch the iPhone app can often be woken in the background. A `false` reading is therefore the expected state across ordinary app lifecycle transitions, not evidence that the Watch is disconnected. Never gate durable synchronization on it — reserve `sendMessage` for commands whose UI is actively waiting for an answer, and fall back to queued delivery.
+
+**There is a dedicated property for the one case that surprises everyone.** On the watch, `session.iOSDeviceNeedsUnlockAfterRebootForReachability` (watchOS 2+, iOS-unavailable) reports the specific reason behind an otherwise inexplicable `false`: reachability requires the paired iPhone to have been unlocked **at least once since it rebooted**. A phone that rebooted overnight and was never unlocked produces exactly the "my watch is disconnected" symptom with nothing else wrong. Check this before investigating anything else, and surface a "unlock your iPhone" prompt rather than an error.
+
+**`isReachable` is also not a delivery guarantee.** It can read `true` while a `sendMessage`/`sendMessageData` still fails or never arrives — don't gate sends on it as proof of delivery. Always pass the `errorHandler`, and for data that must arrive use the queued/background APIs (`transferUserInfo` / `updateApplicationContext` / `transferFile`). For genuine real-time, low-latency needs when both devices share a network, a direct HTTP/SSE channel is a known escape hatch around Watch Connectivity's reliability limits.
+
+## Build a Connectivity Diagnostics Screen
+
+Watch Connectivity fails silently and asymmetrically, and the debugger is often not attached when it does. An internal screen in **both** apps is the cheapest way to tell "the live channel is down" apart from "the durable pipeline is broken" — a distinction no crash log will make for you.
+
+Show:
+
+- OS version, app version and build
+- `activationState`, `isReachable`, `hasContentPending`
+- iOS: `isPaired`, `isWatchAppInstalled` — watchOS: `isCompanionAppInstalled`
+- `outstandingUserInfoTransfers.count` and `outstandingFileTransfers.count`
+- Last sent and last received message IDs
+- Last `WCError` domain and code
+- A timestamp for every state transition
+
+Give it four buttons, one per delivery semantic, so a single tap identifies the broken layer:
+
+| Button | Proves |
+|---|---|
+| Live `sendMessage` ping | Interactive channel is up right now |
+| `updateApplicationContext` | Replaceable-state path works |
+| `transferUserInfo` | Durable ordered queue works |
+| `transferFile` | Durable file pipeline works |
+
+**Test the queued paths on real paired hardware.** Simulator does not implement all of the queued user-info and file transfers, so a green result there proves nothing about a device.
+
+### Make Payloads Survivable
+
+The process that sent a message is frequently gone before the reply arrives. Every payload should carry a protocol version, a message ID, a creation time, and the originating app build, and every handler should be idempotent — replays and duplicate error callbacks are normal, not exceptional.
+
+### Log on Both Sides, and Get the Watch's Log Off the Watch
+
+Use `Logger` with one shared subsystem and distinct categories per side, and record every activation, deactivation, reachability change, send, receipt, acknowledgment, and `WCError`. Apple's Watch Connectivity sample goes one step further and writes diagnostic logs locally on the Watch, then transfers the log file to the iPhone — which is exactly what you need when Xcode cannot stay attached. Console reads the unified log, and a sysdiagnose captures a system-wide snapshot for intermittent failures.
+
+When the Watch will not connect to Xcode at all, that is a different layer — see `watch-device-diag.md`.
 
 ## App Group Required for Complication Updates
 
@@ -247,6 +291,9 @@ Independent apps ship without an iPhone companion in some configurations — or 
 | Assuming `sendMessage`/`sendMessageData` errors fire at most once | Duplicate retries or duplicated side effects for a message that already succeeded | WC offers no exactly-once delivery and the error handler can fire more than once — tag each message with your own frame/message ID and dedupe (add an app-level ack when delivery must be confirmed) |
 | Overwriting `applicationContext` when ordered delivery is needed | Receiver misses events between wake intervals | Use `transferUserInfo` when every event matters, not `updateApplicationContext` |
 | Not deleting files after `transferFile` completes | Files accumulate on the sender's disk indefinitely | Remove the source file in `session(_:didFinish:error:)` |
+| Treating `isReachable == false` as "the Watch is disconnected" | Durable sync gated off during normal lifecycle transitions; data never flows | `false` is expected; gate only `sendMessage` on it, never `transferUserInfo`/`updateApplicationContext` |
+| Redesigning `WCSession` because Xcode dropped the debugger | Days spent rewriting a data layer that was never broken | Run without the debugger or install a TestFlight build first — see `watch-device-diag.md` |
+| Verifying queued transfers only in Simulator | Works in Simulator, fails on device | Simulator does not implement all queued user-info and file transfers; test on a real paired pair |
 
 ## Resources
 
