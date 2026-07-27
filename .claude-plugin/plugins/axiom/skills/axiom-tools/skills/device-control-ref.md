@@ -49,10 +49,36 @@ xcrun devicectl device info processes --device <udid>
 **Parse the structured `--json-output`, not the human-readable text.** devicectl guarantees the
 JSON is versioned and stable across releases; its human-readable output is explicitly *not* stable
 (simctl's human output never carried that guarantee either — the stability contract, not the
-unified `-d` syntax, is the real CI win). There is no literal `simulated` field: the `Reality` column is derived from
-`connectionProperties.transportType` (`sameMachine` = simulator; `localNetwork` / wired =
-physical). Key off that, plus `deviceProperties.bootState` (`booted` / `shutdown`) and
-`hardwareProperties.deviceType`, when enumerating.
+unified `-d` syntax, is the real CI win).
+
+**Use the `properties` dictionary.** The older top-level `hardwareProperties`, `deviceProperties`,
+and `connectionProperties` keys are deprecated in favor of one `properties` dictionary and will be
+removed; the `tags` key is already gone. Pass `--omit-deprecated-fields-in-json` to drop them now
+and prove a parser is forward-compatible. The fields worth keying off:
+
+| Field | Values | Always present |
+|---|---|---|
+| `properties.hardware.reality` | `physical` / `simulated` | Yes |
+| `properties.hardware.deviceType` | `iPhone`, `iPad`, `appleWatch`, … | Yes |
+| `properties.hardware.platform` | `iOS`, `watchOS`, … | Yes |
+| `properties.connection.state` | `connected` / `disconnected` / `unavailable` | Yes |
+| `properties.connection.pairingState` | `paired`, … | Yes |
+| `properties.state.developerModeStatus` | single-key dict: `{"enabled":{}}` / `{"disabled":{}}` | Physical only |
+| `properties.connection.transportType` | `sameMachine` (sim) / `localNetwork` / `wired` | **No** |
+| `properties.state.bootState` | `booted` / `shutdown` | **No** |
+
+**Read `reality` directly; never derive it from `transportType`.** `transportType` and `bootState`
+are absent on a physical device with no active connection — precisely the device you are debugging.
+A parser that infers physical-vs-simulated from `transportType` misclassifies or throws on exactly
+the rows that matter. `hardware.reality` is a literal field and is always populated.
+
+`developerModeStatus` encodes an enum as a single-key dictionary, so test key presence
+(`"enabled" in status`), not a string compare. `connection.lastConnectionDate` is a number in this
+schema (seconds from the 2001 epoch) where the deprecated keys carried an ISO-8601 string — a
+silent type change to catch when migrating.
+
+For reading these states on an Apple Watch that will not appear or will not run, see
+axiom-watchos (`skills/watch-device-diag.md`).
 
 ### Interaction vs lifecycle — devicectl does NOT replace simctl
 
