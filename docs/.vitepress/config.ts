@@ -745,7 +745,8 @@ export default withMermaid(defineConfig({
             { text: 'SwiftData Migration Diagnostics', link: '/diagnostic/swiftdata-migration-diag' },
             { text: 'SwiftUI Debugging Diagnostics', link: '/diagnostic/swiftui-debugging-diag' },
             { text: 'SwiftUI Navigation Diagnostics', link: '/diagnostic/swiftui-nav-diag' },
-            { text: 'Vision Diagnostics', link: '/diagnostic/vision-diag' }
+            { text: 'Vision Diagnostics', link: '/diagnostic/vision-diag' },
+            { text: 'Apple Watch Connection Diagnostics', link: '/diagnostic/watch-device-diag' }
           ]
         }
       ]
@@ -757,7 +758,7 @@ export default withMermaid(defineConfig({
 
     footer: {
       message: 'Released under the MIT License',
-      copyright: 'Copyright © 2026 Charles Wiltgen • v27.0.0-beta.35'
+      copyright: 'Copyright © 2026 Charles Wiltgen • v27.0.0-beta.36'
     }
   }
 }))

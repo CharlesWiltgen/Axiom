@@ -29,6 +29,7 @@ Systematic diagnostics for production issues with mandatory workflows and pressu
 | [**swiftui-debugging-diag**](./swiftui-debugging-diag) | Intermittent view updates, complex state dependencies, Self._printChanges() analysis — systematic SwiftUI debugging with Instruments integration |
 | [**swiftui-nav-diag**](./swiftui-nav-diag) | Navigation not responding, deep links showing wrong screen, state lost on tab switch — SwiftUI navigation diagnostics with production crisis defense |
 | [**vision-diag**](./vision-diag) | Subject not detected, hand pose missing, text recognition wrong, barcode issues, performance problems — Vision framework diagnostics |
+| [**watch-device-diag**](./watch-device-diag) | Xcode can't install, launch, or attach to an Apple Watch; Watch missing or `unavailable` in Device Hub — separates the CoreDevice tunnel from WatchConnectivity |
 
 ## Quality Standards
 
