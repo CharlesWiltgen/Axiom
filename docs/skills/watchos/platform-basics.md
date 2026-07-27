@@ -94,6 +94,6 @@ This page documents the `platform-basics` skill in the `axiom-watchos` suite. Th
 
 **WWDC**: 2025-334, 2025-219, 2024-10205, 2023-10138, 2022-10133, 2026-241
 
-**Docs**: /watchos-apps/building-a-watchos-app, /watchos-apps/creating-independent-watchos-apps, /swiftui/app, /swiftui/windowgroup, /watchkit/wkapplicationdelegate, /swiftui/wkapplicationdelegateadaptor, /swiftui/wknotificationscene, /watchkit/wkusernotificationhostingcontroller, /foundationmodels/privatecloudcomputelanguagemodel
+**Docs**: /watchos-apps/building_a_watchos_app, /watchos-apps/creating-independent-watchos-apps, /swiftui/app, /swiftui/windowgroup, /watchkit/wkapplicationdelegate, /swiftui/wkapplicationdelegateadaptor, /swiftui/wknotificationscene, /watchkit/wkusernotificationhostingcontroller, /foundationmodels/privatecloudcomputelanguagemodel
 
 **Skills**: axiom-watchos, design-for-watchos, watch-connectivity, background-and-networking, modernization, axiom-ai

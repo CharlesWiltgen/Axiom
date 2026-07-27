@@ -6,6 +6,7 @@ Build Apple Watch apps the supported way — SwiftUI-first, independent, and bui
 flowchart LR
     classDef router fill:#6f42c1,stroke:#5a32a3,color:#fff
     classDef discipline fill:#d4edda,stroke:#28a745,color:#1b4332
+    classDef diagnostic fill:#fff3cd,stroke:#ffc107,color:#664d03
 
     axiom_watchos["axiom-watchos router"]:::router
 
@@ -17,6 +18,7 @@ flowchart LR
         smart_stack_and_complications["smart-stack-and-complications"]:::discipline
         controls_and_live_activities["controls-and-live-activities"]:::discipline
         modernization["modernization"]:::discipline
+        watch_device_diag["watch-device-diag"]:::diagnostic
     end
     axiom_watchos --> skills
 ```
@@ -57,6 +59,10 @@ Questions you can ask Claude that will draw from these skills:
 - **[Watch Connectivity](/skills/watchos/watch-connectivity)** – WCSession, paired-device data transfer, Family Setup
   - *"How do I sync preferences between my iPhone and Apple Watch apps?"*
   - *"`transferUserInfo` vs. `updateApplicationContext` vs. `sendMessage` — which one do I use?"*
+
+- **[Apple Watch Connection Diagnostics](/diagnostic/watch-device-diag)** – Getting a Watch reliably attached to Xcode, and telling that apart from a WatchConnectivity problem
+  - *"Xcode can't see my Apple Watch — where do I start?"*
+  - *"My Watch shows `unavailable` in Device Hub. Do I need to unpair it?"*
 
 - **[Background and Networking](/skills/watchos/background-and-networking)** – Background tasks, freshness scheduling, TN3135 networking limits
   - *"How do I refresh my watch app's data while it's on the wrist?"*
