@@ -9,48 +9,40 @@ Use this skill when:
 - Refactoring views to separate concerns
 - Making SwiftUI code testable
 - Asking "where should this code go?"
-- Deciding which property wrapper to use (@State, @Environment, @Bindable)
-- Organizing a SwiftUI codebase for team development
+- Deciding which property wrapper to use (@State, @Binding, @Environment, @Bindable)
 
 ## Example Prompts
 
 | What You Might Ask | Why This Skill Helps |
-|--------------------|----------------------|
+|---|---|
 | "There's quite a bit of code in my model view files about logic things. How do I extract it?" | Provides refactoring workflow with decision trees for where logic belongs |
 | "Should I use MVVM, TCA, or Apple's vanilla patterns?" | Decision criteria based on app complexity, team size, testability needs |
 | "How do I make my SwiftUI code testable?" | Shows separation patterns that enable testing without SwiftUI imports |
 | "Where should formatters and calculations go?" | Anti-patterns section prevents logic in view bodies |
-| "Which property wrapper do I use?" | Decision tree for @State, @Environment, @Bindable, or plain properties |
+| "Which property wrapper do I use?" | Decision tree for @State, @Binding, @Environment, @Bindable, or plain properties |
 
 ## Quick Architecture Decision Tree
 
+```dot
+digraph architecture_choice {
+    "What's driving the choice?" [shape=diamond];
+    "Complex navigation too?" [shape=diamond];
+
+    "What's driving the choice?" -> "Apple's native patterns (Part 1)" [label="starting fresh, small/medium app"];
+    "What's driving the choice?" -> "MVVM (Part 2)" [label="team already fluent in MVVM from UIKit"];
+    "What's driving the choice?" -> "TCA (Part 3)" [label="need exhaustive effect testing + team consistency"];
+    "What's driving the choice?" -> "Complex navigation too?" [label="deep linking, multiple entry points"];
+
+    "Complex navigation too?" -> "Add Coordinator (Part 4)" [label="yes — layers onto any of the above"];
+}
 ```
-What's driving your architecture choice?
-│
-├─ Starting fresh, small/medium app, want Apple's patterns?
-│  └─ Use Apple's Native Patterns (Part 1)
-│     - @Observable models for business logic
-│     - State-as-Bridge for async boundaries
-│     - Property wrapper decision tree
-│
-├─ Familiar with MVVM from UIKit?
-│  └─ Use MVVM Pattern (Part 2)
-│     - ViewModels as presentation adapters
-│     - Clear View/ViewModel/Model separation
-│     - Works well with @Observable
-│
-├─ Complex app, need rigorous testability, team consistency?
-│  └─ Consider TCA (Part 3)
-│     - State/Action/Reducer/Store architecture
-│     - Excellent testing story
-│     - Learning curve + boilerplate trade-off
-│
-└─ Complex navigation, deep linking, multiple entry points?
-   └─ Add Coordinator Pattern (Part 4)
-      - Can combine with any of the above
-      - Extracts navigation logic from views
-      - NavigationPath + Coordinator objects
-```
+
+| Choice | What you get | Cost |
+|--------|--------------|------|
+| Apple's native patterns | `@Observable` models, State-as-Bridge, property-wrapper tree | Fewest moving parts; the default |
+| MVVM | ViewModels as presentation adapters | An extra layer per view that has presentation state |
+| TCA | State/Action/Reducer/Store, exhaustive effect tests | Learning curve, boilerplate, third-party dependency |
+| Coordinator | Navigation pulled out of views, `NavigationPath` routing | Another object to own and test |
 
 ---
 
@@ -64,7 +56,7 @@ What's driving your architecture choice?
 Apple's modern SwiftUI patterns (WWDC 2023-2025) center on:
 1. **@Observable** for data models (replaces ObservableObject)
 2. **State-as-Bridge** for async boundaries (WWDC 2025)
-3. **Three property wrappers**: @State, @Environment, @Bindable
+3. **Four property wrappers**: @State, @Binding, @Environment, @Bindable
 4. **Synchronous UI updates** for animations
 
 ## The State-as-Bridge Pattern
@@ -97,8 +89,9 @@ struct ColorExtractorView: View {
 
 ```swift
 // ✅ Correct: State bridges UI and async code
+@MainActor
 @Observable
-class ColorExtractor {
+final class ColorExtractor {
     var isLoading = false
     var colors: [Color] = []
 
@@ -135,37 +128,51 @@ struct ColorExtractorView: View {
 }
 ```
 
-**Benefits**:
+#### Benefits
 - UI logic stays synchronous (animations work correctly)
 - Async code lives in the model (testable without SwiftUI)
 - Clear boundary between time-sensitive UI and long-running work
 
+The `@MainActor` is required, not decoration. Without it the model has no isolation, `extract(from:)` becomes `@concurrent`, and passing the model in fails under Swift 6 — `error: sending 'self.extractor' risks causing data races`. Annotate the model, not the method.
+
+To flip this default for a whole target instead of annotating every model, use `.defaultIsolation(MainActor.self)` — see swift-concurrency.
+
+A `.task` body is created by `Task.immediate` and runs **synchronously until its first `await`** — so that prefix is as safe for animation-relevant state as a button action is.
+
 ## Property Wrapper Decision Tree
 
-There are only **3 questions** to answer:
+Two questions settle it: **what kind of thing is it**, and **who owns it**. Value types and `@Observable` classes take different branches — `@Bindable` works only on the class side.
 
+```dot
+digraph property_wrapper {
+    "Class or value type?" [shape=diamond];
+    "Who owns this value?" [shape=diamond];
+    "Who owns this object?" [shape=diamond];
+    "This view mutates it?" [shape=diamond];
+    "Needs $ bindings?" [shape=diamond];
+
+    "Class or value type?" -> "Who owns this value?" [label="value type"];
+    "Class or value type?" -> "Who owns this object?" [label="@Observable class"];
+    "Who owns this value?" -> "@State" [label="this view"];
+    "Who owns this value?" -> "This view mutates it?" [label="parent"];
+    "This view mutates it?" -> "@Binding" [label="yes"];
+    "This view mutates it?" -> "plain let" [label="no"];
+    "Who owns this object?" -> "@State" [label="this view creates it"];
+    "Who owns this object?" -> "@Environment" [label="app/scene-wide"];
+    "Who owns this object?" -> "Needs $ bindings?" [label="parent"];
+    "Needs $ bindings?" -> "@Bindable" [label="yes"];
+    "Needs $ bindings?" -> "plain let" [label="no"];
+}
 ```
-Which property wrapper should I use?
-│
-├─ Does this model need to be STATE OF THE VIEW ITSELF?
-│  └─ YES → Use @State
-│     Examples: Form inputs, local toggles, sheet presentations
-│     Lifetime: Managed by the view's lifetime
-│
-├─ Does this model need to be part of the GLOBAL ENVIRONMENT?
-│  └─ YES → Use @Environment
-│     Examples: User account, app settings, dependency injection
-│     Lifetime: Lives at app/scene level
-│
-├─ Does this model JUST NEED BINDINGS?
-│  └─ YES → Use @Bindable
-│     Examples: Editing a model passed from parent
-│     Lightweight: Only enables $ syntax for bindings
-│
-└─ NONE OF THE ABOVE?
-   └─ Use as plain property
-      Examples: Immutable data, parent-owned models
-      No wrapper needed: @Observable handles observation
+
+A parent-owned `@Observable` needs no wrapper to be observed — observation belongs to the object, not the wrapper.
+
+`@Environment(Type.self)` injects objects. For plain values, declare a key with `@Entry`:
+
+```swift
+extension EnvironmentValues {
+    @Entry var theme = Theme(accent: .blue)   // read via @Environment(\.theme)
+}
 ```
 
 ### Examples
@@ -182,7 +189,10 @@ struct DonutEditor: View {
 
 // ✅ @Environment — App-wide model
 struct MenuView: View {
-    @Environment(Account.self) private var account  // Global
+    // Traps at runtime if no ancestor called .environment(account).
+    // Use `@Environment(Account.self) private var account: Account?` if the
+    // model is genuinely optional. There is no compile-time check either way.
+    @Environment(Account.self) private var account
 
     var body: some View {
         Text("Welcome, \(account.userName)")
@@ -199,7 +209,7 @@ struct DonutRow: View {
 }
 
 // ✅ Plain property — Just reading
-struct DonutRow: View {
+struct DonutLabel: View {
     let donut: Donut  // Parent owns, no binding needed
 
     var body: some View {
@@ -208,17 +218,16 @@ struct DonutRow: View {
 }
 ```
 
-### `@State` is a macro now (Xcode 27) — three source-compat breaks
+### `@State` is a macro now (Xcode 27) — two source-compat breaks
 
-Xcode 27 reimplements `@State` as a Swift **macro** so an initial-value expression (`@State private var model = Model()`) is evaluated once instead of on every view re-instantiation. The new behavior back-deploys to the iOS 17-aligned OSes and is mostly source-compatible — but three patterns that compiled under the property-wrapper `@State` no longer do:
+Xcode 27 reimplements `@State` as a Swift **macro** so an initial-value expression (`@State private var model = Model()`) is evaluated once instead of on every view re-instantiation. The new behavior back-deploys to the iOS 17-aligned OSes and is mostly source-compatible — but two patterns that compiled under the property-wrapper `@State` no longer do:
 
-1. **Initial value at the declaration *and* an assignment in `init`.** The init assignment was always silently discarded; now it also fails to compile. Fix: drop the declaration's initial value when you assign in `init`.
+1. **Initial value at the declaration *and* an assignment in `init`, with the `@State` assigned first.** The macro's accessor touches `self` before definite initialization finishes, so you get `error: variable 'self.title' used before being initialized`. Assigning the plain properties first still compiles; dropping the declaration's initial value is the cleaner fix.
    ```swift
    @State private var page: StickerPage              // no initial-value expression
    init(title: String) { self.page = StickerPage(title: title); self.title = title }   // compiles
    ```
-2. **The synthesized memberwise initializer is disabled** by the macro, so an extension calling `self.init(page:title:)` breaks. Fix: assign the members explicitly (`self.title = title; self.page = page`).
-3. **Composing `@State` with another property wrapper or macro is unsupported.**
+2. **Composing `@State` with another property wrapper or macro is unsupported.**
 
 Also: generic-argument inference is slightly less flexible — write the `@State` type explicitly if inference fails. There's no availability gate (the change back-deploys); it's a build-time behavior of the Xcode 27 toolchain, so it bites the moment you build with the 27 SDK regardless of deployment target.
 
@@ -266,7 +275,7 @@ struct DonutMenu: View {
 }
 ```
 
-**How it works**:
+#### How it works
 - SwiftUI tracks which properties are accessed during `body` execution
 - Only those properties trigger view updates when changed
 - Granular dependency tracking = better performance
@@ -282,10 +291,12 @@ class PetStoreViewModel {
     let petStore: PetStore  // Domain model
     var searchText: String = ""
 
+    init(petStore: PetStore) { self.petStore = petStore }
+
     // View-specific computed property
     var filteredPets: [Pet] {
         guard !searchText.isEmpty else { return petStore.myPets }
-        return petStore.myPets.filter { $0.name.contains(searchText) }
+        return petStore.myPets.filter { $0.name.localizedStandardContains(searchText) }
     }
 }
 
@@ -303,13 +314,13 @@ struct PetListView: View {
 }
 ```
 
-**When to use a ViewModel adapter**:
+#### When to use a ViewModel adapter
 - Filtering, sorting, grouping for display
 - Formatting for presentation (but NOT heavy computation)
 - View-specific state that doesn't belong in domain model
 - Bridging between domain model and SwiftUI conventions
 
-**When NOT to use a ViewModel**:
+#### When NOT to use a ViewModel
 - Simple views that just display model data
 - Logic that belongs in the domain model
 - Over-extraction just for "pattern purity"
@@ -318,7 +329,7 @@ struct PetListView: View {
 
 ## Bridging Actor State to SwiftUI
 
-SwiftUI's `@Observable` and `ObservableObject` types must be `@MainActor` — view bodies render on MainActor and need synchronous access to observed state. Custom actors live in their own isolation domain. The two don't connect directly.
+Models a view body reads should be `@MainActor` — bodies render on MainActor and need synchronous access to observed state. (It's a strong default, not a language rule: an `@Observable` with no UI-facing mutable state can stay non-isolated.) Custom actors live in their own isolation domain, so the two don't connect directly.
 
 **A proxy layer is unavoidable** when you want SwiftUI to observe state owned by a custom actor. Some boilerplate is the cost of safe non-UI concurrency.
 
@@ -328,20 +339,27 @@ The standard pattern: actor owns the source of truth; a `@MainActor @Observable`
 // Source of truth — lives off-main
 actor InventoryStore {
     private var items: [Item] = []
-    private var listeners: [AsyncStream<[Item]>.Continuation] = []
+    private var listeners: [UUID: AsyncStream<[Item]>.Continuation] = [:]
 
     func current() -> [Item] { items }
 
     func updates() -> AsyncStream<[Item]> {
         AsyncStream { continuation in
-            listeners.append(continuation)
+            let id = UUID()
+            listeners[id] = continuation
             continuation.yield(items)
+            // Without onTermination, `listeners` grows for the process lifetime
+            continuation.onTermination = { [weak self] _ in
+                Task { await self?.removeListener(id) }
+            }
         }
     }
 
+    private func removeListener(_ id: UUID) { listeners[id] = nil }
+
     func setItems(_ newItems: [Item]) {
         items = newItems
-        listeners.forEach { $0.yield(newItems) }
+        listeners.values.forEach { $0.yield(newItems) }
     }
 }
 
@@ -351,30 +369,32 @@ actor InventoryStore {
 final class InventoryModel {
     private(set) var items: [Item] = []
     private let store: InventoryStore
-    private var observationTask: Task<Void, Never>?
 
     init(store: InventoryStore) {
         self.store = store
     }
 
-    func start() {
-        observationTask = Task { [weak self] in
-            guard let stream = await self?.store.updates() else { return }
-            for await snapshot in stream {
-                self?.items = snapshot
-            }
+    func observe() async {
+        for await snapshot in await store.updates() {
+            items = snapshot
         }
     }
-
-    deinit { observationTask?.cancel() }
 }
 
 struct InventoryView: View {
     @State private var model: InventoryModel
 
+    // The view builds the model from an injected store, which a memberwise
+    // init taking the model itself can't express
+    init(store: InventoryStore) {
+        self.model = InventoryModel(store: store)
+    }
+
     var body: some View {
         List(model.items) { item in Text(item.name) }
-            .onAppear { model.start() }
+            // .task, not .onAppear — it cancels on destroy and won't stack up
+            // a second iteration every time the view reappears
+            .task { await model.observe() }
     }
 }
 ```
@@ -386,6 +406,21 @@ The proxy buys you:
 
 The cost is the proxy code itself, which scales linearly with the number of actor-owned subsystems you need to surface. There's no way to eliminate this without giving up either actor isolation or SwiftUI's observability model.
 
+### The reverse direction: model → `AsyncSequence` `OS26`
+
+`Observations` turns an `@Observable` into an `AsyncSequence`, which is how non-UI consumers watch UI state without SwiftUI:
+
+```swift
+@MainActor
+func indexQueries(_ model: SearchModel) async {
+    for await query in Observations({ model.query }) {
+        await Indexer.shared.record(query)
+    }
+}
+```
+
+It does **not** replace the proxy above. `Observations.init` takes a synchronous closure and tracks `@Observable` types, so it can neither `await` an actor nor observe one.
+
 ---
 
 ## `.task` Modifier Lifecycle
@@ -394,7 +429,7 @@ The `.task` modifier is the canonical way to attach async work to a SwiftUI view
 
 ### When `.task` cancels
 
-`.task` cancels when the **view is destroyed**, which has the same timeline as `onDisappear`. Specifically:
+`.task` cancels when the **view is destroyed, or changes identity**. Specifically:
 
 | Event | Does `.task` cancel? |
 |-------|----------------------|
@@ -404,6 +439,7 @@ The `.task` modifier is the canonical way to attach async work to a SwiftUI view
 | Parent removes the view from its hierarchy | **Yes** — destruction |
 | Sheet/popover is dismissed | **Yes** — destruction (when the sheet view goes away) |
 | App backgrounds | **No** — destruction is a view-tree event, not app lifecycle |
+| `.id()` value changes, or `ForEach` identity churn | **Yes** — identity change, not destruction |
 
 ```swift
 struct ContentView: View {
@@ -533,7 +569,7 @@ A child view pushed onto a `NavigationStack` has its `.task` cancelled when the 
 
 ```swift
 // ❌ Results lost when user pops and pushes again
-struct DetailView: View {
+struct ViewOwnedDetailView: View {
     @State private var data: [Item] = []
     var body: some View {
         List(data) { Text($0.name) }
@@ -559,6 +595,13 @@ struct DetailView: View {
 ---
 
 # Part 2: MVVM Pattern
+
+## Before you add a ViewModel
+
+A SwiftUI `View` is a value-typed description of state — it already fills much of the view-model role, and Apple's guidance prescribes observable *models* read directly by views without a ViewModel layer. Two concrete costs before you add one:
+
+- **`DynamicProperty` wrappers don't work in an `@Observable` class.** `@Environment`, `@FocusState`, `@AppStorage`, `@SceneStorage`, `@ScaledMetric`, and `@Namespace` all fail to compile there — `@Observable` rewrites stored properties to computed ones, and property wrappers can't apply to those. State you move into a ViewModel is state you can no longer wire to SwiftUI.
+- **The "view structs are recreated constantly, so objects can't live there" argument is obsolete.** In Xcode 27 `@State` is a macro whose declaration-site initial value is evaluated once.
 
 ## When to Use MVVM
 
@@ -601,7 +644,7 @@ class PetListViewModel {
 
     var filteredSortedPets: [Pet] {
         let filtered = pets.filter { pet in
-            searchText.isEmpty || pet.name.contains(searchText)
+            searchText.isEmpty || pet.name.localizedStandardContains(searchText)
         }
         return filtered.sorted { lhs, rhs in
             switch selectedSort {
@@ -639,17 +682,34 @@ struct PetListView: View {
 
 ## Common MVVM Mistakes in SwiftUI
 
-### ❌ Mistake 1: Duplicating @Observable in View and ViewModel
+### ❌ Mistake 1: Taking ownership of a model the parent owns
+
+`@State` initializes once and keeps that instance, so a child declaring its own `@State` model silently detaches from the parent's source of truth. `@State` + `@Observable` is correct when the view genuinely owns the model — `@State` holds the reference, `@Observable` does the tracking.
 
 ```swift
-// ❌ @State + @Observable is redundant — @State creates its own storage
-struct MyView: View {
-    @State private var viewModel = MyViewModel()  // ❌ Redundant wrapper
+// ❌ The parent already owns a MyViewModel — this creates a second, unrelated
+//    one, and the child silently stops seeing the parent's updates
+struct DetailView: View {
+    @State private var viewModel = MyViewModel()
+}
+```
+
+Accept what the parent owns instead — and keep `@State` for the view that actually creates the model:
+
+```swift
+// ✅ Parent-owned, read-only
+struct DetailView: View {
+    let viewModel: MyViewModel
 }
 
-// ✅ Pass @Observable directly — use @State only if the view OWNS the lifecycle
-struct MyView: View {
-    let viewModel: MyViewModel  // ✅ Or @State if view creates it
+// ✅ Parent-owned, needs `$` bindings
+struct EditableDetailView: View {
+    @Bindable var viewModel: MyViewModel
+}
+
+// ✅ @State is correct here — this view genuinely creates and owns the model
+struct RootView: View {
+    @State private var viewModel = MyViewModel()
 }
 ```
 
@@ -698,18 +758,22 @@ class FeedViewModel {
 
 ```swift
 // ❌ Business rules belong in the Model, not the ViewModel
-@Observable class OrderViewModel {
-    func calculateDiscount(for order: Order) -> Double { /* ... */ }  // ❌ Business logic
+@MainActor @Observable final class DiscountingOrderViewModel {
+    func calculateDiscount(for order: Order) -> Double { 0 }  // ❌ Business logic
 }
 
 // ✅ Model owns business logic; ViewModel only formats for display
 struct Order {
-    func calculateDiscount() -> Double { /* business rules */ }
+    let currencyCode: String
+    func calculateDiscount() -> Decimal { /* business rules */ }
 }
-@Observable class OrderViewModel {
+@MainActor @Observable final class OrderViewModel {
     let order: Order
+    init(order: Order) { self.order = order }
+
+    // ✅ Just formatting — via a FormatStyle
     var displayDiscount: String {
-        "$\(order.calculateDiscount(), specifier: "%.2f")"  // ✅ Just formatting
+        order.calculateDiscount().formatted(.currency(code: order.currencyCode))
     }
 }
 ```
@@ -822,7 +886,7 @@ struct CounterView: View {
 | Medium app, experienced team | TCA if testability is priority |
 | Large app, multiple teams | TCA for consistency |
 | Rapid prototyping | Apple patterns (faster) |
-| Mission-critical (banking, health) | TCA for rigorous testing |
+| Mission-critical (banking, health) | Either — weigh TCA's exhaustive effect testing against taking a third-party dependency in a regulated domain |
 
 ---
 
@@ -841,16 +905,20 @@ Coordinators extract navigation logic from views. Use when:
 
 ```swift
 // Minimal coordinator — Route enum + @Observable coordinator + NavigationStack binding
+// Routes carry IDs, never value models: a Pet in the path snapshots stale data
+// and makes state restoration lossy. (Pet is Identifiable, not Hashable, so
+// `case detail(Pet)` doesn't even compile.)
 enum Route: Hashable {
-    case detail(Pet)
+    case detail(Pet.ID)
     case settings
 }
 
+@MainActor
 @Observable
-class AppCoordinator {
+final class AppCoordinator {
     var path: [Route] = []
 
-    func showDetail(for pet: Pet) { path.append(.detail(pet)) }
+    func showDetail(for pet: Pet) { path.append(.detail(pet.id)) }
     func popToRoot() { path.removeAll() }
 }
 
@@ -863,7 +931,7 @@ struct AppView: View {
             PetListView(coordinator: coordinator)
                 .navigationDestination(for: Route.self) { route in
                     switch route {
-                    case .detail(let pet): PetDetailView(pet: pet, coordinator: coordinator)
+                    case .detail(let petID): PetDetailView(petID: petID, coordinator: coordinator)
                     case .settings: SettingsView(coordinator: coordinator)
                     }
                 }
@@ -878,10 +946,13 @@ Add deep linking with `.onOpenURL` and URL-to-route parsing:
 // Add to AppCoordinator
 func handleDeepLink(_ url: URL) {
     guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else { return }
-    // Parse URL path into routes
-    if components.path.hasPrefix("/pets/"), let id = components.path.split(separator: "/").last {
-        path = [.detail(loadPet(id: String(id)))]
-    }
+    // For "myapp://pets/<uuid>" the authority is the HOST, not the path:
+    //   host == "pets", path == "/<uuid>"
+    // Matching on path.hasPrefix("/pets/") never fires for this URL shape.
+    guard components.host == "pets",
+          let last = components.path.split(separator: "/").last,
+          let petID = UUID(uuidString: String(last)) else { return }
+    path = [.detail(petID)]
 }
 
 // Add to AppView's body
@@ -891,10 +962,14 @@ func handleDeepLink(_ url: URL) {
 Coordinators are testable without SwiftUI — assert path state directly:
 
 ```swift
-func testDeepLink() {
+@MainActor
+@Test func deepLinkPushesPetDetail() {
     let coordinator = AppCoordinator()
-    coordinator.handleDeepLink(URL(string: "myapp://pets/123")!)
-    XCTAssertEqual(coordinator.path.count, 1)  // Navigated to detail
+    let petID = UUID()
+
+    coordinator.handleDeepLink(URL(string: "myapp://pets/\(petID)")!)
+
+    #expect(coordinator.path == [.detail(petID)])
 }
 ```
 
@@ -933,25 +1008,27 @@ If ANY of these are present, that logic should likely move out.
 
 Use this decision tree:
 
+```dot
+digraph extraction_target {
+    "What kind of logic is it?" [shape=diamond];
+
+    "What kind of logic is it?" -> "Extract to Model" [label="domain rules (discounts, validation)"];
+    "What kind of logic is it?" -> "Extract to ViewModel or computed property" [label="presentation (filtering, sorting)"];
+    "What kind of logic is it?" -> "Extract to Service" [label="side effects (API, database, files)"];
+    "What kind of logic is it?" -> "Leave in the view — use a FormatStyle" [label="display formatting"];
+    "What kind of logic is it?" -> "Precompute in the model, or hoist to a static let" [label="expensive pure computation"];
+}
 ```
-Where does this logic belong?
-│
-├─ Pure domain logic (discounts, validation, business rules)?
-│  └─ Extract to Model
-│     Example: Order.calculateDiscount()
-│
-├─ Presentation logic (filtering, sorting, formatting)?
-│  └─ Extract to ViewModel or computed property
-│     Example: filteredItems, displayPrice
-│
-├─ External side effects (API, database, file system)?
-│  └─ Extract to Service
-│     Example: APIClient, DatabaseManager
-│
-└─ Just expensive computation?
-   └─ Cache with @State or create once
-      Example: let formatter = DateFormatter()
-```
+
+Sorting splits by *who decides the order*: a domain-meaningful default order is the model's, a user-selected sort is presentation state and belongs to the ViewModel.
+
+| Destination | Example |
+|-------------|---------|
+| Model | `Order.calculateDiscount()`, default ordering |
+| ViewModel / computed property | `filteredItems`, user-selected `sortedItems` |
+| Service | `APIClient`, `DatabaseManager` |
+| View (FormatStyle) | `Text(price, format: .currency(code:))` |
+| `static let` | `static let heavyLookupTable = …` |
 
 ### Example: Refactoring Logic from View
 
@@ -970,7 +1047,7 @@ struct OrderListView: View {
         }
 
         return List(discounted) { order in
-            Text(formatter.string(from: order.total)!)  // ❌ Force unwrap
+            Text(formatter.string(from: order.total as NSNumber)!)  // ❌ Force unwrap
         }
     }
 }
@@ -980,9 +1057,10 @@ struct OrderListView: View {
 // ✅ After: Logic extracted
 
 // Model — Business logic
-struct Order {
+struct Order: Identifiable {
     let id: UUID
     let total: Decimal
+    let currencyCode: String
 
     var discount: Decimal {
         total * 0.1
@@ -993,34 +1071,27 @@ struct Order {
     }
 }
 
-// ViewModel — Presentation logic
-@Observable
-class OrderListViewModel {
+// ViewModel — presentation state (the filter is the reason it exists)
+@MainActor @Observable
+final class OrderListViewModel {
     let orders: [Order]
-    private let formatter: NumberFormatter  // ✅ Created once
 
-    var discountedOrders: [Order] {  // ✅ Computed property
+    var discountedOrders: [Order] {
         orders.filter { $0.qualifiesForDiscount }
     }
 
     init(orders: [Order]) {
         self.orders = orders
-        self.formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-    }
-
-    func formattedTotal(_ order: Order) -> String {
-        formatter.string(from: order.total as NSNumber) ?? "$0.00"
     }
 }
 
-// View — UI only
+// View — UI only; formatting stays here, no formatter to cache
 struct OrderListView: View {
     let viewModel: OrderListViewModel
 
     var body: some View {
         List(viewModel.discountedOrders) { order in
-            Text(viewModel.formattedTotal(order))
+            Text(order.total, format: .currency(code: order.currencyCode))
         }
     }
 }
@@ -1032,30 +1103,23 @@ Your refactoring succeeded if:
 
 ```swift
 // ✅ Can test without importing SwiftUI
-import XCTest
+import Testing
 
-final class OrderTests: XCTestCase {
-    func testDiscountCalculation() {
-        let order = Order(id: UUID(), total: 100)
-        XCTAssertEqual(order.discount, 10)
-    }
-
-    func testQualifiesForDiscount() {
-        let order = Order(id: UUID(), total: 100)
-        XCTAssertTrue(order.qualifiesForDiscount)
-    }
+@Test func discountIsTenPercent() {
+    // 200 not 100: the rule is `discount > 10`, so a 100 total lands exactly
+    // on the boundary and does NOT qualify
+    let order = Order(id: UUID(), total: 200, currencyCode: "USD")
+    #expect(order.discount == 20)
+    #expect(order.qualifiesForDiscount)
 }
 
-final class OrderViewModelTests: XCTestCase {
-    func testFilteredOrders() {
-        let orders = [
-            Order(id: UUID(), total: 50),   // Discount: 5 ❌
-            Order(id: UUID(), total: 200),  // Discount: 20 ✅
-        ]
-        let viewModel = OrderListViewModel(orders: orders)
+@MainActor
+@Test func onlyQualifyingOrdersSurviveTheFilter() {
+    let small = Order(id: UUID(), total: 50, currencyCode: "USD")   // discount 5 ❌
+    let large = Order(id: UUID(), total: 200, currencyCode: "USD")  // discount 20 ✅
+    let viewModel = OrderListViewModel(orders: [small, large])
 
-        XCTAssertEqual(viewModel.discountedOrders.count, 1)
-    }
+    #expect(viewModel.discountedOrders.map(\.id) == [large.id])
 }
 ```
 
@@ -1064,29 +1128,34 @@ final class OrderViewModelTests: XCTestCase {
 After extraction, update property wrappers:
 
 ```swift
-// Before refactoring
+// Before refactoring — state and logic both live in the view
 struct OrderListView: View {
-    @State private var orders: [Order] = []  // View owned
+    @State private var orders: [Order] = []
     // ... logic in body
 }
+```
 
-// After refactoring
+After extraction, pick the wrapper by **who owns the model**:
+
+```swift
+// View owns it. Assign in `init` — do NOT use `_viewModel = State(initialValue:)`,
+// which the Xcode 27 @State macro no longer defers (see "@State is a macro now").
 struct OrderListView: View {
-    @State private var viewModel: OrderListViewModel  // View owns ViewModel
+    @State private var viewModel: OrderListViewModel
 
     init(orders: [Order]) {
-        _viewModel = State(initialValue: OrderListViewModel(orders: orders))
+        self.viewModel = OrderListViewModel(orders: orders)
     }
 }
 
-// Or if parent owns it
-struct OrderListView: View {
-    let viewModel: OrderListViewModel  // Parent owns, just reading
+// Parent owns it, view only reads
+struct ReadOnlyOrderListView: View {
+    let viewModel: OrderListViewModel
 }
 
-// Or if need bindings
-struct OrderListView: View {
-    @Bindable var viewModel: OrderListViewModel  // Parent owns, need $
+// Parent owns it, view needs `$` bindings
+struct EditableOrderListView: View {
+    @Bindable var viewModel: OrderListViewModel
 }
 ```
 
@@ -1108,45 +1177,30 @@ struct ProductListView: View {
         let sorted = products.sorted { $0.price > $1.price }  // ❌ Sorted every render!
 
         return List(sorted) { product in
-            Text("\(product.name): \(formatter.string(from: product.price)!)")
+            Text("\(product.name): \(formatter.string(from: product.price as NSNumber)!)")
         }
     }
 }
 ```
 
-**Why it's wrong**:
+#### Why it's wrong
 - `formatter` created on every render (performance)
-- `sorted` computed on every render (performance)
+- `sorted` computed on every render — note that moving it to a computed property relocates the work without eliminating it; cache the derived array if the cost is real
 - Business logic (`sorted`) lives in view (not testable)
-- Force unwrap ('!') can crash
+- Force unwrap (`!`) can crash
+
+Each problem has its own fix, and only one of them needs a new type. Formatting is a `Text` concern — use a `FormatStyle` and the formatter disappears. Ordering is the model's job. A ViewModel earns its place only when there is presentation state to hold, which here there isn't:
 
 ```swift
-// ✅ Correct
-@Observable
-class ProductListViewModel {
-    let products: [Product]
-    private let formatter = NumberFormatter()
-
-    var sortedProducts: [Product] {
-        products.sorted { $0.price > $1.price }
-    }
-
-    init(products: [Product]) {
-        self.products = products
-        formatter.numberStyle = .currency
-    }
-
-    func formattedPrice(_ product: Product) -> String {
-        formatter.string(from: product.price as NSNumber) ?? "$0.00"
-    }
-}
-
+// ✅ Correct — sorted data comes from the model; Text formats itself
 struct ProductListView: View {
-    let viewModel: ProductListViewModel
+    let products: [Product]  // already ordered by the model
 
     var body: some View {
-        List(viewModel.sortedProducts) { product in
-            Text("\(product.name): \(viewModel.formattedPrice(product))")
+        List(products) { product in
+            LabeledContent(product.name) {
+                Text(product.price, format: .currency(code: product.currencyCode))
+            }
         }
     }
 }
@@ -1158,21 +1212,33 @@ See the State-as-Bridge pattern in Part 1 above — keep UI state changes synchr
 
 ## ❌ Anti-Pattern 3: Wrong Property Wrapper
 
+`@State` on a passed-in value copies it once and then ignores the parent. The replacement depends on value type vs `@Observable` class — `@Bindable` requires a class and won't compile on a struct.
+
 ```swift
-// ❌ Don't use @State for passed-in models
+// ❌ Copies once, then loses every parent change
 struct DetailView: View {
-    @State var item: Item  // ❌ Creates a copy, loses parent changes
+    @State var item: Item
 }
 
-// ✅ Correct: No wrapper for passed-in models
-struct DetailView: View {
-    let item: Item  // ✅ Or @Bindable if you need $item
+// ✅ Value type, read-only
+struct ReadOnlyDetailView: View {
+    let item: Item
+}
+
+// ✅ Value type the child mutates — @Binding, NOT @Bindable
+struct EditableDetailView: View {
+    @Binding var item: Item
+}
+
+// ✅ @Observable class the child mutates — @Bindable
+struct ModelDetailView: View {
+    @Bindable var model: ItemModel
 }
 ```
 
 ```swift
 // ❌ Don't use @Environment for view-local state
-struct FormView: View {
+struct EnvironmentFormView: View {
     @Environment(FormData.self) var formData  // ❌ Overkill for local form
 }
 
@@ -1188,39 +1254,57 @@ See MVVM Mistake 2 in Part 2 above — split by concern into separate ViewModels
 
 ## ❌ Anti-Pattern 5: @AppStorage Inside @Observable
 
-**Never use `@AppStorage` inside an `@Observable` class** — it silently breaks observation. `@AppStorage` is a property wrapper designed for SwiftUI views, not model classes.
+`@AppStorage` inside an `@Observable` class **does not compile** — both macros claim `_theme`. Same collision for every `DynamicProperty`: `@Environment`, `@FocusState`, `@SceneStorage`, `@ScaledMetric`, `@Namespace`.
 
 ```swift
-// ❌ BROKEN — @AppStorage silently breaks @Observable
+// ❌ error: invalid redeclaration of synthesized property '_theme'
 @Observable
 class Settings {
-    @AppStorage("theme") var theme = "light"  // Changes won't trigger view updates
-}
-
-// ✅ Read @AppStorage in view, pass to model
-struct SettingsView: View {
-    @AppStorage("theme") private var theme = "light"
-    // ...
+    @AppStorage("theme") var theme = "light"
 }
 ```
 
+Don't reach for a computed property either — `@Observable` tracks stored properties only, so a UserDefaults-backed computed var compiles and is never observed. Keep it stored, write through:
+
+```swift
+// ✅
+@MainActor @Observable
+final class Settings {
+    var theme: String {
+        didSet { UserDefaults.standard.set(theme, forKey: "theme") }
+    }
+
+    init() { theme = UserDefaults.standard.string(forKey: "theme") ?? "light" }
+}
+```
+
+`@ObservationIgnored` silences the error and also defeats observation. If only the view needs the value, keep `@AppStorage` in the `View`.
+
 ## ❌ Anti-Pattern 6: Binding(get:set:) in View Body
 
-Creating `Binding(get:set:)` in the view body creates a new binding on every evaluation, breaking SwiftUI's identity tracking.
+When the source is an `@Observable` object, `@Bindable` expresses the binding directly — hand-rolling `Binding(get:set:)` in the body rebuilds a closure pair on every evaluation for no benefit. `Binding(get:set:)` is still the right tool for genuinely derived values (clamped, transformed, or backed by something that isn't `@Observable`).
 
 ```swift
 // ❌ New Binding created every body evaluation
-var body: some View {
-    TextField("Name", text: Binding(
-        get: { model.name },
-        set: { model.name = $0 }
-    ))
+struct NameField: View {
+    let model: PersonModel
+
+    var body: some View {
+        TextField("Name", text: Binding(
+            get: { model.name },
+            set: { model.name = $0 }
+        ))
+    }
 }
 
-// ✅ Use @Bindable or computed binding
-var body: some View {
-    @Bindable var model = model
-    TextField("Name", text: $model.name)
+// ✅ Rebind locally with @Bindable
+struct BindableNameField: View {
+    let model: PersonModel
+
+    var body: some View {
+        @Bindable var model = model
+        TextField("Name", text: $model.name)
+    }
 }
 ```
 
@@ -1245,7 +1329,7 @@ Any `@ViewBuilder` closure (`.sheet`, `.fullScreenCover`, `NavigationStack` dest
 }
 ```
 
-**Why it's wrong**:
+#### Why it's wrong
 - Callback mutates parent state that the closure depends on
 - Parent re-evaluates, which re-evaluates the closure with the mutated value
 - Child silently skips loading/animation states — no crash, just wrong behavior
@@ -1260,7 +1344,7 @@ Before merging SwiftUI code, verify:
 
 ### Views
 - View bodies contain ONLY UI code (Text, Button, List, etc.)
-- No formatters created in view body
+- No `NumberFormatter`/`DateFormatter` instances created in view body (a `FormatStyle` in `Text(_:format:)` is the correct pattern)
 - No calculations or transformations in view body
 - No API calls or database queries in view body
 - No business rules in view body
@@ -1272,15 +1356,16 @@ Before merging SwiftUI code, verify:
 - Heavy computations are cached or computed once
 
 ### Property Wrappers
-- @State for view-owned models
-- @Environment for app-wide models
-- @Bindable when bindings are needed
+- `@State` for view-owned models
+- `@Environment` for app-wide models
+- `@Binding` for a **value type** the view mutates
+- `@Bindable` for an **`@Observable` object** the view needs `$` bindings on (does not compile on a struct)
 - No wrapper when just reading
 
 ### Animations & Async
 - State changes for animations are synchronous
 - Async boundaries use State-as-Bridge pattern
-- No `await` between `withAnimation { }` blocks
+- No `await` **inside** a `withAnimation { }` closure (an `await` *between* two `withAnimation` blocks is the State-as-Bridge pattern, not a violation)
 
 ### Testability
 - Can test business logic without importing SwiftUI
@@ -1307,17 +1392,10 @@ If you hear:
 ### Time Cost Comparison
 
 #### Option A — Put logic in view
-- Write feature in view: 2 hours
-- Realize it's untestable: 1 hour
-- Try to test it anyway: 2 hours
-- Give up, ship with manual testing: 0 hours
-- **Total: 5 hours, 0 tests**
+Write the feature, then discover it can only be exercised through the UI. Time goes into attempting to test it, then into manual verification on every later change. Ships with no automated coverage.
 
 #### Option B — Extract logic properly
-- Create model/ViewModel: 30 min
-- Write feature with separation: 2 hours
-- Write tests: 1 hour
-- **Total: 3.5 hours, full test coverage**
+A model or ViewModel up front, then the feature, then tests that run without SwiftUI. The extraction is close to free; the tests are the added cost, and they replace the manual verification Option A pays repeatedly.
 
 ### How to Push Back Professionally
 
@@ -1325,7 +1403,7 @@ If you hear:
 > "I understand Friday is the deadline. Let me show you why proper separation is actually faster."
 
 **Step 2**: Show the time comparison
-> "Putting logic in views takes 5 hours with no tests. Extracting it properly takes 3.5 hours with full tests. We save 1.5 hours AND get tests."
+> "Logic in the view can only be checked by hand, every time we touch it. Extracting it costs about half an hour up front and makes the tests possible at all — we come out ahead by the second change."
 
 **Step 3**: Offer the compromise
 > "If we're truly out of time, I can extract 80% now and mark the remaining 20% as tech debt with a ticket. But let's not skip extraction entirely."
@@ -1358,24 +1436,24 @@ Ask these questions:
 
 | Question | TCA | Vanilla |
 |----------|-----|---------|
-| Is testability critical (medical, financial)? | ✅ | ❌ |
+| Do you need exhaustive *effect* testing (every side effect asserted)? | ✅ | ❌ |
 | Do you have < 5 screens? | ❌ | ✅ |
 | Is team experienced with functional programming? | ✅ | ❌ |
 | Do you need rapid prototyping? | ❌ | ✅ |
 | Is consistency across large team critical? | ✅ | ❌ |
 | Do you have complex side effects (sockets, timers)? | ✅ | ~ |
 
-**Recommendation matrix**:
+#### Recommendation matrix
 - 4+ checks for TCA → Use TCA
 - 4+ checks for Vanilla → Use Vanilla
 - Tie → Start with Vanilla, migrate to TCA if needed
 
 ### How to Push Back
 
-**If arguing FOR TCA**:
+#### If arguing FOR TCA
 > "I understand TCA feels heavy. But we're building a banking app. The TestStore gives us exhaustive testing that catches bugs before production. The 2-week learning curve is worth it for 2 years of maintenance."
 
-**If arguing AGAINST TCA**:
+#### If arguing AGAINST TCA
 > "I agree TCA is powerful, but we're prototyping features weekly. The boilerplate will slow us down. Let's use @Observable now and migrate to TCA if we prove the features are worth building."
 
 ## Scenario 3: "Refactoring will take too long"
@@ -1504,7 +1582,7 @@ struct OrderListView: View {
 }
 ```
 
-**Problems**:
+#### Problems
 - 200+ lines in one file
 - Formatters created every render (performance)
 - Business logic untestable
@@ -1515,10 +1593,11 @@ struct OrderListView: View {
 
 ```swift
 // Model — 30 lines
-struct Order {
+struct Order: Identifiable {
     let id: UUID
     let customerName: String
     let total: Decimal
+    let currencyCode: String  // the order's currency, NOT the device's
     let date: Date
     var isCompleted: Bool
 
@@ -1527,17 +1606,29 @@ struct Order {
     }
 }
 
+// Typed error — `.alert(error:)` needs LocalizedError on 26; `OS27` takes any Error
+enum OrderError: LocalizedError {
+    case loadFailed(any Error)
+    case completeFailed(any Error)
+
+    var errorDescription: String? {
+        switch self {
+        case .loadFailed: String(localized: "Couldn’t load orders.")
+        case .completeFailed: String(localized: "Couldn’t complete that order.")
+        }
+    }
+}
+
 // ViewModel — 60 lines
+@MainActor
 @Observable
-class OrderListViewModel {
+final class OrderListViewModel {
     private let orderService: OrderService
-    private let currencyFormatter = NumberFormatter()
-    private let dateFormatter = DateFormatter()
 
     var orders: [Order] = []
     var searchText = ""
     var selectedFilter: FilterType = .all
-    var error: Error?
+    var error: OrderError?
 
     var filteredOrders: [Order] {
         orders
@@ -1548,15 +1639,13 @@ class OrderListViewModel {
 
     init(orderService: OrderService) {
         self.orderService = orderService
-        currencyFormatter.numberStyle = .currency
-        dateFormatter.dateStyle = .medium
     }
 
     func loadOrders() async {
         do {
             orders = try await orderService.fetchOrders()
         } catch {
-            self.error = error
+            self.error = .loadFailed(error)
         }
     }
 
@@ -1565,20 +1654,13 @@ class OrderListViewModel {
             try await orderService.complete(order.id)
             await loadOrders()
         } catch {
-            self.error = error
+            self.error = .completeFailed(error)
         }
     }
 
-    func formattedTotal(_ order: Order) -> String {
-        currencyFormatter.string(from: order.total as NSNumber) ?? "$0.00"
-    }
-
-    func formattedDate(_ order: Order) -> String {
-        dateFormatter.string(from: order.date)
-    }
-
     private func matchesSearch(_ order: Order) -> Bool {
-        searchText.isEmpty || order.customerName.contains(searchText)
+        searchText.isEmpty
+            || order.customerName.localizedStandardContains(searchText)
     }
 
     private func matchesFilter(_ order: Order) -> Bool {
@@ -1609,7 +1691,7 @@ struct OrderListView: View {
         .task {
             await viewModel.loadOrders()
         }
-        .alert("Error", error: $viewModel.error) { }
+        .alert(error: $viewModel.error) { }
     }
 }
 
@@ -1620,8 +1702,9 @@ struct OrderRow: View {
     var body: some View {
         VStack(alignment: .leading) {
             Text(order.customerName)
-            Text(viewModel.formattedTotal(order))
-            Text(viewModel.formattedDate(order))
+            // Formatting is a View concern — no ViewModel method, no cached formatter
+            Text(order.total, format: .currency(code: order.currencyCode))
+            Text(order.date, format: .dateTime.year().month().day())
 
             if order.isCompleted {
                 Image(systemName: "checkmark.circle.fill")
@@ -1637,34 +1720,34 @@ struct OrderRow: View {
 }
 
 // Tests — 100 lines
-final class OrderViewModelTests: XCTestCase {
-    func testFilterBySearch() async {
-        let viewModel = OrderListViewModel(orderService: MockOrderService())
-        await viewModel.loadOrders()
+@MainActor
+@Test func searchFiltersToTheMatchingCustomer() async {
+    let viewModel = OrderListViewModel(orderService: MockOrderService())
+    await viewModel.loadOrders()
 
-        viewModel.searchText = "John"
-        XCTAssertEqual(viewModel.filteredOrders.count, 1)
-    }
+    viewModel.searchText = "John"
 
-    func testFilterByHighValue() async {
-        let viewModel = OrderListViewModel(orderService: MockOrderService())
-        await viewModel.loadOrders()
+    #expect(viewModel.filteredOrders.map(\.customerName) == ["John Appleseed"])
+}
 
-        viewModel.selectedFilter = .highValue
-        XCTAssertTrue(viewModel.filteredOrders.allSatisfy { $0.isHighValue })
-    }
+@MainActor
+@Test func highValueFilterKeepsOnlyHighValueOrders() async {
+    let viewModel = OrderListViewModel(orderService: MockOrderService())
+    await viewModel.loadOrders()
 
-    // ... 10 more tests
+    viewModel.selectedFilter = .highValue
+
+    #expect(viewModel.filteredOrders.allSatisfy { $0.isHighValue })
 }
 ```
 
-**Benefits**:
+#### Benefits
 - View: 40 lines (was 200)
 - ViewModel: Fully testable without SwiftUI
 - Model: Pure business logic
-- Formatters: Created once, not every render
+- Formatting: `Text(_:format:)` — no formatter instance to create or cache
 - Error handling: Proper with alerts
-- Tests: 10+ tests covering all logic
+- Tests: model and ViewModel logic testable without SwiftUI
 
 ---
 
@@ -1672,12 +1755,14 @@ final class OrderViewModelTests: XCTestCase {
 
 **WWDC**: 2025-266, 2024-10150, 2023-10149, 2023-10160
 
-**Docs**: /swiftui/managing-model-data-in-your-app
+**Docs**: /swiftui/managing-model-data-in-your-app, /swiftui/state-and-data-flow, /observation/observations
+
+**Skills**: nav, debugging, swiftui-performance, swift-concurrency
 
 **External**: github.com/pointfreeco/swift-composable-architecture
 
 ---
 
 **Platforms**: iOS 26+, iPadOS 26+, macOS Tahoe+, watchOS 26+, visionOS 26+
-**Xcode**: 26+
+**Xcode**: 26+ (see "`@State` is a macro now" for Xcode 27 build-time changes)
 **Status**: Production-ready (v1.0)
