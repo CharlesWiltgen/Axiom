@@ -18,8 +18,7 @@ Use this skill when you're:
 - Refactoring views to separate concerns
 - Making SwiftUI code testable
 - Asking "where should this code go?"
-- Deciding which property wrapper to use (@State, @Environment, @Bindable)
-- Organizing a SwiftUI codebase for team development
+- Deciding which property wrapper to use (@State, @Binding, @Environment, @Bindable)
 
 ## Example Prompts
 
@@ -37,11 +36,11 @@ Questions you can ask Claude that will draw from this skill:
 ### Apple's Native Patterns
 - @Observable for data models (replaces ObservableObject)
 - State-as-Bridge for async boundaries (WWDC 2025)
-- Three property wrappers: @State, @Environment, @Bindable
+- Four property wrappers: @State, @Binding, @Environment, @Bindable — and why `@Bindable` does not compile on a value type
 - Synchronous UI updates for animations
-- `.task` modifier lifecycle (cancels on view destruction, not body re-evaluation; `.task(id:)` pitfalls)
-- Bridging actor state to SwiftUI via `@Observable` proxy layer
-- **@State is a macro** (Xcode 27) — three source-compat breaks: init-plus-declaration conflict, disabled synthesized memberwise init, no wrapper composition
+- `.task` modifier lifecycle (cancels on view destruction or identity change, not body re-evaluation; `.task(id:)` pitfalls)
+- Bridging actor state to SwiftUI via `@Observable` proxy layer, and `Observations` for the reverse direction
+- **@State is a macro** (Xcode 27) — two source-compat breaks: init-plus-declaration ordering, no wrapper composition
 
 ### MVVM Pattern
 - When MVVM adds value (complex presentation logic)

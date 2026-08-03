@@ -12,7 +12,7 @@ Discipline-enforcing workflows tested with ["red/green/refactor" methodology](ht
 | [**liquid-glass**](/skills/ui-design/liquid-glass) | Implementing Liquid Glass effects, debugging visual artifacts, design review pressure |
 | [**liquid-glass-ref**](/reference/liquid-glass-ref) | Complete Liquid Glass adoption guide (icons, controls, navigation, windows) |
 | [**sf-symbols**](/skills/ui-design/sf-symbols) | SF Symbols rendering, variable values, symbol effects, color modes |
-| [**swiftui-architecture**](/skills/ui-design/swiftui-architecture) | Separating logic from views, choosing architecture patterns (MVVM, TCA, Coordinator) |
+| [**swiftui-architecture**](/skills/ui-design/swiftui-architecture) | Choosing a SwiftUI architecture — Apple's `@Observable` patterns first, and when MVVM, TCA, or Coordinator earn their layer |
 | [**swiftui-performance**](/skills/ui-design/swiftui-performance) | App feels sluggish, animations stutter, SwiftUI Instrument profiling |
 | [**swiftui-debugging**](/skills/ui-design/swiftui-debugging) | View doesn't update, preview crashes, layout issues |
 | [**swiftui-debugging-diag**](/diagnostic/swiftui-debugging-diag) | Systematic SwiftUI debugging, intermittent issues, complex state dependencies |
