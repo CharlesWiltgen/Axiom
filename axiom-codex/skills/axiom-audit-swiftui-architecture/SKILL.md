@@ -90,7 +90,7 @@ Run all 5 existing detection categories. For every grep match, use Read to verif
 **Pattern**: `@State var item: Item` (non-private) where Item is passed in from parent
 **Search**: `@State var` without `private` — read context to check if value comes from parent
 **Issue**: Creates a local copy that loses updates from the parent source of truth
-**Fix**: Use `let item: Item` (read-only) or `@Bindable var item: Item` (read-write)
+**Fix**: `let item: Item` (read-only), `@Binding var item: Item` (mutable value type), or `@Bindable var model: ItemModel` (mutable `@Observable` class). `@Bindable` on a struct does not compile.
 
 ### 4. God ViewModel (MEDIUM)
 
