@@ -106,6 +106,8 @@ class TestPositiveRouting(unittest.TestCase):
             "My sheet with a medium detent goes full screen in landscape"))
         self.assertIn("axiom-swiftui", routed_skills(
             "How do I add a hoverEffect for iPad pointer users?"))
+        self.assertIn("axiom-swiftui", routed_skills(
+            "How do I use keyframeAnimator for a spring animation?"))
         # State-loss-on-adaptation, both word orders
         self.assertIn("axiom-swiftui", routed_skills(
             "My scroll position is lost when the iPad window resizes"))
@@ -304,6 +306,52 @@ class TestPositiveRouting(unittest.TestCase):
             "My ProRes recording drops frames"))
         self.assertIn("axiom-media", routed_skills(
             "Should I adopt deferred start for high resolution photo capture?"))
+
+    def test_media_intelligence(self):
+        self.assertIn("axiom-media", routed_skills(
+            "How do I group faces into people with the MediaIntelligence framework?"))
+        self.assertIn("axiom-media", routed_skills(
+            "Cluster faces across a user's image collection into persistent people"))
+        self.assertIn("axiom-media", routed_skills(
+            "What working directory does FaceGroupAnalyzer need?"))
+        self.assertIn("axiom-media", routed_skills(
+            "Find the video highlights and their intensity levels in a clip"))
+        self.assertIn("axiom-media", routed_skills(
+            "Pick a representative key frame thumbnail for a video with VideoAnalyzer"))
+        self.assertIn("axiom-media", routed_skills(
+            "Why does HighlightAnalysisRequest return no ranges?"))
+        self.assertIn("axiom-media", routed_skills(
+            "KeyFrameAnalysisRequest gives me a timestamp — how do I extract the frame?"))
+        # The framework's headline use case, phrased the way a user actually types it.
+        self.assertIn("axiom-media", routed_skills(
+            "Group my photos by person on device"))
+        self.assertIn("axiom-media", routed_skills(
+            "Build a People view over my own asset collection"))
+
+    def test_media_music_understanding(self):
+        self.assertIn("axiom-media", routed_skills(
+            "How do I use MusicUnderstanding to analyze a song?"))
+        self.assertIn("axiom-media", routed_skills(
+            "Detect the tempo and key of a song on-device"))
+        self.assertIn("axiom-media", routed_skills(
+            "Get the BPM of an audio file in my app"))
+        self.assertIn("axiom-media", routed_skills(
+            "Set the song's BPM label in my player UI"))
+        self.assertIn("axiom-media", routed_skills(
+            "Sync my montage cuts to the beats of a song"))
+        self.assertIn("axiom-media", routed_skills(
+            "Split a song into chorus and verse sections"))
+        self.assertIn("axiom-media", routed_skills(
+            "Beat detection for my video editor timeline"))
+        self.assertIn("axiom-media", routed_skills(
+            "On-device musical structure analysis for my DJ app"))
+        self.assertIn("axiom-media", routed_skills(
+            "Implement on-device music analysis in my app"))
+        # Literal API tokens, one prompt each.
+        self.assertIn("axiom-media", routed_skills(
+            "Why is beatsPerMinute nil in my RhythmResult?"))
+        self.assertIn("axiom-media", routed_skills(
+            "How do I read instrumentActivity ranges for the vocal stem?"))
 
     def test_media_shareplay_playback(self):
         self.assertIn("axiom-media", routed_skills(
@@ -835,6 +883,52 @@ class TestNegativeRouting(unittest.TestCase):
         ):
             self.assertNotIn("axiom-ai", routed_skills(prompt),
                              f"speech regex over-matched a non-iOS prompt: {prompt!r}")
+
+    def test_generic_face_and_video_wording_does_not_fire_media(self):
+        # REGRESSION GUARD. "face group/cluster", "highlight reel", and "key frame" are
+        # ordinary English / OpenCV / video-editing vocabulary, so they must sit behind
+        # `not non_ios`; bare `face` is also a substring of interface/surface, which the
+        # \b anchor must reject even in Apple-context prompts; animation keyframes and
+        # the verb sense of "highlights" must not fire on mere video/clip co-occurrence.
+        for prompt in (
+            "Improve the surface clustering pass in my Metal mesh pipeline",
+            "Clean up the interface grouping in my SwiftUI settings screen",
+            "How should the interface group these settings controls?",
+            "Cluster faces with OpenCV in our Django app",
+            "Make a highlight reel with ffmpeg for our Node.js video service",
+            "Extract key frames from a video with OpenCV in Python",
+            "Use keyframeAnimator to animate my SwiftUI view",
+            "keyframe timing analysis for my UIView animation",
+            "Can I use keyframes to animate a video thumbnail overlay?",
+            "Should I use keyframeAnimator or a video clip for this transition?",
+            "Why does my video highlight in blue when selected in the List?",
+            "The video highlights a rendering bug in my SwiftUI view",
+        ):
+            self.assertNotIn("axiom-media", routed_skills(prompt),
+                             f"media regex over-matched: {prompt!r}")
+
+    def test_generic_music_wording_does_not_fire_media(self):
+        # REGRESSION GUARD. "beatsPerMinute", "beat detection", "tempo", and "bpm" are
+        # heart-rate, fitness, and agile vocabulary as often as music vocabulary: the
+        # bpm/beatsPerMinute forms need music-noun proximity, "beat detect" must not
+        # match the spaced "heart beat detection" (the closed "heartbeat" is blocked by
+        # \b), and bare detect/analyze/track verbs must not turn agile-"tempo" prompts
+        # into media routes.
+        for prompt in (
+            "Track my heart rate in bpm during workouts",
+            "Increase our release tempo for sprint planning",
+            "Analyze our release tempo over the last quarter",
+            "Can we raise the release tempo and still track quality?",
+            "Detect heartbeat patterns with HealthKit",
+            "Heartbeat detection in my watchOS app",
+            "How do I implement heart beat detection on Apple Watch?",
+            "Add heart beat detection to my fitness tracker",
+            "Show beatsPerMinute in the workout summary view",
+            "My beatsPerMinute value from HKQuery is wrong",
+            "Analyze the tempo of a song with librosa in Python",
+        ):
+            self.assertNotIn("axiom-media", routed_skills(prompt),
+                             f"media regex over-matched: {prompt!r}")
 
     def test_generic_launch_wording_does_not_fire_performance(self):
         # REGRESSION GUARD, same shape as the transcription trap above. "launch" and "startup" are
