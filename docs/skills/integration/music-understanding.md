@@ -36,6 +36,7 @@ For **identifying** which song is playing (catalog matching), use [ShazamKit](/s
 - **Streaming loudness** – an `AsyncSequence` emitting as each 100 ms is analyzed
 - **Custom `AudioProvider`** – feed `AVReadOnlyAudioPCMBuffer`s from any `AsyncSequence`
 - **Codable export** – encode any `SessionResult` to JSON
+- **Errors & lifecycle** – `MusicUnderstandingError` cases, the one-analysis-per-session rule, and `cancel()` behavior
 
 ## Related
 
