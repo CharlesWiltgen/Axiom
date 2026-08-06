@@ -25,12 +25,15 @@ For detecting *where* a face is in a single image (bounding box, landmarks), or 
 - "Find the highlight moments in a video and their intensity."
 - "Pick the best representative thumbnail frame for a clip."
 - "Fetch all the faces belonging to one person in my library."
+- "Recognize people in new photos without adding them to my face index."
 
 ## What This Skill Provides
 
 - **`FaceGroupAnalyzer`** – a persistent, `Sendable` analyzer backed by a working directory you own; clusters faces into **entities** (people) across image assets
 - **Lifecycle & state** – `insertOrUpdateAssets`, `update()`, `deleteAssets`/`deleteAllAssets`/`purge`, and a `State` (`.ready` / `.stale` / `.updating`) telling you when to recompute
 - **Query surface** – `allEntities`, `allFaces`, `allAssetIDs`, plus `fetchFaces(for:)` / `fetchFaces(in:)` / `fetchAssetIDs(for:)`, all as `AsyncSequence`s; `Face` is `Codable`
+- **Read-only recognition** – `identifyFaces(in:)` matches faces in new images against the existing gallery without storing anything
+- **Beta caveats** – the Simulator can't run analysis in the iOS 27 betas (test on a physical device), the working directory must exist before init, and entities are clusters rather than verified identities
 - **`VideoAnalyzer`** – a shared analyzer whose variadic `analyze(_:for:)` runs typed requests: `HighlightAnalysisRequest` (notable ranges + intensity levels) and `KeyFrameAnalysisRequest` (representative-frame timestamp)
 - **`MediaIntelligenceError`** – `LocalizedError` cases for working-directory, media-processing, face-grouping, and result-fetching failures
 
