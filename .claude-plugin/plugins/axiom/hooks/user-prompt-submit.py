@@ -98,7 +98,7 @@ if not non_ios and re.search(r'build (fail|error|broken)|xcodebuild|simulator (c
     matches.append("axiom-build")
 
 # UI
-if re.search(r'swiftui|@state\b|@binding\b|@observable\b|@environment\b|navigationstack|navigationsplitview|layout.{0,10}(break|bug|wrong|issue)|preview.{0,5}(crash|fail|not |won.t|broken)|view.{0,10}(not|won.t|doesn.t).{0,10}(updat|render|show|appear)|tabview|scroll.{0,20}(jank|lag|slow|stutter)|presentationdetents?|\bdetents?\b|presentation(compactadaptation|sizing|backgroundinteraction)|popover.{0,20}(sheet|iphone|compact|anchor)|sheet.{0,20}(detent|resiz|medium|half|landscape.{0,15}full)|onhover|hovereffect|oncontinuoushover|pointerstyle|alignmentguide|layoutpriority|toolbarminimiz\w*|(scroll\s*position|selection|focus|draft|state)\w*\s*(is\s*|gets\s*|was\s*)?(lost|reset\w*|jumps?|cleared)\w*.{0,30}(rotat|resiz|window|split|size\s*class)|(rotat|resiz)\w*.{0,30}(los\w+|reset\w*|clears?|clearing)\s.{0,20}(scroll|selection|focus|state|draft)', prompt_lower):
+if re.search(r'swiftui|@state\b|@binding\b|@observable\b|@environment\b|navigationstack|navigationsplitview|layout.{0,10}(break|bug|wrong|issue)|preview.{0,5}(crash|fail|not |won.t|broken)|view.{0,10}(not|won.t|doesn.t).{0,10}(updat|render|show|appear)|tabview|scroll.{0,20}(jank|lag|slow|stutter)|presentationdetents?|\bdetents?\b|presentation(compactadaptation|sizing|backgroundinteraction)|popover.{0,20}(sheet|iphone|compact|anchor)|sheet.{0,20}(detent|resiz|medium|half|landscape.{0,15}full)|onhover|hovereffect|oncontinuoushover|pointerstyle|keyframeanimator|keyframetimeline|alignmentguide|layoutpriority|toolbarminimiz\w*|(scroll\s*position|selection|focus|draft|state)\w*\s*(is\s*|gets\s*|was\s*)?(lost|reset\w*|jumps?|cleared)\w*.{0,30}(rotat|resiz|window|split|size\s*class)|(rotat|resiz)\w*.{0,30}(los\w+|reset\w*|clears?|clearing)\s.{0,20}(scroll|selection|focus|state|draft)', prompt_lower):
     matches.append("axiom-swiftui")
 
 # UI — preview construction (separate from preview-crash routing above)
@@ -170,7 +170,29 @@ if not non_ios and "axiom-integration" not in matches and re.search(r'background
     matches.append("axiom-integration")
 
 # Media
-if re.search(r'avcapture|phpicker|photospicker|photo.{0,5}(library|picker|capture)|core\s*haptics|haptic|now\s*playing|shazamkit|audio\s*recogni|avfoundation|carplay.{0,12}(audio|now|map\s*panel|charging|mini\s*player|overlay)|cpmappanel|allowsminiplayer|cpchargingstation|musickit|camera.{0,5}(capture|preview|session|app|launch)|front\s*camera|center\s*stage|deferred\s*start|pro\s*video\s*storage|prores\b|smart\s*framing|dockkit|dockaccessory|dock\s*accessory|motorized.{0,12}(stand|dock)|playbackcoordinator|avdelegatingplaybackcoordinator|avplayerplaybackcoordinator|avplaybackcoordinationmedium|avcoordinatedplaybacksuspension|coordinatewithsession|coordinated\s*playback|playback\s*coordinat\w*|shareplay.{0,40}(playback|play|audio|video|media|sync|track|queue|position|timeline)|(playback|audio|video|media|sync|timeline).{0,40}shareplay', prompt_lower):
+if re.search(r'avcapture|phpicker|photospicker|photo.{0,5}(library|picker|capture)|core\s*haptics|haptic|now\s*playing|shazamkit|audio\s*recogni|avfoundation|carplay.{0,12}(audio|now|map\s*panel|charging|mini\s*player|overlay)|cpmappanel|allowsminiplayer|cpchargingstation|musickit|camera.{0,5}(capture|preview|session|app|launch)|front\s*camera|center\s*stage|deferred\s*start|pro\s*video\s*storage|prores\b|smart\s*framing|dockkit|dockaccessory|dock\s*accessory|motorized.{0,12}(stand|dock)|playbackcoordinator|avdelegatingplaybackcoordinator|avplayerplaybackcoordinator|avplaybackcoordinationmedium|avcoordinatedplaybacksuspension|coordinatewithsession|coordinated\s*playback|playback\s*coordinat\w*|shareplay.{0,40}(playback|play|audio|video|media|sync|track|queue|position|timeline)|(playback|audio|video|media|sync|timeline).{0,40}shareplay|media\s*intelligence|facegroupanalyzer|videoanalyzer|highlightanalysisrequest|keyframeanalysisrequest|musicunderstanding|instrumentactivity', prompt_lower):
+    matches.append("axiom-media")
+
+# Media — generic terms gated (MediaIntelligence, MusicUnderstanding: "face grouping",
+# "highlight reel", "key frames", "photos by person", "tempo", "bpm", "beatsPerMinute",
+# "chorus/verse" also name OpenCV/ffmpeg/video-editing, heart-rate, and agile concepts).
+# \b on `face` keeps interface/surface out; the lookbehind on `beat detect` keeps the
+# spaced "heart beat detection" out (\b already blocks the closed "heartbeat"); the
+# highlight, key-frame, tempo, bpm, and beatsPerMinute forms require detection verbs
+# or music/video-noun proximity so animation keyframes, the verb sense of
+# "highlights", and heart-rate vocabulary stay out (see TestNegativeRouting).
+if not non_ios and "axiom-media" not in matches and re.search(
+    r'\bface\s*(group|cluster)\w*|(group|cluster)\w*\s+faces'
+    r'|(find|detect|extract|analyz\w*|generate).{0,30}video\s*highlights?|highlight\s*(reel|moments?)'
+    r'|(video|clip)\s*key\s*frames?|key\s*frames?\s+(of|from|for)\s+((a|the|this|my|our)\s+)?(video|clip|movie)'
+    r'|(representative|best)\s*key\s*frames?'
+    r'|photos?\s+by\s+(person|people|face)|(a|the|my|our)\s+people\s+(view|album)'
+    r'|\bmusic\w*\s+analy\w*|musical\s+(key|structure|feature)\w*'
+    r'|(?<!heart[\s-])\bbeat\s*detect\w*|\bbeats?\s+(of|in)\s+(a\s+|the\s+|this\s+)?(song|track|music)'
+    r'|\btempo\b.{0,40}(song|music|audio|bpm|beats?\b)'
+    r'|(song|music|audio|tempo).{0,30}\bbpm\b|\bbpm\b.{0,30}(song|music|audio|tempo)'
+    r'|(song|music|audio|tempo|rhythm)\w*.{0,40}beatsperminute|beatsperminute.{0,40}(song|music|audio|tempo|rhythm)'
+    r'|(song|music|track)\w*.{0,30}\b(chorus|verse)\b', prompt_lower):
     matches.append("axiom-media")
 
 # Accessibility
