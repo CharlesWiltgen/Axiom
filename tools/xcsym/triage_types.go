@@ -45,11 +45,17 @@ type Cluster struct {
 	TotalEvents        int      `json:"total_events"`
 }
 
+// NoiseFlag records why an issue was deprioritized. DeprioritizeSafety is
+// deliberately NOT called "confidence": pattern_confidence and cluster_confidence
+// both mean evidence strength, while this rates how safe the deprioritization is
+// — a rule can match exactly and still be unsafe to act on. Sharing the name
+// across two meanings is what let a strict-matcher rule read as a certain
+// verdict (Axiom-pfp).
 type NoiseFlag struct {
-	Class      string `json:"class"`
-	RuleID     string `json:"rule_id"`
-	Confidence string `json:"confidence"`
-	Reason     string `json:"reason"`
+	Class              string `json:"class"`
+	RuleID             string `json:"rule_id"`
+	DeprioritizeSafety string `json:"deprioritize_safety"`
+	Reason             string `json:"reason"`
 }
 
 type Enrichment struct {

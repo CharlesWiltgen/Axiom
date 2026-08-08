@@ -3,13 +3,22 @@ package main
 import "testing"
 
 // Every rule in noiseRules must have BOTH a positive (want:true) and a
-// negative (want:false) fixture — track them separately.
+// negative (want:false) fixture — track them separately. Positive fixtures must
+// also pin wantSafety: the emitted deprioritize_safety is a documented tool contract
+// (production-triage.md noise-class table) that nothing else in the codebase
+// reads. This pins the Go value only — it does not parse the markdown, so it
+// cannot prove the table agrees. What it buys is that a safety change can
+// never be silent: it forces a second deliberate edit here, which is the moment
+// to update the table.
 func TestNoiseRules_HaveFixtures(t *testing.T) {
 	pos := map[string]bool{}
 	neg := map[string]bool{}
 	for _, c := range noiseFixtures {
 		if c.want {
 			pos[c.ruleID] = true
+			if c.wantSafety == "" {
+				t.Errorf("positive fixture for %q does not pin wantSafety", c.ruleID)
+			}
 		} else {
 			neg[c.ruleID] = true
 		}
@@ -25,12 +34,13 @@ func TestNoiseRules_HaveFixtures(t *testing.T) {
 }
 
 type noiseCase struct {
-	ruleID string
-	report *NormalizedReport
-	raw    *RawCrash
-	cat    CategorizeResult
-	th     Thresholds
-	want   bool // expect this ruleID to fire
+	ruleID     string
+	report     *NormalizedReport
+	raw        *RawCrash
+	cat        CategorizeResult
+	th         Thresholds
+	want       bool   // expect this ruleID to fire
+	wantSafety string // emitted deprioritize_safety; required when want is true
 }
 
 // noiseFixtures is appended to by each rule task (D2–D6).
@@ -41,8 +51,13 @@ func TestNoiseRules_Fixtures(t *testing.T) {
 		flags := applyNoiseRules(c.report, c.raw, c.cat, c.th)
 		fired := false
 		for _, f := range flags {
-			if f.RuleID == c.ruleID {
-				fired = true
+			if f.RuleID != c.ruleID {
+				continue
+			}
+			fired = true
+			if c.wantSafety != "" && f.DeprioritizeSafety != c.wantSafety {
+				t.Errorf("rule %q deprioritize_safety = %q want %q for case %q",
+					c.ruleID, f.DeprioritizeSafety, c.wantSafety, c.report.IssueID)
 			}
 		}
 		if fired != c.want {
@@ -62,8 +77,11 @@ func init() {
 		{Image: "MyApp", Symbol: "ViewModel.load()", InApp: true},
 	})
 	noiseFixtures = append(noiseFixtures,
+		// medium, not high: the matcher is strict but stack shape alone cannot
+		// separate a suspension artifact from a watchdog-terminated real hang
+		// inside a system callout (Axiom-pfp).
 		noiseCase{ruleID: "noise.anr_suspension.v1", report: &NormalizedReport{IssueID: "idle", Kind: "hang"},
-			raw: idle, cat: categorizeHang(idle), want: true},
+			raw: idle, cat: categorizeHang(idle), want: true, wantSafety: "medium"},
 		noiseCase{ruleID: "noise.anr_suspension.v1", report: &NormalizedReport{IssueID: "deadlock", Kind: "hang"},
 			raw: deadlock, cat: categorizeHang(deadlock), want: false},
 	)
@@ -94,14 +112,14 @@ func init() {
 	empty := &RawCrash{}
 	noiseFixtures = append(noiseFixtures,
 		noiseCase{ruleID: "noise.fixed_in_newer.v1", report: fixed, raw: empty,
-			th: Thresholds{LatestVersion: "2.1.0"}, want: true},
+			th: Thresholds{LatestVersion: "2.1.0"}, want: true, wantSafety: "low"},
 		noiseCase{ruleID: "noise.fixed_in_newer.v1", report: current, raw: empty,
 			th: Thresholds{LatestVersion: "2.1.0"}, want: false},
 	)
 }
 
 func init() {
-	// Background-thread crash, no app frames → low-confidence noise.
+	// Background-thread crash, no app frames → low deprioritize-safety noise.
 	bg := &RawCrash{Kind: "crash", CrashedIdx: 0, Threads: []Thread{
 		{Index: 3, Triggered: true, Frames: []Frame{{Image: "ThirdPartySDK", Symbol: "explode"}}},
 	}}
@@ -111,7 +129,7 @@ func init() {
 	}}
 	noiseFixtures = append(noiseFixtures,
 		noiseCase{ruleID: "noise.third_party_only.v1", report: &NormalizedReport{IssueID: "bg", Kind: "crash"},
-			raw: bg, cat: CategorizeResult{Tag: "bad_memory_access"}, want: true},
+			raw: bg, cat: CategorizeResult{Tag: "bad_memory_access"}, want: true, wantSafety: "low"},
 		noiseCase{ruleID: "noise.third_party_only.v1", report: &NormalizedReport{IssueID: "mainNoApp", Kind: "crash"},
 			raw: mainNoApp, cat: CategorizeResult{Tag: "bad_memory_access"}, want: false},
 	)
@@ -123,7 +141,7 @@ func init() {
 	empty := &RawCrash{}
 	noiseFixtures = append(noiseFixtures,
 		noiseCase{ruleID: "noise.single_os_eol.v1", report: eol, raw: empty,
-			th: Thresholds{OSFloor: "18.0"}, want: true},
+			th: Thresholds{OSFloor: "18.0"}, want: true, wantSafety: "medium"},
 		noiseCase{ruleID: "noise.single_os_eol.v1", report: mixed, raw: empty,
 			th: Thresholds{OSFloor: "18.0"}, want: false},
 	)
@@ -135,7 +153,7 @@ func init() {
 	empty := &RawCrash{}
 	noiseFixtures = append(noiseFixtures,
 		noiseCase{ruleID: "noise.long_tail.v1", report: small, raw: empty,
-			th: Thresholds{MinUsers: 5}, want: true},
+			th: Thresholds{MinUsers: 5}, want: true, wantSafety: "high"},
 		noiseCase{ruleID: "noise.long_tail.v1", report: big, raw: empty,
 			th: Thresholds{MinUsers: 5}, want: false},
 	)

@@ -6,7 +6,8 @@ import (
 )
 
 // NoiseRule is a predicate over the full issue context. Match returns
-// (fired, confidence, reason).
+// (fired, deprioritizeSafety, reason) — the middle value rates how safe acting
+// on the flag is, NOT how well the predicate matched. See NoiseFlag.
 type NoiseRule struct {
 	ID    string
 	Class string
@@ -24,8 +25,8 @@ func applyNoiseRules(r *NormalizedReport, raw *RawCrash, cat CategorizeResult, t
 	// consumers can always iterate).
 	flags := []NoiseFlag{}
 	for _, nr := range noiseRules {
-		if ok, conf, reason := nr.Match(r, raw, cat, th); ok {
-			flags = append(flags, NoiseFlag{Class: nr.Class, RuleID: nr.ID, Confidence: conf, Reason: reason})
+		if ok, safety, reason := nr.Match(r, raw, cat, th); ok {
+			flags = append(flags, NoiseFlag{Class: nr.Class, RuleID: nr.ID, DeprioritizeSafety: safety, Reason: reason})
 		}
 	}
 	return flags
@@ -41,8 +42,16 @@ func init() {
 			if !isIdleRunloop(raw) {
 				return false, "", ""
 			}
-			return true, "high",
-				"main-thread top frames are run-loop park signatures with no app work in the top 20; consistent with background suspension, not a real block"
+			// medium, not high. The matcher is strict, but its strictness only
+			// rules out deadlocks with buried app frames or blocking syscalls —
+			// a watchdog-terminated real hang inside a system callout produces
+			// this exact shape. Confidence here rates how safe the
+			// deprioritization is, not how well the predicate matched.
+			// The reason string is rendered verbatim in the agent's
+			// review-before-closing table while confidence is not, so it must
+			// not out-claim the confidence: state the shape, not a verdict.
+			return true, "medium",
+				"main-thread top frames are run-loop park signatures with no app work in the top 20; consistent with background suspension, but shape alone cannot rule out a real block"
 		},
 	})
 }
@@ -82,8 +91,15 @@ func init() {
 				return false, "", ""
 			}
 			if compareVersions(r.Versions.Max, th.LatestVersion) < 0 {
-				return true, "high",
-					"highest affected version " + r.Versions.Max + " predates latest shipped " + th.LatestVersion + "; may already be fixed"
+				// low, not high. Three compounding reasons (Axiom-7m2): this
+				// fires on nearly the whole corpus during any incomplete
+				// rollout; it is the only class whose standing note can invert
+				// the action to "escalate, don't close"; and versions.max is
+				// often a single event's release, not a distribution (the
+				// Sentry event payload carries one value per tag key).
+				return true, "low",
+					"highest affected version " + r.Versions.Max + " predates latest shipped " + th.LatestVersion +
+						"; may already be fixed — but this is rollout-exposure-blind, and versions.max may be a single event's release"
 			}
 			return false, "", ""
 		},
