@@ -93,11 +93,23 @@ The mechanical `cluster_key` is conservative and may over-split (two nil-unwrap 
 
 ### Deprioritized as Likely Noise — Review Before Closing
 
-| Issue ID | Title | Users | Noise Class | Reason |
-|---|---|---|---|---|
-| ISSUE-X | ... | 68 | anr_suspension_false_positive | main-thread top frames are run-loop park signatures... |
+| Issue ID | Title | Users | Noise Class | Deprioritize safety | Reason |
+|---|---|---|---|---|---|
+| ISSUE-X | ... | 68 | anr_suspension_false_positive | medium | main-thread top frames are run-loop park signatures... |
 
-**Standing notes:** For every noise class present in the table, include its standing note from production-triage.md verbatim (`third_party_or_system_only`, `anr_suspension_false_positive`, `fixed_in_newer_build`). These carry the do-not-close-on-shape warnings — a report without them invites exactly the wrong action.
+Sort **least-safe first** by `noise_flags[].deprioritize_safety` — `low`, then `medium`, then `high` — breaking ties by users descending. The reader is scanning for what they are about to wrongly close.
+
+**No `deprioritize_safety` value licenses closing.** `high` means the deprioritization is comparatively safe, not that the issue is dead. Every row here is review-before-closing, `high` rows included.
+
+**Standing notes:** For every noise class present in the table, reproduce its standing note verbatim. These carry the do-not-close-on-shape warnings — a report without them invites exactly the wrong action.
+
+> **`third_party_or_system_only`:** "A third-party SDK can crash on a nil or invalid value passed by app code — zero app frames on the crashed thread does not rule out an app-side root cause. Check for app code on other threads or higher in the call chain before dismissing."
+
+> **`anr_suspension_false_positive`:** "Idle-runloop shape says suspension is *likely* — it cannot say the hang was harmless. A watchdog-terminated fatal hang inside a system callout (UIScene, CoreUI, objc-runtime culprits) carries this exact signature while being a real, fixable block, and no cheap stack-shape signal separates the two: `culprit` and frame origin fail in both directions on measured real hangs, and in SwiftUI apps the `App.$main` frame is always in-app, keeping the app-vs-system frame mix "mixed" on essentially every issue, so that signal carries no information. 'Was the app actively running when captured' is usually not recoverable from the report itself — discriminate with MetricKit instead: `MXHangDiagnostic` call trees for the hang, and `MXAppExitMetric` watchdog-exit counts to see whether users are actually being terminated. If the issue keeps growing across releases, treat it as real regardless of shape."
+
+> **`fixed_in_newer_build`:** "A version split is rollout-exposure-blind — most events sitting on the older build is the normal shape of an incomplete rollout, not proof the bug is fixed. Before closing, verify it actually stopped on the latest build: are there still events there, and is the per-user rate flat-at-zero or *rising* as adoption grows? A flag that fired only because the newest version has little exposure yet, while crashes climb on it, is a live bug — escalate, don't close. Confirm a code change actually touched the crashing path between the two versions."
+
+These are inlined rather than cross-referenced on purpose: `axiom-shipping` (which owns `production-triage.md`) is not shipped to every harness, and a dangling pointer here would drop exactly the safety warnings. `scripts/pre-deploy.ts` asserts these three blocks stay byte-identical to their source in `production-triage.md`.
 
 ### Skipped (Malformed or Unclassifiable)
 
