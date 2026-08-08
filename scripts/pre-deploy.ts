@@ -1973,6 +1973,113 @@ heading("12m. Codex Marketplace Manifest");
   }
 }
 
+// ── 12n. xcsym Noise-Rule Contract Parity ──
+
+// xcsym emits noise_flags[].{class,deprioritize_safety}, but nothing in the Go
+// reads the safety back — so the ONLY thing
+// tying the Go values to the skill's noise-class table (which is what an LLM
+// reads to interpret the output) was a maintainer remembering to edit both.
+// Axiom-pfp changed one safety value and had to hand-check the table; Axiom-417
+// asked for this gate. It ASSERTS, never generates: the table's Action column is
+// editorial guidance the tool must not own.
+//
+// Second half: the three standing notes carry the do-not-close-on-shape
+// warnings. triage-analyzer.md inlines them because axiom-shipping (which owns
+// production-triage.md) is excluded from the Codex build, so a cross-reference
+// there dangles and drops exactly the safety text (Axiom-dtq). Inlining trades a
+// dangling pointer for a drift risk; this check pays that off.
+heading("12n. xcsym Noise-Rule Contract Parity");
+{
+  const noiseGoPath = path.join(root, "tools/xcsym/triage_noise.go");
+  const triageSkillPath = path.join(
+    root,
+    ".claude-plugin/plugins/axiom/skills/axiom-shipping/skills/production-triage.md",
+  );
+  const triageAgentPath = path.join(
+    root,
+    ".claude-plugin/plugins/axiom/agents/triage-analyzer.md",
+  );
+
+  if (!fs.existsSync(noiseGoPath) || !fs.existsSync(triageSkillPath)) {
+    console.log("  ⊘ xcsym triage sources not present — skipped");
+  } else {
+    const goSrc = fs.readFileSync(noiseGoPath, "utf8");
+    const skillSrc = fs.readFileSync(triageSkillPath, "utf8");
+
+    // Each rule is one `noiseRules = append(noiseRules, NoiseRule{...})` block
+    // carrying a Class and returning `true, "<confidence>"` on its firing path.
+    const goRules = new Map<string, string>();
+    for (const block of goSrc.split("noiseRules = append(noiseRules, NoiseRule{").slice(1)) {
+      const cls = block.match(/Class:\s*"([^"]+)"/)?.[1];
+      const safety = block.match(/return\s+true,\s*"([^"]+)"/)?.[1];
+      if (cls && safety) goRules.set(cls, safety);
+    }
+
+    // Table rows look like: | `class` | Meaning | deprioritize safety | Action |
+    const tableRows = new Map<string, string>();
+    for (const line of skillSrc.split("\n")) {
+      const m = line.match(/^\|\s*`([a-z0-9_]+)`\s*\|[^|]*\|\s*([a-z]+)\s*\|/);
+      if (m) tableRows.set(m[1], m[2]);
+    }
+
+    if (goRules.size === 0) {
+      error("noise-parity", `could not parse any noise rules out of ${path.relative(root, noiseGoPath)} — the parser needs updating`);
+    } else {
+      let mismatches = 0;
+      for (const [cls, safety] of goRules) {
+        const documented = tableRows.get(cls);
+        if (documented === undefined) {
+          error("noise-parity", `noise class "${cls}" is emitted by xcsym but has no row in the production-triage.md noise-class table`);
+          mismatches++;
+        } else if (documented !== safety) {
+          error("noise-parity", `noise class "${cls}": Go emits deprioritize_safety "${safety}" but the noise-class table documents "${documented}"`);
+          mismatches++;
+        }
+      }
+      for (const cls of tableRows.keys()) {
+        if (!goRules.has(cls)) {
+          error("noise-parity", `the noise-class table documents "${cls}", but no xcsym rule emits it`);
+          mismatches++;
+        }
+      }
+      if (mismatches === 0) {
+        console.log(`  ✓ ${goRules.size} xcsym noise classes match the production-triage.md table (class + deprioritize_safety)`);
+      }
+    }
+
+    // Standing notes: the skill states them as **Standing note for `x`:** "…";
+    // the agent inlines them as > **`x`:** "…". Compare the quoted body.
+    if (!fs.existsSync(triageAgentPath)) {
+      console.log("  ⊘ triage-analyzer.md not present — standing-note parity skipped");
+    } else {
+      const agentSrc = fs.readFileSync(triageAgentPath, "utf8");
+      const quoted = (src: string, re: RegExp): string | undefined =>
+        src.match(re)?.[1]?.trim();
+      let noteMismatches = 0;
+      let notesChecked = 0;
+      for (const cls of ["third_party_or_system_only", "anr_suspension_false_positive", "fixed_in_newer_build"]) {
+        const inSkill = quoted(skillSrc, new RegExp(`\\*\\*Standing note for \`${cls}\`:\\*\\*[^"]*"([\\s\\S]*?)"\\s*(?:\\n|$)`));
+        const inAgent = quoted(agentSrc, new RegExp(`>\\s*\\*\\*\`${cls}\`:\\*\\*\\s*"([\\s\\S]*?)"\\s*(?:\\n|$)`));
+        if (!inSkill) {
+          error("noise-parity", `standing note for "${cls}" not found in production-triage.md`);
+          noteMismatches++;
+        } else if (!inAgent) {
+          error("noise-parity", `standing note for "${cls}" is not inlined in triage-analyzer.md — Codex ships the agent without axiom-shipping, so a cross-reference there drops the warning`);
+          noteMismatches++;
+        } else if (inSkill !== inAgent) {
+          error("noise-parity", `standing note for "${cls}" has drifted between production-triage.md and triage-analyzer.md`);
+          noteMismatches++;
+        } else {
+          notesChecked++;
+        }
+      }
+      if (noteMismatches === 0) {
+        console.log(`  ✓ ${notesChecked} standing notes inlined in triage-analyzer.md match production-triage.md verbatim`);
+      }
+    }
+  }
+}
+
 // ── Phase 1 Summary ──
 
 heading("Phase 1 Summary (Static)");
