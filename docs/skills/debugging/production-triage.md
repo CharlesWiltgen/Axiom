@@ -42,7 +42,7 @@ Questions you can ask Claude that will draw from this skill:
 - Correlating ASC crash groups with xcsym `pattern_tag` output
 
 ### Suspension and Idle-Runloop Noise Classification
-- Recognizing idle-runloop hangs (`anr_idle_runloop`) — the app was parked in its runloop, not truly blocked — which `noise.anr_suspension.v1` ranks as noise
+- Recognizing idle-runloop hangs (`anr_idle_runloop`) — a shape *consistent with* background suspension — which `noise.anr_suspension.v1` flags as likely noise for review, never as a verdict: real watchdog-terminated hangs inside system callouts share the same shape, and MetricKit (hang diagnostics, watchdog-exit counts) is the discriminator
 - Separating those from real main-thread blocks (`anr_main_thread_block`) and watchdog terminations (`0x8badf00d`), which are genuine responsiveness failures and are never flagged as noise
 - Flag-never-hide policy: noise is surfaced in the report as "noise" so you can decide, not silently dropped
 
@@ -75,7 +75,7 @@ A well-formed triage report answers three questions for each crash family:
 App Store Connect and Sentry both surface background-task-expired and idle-runloop terminations as crashes. They look alarming but usually aren't:
 
 - **Background task expired** – App failed to call `endBackgroundTask()` before the OS killed it. Fix the background task, or flag as noise if it's a deliberate "fire and forget."
-- **Idle runloop termination** – App sat idle too long in the background. Not a code bug; the OS reclaimed resources. Dismiss unless your app is supposed to stay alive.
+- **Idle runloop termination** – shape consistent with the OS reclaiming an idle backgrounded app rather than a code bug. Review, don't dismiss on shape alone: real watchdog-terminated hangs inside system callouts look identical, and MetricKit (hang diagnostics, watchdog-exit counts) is the discriminator.
 
 These two patterns account for a disproportionate share of "crash" noise in most dashboards.
 

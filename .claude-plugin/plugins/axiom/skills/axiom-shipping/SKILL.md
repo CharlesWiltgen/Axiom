@@ -59,7 +59,7 @@ Use this skill when you encounter:
 | Crash data in App Store Connect | See `skills/app-store-connect-ref.md` |
 | TestFlight crash reports | See `skills/app-store-connect-ref.md` |
 | ASC metrics dashboards | See `skills/app-store-connect-ref.md` |
-| Beta tester crash report | See `skills/testflight-triage.md` |
+| Beta tester crash report, local Organizer crash corpus (.xccrashpoint) | See `skills/testflight-triage.md` |
 | Production corpus triage (Sentry, ASC — multiple grouped issues) | See `skills/production-triage.md` + `triage-analyzer` agent or `/axiom:triage` |
 | Crash log symbolication (.ips / MetricKit / .crash) | See axiom-tools (skills/xcsym-ref.md) or `/axiom:analyze-crash`; `skills/testflight-triage.md` for the full TF workflow |
 | Automate App Store Connect | See `skills/asc-mcp.md` |
@@ -234,7 +234,7 @@ Use this skill when you encounter:
 - "Which of these crashes are real bugs vs noise?"
 - Corpus-level hang triage ("Are my ANR reports real blocks?")
 
-**Why production-triage**: Corpus-level triage requires fetching from an aggregator, classifying each issue, noise-flagging suspension false-positives, and clustering into root-cause families. `testflight-triage` covers the Organizer/single-file path; `production-triage` covers the aggregate/multi-issue path.
+**Why production-triage**: Corpus-level triage requires fetching from an aggregator, classifying each issue, noise-flagging suspension false-positives, and clustering into root-cause families. `testflight-triage` covers the Organizer path — single files and the local on-disk `.xccrashpoint` corpus; `production-triage` covers the aggregator path (Sentry / ASC grouped issues).
 
 **Reference**: `skills/production-triage.md` (fetch + NormalizedReport schema + flag-never-hide rule). **Agent**: `triage-analyzer` or `/axiom:triage sentry` / `/axiom:triage asc`.
 

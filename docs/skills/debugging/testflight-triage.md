@@ -30,6 +30,8 @@ Questions you can ask Claude that will draw from this skill:
 - "How do I review TestFlight feedback in Xcode?"
 - "What does EXC_BAD_ACCESS mean and how do I fix it?"
 - "Our crash rate spiked after the latest build. How do I triage this?"
+- "Triage all the crash logs Xcode has collected on my Mac, across every version."
+- "Organizer shows a dozen different crash signatures — are they really different bugs?"
 
 ## What This Skill Provides
 
@@ -62,6 +64,12 @@ Before diving into code, ask yourself:
 - Terminations Organizer for non-crash kills
 - Launch timeout, memory limit, CPU limit categories
 - MetricKit integration for better diagnostics
+
+### The On-Disk Organizer Corpus (.xccrashpoint)
+- Where Xcode keeps every collected crash log on disk, and how to enumerate the full corpus (including the version-pinned filter directories a naive search misses)
+- Why Organizer signature names mislead — they come from an arbitrary non-crashing thread, so one bug fans out into many signatures
+- Why per-version device counts hide cross-version history, and why summed device counts overstate reach
+- Statically linked SPM packages surface under the app binary – grep the package's *source filenames*, not its name
 
 ### Claude-Assisted Interpretation
 - Effective prompts for crash analysis
@@ -101,7 +109,7 @@ Thread 0 Crashed:
 
 This page documents the `axiom-shipping` skill — systematic crash investigation workflow that Claude uses when you report TestFlight issues. The skill contains complete Organizer walkthroughs, symbolication commands, crash pattern guides, and pressure scenarios.
 
-The skill routes through the `axiom-build` router, so asking about TestFlight crashes will automatically invoke this guidance.
+The skill routes through the `axiom-build` and `axiom-shipping` routers, so asking about TestFlight crashes will automatically invoke this guidance.
 
 ## Related
 
