@@ -109,8 +109,8 @@ From the response, extract:
 | `userCount` | `impact.users` |
 | `count` (events) | `impact.events` |
 | `firstSeen`, `lastSeen` | `impact.first_seen`, `impact.last_seen` |
-| `tags.release` (list) | `versions.affected`, `versions.min`, `versions.max` |
-| `tags.os.version` (list) | `os.versions`; `tags.os.name` → `os.platform` |
+| `tags.release` (single value — see below) | `versions.affected`, `versions.min`, `versions.max` |
+| `tags.os.version` (single value — see below) | `os.versions`; `tags.os.name` → `os.platform` |
 | `entries[type=exception].values[0].type` | `exception.type` |
 | `entries[type=exception].values[0].mechanism.meta.signal.name` | `exception.signal` |
 | `entries[type=exception].values[0].mechanism.meta.mach_exception.exception_name` | `exception.mach_exception` |
@@ -119,6 +119,28 @@ From the response, extract:
 **Frames:** Sentry frames are **bottom-up** (outermost frame first). Reverse them to get top-down (crashed frame first), matching the NormalizedReport convention. For each frame: `module`/`package` → `image`, `function` → `symbol`, `inApp` → `in_app`.
 
 **`crashed_thread`:** Set to the index of the thread marked `crashed: true`. If ambiguous, use 0 (main thread). The adapter uses this to set `RawCrash.CrashedIdx` — every rule that inspects the crashed thread depends on it.
+
+### `tags` on an event is one value per key, not a distribution
+
+An **event** payload's `tags` is an array of `{key, value}` objects with exactly **one value per key**. The array is the list — the values are not. So `tags.release` from `events/latest/` is the release of that single (most recent) event, and `tags.os.version` is one OS version. Neither is the issue's affected-version set.
+
+This matters because two noise rules threshold on those fields:
+
+| Rule | Reads | Failure if fed a one-event sample |
+|---|---|---|
+| `noise.fixed_in_newer.v1` | `versions.max` | "Highest affected version predates latest shipped" is decided from one event's release |
+| `noise.single_os_eol.v1` | `os.versions` | "All affected OS versions are below the floor" is decided from one OS version — a single iOS 17 event does not mean no iOS 18 users |
+
+**Do not populate `versions.affected` / `versions.min` / `os.versions` as if they were distributions when your only source is an event body.** A single value cannot be a min, a max, and an affected-set at once. Populate `versions.max` only, leave the rest empty, and treat both rules' output accordingly.
+
+To make either rule sound you need the group-level distribution, which is a separate request per issue:
+
+```
+GET https://sentry.io/api/0/organizations/{org}/issues/{issue_id}/tags/release/values/
+GET https://sentry.io/api/0/organizations/{org}/issues/{issue_id}/tags/os.version/values/
+```
+
+This is a **deliberate, scoped exception** to the no-N+1 rule above — spend it only on the issues you will actually threshold (those where `--latest-version` or `--os-floor` is in play), never on the whole corpus. The issue-list payload carries no release fields, so there is no cheaper source. If you skip the extra request, say so in the report rather than presenting either flag as a measured fact.
 
 ## Fetching from App Store Connect
 
@@ -247,20 +269,22 @@ Hang events do not carry an `exception` or `termination` block — those fields 
 | `pattern_rule_id` | The classification rule that fired (e.g., `R-swift-unwrap-01`, `H-idle-runloop-01`) |
 | `cluster_key` | Mechanical signature grouping this issue with similar ones |
 | `cluster_confidence` | `high` = top app frames; `low` = system-frame fallback (treat as a bag, not a cluster) |
-| `noise_flags` | Array of `{class, rule_id, confidence, reason}` — empty means real-bug candidate |
+| `noise_flags` | Array of `{class, rule_id, deprioritize_safety, reason}` — empty means real-bug candidate |
 | `enrichment` | Cross-skill pointers (e.g., axiom-data for 0xdead10cc + DB frames). **Omitted** when no enrichment applies — i.e. on most issues |
 | `top_frames` | Top 5 frames of the crashed thread, as `"image symbol"` strings. **Omitted** when the crashed thread has no frames — e.g. an ASC aggregate emitted with `frames_unavailable: true` and no `threads[]`. Don't expect it on every issue |
 
 `pattern_rule_id` and `noise_flags[].rule_id` are two separate fields at different nesting levels. `pattern_rule_id` (top-level on each issue) names the classification rule that matched the crash/hang pattern. Each element of `noise_flags[]` carries its own `rule_id` naming the noise rule that fired (e.g., `noise.anr_suspension.v1`). Do not conflate them.
 
-`pattern_confidence` and `noise_flags[].confidence` use **different vocabularies**. `pattern_confidence` values are `high`, `heuristic`, or `low` (crash/hang engine). `noise_flags[].confidence` values are `high`, `medium`, or `low` (noise engine — e.g., `single_os_eol` emits `medium`).
+Every field named `*_confidence` rates **evidence strength**: `pattern_confidence` is `high`, `heuristic`, or `low` (crash/hang engine); `cluster_confidence` is `high` or `low`.
+
+`noise_flags[].deprioritize_safety` is the one that is **not** a confidence, which is why it is not named like one. It rates **how safe acting on the flag is** — `high`, `medium`, or `low` — not how well the predicate matched. A rule can match exactly and still emit `low` when what it matched does not license the conclusion. `anr_suspension_false_positive` is the case in point: strict matcher, unsupported inference from shape to harmless.
 
 ### Noise-class table
 
-| class | Meaning | Confidence | Action |
+| class | Meaning | Deprioritize safety | Action |
 |---|---|---|---|
-| `anr_suspension_false_positive` | Idle-runloop hang — shape is *consistent with* background suspension | high | Demote to the review section, never close on shape alone — real watchdog-terminated hangs in system callouts share this exact signature (see the standing note) |
-| `fixed_in_newer_build` | `versions.max` predates `--latest-version` — may already be fixed | high | Demote pending verification against the latest build |
+| `anr_suspension_false_positive` | Idle-runloop hang — shape is *consistent with* background suspension | medium | Demote to the review section, never close on shape alone — real watchdog-terminated hangs in system callouts share this exact signature (see the standing note) |
+| `fixed_in_newer_build` | `versions.max` predates `--latest-version` — may already be fixed | low | Demote pending verification against the latest build — fires on most of the corpus mid-rollout, and its standing note can invert to *escalate* |
 | `third_party_or_system_only` | Crashed thread is non-main and has zero `in_app` frames — may not be directly actionable | low | Demote cautiously; a third-party SDK can crash on a value your code passed it |
 | `single_os_eol` | All affected OS versions are below `--os-floor` | medium | Deprioritize for supported users |
 | `long_tail_low_impact` | `impact.users` is below `--min-users` | high | Rank low, not hidden |
@@ -297,9 +321,15 @@ The `cluster_key` is a mechanical, exact-signature grouping. High-confidence clu
 1. **Top real-bug families** — clusters with no noise flags, ranked by `total_users` descending. Include `pattern_tag`, root-cause hypothesis, enrichment pointers, and recommended next step.
 2. **Deprioritized as likely noise (review before closing)** — a dedicated section listing every noise-flagged issue with:
    - Issue ID and title
-   - `noise_flags[].class` and `noise_flags[].reason`
+   - `noise_flags[].class`, `noise_flags[].deprioritize_safety`, and `noise_flags[].reason`
    - User/event impact (so the reader can judge independently)
+
+   Sort this section **least-safe first** — `low`, then `medium`, then `high` `deprioritize_safety`, breaking ties by users descending. The reader is scanning for what they are about to wrongly close, and that is at the top of the safety order, not the bottom.
 3. **Skipped (malformed or unclassifiable)** — `errors[]` from the TriageResult, if any.
+
+**No `deprioritize_safety` value licenses closing an issue.** `high` means the deprioritization is comparatively safe, not that the issue is dead. Every row in this section is *review before closing*, `high` rows included — the Action column of the noise-class table, not the safety value, says what may be done.
+
+**`summary.candidate_families` counts only issues with zero noise flags**, regardless of how safe those flags were. A `low`-safety flag removes an issue from that count exactly as a `high` one does, so the number is a floor on real-bug families, not an estimate of them. Never report it as "we found N real bugs."
 
 **Never omit a noise-flagged issue from the report.** Omission is the correctness failure this architecture is designed to prevent — the Poppy lesson was that the #1 issue by user count was an idle-runloop suspension false-positive. A tool that silently buried it would commit the same error inverted.
 
@@ -313,6 +343,8 @@ The `cluster_key` is a mechanical, exact-signature grouping. High-confidence clu
 
 The pipeline ends at the ranked report — it resolves nothing. When you do close an issue, scope the resolution to a release: a bare `{"status":"resolved"}` leaves it unscoped, so the next straggler event from a still-installed broken build reopens it as a "regression" that reads exactly like the fix having failed.
 
+**Closing issues does not move the crash-free rate.** Release Health computes crash-free sessions/users from session envelopes the SDK sends; issue `status` is a workflow field on the issue stream, and nothing connects the two. Bulk-resolving N issues changes the board from 70 rows to 47 and changes the metric by zero. When someone asks you to close issues to improve the number before a demo or review, that is the fact to lead with — the request does not achieve its own goal, which settles it faster than any argument about correctness.
+
 ```bash
 curl -X PUT -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
   -d '{"status":"resolved","statusDetails":{"inRelease":"<pkg>@<ver>+<build>"}}' \
@@ -320,6 +352,16 @@ curl -X PUT -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json
 ```
 
 Re-read the issue afterward to confirm the status actually changed — the PUT's own echo is not proof it applied.
+
+**When you want the row off the board but have not verified a fix, archive — do not resolve.** This is the honest instrument for every noise-flagged issue, and it is what to reach for instead of closing under pressure:
+
+```bash
+curl -X PUT -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"status":"ignored","statusDetails":{"ignoreUntilEscalating":true}}' \
+  "https://sentry.io/api/0/issues/<numericID>/"
+```
+
+`archived_until_escalating` clears the default unresolved stream while asserting only "not working this now" — never the false claim "this is fixed" — and Sentry resurfaces it on its own if volume climbs. Resolving an issue that is still taking events instead flips it back as a `regressed` substatus, so a close under deadline pressure tends to reappear as a fresh regression at the worst moment.
 
 ## Xcode 27 Organizer Overlap `OS27`
 
