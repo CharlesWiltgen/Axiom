@@ -43,20 +43,32 @@ No dSYMs required. No Xcode CLT symbolication. No network calls. Pass the JSONL,
 
 ## Fetching from Sentry
 
-**Token:** Read from `SENTRY_AUTH_TOKEN` environment variable — never commit it, never log it, never include it in output.
+**Token:** Locate a token — never ask the user to paste one, never commit it, never log it, never include it in output. Lookup order:
+
+1. `SENTRY_AUTH_TOKEN` environment variable
+2. `[auth] token` in `~/.sentryclirc`, then a project-local `.sentryclirc`
+3. Ask the user where their token lives (a path or env-var name — not the value)
+
+**Verify scope before the corpus fetch.** Finding *a* token is not finding a *usable* one: reading issues needs `event:read` (+ `project:read`), and `.sentryclirc` tokens are often CI tokens scoped `org:ci` (symbol uploads only) that cannot read issues at all. One cheap probe turns "confusing partial failure" into "wrong token":
+
+```bash
+curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $TOKEN" \
+  "https://sentry.io/api/0/projects/{org_slug}/{proj_slug}/issues/?limit=1"
+# 200 → usable for triage · 401/403 → wrong or under-scoped token; say so and stop
+```
 
 ### List unresolved issues
 
 ```
-GET https://sentry.io/api/0/projects/{org_slug}/{proj_slug}/issues/?query=is:unresolved&statsPeriod=90d&limit=25
+GET https://sentry.io/api/0/projects/{org_slug}/{proj_slug}/issues/?query=is:unresolved&limit=100
 Authorization: Bearer $SENTRY_AUTH_TOKEN
 ```
 
-Adjust `statsPeriod` (e.g., `30d`, `7d`) and add `environment=production` when needed.
+**Do not pass `statsPeriod=90d`, `30d`, or `7d` — the endpoint rejects them with 400.** Its documented set is only `""`, `24h`, and `14d`. Omit the parameter for the unbounded default; use `14d` when a stats window is wanted. If a 400 still comes back, the response's `detail` string lists the currently-valid choices — read it and retry with one of those rather than guessing. Add `environment=production` when needed. `limit=100` is the documented maximum; smaller pages only multiply round trips.
 
 ### Cursor pagination — mandatory
 
-Sentry paginates at ~25 issues per page using cursor-based links. An active app with dozens of unresolved issues will span many pages. Fetching only the first page and calling it a corpus is a correctness failure — it silently drops the majority of issues.
+Sentry pages with cursor-based links at your `limit` (100 max). An active app with dozens of unresolved issues will span many pages. Fetching only the first page and calling it a corpus is a correctness failure — it silently drops the majority of issues.
 
 **Algorithm:**
 
@@ -72,9 +84,14 @@ Sentry paginates at ~25 issues per page using cursor-based links. An active app 
 
 Cap example (for very large projects): stop at 20 pages and announce the cap. The user can re-run with tighter filters.
 
-### Fetch latest event per issue
+### Rank from the list payload; fetch event bodies only where needed
 
-For each issue, fetch its most recent event to get the stack frames:
+The list response already carries what the ranking pass needs per issue: `culprit`, `count`, `userCount`, `metadata` (`function`, `type`, `value`), `firstSeen`/`lastSeen`. Cluster and rank the whole corpus from the paginated list alone — do **not** make a per-issue request for every row (100+ round trips where a handful suffice). Two caveats — the first measured on a real corpus:
+
+- **`culprit` is not universally populated** (empty on ~40% of one corpus), and `metadata.function` tends to be absent on exactly the App Hang issues. Fall back to `metadata.type` + `metadata.value`. Never present the empty-culprit set as a single family — treat it the way the family-merge step treats a `|sys:` bag: split it.
+- **`xcsym triage` classifies at full confidence only with frames.** Fetch event bodies for the issues you will analyze in depth — the top families by users, every hang candidate, anything ambiguous — and emit the rest as minimal reports (`frames_unavailable: true`), which classify by exception code at reduced confidence and still appear in the report (flag-never-hide).
+
+For each issue that needs frames, fetch its most recent event:
 
 ```
 GET https://sentry.io/api/0/issues/{issue_id}/events/latest/
@@ -242,7 +259,7 @@ Hang events do not carry an `exception` or `termination` block — those fields 
 
 | class | Meaning | Confidence | Action |
 |---|---|---|---|
-| `anr_suspension_false_positive` | Idle-runloop hang — likely background suspension, not a real block | high | Demote; the #1 issue by users may be this non-bug |
+| `anr_suspension_false_positive` | Idle-runloop hang — shape is *consistent with* background suspension | high | Demote to the review section, never close on shape alone — real watchdog-terminated hangs in system callouts share this exact signature (see the standing note) |
 | `fixed_in_newer_build` | `versions.max` predates `--latest-version` — may already be fixed | high | Demote pending verification against the latest build |
 | `third_party_or_system_only` | Crashed thread is non-main and has zero `in_app` frames — may not be directly actionable | low | Demote cautiously; a third-party SDK can crash on a value your code passed it |
 | `single_os_eol` | All affected OS versions are below `--os-floor` | medium | Deprioritize for supported users |
@@ -261,7 +278,7 @@ An `anr_idle_runloop` issue is highly likely to carry `anr_suspension_false_posi
 
 ## Semantic family-merge
 
-The `cluster_key` is a mechanical, exact-signature grouping. It is conservative by design: it never over-merges. The agent's job is to merge mechanical clusters that share a root cause and to split bags.
+The `cluster_key` is a mechanical, exact-signature grouping. High-confidence clusters are conservative by design — they never over-merge; `cluster_confidence: low` (`|sys:`) keys are flagged bags, not merges. The agent's job is to merge mechanical clusters that share a root cause and to split bags.
 
 **Merge strategy:**
 
@@ -269,6 +286,7 @@ The `cluster_key` is a mechanical, exact-signature grouping. It is conservative 
 2. Merge clusters when: same `pattern_tag` + overlapping `top_frames` + plausible shared root cause (e.g., two nil-unwrap clusters that differ only in call site).
 3. **Split `cluster_confidence: low` (marked `|sys:`) bags.** A system-frame fallback cluster lumps together unrelated issues under the same top syscall. Inspect individual `top_frames` and `pattern_tag` to split into real families. Do not present a `|sys:` cluster as a single coherent crash family.
 4. Seed merges with the full frame list in `top_frames`, not just `cluster_key`.
+5. To test whether a family involves a vendored SPM package, grep its **source filenames**, not the package or library name — statically linked packages surface as app-binary frames carrying the package's filenames, so the package name never appears (see testflight-triage, Reading the Stack Trace).
 
 ## Flag-never-hide reporting rule
 
@@ -287,9 +305,21 @@ The `cluster_key` is a mechanical, exact-signature grouping. It is conservative 
 
 **Standing note for `third_party_or_system_only`:** Always include this caveat when listing third-party-only issues as deprioritized: "A third-party SDK can crash on a nil or invalid value passed by app code — zero app frames on the crashed thread does not rule out an app-side root cause. Check for app code on other threads or higher in the call chain before dismissing."
 
-**Standing note for `anr_suspension_false_positive`:** "This issue may represent background suspension, not a real main-thread block. Verify by checking whether the app was actively running when the hang was captured."
+**Standing note for `anr_suspension_false_positive`:** "Idle-runloop shape says suspension is *likely* — it cannot say the hang was harmless. A watchdog-terminated fatal hang inside a system callout (UIScene, CoreUI, objc-runtime culprits) carries this exact signature while being a real, fixable block, and no cheap stack-shape signal separates the two: `culprit` and frame origin fail in both directions on measured real hangs, and in SwiftUI apps the `App.$main` frame is always in-app, keeping the app-vs-system frame mix "mixed" on essentially every issue, so that signal carries no information. 'Was the app actively running when captured' is usually not recoverable from the report itself — discriminate with MetricKit instead: `MXHangDiagnostic` call trees for the hang, and `MXAppExitMetric` watchdog-exit counts to see whether users are actually being terminated. If the issue keeps growing across releases, treat it as real regardless of shape."
 
 **Standing note for `fixed_in_newer_build`:** "A version split is rollout-exposure-blind — most events sitting on the older build is the normal shape of an incomplete rollout, not proof the bug is fixed. Before closing, verify it actually stopped on the latest build: are there still events there, and is the per-user rate flat-at-zero or *rising* as adoption grows? A flag that fired only because the newest version has little exposure yet, while crashes climb on it, is a live bug — escalate, don't close. Confirm a code change actually touched the crashing path between the two versions."
+
+## Resolving after triage (if you close issues in Sentry)
+
+The pipeline ends at the ranked report — it resolves nothing. When you do close an issue, scope the resolution to a release: a bare `{"status":"resolved"}` leaves it unscoped, so the next straggler event from a still-installed broken build reopens it as a "regression" that reads exactly like the fix having failed.
+
+```bash
+curl -X PUT -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"status":"resolved","statusDetails":{"inRelease":"<pkg>@<ver>+<build>"}}' \
+  "https://sentry.io/api/0/issues/<numericID>/"
+```
+
+Re-read the issue afterward to confirm the status actually changed — the PUT's own echo is not proof it applied.
 
 ## Xcode 27 Organizer Overlap `OS27`
 

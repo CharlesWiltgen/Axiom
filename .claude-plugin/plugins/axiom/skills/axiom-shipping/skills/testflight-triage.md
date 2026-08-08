@@ -1,7 +1,6 @@
-
 # TestFlight Crash & Feedback Triage
 
-> **Sentry or App Store Connect corpus triage?** This skill covers the Xcode Organizer workflow — a single crash file or a TestFlight feedback session. For triage of multiple grouped production issues from Sentry or ASC aggregates (dozens of issues, corpus-level), use `axiom-shipping (skills/production-triage.md)` and the `triage-analyzer` agent (`/axiom:triage`).
+> **Sentry or App Store Connect corpus triage?** This skill covers the Xcode Organizer workflow — a single crash file, a TestFlight feedback session, or the **local on-disk Organizer corpus** (`.xccrashpoint` bundles on your Mac; see "The On-Disk Organizer Corpus" below). For triage of grouped production issues from Sentry or ASC aggregates (dozens of issues, aggregator-level), use `axiom-shipping (skills/production-triage.md)` and the `triage-analyzer` agent (`/axiom:triage`).
 
 ## First Step: Run xcsym
 
@@ -280,6 +279,10 @@ Thread 0 Crashed:
 
 **Start at frame 3** — the first frame in your code. Work down to understand the call chain.
 
+#### Statically linked SPM packages are invisible by name
+
+A Swift package linked into the app binary surfaces frames attributed to the **app's** binary, carrying the **package's source filenames**. Grepping a report — or a whole corpus — for the package or library name finds nothing even when its frames dominate. Measured over 370 `.crash` logs from a GRDB-backed app: `GRDB` hit 0 logs, `sqlite3` only 80 (just the stalls inside `libsqlite3.dylib`), while the package's source filenames found the real set (`Database.swift` 132, `SerializedDatabase.swift` 130, `Statement.swift` 88). To test a report for a vendored package's involvement, grep its **source filenames**. Absence of the library name is not evidence of absence.
+
 ### Example: Interpreting a Real Crash
 
 ```
@@ -341,7 +344,8 @@ let name = user.name
 | `fatalError()` / `preconditionFailure()` | Your assertion message in Application Specific Info |
 | Uncaught Objective-C exception | `NSException` type and reason in report |
 | Swift runtime error | "Fatal error: ..." message |
-| Deadlock detected | `dispatch_sync` onto current queue |
+
+A same-queue `dispatch_sync` deadlock is **not** a SIGABRT: libdispatch traps the detected case as `EXC_BREAKPOINT` with "BUG IN CLIENT OF LIBDISPATCH" in Application Specific Information, and an undetected main-thread deadlock surfaces as a watchdog kill (0x8badf00d, next section).
 
 **Debug tip:** Look at "Application Specific Information" section — it usually contains the actual error message.
 
@@ -494,6 +498,33 @@ class MetricsManager: NSObject, MXMetricManagerSubscriber {
 | Programmatic crash analysis | MetricKit |
 | Custom crash reporting integration | MetricKit |
 | Termination trends across versions | Terminations Organizer |
+
+---
+
+## The On-Disk Organizer Corpus (.xccrashpoint)
+
+Everything the Organizer shows also lives on disk, and the on-disk form supports corpus-level triage the GUI can't:
+
+```
+~/Library/Developer/Xcode/Products/<bundle-id>/Crashes/Points/*.xccrashpoint
+```
+
+Each `.xccrashpoint` bundle is one Organizer signature and can hold many `.crash` logs. `xcsym` accepts a single `.xccrashpoint` directly; for the corpus, collect the raw logs:
+
+```bash
+find ~/Library/Developer/Xcode/Products/<bundle-id>/Crashes/Points -name '*.crash'
+```
+
+**Do not scope the search to the `-Any-Any` filter directories.** Bundles are organized by version filter, and a meaningful fraction carry only version-pinned filters (e.g. `…-0.8.76-Any`) with no `-Any-Any` at all — measured on one corpus, 17 of 71 bundles had none, and the narrowed glob returned 249 logs where the plain `find` found 370. Enumerate every filter directory.
+
+There is no raw-`.crash`-corpus input to `xcsym triage` (that subcommand takes NormalizedReport JSONL from an aggregator). Corpus triage here is two steps: **cluster by the crashed thread** — extract each log's `Thread N Crashed:` stack and group logs whose crashing stacks match — then run `xcsym crash` on one representative log per group for symbolication and pattern classification.
+
+Two Organizer traps make signature-level triage unreliable:
+
+1. **Signature names come from an arbitrary non-crashing thread.** One bug fans out into many unrelated-looking signatures — measured on one release, 16 of 17 signatures were a single bug (identical crashing stacks, all `EXC_BREAKPOINT`), carrying names like `NO_CRASH_STACK`, `monitorThreadCache`, `installTap` that implicated subsystems with no involvement at all. Triage by diffing the stack of the thread marked `Thread N Crashed:`, never by the signature name.
+2. **Per-version device counts hide cross-version history.** A signature showing "1 device" for the selected version held 27 logs spanning 12 releases once the bundle was opened. Open the bundle before judging reach.
+
+Also: a crash-looping install re-lands reports across capture sites, so summing per-signature `deviceCount` overstates reach — treat the sum as an upper bound.
 
 ---
 
@@ -719,7 +750,7 @@ func suspectFunction() {
 | `KERN_INVALID_ADDRESS` | Null pointer / bad memory access |
 | `KERN_PROTECTION_FAILURE` | Memory protection violation |
 | `0x8badf00d` | Watchdog timeout (main thread blocked) |
-| `0xdead10cc` | Deadlock detected |
+| `0xdead10cc` | Data-protection violation — file or database lock held across suspension (RunningBoard), not a deadlock |
 | `0xc00010ff` | Thermal event (device too hot) |
 
 ### Crash Report Sections
