@@ -31,12 +31,13 @@ Questions you can ask Claude that will draw from this reference:
 - "What are the diagnostic properties on CLLocationUpdate?"
 - "How do I migrate from CLLocationManager delegates?"
 - "How do I migrate from `headingOrientation` to `headingBody`?"
+- "Which LiveConfiguration should I use for on-water navigation?"
 
 ## What's Covered
 
 ### Modern APIs (iOS 17+)
 - CLLocationUpdate with AsyncSequence
-- LiveConfiguration options
+- LiveConfiguration options — `.default`, `.automotiveNavigation`, `.otherNavigation`, `.fitness`, `.airborne`, plus `.maritime` (iOS 27)
 - isStationary for automatic pause/resume
 - CLMonitor for geofencing and beacons
 - CircularGeographicCondition and BeaconIdentityCondition
