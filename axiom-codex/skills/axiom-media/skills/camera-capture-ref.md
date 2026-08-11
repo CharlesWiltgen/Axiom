@@ -161,36 +161,36 @@ let obs = device.observe(\.systemPressureState, options: [.initial, .new]) { dev
 | `.peakPower` | Power demand exceeds battery capability |
 | `.depthModuleTemperature` | Depth module hot — depth quality may degrade |
 | `.cameraTemperature` | Camera module hot |
-| `.systemStress` `OS27` | System is ~30 seconds from unexpected power-off |
+| `.batteryStress` `OS27` | Under current battery conditions the device will shut down within 30 seconds if system load is not reduced |
 
 ### Session Notifications
 
 ```swift
 // Session started
 NotificationCenter.default.addObserver(
-    forName: .AVCaptureSessionDidStartRunning,
+    forName: AVCaptureSession.didStartRunningNotification,
     object: session, queue: .main) { _ in }
 
 // Session stopped
 NotificationCenter.default.addObserver(
-    forName: .AVCaptureSessionDidStopRunning,
+    forName: AVCaptureSession.didStopRunningNotification,
     object: session, queue: .main) { _ in }
 
 // Session interrupted (phone call, etc.)
 NotificationCenter.default.addObserver(
-    forName: .AVCaptureSessionWasInterrupted,
+    forName: AVCaptureSession.wasInterruptedNotification,
     object: session, queue: .main) { notification in
         let reason = notification.userInfo?[AVCaptureSessionInterruptionReasonKey] as? Int
     }
 
 // Interruption ended
 NotificationCenter.default.addObserver(
-    forName: .AVCaptureSessionInterruptionEnded,
+    forName: AVCaptureSession.interruptionEndedNotification,
     object: session, queue: .main) { _ in }
 
 // Runtime error
 NotificationCenter.default.addObserver(
-    forName: .AVCaptureSessionRuntimeError,
+    forName: AVCaptureSession.runtimeErrorNotification,
     object: session, queue: .main) { notification in
         let error = notification.userInfo?[AVCaptureSessionErrorKey] as? Error
     }

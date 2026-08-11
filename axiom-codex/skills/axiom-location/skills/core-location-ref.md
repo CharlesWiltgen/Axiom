@@ -69,9 +69,12 @@ CLLocationUpdate.liveUpdates(.automotiveNavigation)
 CLLocationUpdate.liveUpdates(.otherNavigation)
 CLLocationUpdate.liveUpdates(.fitness)
 CLLocationUpdate.liveUpdates(.airborne)
+CLLocationUpdate.liveUpdates(.maritime)   // OS27 — on-water navigation, needs @available(anyAppleOS 27, *)
 ```
 
 Choose based on use case. If unsure, use `.default` or omit parameter.
+
+`.maritime` `OS27` is the only 27-cycle addition; the other five are available from iOS 17. Gate it — the enum case does not exist on earlier SDKs.
 
 ### Key Properties
 

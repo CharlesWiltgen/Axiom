@@ -20,6 +20,7 @@ Symptoms that indicate camera-specific issues:
 
 | Symptom | Likely Cause |
 |---------|--------------|
+| "No camera device found" / black preview **in the Simulator** | The Simulator has no camera hardware — check this before anything else |
 | Preview shows black screen | Session not started, permission denied, no camera input |
 | UI freezes when opening camera | `startRunning()` called on main thread |
 | Camera freezes on phone call | No interruption handling |
@@ -27,6 +28,7 @@ Symptoms that indicate camera-specific issues:
 | Captured photo rotated wrong | Rotation angle not applied to output connection |
 | Front camera photo not mirrored | This is correct! (preview mirrors, photo does not) |
 | "Camera in use by another app" | Another app has exclusive access |
+| Camera worked, then went black mid-session and never recovered | Runtime error posted to a notification nobody observed — see Step 5 |
 | Capture takes 2+ seconds | `photoQualityPrioritization` set to `.quality` |
 | Preview takes ~1s+ to appear at launch | All outputs initialize before first frame — no deferred start (iOS 26+) |
 | ProRes / high-bitrate recording drops frames | Non-deterministic file I/O or system pressure |
@@ -102,7 +104,7 @@ case .restricted: print("  ❌ Restricted (parental controls?)")
 ```swift
 // Add temporary observer to see interruptions
 NotificationCenter.default.addObserver(
-    forName: .AVCaptureSessionWasInterrupted,
+    forName: AVCaptureSession.wasInterruptedNotification,
     object: session,
     queue: .main
 ) { notification in
@@ -112,10 +114,50 @@ NotificationCenter.default.addObserver(
 }
 ```
 
+### Step 5: Turn On the Error Channel — do this FIRST if the console is clean
+
+**A clean console is not evidence that capture is working.** `AVCaptureSession` reports most runtime failures through `NotificationCenter`, not by throwing. Configure it wrong and you get a thrown error; have it *fail while running* and you get a notification you never registered for. That is why "black preview, no error, everything prints fine" is the single most expensive camera symptom — the error was posted, and nobody was listening.
+
+Register all four before you debug anything else. Two minutes, and it converts silence into a named failure:
+
+```swift
+let c = NotificationCenter.default
+
+c.addObserver(forName: AVCaptureSession.runtimeErrorNotification,
+              object: session, queue: .main) { note in
+    let error = note.userInfo?[AVCaptureSessionErrorKey] as? NSError
+    print("🚨 runtime error: \(error?.localizedDescription ?? "unknown") code=\(error?.code ?? 0)")
+}
+
+c.addObserver(forName: AVCaptureSession.didStopRunningNotification,
+              object: session, queue: .main) { _ in
+    print("🛑 session stopped — expected? if not, look above for a runtime error")
+}
+
+c.addObserver(forName: AVCaptureSession.didStartRunningNotification,
+              object: session, queue: .main) { _ in
+    print("▶️ session running")
+}
+
+c.addObserver(forName: AVCaptureSession.wasInterruptedNotification,
+              object: session, queue: .main) { note in
+    let reason = note.userInfo?[AVCaptureSessionInterruptionReasonKey] as? Int
+    print("⏸️ interrupted: reason \(reason ?? -1)")
+}
+```
+
+**A runtime error leaves the session stopped, and it does not restart itself.** Without an observer the camera stays black until the user force-quits and relaunches — they report "the camera broke", you cannot reproduce it, and there is no log. The handler must attempt recovery (reconfigure and `startRunning()` on your session queue), not just log.
+
+`didStopRunning` also fires for ordinary system causes — device sleep, screen lock — so a stop on its own is not a bug. It is a bug when it arrives with no interruption and no explanation.
+
+All four are iOS 4.0+ and **unavailable on watchOS**. `camera-auditor` checks for the runtime-error observer specifically; a FRAGILE score citing "dead-session silence" points here.
+
 ## Decision Tree
 
 ```
 Camera not working as expected?
+│
+├─ Running in the Simulator? → No camera hardware. Run on a device before diagnosing anything.
 │
 ├─ Black/frozen preview?
 │  ├─ Check Step 1 (session state)
@@ -199,15 +241,33 @@ func startSession() {
 **Symptom**: `session.inputs.count = 0`
 
 **Common causes**:
+0. **Running in the Simulator** — check this first, it costs nothing
 1. Camera permission denied
 2. `AVCaptureDeviceInput` creation failed
 3. `canAddInput()` returned false
 4. Configuration not committed
 
+**Check cause 0 before reading further.** `AVCaptureDevice.default(for: .video)` returns `nil` on every Simulator — there is no camera hardware to discover, and no permission or session change makes one appear. The `guard` below therefore always fails there, so "No camera device found" on a Simulator is a device-testing problem, not a code problem. It is the single most common reason this message appears while following a camera tutorial, and it sends people hunting through permissions and session configuration for a fault that does not exist. Photo and video capture cannot be exercised in the Simulator at all — run on a device.
+
+**Rewriting to `AVCaptureDevice.DiscoverySession` does not fix a nil device, and is the most common wrong turn here.** `default(for:)` is a thin convenience over the same enumeration `DiscoverySession` queries — where one returns `nil`, the other returns `[]`. The rewrite converts a thrown error into an empty array: identical failure, more code. `default(for:)` is not deprecated and not unreliable. Expect this suggestion under time pressure, from yourself or from a reviewer; the two-line disproof is cheaper than the rewrite:
+
+```swift
+#if targetEnvironment(simulator)
+print("SIMULATOR — no capture hardware exists")
+#endif
+print(AVCaptureDevice.DiscoverySession(
+    deviceTypes: [.builtInWideAngleCamera, .builtInUltraWideCamera,
+                  .builtInTelephotoCamera, .external, .continuityCamera],
+    mediaType: .video, position: .unspecified).devices.count)   // Simulator prints 0
+```
+
+If the broadest possible `deviceTypes` array still yields `0`, device discovery is definitively not the bug. `DiscoverySession` *is* the right API when you need to **select** among cameras (ultra-wide, telephoto, external, Continuity) — that is a real improvement, just not this fix.
+
 **Diagnostic**:
 ```swift
 // Step through input setup
 guard let camera = AVCaptureDevice.default(for: .video) else {
+    // Simulator? Expected — no camera hardware. Run on a device.
     print("❌ No camera device found")
     return
 }
@@ -570,7 +630,7 @@ print("hardwareCost: \(session.hardwareCost)")          // iOS 16+
 
 // 2. System pressure rising during use?
 print("pressure: \(device.systemPressureState.level), factors: \(device.systemPressureState.factors)")
-// .systemStress factor (27 SDK) = ~30s from unexpected power-off — back off NOW
+// .batteryStress factor (OS27) = device shuts down within 30s unless load drops — back off NOW
 ```
 
 **Fixes**:
@@ -580,11 +640,41 @@ print("pressure: \(device.systemPressureState.level), factors: \(device.systemPr
 
 **Time to fix**: 30-60 min
 
+### Pattern 18: Controller Deallocated (Black Preview, No Error)
+
+**Symptom**: Preview is black. No error, no exception, no log line. `start()` ran and appeared to succeed.
+
+The session is owned by a controller that went out of scope. When it deallocates, the session tears down and the preview layer keeps rendering its (now empty) backing layer. **Nothing reports this** — which is what makes it expensive: every visible signal says the code is correct, so people re-check permissions, presets, and layer wiring instead.
+
+Classic shape — the controller is a local, so it dies at the end of the initializer:
+
+```swift
+// ❌ controller deallocates when init returns; preview goes black, silently
+init() {
+    let controller = CameraController()
+    try? controller.start()
+}
+
+// ✅ owned for the lifetime of the view
+@State private var controller = CameraController()
+```
+
+**Diagnostic** — confirm before changing anything else:
+```swift
+deinit { print("⚠️ CameraController deallocated — session torn down") }
+```
+If that fires before the preview should have gone black, this is your bug and no session-configuration change will fix it.
+
+**Also check**: a `@StateObject`/`@State` rebuilt on every view update, a controller held only by a closure that has already run, and a `weak var` where the controller has no other owner.
+
+**Time to fix**: 5 min
+
 ## Quick Reference Table
 
 | Symptom | Check First | Likely Pattern |
 |---------|-------------|----------------|
-| Black preview | Step 1 (session state) | 1, 2, or 3 |
+| Black preview | Step 1 (session state) | 1, 2, 3, or 18 |
+| Black preview, no error at all | Add `deinit` print to the controller | 18 |
 | UI freezes | Step 2 (threading) | 4 |
 | Freezes on call | Step 4 (interruptions) | 5 |
 | Wrong rotation | Print rotation angle | 8 or 9 |
