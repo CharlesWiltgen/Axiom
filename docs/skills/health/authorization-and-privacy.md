@@ -41,6 +41,7 @@ Questions you can ask Claude that will draw from this skill:
 - `getRequestStatusForAuthorization` is a sheet gate, not a grant check
 - `requestAuthorization` throws only on system errors, never on user denial
 - Per-object authorization for vision prescriptions (iOS 16+)
+- `earliestAuthorizedSampleDate(for:)` returns a **sparse** dictionary (iOS 27) — a type appears only under limited access with a specific date, so a missing key means "unknown", not "unrestricted"
 
 ### Info.plist and Entitlement Setup
 - Which usage-description keys are required and which operations crash without them
