@@ -74,7 +74,7 @@ This is a router skill with three specialized sub-skills:
 | Build | `BuildProject`, `GetBuildLog` |
 | Test | `RunAllTests`, `RunSomeTests`, `GetTestList` |
 | Diagnostics | `XcodeListNavigatorIssues`, `XcodeRefreshCodeIssuesInFile` |
-| Execution | `ExecuteSnippet` |
+| Execution | `RunCodeSnippet` |
 | Preview | `RenderPreview` |
 | Search | `DocumentationSearch` |
 
