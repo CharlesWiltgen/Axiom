@@ -129,10 +129,12 @@ Query Apple's documentation corpus through MCP.
 ### Execute Swift Code
 
 ```
-ExecuteSnippet(tabIdentifier, codeSnippet: "print(MyModel.self)", sourceFilePath: "Sources/MyModel.swift")
+RunCodeSnippet(codeSnippet: "print(MyModel.self)", sourceFilePath: "Sources/MyModel.swift", purpose: "inspect the model type")
 ```
 
 Runs code in the context of a specific Swift file — has access to that file's `fileprivate` declarations. Not a generic REPL. No `language` parameter (Swift only).
+
+`purpose` is **required**, and Apple's schema forbids the word "test" in it. The tool was named `ExecuteSnippet` in earlier 27 betas; that name no longer resolves.
 
 ## Gotchas and Anti-Patterns
 

@@ -190,7 +190,25 @@ func authorizedWindow(_ store: HKHealthStore) async throws -> [HKObjectType: Dat
 }
 ```
 
-`async`/`throws`, all platforms at 27. Because a denied read and a genuinely-empty read are indistinguishable (see `HKAuthorizationStatus Is Write-Only` above), this is the one signal that gives you a *read floor* for a type — use it to bound a query predicate instead of paging back through data the app can't see. The SDK ships no doc comment for it in beta 4; the contract here is read from the signature, so confirm the exact semantics against Apple's docs once published.
+`async`/`throws`, all platforms at 27. Because a denied read and a genuinely-empty read are indistinguishable (see `HKAuthorizationStatus Is Write-Only` above), this gives you a *read floor* for a type — use it to bound a query predicate instead of paging back through data the app can't see.
+
+**The result is sparse, and that is the trap.** A type appears in the dictionary **only** when the user granted *limited* read access with a specific earliest date. Types without a limited-access date are **silently omitted** — so a missing key does not mean "no restriction", and it does not disambiguate full access from denied access. Success with an **empty dictionary is normal**. Only treat a returned date as a floor; never infer anything from absence.
+
+```swift
+let floors = try await store.earliestAuthorizedSampleDate(for: types)
+
+// ✅ absent key => unknown, not "unrestricted" — fall back to your own window.
+// ✅ a floor may only move the start FORWARD. Using it directly silently widens
+//    the query past your product window when the floor is older than requested.
+let floor = floors[HKQuantityType(.stepCount)]
+let start = max(requestedStart, floor ?? requestedStart, store.earliestPermittedSampleDate())
+
+guard start < end else { return [] }   // limited access can begin today or later
+```
+
+`earliestPermittedSampleDate()` is the store-wide floor — non-optional, iOS 9, no gate — and is your only *guaranteed* lower bound. It is unrelated to per-type authorization; use both.
+
+Re-fetch on foreground. HealthKit posts no authorization-change notification, and the user can edit limited-access dates in the Health app while your app is suspended.
 
 ## App Store Privacy
 

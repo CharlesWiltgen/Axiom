@@ -72,7 +72,8 @@ Grep for:
   - `\.setActive\(true`, `\.setActive\(false` — audio session activation
   - `\.sessionWasInterrupted`, `\.sessionInterruptionEnded` — interruption observers
   - `\.sessionRuntimeError` — runtime error observer
-  - `AVCaptureSessionWasInterrupted`, `AVCaptureSessionInterruptionEnded`, `AVCaptureSessionRuntimeError` — notification names
+  - `AVCaptureSessionWasInterrupted`, `AVCaptureSessionInterruptionEnded`, `AVCaptureSessionRuntimeError` — legacy notification names (deprecated iOS 18)
+  - `wasInterruptedNotification`, `interruptionEndedNotification`, `runtimeErrorNotification`, `didStartRunningNotification`, `didStopRunningNotification` — **current** names (`AVCaptureSession.<name>`). Search for BOTH spellings: the legacy constants do not appear as substrings of the current ones, so a legacy-only search reports "no observer" on correct modern code
   - `AVAudioSession\.interruptionNotification` — audio interruption
 ```
 
@@ -144,7 +145,7 @@ Run all 10 detection patterns. For every grep match, use Read to verify the surr
 - Files containing `AVCaptureSession` but not `sessionInterruptionEnded`
 - `NotificationCenter.*AVCaptureSession` proximity
 **Verify**: Read matching files; check whether observers exist AND whether the handler updates UI state to reflect interruption.
-**Fix**: Observe `.AVCaptureSessionWasInterrupted` and `.AVCaptureSessionInterruptionEnded`; on interruption, show "Camera unavailable" UI; on end, restart the session if it's not running.
+**Fix**: Observe `AVCaptureSession.wasInterruptedNotification` and `AVCaptureSession.interruptionEndedNotification`; on interruption, show "Camera unavailable" UI; on end, restart the session if it's not running. (The `.AVCaptureSessionWasInterrupted` spelling was deprecated in iOS 18.)
 
 ### Pattern 4: UIImagePickerController for Photo Selection (MEDIUM/MEDIUM)
 
@@ -323,7 +324,7 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details.
 - `videoOrientation` in code gated by `if #available(iOS 17.0, *)` with `RotationCoordinator` in the modern branch
 - `AVCaptureSession` operations on a queue named `sessionQueue` even if the explicit `sessionQueue.async {}` is hidden behind a helper method (verify the helper)
 - Permission check before showing camera (camera capture *does* need authorization, only the photo library picker doesn't)
-- `AVCaptureSessionWasInterrupted` observer present but `sessionInterruptionEnded` absent in capture-on-demand code that always recreates the session
+- An interruption observer present (`wasInterruptedNotification` or legacy `AVCaptureSessionWasInterrupted`) but the matching *ended* observer absent, in capture-on-demand code that always recreates the session
 
 ## Related
 
