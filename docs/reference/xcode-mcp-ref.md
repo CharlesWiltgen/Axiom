@@ -38,11 +38,11 @@ Use this reference when:
 - **Build** – `BuildProject` (returns `buildResult`, `elapsedTime`, structured `errors[]`), `GetBuildLog` (severity/pattern/glob filtering, returns `buildLogEntries[]` not raw text)
 - **Test** – `RunAllTests`, `RunSomeTests` (takes `{targetName, testIdentifier}[]`), `GetTestList` (returns `tests[]` with file paths, line numbers, tags)
 - **Diagnostics** – `XcodeListNavigatorIssues` (structured, deduplicated, includes `vitality` fresh/stale flag), `XcodeRefreshCodeIssuesInFile`
-- **Execution** – `ExecuteSnippet` (runs in the context of a specific Swift source file with access to its `fileprivate` declarations; not a REPL; Swift only)
+- **Execution** – `RunCodeSnippet` (runs in the context of a specific Swift source file with access to its `fileprivate` declarations; not a REPL; Swift only; requires a `purpose` string)
 - **Preview** – `RenderPreview` (index-based selection via `previewDefinitionIndexInFile`, returns `previewSnapshotPath`)
 - **Search** – `DocumentationSearch` (local semantic search of Apple Developer Documentation, MLX-accelerated; not web search)
-- **Common parameter patterns** – `tabIdentifier` (18/20 tools), `filePath` vs `path` vs `directoryPath` vs `sourceFilePath`
-- **Quick-reference category table** mapping all 20 tools to their domain
+- **Common parameter patterns** – `tabIdentifier` (most documented tools), `filePath` vs `path` vs `directoryPath` vs `sourceFilePath`
+- **Quick-reference category table** mapping the 20 documented tools to their domain, plus a listing of the 33 further tools the server exposes that this reference does not yet cover
 
 ## Documentation Scope
 

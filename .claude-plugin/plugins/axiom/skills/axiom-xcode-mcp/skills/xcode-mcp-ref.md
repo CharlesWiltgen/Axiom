@@ -213,17 +213,20 @@ Refresh diagnostics for a specific file.
 
 ## Execution & Rendering
 
-### ExecuteSnippet
+### RunCodeSnippet
 
 Build and run a code snippet in the context of a source file.
 
 - **Parameters**:
-  - `tabIdentifier` (string, required)
-  - `codeSnippet` (string, required) — code to execute
-  - `sourceFilePath` (string, required) — Swift file whose context the snippet runs in (has access to its `fileprivate` declarations)
-  - `timeout` (integer, optional, default 120) — seconds
+  - `codeSnippet` (string, **required**) — code to execute
+  - `sourceFilePath` (string, **required**) — Swift file whose context the snippet runs in (has access to its `fileprivate` declarations)
+  - `purpose` (string, **required**) — short human-readable reason for the run. Apple's schema explicitly forbids the word "test" here, because it misleads the user into thinking this is a testing feature.
+  - `tabIdentifier` (string, optional)
+  - `timeout` (integer, optional, default **600**) — seconds
 - **Returns**: `{ executionResults }` — console output from print statements
-- **Notes**: Not a generic REPL. Runs in the context of a specific file. No `language` parameter — Swift only.
+- **Notes**: Not a generic REPL. Runs in the context of a specific file. No `language` parameter — Swift only. Available only for source files in targets that build apps, frameworks, libraries, or command-line executables.
+
+**Renamed.** This tool was `ExecuteSnippet` in earlier Xcode 27 betas. Calling `ExecuteSnippet` now fails — the name does not exist on the server (verified against `xcode-tools` 25280.8, Xcode 27A5237l).
 
 ### RenderPreview
 
@@ -264,17 +267,34 @@ Search Apple Developer Documentation semantically.
 | **Build** | `BuildProject`, `GetBuildLog` |
 | **Test** | `RunAllTests`, `RunSomeTests`, `GetTestList` |
 | **Diagnostics** | `XcodeListNavigatorIssues`, `XcodeRefreshCodeIssuesInFile` |
-| **Execution** | `ExecuteSnippet` |
+| **Execution** | `RunCodeSnippet` |
 | **Preview** | `RenderPreview` |
 | **Search** | `DocumentationSearch` |
 
+### Documented here vs. what the server exposes
+
+The sections above cover **20 of the 53 tools** the Xcode MCP server advertises (`xcode-tools` 25280.8, Xcode 27A5237l). The undocumented 33 are real and callable — enumerate them yourself with `tools/list` rather than assuming this page is exhaustive:
+
+| Group | Tools not yet documented here |
+|---|---|
+| Device interaction | `DeviceInteractionStartSession`, `DeviceInteractionStartWorkspaceSession`, `DeviceInteractionInstallAndRun`, `DeviceInteractionSynthesize`, `DeviceInteractionEndSession` |
+| Run control & console | `RunProject`, `StopProject`, `GetConsoleOutput` |
+| Crash & field performance | `GetTopCrashIssues`, `GetCrashIssueLogs`, `GetTopFieldPerformanceIssues`, `GetFieldPerformanceIssueLogs` |
+| Scheme / destination / test plan | `XcodeListSchemes`, `XcodeSwitchScheme`, `XcodeListRunDestinations`, `XcodeSwitchRunDestination`, `XcodeListTestPlans`, `XcodeSwitchTestPlan` |
+| Targets & templates | `XcodeListTargets`, `XcodeListTemplates`, `XcodeNewTarget` |
+| Build settings & flags | `GetTargetBuildSettings`, `UpdateTargetBuildSetting`, `GetFileCompilerFlags`, `UpdateFileCompilerFlags` |
+| Project config | `AddEntitlement`, `AddInfoPlist` |
+| Localization | `LocalizationPlanner`, `StringCatalogRead`, `StringCatalogEdit`, `StringCatalogContext` |
+| Editor state | `XcodeGetCurrentFile` |
+| Debugger | `InvokeDebuggerCommand` |
+
 ## Common Parameter Patterns
 
-- **`tabIdentifier`** — Required by 18/20 tools. Always call `XcodeListWindows` first.
+- **`tabIdentifier`** — Required by most of the 20 tools documented above. Always call `XcodeListWindows` first.
 - **`filePath`** — Used by XcodeRead, XcodeWrite, XcodeUpdate, XcodeRefreshCodeIssuesInFile. Project-relative or absolute.
 - **`path`** — Used by XcodeLS, XcodeRM, XcodeGlob. Directory path.
 - **`directoryPath`** — Used by XcodeMakeDir.
-- **`sourceFilePath`** — Used by ExecuteSnippet, RenderPreview. Must be a Swift source file.
+- **`sourceFilePath`** — Used by RunCodeSnippet, RenderPreview. Must be a Swift source file.
 
 ## Resources
 
