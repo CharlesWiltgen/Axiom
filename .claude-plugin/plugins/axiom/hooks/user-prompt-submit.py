@@ -106,6 +106,19 @@ if re.search(r'swiftui|@state\b|@binding\b|@observable\b|@environment\b|navigati
 if "axiom-swiftui" not in matches and re.search(r'@previewable\b|previewable\s*\(\s*\)|previewmodifier|makesharedcontext|preview.{0,15}(slow|takes? \w+ seconds?|takes? forever|too slow|hang|never finish)|slow.{0,10}preview|#preview\b|preview\s+(variant|matrix|trait|modifier|canvas)|variant\s*mode|preview\s*pin|xcode_running_for_previews|development assets|sizethatfitslayout', prompt_lower):
     matches.append("axiom-swiftui")
 
+# UI — WebKit for SwiftUI (iOS 26 WebView / WebPage). Unambiguous API tokens, ungated.
+# WKWebView and the webView* modifier names exist nowhere but Apple's SDK, so they need
+# no non_ios gate. Bare "WebView"/"WebPage" are NOT here — both are ordinary words in
+# React Native / Flutter / Electron work; they route via the gated rule below.
+if "axiom-swiftui" not in matches and re.search(r'wkwebview|webview\s*\(\s*(url|page|_)|webviewscrollposition|webviewcontentbackground|webviewonscrollgeometrychange|webviewscrollinputbehavior|webviewbackforwardnavigationgestures|webviewmagnificationgestures|webviewlinkpreviews|webviewelementfullscreenbehavior|webviewtextselection|\bwebpage\s*\(\s*\)', prompt_lower):
+    matches.append("axiom-swiftui")
+
+# UI — generic web-embedding vocabulary, gated AND noun-proximity-guarded.
+# "webview" is common across React Native/Flutter/Electron, so it fires only next to
+# Apple-UI vocabulary — not on its own.
+if not non_ios and "axiom-swiftui" not in matches and re.search(r'\bweb\s?view\b.{0,45}(swiftui|navigationstack|navigationsplitview|toolbar|safe\s*area|scroll)|(swiftui|navigationstack|navigationsplitview).{0,45}\bweb\s?view\b|\bwebkit\b.{0,35}(swiftui|navigationstack)|swiftui.{0,35}\bwebkit\b|embed\w*\s+web\s+content.{0,30}(swiftui|ios)', prompt_lower):
+    matches.append("axiom-swiftui")
+
 # UI — generic terms gated by non_ios check
 # Note: bare "toolbar" matches NSToolbar in macOS prompts — require \. prefix or modifier-context
 if not non_ios and "axiom-swiftui" not in matches and re.search(r'animation.{0,5}(not|won.t|broken|stutter|jank)|\.toolbar\b|toolbaritem|toolbarplacement|\.sheet|\.fullscreencover|list\b.{0,10}(scroll|slow|performance)', prompt_lower):

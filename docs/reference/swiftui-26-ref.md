@@ -30,6 +30,7 @@ Questions you can ask Claude that will draw from this reference:
 - "How do I use the @Animatable macro?"
 - "How do I embed web content with WebView in SwiftUI?"
 - "How do I intercept form submissions in a SwiftUI WebView?"
+- "Why does my WebView scroll wrong inside a NavigationStack?"
 - "How do I use TextEditor with AttributedString?"
 - "How do I make links, phone numbers, and addresses tappable in SwiftUI text?"
 - "How do I create 3D charts in SwiftUI?"
@@ -79,7 +80,10 @@ Questions you can ask Claude that will draw from this reference:
 - WebPage for custom HTML
 - Navigation and load status handling
 - JavaScript interaction
-- Form-submission hook (iOS/macOS/visionOS 27) — `WebPage.FormInfo`, `willSubmit(formInfo:)`, `NavigationPreferences.alternateRequest` / `overrideReferrer` / `isGlobalPrivacyControlEnabled`
+- Scroll control – `webViewScrollPosition(_:)`, `webViewOnScrollGeometryChange(for:of:action:)`, `webViewScrollInputBehavior(_:for:)` (available on iOS but not callable there — no `ScrollInputKind` value exists)
+- Appearance and gestures – `webViewContentBackground(_:)`, `webViewBackForwardNavigationGestures(_:)`, `webViewMagnificationGestures(_:)`, `webViewLinkPreviews(_:)`, `webViewElementFullscreenBehavior(_:)`, `webViewTextSelection(_:)`
+- WebView inside NavigationStack – safe-area and toolbar interaction, and why `.ignoresSafeArea()` is wrong there
+- Form-submission hook (iOS/macOS/visionOS 27) — `WebPage.FormInfo`, `willSubmit(formInfo:)`, `NavigationPreferences.alternateRequest` / `overrideReferrer` / `isGlobalPrivacyControlEnabled` / `allowsJSHandleCreationInPageWorld`
 
 ### Data Detection (iOS 27)
 - `.dataDetection(_:options:)` – makes links, phone numbers, addresses, dates, and money in a view's text tappable
@@ -140,13 +144,21 @@ struct ProgressView: View {
 ### WebView
 
 ```swift
-WebView(url: URL(string: "https://example.com")!)
-    .onNavigationAction { action in
-        // Handle navigation
+struct ArticleReader: View {
+    @State private var page = WebPage()
+    let url: URL
+
+    var body: some View {
+        // WebPage is @Observable — read isLoading/estimatedProgress directly.
+        WebView(page)
+            .overlay(alignment: .top) {
+                if page.isLoading {
+                    ProgressView(value: page.estimatedProgress)
+                }
+            }
+            .task { page.load(URLRequest(url: url)) }
     }
-    .onLoadStatusChanged { status in
-        // Track loading state
-    }
+}
 ```
 
 ## Documentation Scope

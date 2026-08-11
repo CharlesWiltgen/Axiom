@@ -802,7 +802,7 @@ struct InAppBrowser: View {
             Text(page.title.isEmpty ? "Loading…" : page.title)
 
             WebView(page)
-                .ignoresSafeArea()
+                .ignoresSafeArea()  // full-bleed ONLY — see the NavigationStack note below
                 .onAppear {
                     page.load(URLRequest(url: articleURL))
                 }
@@ -827,9 +827,43 @@ struct InAppBrowser: View {
 - Access page properties (`title` is a non-optional `String`, `url` is `URL?`, `estimatedProgress`)
 - Observable — SwiftUI views update automatically
 
+### WebView view modifiers
+
+Nine modifiers, all `iOS 26.0` / `macOS 26.0`, none iOS-unavailable. Verified against the iPhoneOS 27.0 SDK.
+
+| Modifier | Argument |
+|---|---|
+| `webViewScrollPosition(_:)` | `Binding<ScrollPosition>` — read/restore scroll offset |
+| `webViewOnScrollGeometryChange(for:of:action:)` | observes the internal scroll view's `ScrollGeometry` |
+| `webViewScrollInputBehavior(_:for:)` | `ScrollInputBehavior` + `ScrollInputKind` — **not usable on iOS**, see below |
+| `webViewContentBackground(_:)` | `Visibility` — whether the web content paints its own background |
+| `webViewBackForwardNavigationGestures(_:)` | `.automatic` / `.enabled` / `.disabled` |
+| `webViewMagnificationGestures(_:)` | `.automatic` / `.enabled` / `.disabled` |
+| `webViewLinkPreviews(_:)` | `.automatic` / `.enabled` / `.disabled` |
+| `webViewElementFullscreenBehavior(_:)` | `.automatic` / `.enabled` / `.disabled` |
+| `webViewTextSelection(_:)` | any `TextSelectability` |
+
+**These modifiers carry no doc comments in the SDK.** Signatures and availability are verifiable; Apple's stated semantics are not. Treat behavioral claims below as ranked suspects to test, not as guarantees.
+
+#### `webViewScrollInputBehavior` is uncallable on iOS
+
+The modifier is available on iOS 26, but every member of its `ScrollInputKind` argument — `handGestureShortcut`, `look`, `look(axes:)` — is `@available(iOS, unavailable)` (watchOS and visionOS respectively). There is no iOS-constructible value to pass. It is not the fix for an iOS scrolling problem; don't spend time on it.
+
+#### WebView inside NavigationStack
+
+A `WebView` owns an internal scroll view, and a navigation container computes safe-area insets so content scrolls under the bar. Those two facts collide, and the collisions look like "scrolling is broken."
+
+- **`.ignoresSafeArea()` is the first thing to remove.** It is correct for a full-bleed presentation and wrong inside a `NavigationStack` with a toolbar — it discards the insets the stack just computed, and the internal scroll view's content inset is what suffers. The `InAppBrowser` example above is the full-bleed shape.
+- **Bar looks wrong rather than scrolling?** Try `webViewContentBackground(.hidden)`. If the web content paints an opaque background there is nothing for the bar material or scroll-edge effect to sample.
+- **Diagnose with `webViewOnScrollGeometryChange`** rather than guessing. It reports the real `ScrollGeometry`, which turns "feels wrong" into whether `contentInsets` is off by exactly the bar height.
+
+**Toolbar requires a navigation container.** `.toolbar` and `.navigationTitle` render into a `NavigationStack` / `NavigationSplitView` (or a sheet with its own stack). Outside one they silently do nothing — so toolbar chrome around a `WebView` means accepting the stack's inset management, not avoiding it.
+
 #### Form-submission hook + navigation tweaks OS27
 
-`WebPage.NavigationDeciding` gains `willSubmit(formInfo:) async` (default no-op), observing form submissions: `WebPage.FormInfo` (`@MainActor`, so implicitly `Sendable`) carries `targetFrame` / `sourceFrame` (`FrameInfo`), `submissionURL`, `httpMethod`, and `formValues: [String: String]`. `WebPage.NavigationPreferences` adds `alternateRequest: URLRequest?`, `overrideReferrer: String?`, and `isGlobalPrivacyControlEnabled: Bool`. Confirmed on iOS 27, macOS 27, and visionOS 27 (beta 3); **not watchOS/tvOS**. Each SDK stamps its own platform's version and shows the others as `9999` (the normal cross-SDK sentinel — not "unavailable", which watchOS/tvOS use explicitly here).
+`WebPage.NavigationDeciding` gains `willSubmit(formInfo:) async` (default no-op), observing form submissions: `WebPage.FormInfo` (`@MainActor`, so implicitly `Sendable`) carries `targetFrame` / `sourceFrame` (`FrameInfo`), `submissionURL`, `httpMethod`, and `formValues: [String: String]`. `WebPage.NavigationPreferences` adds `alternateRequest: URLRequest?`, `overrideReferrer: String?`, `isGlobalPrivacyControlEnabled: Bool`, and `allowsJSHandleCreationInPageWorld: Bool`. Confirmed on iOS 27, macOS 27, and visionOS 27 (beta 5); **not watchOS/tvOS**, which are marked `unavailable` explicitly.
+
+As of beta 5 the iOS SDK stamps **real versions for all three platforms** — `@available(macOS 27.0, iOS 27.0, visionOS 27.0, *)`. Through beta 4 it wrote `macOS 9999, visionOS 9999` (the cross-SDK "not yet stamped" sentinel), so an availability check written against an early-beta SDK may be narrower than what actually ships.
 
 **tvOS**: WebView and WebPage are **not available on tvOS**. tvOS has no WKWebView at all. For web content parsing on tvOS, use JavaScriptCore. See `axiom-swift (skills/tvos.md)` for alternatives.
 

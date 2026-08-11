@@ -136,6 +136,33 @@ class TestPositiveRouting(unittest.TestCase):
             self.assertIn("axiom-ai", routed_skills(prompt),
                           f"expected axiom-ai for: {prompt!r}")
 
+    def test_swiftui_webkit_api_tokens(self):
+        # Unambiguous Apple API tokens — ungated, must route on their own
+        self.assertIn("axiom-swiftui", routed_skills(
+            "How do I use WKWebView in my app?"))
+        self.assertIn("axiom-swiftui", routed_skills(
+            "WebView(url: articleURL) shows a blank page"))
+        self.assertIn("axiom-swiftui", routed_skills(
+            "Can I restore scroll offset with webViewScrollPosition?"))
+        self.assertIn("axiom-swiftui", routed_skills(
+            "webViewContentBackground(.hidden) isn't letting the bar material through"))
+
+    def test_swiftui_webview_in_navigation_stack(self):
+        # Gated generic rule: "web view" next to Apple-UI vocabulary, with NO
+        # literal "swiftui"/"navigationstack" token to carry it. Verified NO ROUTE
+        # against the pre-fix hook, so this can fail for a real defect.
+        self.assertIn("axiom-swiftui", routed_skills(
+            "My web view won't scroll inside the navigation stack"))
+        self.assertIn("axiom-swiftui", routed_skills(
+            "Embedding web content in SwiftUI breaks the toolbar"))
+        # The verbatim 2026-08-08 Reddit prompt that found this gap. NOTE: this one
+        # already routed pre-fix via the bare "swiftui"/"navigationstack" tokens —
+        # kept as a real-world regression guard, not as coverage for the new rule.
+        self.assertIn("axiom-swiftui", routed_skills(
+            "What's the difference between embedding WebKit in a NavigationStack vs "
+            "without to utilize toolbar features? I'm experiencing scrolling issues "
+            "when embedding the WebView inside NavigationStack."))
+
     def test_swiftui_previews_slow(self):
         for prompt in [
             "My SwiftUI previews take 30 seconds to load",
@@ -1026,6 +1053,23 @@ class TestNegativeRouting(unittest.TestCase):
         # The legitimate ".toolbar" SwiftUI modifier must still route
         self.assertIn("axiom-swiftui", routed_skills(
             "My .toolbar modifier isn't showing in NavigationStack"))
+
+    def test_webview_on_other_stacks_does_not_fire_swiftui(self):
+        # "webview" is ordinary vocabulary in Flutter/Electron/Android work — the
+        # generic rule is non_ios-gated AND noun-proximity-guarded so it stays quiet.
+        for prompt in (
+            "My Flutter webview won't scroll on Android",
+            "Electron webview preload script isn't loading",
+            "How do I pass cookies to a webview in my Django app?",
+        ):
+            self.assertNotIn("axiom-swiftui", routed_skills(prompt), prompt)
+
+    def test_bare_webpage_word_does_not_fire_swiftui(self):
+        # "web page" / "webpage" as ordinary English must not route; only WebPage()
+        self.assertNotIn("axiom-swiftui", routed_skills(
+            "How do I scrape a webpage with Python?"))
+        self.assertNotIn("axiom-swiftui", routed_skills(
+            "The webpage loads slowly on our marketing site"))
 
     def test_iap_does_not_fire_payments(self):
         # In-app purchase belongs to axiom-integration, not axiom-payments
