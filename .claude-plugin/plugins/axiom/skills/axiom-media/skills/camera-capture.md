@@ -527,7 +527,7 @@ class CameraManager {
     func setupInterruptionHandling() {
         // Session was interrupted
         let interruptedObserver = NotificationCenter.default.addObserver(
-            forName: .AVCaptureSessionWasInterrupted,
+            forName: AVCaptureSession.wasInterruptedNotification,
             object: session,
             queue: .main
         ) { [weak self] notification in
@@ -565,7 +565,7 @@ class CameraManager {
 
         // Session interruption ended
         let endedObserver = NotificationCenter.default.addObserver(
-            forName: .AVCaptureSessionInterruptionEnded,
+            forName: AVCaptureSession.interruptionEndedNotification,
             object: session,
             queue: .main
         ) { [weak self] _ in
@@ -836,7 +836,7 @@ let coordinator = AVCaptureDevice.RotationCoordinator(device: camera, previewLay
 **Right**:
 ```swift
 NotificationCenter.default.addObserver(
-    forName: .AVCaptureSessionWasInterrupted,
+    forName: AVCaptureSession.wasInterruptedNotification,
     object: session,
     queue: .main
 ) { notification in

@@ -14,7 +14,10 @@ When camera doesn't work, the problem is usually threading (35%), session lifecy
 ## Symptoms This Diagnoses
 
 Use when you're experiencing:
+- "No camera device found" or a black preview while running in the Simulator
 - Black or frozen camera preview
+- Black preview with **no error at all** — no exception, no log, setup appeared to succeed
+- Camera worked, then went black mid-session and never recovered until relaunch
 - UI freezes for 1-3 seconds when opening camera
 - Camera freezes during a phone call or in Split View
 - Preview or captured photo rotated 90 degrees wrong
@@ -29,7 +32,10 @@ Use when you're experiencing:
 
 ## Example Prompts
 
+- "Why does AVCaptureDevice.default return nil in the Simulator?"
 - "My camera preview is just a black screen"
+- "The preview is black but nothing errors — should I rewrite this with DiscoverySession?"
+- "My camera dies partway through and only a relaunch fixes it — how do I even see the error?"
 - "The UI freezes when I open the camera"
 - "Camera freezes when I get a phone call"
 - "Why is the captured photo rotated wrong?"
