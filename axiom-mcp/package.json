@@ -15,7 +15,8 @@
   "scripts": {
     "clean": "rm -rf dist",
     "build": "rm -rf dist && tsc",
-    "build:bundle": "rm -rf dist && tsc && node dist/scripts/bundle.js",
+    "build:bundle": "rm -rf dist && tsc && node dist/scripts/generate-annotations.js && node dist/scripts/bundle.js",
+    "annotations": "tsc && node dist/scripts/generate-annotations.js",
     "dev": "tsc --watch",
     "start": "node dist/index.js",
     "prepublishOnly": "npm run build:bundle",
@@ -43,7 +44,7 @@
     "url": "https://github.com/CharlesWiltgen/Axiom/issues"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "gray-matter": "^4.0.3",
     "minisearch": "^7.2.0"
   },

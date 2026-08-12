@@ -20,6 +20,18 @@ import { buildIndex, serializeIndex } from '../search/index.js';
 import { buildCatalog } from '../catalog/index.js';
 import { MCP_TOOL_BINARIES } from '../tools/binaries.js';
 
+// Generated inline-auditor sub-skills exist only so Agent-Skills-spec harnesses
+// (which have no agents) can reach an auditor procedure; MCP already ships every
+// auditor as a first-class agent. Every consumer that walks skills/*/skills/*.md
+// must skip them identically — the bundler drops them, so the annotation
+// generator must not annotate them. Mirrors build-codex.ts; marker string is kept
+// in sync with GENERATED_PREFIX in scripts/inline-auditors.ts.
+export const GENERATED_PREFIX = '<!-- GENERATED from agents/';
+
+export function isGeneratedSubSkill(content: string): boolean {
+  return content.startsWith(GENERATED_PREFIX);
+}
+
 async function loadAnnotations(): Promise<SkillAnnotations> {
   try {
     const annotationsPath = join(process.cwd(), 'skill-annotations.json');
@@ -74,13 +86,9 @@ export async function generateBundle(pluginPath: string): Promise<BundleV2> {
               if (!refFile.endsWith('.md')) continue;
               try {
                 const refContent = await readFile(join(refsDir, refFile), 'utf-8');
-                // Skip generated inline-auditor sub-skills. They exist only so
-                // Agent-Skills-spec harnesses (which have no agents) can reach an
-                // auditor procedure; MCP already ships every auditor as a first-class
-                // agent, so bundling the inlined copies would double-count and trip the
-                // pre-deploy mcp-fidelity check. Mirrors build-codex.ts. Marker string is
-                // kept in sync with GENERATED_PREFIX in scripts/inline-auditors.ts.
-                if (refContent.startsWith('<!-- GENERATED from agents/')) continue;
+                // Bundling the inlined copies would double-count and trip the
+                // pre-deploy mcp-fidelity check. See isGeneratedSubSkill above.
+                if (isGeneratedSubSkill(refContent)) continue;
                 const refSkill = applyAnnotations(
                   parseReferenceFile(refContent, refFile, entry),
                   annotations,
