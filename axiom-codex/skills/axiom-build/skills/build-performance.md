@@ -168,6 +168,26 @@ func calculateTotal(items: [Item]) -> Double {
 
 **Expected impact**: 10-30% faster compilation for affected files.
 
+#### SwiftUI nested containers `OS27`
+
+Xcode 27's SDK restructures shared SwiftUI containers (`Group`, `Section`, `ForEach`) around `ContentBuilder` inits — `ContentBuilder` is a typealias for `ViewBuilder`; Group's inits collapse to one unconstrained `init(@ContentBuilder content:)` — plus the parameter-pack type `TupleContent`. Its domain identity (View, ToolbarContent, CustomizableToolbarContent, Commands, AccessibilityRotorContent, SceneAccessoryContent; Charts adds ChartContent) is resolved by conditional conformance after construction, instead of per-domain init overloads at every nesting level. Scene, Tab, and Table are not unified (SceneBuilder, TabContentBuilder, TableRowBuilder remain dedicated).
+
+Measured impact (`swiftc -typecheck`):
+
+| Nest | Xcode 26 | Xcode 27, iOS 26 target | Xcode 27, iOS 27 target |
+|---|---|---|---|
+| `Section`/`Group`/`ForEach`, mixed content | ~7.2s | ~1.7s | ~1.5s |
+| 11-level `Group` of `Text` | ~2.4s | ~1.8s | ~0.15s |
+
+Two mechanisms with different availability:
+- The unified container inits are emitted into the client (iOS 13+), so the big win on mixed nests — the class that escalates to "unable to type-check this expression in reasonable time" errors — arrives with Xcode 27 at any deployment target (Apple: "whether you're targeting the 2027 releases, or previous releases as well").
+- The unconstrained `ViewBuilder.buildBlock` returning `TupleContent` is `@available(iOS 27, *)`, so builder-path-dominated nests (homogeneous row above) collapse fully only at 27 deployment targets.
+
+Consequences:
+- Manually flattening deeply nested `Group`/`Section`/`ForEach` purely for type-check speed is largely obsolete on Xcode 27; the residual case is builder-path-dominated deep nests below a 27 deployment target (homogeneous row above). Pattern 1's explicit-type-annotation advice is unaffected — unification does nothing for chained-expression inference.
+- Some pre-27 ambiguities are fixed outright: `let g = Group {}` fails to compile on Xcode 26 ("ambiguous use of init(content:)"), compiles on 27.
+- Source breakage is possible because the unified builder no longer pins a domain. Apple documents the shapes that can break, and their fixes, in TN3211: non-closure `.background(...)`/`.overlay(...)` with modified `ShapeStyle` expressions ("ambiguous use of 'opacity'") → use the closure form; cross-module name collisions → qualify with the module (`SwiftUI.Color.clear`); generic constraints naming `TupleView` → use `TupleContent`; empty builder blocks with MapKit in scope ("requires 'EmptyMapContent' conform to 'View'") → explicit `EmptyView()`; deeply branching `Chart` conditionals when back-deploying → extract into `@ChartContentBuilder` functions. TN3211 also covers separate `@State`-macro incompatibilities, out of scope here.
+
 ---
 
 ### Pattern 2: Build Phase Script Optimization (HIGH IMPACT)
@@ -748,9 +768,9 @@ Before considering your build optimized:
 
 ## Resources
 
-**WWDC**: 2018-408, 2022-110364, 2024-10171, 2025-247
+**WWDC**: 2018-408, 2022-110364, 2024-10171, 2025-247, 2026-269
 
-**Docs**: /xcode/improving-the-speed-of-incremental-builds, /xcode/building-your-project-with-explicit-module-dependencies
+**Docs**: /xcode/improving-the-speed-of-incremental-builds, /xcode/building-your-project-with-explicit-module-dependencies, /swiftui/contentbuilder, /technotes/tn3211
 
 **Tools**: Xcode Build Timeline (Xcode 14+), Build with Timing Summary (Product → Perform Action), Modules Report (Xcode 16+), Instruments Time Profiler
 
