@@ -12,6 +12,7 @@ Comprehensive build performance optimization with Build Timeline analysis, type 
 - CI/CD build time optimization
 - Enabling Xcode 26 compilation caching
 - Reducing module variants in explicitly built modules
+- Deeply nested SwiftUI views triggering "unable to type-check this expression in reasonable time"
 
 ## Example Prompts
 
@@ -20,6 +21,8 @@ Comprehensive build performance optimization with Build Timeline analysis, type 
 - "What is compilation caching in Xcode 26?"
 - "Why is the same module being built multiple times?"
 - "How do I enable parallel script execution?"
+- "Why does my deeply nested SwiftUI view fail to type-check in reasonable time?"
+- "Does Xcode 27's ContentBuilder speed up SwiftUI type-checking if I still target iOS 26?"
 
 ## What This Skill Provides
 
@@ -52,6 +55,10 @@ Build Settings → COMPILATION_CACHE_ENABLE_CACHING → YES
 
 **Explicitly Built Modules** — Default for Swift in Xcode 26. Separates build into Scan → Build Modules → Compile phases. Use "modules report" filter in build log to identify duplicate module variants.
 
+### Xcode 27 Features
+
+**SwiftUI ContentBuilder** — Shared containers (Group, Section, ForEach) are unified under a single builder, collapsing the overload search that made deeply nested SwiftUI views slow to type-check — the class of code that escalates to "unable to type-check this expression in reasonable time". The big mixed-nest win arrives at any deployment target; homogeneous builder-heavy nests collapse fully at iOS 27 targets. Apple documents the rare source incompatibilities and their fixes in TN3211.
+
 ## Quick Win
 
 Use the `/axiom:optimize-build` command to automatically scan for common issues:
@@ -79,8 +86,8 @@ The build-optimizer agent scans build settings, scripts, and compiler flags, pro
 
 ## Resources
 
-**WWDC**: 2018-408, 2022-110364, 2024-10171, 2025-247
+**WWDC**: 2018-408, 2022-110364, 2024-10171, 2025-247, 2026-269
 
-**Docs**: /xcode/improving-the-speed-of-incremental-builds, /xcode/building-your-project-with-explicit-module-dependencies
+**Docs**: /xcode/improving-the-speed-of-incremental-builds, /xcode/building-your-project-with-explicit-module-dependencies, /swiftui/contentbuilder, /technotes/tn3211
 
 **Tools**: Build Timeline (Xcode 14+), Modules Report (Xcode 16+), Build with Timing Summary
