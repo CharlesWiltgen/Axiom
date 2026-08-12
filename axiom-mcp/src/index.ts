@@ -175,6 +175,10 @@ async function main() {
     process.on('SIGTERM', cleanup);
   }
 
+  // SDK ≥1.30 routes transport errors to onerror then closes; unhandled, the
+  // server would exit silently with nothing in the log.
+  server.onerror = (error) => logger.error('Transport error:', error);
+
   // Connect to stdio transport
   const transport = new StdioServerTransport();
   await server.connect(transport);

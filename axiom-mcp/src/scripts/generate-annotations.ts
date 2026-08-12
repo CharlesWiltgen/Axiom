@@ -17,6 +17,7 @@ import { readdir, readFile, writeFile, stat } from 'fs/promises';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
 import matter from 'gray-matter';
+import { isGeneratedSubSkill } from './bundle.js';
 
 // --- Types ---
 
@@ -447,6 +448,9 @@ async function main() {
             if (!refFile.endsWith('.md')) continue;
             try {
               const refContent = await readFile(join(refsDir, refFile), 'utf-8');
+              // The bundler drops these, so annotating them only produces entries
+              // that bundle.ts then reports as orphaned.
+              if (isGeneratedSubSkill(refContent)) continue;
               const baseName = refFile.replace(/\.md$/, '');
               const refName = `${entry}--${baseName}`;
 
@@ -571,7 +575,20 @@ async function main() {
     sorted[key] = annotations[key];
   }
 
-  await writeFile(annotationsPath, JSON.stringify(sorted, null, 2) + '\n', 'utf-8');
+  // Write only on a real change. Not for the build:bundle path — there the
+  // bundle is written after this, so its mtime always wins. It matters when this
+  // is run standalone (`pnpm run annotations`) while skill-annotations.json is
+  // already git-dirty, or when git is unavailable: staleness.ts only forgives a
+  // newer mtime it can prove is git-clean (staleness.ts:75-88), so an
+  // unconditional rewrite would report a stale bundle over identical bytes.
+  const serialized = JSON.stringify(sorted, null, 2) + '\n';
+  let unchanged = false;
+  try {
+    unchanged = (await readFile(annotationsPath, 'utf-8')) === serialized;
+  } catch {
+    // No existing file — fall through and write.
+  }
+  if (!unchanged) await writeFile(annotationsPath, serialized, 'utf-8');
 
   console.log();
   console.log('Results:');
@@ -581,7 +598,7 @@ async function main() {
   if (staleRelated > 0) console.log(`  Cleaned:   ${staleRelated} stale related references`);
   console.log(`  Total:     ${Object.keys(sorted).length} annotations`);
   console.log();
-  console.log(`Written to: ${annotationsPath}`);
+  console.log(unchanged ? `Unchanged: ${annotationsPath}` : `Written to: ${annotationsPath}`);
 }
 
 // Run when executed directly

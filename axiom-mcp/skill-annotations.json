@@ -31,6 +31,17 @@
       "axiom-swiftui"
     ]
   },
+  "axiom-accessibility--watchos-a11y": {
+    "category": "accessibility",
+    "tags": [
+      "assistivetouch",
+      "navigationlink",
+      "voiceover"
+    ],
+    "related": [
+      "axiom-accessibility"
+    ]
+  },
   "axiom-ai": {
     "category": "ai",
     "tags": [
@@ -40,6 +51,47 @@
     "related": [
       "axiom-networking",
       "axiom-vision"
+    ]
+  },
+  "axiom-ai--core-ai": {
+    "category": "ai",
+    "tags": [
+      "llm"
+    ],
+    "related": [
+      "axiom-ai",
+      "axiom-graphics",
+      "axiom-integration",
+      "axiom-vision"
+    ]
+  },
+  "axiom-ai--coreml-compression": {
+    "category": "ai",
+    "tags": [
+      "ptq",
+      "qat"
+    ],
+    "related": [
+      "axiom-ai"
+    ]
+  },
+  "axiom-ai--coreml-conversion": {
+    "category": "ai",
+    "tags": [
+      "pytorch",
+      "tensorflow"
+    ],
+    "related": [
+      "axiom-ai"
+    ]
+  },
+  "axiom-ai--coreml-training": {
+    "category": "ai",
+    "tags": [
+      "createml"
+    ],
+    "related": [
+      "axiom-ai"
     ]
   },
   "axiom-ai--foundation-models": {
@@ -57,6 +109,51 @@
       "axiom-ai--foundation-models-ref"
     ]
   },
+  "axiom-ai--foundation-models-adapters": {
+    "category": "ai",
+    "tags": [
+      "adapter",
+      "asap",
+      "languagemodelexecutor",
+      "systemlanguagemodel"
+    ],
+    "related": [
+      "axiom-ai",
+      "axiom-ai--foundation-models-adapters-diag",
+      "axiom-ai--foundation-models-adapters-ref"
+    ]
+  },
+  "axiom-ai--foundation-models-adapters-diag": {
+    "category": "ai",
+    "tags": [
+      "@generable",
+      "adapter",
+      "initname",
+      "systemlanguagemodel"
+    ],
+    "related": [
+      "axiom-ai",
+      "axiom-ai--foundation-models-adapters",
+      "axiom-ai--foundation-models-adapters-ref"
+    ]
+  },
+  "axiom-ai--foundation-models-adapters-ref": {
+    "category": "ai",
+    "tags": [
+      "adapter",
+      "asseterror",
+      "cdn",
+      "cli",
+      "languagemodelexecutor",
+      "lora",
+      "systemlanguagemodel"
+    ],
+    "related": [
+      "axiom-ai",
+      "axiom-ai--foundation-models-adapters",
+      "axiom-ai--foundation-models-adapters-diag"
+    ]
+  },
   "axiom-ai--foundation-models-diag": {
     "category": "ai",
     "tags": [
@@ -67,6 +164,44 @@
       "axiom-ai",
       "axiom-ai--foundation-models",
       "axiom-ai--foundation-models-ref"
+    ]
+  },
+  "axiom-ai--foundation-models-evaluations": {
+    "category": "ai",
+    "related": [
+      "axiom-ai",
+      "axiom-ai--foundation-models-evaluations-diag",
+      "axiom-ai--foundation-models-evaluations-ref"
+    ]
+  },
+  "axiom-ai--foundation-models-evaluations-diag": {
+    "category": "ai",
+    "tags": [
+      "sigabrt"
+    ],
+    "related": [
+      "axiom-ai",
+      "axiom-ai--foundation-models-evaluations",
+      "axiom-ai--foundation-models-evaluations-ref"
+    ]
+  },
+  "axiom-ai--foundation-models-evaluations-ref": {
+    "category": "ai",
+    "tags": [
+      "languagemodel",
+      "privatecloudcomputelanguagemodel",
+      "systemlanguagemodel"
+    ],
+    "related": [
+      "axiom-ai",
+      "axiom-ai--foundation-models-evaluations",
+      "axiom-ai--foundation-models-evaluations-diag"
+    ]
+  },
+  "axiom-ai--foundation-models-guardrails": {
+    "category": "ai",
+    "related": [
+      "axiom-ai"
     ]
   },
   "axiom-ai--foundation-models-ref": {
@@ -94,6 +229,27 @@
     ],
     "related": [
       "axiom-ai"
+    ]
+  },
+  "axiom-ai--suggested-actions": {
+    "category": "ai",
+    "tags": [
+      "create-event",
+      "lunch-at-noon",
+      "suggestedactions"
+    ],
+    "related": [
+      "axiom-ai"
+    ]
+  },
+  "axiom-ai--training-paths": {
+    "category": "ai",
+    "tags": [
+      "mlx"
+    ],
+    "related": [
+      "axiom-ai",
+      "axiom-networking"
     ]
   },
   "axiom-apple-docs--apple-docs-research": {
@@ -193,6 +349,19 @@
   },
   "axiom-concurrency--concurrency-profiling": {
     "category": "concurrency",
+    "related": [
+      "axiom-concurrency"
+    ]
+  },
+  "axiom-concurrency--isolation-inheritance-diag": {
+    "category": "concurrency",
+    "tags": [
+      "@concurrent",
+      "@objc",
+      "mainactor",
+      "notificationcenter",
+      "photokit"
+    ],
     "related": [
       "axiom-concurrency"
     ]
@@ -358,6 +527,43 @@
       "axiom-data"
     ]
   },
+  "axiom-data--grdb-app-groups": {
+    "category": "data",
+    "tags": [
+      "databasepool",
+      "databasequeue",
+      "exclusive",
+      "normal",
+      "pragma",
+      "url",
+      "userdefaults",
+      "wal",
+      "widgetcenter"
+    ],
+    "related": [
+      "axiom-data"
+    ]
+  },
+  "axiom-data--grdb-performance": {
+    "category": "data",
+    "tags": [
+      "databaseeventobservationstrategy",
+      "databaseregionobservation",
+      "explain",
+      "plan",
+      "pragma",
+      "query",
+      "rowid",
+      "sql",
+      "strict",
+      "valueobservation",
+      "wal",
+      "without"
+    ],
+    "related": [
+      "axiom-data"
+    ]
+  },
   "axiom-data--icloud-drive-ref": {
     "category": "data",
     "tags": [
@@ -372,6 +578,32 @@
     "tags": [
       "cloudkit",
       "swiftdata"
+    ],
+    "related": [
+      "axiom-data"
+    ]
+  },
+  "axiom-data--sql-json-ref": {
+    "category": "data",
+    "tags": [
+      "blob",
+      "grdb",
+      "jsonb",
+      "text"
+    ],
+    "related": [
+      "axiom-data"
+    ]
+  },
+  "axiom-data--sqlite-fts-ref": {
+    "category": "data",
+    "tags": [
+      "@table",
+      "cloudkit",
+      "grdb",
+      "nfc",
+      "nfd",
+      "order"
     ],
     "related": [
       "axiom-data"
@@ -617,6 +849,16 @@
       "spritekit"
     ]
   },
+  "axiom-games--game-input": {
+    "category": "games",
+    "tags": [
+      "gamecontroller",
+      "touchcontroller"
+    ],
+    "related": [
+      "axiom-games"
+    ]
+  },
   "axiom-games--spritekit": {
     "category": "games",
     "tags": [
@@ -668,6 +910,17 @@
       "hud",
       "metrickit",
       "promotion"
+    ],
+    "related": [
+      "axiom-graphics"
+    ]
+  },
+  "axiom-graphics--hdr-color-ref": {
+    "category": "graphics",
+    "tags": [
+      "colorsync",
+      "hagc",
+      "icc"
     ],
     "related": [
       "axiom-graphics"
@@ -775,6 +1028,15 @@
       "axiom-graphics--realitykit-diag"
     ]
   },
+  "axiom-graphics--resizable-rendering": {
+    "category": "graphics",
+    "tags": [
+      "scenekit"
+    ],
+    "related": [
+      "axiom-graphics"
+    ]
+  },
   "axiom-graphics--scenekit": {
     "category": "graphics",
     "tags": [
@@ -799,6 +1061,101 @@
       "axiom-graphics--scenekit"
     ]
   },
+  "axiom-graphics--usdkit": {
+    "category": "graphics",
+    "tags": [
+      "openusd",
+      "realitykit",
+      "usd"
+    ],
+    "related": [
+      "axiom-graphics"
+    ]
+  },
+  "axiom-health": {
+    "category": "general",
+    "tags": [
+      "healthkit",
+      "workoutkit"
+    ]
+  },
+  "axiom-health--authorization-and-privacy": {
+    "category": "general",
+    "tags": [
+      "healthkit"
+    ],
+    "related": [
+      "axiom-health",
+      "axiom-shipping"
+    ]
+  },
+  "axiom-health--clinical-and-mobility": {
+    "category": "general",
+    "tags": [
+      "fhir"
+    ],
+    "related": [
+      "axiom-health"
+    ]
+  },
+  "axiom-health--fundamentals": {
+    "category": "general",
+    "tags": [
+      "healthkit"
+    ],
+    "related": [
+      "axiom-health",
+      "axiom-concurrency"
+    ]
+  },
+  "axiom-health--queries": {
+    "category": "general",
+    "tags": [
+      "healthkit"
+    ],
+    "related": [
+      "axiom-health",
+      "axiom-concurrency",
+      "axiom-swiftui"
+    ]
+  },
+  "axiom-health--sync-and-background": {
+    "category": "general",
+    "tags": [
+      "healthkit"
+    ],
+    "related": [
+      "axiom-health",
+      "axiom-concurrency"
+    ]
+  },
+  "axiom-health--wellbeing-and-medications": {
+    "category": "general",
+    "related": [
+      "axiom-health"
+    ]
+  },
+  "axiom-health--workoutkit": {
+    "category": "general",
+    "tags": [
+      "healthkit"
+    ],
+    "related": [
+      "axiom-health",
+      "axiom-watchos"
+    ]
+  },
+  "axiom-health--workouts": {
+    "category": "general",
+    "tags": [
+      "healthkit"
+    ],
+    "related": [
+      "axiom-health",
+      "axiom-concurrency",
+      "axiom-watchos"
+    ]
+  },
   "axiom-integration": {
     "category": "integration",
     "tags": [
@@ -809,6 +1166,23 @@
     ],
     "related": [
       "axiom-media"
+    ]
+  },
+  "axiom-integration--accessorysetupkit": {
+    "category": "integration",
+    "related": [
+      "axiom-integration",
+      "axiom-integration--accessorysetupkit-ref"
+    ]
+  },
+  "axiom-integration--accessorysetupkit-ref": {
+    "category": "integration",
+    "tags": [
+      "corebluetooth"
+    ],
+    "related": [
+      "axiom-integration",
+      "axiom-integration--accessorysetupkit"
     ]
   },
   "axiom-integration--alarmkit-ref": {
@@ -876,6 +1250,36 @@
       "axiom-integration"
     ]
   },
+  "axiom-integration--background-assets": {
+    "category": "integration",
+    "tags": [
+      "https",
+      "url",
+      "ux"
+    ],
+    "related": [
+      "axiom-integration",
+      "axiom-integration--background-assets-ref"
+    ]
+  },
+  "axiom-integration--background-assets-ref": {
+    "category": "integration",
+    "tags": [
+      "assetpack",
+      "assetpackmanager",
+      "backgroundassets",
+      "https",
+      "managedbackgroundassetserror",
+      "storedownloaderextension",
+      "storekit",
+      "systemlanguagemodel",
+      "url"
+    ],
+    "related": [
+      "axiom-integration",
+      "axiom-integration--background-assets"
+    ]
+  },
   "axiom-integration--background-processing": {
     "category": "integration",
     "tags": [
@@ -913,6 +1317,31 @@
       "axiom-integration",
       "axiom-integration--background-processing",
       "axiom-integration--background-processing-diag"
+    ]
+  },
+  "axiom-integration--callkit-livecommunicationkit": {
+    "category": "integration",
+    "tags": [
+      "identitylookup",
+      "pushkit",
+      "voip"
+    ],
+    "related": [
+      "axiom-integration",
+      "axiom-integration--callkit-livecommunicationkit-ref"
+    ]
+  },
+  "axiom-integration--callkit-livecommunicationkit-ref": {
+    "category": "integration",
+    "tags": [
+      "identitylookup",
+      "pir",
+      "pushkit",
+      "voip"
+    ],
+    "related": [
+      "axiom-integration",
+      "axiom-integration--callkit-livecommunicationkit"
     ]
   },
   "axiom-integration--contacts": {
@@ -1012,6 +1441,42 @@
       "axiom-integration"
     ]
   },
+  "axiom-integration--live-activities": {
+    "category": "integration",
+    "tags": [
+      "activitykit",
+      "carplay",
+      "standby",
+      "widgetkit"
+    ],
+    "related": [
+      "axiom-integration",
+      "axiom-integration--live-activities-ref"
+    ]
+  },
+  "axiom-integration--live-activities-ref": {
+    "category": "integration",
+    "tags": [
+      "activityconfiguration",
+      "activitykit",
+      "alarmkit",
+      "carplay"
+    ],
+    "related": [
+      "axiom-integration",
+      "axiom-integration--live-activities"
+    ]
+  },
+  "axiom-integration--local-push-connectivity": {
+    "category": "integration",
+    "tags": [
+      "lpc",
+      "networkextension"
+    ],
+    "related": [
+      "axiom-integration"
+    ]
+  },
   "axiom-integration--localization": {
     "category": "integration",
     "tags": [
@@ -1024,6 +1489,16 @@
       "numberformatter",
       "rtl",
       "xliff"
+    ],
+    "related": [
+      "axiom-integration"
+    ]
+  },
+  "axiom-integration--localization-research-ref": {
+    "category": "integration",
+    "tags": [
+      "tms",
+      "voiceover"
     ],
     "related": [
       "axiom-integration"
@@ -1074,6 +1549,42 @@
       "axiom-integration--push-notifications-diag"
     ]
   },
+  "axiom-integration--shareplay": {
+    "category": "integration",
+    "tags": [
+      "facetime",
+      "groupactivities"
+    ],
+    "related": [
+      "axiom-integration",
+      "axiom-integration--shareplay-ref"
+    ]
+  },
+  "axiom-integration--shareplay-ref": {
+    "category": "integration",
+    "tags": [
+      "activitytype",
+      "broadcastoptions",
+      "deliverymode",
+      "groupactivities",
+      "groupactivity",
+      "groupactivityactivationresult",
+      "groupactivitymetadata",
+      "groupactivitysharingcontroller",
+      "groupactivitytransferrepresentation",
+      "groupsession",
+      "groupsessionevent",
+      "groupsessionjournal",
+      "groupsessionmessenger",
+      "groupstateobserver",
+      "lifetimepolicy",
+      "sceneassociationbehavior"
+    ],
+    "related": [
+      "axiom-integration",
+      "axiom-integration--shareplay"
+    ]
+  },
   "axiom-integration--storekit-ref": {
     "category": "integration",
     "tags": [
@@ -1117,6 +1628,16 @@
     "related": [
       "axiom-integration",
       "axiom-integration--timer-patterns"
+    ]
+  },
+  "axiom-integration--weatherkit": {
+    "category": "integration",
+    "tags": [
+      "rest",
+      "weatherservice"
+    ],
+    "related": [
+      "axiom-integration"
     ]
   },
   "axiom-location": {
@@ -1192,6 +1713,129 @@
       "axiom-location--mapkit-diag"
     ]
   },
+  "axiom-macos": {
+    "category": "general",
+    "tags": [
+      "appkit"
+    ]
+  },
+  "axiom-macos--appkit-interop": {
+    "category": "general",
+    "tags": [
+      "@observable"
+    ],
+    "related": [
+      "axiom-macos",
+      "axiom-swiftui",
+      "axiom-uikit"
+    ]
+  },
+  "axiom-macos--appkit-modernization": {
+    "category": "general",
+    "related": [
+      "axiom-macos"
+    ]
+  },
+  "axiom-macos--direct-distribution": {
+    "category": "general",
+    "tags": [
+      "dmg",
+      "rejected"
+    ],
+    "related": [
+      "axiom-macos",
+      "axiom-security",
+      "axiom-shipping"
+    ]
+  },
+  "axiom-macos--ios-apps-on-mac": {
+    "category": "general",
+    "tags": [
+      "designed-for-ipad",
+      "designed-for-iphone"
+    ],
+    "related": [
+      "axiom-macos"
+    ]
+  },
+  "axiom-macos--menus-and-commands": {
+    "category": "general",
+    "tags": [
+      "@state",
+      "appkit",
+      "commandgroup",
+      "commandmenu"
+    ],
+    "related": [
+      "axiom-macos"
+    ]
+  },
+  "axiom-macos--sandbox-and-file-access": {
+    "category": "general",
+    "tags": [
+      "appkit",
+      "testflight",
+      "userdefaults"
+    ],
+    "related": [
+      "axiom-macos",
+      "axiom-integration",
+      "axiom-security"
+    ]
+  },
+  "axiom-macos--screencapturekit": {
+    "category": "general",
+    "tags": [
+      "gpu"
+    ],
+    "related": [
+      "axiom-macos",
+      "axiom-macos--screencapturekit-ref"
+    ]
+  },
+  "axiom-macos--screencapturekit-ref": {
+    "category": "general",
+    "related": [
+      "axiom-macos",
+      "axiom-macos--screencapturekit"
+    ]
+  },
+  "axiom-macos--settings": {
+    "category": "general",
+    "tags": [
+      "@appstorage",
+      "settingslink"
+    ],
+    "related": [
+      "axiom-macos"
+    ]
+  },
+  "axiom-macos--swiftui-differences": {
+    "category": "general",
+    "tags": [
+      "appkit",
+      "disclosuretablerow",
+      "focusedvalues",
+      "inspectorcommands",
+      "navigationsplitview",
+      "sidebarcommands",
+      "textfield"
+    ],
+    "related": [
+      "axiom-macos"
+    ]
+  },
+  "axiom-macos--windows": {
+    "category": "general",
+    "tags": [
+      "documentgroup",
+      "windowgroup"
+    ],
+    "related": [
+      "axiom-macos",
+      "axiom-swiftui"
+    ]
+  },
   "axiom-media": {
     "category": "media",
     "tags": [
@@ -1212,6 +1856,15 @@
       "dac",
       "foa",
       "usb"
+    ],
+    "related": [
+      "axiom-media"
+    ]
+  },
+  "axiom-media--avfoundation-video-ref": {
+    "category": "media",
+    "tags": [
+      "kvo"
     ],
     "related": [
       "axiom-media"
@@ -1250,10 +1903,66 @@
       "axiom-media--camera-capture-diag"
     ]
   },
+  "axiom-media--carplay-hig": {
+    "category": "media",
+    "tags": [
+      "sirikit",
+      "voip"
+    ],
+    "related": [
+      "axiom-media",
+      "axiom-design",
+      "axiom-integration"
+    ]
+  },
+  "axiom-media--carplay-navigation-ref": {
+    "category": "media",
+    "tags": [
+      "hud"
+    ],
+    "related": [
+      "axiom-media"
+    ]
+  },
+  "axiom-media--carplay-templates-ref": {
+    "category": "media",
+    "related": [
+      "axiom-media"
+    ]
+  },
+  "axiom-media--dockkit": {
+    "category": "media",
+    "related": [
+      "axiom-media"
+    ]
+  },
   "axiom-media--haptics": {
     "category": "media",
     "tags": [
       "ahap"
+    ],
+    "related": [
+      "axiom-media"
+    ]
+  },
+  "axiom-media--media-intelligence": {
+    "category": "media",
+    "tags": [
+      "facegroupanalyzer",
+      "mediaintelligence",
+      "url",
+      "videoanalyzer"
+    ],
+    "related": [
+      "axiom-media",
+      "axiom-vision"
+    ]
+  },
+  "axiom-media--music-understanding": {
+    "category": "media",
+    "tags": [
+      "audioprovider",
+      "musicunderstanding"
     ],
     "related": [
       "axiom-media"
@@ -1311,6 +2020,22 @@
       "axiom-media--photo-library"
     ]
   },
+  "axiom-media--screen-capture": {
+    "category": "media",
+    "tags": [
+      "replaykit",
+      "screencapturekit"
+    ],
+    "related": [
+      "axiom-media"
+    ]
+  },
+  "axiom-media--shareplay-playback": {
+    "category": "media",
+    "related": [
+      "axiom-media"
+    ]
+  },
   "axiom-media--shazamkit": {
     "category": "media",
     "tags": [
@@ -1334,6 +2059,17 @@
     "related": [
       "axiom-media",
       "axiom-media--shazamkit"
+    ]
+  },
+  "axiom-media--system-media-routing": {
+    "category": "media",
+    "tags": [
+      "airplay",
+      "dlna",
+      "launchmode"
+    ],
+    "related": [
+      "axiom-media"
     ]
   },
   "axiom-networking": {
@@ -1425,6 +2161,162 @@
       "axiom-networking--networking-diag"
     ]
   },
+  "axiom-payments": {
+    "category": "general"
+  },
+  "axiom-payments--apple-pay": {
+    "category": "general",
+    "tags": [
+      "mig",
+      "psp"
+    ],
+    "related": [
+      "axiom-payments",
+      "axiom-payments--apple-pay-ref"
+    ]
+  },
+  "axiom-payments--apple-pay-ref": {
+    "category": "general",
+    "tags": [
+      "mig",
+      "passkit"
+    ],
+    "related": [
+      "axiom-payments",
+      "axiom-payments--apple-pay"
+    ]
+  },
+  "axiom-payments--apple-pay-vs-iap": {
+    "category": "general",
+    "tags": [
+      "hig",
+      "psp",
+      "stop"
+    ],
+    "related": [
+      "axiom-payments"
+    ]
+  },
+  "axiom-payments--apple-pay-web": {
+    "category": "general",
+    "tags": [
+      "aug",
+      "id",
+      "mig",
+      "tls"
+    ],
+    "related": [
+      "axiom-payments",
+      "axiom-payments--apple-pay-web-ref"
+    ]
+  },
+  "axiom-payments--apple-pay-web-ref": {
+    "category": "general",
+    "tags": [
+      "applepaypayment",
+      "applepaypaymentcontact",
+      "applepaypaymentrequest",
+      "applepaypaymenttoken",
+      "applepaysession",
+      "js",
+      "mig",
+      "psp"
+    ],
+    "related": [
+      "axiom-payments",
+      "axiom-payments--apple-pay-web"
+    ]
+  },
+  "axiom-payments--payments-diag": {
+    "category": "general",
+    "tags": [
+      "psp"
+    ],
+    "related": [
+      "axiom-payments"
+    ]
+  },
+  "axiom-payments--tap-to-pay": {
+    "category": "general",
+    "tags": [
+      "hig",
+      "nfc",
+      "nfc-payloads",
+      "paymentcardreader",
+      "proximityreader",
+      "proximityreaderdiscovery",
+      "psp"
+    ],
+    "related": [
+      "axiom-payments",
+      "axiom-integration",
+      "axiom-payments--tap-to-pay-ref"
+    ]
+  },
+  "axiom-payments--tap-to-pay-ref": {
+    "category": "general",
+    "tags": [
+      "customerengagementsession",
+      "hig",
+      "mobiledocumentreader",
+      "nfc",
+      "paymentcardreader",
+      "paymentcardreadersession",
+      "paymentcardreadresult",
+      "proximityreader",
+      "proximityreaderdiscovery",
+      "psp"
+    ],
+    "related": [
+      "axiom-payments",
+      "axiom-integration",
+      "axiom-payments--tap-to-pay"
+    ]
+  },
+  "axiom-payments--wallet-extensions-ref": {
+    "category": "general",
+    "related": [
+      "axiom-payments"
+    ]
+  },
+  "axiom-payments--wallet-orders": {
+    "category": "general",
+    "tags": [
+      "addordertowalletbutton",
+      "financekit",
+      "financekitui",
+      "hig"
+    ],
+    "related": [
+      "axiom-payments"
+    ]
+  },
+  "axiom-payments--wallet-passes": {
+    "category": "general",
+    "tags": [
+      "csr",
+      "https",
+      "nfc",
+      "two",
+      "wwdr"
+    ],
+    "related": [
+      "axiom-payments",
+      "axiom-payments--wallet-passes-ref"
+    ]
+  },
+  "axiom-payments--wallet-passes-ref": {
+    "category": "general",
+    "tags": [
+      "nfc",
+      "passfields",
+      "passkit"
+    ],
+    "related": [
+      "axiom-payments",
+      "axiom-payments--wallet-passes"
+    ]
+  },
   "axiom-performance": {
     "category": "performance",
     "tags": [
@@ -1433,6 +2325,15 @@
     "related": [
       "axiom-concurrency",
       "axiom-integration"
+    ]
+  },
+  "axiom-performance--app-launch": {
+    "category": "performance",
+    "related": [
+      "axiom-performance",
+      "axiom-concurrency",
+      "axiom-integration",
+      "axiom-testing"
     ]
   },
   "axiom-performance--energy": {
@@ -1556,6 +2457,18 @@
       "axiom-swiftui"
     ]
   },
+  "axiom-performance--trace-comparison": {
+    "category": "performance",
+    "tags": [
+      "ci",
+      "cpu",
+      "same",
+      "xml"
+    ],
+    "related": [
+      "axiom-performance"
+    ]
+  },
   "axiom-performance--xctrace-ref": {
     "category": "performance",
     "tags": [
@@ -1575,6 +2488,15 @@
     "category": "general",
     "related": [
       "axiom-shipping"
+    ]
+  },
+  "axiom-security--agentic-security": {
+    "category": "general",
+    "tags": [
+      "llm"
+    ],
+    "related": [
+      "axiom-security"
     ]
   },
   "axiom-security--app-attest": {
@@ -1747,6 +2669,29 @@
       "iap"
     ]
   },
+  "axiom-shipping--app-clips": {
+    "category": "shipping",
+    "tags": [
+      "aasa",
+      "nfc",
+      "qr",
+      "t-build-won"
+    ],
+    "related": [
+      "axiom-shipping",
+      "axiom-shipping--app-clips-ref"
+    ]
+  },
+  "axiom-shipping--app-clips-ref": {
+    "category": "shipping",
+    "tags": [
+      "aasa"
+    ],
+    "related": [
+      "axiom-shipping",
+      "axiom-shipping--app-clips"
+    ]
+  },
   "axiom-shipping--app-review-guidelines": {
     "category": "shipping",
     "related": [
@@ -1820,6 +2765,17 @@
   },
   "axiom-shipping--expert-review-checklist": {
     "category": "shipping",
+    "related": [
+      "axiom-shipping"
+    ]
+  },
+  "axiom-shipping--production-triage": {
+    "category": "shipping",
+    "tags": [
+      "asc",
+      "normalizedreport",
+      "triageresult"
+    ],
     "related": [
       "axiom-shipping"
     ]
@@ -2032,6 +2988,15 @@
       "axiom-swiftui"
     ]
   },
+  "axiom-swiftui--hot-reload": {
+    "category": "ui",
+    "tags": [
+      "injectionnext"
+    ],
+    "related": [
+      "axiom-swiftui"
+    ]
+  },
   "axiom-swiftui--layout": {
     "category": "ui",
     "tags": [
@@ -2059,42 +3024,6 @@
     "related": [
       "axiom-swiftui",
       "axiom-swiftui--layout"
-    ]
-  },
-  "axiom-swiftui--previews": {
-    "category": "ui",
-    "tags": [
-      "#preview",
-      "@previewable",
-      "previewmodifier",
-      "previewability",
-      "swift-package",
-      "variant-mode",
-      "xcode_running_for_previews"
-    ],
-    "related": [
-      "axiom-swiftui",
-      "axiom-swiftui--previews-ref",
-      "axiom-swiftui--debugging",
-      "axiom-accessibility"
-    ]
-  },
-  "axiom-swiftui--previews-ref": {
-    "category": "ui",
-    "tags": [
-      "#preview",
-      "@previewable",
-      "development-assets",
-      "previewmodifier",
-      "previewtrait",
-      "sizethatfitslayout",
-      "variant-mode",
-      "xcpreviewagent"
-    ],
-    "related": [
-      "axiom-swiftui",
-      "axiom-swiftui--previews",
-      "axiom-swiftui--debugging"
     ]
   },
   "axiom-swiftui--nav": {
@@ -2152,6 +3081,48 @@
       "axiom-swiftui--nav-diag"
     ]
   },
+  "axiom-swiftui--presentations": {
+    "category": "ui",
+    "related": [
+      "axiom-swiftui"
+    ]
+  },
+  "axiom-swiftui--previews": {
+    "category": "ui",
+    "tags": [
+      "#preview",
+      "@previewable",
+      "previewmodifier",
+      "previewability",
+      "swift-package",
+      "variant-mode",
+      "xcode_running_for_previews"
+    ],
+    "related": [
+      "axiom-swiftui",
+      "axiom-swiftui--previews-ref",
+      "axiom-swiftui--debugging",
+      "axiom-accessibility"
+    ]
+  },
+  "axiom-swiftui--previews-ref": {
+    "category": "ui",
+    "tags": [
+      "#preview",
+      "@previewable",
+      "development-assets",
+      "previewmodifier",
+      "previewtrait",
+      "sizethatfitslayout",
+      "variant-mode",
+      "xcpreviewagent"
+    ],
+    "related": [
+      "axiom-swiftui",
+      "axiom-swiftui--previews",
+      "axiom-swiftui--debugging"
+    ]
+  },
   "axiom-swiftui--search-ref": {
     "category": "ui",
     "tags": [
@@ -2167,6 +3138,23 @@
     "category": "ui",
     "tags": [
       "scrollviews"
+    ],
+    "related": [
+      "axiom-swiftui"
+    ]
+  },
+  "axiom-swiftui--toolbars": {
+    "category": "ui",
+    "tags": [
+      "editbutton",
+      "hig",
+      "toolbaritem",
+      "toolbaritemgroup",
+      "toolbaritemplacement",
+      "toolbaritems",
+      "toolbaroverflowmenu",
+      "toolbarrole",
+      "toolbarspacer"
     ],
     "related": [
       "axiom-swiftui"
@@ -2224,6 +3212,18 @@
       "axiom-concurrency"
     ]
   },
+  "axiom-tools--device-control-ref": {
+    "category": "general",
+    "tags": [
+      "cli",
+      "udid"
+    ],
+    "related": [
+      "axiom-tools",
+      "axiom-uikit",
+      "axiom-xcode-mcp"
+    ]
+  },
   "axiom-tools--getting-started": {
     "category": "general",
     "related": [
@@ -2244,6 +3244,45 @@
       "axiom-tools"
     ]
   },
+  "axiom-tools--xcprof-ref": {
+    "category": "general",
+    "tags": [
+      "couldnt-measure",
+      "cpu",
+      "llm",
+      "no-findings",
+      "xml"
+    ],
+    "related": [
+      "axiom-tools",
+      "axiom-performance"
+    ]
+  },
+  "axiom-tools--xcsym-ref": {
+    "category": "general",
+    "tags": [
+      "clt",
+      "deriveddata",
+      "json",
+      "llm",
+      "metrickit",
+      "pii",
+      "uuid"
+    ],
+    "related": [
+      "axiom-tools"
+    ]
+  },
+  "axiom-tools--xcui-ref": {
+    "category": "general",
+    "tags": [
+      "hid",
+      "voiceover"
+    ],
+    "related": [
+      "axiom-tools"
+    ]
+  },
   "axiom-uikit": {
     "category": "ui",
     "tags": [
@@ -2251,6 +3290,12 @@
     ],
     "related": [
       "axiom-swiftui"
+    ]
+  },
+  "axiom-uikit--adaptive-layout": {
+    "category": "ui",
+    "related": [
+      "axiom-uikit"
     ]
   },
   "axiom-uikit--auto-layout-debugging": {
@@ -2277,6 +3322,26 @@
       "axiom-uikit",
       "axiom-concurrency",
       "axiom-swiftui"
+    ]
+  },
+  "axiom-uikit--pencilkit-paperkit": {
+    "category": "ui",
+    "tags": [
+      "quicklook"
+    ],
+    "related": [
+      "axiom-uikit",
+      "axiom-uikit--pencilkit-paperkit-ref"
+    ]
+  },
+  "axiom-uikit--pencilkit-paperkit-ref": {
+    "category": "ui",
+    "tags": [
+      "featureset"
+    ],
+    "related": [
+      "axiom-uikit",
+      "axiom-uikit--pencilkit-paperkit"
     ]
   },
   "axiom-uikit--textkit-ref": {
@@ -2317,6 +3382,13 @@
     "related": [
       "axiom-uikit",
       "axiom-swiftui"
+    ]
+  },
+  "axiom-uikit--uikit-modernization": {
+    "category": "ui",
+    "related": [
+      "axiom-uikit",
+      "axiom-xcode-mcp"
     ]
   },
   "axiom-vision": {
@@ -2367,6 +3439,101 @@
     "related": [
       "axiom-vision",
       "axiom-vision--vision-diag"
+    ]
+  },
+  "axiom-watchos": {
+    "category": "general",
+    "tags": [
+      "clockkit",
+      "relevancekit"
+    ]
+  },
+  "axiom-watchos--background-and-networking": {
+    "category": "general",
+    "tags": [
+      "watchkit"
+    ],
+    "related": [
+      "axiom-watchos",
+      "axiom-concurrency",
+      "axiom-networking"
+    ]
+  },
+  "axiom-watchos--controls-and-live-activities": {
+    "category": "general",
+    "tags": [
+      "activityattributes",
+      "activityconfiguration",
+      "widgetbundle"
+    ],
+    "related": [
+      "axiom-watchos",
+      "axiom-integration"
+    ]
+  },
+  "axiom-watchos--design-for-watchos": {
+    "category": "general",
+    "tags": [
+      "navigationsplitview",
+      "navigationstack",
+      "tabview",
+      "timelineview"
+    ],
+    "related": [
+      "axiom-watchos",
+      "axiom-accessibility",
+      "axiom-swiftui"
+    ]
+  },
+  "axiom-watchos--modernization": {
+    "category": "general",
+    "tags": [
+      "clockkit",
+      "watchkit",
+      "widgetkit"
+    ],
+    "related": [
+      "axiom-watchos",
+      "axiom-shipping",
+      "axiom-swiftui"
+    ]
+  },
+  "axiom-watchos--platform-basics": {
+    "category": "general",
+    "tags": [
+      "watchkit"
+    ],
+    "related": [
+      "axiom-watchos",
+      "axiom-ai",
+      "axiom-health",
+      "axiom-shipping"
+    ]
+  },
+  "axiom-watchos--smart-stack-and-complications": {
+    "category": "general",
+    "tags": [
+      "clockkit",
+      "relevancekit",
+      "relevantcontext"
+    ],
+    "related": [
+      "axiom-watchos",
+      "axiom-health",
+      "axiom-integration"
+    ]
+  },
+  "axiom-watchos--watch-connectivity": {
+    "category": "general",
+    "related": [
+      "axiom-watchos",
+      "axiom-networking"
+    ]
+  },
+  "axiom-watchos--watch-device-diag": {
+    "category": "general",
+    "related": [
+      "axiom-watchos"
     ]
   },
   "axiom-xcode-mcp": {

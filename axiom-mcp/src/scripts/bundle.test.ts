@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { computeBundleStats, generateBundle } from './bundle.js';
+import { computeBundleStats, generateBundle, isGeneratedSubSkill } from './bundle.js';
 import type { BundleV2 } from '../loader/types.js';
 import { makeSkill, makeAgent } from '../test-helpers.js';
 import { mkdtemp, rm, mkdir, writeFile } from 'fs/promises';
@@ -148,5 +148,22 @@ Generated auditor procedure.
     // procedure as an agent, so bundling it would double-count (mirrors
     // build-codex.ts, and satisfies pre-deploy's mcp-fidelity source==bundle count).
     expect(bundle.skills['axiom-test-suite--codable-auditor']).toBeUndefined();
+  });
+});
+
+describe(isGeneratedSubSkill, () => {
+  // Every consumer that walks skills/*/skills/*.md must agree on what is a
+  // generated inline-auditor copy, or the bundle and skill-annotations.json
+  // disagree about which files exist (30 orphaned entries, 2026-08-11).
+  it('identifies a generated inline-auditor copy by its build marker', () => {
+    expect(isGeneratedSubSkill(
+      '<!-- GENERATED from agents/codable-auditor.md by scripts/build-inlined-auditors.ts -->\n\n# Auditor'
+    )).toBe(true);
+  });
+
+  it('does not claim a hand-written sub-skill that merely mentions auditors', () => {
+    expect(isGeneratedSubSkill(
+      '# Layout\n\nSee the GENERATED from agents/ note in the auditor docs.'
+    )).toBe(false);
   });
 });
