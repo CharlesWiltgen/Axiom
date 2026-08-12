@@ -762,6 +762,25 @@ class TestPositiveRouting(unittest.TestCase):
         self.assertNotIn("axiom-uikit", routed_skills(
             "How do I detect screen mirroring to Apple TV over AirPlay?"))
 
+    def test_uikit_resize(self):
+        # resize-auditor's own canonical example prompts must reach the suite that owns it
+        self.assertIn("axiom-uikit", routed_skills(
+            "Audit my app for screen resizing support"))
+        self.assertIn("axiom-uikit", routed_skills(
+            "Is my app ready for resizable windows on iOS 27?"))
+        self.assertIn("axiom-uikit", routed_skills(
+            "My layout breaks when the user resizes the window - audit the whole app"))
+        self.assertIn("axiom-uikit", routed_skills(
+            "How do I prepare my app for the Apple foldable?"))
+        self.assertIn("axiom-uikit", routed_skills(
+            "Does my app handle the folding iPhone inner display?"))
+        # Resizing an image is not a windowing concern
+        self.assertNotIn("axiom-uikit", routed_skills(
+            "How do I resize an image before uploading it?"))
+        # A folder is not a foldable
+        self.assertNotIn("axiom-uikit", routed_skills(
+            "How do I create a folder in the documents directory?"))
+
     def test_swift(self):
         self.assertIn("axiom-swift", routed_skills(
             "How do I use noncopyable types and consuming func?"))
