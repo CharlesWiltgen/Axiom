@@ -1,19 +1,22 @@
 ---
 name: device-control-ref
-description: Reference for driving iOS simulators and physical devices without Xcode running — the Device Hub GUI and its Xcode-independent CLI counterparts (devicectl, simctl), how they divide labor, and which operations still require the Xcode MCP bridge
+description: Reference for driving iOS simulators and physical devices without Xcode running — the Device Hub GUI and its Xcode-independent CLI counterparts (devicectl, simctl), how they divide labor, and how they compare to the Xcode MCP bridge
 ---
 
 # Device Control Reference (Device Hub, devicectl, simctl)
 
 Reference for controlling iOS simulators and physical devices from outside Xcode. On Xcode 27, **Device Hub** is the GUI that replaces `Simulator.app` and manages simulators and physical devices together — but it is a front-end over the `devicectl` and `simctl` command-line tools, so every operation also has a scriptable, headless counterpart. This page maps the tools to their jobs and answers the question "what can I do without Xcode running?"
 
+On Xcode 27 the answer is *all of it* — MCP (the Model Context Protocol server that lets an AI assistant drive Xcode itself) joins the CLI tools via the headless `mcp-server`, so uptime is no longer what separates them. Pick on capability and privilege instead: the CLI tools assert, wait, toggle accessibility settings, and run unprivileged, which is decisive in CI; MCP owns what only the IDE knows, like build state and rendered previews.
+
 ## When to Use This Reference
 
 Use this reference when:
 - You want to drive a simulator or device from a script or CI without keeping Xcode open
-- Your workflow depends on the Xcode **MCP bridge** (`xcrun mcpbridge`) and breaks whenever Xcode isn't running, and you want an Xcode-independent path
+- You're choosing between the CLI tools and the Xcode **MCP bridge** (`xcrun mcpbridge`) for a given job
 - You're deciding between `devicectl` and `simctl` for a given operation
-- You need to script Face ID / Touch ID, orientation, appearance, or simulated location
+- You need to script Face ID / Touch ID, orientation, appearance, VoiceOver, or simulated location
+- You want to resize an app's window from a script — sweeping breakpoints in CI instead of dragging by hand
 - You want to screenshot or screen-record a simulator or a physical device from the command line
 - You're parsing `devicectl --json-output` in CI and need the stable keys
 - You want to know what the Xcode 27 Device Hub GUI offers and how it maps to the CLI
@@ -23,18 +26,25 @@ Use this reference when:
 - "Can I control the simulator without Xcode running?"
 - "How do I script Face ID enrollment and a match in a UI test?"
 - "What's the difference between devicectl and simctl?"
+- "How do I resize the app window from a script?"
+- "Can I automate resize-readiness testing across breakpoints?"
 - "What is Device Hub in Xcode 27, and do I need to open Xcode to use it?"
 - "How do I list physical devices and simulators together from the command line?"
 - "How do I record a video of a physical device from the command line?"
-- "Which device operations still require the Xcode MCP server?"
+- "Should I use xcui or the Xcode MCP device-interaction tools?"
 - "Which devicectl JSON keys are deprecated, and what replaced them?"
 - "How do I tell whether a device has Developer Mode enabled from the command line?"
 
 ## What's Covered
 
 ### Tool map
-- Which tool owns which job — `devicectl`, `simctl`, `xcui`, `xclog`, `xcsym`, `xcprof`, Device Hub, and `mcpbridge`
-- The "needs Xcode running?" column (only the MCP bridge does)
+- Which tool owns which job — `devicectl`, `simctl`, Axiom's bundled CLI tools (`xcui`, `xclog`, `xcsym`, `xcprof`), Device Hub, and `mcpbridge`
+- The "needs Xcode running?" column — nothing does on Xcode 27, though headless MCP requires a one-time `sudo` opt-in that CI may not permit
+
+### Resizable app sessions (Xcode 27)
+- `devicectl device appResize start` / `set` / `observe`, and `devicectl device info appResize`
+- `--preferred-size WxH` and `--corner-radius`, and why the actual size can differ from the requested one
+- The sweep-and-assert recipe – drive breakpoints from the CLI, assert each with `xcui`
 
 ### devicectl (Core Device CLI)
 - Unified `list devices` inventory (physical + simulated, `Reality` column)
@@ -61,9 +71,8 @@ Use this reference when:
 This page documents the `device-control-ref` reference skill (in the `axiom-tools` suite). It is the canonical home for the devicectl / simctl / Device Hub facts that the build, testing, and tools skills cross-reference.
 
 - For the bundled Axiom CLI tools this reference sits alongside, see [xcui](/reference/xcui-ref) (simulator UI & accessibility), [Console Capture (xclog)](/reference/xclog-ref), and [Crash Symbolication (xcsym)](/reference/xcsym-ref)
-- For the Xcode **MCP** path (and why it needs Xcode running), see the [Xcode MCP Integration](/skills/xcode-mcp/) skill
-- For the debugging workflow that uses Device Hub to reproduce a device-only bug on a simulator, that lives in the `axiom-build` xcode-debugging skill
-- For the agent that drives simulator state live, see the [simulator-tester agent](/agents/simulator-tester)
+- For the Xcode **MCP** path, including the headless `mcp-server` setup that removes the running-Xcode requirement, see the [Xcode MCP Integration](/skills/xcode-mcp/) skill
+- For the debugging workflow that uses Device Hub to reproduce a device-only bug on a simulator, see [Xcode Debugging](/skills/debugging/xcode-debugging)
 
 ## Related
 
