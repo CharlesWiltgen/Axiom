@@ -1065,7 +1065,7 @@ Cover at minimum: narrow portrait-shaped, narrow landscape-shaped, very short an
 | Localization length + RTL | launch arguments (below) — fully automatable in XCUITest |
 | Dynamic Type sizes | `xcui a11y set --toggle dynamic-type ...` on the simulator — see axiom-tools (skills/xcui-ref.md) |
 | Orientation | `XCUIDevice.shared.orientation` in tests |
-| Continuous free resize | GUI only — Device Hub resize mode and Xcode 27 preview resize mode (see axiom-tools (skills/device-control-ref.md)); no public window-resize API in XCUITest, and none in xcui, simctl, or devicectl — live-resize behavior is a manual pass |
+| Continuous free resize | Scriptable via `devicectl device appResize` `OS27` — start a session, drive geometry with `set`, assert the result with `xcui`/AXe. Still absent from XCUITest and `simctl`. Device Hub resize mode and the Xcode 27 preview canvas are the GUI equivalents. See axiom-tools (skills/device-control-ref.md) |
 | Multi-window | no direct XCUITest API — exercise through the UI (drag out a second window) or verify per-scene state isolation in unit tests of the model |
 | iPhone Mirroring | real hardware only — Apple's guidance is to validate on actual Mirroring after simulator iteration (WWDC 2026-278); the Mirroring-specific behaviors to check (indirect-input translation, companion-auth fallback) are in axiom-uikit (skills/uikit-modernization.md) |
 
