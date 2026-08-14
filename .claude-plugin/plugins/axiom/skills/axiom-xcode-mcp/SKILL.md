@@ -1,6 +1,6 @@
 ---
 name: axiom-xcode-mcp
-description: Use when connecting to Xcode via MCP, using xcrun mcpbridge, or working with ANY Xcode MCP tool (XcodeRead, BuildProject, RunTests, RenderPreview). Covers setup, tool reference, workflow patterns, troubleshooting.
+description: Use when connecting to Xcode via MCP, using xcrun mcpbridge or the headless mcp-server, or working with ANY Xcode MCP tool (XcodeRead, BuildProject, RunSomeTests, RenderPreview). Covers setup, tool reference, workflows, troubleshooting.
 license: MIT
 ---
 
@@ -8,9 +8,13 @@ license: MIT
 
 **You MUST use this skill for ANY Xcode MCP interaction — setup, tool usage, workflow patterns, or troubleshooting.**
 
-Xcode ships an MCP server (`xcrun mcpbridge`, available since Xcode 26.3) that exposes 20 IDE tools to external AI clients. Xcode 27 adds an explicit "Allow external agents to use Xcode tools" gate, the `run-agent` launch path, and an agent-extension model (custom MCP servers, skills, plug-ins). This skill suite covers setup, tool reference, workflow patterns, and troubleshooting.
+Xcode ships an MCP server exposing IDE tools to external AI clients. `xcrun mcpbridge` is the stdio transport clients register, available since Xcode 26.3. Xcode 27 adds an explicit "Allow external agents to use Xcode tools" gate, the `run-agent` launch path, an agent-extension model (custom MCP servers, skills, plug-ins), and a headless server. This skill suite covers setup, tool reference, workflow patterns, and troubleshooting.
 
-**mcpbridge requires a running Xcode with a project open** — if that's a liability (headless CI, or you don't want to keep Xcode up), the device/simulator half of these operations has a fully Xcode-independent CLI path: `devicectl` + `simctl` + Axiom's `xcui`/`xclog`/`xcsym`/`xcprof`. See `axiom-tools (skills/device-control-ref.md)`. The IDE-authoring tools (build state, render previews, navigator diagnostics) are MCP-only; `xcodebuild` builds and tests but does not render previews.
+**On Xcode 26.x, mcpbridge requires a running Xcode with a project open.** If that's a liability, the device/simulator half of these operations has a fully Xcode-independent CLI path: `devicectl` + `simctl` + Axiom's `xcui`/`xclog`/`xcsym`/`xcprof`. See `axiom-tools (skills/device-control-ref.md)`.
+
+**That constraint is gone on Xcode 27.** `xcrun mcp-server` runs the tool service with Xcode.app closed — `sudo xcrun mcp-server enable`, then `start` and `open <path>`. Clients still register `xcrun mcpbridge`; the bridge is the transport, `mcp-server` is the service. Apple's tool schemas describe `workspaceIdentifier` as "used in headless mode", so headless is a supported model rather than a workaround.
+
+Choose between MCP and the CLI tools (`devicectl`, `simctl`, and Axiom's `xcui`/`xclog`/`xcsym`/`xcprof`) on **capability, not uptime**. `xcui` asserts, waits, toggles accessibility settings, and computes VoiceOver announcements, and none of them need `sudo` — which still matters in CI, where the headless server's sudo opt-in may not be available. The IDE-authoring tools (build state, render previews) remain MCP-only; `xcodebuild` builds and tests but does not render previews.
 
 ## When to Use
 
@@ -20,8 +24,9 @@ Use this skill when:
 - Using any Xcode MCP tool (file ops, build, test, preview)
 - Building, testing, or previewing via MCP tools
 - Troubleshooting mcpbridge connection issues
-- Window/tab targeting questions
+- Workspace targeting questions
 - Permission dialog confusion
+- Driving simulator input with AXe (`tap`/`type`/`swipe`) -> read `skills/axe-ref.md`
 
 ## Routing Logic
 
@@ -30,13 +35,13 @@ Use this skill when:
 **Triggers**:
 - First-time Xcode MCP setup
 - Client-specific config (Claude Code, Cursor, Codex, VS Code, Gemini CLI)
-- Connection errors ("Connection refused", "No windows")
+- Connection errors ("Connection refused", "No workspaces are currently open.")
 - Permission dialog confusion
 - Multi-Xcode targeting (`MCP_XCODE_PID`)
 - Schema compliance issues with strict clients
 - Giving external agents access to Xcode (Intelligence settings gate)
 - Launching an agent via Xcode config (`xcrun mcpbridge run-agent`)
-- Exporting Xcode's skill bundles (`run-agent skills export`)
+- Exporting Xcode's skill bundles (`xcrun agent skills export`)
 - Extending Xcode's agent (per-agent config files, MCP servers, plug-ins)
 
 **Read**: `skills/xcode-mcp-setup.md`
@@ -49,7 +54,7 @@ Use this skill when:
 - How to build/test/preview via MCP
 - Workflow patterns (BuildFix loop, TestFix loop)
 - Tool gotchas and anti-patterns
-- Window/tab targeting strategy
+- Workspace targeting strategy; headless bootstrap (open or create a workspace)
 - When to use MCP tools vs CLI (`xcodebuild`)
 - Destructive operation safety (`XcodeRM`, `XcodeMV`)
 
@@ -98,22 +103,22 @@ digraph xcode_mcp_router {
 
 | Thought | Reality |
 |---------|---------|
-| "I'll just use xcodebuild directly" | MCP gives IDE state, diagnostics, previews, and navigator issues that CLI doesn't expose |
+| "I'll just use xcodebuild directly" | MCP gives IDE state, filtered compiler diagnostics, and rendered previews that CLI doesn't expose |
 | "I already know how to set up MCP" | Client configs differ. Permission dialog behavior is specific. Check setup skill. |
 | "I can figure out the tool params" | Tool schemas have required fields and gotchas. Check ref skill. |
-| "Tab identifiers are obvious" | Most tools fail silently without correct tabIdentifier. Tools skill explains targeting. |
+| "One workspace is open, so I can skip the identifier" | `workspaceIdentifier` is required anyway, despite being absent from every `required` list. |
 | "This is just file reading, I'll use Read tool" | XcodeRead sees Xcode's project view including generated files and resolved packages |
 
 ## Conflict Resolution (vs Other Routers)
 
 | Domain | Owner | Why |
 |--------|-------|-----|
-| MCP-specific interaction (mcpbridge, MCP tools, tab identifiers) | **xcode-mcp** | MCP protocol and tool-specific |
+| MCP-specific interaction (mcpbridge, mcp-server, MCP tools, workspace identifiers) | **axiom-xcode-mcp** | MCP protocol and tool-specific |
 | Xcode environment (Derived Data, zombie processes, simulators) | **axiom-build** | Environment diagnostics, not MCP |
-| Apple's bundled documentation (for-LLM guides/diagnostics) | **apple-docs** | Bundled docs, not MCP tool |
-| `DocumentationSearch` MCP tool usage specifically | **xcode-mcp** | MCP tool invocation |
+| Apple's bundled documentation (for-LLM guides/diagnostics) | **axiom-apple-docs** | Bundled docs, not MCP tool |
+| `DocumentationSearch` MCP tool usage specifically | **axiom-xcode-mcp** | MCP tool invocation |
 | Build failures diagnosed via CLI | **axiom-build** | Traditional build debugging |
-| Build failures diagnosed via MCP tools | **xcode-mcp** | MCP workflow patterns |
+| Build failures diagnosed via MCP tools | **axiom-xcode-mcp** | MCP workflow patterns |
 
 ## Example Invocations
 
@@ -129,7 +134,7 @@ User: "What parameters does BuildProject take?"
 User: "My mcpbridge connection keeps failing"
 -> Read: `skills/xcode-mcp-setup.md`
 
-User: "How do I target a specific Xcode window?"
+User: "How do I target a specific workspace?" / "How do I run this without Xcode open?"
 -> Read: `skills/xcode-mcp-tools.md`
 
 User: "Can I render SwiftUI previews via MCP?"
@@ -140,4 +145,4 @@ User: "Cursor can't parse Xcode's MCP responses"
 
 ## Resources
 
-**References**: skills/xcode-mcp-setup.md, skills/xcode-mcp-tools.md, skills/xcode-mcp-ref.md, skills/axe-ref.md
+**Skills**: skills/xcode-mcp-setup.md, skills/xcode-mcp-tools.md, skills/xcode-mcp-ref.md, skills/axe-ref.md
