@@ -1,27 +1,34 @@
 # Device Control Reference — Device Hub, devicectl, simctl
 
 The Xcode-independent surface for driving simulators and physical devices: which tool owns
-what, and which ones need Xcode running. Device Hub (the Xcode 27 GUI) is a front-end over
+what, and what each one costs to run. Device Hub (the Xcode 27 GUI) is a front-end over
 `devicectl`/`simctl` — every operation has a scriptable, headless counterpart, so a full
-dev/CI loop needs no running Xcode and no MCP bridge.
+dev/CI loop needs no running Xcode.
 
-## Tool map — what each owns, and what needs Xcode running
+## Tool map — what each owns, and what it needs
 
 | Tool | Owns | Needs Xcode running? |
 |------|------|----------------------|
-| `devicectl` (CLI) | configure + interact with a booted sim OR physical device through one `-d <udid>` selector; install/launch/inspect; capture screenshots + screen recordings; stable `--json-output` | No |
+| `devicectl` (CLI) | configure + interact with a booted sim OR physical device through one `-d <udid>` selector; install/launch/inspect; capture screenshots + screen recordings; drive free resize (`appResize`) `OS27`; stable `--json-output` | No |
 | `simctl` (CLI) | simulator lifecycle (create/boot/shutdown/erase) + sim-only state: push, privacy permissions, media, `status_bar`, `openurl`, `ui appearance` | No |
 | `xcui` (Axiom) | drive in-app UI + accessibility tree (tap/assert, VoiceOver order); toggle a11y settings | No |
 | `xclog` (Axiom) | capture simulator/device console | No |
 | `xcsym` (Axiom) | symbolicate crashes (`.ips`, MetricKit, `.crash`) | No |
 | `xcprof` (Axiom) | record/analyze xctrace CPU & network profiles | No |
 | Device Hub (GUI) | visual front-end over devicectl/simctl — canvas, inspector; auto-launches on build-and-run | No (Xcode 27 installed, but needn't be open) |
-| `mcpbridge` (Xcode MCP) | 20 IDE tools — build, test, render previews, project read | **Yes — the only one** |
+| `mcpbridge` (Xcode MCP) | IDE tools — build, test, render previews, project read | 26.x: **yes**. 27: no, via headless `mcp-server` (needs a `sudo` opt-in) `OS27` |
 
-**Answer to "control the device without Xcode running":** everything except the MCP bridge.
+**Answer to "control the device without Xcode running":** all of it.
 `devicectl` + `simctl` + Axiom's `xcui`/`xclog`/`xcsym`/`xcprof` cover the full scriptable
-surface headlessly. Only `mcpbridge` (`axiom-xcode-mcp`) requires a running Xcode with a
-project open — so build MCP-independent workflows on the CLI trio when uptime matters.
+surface headlessly with no privilege escalation. On Xcode 27 the MCP bridge joins them —
+`sudo xcrun mcp-server enable` runs the tool service with Xcode.app closed
+(`axiom-xcode-mcp`) — so uptime is no longer what separates them `OS27`.
+
+Pick on **capability and privilege** instead. `xcui` asserts, waits, toggles accessibility
+settings, and computes VoiceOver announcements, and the whole CLI set runs unprivileged —
+decisive in CI, where `sudo` is often unavailable. MCP owns what only the IDE knows: build
+state and rendered previews. On Xcode 26.x the old rule still holds — `mcpbridge` alone
+needs a running Xcode with a project open.
 
 ## devicectl — the Core Device CLI
 
@@ -30,10 +37,11 @@ configures devices from the command line. `xcrun devicectl list devices` returns
 inventory of physical devices *and* simulators**, distinguished by a `Reality` column
 (`physical` / `simulated`).
 
-Not new in Xcode 27: the CLI is materially identical across the 26 and 27 toolchains — same
+The pre-existing surface is materially identical across the 26 and 27 toolchains — same
 subcommands and flags, verified against both (the exact binary build advances between beta seeds,
-so don't pin one). Xcode 27 adds one service-side change — `simctl` and `devicectl` can now reboot
-a simulator via `reboot`.
+so don't pin one). Xcode 27 adds: the `appResize` family (below), `devicectl device settings
+voiceover`, and a service-side change letting `simctl` and `devicectl` reboot a simulator via
+`reboot`.
 
 ```bash
 # Unified inventory: physical + simulated (--json-output for CI)
@@ -105,6 +113,7 @@ CI order is unchanged at the front: simctl or xcodebuild boots the sim → devic
 | `device settings biometrics [--enable\|--disable]` | works (verified) | enroll / unenroll Face ID / Touch ID |
 | `device simulate biometrics --success\|--failure` | works (verified) | drive a match / no-match |
 | `device settings appearance --mode light\|dark` | works (verified) | force Dark/Light; also `--look-and-feel clear\|tinted`, text size, contrast |
+| `device settings voiceover --enable\|--disable` (also `device info voiceover`) | works (verified) `OS27` | toggle VoiceOver — the one a11y toggle `xcui` omitted for lack of a mechanism |
 | `device simulate location` / `device simulate statusBar` | available | inject location; clean status bar for screenshots |
 | `device process sendMemoryWarning` | available | memory-pressure scenarios |
 | `device info lockState` / `info files` / `copy` / `profile *` | physical-device-only | see caveat below |
@@ -170,7 +179,53 @@ Reach for these only when devicectl capture doesn't fit — none reach a physica
 | `simctl io <udid> recordVideo [--codec h264\|hevc] [--mask ignored\|alpha\|black] <file>` | sim video to a `.mov` | default codec is `hevc` (devicectl defaults `h264`); stop with SIGINT; sim only |
 | `axe record-video --output f.mp4` / `axe stream-video` | sim video / live preview stream (mjpeg, jpeg, ffmpeg, bgra) | sim only; `record-video` stops on Ctrl+C — see `axiom-xcode-mcp (skills/axe-ref.md)` |
 
-## Device Hub (OS27)
+## Resizable app sessions — `devicectl device appResize` `OS27`
+
+Free resize is **scriptable**. This is the automation path for resize-readiness work; Device
+Hub's resize mode is the manual equivalent. The commands are device-and-simulator shaped (`-d`
+accepts either), but only the **simulator** path was verified here — the physical-device path was
+not re-verified against wired hardware.
+
+| Subcommand | Does |
+|---|---|
+| `appResize start -d <id> [--preferred-size WxH] [--corner-radius R]` | Moves the frontmost apps to the Resizable display and holds the session. Runs until interrupted — **the session ends when the command exits**, so background it |
+| `appResize set -d <id> --preferred-size WxH [--corner-radius R]` | Adjusts geometry of the live session from another terminal |
+| `appResize observe -d <id>` | Streams resizability state changes until interrupted |
+| `devicectl device info appResize -d <id>` | Current session state; fails with CoreDeviceError **24004** when no session is active |
+
+The target display is auto-discovered by finding one whose name contains "Resizable".
+
+### Sweep breakpoints and assert each one
+
+```bash
+SIM=<udid>
+xcrun devicectl device appResize start -d $SIM --preferred-size 500x800 &   # hold the session
+sleep 15
+for SIZE in 900x600 1100x500 400x900; do
+  xcrun devicectl device appResize set -d $SIM --preferred-size $SIZE
+  sleep 5
+  xcui assert --id primary-cta || { sleep 5; xcui assert --id primary-cta; }
+done
+kill $!                                  # ends the session
+```
+
+`xcui` and AXe attach normally during a session. Immediately after `start` the automation
+session can time out once while the display transitions — retry rather than concluding the
+tools are blocked.
+
+**Read the actual size back; don't assume you got what you asked for.** Requesting `1100x500`
+on an iPhone 17 simulator yielded `1100x550`. `start` prints `Requested`/`Actual` size and
+corner radius plus `Minimum possible size` and `Maximum possible size` (`1280.0x1280.0` there),
+streams `Scene state updated:` on every change, and `info appResize --json-output -` returns
+`preferredSize`, `cornerRadius`, `minimumPossibleSize`, `maximumPossibleSize`, and
+`displayUniqueId`.
+
+`--corner-radius` drives the container's corner radius, which makes it the way to exercise
+concentric-corner behavior under CI — SwiftUI's `ConcentricRectangle` and UIKit's
+`UICornerRadius.containerConcentric(minimum:)`. Note SwiftUI has no `containerConcentric` corner
+*style*; that spelling is UIKit's and AppKit's. See axiom-swiftui (skills/26-ref.md).
+
+## Device Hub `OS27`
 
 Xcode 27 unifies simulators and physical devices in **Device Hub** — a standalone app that ships
 alongside Xcode and auto-launches when you build and run to a simulator (you don't need to open

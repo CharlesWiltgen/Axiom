@@ -153,7 +153,7 @@ Standard drag interactions (`UIDragInteraction`/`UIDropInteraction`, SwiftUI `Tr
 
 #### Test it for real
 
-Iterate in Device Hub's resizable simulator (see axiom-tools (skills/device-control-ref.md)), then validate in **actual iPhone Mirroring on macOS 27** — Apple's guidance is resizable simulator first, real devices and Mirroring to confirm. TN3210's checklist includes verifying that pinch, rotate, and scroll gestures work with a trackpad or mouse.
+Iterate with `devicectl device appResize` — scriptable, so breakpoints can be swept and asserted automatically (see axiom-tools (skills/device-control-ref.md)) — or by hand in Device Hub's resizable simulator. Then validate in **actual iPhone Mirroring on macOS 27**; Apple's guidance is resizable simulator first, real devices and Mirroring to confirm. TN3210's checklist includes verifying that pinch, rotate, and scroll gestures work with a trackpad or mouse.
 
 ## Desktop-class input — pointer, hardware keyboard, Pencil
 
