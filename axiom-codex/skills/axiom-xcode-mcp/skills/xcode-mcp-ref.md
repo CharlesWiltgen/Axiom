@@ -1,21 +1,107 @@
 
 # Xcode MCP Tool Reference
 
-Complete reference for all 20 tools exposed by Xcode's MCP server (`xcrun mcpbridge`).
+Complete reference for every tool exposed by Xcode's MCP server. `xcrun mcpbridge` is the stdio
+transport; on Xcode 27 the service behind it can run headless (`xcrun mcp-server`) — see
+`axiom-xcode-mcp (skills/xcode-mcp-setup.md)`.
 
-**Source**: Xcode 26.3 `tools/list` response. Validated against Keith Smiley's gist (2025-07-15).
+**Source**: live `tools/list` on Xcode 27 beta 5 (27A5237l), `serverInfo` version 25280.8,
+protocol 2025-06-18.
 
-**Critical**: `tabIdentifier` is required by 18 of 20 tools. Always call `XcodeListWindows` first.
+**Tool count is 53 without a workspace open, 54 with.** The server advertises
+`capabilities.tools.listChanged: true`, and `DocumentationSearch` is the sole workspace-gated
+tool. A tool missing from `tools/list` may just mean no workspace is open.
 
-## Discovery
+**`workspaceIdentifier` is required in practice wherever tested** — even when only one workspace
+is open, and even though it appears in no tool's `required` list. 46 of the 54 tools accept it;
+omitting it on `XcodeListSchemes` and `XcodeListTargets` returned an error naming the valid
+identifiers, so assume the same for the rest rather than treating the empty `required` list as
+permission to skip it:
 
-### XcodeListWindows
+```
+Error: workspaceIdentifier is required for this action. Choose from the following open
+workspaces, or open one with XcodeOpenWorkspace:
+* workspaceIdentifier: workspace-Gxw7GRzGoI, workspacePath: /path/to/MyApp.xcodeproj
+```
 
-Returns open Xcode windows. **Call this first** to get `tabIdentifier` values.
+Get identifiers from `XcodeListWorkspaces`. They are readable slugs (`workspace-Gxw7GRzGoI`), not
+UUIDs. `tabIdentifier` — the Xcode 26.x targeting parameter — appears in **zero** tools on 27.
 
-- **Parameters**: None
-- **Returns**: `{ message: string }` — description of open windows
-- **Notes**: Only tool that does not require `tabIdentifier`.
+**Reading the entries below**: `*` marks required fields. `(+ workspaceIdentifier)` on the Params
+line means the tool accepts it; it is omitted from each list to avoid repeating it 46 times.
+`Returns` fields come from each tool's `outputSchema`. All 54 declare one and responses carry
+`structuredContent`, but a few declare an **empty** schema (`UpdateTargetBuildSetting`) — those
+entries have no `Returns` line, which means "no structured fields", not "undocumented".
+
+Apple's own spelling is preserved even where inconsistent: `DeviceInteractionSynthesize` takes
+`interactSessionKey` while `DeviceInteractionInstallAndRun` and `DeviceInteractionEndSession` take
+`interactionSessionKey`. That is verbatim from the schema — do not "correct" it.
+
+---
+
+## Workspaces & Projects
+
+### XcodeListWorkspaces
+
+Lists the workspaces currently open in Xcode, with the identifier and path of each.
+
+- **Params**: none
+
+- **Returns**: `message`*
+
+### XcodeOpenWorkspace
+
+Opens an Xcode workspace or project at the given path and returns its workspace identifier, which other tools can use to target it.
+
+- **Params**: `path`* — Absolute path to the .xcworkspace or .xcodeproj to open
+
+- **Returns**: `workspaceIdentifier`*, `activeRunDestination`, `activeScheme`, `message`, `workspacePath`
+
+- **Notes**: `path` must be absolute and point at a `.xcworkspace` or `.xcodeproj`; a `Package.swift` does not open.
+
+### XcodeCloseWorkspace
+
+Closes a workspace that was opened with XcodeOpenWorkspace, identified by its workspace identifier.
+
+- **Params** (+ `workspaceIdentifier`): none
+
+- **Returns**: `message`*
+
+### XcodeNewProject
+
+Creates a new Xcode project from a template.
+
+- **Params**: `destinationPath`* — Filesystem path to the directory where the project will be created…; `productName`* — The new project's product name (e.g. 'MyApp'); `templateIdentifier`* — Template identifier to instantiate (e.g. 'com.apple.dt.unit.storyboardApplication'); `options` — Optional dictionary of template-specific options; `organizationIdentifier` — Optional bundle identifier prefix (e.g. 'com.example'); `teamIdentifier` — Optional Apple Development Team ID for code signing (e.g. 'A1B2C3D4E5')
+
+- **Returns**: `createdTargets`*, `projectPath`*
+
+- **Notes**: Params are `productName` and `destinationPath` — **not** `projectName`/`outputPath`. Wrong names return `The data couldn't be read because it is missing.`
+
+### XcodeListTemplates
+
+Lists Xcode templates available in this Xcode install.
+
+- **Params**: `categoryFilter` — Optional list of substrings, case-insensitive, matched against the template's templateCategory…; `kind` — Optional template kind to list; `nameFilter` — Optional substring, case-insensitive, matched against the template's human-readable…; `platformFilter` — Optional list of platform identifiers or names (case-insensitive); `templateIdentifier` — Optional exact identifier match (e.g. 'com.apple.dt.unit.iosFramework')
+
+- **Returns**: `fullTemplateListPath`*, `templates`*, `totalTemplates`*, `truncated`*, `message`
+
+- **Notes**: Inline results truncate to 100 of 193; the full list is written to the returned temp path. Inline `options` arrays are empty in unfiltered browse mode — pass a filter or `templateIdentifier` to get the option schema.
+
+### XcodeNewTarget
+
+Adds a new target to a project in the current Xcode workspace using a target template.
+
+- **Params** (+ `workspaceIdentifier`): `productName`* — The new target's product name (PRODUCT_NAME), e.g. 'MyFeature'; `templateIdentifier`* — Template identifier to instantiate (e.g. 'com.apple.dt.unit.iosFramework'); `embedInAppNamed` — Optional name of an existing application target to embed the new target into…; `options` — Optional dictionary of template-specific options; `organizationIdentifier` — Optional bundle-identifier prefix to set on the new target…; `projectPath` — Optional project-organization or filesystem path to the .xcodeproj that should own the new…
+
+- **Returns**: `additionalTargetsCreated`*, `targetName`*, `activeSchemeName`, `containingProjectPath`, `primaryFilePath`, `targetGroupPath`
+
+### XcodeListTargets
+
+Lists targets in the current Xcode workspace, optionally scoped to a single project.
+
+- **Params** (+ `workspaceIdentifier`): `productTypeFilter` — Optional list of product-type identifiers; `projectPath` — Optional project-organization or filesystem path to a specific .xcodeproj container in the…
+
+- **Returns**: `fullTargetListPath`*, `targets`*, `totalTargets`*, `truncated`*, `message`
 
 ---
 
@@ -23,279 +109,444 @@ Returns open Xcode windows. **Call this first** to get `tabIdentifier` values.
 
 ### XcodeRead
 
-Read file contents (cat -n format, 600 lines default).
+Reads the contents of a file within the Xcode project organization.
 
-- **Parameters**:
-  - `tabIdentifier` (string, required)
-  - `filePath` (string, required) — project-relative or absolute
-  - `limit` (integer, optional) — max lines to return
-  - `offset` (integer, optional) — starting line number
-- **Returns**: `{ content, filePath, fileSize, linesRead, startLine, totalLines }`
+- **Params** (+ `workspaceIdentifier`): `filePath`* — The path to the file within the Xcode project organization…; `limit` — The number of lines to read (only provide if the file is too large to read at once); `offset` — The line number to start reading from (only provide if the file is too large to read at once)
+
+- **Returns**: `content`*, `filePath`*, `fileSize`*, `linesRead`*, `startLine`*, `totalLines`*, `message`
 
 ### XcodeWrite
 
-Create or overwrite a file. Automatically adds new files to the project structure.
+Creates or overwrites files with content in the Xcode project.
 
-- **Parameters**:
-  - `tabIdentifier` (string, required)
-  - `filePath` (string, required)
-  - `content` (string, required)
-- **Returns**: `{ success, filePath, absolutePath, bytesWritten, linesWritten, wasExistingFile, message }`
+- **Params** (+ `workspaceIdentifier`): `content`* — The content to write to the file; `filePath`* — The path to the file within the Xcode project organization…
+
+- **Returns**: `bytesWritten`*, `filePath`*, `linesWritten`*, `message`*, `success`*, `wasExistingFile`*, `absolutePath`
+
+- **Notes**: Overwrites an existing file wholesale — there is no create-only mode. Use `XcodeUpdate` to edit.
 
 ### XcodeUpdate
 
-Edit an existing file with text replacement.
+Edits files in the Xcode project by replacing text content.
 
-- **Parameters**:
-  - `tabIdentifier` (string, required)
-  - `filePath` (string, required)
-  - `oldString` (string, required) — text to find
-  - `newString` (string, required) — replacement text
-  - `replaceAll` (boolean, optional, default false) — replace all occurrences
-- **Returns**: `{ filePath, editsApplied, success, originalContentLength, modifiedContentLength, message }`
-- **Notes**: Single replacement by default. Each `oldString` must be unique unless `replaceAll` is true. Prefer over XcodeWrite for editing existing files.
+- **Params** (+ `workspaceIdentifier`): `filePath`* — The path to the file to modify within the Xcode project organization…; `newString`* — The text to replace it with, must be different from oldString; `oldString`* — The text to replace; `replaceAll` — Replace all occurrences of oldString (default false)
+
+- **Returns**: `editsApplied`*, `filePath`*, `modifiedContentLength`*, `originalContentLength`*, `success`*, `message`
+
+- **Notes**: `oldString`/`newString` use literal characters: if `XcodeRead` shows `\d`, pass `\d`. One replacement unless `replaceAll` is true.
 
 ### XcodeGlob
 
-Find files matching a wildcard pattern.
+Finds files in the Xcode project structure matching wildcard patterns.
 
-- **Parameters**:
-  - `tabIdentifier` (string, required)
-  - `pattern` (string, optional, default `**/*`) — glob pattern
-  - `path` (string, optional) — directory to search within
-- **Returns**: `{ matches[], pattern, searchPath, truncated, totalFound, message }`
+- **Params** (+ `workspaceIdentifier`): `path` — Which project directory to search in (optional, defaults to root); `pattern` — File matching pattern using wildcards (* ** ? [abc] {swift,m})
+
+- **Returns**: `matches`*, `pattern`*, `searchPath`*, `totalFound`*, `truncated`*, `message`, `packageDependencies`
 
 ### XcodeGrep
 
-Search file contents with regex.
+Searches for text patterns in files within the Xcode project structure using regex.
 
-- **Parameters**:
-  - `tabIdentifier` (string, required)
-  - `pattern` (string, required) — regex pattern
-  - `glob` (string, optional) — file pattern filter
-  - `path` (string, optional) — directory scope
-  - `type` (string, optional) — file type filter
-  - `ignoreCase` (boolean, optional)
-  - `multiline` (boolean, optional)
-  - `outputMode` (enum, optional) — `content`, `filesWithMatches`, `count`
-  - `linesContext` (integer, optional) — context lines
-  - `linesBefore` (integer, optional)
-  - `linesAfter` (integer, optional)
-  - `headLimit` (integer, optional) — max results
-  - `showLineNumbers` (boolean, optional)
-- **Returns**: `{ results[], pattern, searchPath, matchCount, truncated, message }`
-- **Notes**: Mirrors ripgrep's interface. Use `outputMode` to control result format.
+- **Params** (+ `workspaceIdentifier`): `pattern`* — Text to search for using regex; `glob` — Only search files matching this pattern; `headLimit` — Stop after N results; `ignoreCase` — Ignore case when matching; `linesAfter` — Show N lines after each match for context; `linesBefore` — Show N lines before each match for context; `linesContext` — Show N lines both before and after each match; `multiline` — Allow patterns to span multiple lines; `outputMode` — What to return: content, files_with_matches, or count (default: files_with_matches); `path` — Where to search - file or directory in project (defaults to root); `showLineNumbers` — Show line numbers with results (content mode only); `type` — Shortcut for common file types (swift, js, py, etc.)
+
+- **Returns**: `matchCount`*, `pattern`*, `results`*, `searchPath`*, `truncated`*, `message`, `packageDependencies`
 
 ### XcodeLS
 
-List directory contents.
+Lists files and directories in the Xcode project structure at the specified path.
 
-- **Parameters**:
-  - `tabIdentifier` (string, required)
-  - `path` (string, required)
-  - `recursive` (boolean, optional, default true)
-  - `ignore` (array of strings, optional) — patterns to skip
-- **Returns**: `{ items[], path }`
+- **Params** (+ `workspaceIdentifier`): `path`* — The project path to browse (e.g., 'ProjectName/Sources/'); `ignore` — Skip files/folders matching these patterns; `recursive` — Recursively list all files (truncated to 100 lines)
+
+- **Returns**: `items`*, `path`*, `message`, `packageDependencies`
 
 ### XcodeMakeDir
 
-Create a directory in the project.
+Creates directories and groups in the Xcode project structure.
 
-- **Parameters**:
-  - `tabIdentifier` (string, required)
-  - `directoryPath` (string, required)
-- **Returns**: `{ success, message, createdPath }`
+- **Params** (+ `workspaceIdentifier`): `directoryPath`* — Project navigator relative path for the directory to create
 
-### XcodeRM
-
-Remove files or directories from project. Uses Trash by default.
-
-- **Parameters**:
-  - `tabIdentifier` (string, required)
-  - `path` (string, required)
-  - `deleteFiles` (boolean, optional, default true) — move to Trash
-  - `recursive` (boolean, optional)
-- **Returns**: `{ removedPath, success, message }`
+- **Returns**: `message`*, `success`*, `createdPath`
 
 ### XcodeMV
 
-Move or copy files.
+Moves or renames files and directories in the project navigator with support for filesystem operations.
 
-- **Parameters**:
-  - `tabIdentifier` (string, required)
-  - `sourcePath` (string, required)
-  - `destinationPath` (string, required)
-  - `operation` (enum, optional) — `move` or `copy`
-  - `overwriteExisting` (boolean, optional)
-- **Returns**: `{ success, operation, message, sourceOriginalPath, destinationFinalPath }`
-- **Notes**: Can copy, not just move. May break imports — confirm with user.
+- **Params** (+ `workspaceIdentifier`): `destinationPath`* — Project navigator relative path for the destination (for move) or new name (for rename); `sourcePath`* — Project navigator relative path of the source item to move/rename; `operation` — The type of move operation to perform; `overwriteExisting` — Whether to overwrite existing files at the destination
+
+- **Returns**: `message`*, `operation`*, `success`*, `destinationFinalPath`, `sourceOriginalPath`
+
+### XcodeRM
+
+Removes files and directories from the Xcode project structure and optionally deletes the underlying files from the filesystem.
+
+- **Params** (+ `workspaceIdentifier`): `path`* — The project path to remove (e.g., 'ProjectName/Sources/MyFile.swift'); `deleteFiles` — Also move the underlying files to Trash (defaults to true); `recursive` — Remove directories and their contents recursively
+
+- **Returns**: `message`*, `removedPath`*, `success`*
+
+- **Notes**: `deleteFiles` defaults to **true** (moves to Trash). Confirm with the user before calling.
 
 ---
 
-## Build & Test
+## Build
 
 ### BuildProject
 
-Build the project and wait for completion.
+Builds an Xcode project and waits until the build completes.
 
-- **Parameters**:
-  - `tabIdentifier` (string, required)
-- **Returns**: `{ buildResult, elapsedTime, errors[] }`
-- **Notes**: Each error has `classification`, `filePath`, `lineNumber`, `message`.
+- **Params** (+ `workspaceIdentifier`): `buildForTesting` — Whether to also build test targets that would not usually be included in a regular build
+
+- **Returns**: `buildResult`*, `errors`*, `fullLogPath`*, `elapsedTime`
 
 ### GetBuildLog
 
-Retrieve build log with optional filtering.
+Gets the log of the current or most recently finished build.
 
-- **Parameters**:
-  - `tabIdentifier` (string, required)
-  - `severity` (enum, optional) — `remark`, `warning`, `error`
-  - `pattern` (string, optional) — regex filter
-  - `glob` (string, optional) — file pattern filter
-- **Returns**: `{ buildIsRunning, buildLogEntries[], buildResult, fullLogPath, truncated, totalFound }`
-- **Notes**: Returns structured entries, not raw text. Each entry has `buildTask` and `emittedIssues[]`.
+- **Params** (+ `workspaceIdentifier`): `glob` — Glob to filter the returned build log entries; `pattern` — Regex to filter the returned build log entries; `severity` — Limit the output of build log entries to those that emitted issues of the specified severity…
 
-### RunAllTests
+- **Returns**: `buildIsRunning`*, `buildLogEntries`*, `buildResult`*, `fullLogPath`*, `totalFound`*, `truncated`*, `message`
 
-Run the full test suite from the active scheme's test plan.
-
-- **Parameters**:
-  - `tabIdentifier` (string, required)
-- **Returns**: `{ summary, counts, results[], schemeName, activeTestPlanName }`
-- **Notes**: `counts` has `total`, `passed`, `failed`, `skipped`, `expectedFailures`, `notRun`. Each result has `targetName`, `identifier`, `displayName`, `state`.
-
-### RunSomeTests
-
-Run specific tests by identifier.
-
-- **Parameters**:
-  - `tabIdentifier` (string, required)
-  - `tests` (array, required) — each element: `{ targetName: string, testIdentifier: string }`
-- **Returns**: Same shape as RunAllTests
-- **Notes**: Use `GetTestList` to discover valid test identifiers.
-
-### GetTestList
-
-List available tests from the active test plan.
-
-- **Parameters**:
-  - `tabIdentifier` (string, required)
-- **Returns**: `{ tests[], schemeName, activeTestPlanName }`
-- **Notes**: Each test has `targetName`, `identifier`, `displayName`, `isEnabled`, `filePath`, `lineNumber`, `tags[]`.
-
----
-
-## Diagnostics
-
-### XcodeListNavigatorIssues
-
-Get issues from Xcode's Issue Navigator.
-
-- **Parameters**:
-  - `tabIdentifier` (string, required)
-  - `severity` (enum, optional) — `remark`, `warning`, `error`
-  - `pattern` (string, optional) — regex filter
-  - `glob` (string, optional) — file pattern filter
-- **Returns**: `{ issues[], truncated, totalFound, message }`
-- **Notes**: Each issue has `message`, `severity`, `path`, `line`, `category`, `vitality` (fresh/stale). Structured and deduplicated.
+- **Notes**: Filter server-side with `severity`, `pattern` (regex on message), and `glob` (on issue path) rather than post-processing the raw log.
 
 ### XcodeRefreshCodeIssuesInFile
 
-Refresh diagnostics for a specific file.
+Retrieves current compiler diagnostics (errors, warnings, notes) for a file in the Xcode project.
 
-- **Parameters**:
-  - `tabIdentifier` (string, required)
-  - `filePath` (string, required)
-- **Returns**: `{ filePath, diagnosticsCount, content, success }`
-- **Notes**: Triggers Xcode to re-analyze the file.
+- **Params** (+ `workspaceIdentifier`): `filePath`* — The path to the file within the Xcode project organization…
+
+- **Returns**: `content`*, `diagnosticsCount`*, `filePath`*, `success`*
+
+- **Notes**: Per-file only — `filePath` is required. For project-wide diagnostics use `GetBuildLog`.
+
+### GetTargetBuildSettings
+
+Get all the Xcode build setting for a specified Xcode project target.
+
+- **Params** (+ `workspaceIdentifier`): `targetName`* — The name of a given Xcode project target; `projectPath` — The project-organization path of the .xcodeproj that owns the target…
+
+- **Returns**: `buildSettings`*, `targetName`*
+
+### UpdateTargetBuildSetting
+
+Updates, appends or deletes the named build setting for the specified Xcode project target.
+
+- **Params** (+ `workspaceIdentifier`): `buildSettingName`* — The build setting name to update or add; `targetName`* — The name of a given Xcode project target; `appendValue` — Append the value instead of replacing the current value; `buildSettingValue` — The value to be added to build settings; `projectPath` — The project-organization path of the .xcodeproj that owns the target…
+
+### GetFileCompilerFlags
+
+Gets the additional per-file compiler flags for a single source file in a specific Xcode target — the same value shown in the Compiler Flags column of Target > Build Phases > Compile Sources.
+
+- **Params** (+ `workspaceIdentifier`): `filePath`* — The path to the source file within the Xcode project organization…; `targetName`* — The name of the Xcode target whose build phase contains the source file; `projectPath` — The project-organization path of the .xcodeproj that owns the target…
+
+- **Returns**: `compilerFlags`*, `filePath`*, `targetName`*, `guidance`, `warning`
+
+### UpdateFileCompilerFlags
+
+Updates, appends or deletes the additional per-file compiler flags for a single source file in a specific Xcode target — the same value shown in the Compiler Flags column of Target > Build Phases > Co…
+
+- **Params** (+ `workspaceIdentifier`): `filePath`* — The path to the source file within the Xcode project organization…; `targetName`* — The name of the Xcode target whose build phase contains the source file; `appendValue` — Append the value to any existing compiler flags (separated by a single space) instead of…; `compilerFlags` — The additional compiler flags to set on the file, as a single space-separated string…; `projectPath` — The project-organization path of the .xcodeproj that owns the target…
+
+- **Returns**: `compilerFlags`*, `filePath`*, `previousFlags`*, `targetName`*, `guidance`, `warning`
 
 ---
 
-## Execution & Rendering
+## Run & Debug
+
+### RunProject
+
+Builds and runs the current scheme in Xcode, equivalent to pressing the Run button (Cmd+R).
+
+- **Params** (+ `workspaceIdentifier`): `attachDebugger` — Whether to attach the debugger to the launched process
+
+- **Returns**: `buildErrors`*, `fullLogPath`*, `runResult`*, `elapsedTime`, `launchSessionReference`, `processIdentifier`
+
+### StopProject
+
+Stops the currently running app in Xcode, equivalent to pressing the Stop button (Cmd+.).
+
+- **Params** (+ `workspaceIdentifier`): none
+
+- **Returns**: `stopResult`*, `processIdentifier`
+
+### GetConsoleOutput
+
+Retrieves console output (stdout, stderr, OSLog) from a running or completed app launch session.
+
+- **Params** (+ `workspaceIdentifier`): `contextLines` — Number of context lines to include around pattern matches (like grep -C); `includeMetadata` — Include detailed OSLog metadata (subsystem, category, pid, tid, sender info); `launchSessionReference` — Optional launch session reference; `oslogSeverity` — Filter OSLog by severity levels; `outputType` — Type of output to retrieve: 'stdio' (stdout/stderr only), 'oslog' (OSLog only), or 'all'…; `pattern` — Optional regex pattern to filter console output; `tailLimit` — Maximum number of lines to return from the END of output (tail behavior)
+
+- **Returns**: `launchSessionInfo`*, `totalCount`*, `truncated`*, `units`*
+
+### InvokeDebuggerCommand
+
+Sends an lldb command to Xcode's active debugging session and returns the output.
+
+- **Params** (+ `workspaceIdentifier`): `command`* — The lldb command to execute in Xcode's active debug session…; `timeout` — Maximum seconds to wait for the command to complete
+
+- **Returns**: `debugSessionActive`*, `isWaitingForMore`*, `output`*, `processIdentifier`
 
 ### RunCodeSnippet
 
-Build and run a code snippet in the context of a source file.
+Builds and runs a snippet of code in the context of a specific file and waits until results are available.
 
-- **Parameters**:
-  - `codeSnippet` (string, **required**) — code to execute
-  - `sourceFilePath` (string, **required**) — Swift file whose context the snippet runs in (has access to its `fileprivate` declarations)
-  - `purpose` (string, **required**) — short human-readable reason for the run. Apple's schema explicitly forbids the word "test" here, because it misleads the user into thinking this is a testing feature.
-  - `tabIdentifier` (string, optional)
-  - `timeout` (integer, optional, default **600**) — seconds
-- **Returns**: `{ executionResults }` — console output from print statements
-- **Notes**: Not a generic REPL. Runs in the context of a specific file. No `language` parameter — Swift only. Available only for source files in targets that build apps, frameworks, libraries, or command-line executables.
+- **Params** (+ `workspaceIdentifier`): `codeSnippet`* — The code snippet that should be run within the context of the specified Swift file; `purpose`* — A short human-readable description of the purpose of running this code snippet; `sourceFilePath`* — The path to a Swift source file within the Xcode project organization…; `timeout` — The time in seconds to wait for the running of the snippet to complete
 
-**Renamed.** This tool was `ExecuteSnippet` in earlier Xcode 27 betas. Calling `ExecuteSnippet` now fails — the name does not exist on the server (verified against `xcode-tools` 25280.8, Xcode 27A5237l).
+- **Returns**: `error`, `executionResults`
+
+- **Notes**: `purpose` is required and Apple's schema forbids the word "test" in it. Swift only — no `language` parameter. Runs with the file's `fileprivate` scope. `timeout` defaults to 600s. Named `ExecuteSnippet` in earlier 27 betas; that name no longer resolves.
+
+---
+
+## Testing
+
+### GetTestList
+
+Gets all available tests from the active scheme's active test plan.
+
+- **Params** (+ `workspaceIdentifier`): none
+
+- **Returns**: `counts`*, `fullTestListPath`*, `schemeName`*, `summary`*, `tests`*, `totalTests`*, `truncated`*, `activeTestPlanName`
+
+- **Notes**: Caps inline output at 100 tests and writes the full list to `fullTestListPath` in grep-friendly form — grep it for `TEST_TARGET`, `TEST_IDENTIFIER`, or `TEST_FILE_PATH`.
+
+### RunAllTests
+
+Runs all tests from the active scheme's active test plan
+
+- **Params** (+ `workspaceIdentifier`): none
+
+- **Returns**: `counts`*, `fullSummaryPath`*, `results`*, `schemeName`*, `summary`*, `totalResults`*, `truncated`*, `activeTestPlanName`, `fullConsoleLogsPath`, `message`, `xcresultBundlePath`
+
+### RunSomeTests
+
+Runs specific tests using the active scheme's active test plan
+
+- **Params** (+ `workspaceIdentifier`): `tests`* — Array of test specifiers to run
+
+- **Returns**: `counts`*, `fullSummaryPath`*, `results`*, `schemeName`*, `summary`*, `totalResults`*, `truncated`*, `activeTestPlanName`, `fullConsoleLogsPath`, `message`, `xcresultBundlePath`
+
+- **Notes**: `tests` is an array of specifiers, each with `targetName` and `testIdentifier` — not bare test names. Source them from `GetTestList`.
+
+### XcodeListTestPlans
+
+Lists the test plans associated with the currently active scheme and identifies which one is active.
+
+- **Params** (+ `workspaceIdentifier`): none
+
+- **Returns**: `fullTestPlanListPath`*, `message`*, `schemeName`*, `testPlans`*, `totalTestPlans`*, `truncated`*, `usesTestPlans`*, `activeTestPlanName`
+
+### XcodeSwitchTestPlan
+
+Changes the active test plan for the currently active scheme.
+
+- **Params** (+ `workspaceIdentifier`): `testPlanName`* — Which test plan to make active
+
+- **Returns**: `activeTestPlanName`*, `message`*, `schemeName`*, `activeTestPlanPath`
+
+---
+
+## Schemes & Run Destinations
+
+### XcodeListSchemes
+
+Lists all schemes available in the current Xcode workspace and identifies which one is currently active.
+
+- **Params** (+ `workspaceIdentifier`): none
+
+- **Returns**: `fullSchemeListPath`*, `schemes`*, `totalSchemes`*, `truncated`*, `activeSchemeName`, `message`
+
+### XcodeSwitchScheme
+
+Changes the active scheme in the current Xcode workspace to the specified scheme.
+
+- **Params** (+ `workspaceIdentifier`): `schemeName`* — The name of the scheme to make active
+
+- **Returns**: `activeSchemeName`*, `message`*, `activeDestinationDisplayTitle`, `activeTestPlanName`
+
+### XcodeListRunDestinations
+
+Lists run destinations available for the currently active scheme, grouped the same way the Xcode picker groups them (Devices, Simulators, Build, Incompatible, etc.), and identifies which one is active…
+
+- **Params** (+ `workspaceIdentifier`): `includeIncompatible` — When true, destinations in the 'Incompatible' group are included in the inline `destinations`…
+
+- **Returns**: `destinations`*, `fullRunDestinationListPath`*, `groups`*, `totalDestinations`*, `truncated`*, `activeDestinationDisplayTitle`, `activeSchemeName`, `message`
+
+### XcodeSwitchRunDestination
+
+Changes the active run destination for the currently active scheme.
+
+- **Params** (+ `workspaceIdentifier`): `displayTitle`* — The destination's `displayTitle` — the disambiguated label shown in the Xcode picker
+
+- **Returns**: `activeDestinationDisplayTitle`*, `activeSchemeName`*, `message`*
+
+---
+
+## Previews
 
 ### RenderPreview
 
-Render a SwiftUI preview snapshot.
+Builds and renders a Preview and waits until a snapshot of the resulting UI is available.
 
-- **Parameters**:
-  - `tabIdentifier` (string, required)
-  - `sourceFilePath` (string, required) — Swift file with `#Preview`
-  - `previewDefinitionIndexInFile` (integer, optional, default 0) — zero-based index of which `#Preview` to render
-  - `timeout` (integer, optional, default 120)
-- **Returns**: `{ previewSnapshotPath }` — path to rendered image
-- **Notes**: Index-based, not name-based. First `#Preview` in the file is index 0.
+- **Params** (+ `workspaceIdentifier`): `sourceFilePath`* — The path to the file within the Xcode project organization…; `previewCanvasControlOverrides` — Optional overrides for the canvas controls, only applicable to preview types that support each…; `previewDefinitionIndexInFile` — The zero based index of the #Preview macro or PreviewProvider struct definition in the source…; `previewLocalizationOverride` — A locale identifier to preview in (e.g. "fr", "ja"); `previewVariantOverrides` — A dictionary mapping variant group names to variant names for any preview variants that should…; `timeout` — The time in seconds to wait for the rendering of the preview to complete
+
+- **Returns**: `displayName`, `errors`, `previewSnapshotPath`, `renderedDestination`, `sourceLineNumber`, `supportedCanvasControlOverrides`, `supportedLocalizations`, `supportedPreviewVariantOverrides`
+
+- **Notes**: `timeout` defaults to 120s. Use `supportedLocalizations` and variant keys returned by a previous call rather than guessing override values.
 
 ---
 
-## Search
+## Device Interaction
+
+### DeviceInteractionStartSession
+
+Prepares a runtime for iOS interaction WITHOUT a workspace.
+
+- **Params**: `deviceIdentifier`* — The UUID/ECID/name/OS version/type of the device to perform interaction; `sessionIdentifier`* — Unique human-friendly identifier for this session (e.g. "Verify Login Flow")
+
+- **Returns**: `deviceIsSimulator`*, `deviceUUID`*, `interactionSessionKey`*, `skillToTrigger`*, `summary`*
+
+- **Notes**: Cannot build or install — use `DeviceInteractionStartWorkspaceSession` if you need `DeviceInteractionInstallAndRun`. Sessions are expensive; always close with `DeviceInteractionEndSession`.
+
+### DeviceInteractionStartWorkspaceSession
+
+Prepares a runtime for iOS interaction WITH a workspace.
+
+- **Params** (+ `workspaceIdentifier`): `sessionIdentifier`* — Unique human-friendly identifier for this session (e.g. "Verify Login Flow"); `deviceIdentifier` — The UUID/ECID/name/OS version/type of the device to perform interaction
+
+- **Returns**: `deviceIsSimulator`*, `deviceUUID`*, `interactionSessionKey`*, `skillToTrigger`*, `summary`*
+
+### DeviceInteractionInstallAndRun
+
+Builds, installs, and starts the current application on the currently targeted device.
+
+- **Params** (+ `workspaceIdentifier`): `interactionSessionKey`* — Device Interaction session identifier that initiates this call; `commandLineArguments` — Arguments that the application should be run with; `environmentVariables` — Environment variables that the application should be run with
+
+- **Returns**: `userMessage`*
+
+### DeviceInteractionSynthesize
+
+Synthesizes device events (tap, swipe, type, etc.) on a physical device or simulator and captures the resulting state.
+
+- **Params**: `interactSessionKey`* — Device Interaction session key to work with; `activationBundleId` — Bundle identifier of the app to activate before any interactions; `interactionCommand` — The interaction command to execute (e.g., 't 100 200' for tap)
+
+- **Returns**: `applicationState`*, `hierarchyPath`*, `logsPath`*, `screenshotPath`*, `thumbnailScreenshotPath`*
+
+- **Notes**: Always derive coordinates from the most recent hierarchy dump (`hierarchyPath`), never from a screenshot alone.
+
+### DeviceInteractionEndSession
+
+Closes previous device session created in DeviceInteractionStartSession or DeviceInteractionStartWorkspaceSession.
+
+- **Params**: `interactionSessionKey`* — Device Interaction session to close
+
+- **Returns**: `userMessage`*
+
+---
+
+## Crash & Field Diagnostics
+
+### GetTopCrashIssues
+
+Retrieve the top crash signatures for an app from Apple's crash reporting service.
+
+- **Params** (+ `workspaceIdentifier`): `app_version` — The app version to filter by (e.g., 4.6); `bundle_id` — The bundle identifier of the app (e.g., com.apple.Playgrounds); `count` — Number of top crash signatures to return; `is_beta` — Whether to fetch TestFlight (true) or App Store (false) data; `platform` — The platform to query (e.g., 'iOS', 'macOS', 'watchOS', 'tvOS', 'visionOS')
+
+- **Returns**: `bundleId`*, `data`*, `message`*, `success`*, `appVersion`
+
+### GetCrashIssueLogs
+
+Get detailed crash logs, expert triage knowledge, and actionable recommendations for a specific crash signature.
+
+- **Params** (+ `workspaceIdentifier`): `signature_name`* — The human-readable crash signature name from GetTopCrashIssues; `app_version` — The app version to filter crash logs by (e.g., 4.6); `bundle_id` — The bundle identifier of the app (e.g., com.apple.Playgrounds); `is_beta` — Whether to fetch TestFlight (true) or App Store (false) data; `platform` — The platform to query (e.g., 'iOS', 'macOS', 'watchOS', 'tvOS', 'visionOS')
+
+- **Returns**: `bundleId`*, `data`*, `message`*, `signatureName`*, `success`*, `appVersion`
+
+### GetTopFieldPerformanceIssues
+
+Analyze app performance and identify performance regressions across different diagnostic types.
+
+- **Params** (+ `workspaceIdentifier`): `diagnostic_type`* — The type of performance diagnostic to retrieve; `app_version` — The app version (e.g., 4.6); `bundle_id` — The bundle identifier of the app (e.g., com.apple.Playgrounds); `is_beta` — Whether to fetch TestFlight (true) or App Store (false) data; `platform` — The platform to query (e.g., 'iOS', 'macOS', 'watchOS', 'tvOS', 'visionOS')
+
+- **Returns**: `bundleId`*, `data`*, `diagnosticType`*, `message`*, `success`*, `appVersion`, `availableVersions`
+
+### GetFieldPerformanceIssueLogs
+
+Get detailed logs, performance data, expert triage knowledge, and actionable recommendations for specific field performance issue.
+
+- **Params** (+ `workspaceIdentifier`): `app_version`* — The app version (e.g., 13.14.0); `diagnostic_type`* — The type of performance diagnostic to retrieve; `signature_name`* — The human-readable signature name from GetTopFieldPerformanceIssues; `bundle_id` — The bundle identifier of the app (e.g., com.toyopagroup.picaboo); `is_beta` — Whether to fetch TestFlight (true) or App Store (false) data; `platform` — The platform to query (e.g., 'iOS', 'macOS', 'watchOS', 'tvOS', 'visionOS')
+
+- **Returns**: `appVersion`*, `bundleId`*, `data`*, `diagnosticType`*, `message`*, `signatureName`*, `success`*
+
+---
+
+## Localization & String Catalogs
+
+### LocalizationPlanner
+
+Ensures the project is in a state where translations can be added.
+
+- **Params** (+ `workspaceIdentifier`): `targetLocaleIdentifier`* — The locale identifier for which you want to translate
+
+- **Returns**: `nextStep`*, `changesMade`, `stepsFailed`, `suggestions`
+
+### StringCatalogContext
+
+Returns context and the source language value for a given string in the String Catalog.
+
+- **Params** (+ `workspaceIdentifier`): `filePath`* — The path to the String Catalog; `stringKey`* — String key for which to get context for; `targetLocaleIdentifier`* — The locale identifier for which you want to translate
+
+- **Returns**: `nextSteps`*, `shouldTranslate`*, `similarStrings`*, `sourceValues`*, `translations`*, `usageLocations`*, `appearances`, `comment`, `isStringSet`, `relevantPluralCases`, `sourcePluralCasesToAdd`, `supportedDevices`, `usageDataUnavailable`
+
+### StringCatalogRead
+
+Returns string keys grouped by translation state for the requested locale.
+
+- **Params** (+ `workspaceIdentifier`): `filePath`* — The path to the String Catalog; `targetLocaleIdentifier`* — Locale identifier to check translations for; `keyLimit` — Maximum number of keys to return; `offset` — Number of keys to skip before returning results; `requestedState` — The translation state to retrieve keys for
+
+- **Returns**: `machineTranslatedCount`*, `needsReviewCount`*, `newCount`*, `nextStep`*, `translatedCount`*, `keys`, `requestedState`, `returnedCount`, `totalForRequestedState`
+
+### StringCatalogEdit
+
+Inserts a translation for a given locale into a String Catalog.
+
+- **Params** (+ `workspaceIdentifier`): `filePath`* — The path to the String Catalog; `stringKey`* — String key to translate; `targetLocaleIdentifier`* — Identifier of the locale for which to insert the given translation; `stringSetTranslation` — Array of translated values for string sets; `templateTranslation` — Translation with template + substitutions for varying a string by plural or for translating a…; `translation` — Simple string translation for non-varied strings; `variationTranslation` — Variation structure for strings with top-level plural, device, or width variations
+
+- **Returns**: `message`*, `success`*
+
+---
+
+## Project Configuration
+
+### AddEntitlement
+
+Add a new entitlement to the project's entitlements file.
+
+- **Params** (+ `workspaceIdentifier`): `entitlementKey`* — The entitlement key you want to add; `entitlementValueType`* — The type of the entitlement value; `targetName`* — The name of the Xcode target to add the entitlement to; `entitlementDictionaryItems` — A JSON-encoded string representing a dictionary; `entitlementValue` — The entitlement value as a string; `entitlementValueItems` — Array of string values; `projectPath` — The project-organization path of the .xcodeproj that owns the target…
+
+- **Returns**: `result`*, `errorDescription`
+
+### AddInfoPlist
+
+Add or update an Info.plist key in the project.
+
+- **Params** (+ `workspaceIdentifier`): `infoPlistKey`* — The Info.plist key to add or change; `infoPlistValueType`* — The type of the Info.plist value; `targetName`* — The name of the Xcode target whose Info.plist key should be added or updated; `infoPlistDictionaryItems` — A JSON-encoded string representing an array of dictionaries; `infoPlistValue` — The value as a string; `infoPlistValueItems` — Array of string values; `projectPath` — The project-organization path of the .xcodeproj that owns the target…
+
+- **Returns**: `result`*, `errorDescription`
+
+---
+
+## Documentation
 
 ### DocumentationSearch
 
-Search Apple Developer Documentation semantically.
+Searches Apple Developer Documentation using semantic matching.
 
-- **Parameters**:
-  - `query` (string, required)
-  - `frameworks` (array of strings, optional) — scope to specific frameworks
-- **Returns**: `{ documents[] }` — each with `title`, `uri`, `contents`, `score`
-- **Notes**: Local semantic search (MLX-accelerated), not web search.
+- **Params**: `query`* — The search query; `frameworks` — Framework(s) to search in
 
----
+- **Returns**: `documents`*
 
-## Quick Reference
-
-| Category | Tools |
-|----------|-------|
-| **Discovery** | `XcodeListWindows` |
-| **File Read** | `XcodeRead`, `XcodeGlob`, `XcodeGrep`, `XcodeLS` |
-| **File Write** | `XcodeWrite`, `XcodeUpdate`, `XcodeMakeDir` |
-| **File Destructive** | `XcodeRM`, `XcodeMV` |
-| **Build** | `BuildProject`, `GetBuildLog` |
-| **Test** | `RunAllTests`, `RunSomeTests`, `GetTestList` |
-| **Diagnostics** | `XcodeListNavigatorIssues`, `XcodeRefreshCodeIssuesInFile` |
-| **Execution** | `RunCodeSnippet` |
-| **Preview** | `RenderPreview` |
-| **Search** | `DocumentationSearch` |
-
-### Documented here vs. what the server exposes
-
-The sections above cover **20 of the 53 tools** the Xcode MCP server advertises (`xcode-tools` 25280.8, Xcode 27A5237l). The undocumented 33 are real and callable — enumerate them yourself with `tools/list` rather than assuming this page is exhaustive:
-
-| Group | Tools not yet documented here |
-|---|---|
-| Device interaction | `DeviceInteractionStartSession`, `DeviceInteractionStartWorkspaceSession`, `DeviceInteractionInstallAndRun`, `DeviceInteractionSynthesize`, `DeviceInteractionEndSession` |
-| Run control & console | `RunProject`, `StopProject`, `GetConsoleOutput` |
-| Crash & field performance | `GetTopCrashIssues`, `GetCrashIssueLogs`, `GetTopFieldPerformanceIssues`, `GetFieldPerformanceIssueLogs` |
-| Scheme / destination / test plan | `XcodeListSchemes`, `XcodeSwitchScheme`, `XcodeListRunDestinations`, `XcodeSwitchRunDestination`, `XcodeListTestPlans`, `XcodeSwitchTestPlan` |
-| Targets & templates | `XcodeListTargets`, `XcodeListTemplates`, `XcodeNewTarget` |
-| Build settings & flags | `GetTargetBuildSettings`, `UpdateTargetBuildSetting`, `GetFileCompilerFlags`, `UpdateFileCompilerFlags` |
-| Project config | `AddEntitlement`, `AddInfoPlist` |
-| Localization | `LocalizationPlanner`, `StringCatalogRead`, `StringCatalogEdit`, `StringCatalogContext` |
-| Editor state | `XcodeGetCurrentFile` |
-| Debugger | `InvokeDebuggerCommand` |
-
-## Common Parameter Patterns
-
-- **`tabIdentifier`** — Required by most of the 20 tools documented above. Always call `XcodeListWindows` first.
-- **`filePath`** — Used by XcodeRead, XcodeWrite, XcodeUpdate, XcodeRefreshCodeIssuesInFile. Project-relative or absolute.
-- **`path`** — Used by XcodeLS, XcodeRM, XcodeGlob. Directory path.
-- **`directoryPath`** — Used by XcodeMakeDir.
-- **`sourceFilePath`** — Used by RunCodeSnippet, RenderPreview. Must be a Swift source file.
+- **Notes**: **Workspace-gated** — the only tool that appears solely when a workspace is open (53 tools without, 54 with). Its absence means "open a workspace", not "removed".
 
 ## Resources
 
-**Skills**: axiom-xcode-mcp (skills/xcode-mcp-setup.md), axiom-xcode-mcp (skills/xcode-mcp-tools.md)
+**Docs**: /xcode/mcp-server, /xcode/giving-external-agents-access-to-xcode
+
+**Skills**: axiom-xcode-mcp (skills/xcode-mcp-setup.md), axiom-xcode-mcp (skills/xcode-mcp-tools.md), axiom-xcode-mcp (skills/axe-ref.md), axiom-tools (skills/device-control-ref.md)
