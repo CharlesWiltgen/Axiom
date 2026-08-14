@@ -88,4 +88,5 @@ tools/xcprof/xcprof-arm64
 
 # Beads / Dolt files (added by bd init)
 .beads-credential-key
+.beads.gate.lock
 __pycache__
