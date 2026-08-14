@@ -1,6 +1,6 @@
 # Xcode MCP Integration
 
-Xcode 26.3 ships a built-in MCP (Model Context Protocol) server that exposes 20 IDE tools to external AI clients. This skill suite teaches Claude how to set up, connect, and use Xcode's MCP tools effectively — from building and testing to rendering SwiftUI previews programmatically.
+Xcode ships a built-in MCP (Model Context Protocol) server that exposes IDE tools to external AI clients — 54 of them on Xcode 27. This skill suite teaches Claude how to set up, connect, and use those tools effectively, from building and testing to rendering SwiftUI previews programmatically. On Xcode 27 the server can also run headless, with Xcode closed.
 
 ```mermaid
 flowchart LR
@@ -26,9 +26,10 @@ flowchart LR
 
 Use these skills when:
 - Setting up `xcrun mcpbridge` for the first time
+- Running MCP headless, in CI or without keeping Xcode open
 - Building, testing, or previewing your project via MCP tools
-- Troubleshooting mcpbridge connection or permission issues
-- Learning Xcode MCP workflow patterns (BuildFix loop, TestFix loop)
+- Troubleshooting connection, permission, or hung-call problems
+- Learning Xcode MCP workflow patterns (workspace bootstrap, BuildFix loop, TestFix loop)
 - Looking up specific tool parameters and schemas
 
 ## Example Prompts
@@ -37,52 +38,60 @@ Questions you can ask Claude that will draw from these skills:
 
 - "How do I set up Xcode MCP with Claude Code?"
 - "Build my project using MCP tools"
+- "How do I run Xcode MCP without keeping Xcode open?"
 - "My mcpbridge connection keeps failing"
 - "What parameters does BuildProject take?"
 - "Run just the failing test, not the whole suite"
 - "Render the preview for my ContentView"
-- "Cursor can't parse Xcode's MCP responses"
+- "My MCP tool call just hangs and never returns"
 
 ## What This Skill Provides
 
-- **Setup guides** for 5 MCP clients (Claude Code, Cursor, Codex, VS Code, Gemini CLI)
-- **Workflow patterns** – iterative BuildFix loops, TestFix loops, preview verification
-- **All 20 tool references** – parameters, return schemas, and gotchas
-- **Window targeting** – tab identifier management and multi-Xcode support
-- **Troubleshooting** – permission dialogs, schema compliance, stale connections
+- **Setup guides** for 5 MCP clients (Claude Code, Cursor, Codex, VS Code, Gemini CLI), in attached or headless mode
+- **Workflow patterns** – workspace bootstrap, iterative BuildFix loops, TestFix loops, preview verification
+- **All 54 tool references** – parameters, return schemas, and gotchas
+- **Workspace targeting** – identifier management, and why it's required even with one project open
+- **Troubleshooting** – hung calls, agent approval, empty tool lists, stale connections
 - **Conflict resolution** – when to use MCP tools vs `xcodebuild` vs standard file tools
 
 ## Skill Suite
 
-This is a router skill with three specialized sub-skills:
+This is a router skill with four sub-skills:
 
 | Skill | Type | Purpose |
 |-------|------|---------|
 | `axiom-xcode-mcp` | Router | Routes to the right specialized skill |
-| `axiom-xcode-mcp` | Specialized | Enable, connect, and troubleshoot per client |
-| `axiom-xcode-mcp` | Discipline | Workflow patterns, gotchas, window targeting |
-| `axiom-xcode-mcp` | Reference | All 20 tools with params, schemas, examples |
+| `xcode-mcp-setup` | Discipline | Enable, connect, and troubleshoot per client |
+| `xcode-mcp-tools` | Discipline | Workflow patterns, gotchas, workspace targeting |
+| `xcode-mcp-ref` | Reference | All 54 tools with params, schemas, examples |
+| `axe-ref` | Reference | AXe simulator input (`tap`/`type`/`swipe`), documented at [AXe](/reference/axe-ref) |
 
-## The 20 Xcode MCP Tools
+## The Xcode MCP Tools
+
+The server exposes 53 tools with no workspace open and 54 with one — `DocumentationSearch` is the only workspace-gated tool. The full per-tool reference is in [Xcode MCP Reference](/reference/xcode-mcp-ref).
 
 | Category | Tools |
 |----------|-------|
-| Discovery | `XcodeListWindows` |
+| Workspaces & Projects | `XcodeListWorkspaces`, `XcodeOpenWorkspace`, `XcodeCloseWorkspace`, `XcodeNewProject`, `XcodeListTemplates`, `XcodeNewTarget`, `XcodeListTargets` |
 | File Read | `XcodeRead`, `XcodeGlob`, `XcodeGrep`, `XcodeLS` |
 | File Write | `XcodeWrite`, `XcodeUpdate`, `XcodeMakeDir` |
 | File Destructive | `XcodeRM`, `XcodeMV` |
-| Build | `BuildProject`, `GetBuildLog` |
-| Test | `RunAllTests`, `RunSomeTests`, `GetTestList` |
-| Diagnostics | `XcodeListNavigatorIssues`, `XcodeRefreshCodeIssuesInFile` |
-| Execution | `RunCodeSnippet` |
+| Build | `BuildProject`, `GetBuildLog`, `XcodeRefreshCodeIssuesInFile`, and build-settings tools |
+| Run & Debug | `RunProject`, `StopProject`, `GetConsoleOutput`, `InvokeDebuggerCommand`, `RunCodeSnippet` |
+| Test | `RunAllTests`, `RunSomeTests`, `GetTestList`, test-plan tools |
+| Schemes & Destinations | `XcodeListSchemes`, `XcodeSwitchScheme`, `XcodeListRunDestinations`, `XcodeSwitchRunDestination` |
 | Preview | `RenderPreview` |
+| Device Interaction | `DeviceInteractionStartSession`, `DeviceInteractionSynthesize`, and session tools |
+| Crash & Field Diagnostics | `GetTopCrashIssues`, `GetCrashIssueLogs`, and field-performance tools |
+| Localization | `LocalizationPlanner`, `StringCatalogRead`, `StringCatalogEdit`, `StringCatalogContext` |
+| Project Configuration | `AddEntitlement`, `AddInfoPlist` |
 | Search | `DocumentationSearch` |
 
 ## Requirements
 
-- **Xcode 26.3+** with MCP enabled in Settings > Intelligence
-- **macOS** with Xcode installed and running
-- At least one project/workspace open in Xcode
+- **Xcode 26.3+** with MCP enabled in Settings > Intelligence, and a project open
+- **Xcode 27** additionally supports headless operation with Xcode closed, after a one-time `sudo xcrun mcp-server enable`
+- **macOS** with Xcode installed
 
 ## Related
 
