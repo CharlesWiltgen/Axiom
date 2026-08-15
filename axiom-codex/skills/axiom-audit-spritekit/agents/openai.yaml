@@ -1,3 +1,6 @@
 interface:
   display_name: "Audit SpriteKit"
   short_description: "The user wants to audit SpriteKit game code for common issues."
+  default_prompt: "Use $axiom-audit-spritekit to audit spritekit in this project."
+policy:
+  allow_implicit_invocation: false

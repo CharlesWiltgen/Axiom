@@ -2,7 +2,6 @@
 name: axiom-audit-core-data
 description: Use when the user mentions Core Data review, schema migration, production crashes, or data safety checking.
 license: MIT
-disable-model-invocation: true
 ---
 # Core Data Auditor Agent
 

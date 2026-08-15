@@ -2,7 +2,6 @@
 name: axiom-analyze-triage
 description: Use when the user wants to triage a CORPUS of production crashes/hangs from an aggregator (Sentry, App Store Connect) — grouped, counted issues — rather than a single crash file.
 license: MIT
-disable-model-invocation: true
 ---
 
 

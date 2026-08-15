@@ -2,7 +2,6 @@
 name: axiom-swift-simplifier
 description: Use when the user wants to simplify Swift code, reduce boilerplate, or make Swift more readable and idiomatic without changing behavior.
 license: MIT
-disable-model-invocation: true
 ---
 # Swift Simplifier Agent
 

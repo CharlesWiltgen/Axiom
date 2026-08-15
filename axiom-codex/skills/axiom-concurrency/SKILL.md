@@ -8,12 +8,13 @@ license: MIT
 
 **You MUST use this skill for ANY concurrency, async/await, threading, or Swift 6 concurrency work.**
 
-<!-- AXIOM_AUDITOR_INLINE_BEGIN — auto-maintained by scripts/build-inlined-auditors.ts; do not hand-edit -->
-> **Not on Claude Code?** Where this router says "Launch `some-auditor` agent", read that auditor's file in this suite and follow it inline — the same procedure, needing only file search and read.
+<!-- AXIOM_AUDITOR_INLINE_BEGIN — rewritten for Codex by scripts/build-codex.ts; do not hand-edit -->
+> **Auditors are skills here.** Where this router says "Launch `some-auditor` agent", invoke the
+> matching Codex skill instead — same procedure, no Claude Code agent required.
 >
-> Available here: `skills/concurrency-auditor.md`.
+> Available: `axiom-audit-concurrency`.
 >
-> Agents that need Bash — builds, tests, simulators, crash symbolication — stay Claude Code-only; there is no inline equivalent for those.
+> The ones that shell out — builds, tests, simulators, crash symbolication — need shell access to run.
 <!-- AXIOM_AUDITOR_INLINE_END -->
 
 ## Quick Reference
@@ -128,7 +129,7 @@ digraph concurrency {
 
 ## Automated Scanning
 
-**Concurrency audit** → Launch `concurrency-auditor` agent or `/axiom:audit concurrency` (5-phase semantic audit: maps isolation architecture, detects 8 anti-patterns, reasons about missing concurrency patterns, correlates compound risks, scores Swift 6.4 readiness)
+**Concurrency audit** → `axiom-audit-concurrency` (5-phase semantic audit: maps isolation architecture, detects 8 anti-patterns, reasons about missing concurrency patterns, correlates compound risks, scores Swift 6.4 readiness)
 
 ## Anti-Rationalization
 

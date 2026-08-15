@@ -2,7 +2,6 @@
 name: axiom-audit-iap
 description: Use when the user mentions in-app purchase review, IAP audit, StoreKit issues, purchase bugs, transaction problems, or subscription management.
 license: MIT
-disable-model-invocation: true
 ---
 # In-App Purchase Auditor Agent
 
@@ -300,5 +299,5 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details
 
 For implementation patterns: `axiom-integration` skill (skills/in-app-purchases.md)
 For StoreKit 2 API reference: `axiom-integration` skill (skills/storekit-ref.md)
-For complete IAP implementation: Launch `iap-implementation` agent
-For security of receipt validation: Launch `security-privacy-scanner` agent
+For complete IAP implementation: `axiom-implement-iap`
+For security of receipt validation: `axiom-scan-security-privacy`

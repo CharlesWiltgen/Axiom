@@ -95,8 +95,14 @@ xcrun simctl list devices
 # If still stuck, erase specific simulator
 xcrun simctl erase <device-uuid>
 
-# Nuclear option: force-quit Simulator.app
-killall -9 Simulator
+# Nuclear option: force-quit the simulator GUI.
+# Xcode 26 ships Simulator.app; Xcode 27 ships DeviceHub.app instead and has no
+# Simulator.app at all — name both or this silently does nothing on 27.
+killall -9 Simulator DeviceHub
+
+# Verify against the PROCESS, not $?. killall exits 0 when EITHER name matched, so
+# with both Xcodes installed a 0 can mean "killed Simulator, DeviceHub still running".
+pgrep -l Simulator DeviceHub    # must print nothing
 ```
 
 ### For Zombie Processes

@@ -2,7 +2,6 @@
 name: axiom-audit-energy
 description: Use when the user mentions battery drain, energy optimization, power consumption audit, or pre-release energy check.
 license: MIT
-disable-model-invocation: true
 ---
 # Energy Auditor Agent
 

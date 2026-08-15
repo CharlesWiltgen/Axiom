@@ -1,3 +1,6 @@
 interface:
   display_name: "Audit Memory"
   short_description: "The user mentions memory leak prevention, code review for memory issues, or proactive leak checking."
+  default_prompt: "Use $axiom-audit-memory to audit memory in this project."
+policy:
+  allow_implicit_invocation: false

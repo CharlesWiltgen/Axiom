@@ -2,7 +2,6 @@
 name: axiom-test-simulator
 description: Use when the user mentions simulator testing, visual verification, push notification testing, location simulation, screenshot capture, OR live accessibility validation (VoiceOver announcements, Dynamic Type, ADA checks) on the simulator.
 license: MIT
-disable-model-invocation: true
 ---
 
 
@@ -63,7 +62,7 @@ else
 fi
 ```
 
-**Common fix**: "Unable to boot" → `xcrun simctl shutdown all && killall -9 Simulator`
+**Common fix**: "Unable to boot" → `xcrun simctl shutdown all && killall -9 Simulator DeviceHub` (Xcode 27 replaced Simulator.app with DeviceHub.app — naming only `Simulator` is a silent no-op there)
 
 ## Capabilities
 
@@ -197,7 +196,11 @@ xcrun simctl keychain booted add-root-cert /path/to/ca.pem
 
 ### 13. UI Automation with AXe (preflighted via `xcui doctor`)
 
-**Xcode 27 beta:** if `xcui doctor` reports an `axe_developer_dir` (a beta that relocated `SimulatorKit.framework` breaks bare `axe`), prefix every direct `axe` call in this section with `DEVELOPER_DIR=<that value>`. xcui's own commands apply it automatically.
+**Drive input through `xcui` when it is available.** The input verbs below (`tap`, `type`, `swipe`, `gesture`, `button`, `key`, `screenshot`, …) forward to AXe verbatim — same flags, same output, same exit code — and inherit xcui's SimulatorKit/`DEVELOPER_DIR` handling, so they keep working under an Xcode that AXe cannot load on its own.
+
+**Check first: `command -v xcui`.** It is on PATH automatically only on Claude Code. On Codex, Pi, and MCP installs no binary ships, so if it is absent, drop the `xcui ` prefix and run the same command as `axe …` — identical flags — then handle `DEVELOPER_DIR` yourself only if bare AXe reports a SimulatorKit load failure.
+
+`axe describe-ui` (what xcui itself parses) and `axe stream-video` / `record-video` (long-running) are always called bare.
 
 **Installation:** AXe is the input/tree engine `xcui` builds on. Preflight it with `xcui doctor` (and `xcui doctor --install` to add it via brew, consented) rather than treating it as optional.
 
@@ -214,36 +217,36 @@ xcui doctor --install  # installs cameroncooke/axe/axe via brew if missing
 axe describe-ui --udid $UDID
 
 # Tap by accessibility identifier (RECOMMENDED - stable)
-axe tap --id "loginButton" --udid $UDID
+xcui tap --id "loginButton" --udid $UDID
 
 # Tap by label
-axe tap --label "Submit" --udid $UDID
+xcui tap --label "Submit" --udid $UDID
 
 # Tap at coordinates (less stable)
-axe tap -x 200 -y 400 --udid $UDID
+xcui tap -x 200 -y 400 --udid $UDID
 
 # Long press
-axe tap -x 200 -y 400 --duration 1.0 --udid $UDID
+xcui tap -x 200 -y 400 --duration 1.0 --udid $UDID
 
 # Gesture presets
-axe gesture scroll-down --udid $UDID     # Scroll content down
-axe gesture scroll-up --udid $UDID       # Scroll content up
-axe gesture swipe-from-left-edge --udid $UDID  # Back navigation
+xcui gesture scroll-down --udid $UDID     # Scroll content down
+xcui gesture scroll-up --udid $UDID       # Scroll content up
+xcui gesture swipe-from-left-edge --udid $UDID  # Back navigation
 
 # Custom swipe
-axe swipe --start-x 200 --start-y 600 --end-x 200 --end-y 200 --udid $UDID
+xcui swipe --start-x 200 --start-y 600 --end-x 200 --end-y 200 --udid $UDID
 
 # Type text (field must be focused first)
-axe tap --id "emailTextField" --udid $UDID
-axe type "user@example.com" --udid $UDID
+xcui tap --id "emailTextField" --udid $UDID
+xcui type "user@example.com" --udid $UDID
 
 # Press Return key
-axe key 40 --udid $UDID
+xcui key 40 --udid $UDID
 
 # Hardware buttons
-axe button home --udid $UDID
-axe button lock --udid $UDID
-axe button siri --udid $UDID
+xcui button home --udid $UDID
+xcui button lock --udid $UDID
+xcui button siri --udid $UDID
 ```
 **Use for**: Automated UI flows when XCUITest not available, quick manual automation
 
@@ -258,7 +261,7 @@ axe record-video --output /tmp/recording.mp4 --udid $UDID
 # Press Ctrl+C to stop
 
 # Screenshot (alternative to simctl)
-axe screenshot --output /tmp/screenshot.png --udid $UDID
+xcui screenshot --output /tmp/screenshot.png --udid $UDID
 ```
 **Use for**: Live monitoring, recording test flows, capturing evidence
 
@@ -278,7 +281,7 @@ xcui a11y set --toggle reduce-transparency --value on --app com.example.App
 xcui a11y set --toggle dynamic-type --value accessibility-extra-large
 ```
 
-Supported `a11y set` toggles: `dynamic-type`, `increase-contrast`, `reduce-motion`, `reduce-transparency`. For taps, use `axe tap --id <id>` directly (real HID touch). Full reference: `axiom-tools (skills/xcui-ref.md)`.
+Supported `a11y set` toggles: `dynamic-type`, `increase-contrast`, `reduce-motion`, `reduce-transparency`. For taps, use `xcui tap --id <id>` (forwards to AXe's real HID touch). Full reference: `axiom-tools (skills/xcui-ref.md)`.
 
 ### 16. Network Conditioning (low-bitrate / latency / loss)
 
@@ -404,7 +407,7 @@ xcrun simctl diagnose -X --all-logs
 | Symptom | Fix |
 |---------|-----|
 | Screenshot is black | `sleep 5` then retry |
-| "Unable to boot" | `xcrun simctl shutdown all && killall -9 Simulator` |
+| "Unable to boot" | `xcrun simctl shutdown all && killall -9 Simulator DeviceHub` (26 = Simulator, 27 = DeviceHub) |
 | "Device not found" | `xcrun simctl list devices` to see available |
 | Deep link doesn't work | Check URL scheme in Info.plist |
 | Push fails | Validate JSON: `python -m json.tool < push.json` |

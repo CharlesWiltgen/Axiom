@@ -1,3 +1,6 @@
 interface:
   display_name: "Audit iCloud"
   short_description: "The user mentions iCloud sync issues, CloudKit errors, ubiquitous container problems, or asks to audit cloud sync."
+  default_prompt: "Use $axiom-audit-icloud to audit icloud in this project."
+policy:
+  allow_implicit_invocation: false

@@ -512,7 +512,8 @@ shared.set(Date(), forKey: "lastUpdate")
 #### Step 2: Check Container Paths
 
 ```bash
-# Device logs (Xcode → Window → Devices and Simulators → View Device Logs)
+# Device logs — Xcode 27: Device Hub → select device → Diagnostic reports panel
+#              Xcode 26 and earlier: Xcode → Window → Devices and Simulators → View Device Logs
 # Filter: Your app bundle ID
 # Look for: Container path mismatches
 ```

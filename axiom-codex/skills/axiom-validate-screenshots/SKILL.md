@@ -2,7 +2,6 @@
 name: axiom-validate-screenshots
 description: Use when the user mentions App Store screenshot validation, screenshot review, checking screenshots before submission, or verifying screenshot dimensions and content.
 license: MIT
-disable-model-invocation: true
 ---
 
 
@@ -166,7 +165,7 @@ These are NOT issues:
 2. **Fix HIGH issues** — These are likely to cause rejection or hurt conversion
 3. **Consider MEDIUM issues** — These affect perceived quality
 4. **Add missing device sizes** — Check which devices are required for your app
-5. **Re-run validation** — `/axiom:audit screenshots` after fixes
+5. **Re-run validation** — `axiom-validate-screenshots` after fixes
 ```
 
 ## Guidelines

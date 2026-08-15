@@ -2,7 +2,6 @@
 name: axiom-resolve-spm
 description: Use when the user mentions SPM resolution failures, "no such module" errors, duplicate symbol linker errors, version conflicts between packages, or Swift 6 package compatibility issues.
 license: MIT
-disable-model-invocation: true
 ---
 
 

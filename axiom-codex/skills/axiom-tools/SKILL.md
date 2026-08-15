@@ -1,0 +1,136 @@
+---
+name: axiom-tools
+description: Use when asking how to use Axiom or what skills exist, capturing console with xclog, symbolicating .ips/MetricKit/.crash crashes with xcsym, driving/validating simulator UI & accessibility with xcui, or analyzing xctrace/CPU profiles with xcprof.
+license: MIT
+---
+
+# Axiom Tools & Onboarding
+
+This suite covers Axiom itself — how to use it, what's available, and the tools that ship with it.
+
+<!-- AXIOM_AUDITOR_INLINE_BEGIN — rewritten for Codex by scripts/build-codex.ts; do not hand-edit -->
+> **Auditors are skills here.** Where this router says "Launch `some-auditor` agent", invoke the
+> matching Codex skill instead — same procedure, no Claude Code agent required.
+>
+> Available: `axiom-analyze-test-failures`, `axiom-audit-accessibility`, `axiom-audit-concurrency`, `axiom-audit-energy`, `axiom-audit-memory`.
+>
+> The ones that shell out — builds, tests, simulators, crash symbolication — need shell access to run.
+<!-- AXIOM_AUDITOR_INLINE_END -->
+
+## Routing
+
+| Question | Read |
+|----------|------|
+| "How do I capture console output?" / "What is xclog?" | [skills/xclog-ref.md](skills/xclog-ref.md) |
+| "How do I symbolicate a crash?" / "What is xcsym?" / "Why is my crash unsymbolicated?" | [skills/xcsym-ref.md](skills/xcsym-ref.md) |
+| "How do I drive/validate the sim UI?" / "What is xcui?" / "How do I script accessibility checks?" | [skills/xcui-ref.md](skills/xcui-ref.md) |
+| "How do I analyze a trace / CPU or network profile?" / "What is xcprof?" / "Why does the profiler report no findings?" | [skills/xcprof-ref.md](skills/xcprof-ref.md) |
+| "How do I control a simulator/device without Xcode running?" / "What is Device Hub?" / "devicectl vs simctl?" | [skills/device-control-ref.md](skills/device-control-ref.md) |
+| "How do I capture a screenshot or record video of a sim or device from the CLI?" | [skills/device-control-ref.md](skills/device-control-ref.md) (Screen capture) |
+| "Can I automate resize testing?" / "Does my layout hold across breakpoints?" | [skills/xcui-ref.md](skills/xcui-ref.md) (Resize sweeps) — `xcui resize sweep` |
+| "How do I drive `appResize` by hand?" | [skills/device-control-ref.md](skills/device-control-ref.md) (Resizable app sessions) |
+
+## Using Axiom Skills
+
+The content below is the core discipline for Axiom's routing system — it establishes the rule that Axiom skills must be checked before any iOS/Swift response.
+
+<EXTREMELY-IMPORTANT>
+If you think there is even a 1% chance an Axiom skill might apply to your iOS/Swift task, you ABSOLUTELY MUST check for the skill.
+
+IF AN AXIOM SKILL APPLIES TO YOUR iOS/SWIFT TASK, YOU DO NOT HAVE A CHOICE. YOU MUST USE IT.
+
+This is not negotiable. This is not optional. You cannot rationalize your way out of this.
+</EXTREMELY-IMPORTANT>
+
+## The Rule
+
+**Check for Axiom skills BEFORE ANY RESPONSE when working with iOS/Swift projects.** This includes clarifying questions. Even 1% chance means check first.
+
+## Red Flags — iOS-Specific Rationalizations
+
+These thoughts mean STOP—you're rationalizing:
+
+| Thought | Reality |
+|---------|---------|
+| "This is just a simple build issue" | Build failures have patterns. Check axiom-build first. |
+| "I can fix this SwiftUI bug quickly" | SwiftUI issues have hidden gotchas. Check axiom-swiftui first. |
+| "Let me just add this database column" | Schema changes risk data loss. Check axiom-data first. |
+| "This async code looks straightforward" | Swift concurrency has subtle rules. Check axiom-concurrency first. |
+| "I'll debug the memory leak manually" | Leak patterns are documented. Check axiom-performance first. |
+| "Let me explore the Xcode project first" | Axiom skills tell you HOW to explore. Check first. |
+| "I remember how to do this from last time" | iOS changes constantly. Skills are up-to-date. |
+| "This iOS/platform version doesn't exist" | If it postdates your training, you can't know that. Apple shipped iOS 26 at WWDC 2025 (18 → 26, 19-25 skipped). Invoke Axiom skills for post-cutoff facts. |
+| "The user just wants a quick answer" | Quick answers without patterns create tech debt. Check skills first. |
+| "This doesn't need a formal workflow" | If an Axiom skill exists for it, use it. |
+| "I'll gather info first, then check skills" | Skills tell you WHAT info to gather. Check first. |
+
+## Skill Priority for iOS Development
+
+When multiple Axiom skills could apply, use this priority:
+
+1. **Environment/Build first** (axiom-build) — Fix the environment before debugging code
+2. **Architecture patterns** (axiom-swiftui, axiom-data, axiom-concurrency) — These determine HOW to structure the solution
+3. **Implementation details** (axiom-integration, axiom-ai, axiom-vision) — These guide specific feature work
+
+Examples:
+- "Xcode build failed" → axiom-build first (environment)
+- "Add SwiftUI screen" → axiom-swiftui first (architecture), then maybe axiom-integration if using system features
+- "App is slow" → axiom-performance first (diagnose), then fix the specific domain
+- "Network request failing" → axiom-build first (environment check), then axiom-networking (implementation)
+
+## iOS Project Detection
+
+Axiom skills apply when:
+- Working directory contains `.xcodeproj` or `.xcworkspace`
+- User mentions iOS, Swift, Xcode, SwiftUI, UIKit
+- User asks about Apple frameworks (SwiftData, CloudKit, etc.)
+- User reports iOS-specific errors (concurrency, memory, build failures)
+
+## Using Axiom Router Skills
+
+Axiom uses **router skills** for progressive disclosure:
+
+1. Check the appropriate router skill first (axiom-build, axiom-swiftui, axiom-data, etc.)
+2. Router will invoke the specialized skill(s) you actually need
+3. Follow the specialized skill exactly
+
+**Do not skip the router.** Routers have decision logic to select the right specialized skill.
+
+### Multi-Domain Questions
+
+When a question spans multiple domains, **invoke ALL relevant routers — don't stop after the first one.**
+
+Examples:
+- "My SwiftUI view doesn't update when SwiftData changes" → invoke **both** axiom-swiftui AND axiom-data
+- "My widget isn't showing updated data from SwiftData" → invoke **both** axiom-integration AND axiom-data
+- "My Foundation Models session freezes the UI" → invoke **both** axiom-ai AND axiom-concurrency
+- "My Core Data saves lose data from background tasks" → invoke **both** axiom-data AND axiom-concurrency
+
+**How to tell**: If the question mentions symptoms from two different domains, or involves two different frameworks, invoke both routers. Each router has cross-domain routing guidance for common overlaps.
+
+## Backward Compatibility
+
+- Direct skill invocation still works: `/skill axiom-concurrency`
+- Commands work unchanged: `axiom-fix-build`, `axiom-audit-accessibility`
+- Agents work via routing or direct command invocation
+
+## When Axiom Skills Don't Apply
+
+Skip Axiom skills for:
+- Non-iOS/Swift projects (Android, web, backend)
+- Generic programming questions unrelated to Apple platforms
+- Questions about Claude Code itself (use claude-code-guide skill)
+
+But when in doubt for iOS/Swift work: **check first, decide later.**
+
+## Device Hub (Xcode 27)
+
+On Xcode 27, **Device Hub** — a standalone app that auto-launches on build-and-run — replaces the `Simulator.app` GUI and manages simulators *and* physical devices in one place (Xcode 26 and earlier keep Simulator.app). Every operation has an Xcode-independent CLI counterpart, so the Axiom tools and scripts are unaffected.
+
+For the full tool map (Device Hub / devicectl / simctl / xcui vs mcpbridge, and what each costs to run), the verified subcommand matrix, the unified `devicectl device capture` screenshot/screen-record path (works on sim and device, Xcode 26.6+), and the Device Hub GUI reference, see `skills/device-control-ref.md`.
+
+## Resources
+
+**Skills**: axiom-swiftui, axiom-concurrency, axiom-data, axiom-build, axiom-performance
+
+**Axiom tools**: `xclog` (simulator console capture, `skills/xclog-ref.md`), `xcsym` (crash symbolication for `.ips`, MetricKit, legacy `.crash` text files, and Xcode Organizer `.xccrashpoint` bundles, `skills/xcsym-ref.md`), `xcui` (scriptable sim UI & accessibility testing, `skills/xcui-ref.md`), `xcprof` (structured xctrace CPU & network profile analysis, `skills/xcprof-ref.md`)

@@ -8,13 +8,13 @@ license: MIT
 
 **You MUST use this skill for ANY SwiftUI work including views, state, navigation, layout, animations, architecture, gestures, and debugging.**
 
-<!-- AXIOM_AUDITOR_INLINE_BEGIN — auto-maintained by scripts/build-inlined-auditors.ts; do not hand-edit -->
-> **Not on Claude Code?** Where this router says "Launch `some-auditor` agent", read that auditor's file in this suite and follow it inline — the same procedure, needing only file search and read.
+<!-- AXIOM_AUDITOR_INLINE_BEGIN — rewritten for Codex by scripts/build-codex.ts; do not hand-edit -->
+> **Auditors are skills here.** Where this router says "Launch `some-auditor` agent", invoke the
+> matching Codex skill instead — same procedure, no Claude Code agent required.
 >
-> Available here: `skills/swiftui-architecture-auditor.md`, `skills/swiftui-layout-auditor.md`, `skills/swiftui-nav-auditor.md`, `skills/swiftui-performance-analyzer.md`, `skills/textkit-auditor.md`, `skills/ux-flow-auditor.md`.
-> Homed in another suite: `axiom-design/skills/liquid-glass-auditor.md`.
+> Available: `axiom-analyze-swiftui-performance`, `axiom-audit-liquid-glass`, `axiom-audit-swiftui-architecture`, `axiom-audit-swiftui-layout`, `axiom-audit-swiftui-nav`, `axiom-audit-textkit`, `axiom-audit-ux-flow`.
 >
-> Agents that need Bash — builds, tests, simulators, crash symbolication — stay Claude Code-only; there is no inline equivalent for those.
+> The ones that shell out — builds, tests, simulators, crash symbolication — need shell access to run.
 <!-- AXIOM_AUDITOR_INLINE_END -->
 
 ## Quick Reference
@@ -69,7 +69,7 @@ These topics are part of the broader iOS UI domain but live in separate suites:
 - Drag/drop, sharing, copy/paste → See axiom-swift (skills/transferable-ref.md)
 - VoiceOver, Dynamic Type → `/skill axiom-accessibility`
 - UI test flakiness → `/skill axiom-testing`
-- UX dead ends, dismiss traps → Launch `ux-flow-auditor` agent
+- UX dead ends, dismiss traps → `axiom-audit-ux-flow`
 
 #### watchOS-specific patterns
 - Glanceable UI, watch navigation, Smart Stack widgets → See axiom-watchos
@@ -113,13 +113,13 @@ digraph swiftui {
 
 ## Automated Scanning
 
-- Architecture audit → Launch `swiftui-architecture-auditor` agent
-- Performance scan → Launch `swiftui-performance-analyzer` agent or `/axiom:audit swiftui-performance`
-- Navigation audit → Launch `swiftui-nav-auditor` agent or `/axiom:audit swiftui-nav`
-- Layout audit → Launch `swiftui-layout-auditor` agent or `/axiom:audit swiftui-layout`
-- UX flow audit → Launch `ux-flow-auditor` agent or `/axiom:audit ux-flow`
-- Liquid Glass scan → Launch `liquid-glass-auditor` agent or `/axiom:audit liquid-glass` (detects migration opportunities AND adoption-completeness gaps: variant discipline for media surfaces, glass-on-glass nesting, missing `if #available` gates, primary-action tinting, `.tabRole(.search)`; scores ADOPTED / PARTIAL / NOT ADOPTED)
-- TextKit scan → Launch `textkit-auditor` agent or `/axiom:audit textkit` (detects fallback triggers, glyph APIs that corrupt complex scripts, missing Writing Tools wiring, AND architectural gaps like missing fallback observation, SwiftUI wrappers dropping TextKit 2 properties, missing `isWritingToolsActive` guards; scores MODERN / MIXED / LEGACY)
+- Architecture audit → `axiom-audit-swiftui-architecture`
+- Performance scan → `axiom-analyze-swiftui-performance`
+- Navigation audit → `axiom-audit-swiftui-nav`
+- Layout audit → `axiom-audit-swiftui-layout`
+- UX flow audit → `axiom-audit-ux-flow`
+- Liquid Glass scan → `axiom-audit-liquid-glass` (detects migration opportunities AND adoption-completeness gaps: variant discipline for media surfaces, glass-on-glass nesting, missing `if #available` gates, primary-action tinting, `.tabRole(.search)`; scores ADOPTED / PARTIAL / NOT ADOPTED)
+- TextKit scan → `axiom-audit-textkit` (detects fallback triggers, glyph APIs that corrupt complex scripts, missing Writing Tools wiring, AND architectural gaps like missing fallback observation, SwiftUI wrappers dropping TextKit 2 properties, missing `isWritingToolsActive` guards; scores MODERN / MIXED / LEGACY)
 
 ## Anti-Rationalization
 

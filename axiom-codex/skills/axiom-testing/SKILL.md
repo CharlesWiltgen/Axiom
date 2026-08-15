@@ -8,12 +8,13 @@ license: MIT
 
 **You MUST use this skill for ANY testing-related question, including writing tests, debugging test failures, making tests faster, or choosing between testing approaches.**
 
-<!-- AXIOM_AUDITOR_INLINE_BEGIN — auto-maintained by scripts/build-inlined-auditors.ts; do not hand-edit -->
-> **Not on Claude Code?** Where this router says "Launch `some-auditor` agent", read that auditor's file in this suite and follow it inline — the same procedure, needing only file search and read.
+<!-- AXIOM_AUDITOR_INLINE_BEGIN — rewritten for Codex by scripts/build-codex.ts; do not hand-edit -->
+> **Auditors are skills here.** Where this router says "Launch `some-auditor` agent", invoke the
+> matching Codex skill instead — same procedure, no Claude Code agent required.
 >
-> Available here: `skills/test-failure-analyzer.md`, `skills/testing-auditor.md`.
+> Available: `axiom-analyze-test-failures`, `axiom-audit-testing`.
 >
-> Agents that need Bash — builds, tests, simulators, crash symbolication — stay Claude Code-only; there is no inline equivalent for those.
+> The ones that shell out — builds, tests, simulators, crash symbolication — need shell access to run.
 <!-- AXIOM_AUDITOR_INLINE_END -->
 
 ## Quick Reference
@@ -68,7 +69,7 @@ digraph testing {
 7. Tests crash / environment wrong? → See axiom-build (skills/xcode-debugging.md)
 8. Run tests from CLI / parse results? → test-runner (Agent)
 9. Fix failing tests automatically? → test-debugger (Agent)
-10. Want test quality audit? → testing-auditor (Agent) or `/axiom:audit testing`
+10. Want test quality audit? → testing-auditor (Agent) or `axiom-audit-testing`
 11. Automate without XCUITest / AXe CLI? → simulator-tester (Agent) + See axiom-xcode-mcp (skills/axe-ref.md)
 12. Testing a Foundation Models / generative feature? → See axiom-ai (`skills/foundation-models-evaluations.md`) for the discipline (dataset design, guardrails vs optimization target, judge calibration), then axiom-ai (`skills/foundation-models-evaluations-ref.md`) for the API. The Evaluations framework (`OS27`) runs *inside* Swift Testing via the `.evaluates` trait — it doesn't replace it. A model isn't a pure function, so you score outputs against a dataset and gate on an aggregate metric instead of asserting on one exact string.
 
@@ -121,9 +122,9 @@ digraph testing {
 
 ## Automated Scanning
 
-**Test quality audit** → Launch `testing-auditor` agent or `/axiom:audit testing` (maps test coverage shape against production code, detects flaky patterns and speed issues, identifies untested critical paths, scores overall test health)
+**Test quality audit** → `axiom-audit-testing` (maps test coverage shape against production code, detects flaky patterns and speed issues, identifies untested critical paths, scores overall test health)
 
-**Flaky test analysis** → Launch `test-failure-analyzer` agent (scans for patterns causing intermittent failures in Swift Testing: missing confirmation, shared mutable state, missing @MainActor)
+**Flaky test analysis** → `axiom-analyze-test-failures` (scans for patterns causing intermittent failures in Swift Testing: missing confirmation, shared mutable state, missing @MainActor)
 
 ## Anti-Rationalization
 

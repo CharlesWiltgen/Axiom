@@ -8,12 +8,13 @@ license: MIT
 
 **You MUST use this skill for ANY Swift idiom review, ownership/noncopyable types, Transferable/drag-and-drop, debug deep links, or tvOS development.**
 
-<!-- AXIOM_AUDITOR_INLINE_BEGIN — auto-maintained by scripts/build-inlined-auditors.ts; do not hand-edit -->
-> **Not on Claude Code?** Where this router says "Launch `some-auditor` agent", read that auditor's file in this suite and follow it inline — the same procedure, needing only file search and read.
+<!-- AXIOM_AUDITOR_INLINE_BEGIN — rewritten for Codex by scripts/build-codex.ts; do not hand-edit -->
+> **Auditors are skills here.** Where this router says "Launch `some-auditor` agent", invoke the
+> matching Codex skill instead — same procedure, no Claude Code agent required.
 >
-> Available here: `skills/swift-simplifier.md`.
+> Available: `axiom-swift-simplifier`.
 >
-> Agents that need Bash — builds, tests, simulators, crash symbolication — stay Claude Code-only; there is no inline equivalent for those.
+> The ones that shell out — builds, tests, simulators, crash symbolication — need shell access to run.
 <!-- AXIOM_AUDITOR_INLINE_END -->
 
 ## Quick Reference
@@ -39,7 +40,7 @@ license: MIT
 | tvOS storage constraints (no Documents dir) | See `skills/tvos.md` |
 | tvOS text input, AVPlayer tuning | See `skills/tvos.md` |
 | TVUIKit components | See `skills/tvos.md` |
-| Simplify Swift for clarity (behavior-preserving cleanups) | `swift-simplifier` agent — `/axiom:audit swift-simplify` |
+| Simplify Swift for clarity (behavior-preserving cleanups) | `swift-simplifier` agent — `axiom-swift-simplifier` |
 
 ## Decision Tree
 
@@ -65,7 +66,7 @@ digraph swift {
 6. Swift concurrency (async/await, actors, Sendable) -> `/skill axiom-concurrency`
 7. Swift performance (COW, ARC, generics optimization) -> See axiom-performance (skills/swift-performance.md)
 8. Codable patterns (JSON, CodingKeys, enum serialization) -> See axiom-data (skills/codable.md)
-9. Simplify Swift for clarity (guard/optional cleanups, if/switch expressions, boilerplate)? -> `swift-simplifier` agent (`/axiom:audit swift-simplify`)
+9. Simplify Swift for clarity (guard/optional cleanups, if/switch expressions, boilerplate)? -> `swift-simplifier` agent (`axiom-swift-simplifier`)
 
 ## Conflict Resolution
 

@@ -2,7 +2,6 @@
 name: axiom-audit-swiftui-layout
 description: Use when the user mentions SwiftUI layout review, adaptive layout issues, GeometryReader problems, or multi-device layout checking.
 license: MIT
-disable-model-invocation: true
 ---
 # SwiftUI Layout Auditor Agent
 

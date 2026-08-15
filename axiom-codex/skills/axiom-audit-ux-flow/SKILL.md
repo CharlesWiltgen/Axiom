@@ -2,7 +2,6 @@
 name: axiom-audit-ux-flow
 description: Use when the user mentions UX flow issues, dead-end views, dismiss traps, missing empty states, broken user journeys, or wants a UX audit of their iOS app.
 license: MIT
-disable-model-invocation: true
 ---
 # UX Flow Auditor Agent
 

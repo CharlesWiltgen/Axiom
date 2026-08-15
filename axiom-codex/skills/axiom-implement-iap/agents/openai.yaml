@@ -1,3 +1,6 @@
 interface:
   display_name: "Implement IAP"
   short_description: "The user wants to add in-app purchases, implement StoreKit 2, or set up subscriptions."
+  default_prompt: "Use $axiom-implement-iap to implement iap in this project."
+policy:
+  allow_implicit_invocation: false

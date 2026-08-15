@@ -2,7 +2,6 @@
 name: axiom-run-tests
 description: Use when the user wants to run XCUITests, parse test results, view test failures, or export test attachments.
 license: MIT
-disable-model-invocation: true
 ---
 
 

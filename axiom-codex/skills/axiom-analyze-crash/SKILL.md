@@ -1,8 +1,7 @@
 ---
 name: axiom-analyze-crash
-description: Use when the user has a crash log (.
+description: Use when the user has a crash log (.ips, MetricKit JSON, legacy .crash text, .xccrashpoint bundle, or pasted text) that needs analysis.
 license: MIT
-disable-model-invocation: true
 ---
 
 
@@ -168,7 +167,7 @@ Report to user and stop if:
 - xcsym stdout contains `"error":"hang_report"` (exit 1) — the input is a hang, not a crash; redirect to hang-diagnostics skill for single-hang investigation, or `triage-analyzer` for corpus/aggregate hang analysis
 - Exit code is non-zero *and* the pattern tag is `unclassified` — the rule engine gave up; raw output is the best the tool can do
 - Crash file is truncated or unparseable — ask for a complete file
-- The user has **multiple grouped issues** from Sentry or App Store Connect (dozens of crashes, a corpus) rather than a single crash file — route to `triage-analyzer` agent or `/axiom:triage` instead; this agent handles one crash at a time
+- The user has **multiple grouped issues** from Sentry or App Store Connect (dozens of crashes, a corpus) rather than a single crash file — route to `triage-analyzer` agent or `axiom-analyze-triage` instead; this agent handles one crash at a time
 
 ## Related
 

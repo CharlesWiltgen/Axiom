@@ -2,7 +2,6 @@
 name: axiom-audit-camera
 description: Use this agent to scan Swift code for camera, video, and audio capture issues including deprecated APIs, missing interruption handlers, threading violations, and permission anti-patterns.
 license: MIT
-disable-model-invocation: true
 ---
 # Camera & Capture Auditor Agent
 

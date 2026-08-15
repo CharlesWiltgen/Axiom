@@ -8,12 +8,13 @@ license: MIT
 
 **You MUST use this skill for ANY data persistence, database, storage, CloudKit, or serialization work.**
 
-<!-- AXIOM_AUDITOR_INLINE_BEGIN — auto-maintained by scripts/build-inlined-auditors.ts; do not hand-edit -->
-> **Not on Claude Code?** Where this router says "Launch `some-auditor` agent", read that auditor's file in this suite and follow it inline — the same procedure, needing only file search and read.
+<!-- AXIOM_AUDITOR_INLINE_BEGIN — rewritten for Codex by scripts/build-codex.ts; do not hand-edit -->
+> **Auditors are skills here.** Where this router says "Launch `some-auditor` agent", invoke the
+> matching Codex skill instead — same procedure, no Claude Code agent required.
 >
-> Available here: `skills/codable-auditor.md`, `skills/core-data-auditor.md`, `skills/database-schema-auditor.md`, `skills/grdb-performance-auditor.md`, `skills/icloud-auditor.md`, `skills/storage-auditor.md`, `skills/swiftdata-auditor.md`.
+> Available: `axiom-audit-codable`, `axiom-audit-core-data`, `axiom-audit-database-schema`, `axiom-audit-grdb-performance`, `axiom-audit-icloud`, `axiom-audit-storage`, `axiom-audit-swiftdata`.
 >
-> Agents that need Bash — builds, tests, simulators, crash symbolication — stay Claude Code-only; there is no inline equivalent for those.
+> The ones that shell out — builds, tests, simulators, crash symbolication — need shell access to run.
 <!-- AXIOM_AUDITOR_INLINE_END -->
 
 ## When to Use
@@ -66,13 +67,13 @@ Use this skill when working with:
 
 ### Automated Scanning
 
-**Core Data audit** → Launch `core-data-auditor` agent or `/axiom:audit core-data` (safety violations, architectural gaps — migration options, thread-confinement, N+1 queries, merge policies, context isolation)
-**Codable audit** → Launch `codable-auditor` agent or `/axiom:audit codable` (safety violations, semantic gaps — try? swallowing errors, JSONSerialization, date handling, silent field drops, wrapper-hidden fallbacks, cross-file strategy drift, enum future-case crashes)
-**iCloud audit** → Launch `icloud-auditor` agent or `/axiom:audit icloud` (entitlement checks, file coordination, incomplete CKError matrix coverage, missing account-change observation, polling vs CKSubscriptions, SwiftData + CloudKit unsupported features, compound risks like uncoordinated I/O across extensions)
-**Storage audit** → Launch `storage-auditor` agent or `/axiom:audit storage` (wrong file locations, missing backup exclusions, sensitive data on disk vs Keychain, missing App Group containers, unbounded cache growth, orphan files, compound risks like user data in tmp/ + critical content)
-**Database schema audit** → Launch `database-schema-auditor` agent or `/axiom:audit database-schema` (unsafe ALTER TABLE, DROP operations, missing idempotency, FK constraints declared but not enforced, incomplete upgrade paths, compound risks like INSERT OR REPLACE on FK-referenced tables)
-**GRDB performance audit** → Launch `grdb-performance-auditor` agent or `/axiom:audit grdb-performance` (raw SQL string interpolation, missing FK indexes in raw SQL, missing PRAGMA optimize for raw-GRDB apps, journal mode mismatch for app-group DBs, missing observesSuspensionNotifications for shared DBs, prefix-redundant indexes in raw SQL, legacy Record subclass, INSERT OR REPLACE misused as upsert, observation on WITHOUT ROWID tables, WITHOUT ROWID upsert below GRDB 7.11)
-**SwiftData audit** → Launch `swiftdata-auditor` agent or `/axiom:audit swiftdata` (struct models, missing schema registration, array relationships without defaults, background context misuse, N+1 patterns, stale predicates, CloudKit conformance gaps, compound risks like struct model + array relationship)
+**Core Data audit** → `axiom-audit-core-data` (safety violations, architectural gaps — migration options, thread-confinement, N+1 queries, merge policies, context isolation)
+**Codable audit** → `axiom-audit-codable` (safety violations, semantic gaps — try? swallowing errors, JSONSerialization, date handling, silent field drops, wrapper-hidden fallbacks, cross-file strategy drift, enum future-case crashes)
+**iCloud audit** → `axiom-audit-icloud` (entitlement checks, file coordination, incomplete CKError matrix coverage, missing account-change observation, polling vs CKSubscriptions, SwiftData + CloudKit unsupported features, compound risks like uncoordinated I/O across extensions)
+**Storage audit** → `axiom-audit-storage` (wrong file locations, missing backup exclusions, sensitive data on disk vs Keychain, missing App Group containers, unbounded cache growth, orphan files, compound risks like user data in tmp/ + critical content)
+**Database schema audit** → `axiom-audit-database-schema` (unsafe ALTER TABLE, DROP operations, missing idempotency, FK constraints declared but not enforced, incomplete upgrade paths, compound risks like INSERT OR REPLACE on FK-referenced tables)
+**GRDB performance audit** → `axiom-audit-grdb-performance` (raw SQL string interpolation, missing FK indexes in raw SQL, missing PRAGMA optimize for raw-GRDB apps, journal mode mismatch for app-group DBs, missing observesSuspensionNotifications for shared DBs, prefix-redundant indexes in raw SQL, legacy Record subclass, INSERT OR REPLACE misused as upsert, observation on WITHOUT ROWID tables, WITHOUT ROWID upsert below GRDB 7.11)
+**SwiftData audit** → `axiom-audit-swiftdata` (struct models, missing schema registration, array relationships without defaults, background context misuse, N+1 patterns, stale predicates, CloudKit conformance gaps, compound risks like struct model + array relationship)
 
 ## Decision Tree
 

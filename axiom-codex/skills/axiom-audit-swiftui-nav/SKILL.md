@@ -2,7 +2,6 @@
 name: axiom-audit-swiftui-nav
 description: Use when the user mentions SwiftUI navigation issues, deep linking problems, state restoration bugs, or navigation architecture review.
 license: MIT
-disable-model-invocation: true
 ---
 # SwiftUI Navigation Auditor Agent
 

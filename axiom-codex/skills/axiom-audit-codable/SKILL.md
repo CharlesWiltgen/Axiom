@@ -2,7 +2,6 @@
 name: axiom-audit-codable
 description: Use when the user mentions Codable review, JSON encoding/decoding issues, data serialization audit, or modernizing legacy code.
 license: MIT
-disable-model-invocation: true
 ---
 # Codable Auditor Agent
 

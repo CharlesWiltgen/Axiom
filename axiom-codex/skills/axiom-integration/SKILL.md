@@ -8,12 +8,13 @@ license: MIT
 
 **You MUST use this skill for ANY iOS system integration including Siri, Shortcuts, widgets, in-app purchases, background tasks, push notifications, and more.**
 
-<!-- AXIOM_AUDITOR_INLINE_BEGIN — auto-maintained by scripts/build-inlined-auditors.ts; do not hand-edit -->
-> **Not on Claude Code?** Where this router says "Launch `some-auditor` agent", read that auditor's file in this suite and follow it inline — the same procedure, needing only file search and read.
+<!-- AXIOM_AUDITOR_INLINE_BEGIN — rewritten for Codex by scripts/build-codex.ts; do not hand-edit -->
+> **Auditors are skills here.** Where this router says "Launch `some-auditor` agent", invoke the
+> matching Codex skill instead — same procedure, no Claude Code agent required.
 >
-> Available here: `skills/iap-auditor.md`.
+> Available: `axiom-audit-iap`.
 >
-> Agents that need Bash — builds, tests, simulators, crash symbolication — stay Claude Code-only; there is no inline equivalent for those.
+> The ones that shell out — builds, tests, simulators, crash symbolication — need shell access to run.
 <!-- AXIOM_AUDITOR_INLINE_END -->
 
 ## Quick Reference
@@ -117,8 +118,8 @@ digraph integration {
 12a. Large asset delivery (game packs, localized asset packs, ML models, Foundation Models adapters, ODR migration)? → `skills/background-assets.md`, `skills/background-assets-ref.md`
 13. Push notifications? → `skills/push-notifications.md`, `skills/push-notifications-diag.md`, `skills/push-notifications-ref.md`
 13a. Push/calls on networks without internet, or PTT over an MCX cellular slice? → `skills/local-push-connectivity.md`
-14. Want IAP audit? → Launch `iap-auditor` agent
-15. Want full IAP implementation? → Launch `iap-implementation` agent
+14. Want IAP audit? → `axiom-audit-iap`
+15. Want full IAP implementation? → `axiom-implement-iap`
 16. Camera / photos / audio / haptics / ShazamKit? → **Use `axiom-media` instead**
 
 ## Cross-Domain Routing

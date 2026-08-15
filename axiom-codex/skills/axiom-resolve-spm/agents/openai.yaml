@@ -1,3 +1,6 @@
 interface:
   display_name: "Resolve Spm"
   short_description: "The user mentions SPM resolution failures, \"no such module\" errors, duplicate symbol linker errors, version conflicts..."
+  default_prompt: "Use $axiom-resolve-spm to resolve spm in this project."
+policy:
+  allow_implicit_invocation: false

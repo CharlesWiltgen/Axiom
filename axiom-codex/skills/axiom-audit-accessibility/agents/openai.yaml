@@ -1,3 +1,6 @@
 interface:
   display_name: "Audit Accessibility"
   short_description: "The user mentions accessibility checking, App Store submission, code review, or WCAG compliance."
+  default_prompt: "Use $axiom-audit-accessibility to audit accessibility in this project."
+policy:
+  allow_implicit_invocation: false

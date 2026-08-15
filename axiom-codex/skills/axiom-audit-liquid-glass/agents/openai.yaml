@@ -1,3 +1,6 @@
 interface:
   display_name: "Audit Liquid Glass"
   short_description: "The user mentions Liquid Glass review, iOS 26 UI updates, toolbar improvements, or visual effect migration."
+  default_prompt: "Use $axiom-audit-liquid-glass to audit liquid glass in this project."
+policy:
+  allow_implicit_invocation: false

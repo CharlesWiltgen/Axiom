@@ -1,0 +1,3 @@
+interface:
+  display_name: "Tools"
+  short_description: "Asking how to use Axiom or what skills exist, capturing console with xclog, symbolicating .ips/MetricKit/.crash crash..."

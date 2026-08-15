@@ -1,3 +1,6 @@
 interface:
   display_name: "Audit SwiftUI Nav"
   short_description: "The user mentions SwiftUI navigation issues, deep linking problems, state restoration bugs, or navigation architectur..."
+  default_prompt: "Use $axiom-audit-swiftui-nav to audit swiftui nav in this project."
+policy:
+  allow_implicit_invocation: false

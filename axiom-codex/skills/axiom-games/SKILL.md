@@ -8,12 +8,13 @@ license: MIT
 
 **You MUST use this skill for ANY game development, SpriteKit, SceneKit, RealityKit, touch controls, game controller, or interactive simulation work.**
 
-<!-- AXIOM_AUDITOR_INLINE_BEGIN — auto-maintained by scripts/build-inlined-auditors.ts; do not hand-edit -->
-> **Not on Claude Code?** Where this router says "Launch `some-auditor` agent", read that auditor's file in this suite and follow it inline — the same procedure, needing only file search and read.
+<!-- AXIOM_AUDITOR_INLINE_BEGIN — rewritten for Codex by scripts/build-codex.ts; do not hand-edit -->
+> **Auditors are skills here.** Where this router says "Launch `some-auditor` agent", invoke the
+> matching Codex skill instead — same procedure, no Claude Code agent required.
 >
-> Available here: `skills/spritekit-auditor.md`.
+> Available: `axiom-audit-spritekit`.
 >
-> Agents that need Bash — builds, tests, simulators, crash symbolication — stay Claude Code-only; there is no inline equivalent for those.
+> The ones that shell out — builds, tests, simulators, crash symbolication — need shell access to run.
 <!-- AXIOM_AUDITOR_INLINE_END -->
 
 ## Quick Reference
@@ -110,7 +111,7 @@ digraph games {
 
 ## Automated Scanning
 
-**SpriteKit audit** → Launch `spritekit-auditor` agent or `/axiom:audit spritekit`
+**SpriteKit audit** → `axiom-audit-spritekit`
 
 Detects anti-patterns AND architectural gaps:
 - Physics bitmask issues (default `0xFFFFFFFF`, missing `contactTestBitMask`, magic numbers)
@@ -206,4 +207,4 @@ User: "I'm migrating from SceneKit to RealityKit"
 → Invoke: See axiom-graphics (skills/scenekit.md) + See axiom-graphics (skills/scenekit-ref.md)
 
 User: "Can you scan my SpriteKit code for common issues?"
-→ Launch `spritekit-auditor` agent
+→ `axiom-audit-spritekit`

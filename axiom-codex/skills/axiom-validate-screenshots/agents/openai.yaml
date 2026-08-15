@@ -1,3 +1,6 @@
 interface:
   display_name: "Validate Screenshots"
   short_description: "The user mentions App Store screenshot validation, screenshot review, checking screenshots before submission, or veri..."
+  default_prompt: "Use $axiom-validate-screenshots to validate screenshots in this project."
+policy:
+  allow_implicit_invocation: false

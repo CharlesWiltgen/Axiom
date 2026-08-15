@@ -8,13 +8,13 @@ license: MIT
 
 **You MUST use this skill for ANY accessibility work including VoiceOver, Dynamic Type, color contrast, WCAG compliance, and UX flow auditing.**
 
-<!-- AXIOM_AUDITOR_INLINE_BEGIN — auto-maintained by scripts/build-inlined-auditors.ts; do not hand-edit -->
-> **Not on Claude Code?** Where this router says "Launch `some-auditor` agent", read that auditor's file in this suite and follow it inline — the same procedure, needing only file search and read.
+<!-- AXIOM_AUDITOR_INLINE_BEGIN — rewritten for Codex by scripts/build-codex.ts; do not hand-edit -->
+> **Auditors are skills here.** Where this router says "Launch `some-auditor` agent", invoke the
+> matching Codex skill instead — same procedure, no Claude Code agent required.
 >
-> Available here: `skills/accessibility-auditor.md`.
-> Homed in another suite: `axiom-concurrency/skills/concurrency-auditor.md`, `axiom-data/skills/swiftdata-auditor.md`, `axiom-swiftui/skills/swiftui-nav-auditor.md`, `axiom-swiftui/skills/ux-flow-auditor.md`.
+> Available: `axiom-audit-accessibility`, `axiom-audit-concurrency`, `axiom-audit-swiftdata`, `axiom-audit-swiftui-nav`, `axiom-audit-ux-flow`.
 >
-> Agents that need Bash — builds, tests, simulators, crash symbolication — stay Claude Code-only; there is no inline equivalent for those.
+> The ones that shell out — builds, tests, simulators, crash symbolication — need shell access to run.
 <!-- AXIOM_AUDITOR_INLINE_END -->
 
 ## Quick Reference
@@ -82,17 +82,17 @@ digraph accessibility {
 4. Reading app: VoiceOver stops at paragraphs/pages, Speak Screen halts → `skills/accessibility-diag.md`
 5. UX dead ends, dismiss traps, buried CTAs, missing states → `skills/ux-flow-audit.md`
 6. watchOS-specific accessibility (rotor on Digital Crown, AssistiveTouch, Double Tap) → `skills/watchos-a11y.md`
-7. Want automated accessibility scan? → `accessibility-auditor` agent or `/axiom:audit accessibility`
+7. Want automated accessibility scan? → `accessibility-auditor` agent or `axiom-audit-accessibility`
 
 ## Automated Scanning
 
-**Accessibility audit** → Launch `accessibility-auditor` agent or `/axiom:audit accessibility`
+**Accessibility audit** → `axiom-audit-accessibility`
 - VoiceOver labels and hints
 - Dynamic Type violations
 - Color contrast failures
 - WCAG compliance scanning
 
-**UX flow audit** → Launch `ux-flow-auditor` agent
+**UX flow audit** → `axiom-audit-ux-flow`
 - Dead-end views, dismiss traps
 - Buried CTAs, missing empty/loading/error states
 - Deep link dead ends, accessibility dead ends
@@ -131,7 +131,7 @@ User: "Prepare for App Store accessibility review"
 → See `skills/accessibility-diag.md`
 
 User: "Scan my app for accessibility issues automatically"
-→ Launch `accessibility-auditor` agent
+→ `axiom-audit-accessibility`
 
 User: "How do I support Assistive Access?"
 → See `skills/accessibility-diag.md`

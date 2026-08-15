@@ -2,7 +2,6 @@
 name: axiom-analyze-swift-performance
 description: Use when the user mentions Swift performance audit, code optimization, or performance review.
 license: MIT
-disable-model-invocation: true
 ---
 # Swift Performance Analyzer Agent
 

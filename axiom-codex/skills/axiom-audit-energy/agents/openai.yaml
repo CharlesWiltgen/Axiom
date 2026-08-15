@@ -1,3 +1,6 @@
 interface:
   display_name: "Audit Energy"
   short_description: "The user mentions battery drain, energy optimization, power consumption audit, or pre-release energy check."
+  default_prompt: "Use $axiom-audit-energy to audit energy in this project."
+policy:
+  allow_implicit_invocation: false

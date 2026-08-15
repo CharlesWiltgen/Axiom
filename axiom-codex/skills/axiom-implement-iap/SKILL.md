@@ -2,7 +2,6 @@
 name: axiom-implement-iap
 description: Use when the user wants to add in-app purchases, implement StoreKit 2, or set up subscriptions.
 license: MIT
-disable-model-invocation: true
 ---
 
 

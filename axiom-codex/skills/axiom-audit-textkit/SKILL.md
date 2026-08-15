@@ -2,7 +2,6 @@
 name: axiom-audit-textkit
 description: Use when the user mentions TextKit review, text layout issues, Writing Tools integration, or UITextView/NSTextView code review.
 license: MIT
-disable-model-invocation: true
 ---
 # TextKit Auditor Agent
 

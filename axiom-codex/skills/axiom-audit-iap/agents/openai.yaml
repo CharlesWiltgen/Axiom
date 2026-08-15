@@ -1,3 +1,6 @@
 interface:
   display_name: "Audit IAP"
   short_description: "The user mentions in-app purchase review, IAP audit, StoreKit issues, purchase bugs, transaction problems, or subscri..."
+  default_prompt: "Use $axiom-audit-iap to audit iap in this project."
+policy:
+  allow_implicit_invocation: false

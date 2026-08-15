@@ -1,0 +1,3 @@
+interface:
+  display_name: "Apple Docs"
+  short_description: "ANY question involves Apple framework APIs, Swift compiler errors, or Xcode-bundled documentation"

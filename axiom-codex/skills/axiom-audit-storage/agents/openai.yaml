@@ -1,3 +1,6 @@
 interface:
   display_name: "Audit Storage"
   short_description: "The user mentions file storage issues, data loss, backup bloat, or asks to audit storage usage."
+  default_prompt: "Use $axiom-audit-storage to audit storage in this project."
+policy:
+  allow_implicit_invocation: false

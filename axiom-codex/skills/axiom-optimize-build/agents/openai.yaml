@@ -1,3 +1,6 @@
 interface:
   display_name: "Optimize Build"
   short_description: "The user mentions slow builds, build performance, or build time optimization."
+  default_prompt: "Use $axiom-optimize-build to optimize build in this project."
+policy:
+  allow_implicit_invocation: false

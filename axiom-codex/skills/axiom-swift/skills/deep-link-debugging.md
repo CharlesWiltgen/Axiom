@@ -6,7 +6,7 @@
 Use when:
 - Adding debug-only deep links for simulator testing
 - Enabling automated navigation to specific screens for screenshot/testing
-- Integrating with `simulator-tester` agent or `/axiom:screenshot`
+- Integrating with `simulator-tester` agent or `axiom-validate-screenshots`
 - Need to navigate programmatically without production deep link implementation
 - Testing navigation flows without manual tapping
 
@@ -316,7 +316,7 @@ fi
 
 ## Integration with Simulator Testing
 
-### With `/axiom:screenshot` Command
+### With `axiom-validate-screenshots` Command
 
 ```bash
 # 1. Navigate to screen
@@ -473,7 +473,7 @@ Before using debug deep links in automated workflows:
 - [ ] Deep links integrate with existing navigation (don't duplicate logic)
 - [ ] URL scheme stripped from Release builds (script or separate Info.plist)
 - [ ] Documented in README or comments for other developers
-- [ ] Works with `/axiom:screenshot` command
+- [ ] Works with `axiom-validate-screenshots` command
 - [ ] Works with `simulator-tester` agent
 
 ---
@@ -496,7 +496,7 @@ Before using debug deep links in automated workflows:
 **After** (with debug deep links):
 1. Build app → 30 seconds
 2. Run: `xcrun simctl openurl booted "debug://recipe-edit?id=42"`
-3. Run: `/axiom:screenshot`
+3. Run: `axiom-validate-screenshots`
 4. Claude analyzes screenshot and confirms layout fix
 5. Make change if needed, rebuild → repeat from step 2
 **Total**: 45 seconds per iteration

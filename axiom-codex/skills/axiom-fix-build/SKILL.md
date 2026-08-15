@@ -2,7 +2,6 @@
 name: axiom-fix-build
 description: Use when the user mentions Xcode build failures, build errors, or environment issues.
 license: MIT
-disable-model-invocation: true
 ---
 
 
@@ -221,8 +220,11 @@ killall -9 xcodebuild
 # Verify they're gone (with elapsed time). -w xcodebuild ignores `xcodebuildmcp`.
 ps -eo pid,etime,command | grep -w xcodebuild | grep -v grep
 
-# Also kill stuck Simulator processes if needed
-killall -9 Simulator
+# Also kill the stuck simulator GUI if needed.
+# Xcode 27 replaced Simulator.app with DeviceHub.app — name both, or this is a
+# silent no-op on a 27-only Mac.
+killall -9 Simulator DeviceHub
+pgrep -l Simulator DeviceHub   # must print nothing — killall exits 0 if EITHER matched
 ```
 
 ### 2. For Stale Derived Data / "No such module" Errors
@@ -314,8 +316,8 @@ xcrun simctl list devices -j | jq -r '.devices | to_entries[] | .value[] | selec
   xcrun simctl erase "$UDID"
 done
 
-# Nuclear option if nothing works
-killall -9 Simulator
+# Nuclear option if nothing works (Xcode 26 = Simulator, Xcode 27 = DeviceHub)
+killall -9 Simulator DeviceHub
 ```
 
 ### 5. For Test Failures (No Code Changes)

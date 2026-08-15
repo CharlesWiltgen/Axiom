@@ -2,7 +2,6 @@
 name: axiom-modernize
 description: Use when the user wants to modernize iOS code to iOS 17/18 patterns, migrate from ObservableObject to @Observable, update @StateObject to @State, or adopt modern SwiftUI APIs.
 license: MIT
-disable-model-invocation: true
 ---
 # Modernization Helper Agent
 
