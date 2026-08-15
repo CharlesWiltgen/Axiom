@@ -11,7 +11,7 @@ Scans your app for resize readiness under the iOS 27 windowing model — where e
 - Checks iPhone Mirroring input compatibility (scroll-type masks, touch-type assumptions in custom gestures)
 - Reasons about completeness: minimum window size, resize throttling, per-scene state restoration, multi-window opt-in
 - Produces a Resize Readiness Score (RESIZE-READY / PARTIAL / FIXED-CANVAS)
-- Ends with a scriptable validation step – `devicectl device appResize` sweeps the breakpoints and `xcui` asserts each one, so the final check runs without a human dragging a window
+- Ends with a scriptable validation step – one `xcui resize sweep --sizes … --screenshot-dir … --assert-id …` drives every breakpoint, captures a PNG at each, and asserts, so the final check runs without a human dragging a window
 
 ## How to Use
 
