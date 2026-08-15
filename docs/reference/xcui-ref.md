@@ -5,9 +5,9 @@ description: Complete reference for the `xcui` CLI that ships with Axiom — doc
 
 # xcui Reference (Scriptable Simulator UI & Accessibility Testing)
 
-Complete reference for `xcui`, the Axiom-bundled CLI that makes iOS-simulator UI and accessibility testing scriptable for coding harnesses. It owns the test-harness semantics AXe and `simctl` lack — waiting on conditions, asserting on the accessibility tree, toggling accessibility settings, handling system permission dialogs, and computing VoiceOver announcements — and delegates input (`tap`/`type`/`swipe`) to AXe, which injects real HID touch. Every subcommand emits a single compact JSON object with a `tool`/`version` envelope (token-lean for LLM consumers); every subcommand also accepts `--human` for a prose rendering, and exit codes drive pass/fail in scripts.
+Complete reference for `xcui`, the Axiom-bundled CLI that makes iOS-simulator UI and accessibility testing scriptable for coding harnesses. It owns the test-harness semantics AXe and `simctl` lack — waiting on conditions, asserting on the accessibility tree, toggling accessibility settings, handling system permission dialogs, and computing VoiceOver announcements — and is also the front door for input: `xcui tap`/`type`/`swipe` forward to AXe verbatim, so you get its real HID touch without managing AXe's environment yourself. Every subcommand emits a single compact JSON object with a `tool`/`version` envelope (token-lean for LLM consumers); every subcommand also accepts `--human` for a prose rendering, and exit codes drive pass/fail in scripts.
 
-> **Xcode 27 beta** – `xcui`'s own subcommands auto-handle it, but bare `axe` (for direct `tap`/`type`/`swipe`) fails when the selected Xcode relocated `SimulatorKit.framework`. If `xcui doctor` reports an `axe_developer_dir`, prefix direct `axe` calls with `DEVELOPER_DIR=<that value>`.
+> **SimulatorKit** – prefer `xcui tap` over `axe tap`: the forwarded verbs carry xcui's `DEVELOPER_DIR` handling, so they keep working under an Xcode that AXe cannot load on its own. The only calls left bare are `axe describe-ui` and the streaming verbs; prefix those with `DEVELOPER_DIR=<value>` if `xcui doctor` reports an `axe_developer_dir` — rare, since AXe 1.8.0 finds the framework at its Xcode 27 home unaided.
 
 ## When to Use This Reference
 
@@ -42,7 +42,8 @@ Use this reference when:
 - **`a11y set` / `a11y reset`** – the four verified toggles and how each is applied (see table below); `--app <bundle-id>` triggers an app relaunch for the toggles that need it
 - **`dialog` subcommand** – `accept` / `dismiss` find the frontmost system alert and tap the correct standard button (permission grants, `OK`, `Cancel`); a one-button alert is tapped for either intent; matching is case- and apostrophe-insensitive. `pregrant <bundle-id> <service>…` grants permissions via `simctl privacy` so the dialog never appears. Exit `0` handled, `1` no actionable alert
 - **`voiceover` subcommand** – `traverse` walks the tree in focus order and emits the **computed** announcement sequence (`label, value, trait`, plus `dimmed` when disabled); `assert --sequence <file>` compares the live sequence to an expected one and reports every differing index (plus a length-mismatch note when counts differ). This is computed from the accessibility tree, **not** captured TTS audio (which the simulator does not expose) — use it to catch missing labels, wrong traits, and bad focus order
-- **Input via AXe** – `xcui` does not re-wrap `tap`/`type`/`swipe`/`touch`; call `axe` directly for real HID input, and `axe describe-ui` for the raw tree `xcui` parses
+- **Input verbs** – `tap`, `slider`, `type`, `swipe`, `drag`, `touch`, `gesture`, `button`, `key`, `key-sequence`, `key-combo`, `screenshot` forward to AXe verbatim (same flags, same output, same exit code), with `--udid` injected when omitted; `axe describe-ui` stays bare as the raw tree `xcui` parses
+- **`resize sweep` subcommand** (OS 27) – drive a resizable-app session across breakpoints and check each, in one JSON envelope: session lifecycle held and torn down (including on SIGINT/SIGTERM), `--screenshot-dir` for a PNG per breakpoint, `--assert-id` for an accessibility check, `--strict` to fail on a clamped size, actual-vs-requested reported with an `honored` flag, per-assertion retry for post-resize flakiness, and the three `appResize` CoreDeviceErrors (1001 / 24001 / 24004) separated into distinct fixes
 - **Output envelope & exit codes** – single compact JSON object with `tool`/`version` first; every subcommand accepts `--human` for prose; exit `0` pass · `1` assertion-fail/wait-timeout · `2` environment error · `8` output-write error
 - **CLI grammar gotcha** – Go's flag parser stops at the first positional, so always use the all-flag forms (`assert --id …`, not `assert <id> …`)
 
@@ -56,8 +57,13 @@ Use this reference when:
 | `increase-contrast` | native `simctl ui increase_contrast` | `on` / `off` | no |
 | `reduce-motion` | `defaults write com.apple.Accessibility ReduceMotionEnabled` | `on` / `off` | yes (pass `--app`) |
 | `reduce-transparency` | `defaults write com.apple.Accessibility ReduceTransparencyEnabled` | `on` / `off` | yes (pass `--app`) |
+| `voiceover` | `devicectl device settings voiceover` | `on` / `off` | no |
 
-`voiceover`, `differentiate-without-color`, and `bold-text` are **not supported in v1** — they had no confirmable simulator mechanism (no native `simctl ui` setter, and their candidate `defaults` keys are not honored on the sim), so they were omitted rather than shipped unverified.
+`differentiate-without-color` and `bold-text` are still **not supported** — no native `simctl ui` setter, candidate `defaults` keys not honored on the sim, and `devicectl device settings` covers only appearance, audio, biometrics, reset, and voiceover. They are omitted rather than shipped unverified.
+
+::: tip Turning VoiceOver on is not the same as `xcui voiceover`
+`a11y set --toggle voiceover` starts the real screen reader. `xcui voiceover traverse` **computes** the announcement sequence from the accessibility tree with VoiceOver off — deterministic, no speech, no focus stealing, and the one you want in CI. Use the toggle only when you need the device in a genuine VoiceOver state.
+:::
 
 ## Documentation Scope
 
