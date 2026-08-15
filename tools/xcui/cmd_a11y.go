@@ -16,6 +16,7 @@ const (
 	methodDefaults         toggleMethod = iota
 	methodContentSize                   // simctl ui <udid> content_size <value-as-is>
 	methodIncreaseContrast              // simctl ui <udid> increase_contrast <enabled|disabled>
+	methodVoiceOver                     // devicectl device settings voiceover -d <udid> --enable|--disable
 )
 
 type toggleSpec struct {
@@ -32,14 +33,28 @@ type toggleSpec struct {
 //     (supersedes the defaults `DarkenSystemColors` candidate); applies live.
 //   - dynamic-type: native `simctl ui content_size <size>`; applies live.
 //
-// The voiceover / differentiate-without-color / bold-text candidates were NOT
-// confirmable (absent from the domain, no native simctl ui setter) and are
-// intentionally omitted from v1 — see xcui-ref.md.
+// voiceover was omitted from v1 for the same reason as the two below — no
+// confirmable simulator mechanism at the time. `devicectl device settings
+// voiceover` supplied one, so it is now wired up; simctl still has no equivalent,
+// which is why this is the only toggle that leaves the simctl/defaults world.
+//
+// differentiate-without-color and bold-text remain unsupported: `devicectl device
+// settings` offers only appearance, audio, biometrics, reset, and voiceover, and
+// neither has a native simctl setter or a defaults key iOS honors on the sim.
 var toggleTable = map[string]toggleSpec{
 	"reduce-motion":       {method: methodDefaults, key: "ReduceMotionEnabled", relaunch: true},
 	"reduce-transparency": {method: methodDefaults, key: "ReduceTransparencyEnabled", relaunch: true},
 	"increase-contrast":   {method: methodIncreaseContrast, relaunch: false},
 	"dynamic-type":        {method: methodContentSize, relaunch: false},
+	"voiceover":           {method: methodVoiceOver, relaunch: false},
+}
+
+// voiceOverArg maps an on/off bool to the devicectl settings voiceover flag.
+func voiceOverArg(on bool) string {
+	if on {
+		return "--enable"
+	}
+	return "--disable"
 }
 
 func lookupToggle(name string) (toggleSpec, bool) {
@@ -127,6 +142,16 @@ func runA11ySet(out io.Writer, args []string) int {
 			fmt.Fprintln(os.Stderr, "a11y set:", err)
 			return 2
 		}
+	case methodVoiceOver:
+		b, perr := parseOnOff(*value)
+		if perr != nil {
+			fmt.Fprintln(os.Stderr, "a11y set:", perr)
+			return 2
+		}
+		if _, err := ExecRun(ctx, 0, "xcrun", "devicectl", "device", "settings", "voiceover", "-d", udid, voiceOverArg(b)); err != nil {
+			fmt.Fprintln(os.Stderr, "a11y set:", err)
+			return 2
+		}
 	case methodDefaults:
 		b, perr := parseOnOff(*value)
 		if perr != nil {
@@ -186,6 +211,10 @@ func runA11yReset(out io.Writer, args []string) int {
 	}
 	_, _ = ExecRun(ctx, 0, "xcrun", "simctl", "ui", udid, "content_size", "large")
 	_, _ = ExecRun(ctx, 0, "xcrun", "simctl", "ui", udid, "increase_contrast", "disabled")
+	// VoiceOver is the one toggle that lives outside simctl, so it needs its own
+	// teardown. Leaving it on is the worst leak of the set: a screen reader that
+	// survives the test run changes what every later run sees.
+	_, _ = ExecRun(ctx, 0, "xcrun", "devicectl", "device", "settings", "voiceover", "-d", udid, "--disable")
 	rep := A11yReport{Tool: "xcui", Version: version, Applied: true, Note: "accessibility overrides cleared"}
 	if *human {
 		renderA11yHuman(out, rep)

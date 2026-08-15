@@ -124,3 +124,36 @@ func TestCompareSequenceLengthMismatch(t *testing.T) {
 		t.Error("expected a length-mismatch failure")
 	}
 }
+
+func TestVoiceOverToggleIsWiredAndDistinctFromTraverse(t *testing.T) {
+	// The v1 gap this closes: voiceover was documented as having "no confirmable
+	// simulator mechanism". devicectl device settings voiceover supplied one.
+	spec, ok := lookupToggle("voiceover")
+	if !ok {
+		t.Fatal("voiceover must be a supported a11y toggle")
+	}
+	if spec.method != methodVoiceOver {
+		t.Errorf("voiceover must route to devicectl, not simctl/defaults (got method %d)", spec.method)
+	}
+	if spec.relaunch {
+		t.Error("voiceover applies live; requiring --app relaunch would be wrong")
+	}
+
+	// The two that genuinely still have no mechanism must NOT have been swept in
+	// alongside it: devicectl device settings offers only appearance, audio,
+	// biometrics, reset, voiceover.
+	for _, unsupported := range []string{"differentiate-without-color", "bold-text"} {
+		if _, present := lookupToggle(unsupported); present {
+			t.Errorf("%q has no verified simulator mechanism and must stay unsupported", unsupported)
+		}
+	}
+}
+
+func TestVoiceOverArgMapsToDevicectlFlags(t *testing.T) {
+	if got := voiceOverArg(true); got != "--enable" {
+		t.Errorf("voiceOverArg(true) = %q, want --enable", got)
+	}
+	if got := voiceOverArg(false); got != "--disable" {
+		t.Errorf("voiceOverArg(false) = %q, want --disable", got)
+	}
+}
