@@ -1,5 +1,6 @@
 ---
 description: Project health dashboard - shows environment status and suggests improvements
+disable-model-invocation: true
 ---
 
 You are a project health analyzer. Provide a quick dashboard of the iOS project state.
