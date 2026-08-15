@@ -17,6 +17,7 @@ import { VERSION_CORE } from "./version-regex.js";
 import {
   shippedRouterCount,
   expectedCodexSkillCount,
+  agentToSkillName,
   isEmittableAgent,
 } from "./codex-exclude.js";
 import {
@@ -1985,9 +1986,14 @@ heading("12m. Codex Marketplace Manifest");
 //
 // Second half: the three standing notes carry the do-not-close-on-shape
 // warnings. triage-analyzer.md inlines them because axiom-shipping (which owns
-// production-triage.md) is excluded from the Codex build, so a cross-reference
-// there dangles and drops exactly the safety text (Axiom-dtq). Inlining trades a
+// production-triage.md) was excluded from the Codex build, so a cross-reference
+// there dangled and dropped exactly the safety text (Axiom-dtq). Inlining trades a
 // dangling pointer for a drift risk; this check pays that off.
+//
+// axiom-shipping SHIPS to Codex as of Axiom-ky1, so the dangling-pointer half of
+// that rationale is gone — Axiom-dtq treated the symptom, and the root cause was an
+// inherited suite exclusion nobody re-examined. Keep the inlining anyway: safety
+// text is worth carrying at the point of use, and this gate keeps the copies honest.
 heading("12n. xcsym Noise-Rule Contract Parity");
 {
   const noiseGoPath = path.join(root, "tools/xcsym/triage_noise.go");
@@ -2080,6 +2086,245 @@ heading("12n. xcsym Noise-Rule Contract Parity");
   }
 }
 
+// ── 12o. Codex Pointer Resolution ──
+
+// Every "see `axiom-suite (skills/file.md)`" pointer inside the EMITTED Codex tree
+// must resolve to a file the build actually wrote, and every `axiom-verb-*` skill
+// name it cites must be a directory that exists.
+//
+// This is the gate for Axiom-ky1. Suite-level exclusion had been aiming 41 pointers
+// at files the build never wrote — axiom-tools' entry was inherited from a suite
+// that held only discipline text and never re-examined after five tool references
+// landed in it. Nothing detected that, because both halves looked locally correct:
+// the source cross-reference is valid, and the exclusion list is valid; only the
+// emitted tree shows the break. Check the artifact, not the inputs.
+heading("12o. Codex Pointer Resolution");
+{
+  const codexSkills = path.join(root, "axiom-codex/skills");
+  if (!fs.existsSync(codexSkills)) {
+    console.log("  ⊘ axiom-codex not built — skipped");
+  } else {
+    const suiteDirs = new Set(fs.readdirSync(codexSkills));
+    const mdFiles: string[] = [];
+    (function walk(dir: string): void {
+      for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+        const p = path.join(dir, e.name);
+        if (e.isDirectory()) walk(p);
+        else if (e.name.endsWith(".md")) mdFiles.push(p);
+      }
+    })(codexSkills);
+
+    let subPointers = 0;
+    let namePointers = 0;
+    const unresolved = new Map<string, number>();
+    const bump = (k: string) => unresolved.set(k, (unresolved.get(k) ?? 0) + 1);
+
+    for (const f of mdFiles) {
+      const text = fs.readFileSync(f, "utf8");
+      for (const m of text.matchAll(/(axiom-[a-z0-9-]+)\s*[(/]\s*skills\/([a-z0-9._-]+\.md)/gi)) {
+        subPointers++;
+        if (!fs.existsSync(path.join(codexSkills, m[1], "skills", m[2]))) {
+          bump(`${m[1]}/skills/${m[2]}`);
+        }
+      }
+      for (const m of text.matchAll(
+        /`(axiom-(?:audit|analyze|scan|fix|test|run|debug|profile|validate|resolve|implement|optimize|modernize|health)[a-z0-9-]*)`/g,
+      )) {
+        namePointers++;
+        if (!suiteDirs.has(m[1])) bump(m[1]);
+      }
+    }
+
+    // Bare agent names and /axiom: commands. Neither exists on Codex, and neither
+    // carries the `axiom-` prefix the pointer regexes above key on — so the original
+    // 12o passed a tree whose PRIMARY invoke instructions ("Launch `build-fixer`
+    // agent or `/axiom:fix-build`") all dangled, while every cross-reference
+    // resolved. Check the instruction, not just the citation.
+    const sourceAgents = new Set(
+      fs.existsSync(path.join(root, ".claude-plugin/plugins/axiom/agents"))
+        ? fs
+            .readdirSync(path.join(root, ".claude-plugin/plugins/axiom/agents"))
+            .filter((f) => f.endsWith(".md"))
+            .map((f) => path.basename(f, ".md"))
+        : [],
+    );
+    for (const f of mdFiles) {
+      const text = fs.readFileSync(f, "utf8");
+      for (const m of text.matchAll(/Launch `([a-z0-9-]+)` agent/g)) {
+        if (sourceAgents.has(m[1])) {
+          bump(`Launch \`${m[1]}\` agent (no agents on Codex; use ${agentToSkillName(m[1])})`);
+        }
+      }
+      for (const m of text.matchAll(/`\/axiom:[a-z0-9 -]+`(?! \(Claude Code only\))/g)) {
+        bump(`${m[0]} (Codex ships no /axiom: commands)`);
+      }
+    }
+
+    if (unresolved.size > 0) {
+      for (const [target, count] of [...unresolved].sort((a, b) => b[1] - a[1])) {
+        error(
+          "codex-pointers",
+          `${count} Codex pointer(s) target "${target}", which the build never emitted — withhold the pointer or ship the target`,
+        );
+      }
+    } else {
+      console.log(
+        `  ✓ ${subPointers} sub-skill pointers + ${namePointers} skill-name references resolve across ${mdFiles.length} emitted Codex files`,
+      );
+    }
+  }
+}
+
+// ── 12q. Command Invocation Policy (Claude Code) ──
+
+// Every /axiom:* command must be user-invoked only. They are escape hatches and
+// actions, not routing surfaces — the 27 routers do the routing.
+//
+// ask.md and status.md were missing the key (found 2026-08-15). /axiom:ask is the
+// worst case: 7.5 KB listing all 26 routers, so a model invocation loads the whole
+// routing table to redo routing the routers already did, and competes with the very
+// routers it exists to backstop. ask.md is GENERATED from
+// scripts/templates/ask.md.template, so the template is checked too — fixing only
+// the output would regress on the next version bump.
+heading("12q. Command Invocation Policy");
+{
+  const cmdDir = path.join(root, ".claude-plugin/plugins/axiom/commands");
+  const template = path.join(root, "scripts/templates/ask.md.template");
+  let checked = 0;
+  let missing = 0;
+
+  const hasKey = (p: string): boolean => {
+    const fm = fs.readFileSync(p, "utf8").split("---")[1] ?? "";
+    return /^\s*disable-model-invocation:\s*true\s*$/m.test(fm);
+  };
+
+  if (!fs.existsSync(cmdDir)) {
+    console.log("  ⊘ commands/ not found — skipped");
+  } else {
+    for (const f of fs.readdirSync(cmdDir).filter((f) => f.endsWith(".md")).sort()) {
+      if (hasKey(path.join(cmdDir, f))) {
+        checked++;
+      } else {
+        error("command-policy", `commands/${f} lacks disable-model-invocation: true — Claude could invoke it unprompted`);
+        missing++;
+      }
+    }
+    if (fs.existsSync(template) && !hasKey(template)) {
+      error("command-policy", "scripts/templates/ask.md.template lacks disable-model-invocation: true — the next version bump would regenerate ask.md without it");
+      missing++;
+    }
+    if (missing === 0) {
+      console.log(`  ✓ all ${checked} commands are user-invoked only (template included)`);
+    }
+  }
+}
+
+// ── 12p. Codex Invocation Policy ──
+
+// Codex decides implicit invocation from `policy.allow_implicit_invocation` in the
+// agents/openai.yaml sidecar, defaulting to TRUE when absent
+// (codex-rs/skills/src/model.rs — allows_implicit_invocation().unwrap_or(true)).
+// The `disable-model-invocation: true` frontmatter key Axiom also emits is NOT read
+// by Codex: its frontmatter struct takes name/description/metadata and carries no
+// deny_unknown_fields, so serde drops it silently. For a year that left every
+// auditor implicitly invocable — the routing regression the design meant to prevent
+// — failing quietly in both directions (Axiom-izi). Assert the emitted artifact.
+//
+// Routers are deliberately the other way: they are the discovery surface, so they
+// must NOT carry the policy block. A gate that only checked "auditors are false"
+// would pass a build that silenced the routers too.
+heading("12p. Codex Invocation Policy");
+{
+  const codexSkills = path.join(root, "axiom-codex/skills");
+  const agentsSrc = path.join(root, ".claude-plugin/plugins/axiom/agents");
+
+  // Derive the agent-skill set from the source agents through the SAME naming
+  // function the builder uses. A name-shaped guess misclassifies both ways:
+  // axiom-health and axiom-testing are routers that read verb-first, and
+  // axiom-swift-simplifier is an agent-skill that does not.
+  const agentSkillNames = new Set(
+    fs.existsSync(agentsSrc)
+      ? fs
+          .readdirSync(agentsSrc)
+          .filter((f) => f.endsWith(".md"))
+          .map((f) => agentToSkillName(path.basename(f, ".md")))
+      : [],
+  );
+
+  if (!fs.existsSync(codexSkills) || agentSkillNames.size === 0) {
+    console.log("  ⊘ axiom-codex not built — skipped");
+  } else {
+    let explicitOnly = 0;
+    let discoverable = 0;
+    let violations = 0;
+
+    for (const dir of fs.readdirSync(codexSkills)) {
+      const yamlPath = path.join(codexSkills, dir, "agents/openai.yaml");
+      if (!fs.existsSync(yamlPath)) continue;
+      const yaml = fs.readFileSync(yamlPath, "utf8");
+      const isAgentSkill = agentSkillNames.has(dir);
+      const isExplicit = /allow_implicit_invocation:\s*false/.test(yaml);
+
+      if (isAgentSkill) {
+        if (!isExplicit) {
+          error("codex-policy", `${dir} lacks policy.allow_implicit_invocation: false — Codex defaults it to implicitly invocable`);
+          violations++;
+        } else if (!yaml.includes(`$${dir}`)) {
+          error("codex-policy", `${dir} is explicit-invoke-only but its default_prompt does not name $${dir}, so nothing tells a user how to reach it`);
+          violations++;
+        } else {
+          explicitOnly++;
+        }
+      } else if (isExplicit) {
+        error("codex-policy", `router ${dir} is marked explicit-invoke-only — routers are the discovery surface and must stay implicitly invocable`);
+        violations++;
+      } else {
+        discoverable++;
+      }
+    }
+
+    // Guards the sentence-splitter: a period inside a file extension (`.ips`) used to
+    // end the sentence, emitting "Use when the user has a crash log (." as the string
+    // Codex routes on. An unbalanced trailing "(" is that bug's fingerprint.
+    let truncated = 0;
+    for (const dir of fs.readdirSync(codexSkills)) {
+      const skillPath = path.join(codexSkills, dir, "SKILL.md");
+      if (!fs.existsSync(skillPath)) continue;
+      const desc = fs.readFileSync(skillPath, "utf8").match(/^description: (.*)$/m)?.[1];
+      if (!desc) continue;
+      const opens = (desc.match(/\(/g) ?? []).length;
+      const closes = (desc.match(/\)/g) ?? []).length;
+      if (opens > closes) {
+        error("codex-policy", `${dir} description ends mid-parenthetical ("${desc.slice(-40)}") — the sentence splitter cut at a file extension`);
+        truncated++;
+      }
+    }
+
+    // Codex's own plugin validator REJECTS this frontmatter key outright:
+    //   if disable_model_invocation not in (None, False): errors.append("must be false")
+    //   — codex-rs/skills/src/assets/samples/plugin-creator/scripts/validate_plugin.py
+    // Emitting it failed validation on all 42 agent-skills against Codex 0.147.0.
+    // The Claude Code plugin still carries it (there it is the supported mechanism);
+    // this check is scoped to the emitted Codex tree only.
+    let rejectedKey = 0;
+    for (const dir of fs.readdirSync(codexSkills)) {
+      const skillPath = path.join(codexSkills, dir, "SKILL.md");
+      if (!fs.existsSync(skillPath)) continue;
+      const fm = fs.readFileSync(skillPath, "utf8").split("---")[1] ?? "";
+      if (/disable-model-invocation/.test(fm)) {
+        error("codex-policy", `${dir} carries disable-model-invocation in frontmatter — Codex's plugin validator rejects it ("must be false"); explicit-invoke-only belongs in openai.yaml's policy block`);
+        rejectedKey++;
+      }
+    }
+
+    if (violations === 0 && truncated === 0 && rejectedKey === 0) {
+      console.log(`  ✓ ${explicitOnly} agent-skills explicit-invoke-only with a $-named default_prompt; ${discoverable} routers left discoverable`);
+      console.log(`  ✓ no emitted description truncated at a file-extension period`);
+      console.log(`  ✓ no emitted skill carries the frontmatter key Codex's validator rejects`);
+    }
+  }
+}
+
 // ── Phase 1 Summary ──
 
 heading("Phase 1 Summary (Static)");
@@ -2115,6 +2360,88 @@ heading("Phase 2: Build Validation");
 if (process.argv.slice(2).includes("--static")) {
   console.log("  ⊘ Skipped (--static flag)");
   process.exit(0);
+}
+
+heading("11z. Codex Plugin Validator (upstream)");
+{
+  // Gate 12p asserts ONE rule that Codex's validator enforces, transcribed by hand
+  // from validate_plugin.py. That catches the rule we already know about; running
+  // the validator itself catches the next one. It is the sample script Codex ships
+  // for plugin authors and is what a submission is checked against — a Codex the
+  // user has installed carries it, so this needs no network.
+  //
+  // Skipped, never failed, when its inputs are absent: python3 + PyYAML + a Codex
+  // install. It is defense in depth, not a hard dependency.
+  const codexDir = path.join(root, "axiom-codex");
+  let validator = "";
+  const home = process.env.HOME ?? "";
+  // Codex extracts its bundled samples here on first run, so this is the reliable
+  // location — the script is otherwise embedded in the native binary as an asset.
+  const extracted = path.join(home, ".codex/skills/.system/plugin-creator/scripts/validate_plugin.py");
+  if (fs.existsSync(extracted)) validator = extracted;
+
+  for (const base of validator
+    ? []
+    : [
+        path.join(home, ".local/share/mise/installs/node"),
+        "/opt/homebrew/lib/node_modules",
+        "/usr/local/lib/node_modules",
+      ]) {
+    if (!fs.existsSync(base)) continue;
+    const found = execSync(
+      `find ${JSON.stringify(base)} -name validate_plugin.py -path '*plugin-creator*' 2>/dev/null | head -1`,
+      { encoding: "utf8", shell: "/bin/bash" },
+    ).trim();
+    if (found) {
+      validator = found;
+      break;
+    }
+  }
+
+  // Prefer a venv the maintainer already created; fall back to system python3.
+  // PEP 668 blocks `pip install` into a Homebrew/mise python, so a venv is the
+  // realistic way to have PyYAML available at all.
+  let py = "python3";
+  const venvPy = path.join(home, ".cache/axiom-validator/bin/python");
+  if (fs.existsSync(venvPy)) py = venvPy;
+
+  let hasYaml = false;
+  try {
+    execSync(`${JSON.stringify(py)} -c 'import yaml'`, { stdio: "pipe" });
+    hasYaml = true;
+  } catch {
+    hasYaml = false;
+  }
+
+  if (!fs.existsSync(codexDir)) {
+    console.log("  ⊘ axiom-codex not built — skipped");
+  } else if (!validator) {
+    console.log("  ⊘ Codex's validate_plugin.py not found locally — skipped (12p still asserts the known rule)");
+  } else if (!hasYaml) {
+    // A plain `pip install` fails under PEP 668 on a Homebrew/mise python, so name
+    // the form that actually works rather than one that errors.
+    console.log(
+      "  ⊘ python3 has no PyYAML — skipped. Enable with:\n" +
+        "      python3 -m venv ~/.cache/axiom-validator && ~/.cache/axiom-validator/bin/pip install pyyaml\n" +
+        "      (then re-run; 12p still asserts the known rule meanwhile)",
+    );
+  } else {
+    try {
+      execSync(`${JSON.stringify(py)} ${JSON.stringify(validator)} ${JSON.stringify(codexDir)}`, {
+        stdio: "pipe",
+        timeout: 60000,
+      });
+      console.log("  ✓ axiom-codex passes Codex's own plugin validator");
+    } catch (e: unknown) {
+      const err = e as { stdout?: Buffer; stderr?: Buffer };
+      const out = (err.stdout?.toString() ?? "") + (err.stderr?.toString() ?? "");
+      const lines = out.split("\n").filter((l) => l.startsWith("- ")).slice(0, 8);
+      error(
+        "codex-validator",
+        `axiom-codex fails Codex's plugin validator:\n    ${lines.join("\n    ") || out.trim().slice(0, 400)}`,
+      );
+    }
+  }
 }
 
 heading("12. MCP Server Tests");
