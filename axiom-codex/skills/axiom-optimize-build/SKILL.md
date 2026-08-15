@@ -2,7 +2,6 @@
 name: axiom-optimize-build
 description: Use when the user mentions slow builds, build performance, or build time optimization.
 license: MIT
-disable-model-invocation: true
 ---
 
 

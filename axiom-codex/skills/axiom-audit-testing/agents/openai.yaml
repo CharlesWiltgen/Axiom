@@ -1,3 +1,6 @@
 interface:
   display_name: "Audit Testing"
   short_description: "The user wants to audit test quality, find flaky test patterns, speed up test execution, or prepare for Swift Testing..."
+  default_prompt: "Use $axiom-audit-testing to audit testing in this project."
+policy:
+  allow_implicit_invocation: false

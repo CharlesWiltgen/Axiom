@@ -2,7 +2,6 @@
 name: axiom-audit-swiftdata
 description: Use when the user mentions SwiftData review, @Model issues, SwiftData migration safety, or SwiftData performance checking.
 license: MIT
-disable-model-invocation: true
 ---
 # SwiftData Auditor Agent
 

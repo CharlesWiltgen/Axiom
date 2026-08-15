@@ -2,7 +2,6 @@
 name: axiom-audit-icloud
 description: Use when the user mentions iCloud sync issues, CloudKit errors, ubiquitous container problems, or asks to audit cloud sync.
 license: MIT
-disable-model-invocation: true
 ---
 # iCloud Auditor Agent
 

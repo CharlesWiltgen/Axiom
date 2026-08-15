@@ -2,7 +2,6 @@
 name: axiom-audit-networking
 description: Use when the user mentions networking review, deprecated APIs, connection issues, or App Store submission prep.
 license: MIT
-disable-model-invocation: true
 ---
 # Networking Auditor Agent
 

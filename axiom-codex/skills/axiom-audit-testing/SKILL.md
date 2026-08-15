@@ -2,7 +2,6 @@
 name: axiom-audit-testing
 description: Use when the user wants to audit test quality, find flaky test patterns, speed up test execution, or prepare for Swift Testing migration.
 license: MIT
-disable-model-invocation: true
 ---
 # Testing Auditor Agent
 

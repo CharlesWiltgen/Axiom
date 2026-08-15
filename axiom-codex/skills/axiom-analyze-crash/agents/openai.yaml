@@ -1,3 +1,6 @@
 interface:
   display_name: "Analyze Crash"
-  short_description: "The user has a crash log (."
+  short_description: "The user has a crash log (.ips, MetricKit JSON, legacy .crash text, .xccrashpoint bundle, or pasted text) that needs ..."
+  default_prompt: "Use $axiom-analyze-crash to analyze crash in this project."
+policy:
+  allow_implicit_invocation: false

@@ -1,3 +1,6 @@
 interface:
   display_name: "Audit SwiftData"
   short_description: "The user mentions SwiftData review, @Model issues, SwiftData migration safety, or SwiftData performance checking."
+  default_prompt: "Use $axiom-audit-swiftdata to audit swiftdata in this project."
+policy:
+  allow_implicit_invocation: false

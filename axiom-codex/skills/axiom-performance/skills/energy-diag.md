@@ -400,7 +400,7 @@ Compare the post-fix payload against the pre-fix baseline — without the baseli
 - Looking for anti-patterns at scale
 - Pre-release energy audit
 
-Run: `/axiom:audit energy`
+Run: `axiom-audit-energy`
 
 ---
 

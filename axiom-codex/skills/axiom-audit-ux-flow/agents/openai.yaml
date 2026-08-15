@@ -1,3 +1,6 @@
 interface:
   display_name: "Audit UX Flow"
   short_description: "The user mentions UX flow issues, dead-end views, dismiss traps, missing empty states, broken user journeys, or wants..."
+  default_prompt: "Use $axiom-audit-ux-flow to audit ux flow in this project."
+policy:
+  allow_implicit_invocation: false

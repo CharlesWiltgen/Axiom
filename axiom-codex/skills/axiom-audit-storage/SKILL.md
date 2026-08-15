@@ -2,7 +2,6 @@
 name: axiom-audit-storage
 description: Use when the user mentions file storage issues, data loss, backup bloat, or asks to audit storage usage.
 license: MIT
-disable-model-invocation: true
 ---
 # Storage Auditor Agent
 

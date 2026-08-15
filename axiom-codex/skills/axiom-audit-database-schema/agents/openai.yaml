@@ -1,3 +1,6 @@
 interface:
   display_name: "Audit Database Schema"
   short_description: "The user mentions database schema review, migration safety, GRDB migration audit, or SQLite schema checking."
+  default_prompt: "Use $axiom-audit-database-schema to audit database schema in this project."
+policy:
+  allow_implicit_invocation: false

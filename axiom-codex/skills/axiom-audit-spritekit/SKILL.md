@@ -2,7 +2,6 @@
 name: axiom-audit-spritekit
 description: Use when the user wants to audit SpriteKit game code for common issues.
 license: MIT
-disable-model-invocation: true
 ---
 # SpriteKit Auditor Agent
 

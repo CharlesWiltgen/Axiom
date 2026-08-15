@@ -2,7 +2,6 @@
 name: axiom-health-check
 description: Use when the user wants a comprehensive project-wide audit, full health check, or scan across all domains.
 license: MIT
-disable-model-invocation: true
 ---
 # Health Check Meta-Audit Agent
 
@@ -14,7 +13,7 @@ Skip: `*Tests.swift`, `*Previews.swift`, `*/Pods/*`, `*/Carthage/*`, `*/.build/*
 
 ## Phase 0: Determine Audit Scope and User Intent
 
-Before anything else, parse the launch prompt for three optional blocks emitted by the `/axiom:health-check` command:
+Before anything else, parse the launch prompt for three optional blocks emitted by the `axiom-health-check` command:
 
 ### `DIFF SCOPE` block
 

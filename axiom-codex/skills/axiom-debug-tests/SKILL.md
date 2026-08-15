@@ -2,7 +2,6 @@
 name: axiom-debug-tests
 description: Use this agent for closed-loop test debugging - automatically analyzes test failures, suggests fixes, and re-runs tests until passing.
 license: MIT
-disable-model-invocation: true
 ---
 
 

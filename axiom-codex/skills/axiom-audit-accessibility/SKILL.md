@@ -2,7 +2,6 @@
 name: axiom-audit-accessibility
 description: Use when the user mentions accessibility checking, App Store submission, code review, or WCAG compliance.
 license: MIT
-disable-model-invocation: true
 ---
 # Accessibility Auditor Agent
 

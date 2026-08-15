@@ -2,7 +2,6 @@
 name: axiom-audit-grdb-performance
 description: Use when the user mentions GRDB performance review, slow GRDB queries, app-group database setup audit, a ValueObservation that stopped updating, or pre-release GRDB scan.
 license: MIT
-disable-model-invocation: true
 ---
 # GRDB Performance Auditor Agent
 

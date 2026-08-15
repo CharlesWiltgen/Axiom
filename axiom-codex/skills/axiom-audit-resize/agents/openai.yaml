@@ -1,3 +1,6 @@
 interface:
   display_name: "Audit Resize"
   short_description: "The user mentions window resizing support, resizable-window readiness, iPhone Mirroring compatibility, scene-lifecycl..."
+  default_prompt: "Use $axiom-audit-resize to audit resize in this project."
+policy:
+  allow_implicit_invocation: false

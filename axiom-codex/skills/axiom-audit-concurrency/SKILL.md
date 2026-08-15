@@ -2,7 +2,6 @@
 name: axiom-audit-concurrency
 description: Use when the user mentions concurrency checking, Swift 6 compliance, data race prevention, or async code review.
 license: MIT
-disable-model-invocation: true
 ---
 # Concurrency Auditor Agent
 

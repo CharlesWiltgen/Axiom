@@ -130,9 +130,11 @@ See `carplay-hig.md` for the full entitlement request flow and what Apple review
 
 ## Testing CarPlay
 
-**Xcode Simulator (Xcode 12+):**
+**Xcode Simulator (Xcode 12–26):**
 
-1. Simulator menu → I/O → External Displays → CarPlay
+1. Simulator menu → I/O → External Displays → CarPlay — Xcode 26 and earlier only.
+   Xcode 27 ships no `Simulator.app`; CarPlay simulation moved into Device Hub as a
+   DeviceKit plugin (`CarPlaySimulator.devicekitplugin`)
 2. Tap CarPlay display
 3. Find your app in the Audio section
 4. Run without debugger attached for reliable testing (debugger interference is the most common cause of "works on device, not simulator")

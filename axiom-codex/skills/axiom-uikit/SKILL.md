@@ -8,12 +8,13 @@ license: MIT
 
 **You MUST use this skill for ANY UIKit bridging, Auto Layout, Combine, TextKit, or UIKit animation work.**
 
-<!-- AXIOM_AUDITOR_INLINE_BEGIN — auto-maintained by scripts/build-inlined-auditors.ts; do not hand-edit -->
-> **Not on Claude Code?** Where this router says "Launch `some-auditor` agent", read that auditor's file in this suite and follow it inline — the same procedure, needing only file search and read.
+<!-- AXIOM_AUDITOR_INLINE_BEGIN — rewritten for Codex by scripts/build-codex.ts; do not hand-edit -->
+> **Auditors are skills here.** Where this router says "Launch `some-auditor` agent", invoke the
+> matching Codex skill instead — same procedure, no Claude Code agent required.
 >
-> Available here: `skills/resize-auditor.md`.
+> Available: `axiom-audit-resize`.
 >
-> Agents that need Bash — builds, tests, simulators, crash symbolication — stay Claude Code-only; there is no inline equivalent for those.
+> The ones that shell out — builds, tests, simulators, crash symbolication — need shell access to run.
 <!-- AXIOM_AUDITOR_INLINE_END -->
 
 ## Quick Reference
@@ -36,7 +37,7 @@ license: MIT
 | UIScene lifecycle required, resizable apps, size classes, tab sidebar `OS27` | See `skills/uikit-modernization.md` |
 | iPhone Mirroring compat: indirect input, companion Face ID, portrait trap | See `skills/uikit-modernization.md` |
 | Scene edges: teardown, activation requests, per-scene restoration, external display, activeAppearance | See `skills/uikit-modernization.md` |
-| Automated resize-readiness scan (scene lifecycle, UIScreen.main, fixed-canvas, Mirroring input) | Launch `resize-auditor` agent or `/axiom:audit resize` |
+| Automated resize-readiness scan (scene lifecycle, UIScreen.main, fixed-canvas, Mirroring input) | `axiom-audit-resize` |
 | TextKit 2 architecture, NSTextLayoutManager | See `skills/textkit-ref.md` |
 | Writing Tools integration (iOS 26) | See `skills/textkit-ref.md` |
 | Viewport rendering surfaces, attachment reuse, collapsible text `OS27` | See `skills/textkit-ref.md` |
@@ -141,7 +142,7 @@ User: "How do I embed SwiftUI in my UIKit app?"
 → Read: `skills/uikit-bridging.md`
 
 User: "Audit my app for screen resizing support"
-→ Launch `resize-auditor` agent (or `/axiom:audit resize`)
+→ `axiom-audit-resize` (or `axiom-audit-resize`)
 
 User: "My custom pinch gesture stops working when the app runs in iPhone Mirroring"
 → Read: `skills/uikit-modernization.md`

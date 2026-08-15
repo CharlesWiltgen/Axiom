@@ -2,7 +2,6 @@
 name: axiom-audit-memory
 description: Use when the user mentions memory leak prevention, code review for memory issues, or proactive leak checking.
 license: MIT
-disable-model-invocation: true
 ---
 # Memory Auditor Agent
 

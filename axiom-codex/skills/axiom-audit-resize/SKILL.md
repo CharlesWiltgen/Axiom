@@ -2,7 +2,6 @@
 name: axiom-audit-resize
 description: Use when the user mentions window resizing support, resizable-window readiness, iPhone Mirroring compatibility, scene-lifecycle migration checking, or preparing an app for the 27-cycle resizing model.
 license: MIT
-disable-model-invocation: true
 ---
 # Resize Readiness Auditor Agent
 
@@ -251,7 +250,7 @@ Scoring:
 1. [Immediate — CRITICAL fixes (scene lifecycle, UIScreen.main, UIRequiresFullScreen)]
 2. [Short-term — HIGH fixes (orientation-derived layout, rendering surfaces)]
 3. [Long-term — completeness items from Phase 3 (restoration, throttling, multi-scene)]
-4. [Validate by script: `devicectl device appResize start/set` across breakpoints, asserting each with `xcui` — then real iPhone Mirroring on macOS 27]
+4. [Validate by script: `xcui resize sweep --sizes <breakpoints> --assert-id <id>` — one command drives every breakpoint, reports actual-vs-requested size, and asserts at each; then confirm in real iPhone Mirroring on macOS 27]
 ```
 
 ## Output Limits

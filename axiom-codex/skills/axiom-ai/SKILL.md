@@ -8,12 +8,13 @@ license: MIT
 
 **You MUST use this skill for ANY Apple Intelligence or Foundation Models work.**
 
-<!-- AXIOM_AUDITOR_INLINE_BEGIN — auto-maintained by scripts/build-inlined-auditors.ts; do not hand-edit -->
-> **Not on Claude Code?** Where this router says "Launch `some-auditor` agent", read that auditor's file in this suite and follow it inline — the same procedure, needing only file search and read.
+<!-- AXIOM_AUDITOR_INLINE_BEGIN — rewritten for Codex by scripts/build-codex.ts; do not hand-edit -->
+> **Auditors are skills here.** Where this router says "Launch `some-auditor` agent", invoke the
+> matching Codex skill instead — same procedure, no Claude Code agent required.
 >
-> Available here: `skills/foundation-models-auditor.md`.
+> Available: `axiom-audit-foundation-models`.
 >
-> Agents that need Bash — builds, tests, simulators, crash symbolication — stay Claude Code-only; there is no inline equivalent for those.
+> The ones that shell out — builds, tests, simulators, crash symbolication — need shell access to run.
 <!-- AXIOM_AUDITOR_INLINE_END -->
 
 ## When to Use
@@ -178,7 +179,7 @@ For the full "which path applies to me?" disambiguation (decision tree, the thre
 - Accuracy drops after OS update (FB18924722)
 - `coremltools.libmilstoragepython` missing on export
 
-**Automated scanning** → Launch `foundation-models-auditor` agent or `/axiom:audit foundation-models`
+**Automated scanning** → `axiom-audit-foundation-models`
 
 Detects anti-patterns AND architectural gaps:
 - Missing availability checks, main-thread `respond()`, manual JSON parsing, missing specific error catches (guardrail / context size), session created per-tap, no streaming for long output, missing `@Guide` constraints, nested non-`@Generable` types, no fallback UI

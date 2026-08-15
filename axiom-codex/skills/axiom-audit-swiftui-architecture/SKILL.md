@@ -2,7 +2,6 @@
 name: axiom-audit-swiftui-architecture
 description: Use when the user mentions SwiftUI architecture review, separation of concerns, testability issues, or "logic in view" problems.
 license: MIT
-disable-model-invocation: true
 ---
 # SwiftUI Architecture Auditor Agent
 
@@ -198,7 +197,7 @@ Scoring:
 1. [Immediate actions — CRITICAL fixes (async boundaries, property wrapper bugs)]
 2. [Short-term — HIGH fixes (extract logic from views, fix testability)]
 3. [Long-term — architectural improvements from Phase 3 findings]
-4. [If performance concerns: run `/axiom:audit swiftui-performance`]
+4. [If performance concerns: run `axiom-analyze-swiftui-performance`]
 ```
 
 ## Output Limits

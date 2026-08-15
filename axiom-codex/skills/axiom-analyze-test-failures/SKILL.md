@@ -2,7 +2,6 @@
 name: axiom-analyze-test-failures
 description: Use when the user mentions flaky tests, tests that pass locally but fail in CI, race conditions in tests, or needs to diagnose WHY a specific test fails.
 license: MIT
-disable-model-invocation: true
 ---
 # Test Failure Analyzer Agent
 

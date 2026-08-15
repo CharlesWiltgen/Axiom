@@ -1,0 +1,331 @@
+
+# xcsym Reference (iOS/macOS Crash Symbolication)
+
+xcsym symbolicates `.ips` (v1/v2), MetricKit (`MXCrashDiagnostic`), Apple's legacy `.crash` text reports, and Xcode Organizer `.xccrashpoint` bundles end-to-end and emits LLM-friendly JSON. It auto-detects format, discovers dSYMs from Archives/DerivedData/downloads, symbolicates frames via `atos`, categorizes the crash into a `pattern_tag`, and reports UUID/arch mismatches per image. Single binary, no dependencies beyond Xcode CLT.
+
+`.crash` text is the format Xcode Organizer exposes when a user chooses "Show in Finder" on a TestFlight crash. `.xccrashpoint` bundles nest `.crash` files under `Filters/Filter_<id>/Logs/` (with optional `LocallySymbolicated/` siblings). Point xcsym at either the bundle path or the inner `.crash` directly — bundle inputs are walked automatically: the Filter dir with the most recent modification time wins, and the raw `.crash` is preferred over `LocallySymbolicated/`.
+
+## Invocation
+
+`xcsym` is on PATH as a bare command (Claude Code 2.1.91+ resolves plugin `bin/` entries automatically). Just run `xcsym <subcommand>` — no prefix, no path lookup.
+
+## When to Use
+
+- **Triaging a new `.ips`** — full pipeline in one call, structured JSON out
+- **TestFlight crashes** — paired with `xcsym verify` to diagnose UUID mismatches
+- **MetricKit crashes** — write `MXCrashDiagnostic.jsonRepresentation()` to disk and run `crash`
+- **Explaining why a crash is unsymbolicated** — `verify` tells you per-image UUID/arch mismatch
+- **Inventorying local dSYMs** — `list-dsyms` enumerates archives + DerivedData
+- **Scrubbing a user's crash for a fixture** — `anonymize` preserves dSYM UUIDs (correlation keys) while scrubbing PII
+
+**Building an in-app crash reporter?** That's the CrashReportExtension framework, not xcsym — see `axiom-performance (skills/metrickit-ref.md Part 10)`.
+
+**Do not use `xcsym crash` for hangs.** `crash` rejects `.ips` files with `bug_type=298` (exit 1, `"error":"hang_report"` on stdout). Use `xcsym triage` with `kind: "hang"` in the NormalizedReport for hang classification, or see `axiom-performance (skills/hang-diagnostics.md)` for single-hang investigation.
+
+## Critical Best Practices
+
+**Start with `crash`.** It runs the full pipeline (parse → discover dSYMs → symbolicate → categorize → emit JSON). Only reach for `resolve`, `find-dsym`, or `verify` when `crash` surfaces a specific problem.
+
+**Read `pattern_tag` first.** It's the most compact signal about what kind of crash you're looking at. Map it to the agent's fix-guidance table before reading frames.
+
+**Trust exit codes.** Non-zero codes say *why* symbolication was incomplete — don't assume a crashed call means the tool failed.
+
+**Anonymize before committing a fixture.** The `anonymize` subcommand is format-aware (handles `.ips` v1/v2, MetricKit, and legacy `.crash` text) and intentionally preserves dSYM UUIDs so anonymized fixtures still symbolicate against your dSYMs.
+
+## Subcommands
+
+### crash — Full Pipeline
+
+```bash
+xcsym crash --format=summary <file>             # small tier (~2KB target, warns past 4KB)
+xcsym crash --format=standard <file>            # default (~12KB target, warns past 50KB)
+xcsym crash --format=full <file>                # all threads (warns past 100KB)
+xcsym crash --from-metrickit <file>             # force MetricKit (skip auto-detect)
+xcsym crash --dsym <path> <file>                # explicit dSYM for the main app
+xcsym crash --dsym-paths <a>:<b> <file>         # extra dSYM search roots
+xcsym crash --no-symbolicate <file>             # skip atos; keep raw frames
+xcsym crash --no-cache <file>                   # bypass UUID cache
+xcsym crash --no-spotlight <file>               # skip mdfind lookups
+xcsym crash --no-defaults <file>                # skip Archives/DerivedData/Downloads/Toolchain/Frameworks(cwd) walks (fast triage)
+xcsym crash --output <path> <file>              # write JSON to a file
+xcsym crash --human <file>                       # terse prose summary instead of JSON (for a person)
+xcsym crash - < crash.ips                       # read from stdin (for pasted content)
+xcsym crash crash.crash                         # legacy Apple text format (Organizer export)
+xcsym crash Foo.xccrashpoint                    # Xcode Organizer bundle (auto-walks to inner .crash)
+xcsym crash --filter 0.8.60-Any Foo.xccrashpoint  # bundle with multiple Filter_* dirs: pick the one whose name contains this substring (use a dash-bounded fragment to avoid matching "1.0" against "11.0.0")
+xcsym crash --prefer-locally-symbolicated Foo.xccrashpoint  # use Logs/LocallySymbolicated/*.crash instead of raw
+```
+
+Accepted inputs: `.ips` (v1 and v2 JSON), MetricKit `MXCrashDiagnostic` JSON, Apple's legacy `.crash` text format, and `.xccrashpoint` directory bundles. The file extension doesn't matter for non-bundle inputs — format is auto-detected from content. The `.xccrashpoint` suffix is matched case-insensitively (APFS/HFS+ are case-insensitive by default). For `.xccrashpoint` bundles, xcsym walks `Filters/Filter_*/Logs/` and picks one `.crash` file: the Filter dir with the most recent modification time (override with `--filter <substring>` — substring, not segment-anchored, so prefer dash-bounded fragments like `0.8.60-Any`), raw copy preferred over `LocallySymbolicated/` (override with `--prefer-locally-symbolicated` to keep Xcode's atos output instead of re-symbolicating). The original bundle path is surfaced in `input.bundle` so consumers can tell where the resolved `.crash` came from.
+
+**Unsupported input returns exit 2** with a structured JSON reject on stdout (`{"error":"unsupported_format", …}`) so agents can route on the error field instead of scraping stderr. See the Exit Codes section below.
+
+**Output is compact JSON by default** (single-line, token-lean for LLM consumers); every report subcommand (`crash`, `resolve`, `find-dsym`, `list-dsyms`, `verify`) takes `--human` for a terse prose rendering, and `… | jq .` gives indented JSON. `anonymize` is the exception — its output is a crash document in the `.ips` wire format (compact header line + pretty payload), not a report, so it has no `--human`.
+
+**Flag placement matters.** Go's `flag` package stops parsing at the first positional, so flags must come before the file path. `xcsym crash <file> --format=summary` fails with a usage error.
+
+### verify — dSYM Match Diagnostics
+
+```bash
+xcsym verify <file>
+xcsym verify <file> --dsym <path>
+xcsym verify <file> --dsym-paths <a>:<b>
+xcsym verify <file> --no-cache
+xcsym verify <file> --no-spotlight
+```
+
+Reports which images are matched, mismatched (UUID or arch), and missing. Use when `crash` exits non-zero to pinpoint *which* dSYM is wrong.
+
+### resolve — Single-Address Resolution
+
+```bash
+xcsym resolve --dsym <path> --load-addr <hex> <addr>...
+xcsym resolve --dsym /bin/ls --load-addr 0x100000000 0x10000aabb 0x10000bbcc
+xcsym resolve --dsym <path> --load-addr <hex> --arch arm64 <addr>...
+```
+
+Hands raw addresses to `atos` against a specific dSYM. Useful for one-off address resolution outside a crash context.
+
+### find-dsym — Locate dSYM by UUID
+
+```bash
+xcsym find-dsym <uuid>
+xcsym find-dsym <uuid> --arch arm64
+xcsym find-dsym <uuid> --dsym-paths <a>:<b>
+xcsym find-dsym <uuid> --no-cache
+xcsym find-dsym <uuid> --no-spotlight
+```
+
+Walks the same discovery chain as `crash` minus the per-UUID explicit map (step 1) — see "dSYM Discovery Order" below for the authoritative order.
+
+### list-dsyms — Inventory
+
+```bash
+xcsym list-dsyms
+xcsym list-dsyms --source=archives      # only Archives
+xcsym list-dsyms --source=deriveddata   # only DerivedData
+xcsym list-dsyms --source=downloads
+xcsym list-dsyms --source=toolchain
+xcsym list-dsyms --source=frameworks
+xcsym list-dsyms --source=env
+xcsym list-dsyms --source=all           # default
+xcsym list-dsyms --dsym-paths <a>:<b>
+```
+
+### triage — Corpus Classification
+
+```bash
+xcsym triage < corpus.jsonl                                    # read NormalizedReport JSONL from stdin
+xcsym triage corpus.jsonl                                      # or from a file
+xcsym triage --latest-version 2.1.1 < corpus.jsonl            # flag issues older than this version
+xcsym triage --os-floor 18.0 < corpus.jsonl                   # flag issues below this OS floor
+xcsym triage --min-users 5 < corpus.jsonl                     # flag issues with fewer affected users
+xcsym triage --latest-version 2.1.1 --os-floor 18.0 --min-users 5 < corpus.jsonl  # all thresholds
+```
+
+Input: one NormalizedReport JSON object per line (JSONL). Each report describes one grouped issue from Sentry or App Store Connect — `provider`, `issue_id`, `kind` (`crash` or `hang`), `impact`, `threads[]` with `frames[]` where each frame carries `in_app`. See `axiom-shipping (skills/production-triage.md)` for the full schema and provider fetch workflow.
+
+Output: a single TriageResult JSON object to stdout with:
+- `summary` — total/crashes/hangs/skipped/clusters/flagged_noise/candidate_families
+- `issues[]` — per-issue `pattern_tag`, `pattern_confidence`, `pattern_rule_id`, `cluster_key`, `cluster_confidence`, `noise_flags[]` (each `{class, rule_id, deprioritize_safety, reason}` — `deprioritize_safety` rates how safe acting on the flag is, NOT match strength), `top_frames`
+- `clusters[]` — mechanical groupings by signature with `cluster_key`, `cluster_confidence`, `dominant_pattern_tag`, `issue_ids[]`, `total_users`, `total_events`
+- `errors[]` — malformed or unclassifiable reports (run still exits 0)
+
+**Network-free.** No symbolication, no dSYM discovery, no `atos`, no environment capture. Provider-symbolicated frames arrive via the NormalizedReport.
+
+**Accepts hangs.** Unlike `xcsym crash`, `triage` accepts `kind: "hang"` and classifies them with `anr_idle_runloop` / `anr_main_thread_block` tags. The `noise.anr_suspension.v1` rule automatically flags idle-runloop hangs as likely background suspension false-positives.
+
+**Exit codes:** 0 = success (including "some reports skipped" — see `errors[]`); 1 = usage error / unreadable stream / invalid flags; 8 = output write error. Never non-zero for "found noise."
+
+### anonymize — Scrub PII for Fixtures
+
+```bash
+xcsym anonymize <file>                   # anonymized content to stdout (.ips, MetricKit, or .crash)
+xcsym anonymize --output <path> <file>   # write to file
+xcsym anonymize - < crash.ips            # read from stdin
+```
+
+**Scrubs:**
+- Bundle IDs across every spelling (`bundle_id`, `bundleID`, `bundleIdentifier`, `CFBundleIdentifier`, `codeSigningID`, `coalitionName`)
+- Process and app names (`procName`, `app_name`)
+- User paths (`/Users/<name>/` → `/Users/REDACTED/`)
+- `.app` names (word-boundary regex, so `com.apple.*` identifiers aren't mangled) and `.framework` names (anchored to end-of-string or `/`, so `com.framework.*` reverse-DNS segments aren't mangled)
+- IPv4 and IPv6 addresses
+- Device names and account IDs (`crashReporterKey`, `sessionID`, `incident_id`, `incident`, `deviceIdentifier`, `deviceUDID`, `userID`)
+- Binary names inside `usedImages[].name` and MetricKit `binaryName`
+- Foreign UUIDs in freeform strings (incident IDs, paths)
+- `.crash` header keys that always carry PII: `Process`, `Identifier`, `Parent Process`, `Coalition`, `Terminating Process`, `Hardware Model`, `AppVariant` — rewritten to deterministic placeholders while preserving column padding so a human can sanity-check the result
+
+**Preserves:**
+- dSYM UUIDs — `slice_uuid`, `usedImages[].uuid`, MetricKit `binaryUUID` — so anonymized output still symbolicates against matching dSYMs
+- Thread names (`threads[].name`, e.g. `com.apple.main-thread`) — Apple infrastructure labels, not PII; keeping them preserves debug context
+- Library identifiers inside nested library structures (same rationale as thread names)
+- Structural fields categorize and symbolicate rules depend on (exception type, codes, subtype, thread state, frame offsets)
+
+## Output Schema
+
+Top-level JSON emitted by `crash`:
+
+```json
+{
+  "tool": "xcsym",
+  "version": "0.1.0-dev",
+  "format": "standard",
+  "environment": {
+    "atos_version": "...",
+    "clt_version": "...",
+    "xcode_path": "/Applications/Xcode.app"
+  },
+  "input": {
+    "path": "testdata/crashes/ips_v2/swift_forced_unwrap.ips",
+    "format": "ips_json_v2",  // one of: ips_json_v1 | ips_json_v2 | metrickit_json | apple_crash_text
+    "bundle": "/path/to/Foo.xccrashpoint"  // omitted unless input was a .xccrashpoint bundle
+  },
+  "crash": {
+    "app": { "name": "...", "version": "...", "bundle_id": "..." },
+    "os": { "platform": "iOS", "version": "17.5", "is_simulator": false },
+    "arch": "arm64",
+    "exception": { "type": "EXC_BREAKPOINT", "codes": "0x1", "subtype": "...", "signal": "SIGTRAP" },
+    "termination": { "namespace": "SIGNAL", "code": "0x5" },
+    "pattern_tag": "swift_forced_unwrap",
+    "pattern_confidence": "high",
+    "pattern_rule_id": "R-swift-unwrap-01",
+    "pattern_reason": "exception.subtype matched '...unexpectedly found nil...'",
+    "crashed_thread": { "index": 0, "triggered": true, "frames": [...] },
+    "other_threads_top_frames": [...],
+    "all_threads": [...]
+  },
+  "images": { "matched": [...], "mismatched": [...], "missing": [...] },
+  "images_summary": { "matched_count": 1, "mismatched_count": 0, "missing_count": 0 },
+  "warnings": [],
+  "size_warning": "report size 54321 bytes exceeds 51200 bytes; consider --format=summary for triage"
+}
+```
+
+### Tiers
+
+| Tier | Design target | Warns past | Contains |
+|---|---|---|---|
+| `summary` | ~2 KB | 4 KB | App, OS, exception, pattern_tag, crashed-thread top 3 frames, `images_summary` |
+| `standard` | ~12 KB | 50 KB | + full crashed thread, other threads' top frames, `images` |
+| `full` | n/a | 100 KB | + `all_threads` (every thread, every frame) |
+
+Design targets are aspirational — small/typical crashes hit them. Real production crashes from framework-heavy apps regularly exceed them without indicating anything pathological (the `images` array dominates standard size: ~150–300 bytes per image × 45–150 images is typical). The warn threshold is what xcsym actually flags via `size_warning` in output.
+
+## Exit Codes
+
+Exit codes are subcommand-specific. Usage errors, tool errors, timeouts, and output errors are shared across all subcommands. Symbolication-specific codes (2/3/4/7) vary in meaning between `crash` and `verify`.
+
+**Shared across all subcommands:**
+
+| Code | Meaning |
+|---|---|
+| 0 | Success |
+| 1 | Usage error (bad flags, missing required args) |
+| 5 | Tool/discovery error (dwarfdump/atos failed, Spotlight failed, etc.) |
+| 6 | Command timeout |
+| 8 | Output write error (e.g., `--output` path unwritable) |
+
+**`crash` — main-image-centric:**
+
+| Code | Meaning | First thing to do |
+|---|---|---|
+| 0 | All images matched | — |
+| 2 | Input not found / unreadable / unsupported format OR main app dSYM missing | Check path exists; otherwise download the dSYM for the main UUID |
+| 3 | Main app UUID mismatch | `xcsym find-dsym <uuid>` against the exact UUID from the crash |
+| 4 | Main app arch mismatch | User is on a different slice (arm64e vs arm64); use `find-dsym --arch` |
+| 7 | Main matched, some other images missing/mismatched | Partial success — frames in the main binary symbolicate, others won't |
+
+**`verify` — per-image-centric (note the 7 vs crash difference):**
+
+| Code | Meaning |
+|---|---|
+| 2 | Input not found / unreadable / unsupported format |
+| 3 | Any image has a UUID mismatch with an explicitly-overridden dSYM |
+| 4 | Any image has an arch-slice mismatch with its dSYM |
+| 7 | Any missing images (with or without matches — NOT "main matched + others missing") |
+
+**`find-dsym` — lookup-centric:**
+
+| Code | Meaning |
+|---|---|
+| 0 | Match — dSYM located |
+| 2 | Miss — nothing found across every discovery source |
+
+**`list-dsyms`, `resolve`, `anonymize`:** success/failure only (0/1/5/6/8); no symbolication-specific codes.
+
+On hang input (`bug_type=298`), `crash` exits 1 after writing a JSON reject to stdout of shape `{"tool":"xcsym","error":"hang_report","message":"...","input":"...","routing":"..."}`. Route the user to hang-diagnostics when you see `"error":"hang_report"`.
+
+On unsupported input (anything that isn't `.ips`, MetricKit, Apple `.crash` text, or a `.xccrashpoint` bundle), `crash` exits 2 after writing `{"tool":"xcsym","error":"unsupported_format","message":"...","input":"...","routing":"..."}` to stdout. The routing field names the accepted formats.
+
+A `.xccrashpoint` directory that exists but doesn't contain `Filters/Filter_*/Logs/*.crash` is a **distinct** error — `crash` exits 2 with `{"error":"empty_bundle","routing":"..."}`. Agents should route the two cases separately: `unsupported_format` means the user gave xcsym the wrong file type; `empty_bundle` means the bundle is right but corrupt or stripped (re-export from Xcode Organizer).
+
+If the resolver hits a real I/O error walking the bundle (permission denied, stale NFS handle, etc.), `crash` exits 5 (tool error) rather than mislabeling the bundle as empty.
+
+## Pattern Tag Catalog
+
+Every `pattern_tag` xcsym can emit, with the rule that fires it:
+
+| pattern_tag | Rule ID | Confidence | Signal |
+|---|---|---|---|
+| `swift_forced_unwrap` | R-swift-unwrap-01 | high | Subtype contains "unexpectedly found nil..." |
+| `swift_concurrency_violation` | R-swift-conc-01 | high | `_swift_task_isCurrentExecutor` in subtype |
+| `swift_fatal_error` | R-swift-fatal-01 | high | Swift runtime failure + `_fatalError` / `_preconditionFailure` / `_assertionFailure` sentinel frame |
+| `zombie_or_heap_corruption` | R-zombie-01 | heuristic | `libgmalloc` / `NSZombie` image in the crashed thread |
+| `stack_overflow` | R-stack-overflow-01 | heuristic | `KERN_PROTECTION_FAILURE` with fault within 1 page of SP |
+| `bad_memory_access` | R-bad-access-01 | high | `EXC_BAD_ACCESS` with `KERN_INVALID_ADDRESS` |
+| `illegal_instruction` | R-illegal-inst-01 | high | `EXC_BAD_INSTRUCTION` |
+| `exc_guard` | R-exc-guard-01 | high | `EXC_GUARD` |
+| `objc_exception` | R-objc-exc-01 | high | `EXC_CRASH`/SIGABRT with `objc_exception_throw` frame |
+| `main_thread_checker_violation` | R-mtc-01 | high | `main_thread_checker.dylib` in crashed frames |
+| `abort` | R-abort-01 | high | SIGABRT with `abort`/`__abort_with_payload` frame |
+| `watchdog_termination` | R-watchdog-01 | high | Termination namespace FRONTBOARD/SPRINGBOARD/ASSERTIOND + code 0x8BADF00D |
+| `user_force_quit` | R-user-quit-01 | high | FRONTBOARD + 0xDEADFA11 |
+| `background_task_expired` | R-bg-expired-01 | high | code 0xBAADCA11 (any namespace) |
+| `data_protection_violation` | R-data-prot-01 | high | code 0xdead10cc (any namespace) |
+| `code_signing_killed` | R-code-sign-01 | high | code matches `0xc51bad0[0-9a-f]` (case-insensitive, any namespace) |
+| `jetsam_oom` | R-jetsam-01 | high | `EXC_RESOURCE` with `MEMORY` subtype OR `termination.reason` contains `per-process-limit` / `vm-pageshortage` |
+| `cpu_resource_fatal` | R-cpu-fatal-01 | high | `EXC_RESOURCE` CPU/WAKEUPS FATAL (excludes NON-FATAL) |
+| `swiftui_update_loop` | R-swiftui-loop-01 | low | ≥100 consecutive `AG::Graph::update_*` frames from the top |
+| `unclassified` | — | low | No rule matched — raw fields are in `pattern_reason` |
+
+## dSYM Discovery Order
+
+Source: `tools/xcsym/dsym.go`. Sources are tried first-hit-wins in this exact order:
+
+1. **ExplicitByUUID** — per-image overrides the `crash` subcommand builds when the header lists a main-image UUID (before any other source, including cache)
+2. **Explicit paths** — `--dsym` direct override and `--dsym-paths` extra roots
+3. **UUID cache** — `~/Library/Caches/xcsym/uuid-index.json` (skip with `--no-cache`)
+4. **Spotlight** — `mdfind kMDItemContentType == com.apple.xcode.dsym` (skip with `--no-spotlight`)
+5. **Archives** — `~/Library/Developer/Xcode/Archives/**` (most recent first)
+6. **DerivedData** — `~/Library/Developer/Xcode/DerivedData/**/Build/Products/**`
+7. **Frameworks (cwd scan)** — walks the current working directory plus caller-supplied roots for `*.xcframework`, `Carthage/Build`, and Pods layouts. Bounded by `XCSYM_FRAMEWORK_SCAN_TIMEOUT` (Go duration or integer seconds; default `500ms`) so an unrelated monorepo checkout can't stall discovery. An exhausted budget is swallowed as "no match" and the chain continues.
+8. **Downloads** — `~/Downloads/**` (for drag-and-dropped `App.dSYM.zip` files)
+9. **Toolchain** — current Xcode toolchain (system Swift dylibs bundled with Xcode.app)
+10. **Env paths** — `XCSYM_DSYM_PATHS` (colon-separated, processed as a last-resort supplement to `--dsym-paths`)
+
+`find-dsym` follows the same chain minus step 1 (no per-UUID explicit map). `list-dsyms --source=<name>` restricts scanning to a single root by name.
+
+## Troubleshooting
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| Exit 2, "main dSYM missing" | No archive for that UUID on this machine | Download the archive from App Store Connect; or set `XCSYM_DSYM_PATHS` to its location |
+| Exit 3, main UUID mismatch | Crash came from a different build than the archive on disk | `xcsym find-dsym <uuid>` against the exact UUID from the crash |
+| Exit 4, main arch mismatch | arm64 vs arm64e slice mismatch | Pass `--arch` to `find-dsym`; verify the archive contains the slice |
+| Exit 7, "main matched, others missing" | Third-party frameworks shipped without dSYMs | Expected for stripped dependencies; main app frames symbolicate |
+| Exit 2 with `empty_bundle` on `.xccrashpoint` | Bundle has no `Filters/Filter_*/Logs/*.crash` (corrupt or stripped) | Pull a fresh export from Xcode Organizer; or point xcsym at a specific `.crash` inside the bundle |
+| Exit 5 on `.xccrashpoint` (tool error) | Permission denied / stale mount walking `Filters/` | Check mount health and `ls -la Foo.xccrashpoint/Filters` |
+| `.xccrashpoint` with multiple builds returns the wrong one | Default picks the Filter dir with the most recent modification time | Use `--filter <substring>` to select a specific build by version/platform — prefer dash-bounded fragments like `0.8.60-Any` |
+| `pattern_tag="unclassified"` | No rule matched | Read `pattern_reason` for inspected fields; file a gap report |
+| `size_warning` in output | Tier exceeded its warn threshold (4 KB summary / 50 KB standard / 100 KB full) | Switch to the next smaller tier — the warning text names it |
+| `{"error":"hang_report"}` on stdout, exit 1 | `.ips` is a hang (`bug_type=298`), not a crash | Use hang-diagnostics skill; `crash` rejects hangs by design |
+| `crash`/`verify` takes minutes on a long-lived dev machine | Per-image walks of a huge `~/Library/Developer/Xcode/DerivedData/**` (the `--no-cache`/`--no-spotlight` flags don't skip these) | Add `--no-defaults` to bypass all default search roots (Archives/DerivedData/Downloads/Toolchain/Frameworks(cwd)) — symbolicates from `--dsym`/`--dsym-paths`/`XCSYM_DSYM_PATHS` only; images without those report Missing |
+
+## Resources
+
+**Skills**: axiom-tools (skills/xclog-ref.md), axiom-build (skills/lldb.md, skills/lldb-ref.md, skills/xcode-debugging.md), axiom-performance (skills/memory-debugging.md, skills/metrickit-ref.md, skills/hang-diagnostics.md), axiom-shipping (skills/testflight-triage.md, skills/production-triage.md, skills/app-store-diag.md, skills/app-store-submission.md)
+
+**Agents**: crash-analyzer (single crash file: xcsym crash + pattern_tag → fix guidance), triage-analyzer (corpus triage: fetch Sentry/ASC → xcsym triage → ranked report), simulator-tester (auto-runs xcsym on crashes during test runs), test-failure-analyzer + test-debugger (symbolicate test-generated `.ips` artifacts), memory-auditor (correlates jetsam/heap-corruption tags with leak patterns), concurrency-auditor (correlates `swift_concurrency_violation` with @MainActor gaps), energy-auditor (correlates CPU/watchdog/background terminations with energy anti-patterns)
+
+**Commands**: `axiom-analyze-crash` (single crash), `axiom-analyze-triage` (corpus triage)

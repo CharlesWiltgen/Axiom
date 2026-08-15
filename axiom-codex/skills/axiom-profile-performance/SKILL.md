@@ -2,7 +2,6 @@
 name: axiom-profile-performance
 description: Use when the user wants automated performance profiling, headless Instruments analysis, or CLI-based trace collection.
 license: MIT
-disable-model-invocation: true
 ---
 
 
@@ -137,7 +136,7 @@ For instruments `analyze` doesn't parse yet (SwiftUI, Swift Tasks/Actors), repor
 
 ## Comparison (before / after)
 
-Use `xcprof compare <baseline> <current> --json` to diff two traces. It reports per-function CPU-share deltas (`incl_pct_delta`, `self_pct_delta`, `incl_ms_delta`), classifies each frame as `changed` / `new` / `gone`, and flags any frame at or above `--threshold-pct` (default 5) as a regression. Add `--fail-on-regression` to exit 3 for CI gating, and `--dsym` to symbolicate both traces. Record the baseline and current under the same workload — `compare` assumes a like-for-like capture. See `/axiom:compare-traces` and `axiom-performance (skills/trace-comparison.md)`.
+Use `xcprof compare <baseline> <current> --json` to diff two traces. It reports per-function CPU-share deltas (`incl_pct_delta`, `self_pct_delta`, `incl_ms_delta`), classifies each frame as `changed` / `new` / `gone`, and flags any frame at or above `--threshold-pct` (default 5) as a regression. Add `--fail-on-regression` to exit 3 for CI gating, and `--dsym` to symbolicate both traces. Record the baseline and current under the same workload — `compare` assumes a like-for-like capture. See `/axiom:compare-traces` (Claude Code only) and `axiom-performance (skills/trace-comparison.md)`.
 
 ## Error handling
 

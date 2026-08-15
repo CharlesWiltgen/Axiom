@@ -8,12 +8,13 @@ license: MIT
 
 **You MUST use this skill for ANY networking work including HTTP requests, WebSockets, TCP connections, or network debugging.**
 
-<!-- AXIOM_AUDITOR_INLINE_BEGIN — auto-maintained by scripts/build-inlined-auditors.ts; do not hand-edit -->
-> **Not on Claude Code?** Where this router says "Launch `some-auditor` agent", read that auditor's file in this suite and follow it inline — the same procedure, needing only file search and read.
+<!-- AXIOM_AUDITOR_INLINE_BEGIN — rewritten for Codex by scripts/build-codex.ts; do not hand-edit -->
+> **Auditors are skills here.** Where this router says "Launch `some-auditor` agent", invoke the
+> matching Codex skill instead — same procedure, no Claude Code agent required.
 >
-> Available here: `skills/networking-auditor.md`.
+> Available: `axiom-audit-networking`.
 >
-> Agents that need Bash — builds, tests, simulators, crash symbolication — stay Claude Code-only; there is no inline equivalent for those.
+> The ones that shell out — builds, tests, simulators, crash symbolication — need shell access to run.
 <!-- AXIOM_AUDITOR_INLINE_END -->
 
 ## Quick Reference
@@ -111,7 +112,7 @@ Do NOT capitulate to sunk cost pressure. The correct approach is:
 
 ## Automated Scanning
 
-**Networking audit** → Launch `networking-auditor` agent or `/axiom:audit networking` (deprecated APIs, anti-patterns, and completeness gaps — transition handling, TLS coverage, connection cleanup, framework selection)
+**Networking audit** → `axiom-audit-networking` (deprecated APIs, anti-patterns, and completeness gaps — transition handling, TLS coverage, connection cleanup, framework selection)
 
 ## Anti-Rationalization
 

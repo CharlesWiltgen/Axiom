@@ -2,7 +2,6 @@
 name: axiom-audit-liquid-glass
 description: Use when the user mentions Liquid Glass review, iOS 26 UI updates, toolbar improvements, or visual effect migration.
 license: MIT
-disable-model-invocation: true
 ---
 # Liquid Glass Auditor Agent
 

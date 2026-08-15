@@ -8,12 +8,13 @@ license: MIT
 
 **You MUST use this skill for ANY keychain, encryption, passkey, app integrity, agentic/AI feature security, file protection, or code signing work.**
 
-<!-- AXIOM_AUDITOR_INLINE_BEGIN — auto-maintained by scripts/build-inlined-auditors.ts; do not hand-edit -->
-> **Not on Claude Code?** Where this router says "Launch `some-auditor` agent", read that auditor's file in this suite and follow it inline — the same procedure, needing only file search and read.
+<!-- AXIOM_AUDITOR_INLINE_BEGIN — rewritten for Codex by scripts/build-codex.ts; do not hand-edit -->
+> **Auditors are skills here.** Where this router says "Launch `some-auditor` agent", invoke the
+> matching Codex skill instead — same procedure, no Claude Code agent required.
 >
-> Available here: `skills/security-privacy-scanner.md`.
+> Available: `axiom-scan-security-privacy`.
 >
-> Agents that need Bash — builds, tests, simulators, crash symbolication — stay Claude Code-only; there is no inline equivalent for those.
+> The ones that shell out — builds, tests, simulators, crash symbolication — need shell access to run.
 <!-- AXIOM_AUDITOR_INLINE_END -->
 
 ## Quick Reference
@@ -190,7 +191,7 @@ digraph security {
 
 ## Automated Scanning
 
-**Security audit** → Launch `security-privacy-scanner` agent (scans for hardcoded credentials, insecure token storage, Privacy Manifest coverage gaps, ATS violations, missing ATT descriptions, missing export compliance, weak Keychain ACLs, and compound rejection risks; scores posture HARDENED/GAPS/VULNERABLE)
+**Security audit** → `axiom-scan-security-privacy` (scans for hardcoded credentials, insecure token storage, Privacy Manifest coverage gaps, ATS violations, missing ATT descriptions, missing export compliance, weak Keychain ACLs, and compound rejection risks; scores posture HARDENED/GAPS/VULNERABLE)
 
 ## Anti-Rationalization
 

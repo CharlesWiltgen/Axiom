@@ -2,7 +2,6 @@
 name: axiom-analyze-swiftui-performance
 description: Use when the user mentions SwiftUI performance, janky scrolling, slow animations, or view update issues.
 license: MIT
-disable-model-invocation: true
 ---
 # SwiftUI Performance Analyzer Agent
 

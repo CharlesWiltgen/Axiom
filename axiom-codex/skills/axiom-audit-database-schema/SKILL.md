@@ -2,7 +2,6 @@
 name: axiom-audit-database-schema
 description: Use when the user mentions database schema review, migration safety, GRDB migration audit, or SQLite schema checking.
 license: MIT
-disable-model-invocation: true
 ---
 # Database Schema Auditor Agent
 

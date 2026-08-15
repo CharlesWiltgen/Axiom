@@ -1,3 +1,6 @@
 interface:
   display_name: "Scan Security Privacy"
   short_description: "The user mentions security review, App Store submission prep, Privacy Manifest requirements, hardcoded credentials, o..."
+  default_prompt: "Use $axiom-scan-security-privacy to scan security privacy in this project."
+policy:
+  allow_implicit_invocation: false

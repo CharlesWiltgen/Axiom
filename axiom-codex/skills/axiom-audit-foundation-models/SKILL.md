@@ -2,7 +2,6 @@
 name: axiom-audit-foundation-models
 description: Use when the user mentions Foundation Models review, on-device AI audit, LanguageModelSession issues, @Generable checking, or Apple Intelligence integration review.
 license: MIT
-disable-model-invocation: true
 ---
 # Foundation Models Auditor Agent
 

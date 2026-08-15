@@ -8,12 +8,13 @@ license: MIT
 
 **You MUST use this skill for ANY performance issue including memory leaks, slow execution, battery drain, or profiling.**
 
-<!-- AXIOM_AUDITOR_INLINE_BEGIN — auto-maintained by scripts/build-inlined-auditors.ts; do not hand-edit -->
-> **Not on Claude Code?** Where this router says "Launch `some-auditor` agent", read that auditor's file in this suite and follow it inline — the same procedure, needing only file search and read.
+<!-- AXIOM_AUDITOR_INLINE_BEGIN — rewritten for Codex by scripts/build-codex.ts; do not hand-edit -->
+> **Auditors are skills here.** Where this router says "Launch `some-auditor` agent", invoke the
+> matching Codex skill instead — same procedure, no Claude Code agent required.
 >
-> Available here: `skills/energy-auditor.md`, `skills/memory-auditor.md`, `skills/swift-performance-analyzer.md`.
+> Available: `axiom-analyze-swift-performance`, `axiom-audit-energy`, `axiom-audit-memory`.
 >
-> Agents that need Bash — builds, tests, simulators, crash symbolication — stay Claude Code-only; there is no inline equivalent for those.
+> The ones that shell out — builds, tests, simulators, crash symbolication — need shell access to run.
 <!-- AXIOM_AUDITOR_INLINE_END -->
 
 ## When to Use
@@ -38,7 +39,7 @@ Use this router when:
 - Instruments workflows
 - deinit not called
 
-**Memory leak scan** → Launch `memory-auditor` agent or `/axiom:audit memory` (5-phase semantic audit: maps resource ownership, detects 6 leak patterns, reasons about missing cleanup, correlates compound risks, scores lifecycle health)
+**Memory leak scan** → `axiom-audit-memory` (5-phase semantic audit: maps resource ownership, detects 6 leak patterns, reasons about missing cleanup, correlates compound risks, scores lifecycle health)
 
 **Memory leaks (Objective-C blocks)** → See skills/objc-block-retain-cycles.md
 - Block retain cycles
@@ -60,12 +61,12 @@ Use this router when:
 - Command-line trace recording
 - Programmatic trace analysis
 
-**Run automated profile** → Use `performance-profiler` agent or `/axiom:profile`
+**Run automated profile** → Use `performance-profiler` agent or `axiom-profile-performance`
 - Records trace via xctrace
 - Exports and analyzes data
 - Reports findings with severity
 
-**Compare two traces / detect regressions** → See skills/trace-comparison.md or `/axiom:compare-traces`
+**Compare two traces / detect regressions** → See skills/trace-comparison.md or `/axiom:compare-traces` (Claude Code only)
 - Did this change slow down a hot path? Function-level CPU-share deltas
 - CI gating with `xcprof compare --fail-on-regression` (non-zero exit)
 - Regressions vs improvements, severity ranking, exit-code semantics
@@ -117,7 +118,7 @@ Use this router when:
 - BGContinuedProcessingTask (iOS 26)
 - MetricKit setup
 
-**Energy scan** → Launch `energy-auditor` agent or `/axiom:audit energy` (8 anti-patterns: timer abuse, polling, continuous location, animation leaks, background mode misuse, network inefficiency, GPU waste, disk I/O)
+**Energy scan** → `axiom-audit-energy` (8 anti-patterns: timer abuse, polling, continuous location, animation leaks, background mode misuse, network inefficiency, GPU waste, disk I/O)
 
 ### Timer Safety
 
@@ -139,7 +140,7 @@ Use this router when:
 - ARC overhead, generic specialization
 - Collection performance
 
-**Swift performance scan** → Launch `swift-performance-analyzer` agent or `/axiom:audit swift-performance` (unnecessary copies, ARC overhead, unspecialized generics, collection inefficiencies, actor isolation costs, memory layout)
+**Swift performance scan** → `axiom-analyze-swift-performance` (unnecessary copies, ARC overhead, unspecialized generics, collection inefficiencies, actor isolation costs, memory layout)
 
 **Modern Swift idioms** → See axiom-swift (skills/swift-modern.md)
 - Outdated API patterns (Date(), CGFloat, DateFormatter)
@@ -158,7 +159,7 @@ Use this router when:
 
 ### Runtime Console Capture
 
-**Capture simulator console output** → `/axiom:console`
+**Capture simulator console output** → `/axiom:console` (Claude Code only)
 - Capture print(), os_log(), Logger output from simulator
 - Structured JSON with level, subsystem, category
 - Bounded collection with `--timeout` and `--max-lines`
@@ -212,8 +213,8 @@ Use this router when:
 23. Need timer API syntax/lifecycle? → timer-patterns-ref
 24. Code review for outdated Swift patterns? → swift-modern
 25. Claude generating legacy APIs (DateFormatter, CGFloat, DispatchQueue)? → swift-modern
-26. Need to see runtime console output before profiling? → axiom-tools (skills/xclog-ref.md) or `/axiom:console`
-27. Have an `.ips`, MetricKit, or legacy `.crash` text file to symbolicate/triage? → axiom-tools (skills/xcsym-ref.md) or `/axiom:analyze-crash`
+26. Need to see runtime console output before profiling? → axiom-tools (skills/xclog-ref.md) or `/axiom:console` (Claude Code only)
+27. Have an `.ips`, MetricKit, or legacy `.crash` text file to symbolicate/triage? → axiom-tools (skills/xcsym-ref.md) or `axiom-analyze-crash`
 
 ## Anti-Rationalization
 
@@ -232,8 +233,8 @@ Use this router when:
 | "Too many frameworks — I'll just statically link everything" | Static copies the library into every binary that links it (app + each extension), duplicates its global state, and breaks on Obj-C categories without `-ObjC`. app-launch has the static/dynamic/mergeable tradeoff and the `DYLD_PRINT_STATISTICS` check that tells you whether pre-main is even your problem. |
 | "UI locks up when network requests finish — that's slow" | Multiple callbacks completing at once = main thread contention = concurrency issue. Cross-route to axiom-concurrency. |
 | "I'll just add print statements to debug this" | Print-debug cycles cost 3-5 min each (build + run + reproduce). An LLDB breakpoint costs 30 seconds. axiom-build (skills/lldb.md) has the commands. |
-| "I can't see what the app is logging" | xclog captures print() + os_log from the simulator with structured JSON. `/axiom:console`. |
-| "I'll hand-parse this .ips JSON to see the top frame" | xcsym parses, discovers dSYMs, symbolicates, and categorizes in one call — structured JSON with pattern_tag. `/axiom:analyze-crash`. |
+| "I can't see what the app is logging" | xclog captures print() + os_log from the simulator with structured JSON. `/axiom:console` (Claude Code only). |
+| "I'll hand-parse this .ips JSON to see the top frame" | xcsym parses, discovers dSYMs, symbolicates, and categorizes in one call — structured JSON with pattern_tag. `axiom-analyze-crash`. |
 | "I'll just use Timer.scheduledTimer, it's simpler" | Timer stops during scrolling (`.default` mode), retains its target (leak). timer-patterns has the decision tree. |
 | "DispatchSourceTimer crashed but it's intermittent, let's ship" | DispatchSourceTimer has 4 crash patterns that are ALL deterministic. timer-patterns diagnoses which one. |
 | "Claude already knows modern Swift" | Claude defaults to pre-5.5 patterns (Date(), CGFloat, filter().count). swift-modern has the correction table. |
@@ -284,7 +285,7 @@ User: "What's the best way to implement location tracking efficiently?"
 → See skills/energy-ref.md
 
 User: "Profile my app's CPU usage"
-→ Use: `performance-profiler` agent (or `/axiom:profile`)
+→ Use: `performance-profiler` agent (or `axiom-profile-performance`)
 
 User: "How do I run xctrace from the command line?"
 → See skills/xctrace-ref.md
@@ -302,7 +303,7 @@ User: "Main thread is blocked, how do I diagnose?"
 → See skills/hang-diagnostics.md
 
 User: "Triage my Sentry hangs" / "Which ANR reports are real blocks?"
-→ See `axiom-shipping (skills/production-triage.md)` + `triage-analyzer` agent (or `/axiom:triage sentry`)
+→ See `axiom-shipping (skills/production-triage.md)` + `triage-analyzer` agent (or `axiom-analyze-triage`)
 
 User: "My app takes 3 seconds to launch"
 → See skills/app-launch.md
@@ -386,7 +387,7 @@ User: "Is there a more modern way to do this?"
 → Invoke: See axiom-swift (skills/swift-modern.md)
 
 User: "What is the app logging? I need to see console output"
-→ Invoke: `/axiom:console`
+→ Invoke: `/axiom:console` (Claude Code only)
 
 User: "Capture the simulator logs while I reproduce this bug"
-→ Invoke: `/axiom:console`
+→ Invoke: `/axiom:console` (Claude Code only)

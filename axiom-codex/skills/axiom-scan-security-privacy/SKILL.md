@@ -2,7 +2,6 @@
 name: axiom-scan-security-privacy
 description: Use when the user mentions security review, App Store submission prep, Privacy Manifest requirements, hardcoded credentials, or sensitive data storage.
 license: MIT
-disable-model-invocation: true
 ---
 # Security & Privacy Scanner Agent
 
@@ -291,4 +290,4 @@ For implementation patterns: `axiom-shipping` skill (privacy manifest creation)
 For Keychain patterns: `axiom-security` skill
 For ATS configuration: `axiom-networking` skill
 For entitlement issues: `axiom-build` skill
-For IAP-adjacent receipt security: Launch `iap-auditor` agent
+For IAP-adjacent receipt security: `axiom-audit-iap`

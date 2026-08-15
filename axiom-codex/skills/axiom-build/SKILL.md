@@ -8,13 +8,13 @@ license: MIT
 
 **You MUST use this skill for ANY build, environment, or Xcode-related issue before debugging application code.**
 
-<!-- AXIOM_AUDITOR_INLINE_BEGIN — auto-maintained by scripts/build-inlined-auditors.ts; do not hand-edit -->
-> **Not on Claude Code?** Where this router says "Launch `some-auditor` agent", read that auditor's file in this suite and follow it inline — the same procedure, needing only file search and read.
+<!-- AXIOM_AUDITOR_INLINE_BEGIN — rewritten for Codex by scripts/build-codex.ts; do not hand-edit -->
+> **Auditors are skills here.** Where this router says "Launch `some-auditor` agent", invoke the
+> matching Codex skill instead — same procedure, no Claude Code agent required.
 >
-> Available here: `skills/modernization-helper.md`.
-> Homed in another suite: `axiom-security/skills/security-privacy-scanner.md`.
+> Available: `axiom-modernize`, `axiom-scan-security-privacy`.
 >
-> Agents that need Bash — builds, tests, simulators, crash symbolication — stay Claude Code-only; there is no inline equivalent for those.
+> The ones that shell out — builds, tests, simulators, crash symbolication — need shell access to run.
 <!-- AXIOM_AUDITOR_INLINE_END -->
 
 ## When to Use
@@ -72,7 +72,7 @@ This router invokes specialized skills based on the specific issue:
 
 **Why spm-conflict-resolver**: Specialized agent that analyzes Package.swift and Package.resolved to diagnose and resolve Swift Package Manager conflicts.
 
-**Invoke**: Launch `spm-conflict-resolver` agent
+**Invoke**: `axiom-resolve-spm`
 
 ---
 
@@ -87,7 +87,7 @@ This router invokes specialized skills based on the specific issue:
 
 **Why security-privacy-scanner**: Specialized agent that scans for security vulnerabilities and privacy compliance issues.
 
-**Invoke**: Launch `security-privacy-scanner` agent or `/axiom:audit security`
+**Invoke**: `axiom-scan-security-privacy`
 
 ---
 
@@ -101,7 +101,7 @@ This router invokes specialized skills based on the specific issue:
 
 **Why modernization-helper**: Specialized agent that scans for legacy patterns and provides migration paths with code examples.
 
-**Invoke**: Launch `modernization-helper` agent or `/axiom:audit modernization`
+**Invoke**: `axiom-modernize`
 
 ---
 
@@ -115,7 +115,7 @@ This router invokes specialized skills based on the specific issue:
 
 **Why build-fixer**: Autonomous agent that checks zombie processes, Derived Data, SPM cache, and simulator state before investigating code. Saves 30+ minutes on environment issues.
 
-**Invoke**: Launch `build-fixer` agent or `/axiom:fix-build`
+**Invoke**: `axiom-fix-build`
 
 ---
 
@@ -129,7 +129,7 @@ This router invokes specialized skills based on the specific issue:
 
 **Why build-optimizer**: Scans Xcode projects for build performance optimizations — slow type checking, expensive scripts, suboptimal settings — to reduce build times by 30-50%.
 
-**Invoke**: Launch `build-optimizer` agent or `/axiom:optimize-build`
+**Invoke**: `axiom-optimize-build`
 
 ---
 
@@ -183,7 +183,7 @@ This router invokes specialized skills based on the specific issue:
 
 **Why crash-analyzer**: Autonomous agent that parses crash reports, identifies patterns (null pointer, Swift runtime, watchdog, jetsam), and generates actionable analysis.
 
-**Invoke**: Launch `crash-analyzer` agent or `/axiom:analyze-crash`
+**Invoke**: `axiom-analyze-crash`
 
 ---
 
@@ -241,7 +241,7 @@ This router invokes specialized skills based on the specific issue:
 
 **Why xclog-ref**: Xcode's debug console isn't accessible externally. xclog combines simctl stdout/stderr with `log stream` JSON to capture everything print(), NSLog(), os_log(), and Logger emit — with structured fields (level, subsystem, category) for automated analysis.
 
-**Invoke**: `/axiom:console`
+**Invoke**: `/axiom:console` (Claude Code only)
 
 ---
 
@@ -279,7 +279,7 @@ This router invokes specialized skills based on the specific issue:
 13. App hang/freeze/watchdog? → hang-diagnostics
 14. Need to reproduce crash interactively / inspect runtime state? → lldb
 15. Code signing error (certificate, profile, entitlement, Keychain)? → code-signing / code-signing-diag
-16. Need to see runtime console output (print/os_log)? → xclog-ref or `/axiom:console`
+16. Need to see runtime console output (print/os_log)? → xclog-ref or `/axiom:console` (Claude Code only)
 
 ## Anti-Rationalization
 
@@ -292,7 +292,7 @@ This router invokes specialized skills based on the specific issue:
 | "I'll skip environment checks, it compiles locally" | Environment-first saves 30+ min. Every time. |
 | "I'll read the crash report more carefully instead of reproducing" | Crash reports show WHAT crashed, not WHY. Reproducing in LLDB with breakpoints reveals the actual state. `skills/lldb.md` has the workflow. |
 | "I know my certificate is fine, let me check the code" | Code signing errors are NEVER code bugs. 100% configuration. code-signing diagnoses with CLI in 5 min. |
-| "I can't see what the app is logging without Xcode" | xclog captures print() + os_log from the simulator. Structured JSON output with level, subsystem, category. `/axiom:console`. |
+| "I can't see what the app is logging without Xcode" | xclog captures print() + os_log from the simulator. Structured JSON output with level, subsystem, category. `/axiom:console` (Claude Code only). |
 
 ## When NOT to Use (Conflict Resolution)
 
@@ -371,13 +371,13 @@ User: "How do I export crash data from App Store Connect?"
 → Invoke: See axiom-shipping (skills/app-store-connect-ref.md)
 
 User: "Analyze this crash log" [pastes .ips content]
-→ Invoke: `crash-analyzer` agent or `/axiom:analyze-crash`
+→ Invoke: `crash-analyzer` agent or `axiom-analyze-crash`
 
 User: "Parse this .ips file: ~/Library/Logs/DiagnosticReports/MyApp.ips"
-→ Invoke: `crash-analyzer` agent or `/axiom:analyze-crash`
+→ Invoke: `crash-analyzer` agent or `axiom-analyze-crash`
 
 User: "Why did my app crash? Here's the report..."
-→ Invoke: `crash-analyzer` agent or `/axiom:analyze-crash`
+→ Invoke: `crash-analyzer` agent or `axiom-analyze-crash`
 
 User: "How do I set up MetricKit to collect crash data?"
 → Invoke: See axiom-performance (`skills/metrickit-ref.md`)
@@ -407,13 +407,13 @@ User: "How do I set breakpoints to catch this crash?"
 → Invoke: `skills/lldb.md`
 
 User: "My build is failing with BUILD FAILED but no error details"
-→ Invoke: `build-fixer` agent or `/axiom:fix-build`
+→ Invoke: `build-fixer` agent or `axiom-fix-build`
 
 User: "Build sometimes succeeds, sometimes fails"
-→ Invoke: `build-fixer` agent or `/axiom:fix-build`
+→ Invoke: `build-fixer` agent or `axiom-fix-build`
 
 User: "How can I speed up my Xcode build times?"
-→ Invoke: `build-optimizer` agent or `/axiom:optimize-build`
+→ Invoke: `build-optimizer` agent or `axiom-optimize-build`
 
 User: "No signing certificate found when I try to build"
 → Invoke: See axiom-security (skills/code-signing-diag.md)
@@ -425,10 +425,10 @@ User: "How do I set up code signing for GitHub Actions?"
 → Invoke: See axiom-security (skills/code-signing.md)
 
 User: "What is my app printing to the console?"
-→ Invoke: `/axiom:console`
+→ Invoke: `/axiom:console` (Claude Code only)
 
 User: "I need to see the simulator console output"
-→ Invoke: `/axiom:console`
+→ Invoke: `/axiom:console` (Claude Code only)
 
 User: "The app fails silently, no error in the UI"
-→ Invoke: `/axiom:console`
+→ Invoke: `/axiom:console` (Claude Code only)

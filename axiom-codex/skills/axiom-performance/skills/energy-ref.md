@@ -15,8 +15,10 @@ Complete API reference for iOS energy optimization, with code examples from WWDC
 
 ```
 1. Connect iPhone wirelessly to Xcode
-   - Xcode → Window → Devices and Simulators
-   - Enable "Connect via network" for your device
+   - Xcode 27: pair the device in Device Hub — a paired device is reachable over
+     the local network (devicectl reports transportType localNetwork)
+   - Xcode 26 and earlier: Xcode → Window → Devices and Simulators, then
+     enable "Connect via network" for your device
 
 2. Profile your app
    - Xcode → Product → Profile (Cmd+I)
