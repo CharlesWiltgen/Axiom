@@ -7,7 +7,7 @@ description: AXe CLI reference for accessibility-based iOS Simulator UI automati
 
 Reference for AXe, a CLI tool for automating iOS Simulator interactions using Apple's Accessibility APIs. Enables tapping by accessibility identifier, gestures, text input, screenshots, video recording, and UI tree inspection -- all without a daemon.
 
-> **Xcode 27 beta** – bare `axe` fails to load its frameworks when the selected Xcode relocated `SimulatorKit.framework` (Xcode 27 moved it to `Contents/SharedFrameworks/`). Run `xcui doctor`; if it reports an `axe_developer_dir`, prefix every `axe` command below with `DEVELOPER_DIR=<that value>` (e.g. `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer axe tap …`). AXe 1.7.1 has no fix yet.
+> **SimulatorKit** – AXe needs `SimulatorKit.framework`, which Xcode 27 moved to `Contents/SharedFrameworks/`. AXe 1.8.0 finds it there on its own, so no prefix is needed; older AXe fails to load it. Rather than guessing from your Xcode version, run `xcui doctor` — it decides by actually running AXe. Only if it reports an `axe_developer_dir` do you prefix `axe` commands below with `DEVELOPER_DIR=<that value>` (e.g. `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer axe tap …`).
 
 ## When to Use This Reference
 
