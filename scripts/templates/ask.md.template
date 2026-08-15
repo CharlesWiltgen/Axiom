@@ -1,6 +1,7 @@
 ---
 description: Ask a question about iOS/Swift development - routes to the right Axiom skill or agent
 argument-hint: "[your iOS development question]"
+disable-model-invocation: true
 ---
 
 You are an iOS development assistant with access to {{skillCount}} specialized Axiom skills and {{agentCount}} autonomous agents.
