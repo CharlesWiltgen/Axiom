@@ -3,7 +3,7 @@
 
 AXe is a CLI tool for interacting with iOS Simulators using Apple's Accessibility APIs and HID functionality. Single binary, no daemon required.
 
-> **Xcode 27 beta gotcha**: a beta that relocated `SimulatorKit.framework` (Xcode 27 moved it to `Contents/SharedFrameworks/`) breaks bare `axe` — "Failed to load essential private frameworks … SimulatorKit.framework … does not exist". Run `xcui doctor`; if it reports an `axe_developer_dir`, prefix every `axe` command below with `DEVELOPER_DIR=<that value>` (e.g. `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer axe tap …`). AXe 1.7.1 has no fix yet.
+> **SimulatorKit load failure**: AXe needs `SimulatorKit.framework`, which Xcode 27 moved to `Contents/SharedFrameworks/`. **AXe 1.8.0 finds it there on its own — no prefix needed.** Older AXe fails with "…SimulatorKit.framework … does not exist". Don't assume from the Xcode version: run `xcui doctor`, which now decides by actually running AXe. Only if it reports an `axe_developer_dir` do you prefix direct `axe` calls with `DEVELOPER_DIR=<that value>` (e.g. `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer axe tap …`).
 
 ## Installation
 

@@ -181,8 +181,12 @@ Reach for these only when devicectl capture doesn't fit — none reach a physica
 
 ## Resizable app sessions — `devicectl device appResize` `OS27`
 
-Free resize is **scriptable**. This is the automation path for resize-readiness work; Device
-Hub's resize mode is the manual equivalent. The commands are device-and-simulator shaped (`-d`
+Free resize is **scriptable**. Device Hub's resize mode is the manual equivalent.
+
+> **Use `xcui resize sweep` for breakpoint testing.** It wraps everything below — session
+> lifecycle, actual-vs-requested readback, per-size assertions, and the 1001/24001/24004 error
+> split — in one command. See axiom-tools (skills/xcui-ref.md). Reach for the raw `devicectl`
+> calls here only when you need something the sweep does not cover. The commands are device-and-simulator shaped (`-d`
 accepts either), but only the **simulator** path was verified here — the physical-device path was
 not re-verified against wired hardware.
 
@@ -230,7 +234,31 @@ concentric-corner behavior under CI — SwiftUI's `ConcentricRectangle` and UIKi
 Xcode 27 unifies simulators and physical devices in **Device Hub** — a standalone app that ships
 alongside Xcode and auto-launches when you build and run to a simulator (you don't need to open
 Xcode to use it), replacing the `Simulator.app` GUI. Xcode 26 and earlier keep `Simulator.app`, so
-it isn't "gone" for those users. It offers the same toolset for simulators and physical devices, in
+it isn't "gone" for those users.
+
+**The bundle and process names changed, and scripts that force-quit the GUI depend on it:**
+
+| Xcode | Path | Process | Bundle id |
+|---|---|---|---|
+| 26 | `Contents/Developer/Applications/Simulator.app` | `Simulator` | `com.apple.iphonesimulator` |
+| 27 | `Contents/Applications/DeviceHub.app` | `DeviceHub` | `com.apple.dt.Devices` |
+
+Xcode 27 ships **no** `Simulator.app` at any path, so `killall -9 Simulator` kills nothing there
+— it prints `No matching processes belonging to you were found` and leaves the stuck GUI running.
+Name both: `killall -9 Simulator DeviceHub`.
+
+**Do not verify that with `$?`.** killall exits 0 when *either* name matched, so on a machine
+carrying both Xcodes a 0 can mean "killed Simulator, never touched DeviceHub" — the GUI you were
+trying to kill is still running. Confirm against the process, not the exit code:
+
+```bash
+killall -9 Simulator DeviceHub
+pgrep -l Simulator DeviceHub    # must print NOTHING
+``` CarPlay simulation moved with it, into DeviceKit's
+`CarPlaySimulator.devicekitplugin`; the Xcode 26 `defaults write com.apple.iphonesimulator
+CarPlayExtraOptions -bool YES` key does not exist anywhere in the 27 toolchain.
+
+Device Hub offers the same toolset for simulators and physical devices, in
 a *compact* window (live screen plus a few essentials) that expands to a *full window* with canvas,
 sidebar inventory, and inspector. Bottom controls are contextual — home/screenshot/rotate on iPhone,
 play/pause and navigation on Apple TV, environment/camera on Vision Pro, side button and Digital

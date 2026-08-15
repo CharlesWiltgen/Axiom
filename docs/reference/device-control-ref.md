@@ -29,6 +29,7 @@ Use this reference when:
 - "How do I resize the app window from a script?"
 - "Can I automate resize-readiness testing across breakpoints?"
 - "What is Device Hub in Xcode 27, and do I need to open Xcode to use it?"
+- "My simulator is stuck and `killall -9 Simulator` does nothing — what changed in Xcode 27?"
 - "How do I list physical devices and simulators together from the command line?"
 - "How do I record a video of a physical device from the command line?"
 - "Should I use xcui or the Xcode MCP device-interaction tools?"
@@ -65,6 +66,8 @@ Use this reference when:
 ### Device Hub (Xcode 27 GUI)
 - Compact vs full window, the interactive canvas
 - The five-panel inspector and what each panel is for
+- Bundle path, process name, and bundle id per Xcode version, and why `killall -9 Simulator` kills nothing on Xcode 27
+- Where CarPlay simulation went, and the `CarPlayExtraOptions` default that does not exist in Xcode 27
 
 ## Documentation Scope
 

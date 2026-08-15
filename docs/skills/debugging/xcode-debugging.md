@@ -68,11 +68,12 @@ Questions you can ask Claude that will draw from this skill:
 ```bash
 # 1. Check for zombie processes (10+ or older than 30 min = problem)
 # \bxcodebuild\b is word-bounded so it skips the long-running `xcodebuildmcp` MCP server
-ps aux | grep -E '\bxcodebuild\b|Simulator' | grep -v grep
+ps aux | grep -E '\bxcodebuild\b|Simulator|DeviceHub' | grep -v grep
 
 # 2. Kill zombies if found
+# Xcode 26 ships Simulator.app; Xcode 27 replaced it with DeviceHub.app, so name both
 killall xcodebuild 2>/dev/null
-killall Simulator 2>/dev/null
+killall Simulator DeviceHub 2>/dev/null
 
 # 3. Clean Derived Data
 rm -rf ~/Library/Developer/Xcode/DerivedData
