@@ -76,11 +76,20 @@ func runDoctor(out io.Writer, args []string) int {
 	// Smoke-test AXe: presence + version isn't enough. Under an Xcode that
 	// relocated SimulatorKit.framework (Xcode 27 beta), AXe loads but every
 	// describe-ui/tap fails — so actually exercise it before green-lighting.
+	// Surface passthrough drift: an AXe verb xcui doesn't forward reads as "unknown
+	// command", which looks like an xcui bug rather than a version gap.
+	if axePath != "" {
+		if res, err := ExecRun(ctx, 10*time.Second, axePath, "--help"); err == nil {
+			if missing := unforwardedAxeVerbs(string(res.Stdout)); len(missing) > 0 {
+				rep.Note = joinNote(rep.Note, "AXe has verbs xcui does not forward ("+strings.Join(missing, ", ")+") — call them as `axe <verb>` until Axiom adds them")
+			}
+		}
+	}
+
 	axeWorks := true
 	if axePath != "" && rep.BootedUDID != "" {
-		if dir, on := axeDeveloperDirOverride(); on {
-			rep.AxeDeveloperDir = dir
-		}
+		// Read the override AFTER the smoke test, not before: the decision is now
+		// made by running AXe, so asking first would always report "none".
 		if res, err := runAxe(ctx, 30*time.Second, "describe-ui", "--udid", rep.BootedUDID); err != nil {
 			stderr := strings.TrimSpace(string(res.Stderr))
 			switch {
@@ -100,11 +109,14 @@ func runDoctor(out io.Writer, args []string) int {
 				}
 				rep.Problems = append(rep.Problems, "AXe smoke test (describe-ui) failed: "+msg)
 			}
-		} else if rep.AxeDeveloperDir != "" {
-			// xcui compensates on its own AXe calls, but a bare `axe` (e.g. an
-			// `axe tap` run directly) still needs the same DEVELOPER_DIR prefix.
-			rep.Note = joinNote(rep.Note, "selected Xcode relocated SimulatorKit.framework; xcui auto-applies DEVELOPER_DIR="+rep.AxeDeveloperDir+" to its AXe calls — bare `axe` fails without the same prefix")
-			rep.NextSteps = append(rep.NextSteps, "for direct axe calls: DEVELOPER_DIR="+rep.AxeDeveloperDir+" axe <cmd>")
+		} else if dir, on, _ := axeDeveloperDirOverride(); on {
+			// Only reachable when a bare AXe run actually failed to load
+			// SimulatorKit and the retry under dir succeeded — so the claim that a
+			// direct `axe` needs the same prefix is now something xcui observed,
+			// not something it inferred from the filesystem and asserted.
+			rep.AxeDeveloperDir = dir
+			rep.Note = joinNote(rep.Note, "bare AXe could not load SimulatorKit.framework under the selected Xcode; xcui retried with DEVELOPER_DIR="+dir+" and that worked, so it applies the same prefix to its AXe calls")
+			rep.NextSteps = append(rep.NextSteps, "for direct axe calls: DEVELOPER_DIR="+dir+" axe <cmd>")
 		}
 	}
 
