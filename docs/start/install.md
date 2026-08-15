@@ -62,6 +62,16 @@ Skills activate automatically based on your questions. Just ask:
 
 Skills cover SwiftUI, concurrency, data persistence, performance, networking, accessibility, Apple Intelligence, build debugging, and more. See the [full skill catalog](/skills/) for everything available.
 
+## Controlling When Axiom Activates
+
+Axiom's routers are meant to fire on their own — that is how a question about a build failure reaches the build skill without you naming it. Two things follow from that, and it is worth knowing which lever exists for which problem.
+
+**Commands never fire on their own.** All 17 `/axiom:*` commands carry `disable-model-invocation: true`, so Claude loads them only when you type them. That includes `/axiom:ask` — it is the manual escape hatch for when auto-routing misses, so it must not compete with the routers it backstops.
+
+**Routers are all-or-nothing.** If you want Axiom quieter than that, the only supported control is disabling the plugin in `/plugin`. Claude Code's per-skill `skillOverrides` setting does **not** apply here: its documentation states plainly that *"Plugin skills are not affected by `skillOverrides`. Manage those through `/plugin` instead."* If you have seen a `skillOverrides` entry appear to suppress an `axiom:*` skill, it was not doing so by a supported route, and it will not survive a version bump — plugin skills can also appear under a version-prefixed namespace that a hand-written override key won't match.
+
+If Axiom is firing on work where it doesn't belong, that is usually a routing bug worth [reporting](https://github.com/CharlesWiltgen/Axiom/issues) rather than something to suppress — see [Non-Apple projects](#non-apple-projects) for the case Axiom already guards against.
+
 ## Troubleshooting
 
 ### Skills Not Activating
