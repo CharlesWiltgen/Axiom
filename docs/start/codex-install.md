@@ -130,11 +130,13 @@ The Codex plugin includes the same skill content as the Claude Code plugin, with
 
 | Feature | Claude Code | Codex |
 |---------|-------------|-------|
-| Skills | 175 specialized + 23 routers | 175 specialized (Codex has native routing) |
-| Agents | 38 autonomous auditors | Not supported in Codex plugins |
-| Commands | 12 `/axiom:*` commands | Not supported in Codex plugins |
+| Skills | 27 routers + 303 specialized | 27 routers + 272 specialized (the other 31 are listed below) |
+| Agents | 42 autonomous auditors | All 42, converted to skills you invoke by name (`axiom-audit-memory`, `axiom-fix-build`, …) |
+| Commands | 17 `/axiom:*` commands | Not supported in Codex plugins — use the equivalent agent-skill above |
 | Hooks | Lifecycle hooks (skill routing, `@State` guardrail, version ground-truth) | Supported via the native plugin install — set `features.hooks = true` |
 | Installation | `/plugin marketplace add` | `npx skills add`, native `codex plugin`, or manual marketplace |
+
+**The 31 specialized skills Codex doesn't get as files.** Thirty are auditor procedures that each router carries inline for spec-only harnesses; Codex receives every one as a first-class skill instead, so shipping the file too would duplicate the same procedure under two names. The last is `getting-started`, which drives a Claude Code tool (`AskUserQuestion`) and cites `/axiom:*` commands that don't exist in Codex. Nothing else is withheld — every router and every reference ships.
 
 ## Troubleshooting
 
