@@ -9,8 +9,8 @@ dev/CI loop needs no running Xcode.
 
 | Tool | Owns | Needs Xcode running? |
 |------|------|----------------------|
-| `devicectl` (CLI) | configure + interact with a booted sim OR physical device through one `-d <udid>` selector; install/launch/inspect; capture screenshots + screen recordings; drive free resize (`appResize`) `OS27`; stable `--json-output` | No |
-| `simctl` (CLI) | simulator lifecycle (create/boot/shutdown/erase) + sim-only state: push, privacy permissions, media, `status_bar`, `openurl`, `ui appearance` | No |
+| `devicectl` (CLI) | configure + interact with a booted sim OR physical device through one `-d <udid>` selector; install/launch/inspect; capture screenshots + screen recordings; status-bar overrides incl. a `screenshot` preset; drive free resize (`appResize`) `OS27`; stable `--json-output` | No |
+| `simctl` (CLI) | simulator lifecycle (create/boot/shutdown/erase) + sim-only state: push, privacy permissions, media, `openurl`, `ui appearance`; shares the `status_bar` override store with devicectl and solely owns `--operatorName` | No |
 | `xcui` (Axiom) | drive in-app UI + accessibility tree (tap/assert, VoiceOver order); toggle a11y settings | No |
 | `xclog` (Axiom) | capture simulator/device console | No |
 | `xcsym` (Axiom) | symbolicate crashes (`.ips`, MetricKit, `.crash`) | No |
@@ -98,7 +98,8 @@ simctl still owns the simulator lifecycle and the sim-only features.
 | create / boot / shutdown / erase a sim | `xcrun simctl boot\|shutdown\|erase` |
 | pick the test destination | `xcodebuild -destination` |
 | configure / interact with a booted sim or device | `xcrun devicectl` |
-| push, privacy permissions, media, status bar, openurl | `xcrun simctl` (sim-only) |
+| push, privacy permissions, media, openurl | `xcrun simctl` (sim-only) |
+| status bar overrides for screenshots | either — same store; `devicectl` adds a `screenshot` preset, `simctl` owns `--operatorName` |
 
 CI order is unchanged at the front: simctl or xcodebuild boots the sim → devicectl configures it
 → run tests.
@@ -114,7 +115,8 @@ CI order is unchanged at the front: simctl or xcodebuild boots the sim → devic
 | `device simulate biometrics --success\|--failure` | works (verified) | drive a match / no-match |
 | `device settings appearance --mode light\|dark` | works (verified) | force Dark/Light; also `--look-and-feel clear\|tinted`, text size, contrast |
 | `device settings voiceover --enable\|--disable` (also `device info voiceover`) | works (verified) `OS27` | toggle VoiceOver — the one a11y toggle `xcui` omitted for lack of a mechanism |
-| `device simulate location` / `device simulate statusBar` | available | inject location; clean status bar for screenshots |
+| `device simulate location` | available | inject location |
+| `device simulate statusBar` (`preset`/`override`/`show`/`clear`) | works (verified) | clean status bar for screenshots — see Status bar for screenshots below |
 | `device process sendMemoryWarning` | available | memory-pressure scenarios |
 | `device info lockState` / `info files` / `copy` / `profile *` | physical-device-only | see caveat below |
 
@@ -178,6 +180,134 @@ Reach for these only when devicectl capture doesn't fit — none reach a physica
 | `simctl io <udid> screenshot [--type png] <file>` | sim PNG; `-` writes to stdout | sim only |
 | `simctl io <udid> recordVideo [--codec h264\|hevc] [--mask ignored\|alpha\|black] <file>` | sim video to a `.mov` | default codec is `hevc` (devicectl defaults `h264`); stop with SIGINT; sim only |
 | `axe record-video --output f.mp4` / `axe stream-video` | sim video / live preview stream (mjpeg, jpeg, ffmpeg, bgra) | sim only; `record-video` stops on Ctrl+C — see `axiom-xcode-mcp (skills/axe-ref.md)` |
+
+## Status bar for screenshots
+
+A shipping screenshot needs a clean status bar — 9:41, full bars, full battery. On a simulator
+both tools write the **same override store**: a `devicectl` override shows up in
+`simctl status_bar list`, and either tool's `clear` empties the other's view. Pick by toolchain,
+not by effect.
+
+### Fastest path — the `screenshot` preset
+
+```bash
+SIM=$(xcrun simctl list devices booted | grep -Eo '[0-9A-F-]{36}' | head -1)
+xcrun devicectl device simulate statusBar preset -d "$SIM" screenshot
+xcrun devicectl device capture screenshot -d "$SIM" --destination shot.png
+xcrun devicectl device simulate statusBar clear -d "$SIM"
+```
+
+| Preset | Applies |
+|---|---|
+| `screenshot` | 9:41, battery 100 `charged`, cellular `active` 4 bars, `LTE`, Wi-Fi `active` 3 bars (verified readback) |
+| `low-battery` | 5% draining, weak signals |
+| `no-service` | no cellular or Wi-Fi |
+| `charging` | 50% charging, moderate signals |
+
+`screenshot` picks **LTE** (not 5G) and `charged` (a green charging battery, not a plain full
+one). It rewrites every field it owns, so it is safe to re-run over a dirty state — unlike a bare
+`override`, below.
+
+**The preset also sets the carrier to the literal string `Carrier`** — the placeholder
+`screenshot-validator` flags as a defect. It is invisible on Dynamic Island iPhones, but renders on
+iPad and older iPhones, and you **cannot** correct it afterward: `operatorName` refuses to overwrite
+an existing value (below). For any device that shows a carrier name, skip the preset and use the
+`simctl` path with an explicit `--operatorName` in the same `override` call.
+
+**`devicectl`'s subcommand set tracks a machine-wide component, not `xcode-select`.** Every
+`devicectl` binary defers to `/Library/Developer/PrivateFrameworks/CoreDevice.framework` — one copy
+per machine, upgraded by the newest Xcode installed — so selecting an older Xcode does *not* hand
+you an older `devicectl`, and a second Xcode on the machine changes what the first one can do. Probe
+the capability instead of inferring it from an Xcode version:
+
+```bash
+xcrun devicectl device simulate statusBar --help >/dev/null 2>&1 \
+  && echo "statusBar available" || echo "fall back to simctl"
+```
+
+### simctl — sim-only, and the only way to set a carrier name
+
+`devicectl` has no operator-name flag.
+
+```bash
+xcrun simctl status_bar "$SIM" clear                     # first — override merges
+xcrun simctl status_bar "$SIM" override \
+  --time "9:41" --dataNetwork lte --wifiMode active --wifiBars 3 \
+  --cellularMode active --cellularBars 4 --operatorName "Your Co" \
+  --batteryState charged --batteryLevel 100
+```
+
+That is the preset's look with a real carrier name (verified readback). For a Wi-Fi-only status
+bar, drop **every** cellular flag — see the `wifi` trap below:
+
+```bash
+xcrun simctl status_bar "$SIM" override --time "9:41" \
+  --dataNetwork wifi --wifiMode active --wifiBars 3 --batteryState charged --batteryLevel 100
+```
+
+`--operatorName` only renders alongside a cellular override, and Dynamic Island iPhones show no
+carrier name at all — set it for iPad and older-iPhone shots; don't debug its absence on an
+iPhone 17.
+
+### Clear first; verify by readback, never by exit code
+
+`override` **merges** into whatever is already set, and some values silently fail to land. All of
+these **exit 0**:
+
+| Silent failure | Stored result | Changes the capture? |
+|---|---|---|
+| `--dataNetwork wifi` alongside any `--cellularMode`, even `notSupported` | `5G` | No — the data label isn't drawn while Wi-Fi is active. Breaks readback assertions only |
+| `--dataNetwork wifi` over an existing data-network value | old value (`LTE`, `hide`) survives | Only on a Wi-Fi-only shot, where the label renders |
+| `--operatorName` over an existing carrier name | first value survives, including the preset's `Carrier` | Yes, on iPad and older iPhones |
+
+Other values overwrite normally (`LTE` replaces `wifi`, `hide` replaces `LTE`), so a script reads
+as working until the one case that changes pixels lands in a shipped screenshot.
+
+```bash
+xcrun devicectl device simulate statusBar clear -d "$SIM"          # always, before override
+xcrun devicectl device simulate statusBar override -d "$SIM" --time "9:41" --battery-level 100
+xcrun devicectl device simulate statusBar show -d "$SIM" --json-output -    # assert on this
+```
+
+`show` returns the full override set; `simctl status_bar <udid> list` prints the same state as
+text. In CI, assert on the readback — a screenshot with a stale status bar is exactly the failure
+this prevents, and no exit code reports it.
+
+### The two flag vocabularies are not copy-paste compatible
+
+Cross-tool spellings are rejected outright: `simctl --batteryState draining` and
+`devicectl --battery-state discharging` both fail.
+
+| Field | devicectl | simctl |
+|---|---|---|
+| time | `--time "9:41"` | `--time "9:41"` |
+| data network | `--data-network` — `hide, wifi, hotspot, 1x, GPRS, Edge, UMTS, 4G, LTE, LTEA, LTEPlus, 5G, 5GPlus, 5GUWB, 5GUC` | `--dataNetwork` — `hide, wifi, 3g, 4g, lte, lte-a, lte+, 5g, 5g+, 5g-uwb, 5g-uc` |
+| Wi-Fi | `--wifi-mode` (`notSupported, searching, failed, active`) + `--wifi-strength` | `--wifiMode` (`searching, failed, active`) + `--wifiBars` |
+| cellular | `--cellular-mode` + `--cellular-strength` | `--cellularMode` + `--cellularBars` |
+| battery | `--battery-state` (`draining, charging, charged`) + `--battery-level` | `--batteryState` (`discharging, charging, charged`) + `--batteryLevel` |
+| carrier | *(none)* | `--operatorName` |
+| not charging | `--battery-failing-to-charge` | *(none)* |
+
+`devicectl` matches its own values case-insensitively (`5g` sets `5G`); `simctl` does not
+(`--dataNetwork 5G` fails). Exit codes on a bad value: `devicectl` 1, `simctl` 117 for an unknown
+enum and 22 for an out-of-range integer.
+
+**`--cellular-strength`'s help text is wrong.** It advertises 1–5; a simulator rejects 5 with
+`Invalid value for cellular bars: expected 0-4`. Cap at 4, matching `simctl --cellularBars`.
+
+**Strip backticks when parsing `dataNetworkType` out of the JSON.** Values whose names aren't valid
+Swift identifiers come back wrapped — `` "`5G`" ``, `` "`4G`" ``, `` "`1x`" ``, `` "`5GUC`" `` —
+while `"LTE"`, `"Edge"`, `"wifi"`, and `"hide"` come back clean.
+
+### Overrides are cosmetic
+
+devicectl states outright that these overrides "do not affect the actual device state": a `--time`
+of 9:41 changes the displayed string, not the clock, so a `Date()` read inside the app is
+unaffected. One exception on the simctl side — its `--time` help notes that a **valid ISO date
+string** also sets the date on relevant devices.
+
+Device Hub exposes no GUI control for status-bar overrides; run these commands while the simulator
+is displayed in Device Hub.
 
 ## Resizable app sessions — `devicectl device appResize` `OS27`
 
