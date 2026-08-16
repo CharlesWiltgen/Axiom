@@ -79,7 +79,7 @@ Analyze each screenshot one at a time using the Read tool. For each image, check
 
 ### HIGH Issues (likely rejection or poor conversion)
 
-- **Status bar problems**: Missing status bar, status bar showing carrier "Carrier" (any realistic time is acceptable — 9:41 is Apple's iPhone marketing convention, not a requirement)
+- **Status bar problems**: Missing status bar, status bar showing carrier "Carrier" (any realistic time is acceptable — 9:41 is Apple's iPhone marketing convention, not a requirement). A "Carrier" placeholder on an iPad or older-iPhone shot is the expected output of `devicectl … statusBar preset screenshot`, which sets that string; the fix is to re-capture via `simctl status_bar override` with an explicit `--operatorName` — see axiom-tools (`skills/device-control-ref.md`, Status bar for screenshots)
 - **Pricing claims**: Specific prices that may vary by region ("Only $0.99!") — violates Guidelines 2.3.7
 - **Broken/truncated UI**: Cut-off text, overlapping elements, missing images (broken image icons), empty states that look like errors
 - **Loading spinners or progress bars**: Screenshots should show completed states

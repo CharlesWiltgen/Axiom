@@ -131,14 +131,36 @@ xcrun simctl install booted /path/to/YourApp.app
 ```
 
 ### 8. Status Bar Override (for screenshots)
+
+Prefer the preset — one command, Apple's classic values (9:41, full bars, 100% battery):
+
 ```bash
-xcrun simctl status_bar booted override --time "9:41" --batteryLevel 100 --cellularBars 4
-xcrun simctl status_bar booted clear
+xcrun devicectl device simulate statusBar preset -d "$SIM" screenshot
+# ... capture ...
+xcrun devicectl device simulate statusBar clear -d "$SIM"
 ```
+
+Hand-rolling the fields instead (`simctl status_bar` on Xcode 26, or when you need
+`--operatorName`, which devicectl lacks):
+
+```bash
+xcrun simctl status_bar "$SIM" clear      # ALWAYS clear first — override merges
+xcrun simctl status_bar "$SIM" override --time "9:41" --batteryState charged \
+  --batteryLevel 100 --cellularMode active --cellularBars 4
+xcrun simctl status_bar "$SIM" list       # assert on THIS, not on the exit code
+```
+
+**Clear before override, and verify by readback.** `override` merges into whatever is already
+set, and several values silently fail while still exiting 0 — `--operatorName` won't overwrite
+an existing carrier name, and `--dataNetwork wifi` becomes `5G` if any `--cellularMode` is in
+the same call. A stale status bar in a shipped screenshot is the failure this prevents. Flag spellings differ between the two tools and are not interchangeable
+(`draining` vs `discharging`, `--cellular-strength` vs `--cellularBars`). Full detail, including
+the bad `--cellular-strength` help range and the JSON backtick quirk, is in
+axiom-tools (`skills/device-control-ref.md`, Status bar for screenshots).
 
 ### 9. Device State via devicectl (biometrics + CI-stable JSON)
 
-`devicectl` drives a booted sim through the **same `-d <udid>` selector it uses for real devices** and parses to a **stable `--json-output`** (simctl stdout carries no stability guarantee). It works on simulators in **Xcode 26.6+ — no toolchain gate**. Prefer it for biometrics (simctl has no equivalent) and for any device-state step you want CI-stable and cross-device; simctl still owns lifecycle (boot/erase) and the sim-only features above (push, privacy, media, openurl, status bar).
+`devicectl` drives a booted sim through the **same `-d <udid>` selector it uses for real devices** and parses to a **stable `--json-output`** (simctl stdout carries no stability guarantee). It works on simulators in **Xcode 26.6+ — no toolchain gate**. Prefer it for biometrics (simctl has no equivalent) and for any device-state step you want CI-stable and cross-device; simctl still owns lifecycle (boot/erase) and the sim-only features above (push, privacy, media, openurl); the status bar is shared — both tools write the same override store.
 
 **Face ID / Touch ID — devicectl only (simctl cannot do this):**
 ```bash
