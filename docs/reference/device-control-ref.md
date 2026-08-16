@@ -18,6 +18,7 @@ Use this reference when:
 - You need to script Face ID / Touch ID, orientation, appearance, VoiceOver, or simulated location
 - You want to resize an app's window from a script — sweeping breakpoints in CI instead of dragging by hand
 - You want to screenshot or screen-record a simulator or a physical device from the command line
+- You're preparing App Store screenshots and need a clean status bar (9:41, full bars, full battery)
 - You're parsing `devicectl --json-output` in CI and need the stable keys
 - You want to know what the Xcode 27 Device Hub GUI offers and how it maps to the CLI
 
@@ -32,6 +33,8 @@ Use this reference when:
 - "My simulator is stuck and `killall -9 Simulator` does nothing — what changed in Xcode 27?"
 - "How do I list physical devices and simulators together from the command line?"
 - "How do I record a video of a physical device from the command line?"
+- "How do I set the status bar to 9:41 with full bars for App Store screenshots?"
+- "Why did my screenshot come out with the wrong status bar even though the command succeeded?"
 - "Should I use xcui or the Xcode MCP device-interaction tools?"
 - "Which devicectl JSON keys are deprecated, and what replaced them?"
 - "How do I tell whether a device has Developer Mode enabled from the command line?"
@@ -62,6 +65,14 @@ Use this reference when:
 - `devicectl device capture screenshot` / `screen-record` – unified sim + device path (Xcode 26.6+)
 - Codec, mask-policy, and `--duration` auto-stop options, and the `.png` / `.mp4` extension rules
 - Simulator-only fallbacks (`simctl io`, `axe`) and when to reach for them
+
+### Status bar for screenshots
+- `devicectl device simulate statusBar preset` and its four presets – `screenshot`, `low-battery`, `no-service`, `charging`
+- `override` / `show` / `clear`, and the `simctl status_bar` equivalents that share the same store
+- Why to clear before every override, and why to assert on the readback instead of the exit code
+- The two tools' incompatible flag vocabularies, side by side
+- The `--cellular-strength` range `devicectl`'s own help text gets wrong, and the JSON backtick quirk in `dataNetworkType`
+- Why `devicectl`'s command set follows a machine-wide CoreDevice, not `xcode-select`
 
 ### Device Hub (Xcode 27 GUI)
 - Compact vs full window, the interactive canvas
