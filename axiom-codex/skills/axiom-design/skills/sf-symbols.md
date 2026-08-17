@@ -104,8 +104,19 @@ Image(systemName: "cloud.rain.fill")
 |---------|--------|-----|
 | Using `.foregroundColor()` with Multicolor | Overrides Apple's colors | Remove foreground color modifier |
 | Setting Palette with only 1 color | Looks like Monochrome | Provide colors for each layer |
-| Assuming all symbols support Multicolor | Fallback to Monochrome | Check in SF Symbols app first |
+| Assuming all symbols support Multicolor | Fallback to Monochrome | Check first — scriptable, see below |
 | Using Hierarchical when layers need distinct meanings | Colors don't carry semantic intent | Use Palette instead |
+
+#### Check which modes a symbol actually supports — without opening the app
+
+The SF Symbols app ships a CLI. Its `--json` availability keys are the symbol's supported rendering modes, so the Multicolor question above is a one-liner (`textformat` returns `monochrome` alone; `folder.fill.badge.person.crop` returns all four):
+
+```bash
+SFSYMBOLS="/Applications/SF Symbols.app/Contents/Executables/sfsymbols"     # or "SF Symbols Beta.app"
+"$SFSYMBOLS" search --match-style exactName --json textformat | jq '.[0].availability | keys'
+```
+
+Binary discovery, the exit-0-on-no-match trap, deployment-target filtering, and `export` are in axiom-design (skills/sf-symbols-ref.md), Part 11.
 
 ---
 
@@ -482,6 +493,8 @@ Image(systemName: "wifi")
 
 ### Missing Accessibility Labels
 
+Symbol-specific labelling is covered here. For the wider audit — VoiceOver traversal order, Dynamic Type, contrast, touch targets — use axiom-accessibility.
+
 ```swift
 // ❌ VoiceOver says "star.fill"
 Image(systemName: "star.fill")
@@ -519,14 +532,14 @@ Image(systemName: isFavorite ? "star.fill" : "star")
 
 1. **Check rendering mode** — If you set `.foregroundStyle` but see only one color, you may need `.symbolRenderingMode(.palette)` or `.hierarchical`
 2. **Check `.tint` vs `.foregroundStyle`** — In UIKit, `tintColor` affects Monochrome and Hierarchical. For Palette, use `UIImage.SymbolConfiguration(paletteColors:)`
-3. **Check Multicolor support** — Not all symbols have Multicolor variants. Unsupported symbols fall back to Monochrome
+3. **Check Multicolor support** — Not all symbols have Multicolor variants. Unsupported symbols fall back to Monochrome. Confirm without the GUI: `sfsymbols search --match-style exactName --json <name>` lists the supported modes as its `availability` keys
 4. **Check environment** — `.foregroundStyle` from a parent view may override your rendering mode. Apply `.symbolRenderingMode()` directly on the Image
 
 ### Custom Symbol Weight Mismatch
 
 **Symptom**: Custom symbol looks too thin or too thick next to text or other symbols.
 
-1. **Check template weight** — Custom symbols need weight variants matching the 9 SF Pro weights. Export from SF Symbols app handles this
+1. **Check template weight** — Custom symbols need weight variants matching the 9 SF Pro weights. Exporting from the SF Symbols app handles this; so does `sfsymbols export <name> --format svg --weight <name>` from the command line
 2. **Check `.font()` alignment** — The symbol's weight follows the applied font weight. If using `.font(.title)`, ensure your custom symbol has appropriate weight variants
 3. **Check scale** — `.imageScale(.small/.medium/.large)` affects overall size. Use `.font()` for weight matching
 

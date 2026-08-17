@@ -30,6 +30,7 @@ Questions you can ask Claude that will draw from this skill:
 - "My custom symbol's Draw animation looks wrong — paths draw in the wrong order."
 - "How do I create a symbol that changes from play to pause with a smooth animation?"
 - "I need my symbol effects to work on iOS 17 but I want Wiggle on iOS 18+."
+- "Does this symbol support Multicolor, or will it fall back to Monochrome?"
 
 ## What This Skill Provides
 

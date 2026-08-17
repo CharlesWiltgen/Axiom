@@ -7,12 +7,12 @@ Comprehensive API reference for SwiftUI adaptive layout tools. For decision guid
 
 This reference covers all SwiftUI layout APIs for building adaptive interfaces:
 
-- **ViewThatFits** — Automatic variant selection (iOS 16+)
-- **AnyLayout** — Type-erased animated layout switching (iOS 16+)
-- **Layout Protocol** — Custom layout algorithms (iOS 16+)
-- **onGeometryChange** — Efficient geometry reading (iOS 16+ backported)
-- **GeometryReader** — Layout-phase geometry access (iOS 13+)
-- **Safe Area Padding** — .safeAreaPadding() vs .padding() (iOS 17+)
+- **ViewThatFits** — Automatic variant selection
+- **AnyLayout** — Type-erased animated layout switching
+- **Layout Protocol** — Custom layout algorithms
+- **onGeometryChange** — Efficient geometry reading
+- **GeometryReader** — Layout-phase geometry access
+- **Safe Area Padding** — .safeAreaPadding() vs .padding()
 - **Size Classes** — Coarse trait-context semantics (NOT a width sensor — see below)
 - **Window APIs** — Resizable windows everywhere, menu bar, resize anchors, live-resize signal
 
@@ -92,8 +92,8 @@ struct AdaptiveView: View {
 
     var layout: AnyLayout {
         sizeClass == .compact
-            ? AnyLayout(VStackLayout(spacing: 12))
-            : AnyLayout(HStackLayout(spacing: 20))
+            ? AnyLayout(VStackLayout())
+            : AnyLayout(HStackLayout())
     }
 
     var body: some View {
@@ -110,11 +110,13 @@ struct AdaptiveView: View {
 ### Available Layout Types
 
 ```swift
-AnyLayout(HStackLayout(alignment: .top, spacing: 10))
-AnyLayout(VStackLayout(alignment: .leading, spacing: 8))
+AnyLayout(HStackLayout(alignment: .top))
+AnyLayout(VStackLayout(alignment: .leading))
 AnyLayout(ZStackLayout(alignment: .center))
-AnyLayout(GridLayout(alignment: .leading, horizontalSpacing: 10, verticalSpacing: 10))
+AnyLayout(GridLayout(alignment: .leading))
 ```
+
+Each stack layout also accepts `spacing:` (and `GridLayout` takes `horizontalSpacing:`/`verticalSpacing:`), all typed `CGFloat?`. Omitting them — as above — yields system spacing, which is the correct default. Pass a value only for the exceptions in axiom-design (skills/hig.md).
 
 ### Custom Conditions
 
@@ -191,7 +193,7 @@ struct FlowLayout: Layout {
 }
 
 // Usage
-FlowLayout(spacing: 12) {
+FlowLayout() {
     ForEach(tags) { tag in
         TagView(tag: tag)
     }
@@ -240,7 +242,7 @@ func placeSubviews(...) {
 
 ## onGeometryChange
 
-Efficient geometry reading without layout side effects. Backported to iOS 16+.
+Efficient geometry reading without layout side effects. 
 
 ### Basic Usage
 
@@ -390,6 +392,8 @@ GeometryReader { geo in
 
 SwiftUI provides two primary approaches for handling spacing around content: `.padding()` and `.safeAreaPadding()`. Understanding when to use each is critical for proper layout on devices with safe areas (notch, Dynamic Island, home indicator).
 
+**Which edge to pad is a layout question (this file). How much to pad is a design question — see axiom-design (skills/hig.md), "What spacing, padding, or margin value should I use?". Short version: omit the length. Both modifiers take `CGFloat?` and `nil` means system-determined; the literals below would be inventing values Apple never published.**
+
 ### The Critical Difference
 
 ```swift
@@ -397,13 +401,13 @@ SwiftUI provides two primary approaches for handling spacing around content: `.p
 ScrollView {
     content
 }
-.padding(.horizontal, 20)
+.padding(.horizontal)
 
 // ✅ CORRECT - Respects safe areas, adds padding beyond them
 ScrollView {
     content
 }
-.safeAreaPadding(.horizontal, 20)
+.safeAreaPadding(.horizontal)
 ```
 
 **Key insight**: `.padding()` adds fixed spacing from the view's edges. `.safeAreaPadding()` adds spacing beyond the safe area insets.
@@ -420,16 +424,16 @@ ScrollView {
 ```swift
 VStack(spacing: 0) {
     header
-        .padding(.horizontal, 16)  // ✅ Internal spacing
+        .padding(.horizontal)  // ✅ Internal spacing, system-sized
 
     Divider()
 
     content
-        .padding(.horizontal, 16)  // ✅ Internal spacing
+        .padding(.horizontal)  // ✅ Internal spacing
 }
 ```
 
-#### Use `.safeAreaPadding()` when (iOS 17+)
+#### Use `.safeAreaPadding()` when
 
 - Adding margin to full-width content that extends to screen edges
 - Implementing edge-to-edge scrolling with proper insets
@@ -442,7 +446,7 @@ List(items) { item in
     ItemRow(item)
 }
 .listStyle(.plain)
-.safeAreaPadding(.horizontal, 20)  // Adds 20pt beyond safe areas
+.safeAreaPadding(.horizontal)  // System margin, beyond safe areas
 
 // ✅ Full-screen content with proper margins
 ZStack {
@@ -451,30 +455,7 @@ ZStack {
     VStack {
         content
     }
-    .safeAreaPadding(.all, 16)  // Respects notch, home indicator
-}
-```
-
-### Platform Availability
-
-For earlier iOS versions, use manual safe area handling:
-
-```swift
-// iOS 13-16 fallback
-GeometryReader { geo in
-    content
-        .padding(.horizontal, 20 + geo.safeAreaInsets.leading)
-}
-```
-
-Or conditional compilation:
-
-```swift
-if #available(iOS 17, *) {
-    content.safeAreaPadding(.horizontal, 20)
-} else {
-    content.padding(.horizontal, 20)
-        .padding(.leading, safeAreaInsets.leading)
+    .safeAreaPadding()  // Respects notch, home indicator
 }
 ```
 
@@ -503,7 +484,7 @@ if #available(iOS 17, *) {
 
 ```swift
 ScrollView {
-    LazyVStack(spacing: 12) {
+    LazyVStack {
         ForEach(items) { item in
             ItemCard(item)
         }
@@ -540,12 +521,12 @@ ZStack {
 VStack(spacing: 0) {
     content
 }
-.safeAreaPadding(.horizontal, 16)  // Beyond safe areas
+.safeAreaPadding(.horizontal)  // Beyond safe areas
 
 // Inner: Regular padding for internal spacing
 VStack {
     Text("Title")
-        .padding(.bottom, 8)  // Internal spacing
+        .padding(.bottom)  // Internal spacing
     Text("Subtitle")
 }
 ```
@@ -565,7 +546,7 @@ Does your content extend to screen edges?
 ### Visual Debugging
 
 ```swift
-// Visualize safe area padding (iOS 17+)
+// Visualize safe area padding
 content
     .safeAreaPadding(.horizontal, 20)
     .background(.red.opacity(0.2))  // Shows padding area
@@ -575,18 +556,16 @@ content
 ### Migration from Manual Safe Area Handling
 
 ```swift
-// ❌ OLD: Manual calculation (iOS 13-16)
+// ❌ Manual calculation — wraps the view in a GeometryReader for no reason
 GeometryReader { geo in
     content
-        .padding(.top, geo.safeAreaInsets.top + 16)
-        .padding(.bottom, geo.safeAreaInsets.bottom + 16)
-        .padding(.horizontal, 20)
+        .padding(.top, geo.safeAreaInsets.top)
+        .padding(.bottom, geo.safeAreaInsets.bottom)
 }
 
-// ✅ NEW: .safeAreaPadding() (iOS 17+)
+// ✅ .safeAreaPadding() does it without the GeometryReader
 content
-    .safeAreaPadding(.vertical, 16)
-    .safeAreaPadding(.horizontal, 20)
+    .safeAreaPadding(.vertical)
 ```
 
 ### Related APIs
@@ -612,18 +591,9 @@ Color.blue
 
 ### Why It Matters
 
-**Before iOS 17**: Developers had to manually calculate safe area insets with GeometryReader, leading to:
-- Verbose code
-- Performance overhead (GeometryReader forces extra layout pass)
-- Easy mistakes (forgetting to check all edges)
+Hand-rolling safe area math with a `GeometryReader` is verbose, forces an extra layout pass, and is easy to get wrong (one forgotten edge). `.safeAreaPadding()` is declarative, safe-area-aware by construction, type-safe per edge, and adds no layout pass.
 
-**iOS 17+**: `.safeAreaPadding()` provides:
-- Declarative API (matches SwiftUI philosophy)
-- Automatic safe area awareness
-- Better performance (no extra layout passes)
-- Type-safe edge specification
-
-**Real-world impact**: Using `.padding()` instead of `.safeAreaPadding()` on iPhone 15 Pro causes content to:
+**Real-world impact**: Using `.padding()` instead of `.safeAreaPadding()` causes content to:
 - Hit the Dynamic Island (top)
 - Overlap the home indicator (bottom)
 - Get cut off by screen corners (rounded edges)
@@ -706,6 +676,8 @@ content
 ---
 
 ## Dynamic Type Size
+
+Reading `dynamicTypeSize` to drive layout is covered here. Whether your layout is *accessible* at those sizes — reflow, truncation, tap targets, VoiceOver order — is axiom-accessibility's domain.
 
 Environment value for user's preferred text size.
 
@@ -885,7 +857,7 @@ ScrollView {
 }
 .coordinateSpace(name: "scroll")
 
-// iOS 17+ typed coordinate space
+// Typed coordinate space
 extension CoordinateSpaceProtocol where Self == NamedCoordinateSpace {
     static var scroll: Self { .named("scroll") }
 }
@@ -893,7 +865,7 @@ extension CoordinateSpaceProtocol where Self == NamedCoordinateSpace {
 
 ---
 
-## ScrollView Geometry (iOS 18+)
+## ScrollView Geometry
 
 ### onScrollGeometryChange
 

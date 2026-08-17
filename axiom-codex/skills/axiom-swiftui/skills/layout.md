@@ -141,6 +141,8 @@ struct AdaptiveStack<Content: View>: View {
 
 #### For Dynamic Type
 
+(Switching layout on `dynamicTypeSize` is layout. Verifying the result at accessibility sizes is axiom-accessibility.)
+
 ```swift
 @Environment(\.dynamicTypeSize) var dynamicTypeSize
 

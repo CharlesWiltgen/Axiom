@@ -406,6 +406,8 @@ Lists, tables, and forms have larger row height and padding to give content room
 
 Lists, tables, forms, and sections all have increased height, padding, spacing, and corner radius. Standard components adopt automatically. Remove hard-coded `.frame(height:)` and `.padding(.vertical:)` — let the system determine row height and padding.
 
+This is a specific case of the general rule: see `skills/hig.md`, "What spacing, padding, or margin value should I use?". It applies well beyond Liquid Glass.
+
 ### Section Header Capitalization
 
 iOS 26 no longer uppercases section headers — they render exactly as provided. Update to title-style capitalization: `Section(header: Text("User Settings"))` not `"user settings"`.
