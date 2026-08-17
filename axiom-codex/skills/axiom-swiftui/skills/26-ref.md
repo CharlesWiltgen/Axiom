@@ -257,6 +257,73 @@ List { ForEach(1...20, id: \.self) { Text("\($0). Item") } }
 
 Works like `safeAreaInset` but with blur. Bar remains fixed while content scrolls beneath.
 
+### Section Index (`sectionIndexLabel`, `listSectionIndexVisibility`)
+
+The vertical strip of letters on a list's trailing edge that jumps to a section. `sectionIndexLabel(_:)` gives a `Section` its entry; `listSectionIndexVisibility(_:)` overrides whether the strip shows.
+
+```swift
+List(sections) { section in
+    Section(section.title) {
+        ForEach(section.rows) { row in
+            RowView(row)
+        }
+    }
+    .sectionIndexLabel(section.indexTitle)   // typically a single character
+}
+```
+
+`sectionIndexLabel` must be attached to the **`Section`**, as above — it is implemented as a view trait, so putting it on a row or on the `List` silently does nothing, with no compiler error. Passing `nil` is legal and explicitly means "no label for this section", which is how you drop a section from the index when the title is computed.
+
+**The index appears by default** as soon as any section carries an index label — `.listSectionIndexVisibility(.visible)` only forces it, `.hidden` suppresses it. Sections without a label are omitted from the index, which is the supported way to keep some sections out of it.
+
+**To show a letter that has no content** (a full A–Z strip over sparse data), add an empty section that carries the index label and hide its header.
+
+**Deriving the labels is where this actually goes wrong.** SwiftUI gives you the strip; choosing each section's letter is your code, and a naive `first.uppercased()` is an i18n bug:
+
+- Diacritics land in the wrong bucket — fold first (`name.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)`) so *Ángel* files under A rather than a catch-all.
+- Non-Latin scripts break entirely. Japanese, Korean, Chinese, Greek and Cyrillic names all collapse into one bucket. The correct tool is UIKit's `UILocalizedIndexedCollation` — `currentCollation`, `sectionIndexTitles`, and `sectionForObject(_:collationStringSelector:)` — which produces kana sections for `ja`, jamo for `ko`, and so on. It needs an `@objc` sort-key on an `NSObject` subclass, so budget real time for it rather than assuming A–Z generalizes.
+- If the data comes from `CNContactStore`, honor `CNContactsUserDefaults.shared().sortOrder` — users can choose First/Last, and ignoring it makes your sections disagree with every other app on the device.
+
+| API | Availability |
+|-----|--------------|
+| `sectionIndexLabel(_:)` | iOS, macOS, tvOS, watchOS, visionOS 26 |
+| `listSectionIndexVisibility(_:)` | iOS, watchOS, visionOS 26 — unavailable on macOS, tvOS |
+
+Mind the asymmetry: `sectionIndexLabel` compiles on macOS and tvOS, but those platforms have no index to display it in, so the label is dead weight there.
+
+**watchOS presents it differently** — instead of a persistent strip, the current section's index label appears beside the scroll indicator while the user turns the crown.
+
+**HIG constraint** — do not put an index on a list whose rows carry trailing controls such as disclosure indicators. Both occupy the trailing edge and users cannot reliably hit one without the other. See axiom-design (skills/hig.md), "Should this list have a section index?".
+
+The usual resolution is not to drop the `NavigationLink` but to hide its chevron — the row keeps pushing and keeps announcing as a link:
+
+```swift
+List(groups) { group in
+    Section(group.letter) {
+        ForEach(group.people) { person in
+            NavigationLink(value: person) { Text(person.displayName) }
+        }
+    }
+    .sectionIndexLabel(group.letter)
+}
+.navigationLinkIndicatorVisibility(.hidden)   // iOS 17+
+```
+
+### Section Margins (`listSectionMargins`)
+
+```swift
+Section("Recents") {
+    ForEach(recents) { RowView($0) }
+}
+.listSectionMargins(.horizontal, nil)   // nil = system margins, explicitly
+```
+
+`listSectionMargins(_ edges: Edge.Set = .all, _ length: CGFloat?)`. Default margins derive from the list style, list section spacing, and the list's content margins; **this modifier overrides all of that completely** for the edges named, leaving other edges unchanged. For sections with headers or footers, the margins apply around those, not just the rows.
+
+iOS 26 and visionOS 26 only — unavailable on macOS, tvOS and watchOS.
+
+Unlike `.padding()`, `length` here has **no default**, so the argument is mandatory — but `nil` is a legal value and restores the system margins. Mandatory argument, not mandatory number. Reach for a real value only when the system's section margins are demonstrably wrong; see axiom-design (skills/hig.md), "What spacing, padding, or margin value should I use?".
+
 ### dataDetection OS27
 
 `.dataDetection(_:options:)` makes detected data in a view's text content tappable — links, emails, phone numbers, postal addresses, calendar events, money, measurements, flight/shipment numbers, payment IDs. iOS/macOS/watchOS/visionOS 27; **not tvOS**. SwiftUI equivalent of UIKit's `UITextView.dataDetectorTypes`, backed by the semantic `DataDetector` engine (not legacy `NSDataDetector`).
@@ -1276,9 +1343,9 @@ Apps must support resizable windows on iPad.
 
 **WWDC**: 2025-256, 2025-278 (What's new in widgets), 2025-287 (Meet WebKit for SwiftUI), 2025-310 (Optimize SwiftUI performance with instruments), 2025-323 (Build a SwiftUI app with the new design), 2025-325 (Bring Swift Charts to the third dimension), 2025-341 (Cook up a rich text experience in SwiftUI with AttributedString)
 
-**Docs**: /swiftui, /swiftui/defaulttoolbaritem, /swiftui/toolbarspacer, /swiftui/searchtoolbarbehavior, /swiftui/view/toolbar(id:content:), /swiftui/view/tabbarminimizebehavior(_:), /swiftui/view/tabviewbottomaccessory(isenabled:content:), /swiftui/slider, /swiftui/slidertick, /swiftui/slidertickcontentforeach, /webkit, /foundation/attributedstring, /charts, /charts/chart3d, /charts/surfaceplot, /charts/chart3dpose, /charts/chart3dcameraprojection, /charts/chart3dsurfacestyle, /realitykit/presentationcomponent
+**Docs**: /swiftui, /swiftui/defaulttoolbaritem, /swiftui/toolbarspacer, /swiftui/searchtoolbarbehavior, /swiftui/view/toolbar(id:content:), /swiftui/view/tabbarminimizebehavior(_:), /swiftui/view/tabviewbottomaccessory(isenabled:content:), /swiftui/slider, /swiftui/slidertick, /swiftui/slidertickcontentforeach, /webkit, /foundation/attributedstring, /charts, /charts/chart3d, /charts/surfaceplot, /charts/chart3dpose, /charts/chart3dcameraprojection, /charts/chart3dsurfacestyle, /realitykit/presentationcomponent, /swiftui/view/sectionindexlabel(_:), /swiftui/view/listsectionindexvisibility(_:), /swiftui/view/listsectionmargins(_:_:)
 
-**Skills**: skills/swiftui-performance.md, axiom-design (skills/liquid-glass.md), axiom-concurrency, axiom-integration, skills/search-ref.md
+**Skills**: skills/swiftui-performance.md, axiom-design (skills/liquid-glass.md), axiom-design (skills/hig.md), axiom-concurrency, axiom-integration, skills/search-ref.md
 
 ---
 

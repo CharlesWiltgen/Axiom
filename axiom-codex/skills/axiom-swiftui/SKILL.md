@@ -44,6 +44,8 @@ license: MIT
 | Multi-column Table, sortable/resizable columns (iPad/Mac; collapses to first column in compact) | See axiom-macos (skills/swiftui-differences.md) |
 | Inspector panel (`.inspector` — trailing column in regular width, sheet in compact) | See axiom-macos (skills/swiftui-differences.md) |
 | Gesture conflicts | See `skills/gestures.md` |
+| Section index — the vertical A–Z index strip / alphabet scrubber on a list's trailing edge, jump-to-section | See `skills/26-ref.md` (Section Index) |
+| List section margins / insets around a `Section` | See `skills/26-ref.md` (Section Margins) |
 | Web content — `WebView` / `WebPage`, scroll modifiers, WebView-in-NavigationStack | See `skills/26-ref.md` (WebView & WebPage) |
 | iOS 26 features | See `skills/26-ref.md` |
 

@@ -1,24 +1,26 @@
 
 # SwiftUI Containers Reference
 
-Stacks, grids, outlines, and scroll enhancements. iOS 14 through iOS 26.
+Stacks, grids, outlines, and scroll enhancements, through the 27 cycle.
+
+**Spacing values are not shown here on purpose.** Every stack and grid takes `spacing:` as a `CGFloat?`, and omitting it yields system spacing — the correct default. Which container to use is a layout question (this file); how much space to put between things is a design question, answered in axiom-design (skills/hig.md). The one example below that passes an explicit value (the photo grid) says why.
 
 ## Quick Decision
 
-| Use Case | Container | iOS |
-|----------|-----------|-----|
-| Fixed views vertical/horizontal | VStack / HStack | 13+ |
-| Overlapping views | ZStack | 13+ |
-| Large scrollable list | LazyVStack / LazyHStack | 14+ |
-| Multi-column grid | LazyVGrid | 14+ |
-| Multi-row grid (horizontal) | LazyHGrid | 14+ |
-| Static grid, precise alignment | Grid | 16+ |
-| Hierarchical data (tree) | List with `children:` | 14+ |
-| Custom hierarchies | OutlineGroup | 14+ |
-| Show/hide content | DisclosureGroup | 14+ |
-| Custom container that styles its children | Group(subviews:) / ForEach(subviews:) | 18+ |
-| Custom container with sections | Group(sections:) / ForEach(sections:) | 18+ |
-| Container-specific modifier on children | ContainerValues + @Entry | 18+ |
+| Use Case | Container |
+|----------|-----------|
+| Fixed views vertical/horizontal | VStack / HStack |
+| Overlapping views | ZStack |
+| Large scrollable list | LazyVStack / LazyHStack |
+| Multi-column grid | LazyVGrid |
+| Multi-row grid (horizontal) | LazyHGrid |
+| Static grid, precise alignment | Grid |
+| Hierarchical data (tree) | List with `children:` |
+| Custom hierarchies | OutlineGroup |
+| Show/hide content | DisclosureGroup |
+| Custom container that styles its children | Group(subviews:) / ForEach(subviews:) |
+| Custom container with sections | Group(sections:) / ForEach(sections:) |
+| Container-specific modifier on children | ContainerValues + @Entry |
 
 ---
 
@@ -27,12 +29,12 @@ Stacks, grids, outlines, and scroll enhancements. iOS 14 through iOS 26.
 ### VStack, HStack, ZStack
 
 ```swift
-VStack(alignment: .leading, spacing: 12) {
+VStack(alignment: .leading) {
     Text("Title")
     Text("Subtitle")
 }
 
-HStack(alignment: .top, spacing: 8) {
+HStack(alignment: .top) {
     Image(systemName: "star")
     Text("Rating")
 }
@@ -59,7 +61,7 @@ Spacer(minLength: 20)  // Minimum size
 
 ---
 
-### LazyVStack, LazyHStack (iOS 14+)
+### LazyVStack, LazyHStack
 
 Render children only when visible. Use inside ScrollView.
 
@@ -93,12 +95,12 @@ ScrollView {
 
 ## Part 2: Grids
 
-### Grid (iOS 16+)
+### Grid
 
 Non-lazy grid with precise alignment. Loads all views at once.
 
 ```swift
-Grid(alignment: .leading, horizontalSpacing: 10, verticalSpacing: 10) {
+Grid(alignment: .leading) {
     GridRow {
         Text("Name")
         TextField("Enter name", text: $name)
@@ -128,7 +130,7 @@ Grid {
 
 ---
 
-### LazyVGrid (iOS 14+)
+### LazyVGrid
 
 Vertical-scrolling grid. Define **columns**; rows grow unbounded.
 
@@ -140,7 +142,7 @@ let columns = [
 ]
 
 ScrollView {
-    LazyVGrid(columns: columns, spacing: 16) {
+    LazyVGrid(columns: columns) {
         ForEach(items) { item in
             ItemCard(item: item)
         }
@@ -148,7 +150,7 @@ ScrollView {
 }
 ```
 
-### LazyHGrid (iOS 14+)
+### LazyHGrid
 
 Horizontal-scrolling grid. Define **rows**; columns grow unbounded.
 
@@ -156,7 +158,7 @@ Horizontal-scrolling grid. Define **rows**; columns grow unbounded.
 let rows = [GridItem(.fixed(100)), GridItem(.fixed(100))]
 
 ScrollView(.horizontal) {
-    LazyHGrid(rows: rows, spacing: 16) {
+    LazyHGrid(rows: rows) {
         ForEach(items) { item in
             ItemCard(item: item)
         }
@@ -181,7 +183,7 @@ let columns = [GridItem(.adaptive(minimum: 150))]
 
 ## Part 3: Outlines
 
-### List with Hierarchical Data (iOS 14+)
+### List with Hierarchical Data
 
 ```swift
 struct FileItem: Identifiable {
@@ -196,7 +198,7 @@ List(files, children: \.children) { file in
 .listStyle(.sidebar)
 ```
 
-### OutlineGroup (iOS 14+)
+### OutlineGroup
 
 For custom hierarchical layouts outside List.
 
@@ -212,7 +214,7 @@ List {
 }
 ```
 
-### DisclosureGroup (iOS 14+)
+### DisclosureGroup
 
 ```swift
 @State private var isExpanded = false
@@ -230,6 +232,8 @@ DisclosureGroup("Advanced Options", isExpanded: $isExpanded) {
 ### Photo Grid
 
 ```swift
+// Deliberate exception: a photo grid wants near-zero gutters so images read
+// as a contact sheet. System spacing would be too airy here.
 let columns = [GridItem(.adaptive(minimum: 100), spacing: 2)]
 
 ScrollView {
@@ -264,7 +268,7 @@ ScrollView {
 
 ```swift
 ScrollView(.horizontal, showsIndicators: false) {
-    LazyHStack(spacing: 16) {
+    LazyHStack {
         ForEach(items) { item in
             CarouselCard(item: item).frame(width: 280)
         }
@@ -338,7 +342,7 @@ ScrollView(.horizontal) {
 
 ## Part 6: Scroll Enhancements
 
-### containerRelativeFrame (iOS 17+)
+### containerRelativeFrame
 
 Size views relative to scroll container.
 
@@ -353,7 +357,7 @@ ScrollView(.horizontal) {
 }
 ```
 
-### scrollTargetLayout (iOS 17+)
+### scrollTargetLayout
 
 Enable snapping.
 
@@ -367,7 +371,7 @@ ScrollView(.horizontal) {
 .scrollTargetBehavior(.viewAligned)
 ```
 
-### scrollPosition (iOS 17+)
+### scrollPosition
 
 Track topmost visible item. **Requires `.id()` on each item.**
 
@@ -384,7 +388,7 @@ ScrollView {
 .scrollPosition(id: $position)
 ```
 
-### scrollTransition (iOS 17+)
+### scrollTransition
 
 ```swift
 .scrollTransition { content, phase in
@@ -394,7 +398,7 @@ ScrollView {
 }
 ```
 
-### onScrollGeometryChange (iOS 18+)
+### onScrollGeometryChange
 
 ```swift
 .onScrollGeometryChange(for: Bool.self) { geo in
@@ -404,7 +408,7 @@ ScrollView {
 }
 ```
 
-### onScrollVisibilityChange (iOS 18+)
+### onScrollVisibilityChange
 
 ```swift
 VideoPlayer(player: player)
@@ -415,7 +419,7 @@ VideoPlayer(player: player)
 
 ---
 
-## Part 7: Custom Containers (iOS 18+)
+## Part 7: Custom Containers
 
 Container View APIs let you build reusable containers that decompose their children — applying decoration between them, grouping them into sections, or reading per-child configuration. This is how you write a `List` replacement instead of a one-off layout.
 
@@ -479,7 +483,7 @@ struct StackedCards<Content: View>: View {
     @ViewBuilder var content: Content
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading) {
             ForEach(subviews: content) { subview in
                 CardView { subview }
             }
@@ -518,9 +522,9 @@ struct SectionedBoard<Content: View>: View {
     @ViewBuilder var content: Content
 
     var body: some View {
-        HStack(spacing: 80) {
+        HStack {
             ForEach(sections: content) { section in
-                VStack(spacing: 20) {
+                VStack {
                     if !section.header.isEmpty {
                         SectionHeaderCard { section.header }
                     }

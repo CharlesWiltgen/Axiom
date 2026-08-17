@@ -18,6 +18,7 @@ Use this reference when you need:
 - TextEditor with AttributedString
 - Chart3D for 3D data visualization
 - Spatial layout and scene bridging
+- List section index and section margins
 
 **For Liquid Glass implementation:** See [liquid-glass](/skills/ui-design/liquid-glass) for adoption patterns.
 
@@ -38,8 +39,18 @@ Questions you can ask Claude that will draw from this reference:
 - "What performance improvements does iOS 26 bring to SwiftUI?"
 - "How do I make toolbars morph during navigation transitions?"
 - "Why isn't my toolbar morphing when I push a new view?"
+- "How do I add the A–Z index strip to a SwiftUI List?"
+- "Why isn't my section index showing up?"
+- "How do I change the margins around a List section?"
 
 ## What's Covered
+
+### Lists
+- sectionIndexLabel(_:) – per-section entry in the A–Z index
+- listSectionIndexVisibility(_:) – override the index strip's visibility
+- Default visibility behavior, and excluding sections from the index
+- listSectionMargins(_:_:) – override a section's margins
+- Platform availability, including where each API is unavailable
 
 ### Liquid Glass Design
 - .glassBackgroundEffect() modifier

@@ -9,6 +9,7 @@ Use when:
 - You need to check platform availability for a specific effect
 - You need configuration options (weight, scale, variable values)
 - You need to create custom symbols with proper template structure
+- You need to verify a symbol name exists, or check one symbol's availability at your deployment target — see Part 11 (`sfsymbols` CLI)
 
 #### Related Skills
 - Use `axiom-design (skills/sf-symbols.md)` for decision trees, anti-patterns, troubleshooting, and when to use which effect
@@ -658,6 +659,8 @@ struct FavoriteButton: View {
 
 ## Part 6: Custom Symbols
 
+**Starting from an existing symbol instead of a blank canvas?** `sfsymbols export <name> --format svg` writes the same editable template the app produces, from the command line — see Part 11. The annotation steps below still require the GUI.
+
 ### Template Structure
 
 Custom symbols are SVG files with specific layer annotations:
@@ -711,6 +714,8 @@ The system interpolates between these for intermediate weights (Thin, Light, Med
 ---
 
 ## Part 7: Platform Availability Matrix
+
+This matrix covers when each *feature* arrived. For when a **specific symbol** arrived — which is what an `@available` gate actually needs, and which differs per rendering mode — query the catalog directly; see Part 11 (`sfsymbols` CLI).
 
 ### Rendering Modes
 
@@ -955,6 +960,75 @@ struct TaskCheckbox: View {
     }
 }
 ```
+
+---
+
+## Part 11: The `sfsymbols` CLI
+
+The SF Symbols app ships a command-line tool. It turns the two questions this file is most often opened for — *does this symbol name exist?* and *is it available on my deployment target?* — into commands, so they can be answered without opening the app or trusting a transcribed table.
+
+### Finding the binary — it is NOT on PATH and NOT in Xcode
+
+`xcrun --find sfsymbols` fails and `which sfsymbols` finds nothing (verified). It lives inside the **SF Symbols app** bundle, a separate Apple download — not the Xcode toolchain. Probe both bundles rather than hardcoding either:
+
+```bash
+for app in "/Applications/SF Symbols.app" "/Applications/SF Symbols Beta.app"; do
+  [ -x "$app/Contents/Executables/sfsymbols" ] && SFSYMBOLS="$app/Contents/Executables/sfsymbols" && break
+done
+[ -n "$SFSYMBOLS" ] || echo "SF Symbols app not installed — use the Part 7 matrix instead"
+```
+
+Verified against `SF Symbols Beta.app` 8.0; the release-bundle path is the same relative layout but unverified — which is why the probe tests both rather than assuming either.
+
+### `search` — verify a name, or filter by deployment target
+
+```bash
+"$SFSYMBOLS" search --match-style exactName car.fill            # does this name exist?
+"$SFSYMBOLS" search --match-style exactName --min-platform iOS16 car.fill   # ...at my floor?
+"$SFSYMBOLS" search --limit 6 "trash delete"                    # permissive discovery
+```
+
+| Option | Use |
+|---|---|
+| `--match-style exactName` | name must equal the query — the form to use when verifying a symbol you are about to ship |
+| `--match-style nameContains` | substring; `car.fill` also matches `cablecar.fill` |
+| `--match-style permissive` (default) | tokenized across names, aliases, tags, lemmas — for discovery, not verification |
+| `--min-platform <plat><ver>` | repeatable; symbol must satisfy every one. e.g. `--min-platform iOS16 --min-platform watchOS9` |
+| `--show-availability` | append the introducing version |
+| `--json` | structured output, incl. **per-rendering-mode** availability |
+| `--category-filter`, `--limit`, `--show-glyph`, `--show-codepoint` | catalog browsing |
+
+**A zero-result search still exits 0.** Exit status cannot answer "does this symbol exist" — only empty stdout can. Test the output, never `$?`:
+
+```bash
+if [ -n "$("$SFSYMBOLS" search --match-style exactName --min-platform iOS16 "$NAME" 2>/dev/null)" ]; then
+  echo "$NAME is available at the iOS 16 floor"
+else
+  echo "$NAME is missing or newer than iOS 16"
+fi
+```
+
+**Per-rendering-mode availability is finer than the Part 7 matrix.** The matrix above gives when each *mode* arrived; `--json` gives when a *specific symbol* arrived in each mode, which is what an `@available` gate actually needs. `car.fill` is monochrome from iOS 13 but multicolor only from iOS 15:
+
+```bash
+"$SFSYMBOLS" search --match-style exactName --json car.fill | jq '.[0].availability'
+```
+
+The tool prints `sfsymbols: skipped N derived custom symbol(s)` to **stderr**, so `--json` on stdout parses cleanly with no filtering.
+
+### `export` — symbol artwork without the app
+
+```bash
+"$SFSYMBOLS" export car.fill --format svg --output car.svg          # editable template
+"$SFSYMBOLS" export heart.fill --format png --output heart.png \
+  --rendering-mode multicolor --point-size 200
+```
+
+SVG is the editable design template the app produces (the Part 6 starting point); PNG and PDF are renderings. Options: `--weight` (the 9 SF Pro weights), `--point-size`, `--symbol-scale`, `--image-scale`, `--rendering-mode`, `--color` (named or `#RRGGBB`), `--color-space`. Use `--output-dir` instead of `--output` when requesting more than one `--format`.
+
+### Use it to replace a guess
+
+Symbol names are easy to invent and the compiler never checks them: `Image(systemName:)` accepts any string, so a wrong name builds cleanly and fails at runtime instead. Before shipping a name that was recalled rather than looked up, run the `exactName` check above.
 
 ---
 

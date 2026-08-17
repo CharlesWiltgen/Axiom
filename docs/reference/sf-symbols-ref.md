@@ -15,6 +15,7 @@ Use this reference when:
 - You need platform availability for a specific feature
 - You need configuration options (weight, scale, variable values)
 - You need custom symbol template structure and Draw annotation details
+- You want to verify a symbol name exists, or check one symbol's availability and supported rendering modes, without opening the SF Symbols app
 
 ## Example Prompts
 
@@ -26,6 +27,9 @@ Questions you can ask Claude that will draw from this reference:
 - "How do I combine rendering mode with symbol effects?"
 - "What's the UIKit equivalent of .contentTransition(.symbolEffect(.replace))?"
 - "How do I create a custom symbol with Draw animation support?"
+- "Is `gauge.with.needle` a real symbol name, and does it exist on iOS 16?"
+- "Which rendering modes does this symbol actually support?"
+- "How do I export a symbol to SVG or PNG from the command line?"
 
 ## What's Covered
 
@@ -35,6 +39,7 @@ Questions you can ask Claude that will draw from this reference:
 - **UIKit reference** – `addSymbolEffect()`, `removeSymbolEffect()`, `setSymbolImage()`, completion handlers
 - **Custom symbols** – Template structure, Draw annotation, weight interpolation
 - **Platform availability matrix** – iOS 13+ through iOS 26+, cross-platform
+- **The `sfsymbols` CLI** – `search` and `export`, where the binary hides (inside the SF Symbols app, not Xcode and not on PATH), per-symbol availability via `--json`, `--min-platform` deployment-target filtering, and why a zero-result search still exits 0
 - **Accessibility** – Labels, Reduce Motion, Bold Text, Dynamic Type
 - **Common patterns** – Notification badge, WiFi strength, play/pause, download progress
 

@@ -219,7 +219,68 @@ Text("Disabled").foregroundStyle(.quaternary)
 - iOS/iPadOS: 44x44 points minimum
 - macOS: 20x20 points minimum; larger for primary actions
 - watchOS: Use system controls (optimized for small screen)
-- tvOS: 60+ point spacing for focus clarity
+- tvOS: give focusable elements room to grow when focused; HIG's published tvOS figure is a safe-area content inset (60pt top/bottom, 80pt sides), not a focus-spacing minimum
+
+### Q: What spacing, padding, or margin value should I use?
+
+**A:** None — omit the length and let the system supply it.
+
+Apple's HIG Layout guidance publishes no iOS spacing scale. It says to respect "system-defined safe areas, margins, and guides" and let the interface adapt. The SDK encodes that rule in the type signatures: every SwiftUI spacing modifier takes an **optional** length, and `nil` means system-determined.
+
+```swift
+// From SwiftUICore.swiftinterface — the length is Optional, defaulting to nil
+public func padding(_ edges: Edge.Set = .all, _ length: CGFloat? = nil) -> some View
+```
+
+```swift
+// ❌ WRONG — invents values Apple never published; won't adapt
+VStack(spacing: 12) { … }
+    .padding(.horizontal, 20)
+
+// ✅ RIGHT — system decides, and adapts across platform, size class, and Dynamic Type
+VStack { … }
+    .padding(.horizontal)
+```
+
+**System-spacing APIs.** All of them type the length as `CGFloat?`, where `nil` means system-determined — but only two *default* it, so the rest still require the argument. Pass `nil` explicitly there; it is not the same as committing to a number.
+
+| API | How to get the system value | Use for |
+|-----|------------------------------|---------|
+| `.padding(_:_:)` | omit the length | general spacing around a view |
+| `.safeAreaPadding(_:_:)` | omit the length | spacing measured beyond the safe area, not from the view edge |
+| `.contentMargins(_:_:for:)` | pass `nil` | scroll content insets, independent of scroll indicators |
+| `.listRowInsets(_:_:)` | pass `nil` | per-row insets in a `List` |
+| `.listSectionMargins(_:_:)` | pass `nil` | `List` section margins (iOS 26+; iOS/visionOS only — unavailable on macOS, tvOS, watchOS) |
+| `VStack`/`HStack` | omit `spacing:` | system default inter-view spacing |
+| `Grid` | omit `horizontalSpacing:`/`verticalSpacing:` | system default grid gutters |
+
+`.contentMargins(.horizontal)` does not compile — with the length omitted the call resolves to the single-`CGFloat` overload and `.horizontal` is not a `CGFloat`. Write `.contentMargins(.horizontal, nil)`.
+
+UIKit equivalents: `layoutMarginsGuide`, `directionalLayoutMargins`, `readableContentGuide` (caps line length for readability).
+
+**When a literal is legitimate.** Three cases, and all of them are exceptions you justify, not defaults:
+- Implementing a design system that defines its own scale — then the scale lives in one place, not scattered at call sites
+- Optical correction where the system value is demonstrably wrong for a specific glyph or asset
+- Non-standard canvases (games, custom drawing) that aren't participating in system layout
+
+If you type a number, leave a comment saying which system value was wrong and why. A bare literal is indistinguishable from a guess.
+
+**Where the published numbers actually live.** Apple's concrete values are platform-specific, never a general scale. 44x44pt touch targets come from accessibility and controls guidance (see the touch-target question above). Layout guidance itself publishes exactly two figures, both non-iOS: tvOS safe-area content insets (*"Inset primary content 60 points from the top and bottom of the screen, and 80 points from the sides"*) and visionOS button separation (*"place buttons so their centers are at least 60 points apart"*). There is no published iOS spacing scale — which is the whole reason the rule above is "omit the length".
+
+### Q: Should this list have a section index (the A–Z strip on the trailing edge)?
+
+**A:** Only if the list is long, sorted, and people scan it by letter — contacts, songs, a music library. An index over a short or unsorted list is decoration that steals a thumb-width of the trailing edge.
+
+**The hard rule:** never put an index on a list whose rows carry trailing controls — disclosure indicators, chevrons, detail buttons. Apple's guidance is explicit that both occupy the trailing side and *"it can be difficult for people to use one element without activating the other."*
+
+**You usually don't have to choose.** The conflict is with the *chevron*, not with push navigation. `.navigationLinkIndicatorVisibility(.hidden)` hides the indicator while the row stays a `NavigationLink` — it still pushes and still announces as a link to VoiceOver. Apple's own Contacts app is exactly this: A–Z index, push-to-detail, no chevrons. Only when a row genuinely needs a *tappable* trailing control (a detail button, a favorite toggle) is it a real either/or, and then the index is the thing that goes.
+
+**Also worth knowing before you design around it:**
+- The index shows only sections that have an index label, so it doesn't have to be a complete alphabet
+- watchOS renders it as a transient label beside the scroll indicator during crown scrolling, not a persistent strip — don't design a watch layout that assumes the iOS presentation
+- macOS and tvOS have no section index at all
+
+For the SwiftUI API (`sectionIndexLabel`, `listSectionIndexVisibility`, and the availability asymmetry between them), see axiom-swiftui (skills/26-ref.md), "Section Index".
 
 ---
 
@@ -437,9 +498,9 @@ Apple Pay, Wallet, and Tap to Pay each have their own HIG with rules App Review 
 
 **WWDC**: 356, 2019-808
 
-**Docs**: /design/human-interface-guidelines, /design/human-interface-guidelines/color, /design/human-interface-guidelines/dark-mode, /design/human-interface-guidelines/typography, /design/human-interface-guidelines/apple-pay, /design/human-interface-guidelines/wallet, /design/human-interface-guidelines/tap-to-pay-on-iphone
+**Docs**: /design/human-interface-guidelines, /design/human-interface-guidelines/layout, /design/human-interface-guidelines/lists-and-tables, /design/human-interface-guidelines/color, /design/human-interface-guidelines/dark-mode, /design/human-interface-guidelines/typography, /design/human-interface-guidelines/apple-pay, /design/human-interface-guidelines/wallet, /design/human-interface-guidelines/tap-to-pay-on-iphone
 
-**Skills**: axiom-design (skills/hig-ref.md), axiom-design (skills/liquid-glass.md), axiom-design (skills/liquid-glass-ref.md), axiom-accessibility, axiom-payments
+**Skills**: axiom-design (skills/hig-ref.md), axiom-design (skills/liquid-glass.md), axiom-design (skills/liquid-glass-ref.md), axiom-swiftui (skills/26-ref.md), axiom-accessibility, axiom-payments
 
 ---
 

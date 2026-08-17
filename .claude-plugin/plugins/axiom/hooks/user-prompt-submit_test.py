@@ -136,6 +136,29 @@ class TestPositiveRouting(unittest.TestCase):
             self.assertIn("axiom-ai", routed_skills(prompt),
                           f"expected axiom-ai for: {prompt!r}")
 
+    def test_explicit_axiom_invocation_still_routes(self):
+        """The meta-gate must not swallow a user ASKING for a skill."""
+        self.assertIn("axiom-swiftui", routed_skills(
+            "Use axiom-swiftui to check my section index implementation"))
+        self.assertIn("axiom-swiftui", routed_skills(
+            "/axiom:audit swiftui-layout the section index in my contacts router"))
+        self.assertIn("axiom-swiftui", routed_skills(
+            "run axiom-swiftui against the SKILL.md section index trigger"))
+
+    def test_swiftui_section_index(self):
+        """The A-Z index strip on a list's trailing edge (Axiom-eci).
+
+        Real prompt from a session that spent ~50x the expected time on this
+        feature without ever routing to Axiom. Developers describe it in plain
+        language -- 'index strip', 'alphabet scrubber' -- never by API name.
+        """
+        self.assertIn("axiom-swiftui", routed_skills(
+            "Some of our views have that vertical index strip on the right, what is that called?"))
+        self.assertIn("axiom-swiftui", routed_skills(
+            "How do I add an alphabet scrubber to this list?"))
+        self.assertIn("axiom-swiftui", routed_skills(
+            "listSectionMargins is being ignored on my Section"))
+
     def test_swiftui_webkit_api_tokens(self):
         # Unambiguous Apple API tokens — ungated, must route on their own
         self.assertIn("axiom-swiftui", routed_skills(
@@ -912,6 +935,68 @@ class TestPositiveRouting(unittest.TestCase):
 
 class TestNegativeRouting(unittest.TestCase):
     """Known false-positive traps must NOT trigger."""
+
+    def test_section_index_english_phrases_are_gated(self):
+        """REGRESSION GUARD. "section index"/"alphabet scrubber" are CROSS-PLATFORM
+        vocabulary, not Apple-only tokens -- Android's SectionIndexer is literally
+        this feature. The rule originally shipped ungated, repeating the exact
+        mistake documented in test_generic_transcription_wording_does_not_fire_ai.
+        """
+        for prompt in (
+            "Add a section index to my Android RecyclerView list in Kotlin",
+            "Add a section index to the README table of contents",
+            "Our React list needs an alphabet scrubber",
+            "Build a section index for the Django admin",
+        ):
+            self.assertNotIn("axiom-swiftui", routed_skills(prompt), prompt)
+
+    def test_section_index_api_tokens_stay_ungated(self):
+        """Apple-only identifiers must route even beside a non-iOS keyword."""
+        self.assertIn("axiom-swiftui", routed_skills(
+            "Our Kotlin backend feeds a list where listSectionIndexVisibility is ignored"))
+
+    def test_meta_prompts_about_axiom_itself_do_not_route(self):
+        """Prompts ABOUT Axiom's internals must not route to Axiom skills.
+
+        Observed live 2026-08-17: the hook fired axiom-swiftui/axiom-design on
+        two prompts about routing architecture and bd issues. Talking about a
+        router is not doing the work the router covers.
+        """
+        for prompt in (
+            "Which Axiom router should own the section index content?",
+            "Review the Axiom skill description budget and tell me if we're over",
+            "Why is the axiom-swiftui SKILL.md not routing correctly?",
+            "Add a section index trigger to the Axiom hook",
+            # Substring bypass: "because" contains "use".
+            "The description budget is over because axiom-swiftui's router "
+            "description mentions navigationstack and presentationDetents",
+            # Multi-line: `.` does not match newline without re.S.
+            "Look at the Axiom repo.\nWhy does the swiftui router trigger on my "
+            "navigationstack question?",
+        ):
+            self.assertEqual(set(), routed_skills(prompt), prompt)
+
+    def test_meta_gate_does_not_swallow_real_work(self):
+        """Citing a skill name while doing real work must still route.
+
+        REGRESSION GUARD. The gate's first vocabulary list included "suite",
+        "coverage" and "hook" -- generic enough that a user reporting a
+        follow-on problem WHILE using Axiom got silently suppressed. Measured
+        against the published hook: 3 of 8 adversarial prompts regressed. Those
+        three terms caught no true positive the stronger terms missed, so they
+        were dropped. Do not re-add them without re-running this test.
+        """
+        for prompt, expected in (
+            ("axiom-swiftui triggered but my sheet with presentationDetents "
+             "still goes fullscreen in landscape", "axiom-swiftui"),
+            ("Following axiom-data's advice my migration works, but the XCTest "
+             "suite now crashes in the simulator", "axiom-testing"),
+            ("Per the axiom-build hook suggestion I cleared DerivedData, "
+             "xcodebuild still fails with no such module", "axiom-build"),
+            ("axiom-performance coverage of retain cycles didn't help, "
+             "Instruments still shows my timer leaking", "axiom-performance"),
+        ):
+            self.assertIn(expected, routed_skills(prompt), prompt)
 
     def test_generic_transcription_wording_does_not_fire_ai(self):
         # REGRESSION GUARD. "transcribe"/"transcription"/"dictation" are ordinary English words,

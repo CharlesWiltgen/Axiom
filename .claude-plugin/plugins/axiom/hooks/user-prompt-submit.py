@@ -93,6 +93,35 @@ non_ios_keyword = re.search(r'typescript|react(?!\s*native)|angular|vue\.js|djan
 ios_signal = re.search(r'\bswift\b|swiftui|swiftdata|\bxcode|xcworkspace|xcodeproj|\bobjective-c\b|\bobjc\b|\bios\b|ipados|watchos|tvos|visionos|\biphone|\bipad|apple\s*(watch|tv)|vision\s*pro|uikit|appkit|cocoapod|swift\s*package|testflight|app\s*store\s*connect|provisioning\s*profile|\bxcrun\b|\blldb\b', prompt_lower)
 non_ios = bool(non_ios_keyword) and not ios_signal
 
+# Meta gate (Axiom-eci). A prompt ABOUT Axiom's own internals is not a prompt to
+# route: talking about a router is not doing the work the router covers. Observed
+# live 2026-08-17 firing axiom-swiftui/axiom-design on questions about routing
+# architecture and bd issues, which is the exact noise that teaches the model to
+# discount this hook's signal.
+#
+# Deliberately narrow: it requires BOTH the word "axiom" AND Axiom-internals
+# vocabulary, and it yields to an explicit request to use a skill, so
+# "use axiom-swiftui to check my section index" still routes normally.
+# `[\s\S]` not `.` — meta prompts here are routinely multi-line (pasted bd issue
+# text), and `.` stops at a newline. Vocabulary is \b-anchored so "webhook" does not
+# read as "hook" and "triggered" does not read as "trigger". Known accepted losses:
+# "test suite" and "test coverage" beside the word axiom still arm the gate.
+# Weak terms ("hook", "coverage", "suite") were removed after a behavioural diff
+# against the published hook showed 3 of 8 adversarial prompts regressing: a user
+# doing real work while citing a skill ("Following axiom-data's advice ... the XCTest
+# SUITE now crashes") was silently suppressed. They caught no true positive that the
+# strong terms below miss. Re-adding one requires re-running
+# TestNegativeRouting.test_meta_gate_does_not_swallow_real_work.
+_META_VOCAB = (r'routers?|skill file|skill\.md|skill description|description budget|'
+               r'manifest|marketplace|triggers?|sub-skills?')
+_axiom_meta_subject = re.search(
+    r'\baxiom\b[\s\S]{0,80}\b(?:' + _META_VOCAB + r')\b|'
+    r'\b(?:' + _META_VOCAB + r')\b[\s\S]{0,80}\baxiom\b', prompt_lower)
+# \b on the verb group: without it "use" matches inside "beca(use)", letting a pure
+# meta prompt bypass the gate.
+_explicit_invocation = re.search(r'\b(use|using|invoke|run|load|try)\s+(the\s+)?axiom|/skill\s|/axiom:', prompt_lower)
+axiom_meta = bool(_axiom_meta_subject) and not _explicit_invocation
+
 # Build/environment (highest priority)
 if not non_ios and re.search(r'build (fail|error|broken)|xcodebuild|simulator (crash|hang|won.t|not )|pod (install|update)|spm |swift package|linker (error|command)|module.{0,5}not found|derived data|code sign|provisioning|xcworkspace|xcodeproj|xcode (error|crash|hang|won.t)|build time|compile (error|slow|time)|lldb\b|breakpoint.{0,10}(set|conditional|symbolic)|thread\s*backtrace|\bpo\b.{0,10}(vs|variable|expression)|transport error|could not be established|\bcoredevice\b|dvtenablecoredevice|deploy(ing|ed)?.{0,30}(to\s+)?(device|watch|phone|ipad|simulator|hardware|real\s+device|physical\s+device)|connect.{0,10}(to.{0,10})?(watch|device|phone|ipad|simulator)|device.{0,10}(not.{0,10}(connect|found|recogn|appear)|won.t.{0,10}(connect|appear|show))|cannot find symbol|cannot find.{0,15}in scope|use of unresolved identifier|undefined (symbol|reference)|works? (fine )?(in|on) (the )?simulator.{0,40}(fail|crash|broken|wrong|black|empty|hang).{0,15}(on|in).{0,10}(real |physical )?device|(crash|fail|broken|wrong|black|empty|hang)\w*\s+only\s+on\s+.{0,15}device|only\s+(crash|fail|broken|hang)\w*\s+(on|in)\s+.{0,15}device|(real|physical)\s*device[- ]only|device[- ]only.{0,15}(crash|fail|broken)|after .{0,30}(updating|upgrading|installing) xcode', prompt_lower):
     matches.append("axiom-build")
@@ -104,6 +133,28 @@ if re.search(r'swiftui|@state\b|@binding\b|@observable\b|@environment\b|navigati
 # UI — preview construction (separate from preview-crash routing above)
 # Routes to axiom-swiftui for building good previews, perf, @Previewable, PreviewModifier, variant matrix
 if "axiom-swiftui" not in matches and re.search(r'@previewable\b|previewable\s*\(\s*\)|previewmodifier|makesharedcontext|preview.{0,15}(slow|takes? \w+ seconds?|takes? forever|too slow|hang|never finish)|slow.{0,10}preview|#preview\b|preview\s+(variant|matrix|trait|modifier|canvas)|variant\s*mode|preview\s*pin|xcode_running_for_previews|development assets|sizethatfitslayout', prompt_lower):
+    matches.append("axiom-swiftui")
+
+# UI — list section index (Axiom-eci). Split deliberately.
+#
+# API tokens are Apple-only identifiers and stay UNGATED, so they route even in a
+# mixed prompt ("our Kotlin backend feeds a list where listSectionIndexVisibility...").
+if "axiom-swiftui" not in matches and re.search(r'sectionindexlabel|listsectionindexvisibility|listsectionmargins', prompt_lower):
+    matches.append("axiom-swiftui")
+
+# The English phrases are CROSS-PLATFORM vocabulary — Android's SectionIndexer is
+# literally this feature — so they sit behind the non_ios gate, like every other
+# generic-term rule. Shipping them ungated repeated the exact bug recorded in
+# test_generic_transcription_wording_does_not_fire_ai.
+#
+# Bare "section index" is deliberately NOT here: it carries no UI signal at all and
+# fires on "a section index for the Django admin" and "a section index to the README
+# table of contents", neither of which the non_ios gate catches (no non-iOS keyword).
+# "index strip" and "alphabet scrubber" name the iOS control specifically. Cost of the
+# omission: "add a section index to the contacts list" no longer routes — an accepted
+# miss under the over-invoking-is-worse rule. Bare "scrubber" is excluded too; it names
+# a media transport control far more often.
+if "axiom-swiftui" not in matches and not non_ios and re.search(r'index strip|alphabet scrubber', prompt_lower):
     matches.append("axiom-swiftui")
 
 # UI — WebKit for SwiftUI (iOS 26 WebView / WebPage). Unambiguous API tokens, ungated.
@@ -338,6 +389,13 @@ if re.search(r'device\s*hub|\bdevicectl\b|(control|drive|manage).{0,25}(simulato
     matches.append("axiom-tools")
 
 # --- Output ---
+# See the `axiom_meta` gate above: a prompt ABOUT Axiom's internals clears ALL
+# matches, not just related ones. Deliberate — under "over-invoking is worse than
+# under-invoking", a whole-prompt suppression is the cheaper error, and the model's
+# own description matcher still runs as a backstop.
+if axiom_meta:
+    matches = []
+
 if not matches:
     print("{}")
     sys.exit(0)

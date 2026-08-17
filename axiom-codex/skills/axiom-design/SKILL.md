@@ -22,11 +22,14 @@ license: MIT
 | Symptom / Task | Reference |
 |----------------|-----------|
 | Design decisions, HIG compliance, colors, backgrounds | See `skills/hig.md` |
+| Spacing, padding, margins, insets — what value to use | See `skills/hig.md` |
+| Section index / A–Z index strip / alphabet scrubber — should this list have one | See `skills/hig.md` |
 | Semantic colors, custom color patterns, material styles | See `skills/hig-ref.md` |
 | Liquid Glass effects, adoption, migration from blur effects | See `skills/liquid-glass.md` |
 | App-wide Liquid Glass adoption, backward compatibility | See `skills/liquid-glass-ref.md` |
 | SF Symbols rendering modes, effects, animations | See `skills/sf-symbols.md` |
 | SF Symbols API signatures, UIKit equivalents, availability | See `skills/sf-symbols-ref.md` |
+| Verify a symbol name exists / check one symbol's availability or supported modes (`sfsymbols` CLI) | See `skills/sf-symbols-ref.md` (Part 11) |
 | San Francisco fonts, text styles, Dynamic Type, tracking | See `skills/typography-ref.md` |
 | App entry points, auth flows, root view switching, scene lifecycle, document-based apps | See `skills/app-composition.md` |
 | Apple Pay button / Wallet pass design / Tap to Pay button | See `axiom-payments` suite, plus `skills/hig.md` for cross-cutting HIG context |
@@ -40,6 +43,7 @@ digraph design {
 
     start -> what;
     what -> "skills/hig.md" [label="design decision,\nHIG compliance,\ncolor/background choice"];
+    what -> "skills/hig.md" [label="spacing/padding/margin value"];
     what -> "skills/hig-ref.md" [label="semantic color API,\ncustom color code,\nmaterial style details"];
     what -> "skills/liquid-glass.md" [label="Liquid Glass effects,\nmigrate from blur,\nRegular vs Clear"];
     what -> "skills/liquid-glass-ref.md" [label="app-wide Liquid Glass plan,\nplatform differences,\nbackward compat"];

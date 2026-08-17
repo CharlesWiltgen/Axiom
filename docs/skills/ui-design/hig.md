@@ -34,6 +34,10 @@ Questions you can ask Claude that will draw from this skill:
 - "How do I create colors that adapt to light/dark mode?"
 - "Is my touch target too small?"
 - "What's the minimum tappable area for buttons?"
+- "What spacing should I use between these views?"
+- "How much padding should this card have?"
+- "Should this list have an A–Z index strip down the side?"
+- "Why does my section index overlap the row chevrons?"
 
 ## What This Skill Provides
 
@@ -56,6 +60,17 @@ Questions you can ask Claude that will draw from this skill:
 ### Touch Targets
 - Minimum 44x44pt tappable area
 - Spacing between targets
+
+### Spacing, Padding and Margins
+- Why Apple publishes no iOS spacing scale, and what to do instead
+- Which modifiers hand you the system value, and which require an explicit `nil`
+- The three cases where a hardcoded literal is legitimate
+- UIKit equivalents – layout margins guide, directional layout margins, readable content guide
+
+### Section Index
+- When an A–Z index strip earns its place on a list
+- The hard rule against pairing an index with trailing row controls
+- Platform differences – watchOS presents it during crown scrolling; macOS and tvOS have none
 
 ## Key Pattern
 
