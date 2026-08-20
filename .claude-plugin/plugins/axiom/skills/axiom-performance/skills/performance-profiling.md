@@ -194,6 +194,8 @@ MyViewController.viewDidLoad() – 500ms (40% of total)
 
 Use Allocations when memory grows over time or you suspect memory pressure issues.
 
+Before recording, get the peak from the process itself — `ledger_phys_footprint_peak` via `task_vm_info` is a single call, needs no trace, and cannot be missed by a sampling interval. If it sits far above the resting figure, you know you are hunting a transient spike rather than growth, which changes what you record and where you look. See `axiom-performance (skills/memory-debugging.md)` — Measure Peak, Not Resting.
+
 ### Workflow: Record and Analyze
 
 #### Step 1: Launch Instruments

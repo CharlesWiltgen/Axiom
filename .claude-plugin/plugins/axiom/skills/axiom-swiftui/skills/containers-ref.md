@@ -307,6 +307,8 @@ List(selection: $selection) {
 | Grid <50 | No | Grid |
 | Grid 50+ | Yes | LazyVGrid/LazyHGrid |
 
+**Heavy rows (images, large payloads)**: through iOS 26 neither `LazyVStack` nor `List` frees a row's state after it scrolls away — keep the weight in a bounded store above the list. See `skills/layout-ref.md` (Lazy Container Gotchas).
+
 **Cache GridItem arrays** — define outside body:
 
 ```swift

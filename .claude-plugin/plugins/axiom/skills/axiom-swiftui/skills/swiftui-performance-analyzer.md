@@ -137,6 +137,13 @@ Run all 10 existing detection patterns. For every grep match, use Read to verify
 **Issue**: More allocations, less efficient updates (whole-object invalidation vs property-level)
 **Fix**: Migrate to `@Observable` macro
 
+### 11. Heavy Payload in Per-Row State (HIGH)
+
+**Pattern**: `@State`/`@StateObject` holding a decoded image, `Data`, or a large array inside a row view rendered by `LazyVStack`/`LazyHStack`/`LazyVGrid`/`List`
+**Search**: `@StateObject` or `@State` near `UIImage`, `Image(uiImage:`, `Data(`, `[UInt8]` — verify the view is used inside a lazy container or `List`
+**Issue**: Through iOS 26 a lazy container never frees a row's state once created — footprint grows with rows *visited*, not rows visible (measured: +95 MB over an 800-row scroll; `List` is no better at +88 MB). On iOS 27 the row is evicted once the user scrolls a few screens away, so the same state silently resets instead. The exact threshold is not a contract — it moved with row height and scroll pattern in measurement.
+**Fix**: Move the payload into a bounded store (`NSCache`) owned above the list; lift per-row flags into the list's model. See `axiom-swiftui (skills/layout-ref.md)` — Lazy Container Gotchas
+
 ## Phase 3: Reason About Context-Dependent Performance
 
 Using the Performance Context Map from Phase 1 and your domain knowledge, check for issues that depend on *where* the code runs — not just *what* the code does.
@@ -149,6 +156,7 @@ Using the Performance Context Map from Phase 1 and your domain knowledge, check 
 | Do any scrolling views have deep view hierarchies (>5 levels of nesting)? | Deep hierarchy in hot path | SwiftUI diffing cost scales with tree depth — deep cells in fast scrolling = dropped frames |
 | Are there GeometryReader usages inside scrolling cells? | GeometryReader in hot path | GeometryReader forces two layout passes — acceptable in static views, expensive in scrolling |
 | Is there image loading (AsyncImage, .task with image) inside List/ForEach without caching? | Uncached image loading in scrolling | Images re-fetched on every scroll-into-view without caching |
+| Does any row state need to survive the user scrolling away and back (expanded/collapsed, nested scroll offset, in-row player position)? | Row state lost to eviction on iOS 27 | Lazy rows are rebuilt after a scroll-away on iOS 27 — code that worked on iOS 26 forgets. It reproduces only in lists long enough to scroll several screens, and it reaches users on already-shipped binaries because the behavior is not SDK-gated |
 | Are there @State properties initialized with expensive expressions? | Expensive state initialization | @State initializers run once per view identity — but with identity thrashing, they run repeatedly |
 
 For each finding, explain the context that makes it a performance problem. Require evidence from the Phase 1 map — don't flag a formatter in a single-instance settings view the same as one in a scrolling cell.

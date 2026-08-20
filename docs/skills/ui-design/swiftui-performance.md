@@ -31,8 +31,13 @@ Questions you can ask Claude that will draw from this skill:
 - "Some views are updating way too often even though their data hasn't changed."
 - "I have large data structures and complex view hierarchies. How do I optimize them?"
 - "We have a performance deadline and I need to understand what's slow in SwiftUI."
+- "My list's memory keeps climbing as I scroll on iOS 26 — is that a leak?"
 
 ## What This Skill Provides
+
+### Lazy Container Memory (iOS 26 vs iOS 27)
+- Why a growing footprint while scrolling on iOS 26 is not a leak, and why iOS 27 hides its cost from the resting figure
+- Profiling the peak rather than the memory gauge when rows rebuild on scroll-back
 
 ### SwiftUI Instrument (Instruments 26)
 - Four track lanes: Update Groups, Long View Body Updates, Long Representable Updates, Other Long Updates

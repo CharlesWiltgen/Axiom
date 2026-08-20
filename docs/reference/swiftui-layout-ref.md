@@ -7,6 +7,33 @@ description: Reference — Complete SwiftUI adaptive layout API guide covering V
 
 Comprehensive API reference for SwiftUI adaptive layout tools.
 
+## When to Use This Reference
+
+Use this reference when you're:
+
+- Building a layout that has to adapt across iPhone, iPad, and resizable windows
+- Reaching for `GeometryReader` and unsure whether `onGeometryChange` or `containerRelativeFrame` is the better tool
+- Deciding between size classes and real geometry for a width breakpoint
+- Diagnosing a scrolling list whose memory grows the longer the user scrolls, or whose rows forget their state
+
+## Example Prompts
+
+Questions you can ask Claude that draw from this reference:
+
+- "How do I switch between a stack and a grid based on available width?"
+- "Why is my `GeometryReader` collapsing to zero height inside a `ScrollView`?"
+- "Should I use `horizontalSizeClass` or measure the width myself?"
+- "My list's memory keeps climbing the further I scroll — what's holding it?"
+- "My expanded rows collapse themselves after the user scrolls away and back."
+
+## Documentation Scope
+
+This page documents the `layout-ref` skill in the `axiom-swiftui` suite.
+
+- For adaptive layout *patterns* rather than API surface, see [swiftui-layout](/skills/ui-design/swiftui-layout)
+- For choosing a container in the first place, see [swiftui-containers-ref](/reference/swiftui-containers-ref)
+- For automated scanning, use the [swiftui-layout-auditor](/agents/swiftui-layout-auditor) agent
+
 ## Overview
 
 Complete guide to all SwiftUI layout APIs for building adaptive interfaces, based on WWDC 2022, 2024, and 2025 content.
@@ -31,6 +58,10 @@ Complete guide to all SwiftUI layout APIs for building adaptive interfaces, base
 - **alignmentGuide** – Per-view guide adjustment within a stack (iOS 13+)
 - **Custom alignments** – `AlignmentID` semantic lines that align views across nested containers
 - **layoutPriority / truncationMode / allowsTightening / minimumScaleFactor** – Controlling which text gives way, and how, when a window narrows
+
+### Lazy Container Behavior
+- **Off-screen row lifetime** – iOS 26 holds a visited row's state until you scroll back over it; iOS 27 releases rows continuously (measured on both cycles)
+- **Per-row state loss** – What survives a scroll-away on each cycle, and the two-part fix that covers both
 
 ### Window APIs
 - **Resizable windows everywhere** – iPhone apps resize too (Mac mirroring, iPhone-only on iPad)

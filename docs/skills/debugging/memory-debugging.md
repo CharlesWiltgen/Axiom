@@ -40,6 +40,11 @@ Questions you can ask Claude that will draw from this skill:
 4. **NotificationCenter Leaks** – Observers not removed in deinit
 5. **Parent-Child Cycles** – Navigation or container relationships
 
+### Measuring Peak vs Resting Memory
+- Reading `ledger_phys_footprint_peak` and `os_proc_available_memory()` from `task_vm_info` – the high-water mark, plus the headroom that makes it meaningful
+- Which number each termination is judged against – a limit kill checks instantaneous footprint, while background jetsam picks victims by their resting figure
+- Why the peak never resets (read it before and after, take the delta), why polling misses spikes, and where peaks hide (scroll-back, document reopen, image pipelines)
+
 ### Instruments Workflows
 - Allocations instrument setup and heap snapshots
 - Reference count tracking and retain cycle visualization
