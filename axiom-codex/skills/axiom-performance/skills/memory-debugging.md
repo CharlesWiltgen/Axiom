@@ -79,6 +79,53 @@ Navigate to view, navigate away. See "✅ deallocated"? Yes = no leak. No = reta
 | **Memory Limit Exceeded** | Your app used too much memory | Reduce peak footprint |
 | **Jetsam** | System needed memory for other apps | Reduce background memory to <50MB |
 
+### Measure Peak, Not Resting
+
+The table above says "reduce peak footprint" for one row and "reduce background memory" for the other, and that split is real — the two terminations are judged against different numbers:
+
+| Termination | Judged against | Number to reduce |
+|---|---|---|
+| Memory Limit Exceeded | Your instantaneous footprint, checked continuously | Peak |
+| Jetsam under system pressure | Your footprint at the moment the kernel picks victims — for a backgrounded app, its resting figure | Resting |
+
+So peak is what explains a limit kill you cannot reproduce; resting is what governs whether you survive someone else's memory pressure. The kernel tracks both, plus your headroom, in one call:
+
+```swift
+import os
+
+func footprint() -> (currentMB: Double, peakMB: Double, headroomMB: Double)? {
+    var info = task_vm_info_data_t()
+    var count = mach_msg_type_number_t(
+        MemoryLayout<task_vm_info_data_t>.size / MemoryLayout<integer_t>.size
+    )
+    let kr = withUnsafeMutablePointer(to: &info) {
+        $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
+            task_info(mach_task_self_, task_flavor_t(TASK_VM_INFO), $0, &count)
+        }
+    }
+    guard kr == KERN_SUCCESS else { return nil }
+    return (Double(info.phys_footprint) / 1_048_576,
+            Double(info.ledger_phys_footprint_peak) / 1_048_576,
+            Double(os_proc_available_memory()) / 1_048_576)
+}
+```
+
+- `phys_footprint` is what Xcode's memory gauge shows.
+- `ledger_phys_footprint_peak` is the high-water mark since launch.
+- `os_proc_available_memory()` is your remaining headroom — the same value as the struct's `limit_bytes_remaining`. iOS, tvOS, and watchOS only; not macOS. Without it a peak has nothing to be judged against: 300 MB is unremarkable on an iPad Pro reporting 5 GB of headroom and fatal in an app extension with 50 MB. `current + headroom` gives you that device's actual limit, which is the number to put beside a colleague's "we're only at 180 MB".
+
+**A zero headroom reading is ambiguous — never read it as "plenty of room".** `<os/proc.h>` defines 0 as: the calling process is not an app, **or** it has already exceeded its memory limit. Those are opposite situations. Disambiguate with `phys_footprint` from the same call — a small footprint beside a 0 means the reading does not apply to this process; a large one means you are already over the line.
+
+**The peak never resets.** There is no API to clear it, and it outlives the free that hides the spike from the gauge. A single read after your test hands you the process-lifetime maximum — which may have been set during launch, or on a screen the user visited ten minutes ago. **Read it before the interaction and after, and take the delta**, or relaunch between runs.
+
+**Sampling is not a substitute.** A transient spike outruns any polling rate you are willing to pay for. In the lazy-container case below, polling on every step of a scroll still missed a peak several times higher than anything it recorded.
+
+**Simulator readings are not device readings.** In the simulator your process is a macOS process: `phys_footprint` measures host memory, there is no iOS dirty-memory limit, and `os_proc_available_memory()` is not meaningful. Peak work belongs on hardware.
+
+**Where peaks hide**: transitions, not steady states — a list scrolling back through rows it already passed, a document reopening, a share sheet loading previews, an image pipeline decoding faster than it releases. The measured case, with numbers, is `axiom-swiftui (skills/layout-ref.md)` — Lazy Container Gotchas, where iOS 27 releases rows continuously and still peaks several times above rest.
+
+**In production**, `MXMetricPayload.memoryMetrics.peakMemoryUsage` is the field counterpart to this call — see Monitoring with MetricKit below.
+
 ### Reducing Jetsam Rate
 
 Clear caches on backgrounding:
@@ -117,6 +164,10 @@ On `iOS27`, MetricKit adds a **memory exception diagnostic** — when the app (o
 
 ```
 App memory grows while in USE? → Memory leak (fix retention)
+App memory grows only WHILE SCROLLING a long list, on iOS 26? → Not a leak.
+  Lazy containers and List never free a visited row's state on 26; the memory is
+  reachable, so leak detection reports nothing. Move heavy payloads out of per-row
+  state. See axiom-swiftui (skills/layout-ref.md) — Lazy Container Gotchas
 App killed in BACKGROUND? → Jetsam (reduce bg memory)
 ```
 

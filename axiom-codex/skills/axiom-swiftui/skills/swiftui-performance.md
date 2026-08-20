@@ -151,6 +151,21 @@ These lanes are covered in detail in the next section.
 
 ---
 
+## Lazy Container Memory Changed in the 27 Cycle
+
+Through iOS 26, a lazy container never frees a row's state once it has been created — footprint grows with rows *visited*, not rows visible. Measured over an 800-row scroll with 100 KB per row: **+95 MB on iOS 26.5, +1.5 MB on iOS 27.0**, same binary. `List` is no better on 26 (+88 MB); it releases only when you scroll back over the region.
+
+Two consequences when you are profiling:
+
+- **Growing footprint while scrolling on iOS 26 is not a leak.** The memory is reachable and owned by the live container, so leak detection has nothing to report. Look for heavy payloads in per-row `@State`/`@StateObject`, not for retain cycles.
+- **A list that "forgets" on iOS 27 is the same mechanism from the other side.** Row state is destroyed once the user scrolls a few screens away, so a bug filed as "our expanded rows collapse themselves" is an eviction symptom, not a state-management bug. It arrives without a rebuild — the same source linked against the 26.5 SDK evicts identically on the 27 runtime, so already-shipped binaries change behavior on OS update.
+
+- **On 27, profile the peak, not the resting figure.** Eviction means rows are rebuilt on the way back, and the rebuild spike outruns sampling — a list measured on device peaked at several times its resting footprint while per-frame polling saw almost nothing. Numbers in `skills/layout-ref.md`; the call to read peak and headroom in `axiom-performance (skills/memory-debugging.md)`.
+
+Full measurements, the eviction boundary, and the one fix that covers both cycles: `skills/layout-ref.md` — Lazy Container Gotchas.
+
+---
+
 ## The SwiftUI Instrument (Instruments 26)
 
 ### Getting Started

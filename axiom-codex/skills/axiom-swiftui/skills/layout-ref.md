@@ -968,13 +968,32 @@ HStack {
 
 ## Lazy Container Gotchas
 
-### Recycling Behavior
+### What Happens to a Row After It Scrolls Away
 
-`LazyVStack` and `LazyHStack` create views **on demand** and recycle them when off-screen. This means:
+Lazy containers create rows on demand on every OS. What the 27 cycle changed is what happens to a row *after* it leaves the screen — and the two cycles fail in opposite directions, so unversioned advice is wrong on one of them. The symptoms diverge; the fix does not.
 
-- **View identity matters**: If cells flash/disappear during fast scrolling, the view identity is unstable. Use explicit `.id()` on items.
-- **onAppear/onDisappear fire repeatedly**: Views are created and destroyed as you scroll. Don't use these for one-time setup.
-- **State resets on recycle**: `@State` in lazy items resets when recycled. Lift state to the model layer.
+| Runtime | Off-screen row | Symptom |
+|---|---|---|
+| iOS 26 | Kept alive; freed only when scrolled back over | Footprint grows with rows visited |
+| iOS 27 | Released continuously | Per-row state is rebuilt, so it silently resets |
+
+Measured: 800 rows, 100 KB each held in per-row state, scrolled top to bottom.
+
+| Runtime | Container | Rows alive at bottom | Footprint delta |
+|---|---|---|---|
+| 26.5 | LazyVStack | 800 of 800 | +95 MB |
+| 26.5 | List | 800 of 800 | +88 MB |
+| 27.0 | LazyVStack | 50 of 800 | +1.5 MB |
+| 27.0 | List | 59 of 800 | ~0 |
+| either | VStack (non-lazy) | 800, all built at launch | 168 MB before a single scroll |
+
+iPhone 17 simulator, iOS 26.5 and iOS 27.0 (build 24A5408d), Xcode 27. Deltas are against a baseline taken with the first screenful already realized, so they run below the raw payload arithmetic. **This 26-vs-27 comparison is simulator-only.** The 27 behavior on its own is separately confirmed on device below; macOS and visionOS are untested.
+
+**The 27 behavior is not gated on the SDK you build against.** The same source linked against the 26.5 SDK evicts identically on the 27 runtime. Shipped binaries change behavior when a user updates the OS — there is no rebuild to opt into, and no deployment target that opts out.
+
+#### Row lifecycle, both cycles
+
+`onAppear`/`onDisappear` fire repeatedly as rows scroll, so neither is a place for one-time setup. View identity still matters — if rows flash during fast scrolling, identity is unstable:
 
 ```swift
 // ❌ Items flash during fast scroll — unstable identity
@@ -992,11 +1011,150 @@ LazyVStack {
 }
 ```
 
+#### iOS 26 — the row stops rendering, its state stays
+
+`onDisappear` fires for 786 of the 800 rows, yet not one row's state is freed. Waiting does not help: 8 seconds idle at the bottom frees zero rows. Only scrolling back *over* a region releases it.
+
+Reaching for `List` does not help either — +88 MB, same shape, and it too releases only on the return trip. The container is not the problem; per-row state is. `@State` and `@StateObject` were measured separately, with the same result.
+
+The arithmetic is what makes this dangerous rather than untidy: a 3 MB decoded image per row, across the few hundred rows a user scrolls past, is hundreds of MB resident that never comes back.
+
+```swift
+// ❌ Every row the user scrolls past keeps its image alive for the life of the list
+@MainActor @Observable
+final class RowImage {
+    var image: Image?
+    func load(_ url: URL) async { image = await decodeThumbnail(url) }
+}
+
+struct PhotoRow: View {
+    let photo: Photo
+    @State private var loaded = RowImage()
+
+    var body: some View {
+        thumbnail(loaded.image)
+            .task { await loaded.load(photo.url) }
+    }
+}
+
+// ✅ One bounded store above the list; the row reads through it and holds nothing
+@MainActor @Observable
+final class ThumbnailStore {
+    // NSCache constrains both parameters to AnyObject — CachedImage must be a class
+    @ObservationIgnored private let cache = NSCache<NSNumber, CachedImage>()
+
+    init(limit: Int = 60) { cache.countLimit = limit }
+
+    func image(for id: Int) -> Image {
+        if let hit = cache.object(forKey: NSNumber(value: id)) { return hit.value }
+        let made = CachedImage(id: id)
+        cache.setObject(made, forKey: NSNumber(value: id))
+        return made.value
+    }
+}
+
+struct PhotoFeed: View {
+    let photos: [Photo]
+    @State private var store = ThumbnailStore()
+
+    var body: some View {
+        ScrollView {
+            LazyVStack {
+                ForEach(photos) { CachedPhotoRow(photo: $0) }
+            }
+        }
+        .environment(store)
+    }
+}
+
+struct CachedPhotoRow: View {
+    let photo: Photo
+    @Environment(ThumbnailStore.self) private var store
+
+    // Read through the store on each body pass rather than parking the result in
+    // @State — a strong reference held in row state is precisely what 26 never frees.
+    var body: some View { thumbnail(store.image(for: photo.id)) }
+}
+```
+
+Verified on 26.5 against the same 800-row scroll: **+6.5 MB instead of +95 MB**, with live rows held near the cache limit. `countLimit` is a hint rather than a hard cap, and `NSCache` also purges under memory pressure — both are what you want here.
+
+#### iOS 27 — per-row state does not survive a scroll-away
+
+Scroll far enough and back and the row is rebuilt: fresh `@State`, fresh `@StateObject`, initializers run again.
+
+Do not treat the threshold as a contract. Bisection puts it between roughly one and three screens for 60pt rows, and between five and seven screens for 300pt rows — but it also moved when only the scroll *step* changed, so it fits neither a point-distance nor a row-count model cleanly. Row height is itself a moving target: the same list re-laid-out at an accessibility text size has different row heights, and therefore different eviction geometry, for the same content. What reproduces is the outcome: **a user who scrolls a few screens away and comes back gets a rebuilt row.**
+
+What that costs is an expanded/collapsed flag, a nested carousel's offset, a per-row loaded image, an in-row player's position. Code that shipped correctly on 26 forgets on 27 — and per the SDK note above, it forgets for users who never installed a new build. It will not reproduce in a preview or a short test list.
+
+Rebuilding is not free either. Every evicted row the user returns to is built again, re-running whatever its initializer does — and the return trip is where it concentrates. Measured on device (iPad Pro, iOS 27.0), 300 rows whose construction decodes a JPEG:
+
+| Figure | Value |
+|---|---|
+| Row constructions for 300 rows | 539 |
+| Footprint at rest after scrolling | 81 MB |
+| What polling every scroll step recorded | 86 MB |
+| Peak (`ledger_phys_footprint_peak`), minus its 36 MB pre-test baseline | 261 MB |
+
+iPad Pro 12.9-inch (M1), iOS 27.0 build 24A5418b. That device reported 5 GB of headroom, so nothing here came close to a kill — **read the multiple, not the megabytes**: the same shape on a phone, or in an app extension, has far less room.
+
+**Resting footprint can understate the peak by multiples**, and sampling does not close the gap — polling on every scroll step still saw 86 MB. If you judge a list by the memory gauge at rest, this is invisible, and a per-process limit kill is checked against the instantaneous figure rather than the resting one. How to read peak and headroom: `axiom-performance (skills/memory-debugging.md)` — Measure Peak, Not Resting.
+
+So 27 does not make heavy rows safe; it moves the cost from retention to churn, and hides it from the measurement most people take. Rows whose construction decodes an image, reads a file, or builds a formatter should get that work moved out regardless of cycle.
+
+```swift
+// ❌ Collapses itself once the user scrolls away and back
+struct CommentRow: View {
+    let comment: Comment
+    @State private var isExpanded = false
+
+    var body: some View {
+        DisclosureGroup(comment.author, isExpanded: $isExpanded) {
+            Text(comment.body)
+        }
+    }
+}
+
+// ✅ Expansion owned above the row, so eviction cannot take it
+struct ExpandableCommentRow: View {
+    let comment: Comment
+    @Binding var expanded: Set<Comment.ID>
+
+    var body: some View {
+        DisclosureGroup(comment.author, isExpanded: binding) {
+            Text(comment.body)
+        }
+    }
+
+    private var binding: Binding<Bool> {
+        Binding(
+            get: { expanded.contains(comment.id) },
+            set: { isOn in
+                if isOn { expanded.insert(comment.id) } else { expanded.remove(comment.id) }
+            }
+        )
+    }
+}
+```
+
+Lifting the flag does cost a parent invalidation per toggle where the in-row `@State` invalidated one row. In a lazy container that is bounded by the realized rows, so it is the right trade — but do not lift *frequently* changing per-row state this way without measuring.
+
+#### The rule
+
+**Lift per-row state above the row, and bound whatever holds the weight.** Both halves are load-bearing, and each covers a different cycle:
+
+| Change | Fixes the 26 growth | Fixes the 27 reset |
+|---|---|---|
+| Lift state to a parent or model | No — 800 payloads in a parent dictionary is the same +95 MB | Yes |
+| Bound the store (`NSCache`, LRU, windowed fetch) | Yes | No — a bounded store still lets the row rebuild |
+
+Detection: a `@State` or `@StateObject` declaration inside a view used as a `ForEach` row under a lazy container or `List`. The `swiftui-performance-analyzer` agent flags this as rule 11.
+
 ### When NOT to Use Lazy Containers
 
 | Scenario | Use Instead | Why |
-|----------|-------------|-----|
-| < 50 items | `VStack` / `HStack` | No recycling overhead, simpler |
+|---|---|---|
+| < 50 items | `VStack` / `HStack` | Below the window either cycle would evict, so laziness buys nothing back |
 | Nested in another lazy container | `VStack` (inner) | Nested lazy causes layout issues |
 | Need all items measured upfront | `VStack` | Lazy containers don't know total size |
 
@@ -1006,6 +1164,6 @@ LazyVStack {
 
 **WWDC**: 2025-208, 2024-10074, 2023-10057, 2022-10056, 2026-278
 
-**Docs**: /swiftui/layout, /swiftui/viewthatfits, /swiftui/view/oninteractiveresizechange(_:), /swiftui/view/alignmentguide(_:computevalue:), /swiftui/alignmentid, /swiftui/view/layoutpriority(_:), /technotes/tn3192-migrating-your-app-from-the-deprecated-uirequiresfullscreen-key
+**Docs**: /swiftui/lazyvstack, /swiftui/layout, /swiftui/viewthatfits, /swiftui/view/oninteractiveresizechange(_:), /swiftui/view/alignmentguide(_:computevalue:), /swiftui/alignmentid, /swiftui/view/layoutpriority(_:), /technotes/tn3192-migrating-your-app-from-the-deprecated-uirequiresfullscreen-key
 
 **Skills**: skills/layout.md, skills/debugging.md, axiom-uikit (skills/uikit-modernization.md)
