@@ -115,14 +115,14 @@ Target 20–30 terms for a small app. Over 50 and it becomes maintenance overhea
 Store as markdown in the repo so translators and reviewers can diff it:
 
 ```markdown
-# Poppy Localization Glossary
+# App Localization Glossary
 
 | English | fr | ja | ko | Source | Notes |
 |---------|----|----|----|--------|-------|
 | Up Next | À suivre | 次はこちら | 다음 항목 | Apple Music (ios 18) | Apple Music UI terminology |
 | Shuffle | Aléatoire | シャッフル | 셔플 | Apple Music (ios 18) | |
 | Smart Playlist | Liste intelligente | スマートプレイリスト | 스마트 재생목록 | Apple Music (ios 18) | |
-| Visualizer | Visualiseur | ビジュアライザ | 비주얼라이저 | Project decision 2026-04 | Custom Poppy term |
+| Visualizer | Visualiseur | ビジュアライザ | 비주얼라이저 | Project decision 2026-04 | Custom app term |
 ```
 
 **Source column is load-bearing.** It tells the next translator whether a term is locked to Apple's canonical form (don't change) or a project decision (can revisit). Without it, every new translator re-opens settled questions.

@@ -170,8 +170,8 @@ One JSON object per line (JSONL). Each line is one grouped issue.
 ```json
 {
   "provider": "sentry",
-  "issue_id": "POPPY-3V",
-  "issue_url": "https://sentry.io/organizations/acme/issues/POPPY-3V/",
+  "issue_id": "ACME-3V",
+  "issue_url": "https://sentry.io/organizations/acme/issues/ACME-3V/",
   "title": "CFRunLoopRunSpecific",
   "kind": "hang",
   "impact": { "users": 68, "events": 412, "first_seen": "2026-05-01", "last_seen": "2026-06-05" },
@@ -198,8 +198,8 @@ Hang events do not carry an `exception` or `termination` block — those fields 
 ```json
 {
   "provider": "sentry",
-  "issue_id": "POPPY-7B",
-  "issue_url": "https://sentry.io/organizations/acme/issues/POPPY-7B/",
+  "issue_id": "ACME-7B",
+  "issue_url": "https://sentry.io/organizations/acme/issues/ACME-7B/",
   "title": "GRDB.DatabaseError: disk I/O error",
   "kind": "crash",
   "impact": { "users": 22, "events": 89, "first_seen": "2026-05-10", "last_seen": "2026-06-04" },
@@ -331,7 +331,7 @@ The `cluster_key` is a mechanical, exact-signature grouping. High-confidence clu
 
 **`summary.candidate_families` counts only issues with zero noise flags**, regardless of how safe those flags were. A `low`-safety flag removes an issue from that count exactly as a `high` one does, so the number is a floor on real-bug families, not an estimate of them. Never report it as "we found N real bugs."
 
-**Never omit a noise-flagged issue from the report.** Omission is the correctness failure this architecture is designed to prevent — the Poppy lesson was that the #1 issue by user count was an idle-runloop suspension false-positive. A tool that silently buried it would commit the same error inverted.
+**Never omit a noise-flagged issue from the report.** Omission is the correctness failure this architecture is designed to prevent — in one real triage run the #1 issue by user count was an idle-runloop suspension false-positive. A tool that silently buried it would commit the same error inverted.
 
 **Standing note for `third_party_or_system_only`:** Always include this caveat when listing third-party-only issues as deprioritized: "A third-party SDK can crash on a nil or invalid value passed by app code — zero app frames on the crashed thread does not rule out an app-side root cause. Check for app code on other threads or higher in the call chain before dismissing."
 
