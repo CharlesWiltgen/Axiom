@@ -30,7 +30,11 @@ Every discipline skill is TDD-tested against real developer pressure scenarios. 
 
 Then search for "axiom" in the `/plugin` menu and install.
 
-### MCP (VS Code, Cursor, Gemini CLI, and more)
+### Cursor (native plugin)
+
+Axiom's generated Cursor plugin includes 27 skill routers, 42 agents, 17 `/axiom-*` commands, advisory hooks, and automatic discovery of its MCP server configuration. See the [Cursor install and support guide](https://charleswiltgen.github.io/Axiom/start/cursor-install) for the macOS support boundary and local installation steps.
+
+### MCP (VS Code, Cursor MCP-only, Gemini CLI, and more)
 
 See the [MCP setup guide](https://charleswiltgen.github.io/Axiom/start/mcp-install).
 

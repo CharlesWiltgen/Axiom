@@ -59,7 +59,9 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
 ### Cursor
 
-Add to `.cursor/mcp.json` in your workspace:
+When Axiom is installed as a native Cursor plugin, Cursor automatically discovers the plugin-root `mcp.json`. Do not also add Axiom to `.cursor/mcp.json`: duplicate definitions can produce duplicate servers or unclear configuration ownership. See the [native Cursor install guide](/start/cursor-install).
+
+For an **MCP-only setup without the native plugin**, add this exact configuration to `.cursor/mcp.json` in your workspace:
 
 ```json
 {
