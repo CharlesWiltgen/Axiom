@@ -1,0 +1,569 @@
+## Cursor MCP Tool Boundary
+
+The `xclog`, `xcsym`, and `xcprof` examples below are reference syntax, not executable commands for Cursor. Map each subcommand to the same-named MCP tool—for example, `xclog launch` to `axiom_xclog_launch`, `xcsym crash` to `axiom_xcsym_crash`, and `xcprof record` to `axiom_xcprof_record`—and preserve its arguments as structured fields. Do not run a bare helper binary. If a required MCP tool is unavailable, stop and report that the Axiom MCP integration is missing; do not fall back to a same-named executable.
+
+
+# Hang Diagnostics
+
+Systematic diagnosis and resolution of app hangs. A hang occurs when the main thread is blocked for more than 1 second, making the app unresponsive to user input.
+
+## Why xcsym rejected my hang .ips
+
+xcsym's `crash` subcommand explicitly rejects `.ips` files of type `hang` because hang analysis has a different workflow from crash analysis. If xcsym returned `{"error":"hang_report"}` (bug_type=298), you're in the right place — this skill is the authoritative path for hang diagnosis. See `axiom-tools (skills/xcsym-ref.md)` for the crash-focused workflow.
+
+## Red Flags — Check This Skill When
+
+| Symptom | This Skill Applies |
+|---------|-------------------|
+| App freezes briefly during use | Yes — likely hang |
+| UI doesn't respond to touches | Yes — main thread blocked |
+| "App not responding" system dialog | Yes — severe hang |
+| Xcode Organizer shows hang diagnostics | Yes — field hang reports |
+| MetricKit MXHangDiagnostic received | Yes — aggregated hang data |
+| Animations stutter or skip | Maybe — could be hitch, not hang |
+| App feels slow but responsive | No — performance issue, not hang |
+
+## What Is a Hang
+
+A **hang** is when the main runloop cannot process events for more than 1 second. The user taps, but nothing happens.
+
+```
+User taps → Main thread busy/blocked → Event queued → 1+ second delay → HANG
+```
+
+**Key distinction**: The main thread handles ALL user input. If it's busy or blocked, the entire UI freezes.
+
+### Hang vs Hitch vs Lag
+
+| Issue | Duration | User Experience | Tool |
+|-------|----------|-----------------|------|
+| **Hang** | >1 second | App frozen, unresponsive | Time Profiler, System Trace |
+| **Hitch** | 1-3 frames (16-50ms) | Animation stutters | Animation Hitches instrument |
+| **Lag** | 100-500ms | Feels slow but responsive | Time Profiler |
+
+**This skill covers hangs.** For hitches, see `axiom-swiftui` (performance reference). For general lag, see `axiom-performance (skills/performance-profiling.md)`.
+
+## The Two Causes of Hangs
+
+Every hang has one of two root causes:
+
+### 1. Main Thread Busy
+
+The main thread is doing work instead of processing events.
+
+**Subcategories**:
+
+| Type | Example | Fix |
+|------|---------|-----|
+| **Proactive work** | Pre-computing data user hasn't requested | Lazy initialization, compute on demand |
+| **Irrelevant work** | Processing all notifications, not just relevant ones | Filter notifications, targeted observers |
+| **Suboptimal API** | Using blocking API when async exists | Switch to async API |
+
+### 2. Main Thread Blocked
+
+The main thread is waiting for something else.
+
+**Subcategories**:
+
+| Type | Example | Fix |
+|------|---------|-----|
+| **Synchronous IPC** | Calling system service synchronously | Use async API variant |
+| **File I/O** | `Data(contentsOf:)` on main thread | Move to background queue |
+| **Network** | Synchronous URL request | Use URLSession async |
+| **Lock contention** | Waiting for lock held by background thread | Reduce critical section, use actors |
+| **Semaphore/dispatch_sync** | Blocking on background work | Restructure to async completion |
+
+## Decision Tree — Diagnosing Hangs
+
+```
+START: App hangs reported
+  │
+  ├─→ Do you have hang diagnostics from Organizer or MetricKit?
+  │     │
+  │     ├─→ YES: Examine stack trace
+  │     │     │
+  │     │     ├─→ Stack shows your code running
+  │     │     │     → BUSY: Main thread doing work
+  │     │     │     → Profile with Time Profiler
+  │     │     │
+  │     │     └─→ Stack shows waiting (semaphore, lock, dispatch_sync)
+  │     │           → BLOCKED: Main thread waiting
+  │     │           → Profile with System Trace
+  │     │
+  │     └─→ NO: Can you reproduce?
+  │           │
+  │           ├─→ YES: Profile with Time Profiler first
+  │           │     │
+  │           │     ├─→ High CPU on main thread
+  │           │     │     → BUSY: Optimize the work
+  │           │     │
+  │           │     └─→ Low CPU, thread blocked
+  │           │           → Use System Trace to find what's blocking
+  │           │
+  │           └─→ NO: Enable MetricKit in app
+  │                 → Wait for field reports
+  │                 → Check Organizer > Hangs
+```
+
+## Tool Selection
+
+| Scenario | Primary Tool | Why |
+|----------|-------------|-----|
+| **Reproduces locally** | Time Profiler | See exactly what main thread is doing |
+| **Blocked thread suspected** | System Trace | Shows thread state, lock contention |
+| **Field reports only** | Xcode Organizer | Aggregated hang diagnostics |
+| **Want in-app data** | MetricKit | MXHangDiagnostic with call stacks |
+| **Need precise timing** | System Trace | Nanosecond-level thread analysis |
+| **Re-scope a known hang to app code** | xcprof | Auto-flags candidate stalls; `--start-ms/--end-ms` window + `--user-binary` attribution (see Hang Window Workflow) |
+| **User can reproduce, you can't** | sysdiagnose triggered during the hang | Stackshot has per-thread backtraces of every process (see Getting Hang Data from End Users) |
+
+## Time Profiler Workflow for Hangs
+
+1. **Launch Instruments** → Select Time Profiler template
+2. **Record during hang** → Reproduce the freeze
+3. **Stop recording** → Find the hang period in timeline
+4. **Select hang region** → Drag to select frozen timespan
+5. **Examine call tree** → Look for main thread work
+
+**What to look for**:
+- Functions with high "Self Time" on main thread
+- Unexpectedly deep call stacks
+- System calls that shouldn't be on main thread
+
+## Hang Window Workflow
+
+`xcprof analyze` runs main-thread hang detection automatically on every invocation (not opt-in): the `## Main thread (approximate)` section reports the largest gap between consecutive main-thread samples (`max gap`) and a `candidate stalls` count — a strong signal that a hang occurred and how long the worst one was. It's *approximate* because cpu-profile only samples running threads, so a large gap is a candidate stall, not a confirmed one. The actionable follow-up is to re-scope to the hang window and attribute the samples to your own code.
+
+**Step 1 — Bound the window.** xcprof reports the stall's *duration* (`max gap`), not its start time, so estimate the window from when you observed the freeze: a MetricKit hang report's timestamp, a user-visible stall, or the Instruments timeline (`--open`). Example: a ~5s freeze around the 2s mark → window ≈ 2000–7000ms.
+
+**Step 2 — Re-scope and attribute to app code.**
+
+```sh
+xcprof analyze MyApp.trace \
+  --start-ms 2000 --end-ms 7000 \
+  --user-binary MyApp
+```
+
+`--start-ms`/`--end-ms` restrict the sample set to that window (echoed back as a `scope:` line). The `## Top user-code frames` table is emitted on every run; `--user-binary` (comma-separated) just *sharpens* it — narrowing user-code attribution to the named binaries plus the recording target, so the table lists your app's functions instead of every non-system frame.
+
+**Expected output** (shape — real output is markdown sections + tables):
+
+```
+## Summary
+- duration: 12.400s · mode: immediate · end: time-limit
+- scope: 2000–7000ms (812 samples in window)
+
+## Main thread (approximate)
+- samples: 812 · cpu share: 71.2% · max gap: 4980ms (threshold 250ms) · candidate stalls: 1
+
+## Top user-code frames
+| function | binary | self | inclusive |
+|---|---|---|---|
+| ImageStore.thumbnail(for:) | MyApp | 58.0% (~2900ms) | 62.0% (~3100ms) |
+| FeedView.body.getter | MyApp | 12.0% (~600ms) | 24.0% (~1200ms) |
+```
+
+The answer is now "`ImageStore.thumbnail(for:)` runs ~2.9s on the main thread" (→ move the decode off-main), not an opaque deepest system frame.
+
+> Release builds without symbols attribute nothing ("none attributed"). Pass `--dsym <path>` (or rely on Spotlight UUID discovery) so frames resolve to names.
+
+## System Trace Workflow for Blocked Hangs
+
+1. **Launch Instruments** → Select System Trace template
+2. **Record during hang** → Capture thread states
+3. **Find main thread** → Filter to main thread
+4. **Look for red/orange** → Blocked states
+5. **Examine blocking reason** → Lock, semaphore, IPC
+
+**Thread states**:
+- **Running (blue)**: Executing code
+- **Preempted (orange)**: Runnable but not scheduled
+- **Blocked (red)**: Waiting for resource
+
+## Common Hang Patterns and Fixes
+
+### Pattern 1: Synchronous File I/O
+
+**Before (hangs)**:
+```swift
+// Main thread blocks on file read
+func loadUserData() {
+    let data = try! Data(contentsOf: largeFileURL)  // BLOCKS
+    processData(data)
+}
+```
+
+**After (async)**:
+```swift
+func loadUserData() {
+    // `Task.detached` is intentional — `Task {}` would inherit the caller's
+    // @MainActor isolation and run the file I/O on main. In Swift 6.2+,
+    // prefer marking a helper `@concurrent` instead of detached.
+    Task.detached {
+        let data = try Data(contentsOf: largeFileURL)
+        await MainActor.run {
+            self.processData(data)
+        }
+    }
+}
+```
+
+### Pattern 2: Unfiltered Notification Observer
+
+**Before (processes all)**:
+```swift
+NotificationCenter.default.addObserver(
+    self,
+    selector: #selector(handleChange),
+    name: .NSManagedObjectContextObjectsDidChange,
+    object: nil  // Receives ALL contexts
+)
+```
+
+**After (filtered)**:
+```swift
+NotificationCenter.default.addObserver(
+    self,
+    selector: #selector(handleChange),
+    name: .NSManagedObjectContextObjectsDidChange,
+    object: relevantContext  // Only this context
+)
+```
+
+### Pattern 3: Expensive Formatter Creation
+
+**Before (creates each time)**:
+```swift
+func formatDate(_ date: Date) -> String {
+    let formatter = DateFormatter()  // EXPENSIVE
+    formatter.dateStyle = .medium
+    return formatter.string(from: date)
+}
+```
+
+**After (cached)**:
+```swift
+private static let dateFormatter: DateFormatter = {
+    let formatter = DateFormatter()
+    formatter.dateStyle = .medium
+    return formatter
+}()
+
+func formatDate(_ date: Date) -> String {
+    Self.dateFormatter.string(from: date)
+}
+```
+
+### Pattern 4: dispatch_sync to Main Thread
+
+**Before (deadlock risk)**:
+```swift
+// From background thread
+DispatchQueue.main.sync {  // BLOCKS if main is blocked
+    updateUI()
+}
+```
+
+**After (async)**:
+```swift
+DispatchQueue.main.async {
+    self.updateUI()
+}
+```
+
+### Pattern 5: Semaphore for Async Result
+
+**Before (blocks main thread)**:
+```swift
+func fetchDataSync() -> Data {
+    let semaphore = DispatchSemaphore(value: 0)
+    var result: Data?
+
+    URLSession.shared.dataTask(with: url) { data, _, _ in
+        result = data
+        semaphore.signal()
+    }.resume()
+
+    semaphore.wait()  // BLOCKS MAIN THREAD
+    return result!
+}
+```
+
+**After (async/await)**:
+```swift
+func fetchData() async throws -> Data {
+    let (data, _) = try await URLSession.shared.data(from: url)
+    return data
+}
+```
+
+### Pattern 6: Lock Contention
+
+**Before (shared lock)**:
+```swift
+class DataManager {
+    private let lock = NSLock()
+    private var cache: [String: Data] = [:]
+
+    func getData(for key: String) -> Data? {
+        lock.lock()  // Main thread waits for background
+        defer { lock.unlock() }
+        return cache[key]
+    }
+}
+```
+
+**After (actor)**:
+```swift
+actor DataManager {
+    private var cache: [String: Data] = [:]
+
+    func getData(for key: String) -> Data? {
+        cache[key]  // Actor serializes access safely
+    }
+}
+```
+
+### Pattern 7: App Launch Hang (Watchdog)
+
+**Before (too much work)**:
+```swift
+func application(_ application: UIApplication,
+                 didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+    loadAllUserData()      // Expensive
+    setupAnalytics()       // Network calls
+    precomputeLayouts()    // CPU intensive
+    return true
+}
+```
+
+**After (deferred)**:
+```swift
+func application(_ application: UIApplication,
+                 didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+    // Only essential setup
+    setupMinimalUI()
+    return true
+}
+
+func applicationDidBecomeActive(_ application: UIApplication) {
+    // Defer non-essential work
+    Task {
+        await loadUserDataInBackground()
+    }
+}
+```
+
+### Pattern 8: Image Processing on Main Thread
+
+**Before (blocks UI)**:
+```swift
+func processImage(_ image: UIImage) {
+    let filtered = applyExpensiveFilter(image)  // BLOCKS
+    imageView.image = filtered
+}
+```
+
+**After (background processing)**:
+```swift
+func processImage(_ image: UIImage) {
+    imageView.image = placeholder
+
+    // `Task.detached` here because the enclosing function is @MainActor-isolated;
+    // `Task {}` would inherit isolation and run the filter on main. In Swift 6.2+,
+    // prefer making the filter `@concurrent` and using a regular `Task {}`.
+    Task.detached(priority: .userInitiated) {
+        let filtered = applyExpensiveFilter(image)
+        await MainActor.run {
+            self.imageView.image = filtered
+        }
+    }
+}
+```
+
+## Xcode Organizer Hang Diagnostics
+
+**Window > Organizer > Select App > Hangs**
+
+The Organizer shows aggregated hang data from users who opted into sharing diagnostics.
+
+**Reading the report**:
+1. **Hang Rate**: Hangs per day per device
+2. **Call Stack**: Where the hang occurred
+3. **Device/OS breakdown**: Which configurations affected
+
+**Interpreting call stacks**:
+- **Your code at top**: Main thread busy with your work
+- **System API at top**: You called blocking API on main thread
+- **pthread_mutex/semaphore**: Lock contention or explicit waiting
+
+The Xcode 27 Organizer goes further: the redesigned Overview pairs the hang-rate chart with the underlying diagnostics on one screen, Metric Goals calibrate an achievable hang-rate target against similar apps and your own baselines, and **Generate Recommendations** runs an agentic analysis over the diagnostic data to localize the hang and propose fixes. A new hitches metric also surfaces choppy animations beyond scrolling. See `axiom-performance (skills/performance-profiling.md)` for the Instruments-27 side (Swift executors instrument for main-actor congestion, Inspector for blocked-thread syscalls).
+
+## MetricKit Hang Diagnostics
+
+On the 27 cycle, hang diagnostics arrive as typed `DiagnosticReport` values (`OS27` — not watchOS/tvOS):
+
+```swift
+import MetricKit
+
+let manager = MetricManager()   // keep alive
+
+for await report in manager.diagnosticReports {
+    if case .hang(let hang) = report.result {
+        uploadHangDiagnostic(duration: hang.hangDuration,
+                             callStack: hang.callStackTree)
+    }
+}
+```
+
+`report.environment` includes the signpost intervals and reported app states active around the hang — see `axiom-performance (skills/metrickit-ref.md)` Part 1.
+
+On earlier releases, adopt the legacy subscriber:
+
+```swift
+import MetricKit
+
+class MetricsSubscriber: NSObject, MXMetricManagerSubscriber {
+    func didReceive(_ payloads: [MXDiagnosticPayload]) {
+        for payload in payloads {
+            if let hangDiagnostics = payload.hangDiagnostics {
+                for diagnostic in hangDiagnostics {
+                    analyzeHang(diagnostic)
+                }
+            }
+        }
+    }
+
+    private func analyzeHang(_ diagnostic: MXHangDiagnostic) {
+        // Duration of the hang
+        let duration = diagnostic.hangDuration
+
+        // Call stack tree (needs symbolication)
+        let callStack = diagnostic.callStackTree
+
+        // Send to your analytics
+        uploadHangDiagnostic(duration: duration, callStack: callStack)
+    }
+}
+```
+
+**Key MXHangDiagnostic properties**:
+- `hangDuration`: How long the hang lasted
+- `callStackTree`: MXCallStackTree with frames
+
+There is no built-in grouping identifier — derive your own signature from the symbolicated call stack to group similar hangs.
+
+## Watchdog Terminations
+
+The watchdog kills apps that hang during key transitions:
+
+| Transition | Time Limit | Consequence |
+|------------|-----------|-------------|
+| **App launch** | ~20 seconds | App killed, crash logged |
+| **Background transition** | ~5 seconds | App killed |
+| **Foreground transition** | ~10 seconds | App killed |
+
+**Watchdog disabled in**:
+- Simulator
+- Debugger attached
+- Development builds (sometimes)
+
+**Watchdog kills are logged as crashes** with exception type `EXC_CRASH (SIGKILL)` and termination reason code `0x8badf00d` ("ate bad food"), namespace `SPRINGBOARD` (or `FRONTBOARD`). Don't confuse it with `Namespace RUNNINGBOARD, Code 0xDEAD10CC` — that is a different termination (the app held a file or SQLite lock while being suspended), not a watchdog timeout.
+
+**A hang with no watchdog kill is normal.** Enforcement centers on launch (`scene-create`) and lifecycle transitions; mid-session responsiveness monitoring (`scene-update`) is not guaranteed to fire for every frozen app. Treat a missing watchdog report as no signal — not as evidence the app isn't hanging.
+
+## Getting Hang Data from End Users
+
+A hang raises no signal or exception, so crash SDKs (Bugsnag, Sentry, Crashlytics) report nothing unless their separate app-hang detection is enabled. Two capture paths need no developer tools on the user's device:
+
+### sysdiagnose stackshot — must be captured DURING the hang
+
+sysdiagnose includes a stackshot (`stacks-*.ips`): per-thread backtraces of every running process at the moment of capture — the iOS equivalent of Android's `bugreport` thread dump. It is a snapshot: it only shows the hang if triggered while the app is frozen.
+
+1. While the app is hung — press both volume buttons + the side button together briefly; a short vibration confirms capture started
+2. Wait for the archive to be written (up to ~10 minutes)
+3. Retrieve: Settings > Privacy & Security > Analytics & Improvements > Analytics Data > `sysdiagnose_….tar.gz` — share via AirDrop
+4. Stackshot frames are unsymbolicated (program-counter offsets) — symbolicate against the app and framework dSYMs
+
+A sysdiagnose captured after the app recovers or relaunches shows nothing useful about the hang — the most common reason "sysdiagnose has no stacks for my process".
+
+### Analytics Data .ips reports
+
+The same Settings > Analytics Data list holds `.ips` reports users can share directly: crashes, watchdog kills (`0x8badf00d`), and hang reports. An empty list is no signal (see Watchdog Terminations above).
+
+**Prefer MetricKit for ongoing capture** — MXHangDiagnostic needs no user action at all; see the MetricKit section above and `axiom-performance (skills/metrickit-ref.md)`.
+
+## Pressure Scenarios
+
+### Scenario 1: Manager Says "Just Add a Loading Spinner"
+
+**Situation**: App hangs during data load. Manager suggests adding spinner to "fix" it.
+
+**Why this fails**: Adding a spinner doesn't prevent the hang—the UI still freezes, the spinner won't animate, and the app remains unresponsive.
+
+**Correct response**: "A spinner won't animate during a hang because the main thread is blocked. We need to move this work off the main thread so the spinner can actually spin and the app stays responsive."
+
+### Scenario 2: "It Works Fine in Testing"
+
+**Situation**: QA can't reproduce the hang. Logs show it happens in production.
+
+**Analysis**:
+1. Field devices have different data sizes
+2. Network conditions vary (slow connection = longer sync)
+3. Background apps consume memory/CPU
+4. Watchdog is disabled in debug builds
+
+**Action**:
+- Add MetricKit to capture field diagnostics
+- Test with production-sized datasets
+- Test without debugger attached
+- Check Organizer for hang reports
+
+### Scenario 3: "We've Always Done It This Way"
+
+**Situation**: Legacy code calls synchronous API on main thread. Refactoring is "too risky."
+
+**Why it matters**: Even if it worked before:
+- Data may have grown larger
+- OS updates may have changed timing
+- New devices have different characteristics
+- Users notice more as apps get faster
+
+**Approach**:
+1. Add metrics to measure current hang rate
+2. Refactor incrementally with feature flags
+3. A/B test to show improvement
+4. Document risk of not fixing
+
+## Anti-Patterns to Avoid
+
+| Anti-Pattern | Why It's Wrong | Instead |
+|--------------|----------------|---------|
+| `DispatchQueue.main.sync` from background | Can deadlock, always blocks | Use `.async` |
+| Semaphore to convert async to sync | Blocks calling thread | Stay async with completion/await |
+| File I/O on main thread | Unpredictable latency | Background queue |
+| Unfiltered notification observer | Processes irrelevant events | Filter by object/name |
+| Creating formatters in loops | Expensive initialization | Cache and reuse |
+| Synchronous network request | Blocks on network latency | URLSession async |
+
+## Hang Prevention Checklist
+
+Before shipping, verify:
+
+- [ ] No `Data(contentsOf:)` or file reads on main thread
+- [ ] No `DispatchQueue.main.sync` from background threads
+- [ ] No semaphore.wait() on main thread
+- [ ] Formatters (DateFormatter, NumberFormatter) are cached
+- [ ] Notification observers filter appropriately
+- [ ] Launch work is minimized (defer non-essential)
+- [ ] Image processing happens off main thread
+- [ ] Database queries don't run on main thread
+- [ ] MetricKit adopted for field diagnostics
+
+## Resources
+
+**WWDC**: 2021-10258, 2022-10082, 2026-268
+
+**Docs**: /xcode/analyzing-responsiveness-issues-in-your-shipping-app, /metrickit/mxhangdiagnostic
+
+**Skills**: axiom-performance (skills/metrickit-ref.md), axiom-performance (skills/performance-profiling.md), axiom-concurrency, axiom-build (skills/lldb.md) (interactive thread inspection at freeze point)

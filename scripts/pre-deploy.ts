@@ -77,6 +77,14 @@ import {
 } from "./inline-auditors.ts";
 import { parsePorcelain, resolveStaleness } from "./staleness.ts";
 import { findDashViolations } from "./docs-dashes.ts";
+import { renderCursorDistribution } from "./cursor/render.ts";
+import { compareCursorPaths } from "./cursor/compare.ts";
+import { validateCursorInventory } from "./cursor/inventory.ts";
+import {
+  CURSOR_AGENT_NAMES,
+  CURSOR_COMMAND_NAMES,
+  CURSOR_ROUTER_NAMES,
+} from "./cursor/contract.ts";
 
 const root = path.resolve(import.meta.dirname!, "..");
 const pluginDir = path.join(root, ".claude-plugin/plugins/axiom");
@@ -508,6 +516,15 @@ const mcpPkgPath = path.join(root, "axiom-mcp/package.json");
 if (fs.existsSync(mcpPkgPath)) {
   const mcpPkg = JSON.parse(fs.readFileSync(mcpPkgPath, "utf8"));
   versions["axiom-mcp/package.json"] = mcpPkg.version;
+}
+
+const cursorPluginManifestPath = path.join(root, "axiom-cursor/.cursor-plugin/plugin.json");
+if (fs.existsSync(cursorPluginManifestPath)) {
+  const cursorPlugin = JSON.parse(fs.readFileSync(cursorPluginManifestPath, "utf8"));
+  if (typeof cursorPlugin.version === "string") versions["axiom-cursor/.cursor-plugin/plugin.json"] = cursorPlugin.version;
+  else error("version", "Cursor plugin manifest has no string version");
+} else {
+  error("version", "Cursor plugin manifest not found — run: npm run build:cursor");
 }
 
 const versionValues = Object.values(versions);
@@ -2216,6 +2233,195 @@ heading("12q. Command Invocation Policy");
     if (missing === 0) {
       console.log(`  ✓ all ${checked} commands are user-invoked only (template included)`);
     }
+  }
+}
+
+// ── 12r. Cursor Generated Distribution ──
+//
+// Cursor installs from a repository-root marketplace and a nested plugin root.
+// Re-render in memory and compare every byte so a stale generated tree, a changed
+// report hash, or a source-file mtime quirk cannot bypass the release gate.
+heading("12r. Cursor Generated Distribution");
+{
+  const cursorRoot = path.join(root, "axiom-cursor");
+  const cursorMarketplacePath = path.join(root, ".cursor-plugin", "marketplace.json");
+  type CursorDiskFile = { content: Buffer; mode: number };
+  const readTree = (directory: string): Map<string, CursorDiskFile> => {
+    const files = new Map<string, CursorDiskFile>();
+    const walk = (current: string, prefix: string): void => {
+      const stat = fs.lstatSync(current);
+      if (stat.isSymbolicLink()) throw new Error(`symlinked generated directory: ${current}`);
+      if (!stat.isDirectory()) throw new Error(`generated path is not a directory: ${current}`);
+      for (const entry of fs.readdirSync(current, { withFileTypes: true }).sort((a, b) => compareCursorPaths(a.name, b.name))) {
+        const absolute = path.join(current, entry.name);
+        const relative = path.posix.join(prefix, entry.name);
+        const entryStat = fs.lstatSync(absolute);
+        if (entryStat.isSymbolicLink()) throw new Error(`symlinked generated file: ${relative}`);
+        if (entryStat.isDirectory()) walk(absolute, relative);
+        else if (entryStat.isFile()) files.set(relative, { content: fs.readFileSync(absolute), mode: entryStat.mode & 0o777 });
+        else throw new Error(`unsupported generated entry: ${relative}`);
+      }
+    };
+    walk(directory, "");
+    return files;
+  };
+  try {
+    if (!fs.existsSync(cursorMarketplacePath) || !fs.existsSync(cursorRoot)) {
+      throw new Error("generated marketplace or nested plugin root is missing — run: npm run build:cursor");
+    }
+    const expected = renderCursorDistribution(root, { profile: "full" });
+    const actual = readTree(cursorRoot);
+    const expectedFiles = new Map(expected.plugin);
+    const added = [...actual.keys()].filter((file) => !expectedFiles.has(file)).sort(compareCursorPaths);
+    const removed = [...expectedFiles.keys()].filter((file) => !actual.has(file)).sort(compareCursorPaths);
+    const changed = [...expectedFiles.keys()].filter((file) => {
+      const disk = actual.get(file);
+      const rendered = expectedFiles.get(file)!;
+      return !disk || disk.mode !== 0o644 || !disk.content.equals(Buffer.from(rendered.content, "utf8"));
+    }).sort(compareCursorPaths);
+    const marketplaceStat = fs.lstatSync(cursorMarketplacePath);
+    if (marketplaceStat.isSymbolicLink() || !marketplaceStat.isFile()) {
+      throw new Error("generated marketplace is not a regular file");
+    }
+    const marketplaceMode = marketplaceStat.mode & 0o777;
+    const marketplaceActual = fs.readFileSync(cursorMarketplacePath);
+    if (marketplaceMode !== 0o644 || !marketplaceActual.equals(Buffer.from(expected.marketplace.content, "utf8"))) {
+      changed.push("marketplace.json");
+      changed.sort(compareCursorPaths);
+    }
+    if (added.length || removed.length || changed.length) {
+      error("cursor-staleness", `generated Cursor output differs from a full render (added: ${added.join(", ") || "none"}; removed: ${removed.join(", ") || "none"}; changed: ${changed.join(", ") || "none"}). Run: npm run build:cursor`);
+    } else {
+      console.log(`  ✓ Cursor output matches deterministic full render (${expectedFiles.size} plugin files + marketplace)`);
+    }
+
+    const marketplace = JSON.parse(marketplaceActual.toString("utf8")) as { plugins?: Array<{ name?: string; source?: string }> };
+    const entry = marketplace.plugins?.find((plugin) => plugin.name === "axiom");
+    if (!entry || entry.source !== "./axiom-cursor") {
+      error("cursor-marketplace", "marketplace must resolve axiom from nested source ./axiom-cursor");
+    } else if (path.resolve(root, entry.source) !== cursorRoot) {
+      error("cursor-marketplace", "marketplace nested source does not resolve to axiom-cursor");
+    }
+    const plugin = JSON.parse(actual.get(".cursor-plugin/plugin.json")!.content.toString("utf8")) as { name?: string; mcpServers?: unknown };
+    if (plugin.name !== "axiom" || "mcpServers" in plugin || !actual.has("mcp.json")) {
+      error("cursor-marketplace", "Cursor plugin must be named axiom, omit plugin mcpServers, and provide plugin-root mcp.json");
+    }
+
+    const count = (prefix: string, suffix: string) => [...actual.keys()].filter((file) => file.startsWith(prefix) && file.endsWith(suffix)).length;
+    if (count("skills/", "/SKILL.md") !== 27 || count("agents/", ".md") !== 42 || count("commands/", ".md") !== 17) {
+      error("cursor-inventory", `Cursor component totals drifted (skills ${count("skills/", "/SKILL.md")}/27, agents ${count("agents/", ".md")}/42, commands ${count("commands/", ".md")}/17)`);
+    }
+    const mcp = JSON.parse(actual.get("mcp.json")!.content.toString("utf8"));
+    const hooks = JSON.parse(actual.get("hooks/hooks.json")!.content.toString("utf8"));
+    if (mcp?.mcpServers?.axiom?.command !== "npx" || JSON.stringify(mcp?.mcpServers?.axiom?.args) !== JSON.stringify(["-y", "axiom-mcp"]) || !hooks?.hooks?.sessionStart || !hooks?.hooks?.postToolUse) {
+      error("cursor-hooks-mcp", "Cursor MCP or native hook manifest no longer matches the required release contract");
+    }
+    const disposition = JSON.parse(actual.get("reports/capability-disposition.json")!.content.toString("utf8"));
+    const exactStrings = (left: unknown, right: readonly string[]): boolean =>
+      Array.isArray(left)
+      && left.every((value) => typeof value === "string")
+      && new Set(left).size === left.length
+      && [...left].sort(compareCursorPaths).join("\0") === [...right].sort(compareCursorPaths).join("\0");
+    const routerNames = [...actual.keys()]
+      .filter((file) => file.startsWith("skills/") && file.endsWith("/SKILL.md"))
+      .map((file) => file.split("/")[1]);
+    const agentNames = [...actual.keys()]
+      .filter((file) => file.startsWith("agents/") && file.endsWith(".md"))
+      .map((file) => path.basename(file, ".md"));
+    const commandNames = [...actual.keys()]
+      .filter((file) => file.startsWith("commands/") && file.endsWith(".md"))
+      .map((file) => path.basename(file, ".md"));
+    const routerRows = Array.isArray(disposition.routerDispositions) ? disposition.routerDispositions : [];
+    const agentRows = Array.isArray(disposition.agentDispositions) ? disposition.agentDispositions : [];
+    const commandRows = Array.isArray(disposition.commandDispositions) ? disposition.commandDispositions : [];
+    const hookRows = Array.isArray(disposition.hookDispositions) ? disposition.hookDispositions : [];
+    const expectedHookWarnings: Record<string, string> = {
+      "agent:build-fixer:PreToolUse:Bash": "Warning: Destructive command detected.",
+      "agent:build-optimizer:PreToolUse:Edit|Write": "Warning: Modifying Xcode project file. Ensure backup exists.",
+      "agent:iap-implementation:PreToolUse:Edit|Write": "Warning: Modifying StoreKit configuration.",
+      "agent:simulator-tester:PreToolUse:Bash": "Warning: Simulator state change command.",
+      "agent:test-debugger:PreToolUse:Bash": "Warning: About to delete test results.",
+      "agent:test-runner:PreToolUse:Bash": "Warning: About to delete test results.",
+    };
+    const expectedHookAdvisories: Record<string, string> = {
+      "agent:build-fixer:PreToolUse:Bash": "Before running a shell command containing `killall`, deleting DerivedData with `rm -rf`, or erasing a simulator with `xcrun simctl erase`, warn: \"Destructive command detected.\"",
+      "agent:build-optimizer:PreToolUse:Edit|Write": "Before editing or writing a `.pbxproj` file, warn: \"Modifying Xcode project file. Ensure backup exists.\"",
+      "agent:iap-implementation:PreToolUse:Edit|Write": "Before editing or writing a StoreKit-related path or `.storekit` file, warn: \"Modifying StoreKit configuration.\"",
+      "agent:simulator-tester:PreToolUse:Bash": "Before running a `simctl` command that erases, deletes, shuts down, or boots simulator state, warn: \"Simulator state change command.\"",
+      "agent:test-debugger:PreToolUse:Bash": "Before deleting `.xcresult` test results with `rm -rf`, warn: \"About to delete test results.\"",
+      "agent:test-runner:PreToolUse:Bash": "Before deleting `.xcresult` test results with `rm -rf`, warn: \"About to delete test results.\"",
+    };
+    const expectedGlobalHookIds = [
+      "global:global:PostToolUse:Bash",
+      "global:global:PostToolUse:Write|Edit",
+      "global:global:PreToolUse:Read",
+      "global:global:SessionStart:*",
+      "global:global:SubagentStart:*",
+      "global:global:UserPromptSubmit:*",
+    ];
+    const capabilityOkay = disposition.routers === 27
+      && disposition.agents === 42
+      && disposition.commands === 17
+      && disposition.excludedMirrors === 30
+      && disposition.releasedReadonlyBackground === 30
+      && disposition.releasedWritableForeground === 12
+      && Array.isArray(disposition.authorityExpansions)
+      && exactStrings(routerNames, CURSOR_ROUTER_NAMES)
+      && exactStrings(agentNames, CURSOR_AGENT_NAMES)
+      && exactStrings(commandNames, CURSOR_COMMAND_NAMES.map((name) => `axiom-${name}`))
+      && exactStrings(disposition.authorityExpansions.map((row: { agent?: unknown }) => row.agent), CURSOR_AGENT_NAMES)
+      && Object.keys(disposition.dispositions ?? {}).length === 7
+      && exactStrings(routerRows.map((row: { name?: unknown }) => row.name), CURSOR_ROUTER_NAMES)
+      && routerRows.every((row: { disposition?: unknown; listedInCanonicalManifest?: unknown }) =>
+        row.disposition === "generated-native-skill" && typeof row.listedInCanonicalManifest === "boolean")
+      && exactStrings(agentRows.map((row: { name?: unknown }) => row.name), CURSOR_AGENT_NAMES)
+      && agentRows.every((row: { disposition?: unknown; authority?: unknown; sourceBackground?: unknown; releasedBackground?: unknown; sourceTools?: unknown; inheritedAuthority?: unknown }) =>
+        row.disposition === "generated-native-subagent"
+        && (row.authority === "readonly" || row.authority === "writable")
+        && typeof row.sourceBackground === "boolean"
+        && typeof row.releasedBackground === "boolean"
+        && Array.isArray(row.sourceTools)
+        && row.sourceTools.length > 0
+        && row.inheritedAuthority === "Cursor agent inherits its host tool and MCP access.")
+      && agentRows.filter((row: { authority?: unknown; releasedBackground?: unknown }) => row.authority === "readonly" && row.releasedBackground === true).length === 30
+      && agentRows.filter((row: { authority?: unknown; releasedBackground?: unknown }) => row.authority === "writable" && row.releasedBackground === false).length === 12
+      && exactStrings(commandRows.map((row: { generatedName?: unknown }) => row.generatedName), CURSOR_COMMAND_NAMES.map((name) => `axiom-${name}`))
+      && exactStrings(commandRows.map((row: { canonicalName?: unknown }) => row.canonicalName), CURSOR_COMMAND_NAMES)
+      && commandRows.every((row: { disposition?: unknown }) => row.disposition === "generated-native-command")
+      && exactStrings(hookRows.map((row: { id?: unknown }) => row.id), [...expectedGlobalHookIds, ...Object.keys(expectedHookWarnings)])
+      && hookRows.filter((row: { source?: unknown }) => row.source === "agent").every((row: { id: string; disposition?: unknown; warning?: unknown; advisory?: unknown }) =>
+        row.disposition === "agent-prompt.advisory"
+        && row.warning === expectedHookWarnings[row.id]
+        && row.advisory === expectedHookAdvisories[row.id])
+      && JSON.stringify(disposition.mcpDispositions) === JSON.stringify([{ name: "axiom", disposition: "external-runtime-mcp", command: "npx -y axiom-mcp", bundled: false }])
+      && JSON.stringify(disposition.binaryDispositions) === JSON.stringify([
+        { name: "xclog", disposition: "external-via-axiom-mcp" },
+        { name: "xcprof", disposition: "external-via-axiom-mcp" },
+        { name: "xcsym", disposition: "external-via-axiom-mcp" },
+        { name: "xcui", disposition: "external-unbundled-no-mcp-wrapper" },
+      ])
+      && JSON.stringify(disposition.cloudDispositions) === JSON.stringify([{ name: "Cursor Cloud Agents", disposition: "unsupported" }]);
+    if (!capabilityOkay) {
+      error("cursor-capability-ledger", "Cursor capability ledger lacks required full-profile inventory, authority, or hook disposition coverage");
+    }
+    const inventory = JSON.parse(actual.get("reports/inventory-sha256.json")!.content.toString("utf8"));
+    try {
+      validateCursorInventory(inventory, actual);
+    } catch (inventoryError) {
+      error("cursor-report-hash", (inventoryError as Error).message);
+    }
+
+    for (const [relative, file] of actual) {
+      const text = file.content.toString("utf8");
+      if (file.mode !== 0o644 || file.content.includes(0) || /CLAUDE_PLUGIN_ROOT|\$ARGUMENTS|\{\{args\.|\/axiom:|TaskOutput|AskUserQuestion/.test(text)) {
+        error("cursor-artifact-safety", `${relative} has an unsafe mode, binary byte, or stale Claude token`);
+      }
+    }
+    if (marketplaceMode !== 0o644) {
+      error("cursor-artifact-safety", "marketplace.json has an unsafe mode");
+    }
+  } catch (e: unknown) {
+    error("cursor-distribution", (e as Error).message);
   }
 }
 

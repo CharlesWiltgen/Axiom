@@ -1,0 +1,1355 @@
+{
+  "routers": 27,
+  "agents": 42,
+  "commands": 17,
+  "excludedMirrors": 30,
+  "globalHookEntries": 6,
+  "perAgentHooks": 6,
+  "releasedReadonlyBackground": 30,
+  "releasedWritableForeground": 12,
+  "authorityExpansions": [
+    {
+      "agent": "accessibility-auditor",
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inherited": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "agent": "build-fixer",
+      "sourceTools": [
+        "Bash",
+        "Read",
+        "Grep",
+        "Glob"
+      ],
+      "inherited": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "agent": "build-optimizer",
+      "sourceTools": [
+        "Bash",
+        "Read",
+        "Grep",
+        "Glob"
+      ],
+      "inherited": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "agent": "camera-auditor",
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inherited": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "agent": "codable-auditor",
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inherited": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "agent": "concurrency-auditor",
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inherited": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "agent": "core-data-auditor",
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inherited": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "agent": "crash-analyzer",
+      "sourceTools": [
+        "Bash",
+        "Read",
+        "Grep",
+        "Glob"
+      ],
+      "inherited": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "agent": "database-schema-auditor",
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inherited": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "agent": "energy-auditor",
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inherited": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "agent": "foundation-models-auditor",
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inherited": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "agent": "grdb-performance-auditor",
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inherited": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "agent": "health-check",
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read",
+        "Write",
+        "Agent"
+      ],
+      "inherited": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "agent": "iap-auditor",
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inherited": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "agent": "iap-implementation",
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read",
+        "Write",
+        "Edit",
+        "Bash"
+      ],
+      "inherited": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "agent": "icloud-auditor",
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inherited": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "agent": "liquid-glass-auditor",
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inherited": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "agent": "memory-auditor",
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inherited": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "agent": "modernization-helper",
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inherited": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "agent": "networking-auditor",
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inherited": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "agent": "performance-profiler",
+      "sourceTools": [
+        "Bash",
+        "Read",
+        "Grep",
+        "Glob"
+      ],
+      "inherited": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "agent": "resize-auditor",
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inherited": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "agent": "screenshot-validator",
+      "sourceTools": [
+        "Bash",
+        "Glob",
+        "Read"
+      ],
+      "inherited": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "agent": "security-privacy-scanner",
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inherited": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "agent": "simulator-tester",
+      "sourceTools": [
+        "Bash",
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inherited": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "agent": "spm-conflict-resolver",
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read",
+        "Bash"
+      ],
+      "inherited": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "agent": "spritekit-auditor",
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inherited": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "agent": "storage-auditor",
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inherited": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "agent": "swift-performance-analyzer",
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inherited": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "agent": "swift-simplifier",
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inherited": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "agent": "swiftdata-auditor",
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inherited": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "agent": "swiftui-architecture-auditor",
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inherited": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "agent": "swiftui-layout-auditor",
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inherited": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "agent": "swiftui-nav-auditor",
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inherited": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "agent": "swiftui-performance-analyzer",
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inherited": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "agent": "test-debugger",
+      "sourceTools": [
+        "Bash",
+        "Read",
+        "Grep",
+        "Glob",
+        "Edit"
+      ],
+      "inherited": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "agent": "test-failure-analyzer",
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inherited": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "agent": "test-runner",
+      "sourceTools": [
+        "Bash",
+        "Read",
+        "Grep",
+        "Glob"
+      ],
+      "inherited": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "agent": "testing-auditor",
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inherited": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "agent": "textkit-auditor",
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inherited": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "agent": "triage-analyzer",
+      "sourceTools": [
+        "Bash",
+        "Read",
+        "Grep",
+        "Glob"
+      ],
+      "inherited": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "agent": "ux-flow-auditor",
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inherited": "Cursor agent inherits its host tool and MCP access."
+    }
+  ],
+  "dispositions": {
+    "PostToolUse(Bash)": "postToolUse.additional_context",
+    "PostToolUse(Write|Edit)": "postToolUse.additional_context",
+    "PreToolUse(Read)": "omitted",
+    "SessionStart": "sessionStart.additional_context",
+    "SubagentStart": "prompt",
+    "UserPromptSubmit": "omitted",
+    "per-agent PreToolUse": "advisory"
+  },
+  "routerDispositions": [
+    {
+      "name": "axiom-accessibility",
+      "disposition": "generated-native-skill",
+      "listedInCanonicalManifest": true
+    },
+    {
+      "name": "axiom-ai",
+      "disposition": "generated-native-skill",
+      "listedInCanonicalManifest": true
+    },
+    {
+      "name": "axiom-apple-docs",
+      "disposition": "generated-native-skill",
+      "listedInCanonicalManifest": true
+    },
+    {
+      "name": "axiom-build",
+      "disposition": "generated-native-skill",
+      "listedInCanonicalManifest": true
+    },
+    {
+      "name": "axiom-concurrency",
+      "disposition": "generated-native-skill",
+      "listedInCanonicalManifest": true
+    },
+    {
+      "name": "axiom-data",
+      "disposition": "generated-native-skill",
+      "listedInCanonicalManifest": true
+    },
+    {
+      "name": "axiom-design",
+      "disposition": "generated-native-skill",
+      "listedInCanonicalManifest": true
+    },
+    {
+      "name": "axiom-games",
+      "disposition": "generated-native-skill",
+      "listedInCanonicalManifest": true
+    },
+    {
+      "name": "axiom-graphics",
+      "disposition": "generated-native-skill",
+      "listedInCanonicalManifest": true
+    },
+    {
+      "name": "axiom-health",
+      "disposition": "generated-native-skill",
+      "listedInCanonicalManifest": true
+    },
+    {
+      "name": "axiom-integration",
+      "disposition": "generated-native-skill",
+      "listedInCanonicalManifest": true
+    },
+    {
+      "name": "axiom-location",
+      "disposition": "generated-native-skill",
+      "listedInCanonicalManifest": true
+    },
+    {
+      "name": "axiom-macos",
+      "disposition": "generated-native-skill",
+      "listedInCanonicalManifest": true
+    },
+    {
+      "name": "axiom-media",
+      "disposition": "generated-native-skill",
+      "listedInCanonicalManifest": true
+    },
+    {
+      "name": "axiom-networking",
+      "disposition": "generated-native-skill",
+      "listedInCanonicalManifest": true
+    },
+    {
+      "name": "axiom-payments",
+      "disposition": "generated-native-skill",
+      "listedInCanonicalManifest": true
+    },
+    {
+      "name": "axiom-performance",
+      "disposition": "generated-native-skill",
+      "listedInCanonicalManifest": true
+    },
+    {
+      "name": "axiom-security",
+      "disposition": "generated-native-skill",
+      "listedInCanonicalManifest": true
+    },
+    {
+      "name": "axiom-shipping",
+      "disposition": "generated-native-skill",
+      "listedInCanonicalManifest": true
+    },
+    {
+      "name": "axiom-swift",
+      "disposition": "generated-native-skill",
+      "listedInCanonicalManifest": true
+    },
+    {
+      "name": "axiom-swiftui",
+      "disposition": "generated-native-skill",
+      "listedInCanonicalManifest": true
+    },
+    {
+      "name": "axiom-testing",
+      "disposition": "generated-native-skill",
+      "listedInCanonicalManifest": true
+    },
+    {
+      "name": "axiom-tools",
+      "disposition": "generated-native-skill",
+      "listedInCanonicalManifest": false
+    },
+    {
+      "name": "axiom-uikit",
+      "disposition": "generated-native-skill",
+      "listedInCanonicalManifest": true
+    },
+    {
+      "name": "axiom-vision",
+      "disposition": "generated-native-skill",
+      "listedInCanonicalManifest": true
+    },
+    {
+      "name": "axiom-watchos",
+      "disposition": "generated-native-skill",
+      "listedInCanonicalManifest": true
+    },
+    {
+      "name": "axiom-xcode-mcp",
+      "disposition": "generated-native-skill",
+      "listedInCanonicalManifest": true
+    }
+  ],
+  "agentDispositions": [
+    {
+      "name": "accessibility-auditor",
+      "disposition": "generated-native-subagent",
+      "authority": "readonly",
+      "sourceBackground": true,
+      "releasedBackground": true,
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inheritedAuthority": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "name": "build-fixer",
+      "disposition": "generated-native-subagent",
+      "authority": "writable",
+      "sourceBackground": false,
+      "releasedBackground": false,
+      "sourceTools": [
+        "Bash",
+        "Read",
+        "Grep",
+        "Glob"
+      ],
+      "inheritedAuthority": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "name": "build-optimizer",
+      "disposition": "generated-native-subagent",
+      "authority": "writable",
+      "sourceBackground": false,
+      "releasedBackground": false,
+      "sourceTools": [
+        "Bash",
+        "Read",
+        "Grep",
+        "Glob"
+      ],
+      "inheritedAuthority": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "name": "camera-auditor",
+      "disposition": "generated-native-subagent",
+      "authority": "readonly",
+      "sourceBackground": true,
+      "releasedBackground": true,
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inheritedAuthority": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "name": "codable-auditor",
+      "disposition": "generated-native-subagent",
+      "authority": "readonly",
+      "sourceBackground": true,
+      "releasedBackground": true,
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inheritedAuthority": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "name": "concurrency-auditor",
+      "disposition": "generated-native-subagent",
+      "authority": "readonly",
+      "sourceBackground": true,
+      "releasedBackground": true,
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inheritedAuthority": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "name": "core-data-auditor",
+      "disposition": "generated-native-subagent",
+      "authority": "readonly",
+      "sourceBackground": true,
+      "releasedBackground": true,
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inheritedAuthority": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "name": "crash-analyzer",
+      "disposition": "generated-native-subagent",
+      "authority": "writable",
+      "sourceBackground": false,
+      "releasedBackground": false,
+      "sourceTools": [
+        "Bash",
+        "Read",
+        "Grep",
+        "Glob"
+      ],
+      "inheritedAuthority": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "name": "database-schema-auditor",
+      "disposition": "generated-native-subagent",
+      "authority": "readonly",
+      "sourceBackground": true,
+      "releasedBackground": true,
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inheritedAuthority": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "name": "energy-auditor",
+      "disposition": "generated-native-subagent",
+      "authority": "readonly",
+      "sourceBackground": true,
+      "releasedBackground": true,
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inheritedAuthority": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "name": "foundation-models-auditor",
+      "disposition": "generated-native-subagent",
+      "authority": "readonly",
+      "sourceBackground": true,
+      "releasedBackground": true,
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inheritedAuthority": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "name": "grdb-performance-auditor",
+      "disposition": "generated-native-subagent",
+      "authority": "readonly",
+      "sourceBackground": true,
+      "releasedBackground": true,
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inheritedAuthority": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "name": "health-check",
+      "disposition": "generated-native-subagent",
+      "authority": "writable",
+      "sourceBackground": false,
+      "releasedBackground": false,
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read",
+        "Write",
+        "Agent"
+      ],
+      "inheritedAuthority": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "name": "iap-auditor",
+      "disposition": "generated-native-subagent",
+      "authority": "readonly",
+      "sourceBackground": true,
+      "releasedBackground": true,
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inheritedAuthority": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "name": "iap-implementation",
+      "disposition": "generated-native-subagent",
+      "authority": "writable",
+      "sourceBackground": false,
+      "releasedBackground": false,
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read",
+        "Write",
+        "Edit",
+        "Bash"
+      ],
+      "inheritedAuthority": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "name": "icloud-auditor",
+      "disposition": "generated-native-subagent",
+      "authority": "readonly",
+      "sourceBackground": true,
+      "releasedBackground": true,
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inheritedAuthority": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "name": "liquid-glass-auditor",
+      "disposition": "generated-native-subagent",
+      "authority": "readonly",
+      "sourceBackground": true,
+      "releasedBackground": true,
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inheritedAuthority": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "name": "memory-auditor",
+      "disposition": "generated-native-subagent",
+      "authority": "readonly",
+      "sourceBackground": true,
+      "releasedBackground": true,
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inheritedAuthority": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "name": "modernization-helper",
+      "disposition": "generated-native-subagent",
+      "authority": "readonly",
+      "sourceBackground": true,
+      "releasedBackground": true,
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inheritedAuthority": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "name": "networking-auditor",
+      "disposition": "generated-native-subagent",
+      "authority": "readonly",
+      "sourceBackground": true,
+      "releasedBackground": true,
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inheritedAuthority": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "name": "performance-profiler",
+      "disposition": "generated-native-subagent",
+      "authority": "writable",
+      "sourceBackground": false,
+      "releasedBackground": false,
+      "sourceTools": [
+        "Bash",
+        "Read",
+        "Grep",
+        "Glob"
+      ],
+      "inheritedAuthority": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "name": "resize-auditor",
+      "disposition": "generated-native-subagent",
+      "authority": "readonly",
+      "sourceBackground": true,
+      "releasedBackground": true,
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inheritedAuthority": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "name": "screenshot-validator",
+      "disposition": "generated-native-subagent",
+      "authority": "writable",
+      "sourceBackground": true,
+      "releasedBackground": false,
+      "sourceTools": [
+        "Bash",
+        "Glob",
+        "Read"
+      ],
+      "inheritedAuthority": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "name": "security-privacy-scanner",
+      "disposition": "generated-native-subagent",
+      "authority": "readonly",
+      "sourceBackground": true,
+      "releasedBackground": true,
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inheritedAuthority": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "name": "simulator-tester",
+      "disposition": "generated-native-subagent",
+      "authority": "writable",
+      "sourceBackground": false,
+      "releasedBackground": false,
+      "sourceTools": [
+        "Bash",
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inheritedAuthority": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "name": "spm-conflict-resolver",
+      "disposition": "generated-native-subagent",
+      "authority": "writable",
+      "sourceBackground": false,
+      "releasedBackground": false,
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read",
+        "Bash"
+      ],
+      "inheritedAuthority": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "name": "spritekit-auditor",
+      "disposition": "generated-native-subagent",
+      "authority": "readonly",
+      "sourceBackground": true,
+      "releasedBackground": true,
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inheritedAuthority": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "name": "storage-auditor",
+      "disposition": "generated-native-subagent",
+      "authority": "readonly",
+      "sourceBackground": true,
+      "releasedBackground": true,
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inheritedAuthority": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "name": "swift-performance-analyzer",
+      "disposition": "generated-native-subagent",
+      "authority": "readonly",
+      "sourceBackground": true,
+      "releasedBackground": true,
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inheritedAuthority": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "name": "swift-simplifier",
+      "disposition": "generated-native-subagent",
+      "authority": "readonly",
+      "sourceBackground": true,
+      "releasedBackground": true,
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inheritedAuthority": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "name": "swiftdata-auditor",
+      "disposition": "generated-native-subagent",
+      "authority": "readonly",
+      "sourceBackground": true,
+      "releasedBackground": true,
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inheritedAuthority": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "name": "swiftui-architecture-auditor",
+      "disposition": "generated-native-subagent",
+      "authority": "readonly",
+      "sourceBackground": true,
+      "releasedBackground": true,
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inheritedAuthority": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "name": "swiftui-layout-auditor",
+      "disposition": "generated-native-subagent",
+      "authority": "readonly",
+      "sourceBackground": true,
+      "releasedBackground": true,
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inheritedAuthority": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "name": "swiftui-nav-auditor",
+      "disposition": "generated-native-subagent",
+      "authority": "readonly",
+      "sourceBackground": true,
+      "releasedBackground": true,
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inheritedAuthority": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "name": "swiftui-performance-analyzer",
+      "disposition": "generated-native-subagent",
+      "authority": "readonly",
+      "sourceBackground": true,
+      "releasedBackground": true,
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inheritedAuthority": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "name": "test-debugger",
+      "disposition": "generated-native-subagent",
+      "authority": "writable",
+      "sourceBackground": false,
+      "releasedBackground": false,
+      "sourceTools": [
+        "Bash",
+        "Read",
+        "Grep",
+        "Glob",
+        "Edit"
+      ],
+      "inheritedAuthority": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "name": "test-failure-analyzer",
+      "disposition": "generated-native-subagent",
+      "authority": "readonly",
+      "sourceBackground": true,
+      "releasedBackground": true,
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inheritedAuthority": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "name": "test-runner",
+      "disposition": "generated-native-subagent",
+      "authority": "writable",
+      "sourceBackground": false,
+      "releasedBackground": false,
+      "sourceTools": [
+        "Bash",
+        "Read",
+        "Grep",
+        "Glob"
+      ],
+      "inheritedAuthority": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "name": "testing-auditor",
+      "disposition": "generated-native-subagent",
+      "authority": "readonly",
+      "sourceBackground": true,
+      "releasedBackground": true,
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inheritedAuthority": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "name": "textkit-auditor",
+      "disposition": "generated-native-subagent",
+      "authority": "readonly",
+      "sourceBackground": true,
+      "releasedBackground": true,
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inheritedAuthority": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "name": "triage-analyzer",
+      "disposition": "generated-native-subagent",
+      "authority": "writable",
+      "sourceBackground": false,
+      "releasedBackground": false,
+      "sourceTools": [
+        "Bash",
+        "Read",
+        "Grep",
+        "Glob"
+      ],
+      "inheritedAuthority": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "name": "ux-flow-auditor",
+      "disposition": "generated-native-subagent",
+      "authority": "readonly",
+      "sourceBackground": true,
+      "releasedBackground": true,
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inheritedAuthority": "Cursor agent inherits its host tool and MCP access."
+    }
+  ],
+  "commandDispositions": [
+    {
+      "canonicalName": "analyze-crash",
+      "generatedName": "axiom-analyze-crash",
+      "disposition": "generated-native-command"
+    },
+    {
+      "canonicalName": "ask",
+      "generatedName": "axiom-ask",
+      "disposition": "generated-native-command"
+    },
+    {
+      "canonicalName": "audit",
+      "generatedName": "axiom-audit",
+      "disposition": "generated-native-command"
+    },
+    {
+      "canonicalName": "compare-traces",
+      "generatedName": "axiom-compare-traces",
+      "disposition": "generated-native-command"
+    },
+    {
+      "canonicalName": "console",
+      "generatedName": "axiom-console",
+      "disposition": "generated-native-command"
+    },
+    {
+      "canonicalName": "fix-build",
+      "generatedName": "axiom-fix-build",
+      "disposition": "generated-native-command"
+    },
+    {
+      "canonicalName": "health-check",
+      "generatedName": "axiom-health-check",
+      "disposition": "generated-native-command"
+    },
+    {
+      "canonicalName": "modernize",
+      "generatedName": "axiom-modernize",
+      "disposition": "generated-native-command"
+    },
+    {
+      "canonicalName": "optimize-build",
+      "generatedName": "axiom-optimize-build",
+      "disposition": "generated-native-command"
+    },
+    {
+      "canonicalName": "profile",
+      "generatedName": "axiom-profile",
+      "disposition": "generated-native-command"
+    },
+    {
+      "canonicalName": "resolve-deps",
+      "generatedName": "axiom-resolve-deps",
+      "disposition": "generated-native-command"
+    },
+    {
+      "canonicalName": "run-tests",
+      "generatedName": "axiom-run-tests",
+      "disposition": "generated-native-command"
+    },
+    {
+      "canonicalName": "screenshot",
+      "generatedName": "axiom-screenshot",
+      "disposition": "generated-native-command"
+    },
+    {
+      "canonicalName": "status",
+      "generatedName": "axiom-status",
+      "disposition": "generated-native-command"
+    },
+    {
+      "canonicalName": "test-simulator",
+      "generatedName": "axiom-test-simulator",
+      "disposition": "generated-native-command"
+    },
+    {
+      "canonicalName": "triage",
+      "generatedName": "axiom-triage",
+      "disposition": "generated-native-command"
+    },
+    {
+      "canonicalName": "ui",
+      "generatedName": "axiom-ui",
+      "disposition": "generated-native-command"
+    }
+  ],
+  "hookDispositions": [
+    {
+      "id": "agent:build-fixer:PreToolUse:Bash",
+      "source": "agent",
+      "owner": "build-fixer",
+      "event": "PreToolUse",
+      "matcher": "Bash",
+      "disposition": "agent-prompt.advisory",
+      "warning": "Warning: Destructive command detected.",
+      "advisory": "Before running a shell command containing `killall`, deleting DerivedData with `rm -rf`, or erasing a simulator with `xcrun simctl erase`, warn: \"Destructive command detected.\""
+    },
+    {
+      "id": "agent:build-optimizer:PreToolUse:Edit|Write",
+      "source": "agent",
+      "owner": "build-optimizer",
+      "event": "PreToolUse",
+      "matcher": "Edit|Write",
+      "disposition": "agent-prompt.advisory",
+      "warning": "Warning: Modifying Xcode project file. Ensure backup exists.",
+      "advisory": "Before editing or writing a `.pbxproj` file, warn: \"Modifying Xcode project file. Ensure backup exists.\""
+    },
+    {
+      "id": "agent:iap-implementation:PreToolUse:Edit|Write",
+      "source": "agent",
+      "owner": "iap-implementation",
+      "event": "PreToolUse",
+      "matcher": "Edit|Write",
+      "disposition": "agent-prompt.advisory",
+      "warning": "Warning: Modifying StoreKit configuration.",
+      "advisory": "Before editing or writing a StoreKit-related path or `.storekit` file, warn: \"Modifying StoreKit configuration.\""
+    },
+    {
+      "id": "agent:simulator-tester:PreToolUse:Bash",
+      "source": "agent",
+      "owner": "simulator-tester",
+      "event": "PreToolUse",
+      "matcher": "Bash",
+      "disposition": "agent-prompt.advisory",
+      "warning": "Warning: Simulator state change command.",
+      "advisory": "Before running a `simctl` command that erases, deletes, shuts down, or boots simulator state, warn: \"Simulator state change command.\""
+    },
+    {
+      "id": "agent:test-debugger:PreToolUse:Bash",
+      "source": "agent",
+      "owner": "test-debugger",
+      "event": "PreToolUse",
+      "matcher": "Bash",
+      "disposition": "agent-prompt.advisory",
+      "warning": "Warning: About to delete test results.",
+      "advisory": "Before deleting `.xcresult` test results with `rm -rf`, warn: \"About to delete test results.\""
+    },
+    {
+      "id": "agent:test-runner:PreToolUse:Bash",
+      "source": "agent",
+      "owner": "test-runner",
+      "event": "PreToolUse",
+      "matcher": "Bash",
+      "disposition": "agent-prompt.advisory",
+      "warning": "Warning: About to delete test results.",
+      "advisory": "Before deleting `.xcresult` test results with `rm -rf`, warn: \"About to delete test results.\""
+    },
+    {
+      "id": "global:global:PostToolUse:Bash",
+      "source": "global",
+      "owner": null,
+      "event": "PostToolUse",
+      "matcher": "Bash",
+      "disposition": "postToolUse.additional_context",
+      "warning": null,
+      "advisory": null
+    },
+    {
+      "id": "global:global:PostToolUse:Write|Edit",
+      "source": "global",
+      "owner": null,
+      "event": "PostToolUse",
+      "matcher": "Write|Edit",
+      "disposition": "postToolUse.additional_context",
+      "warning": null,
+      "advisory": null
+    },
+    {
+      "id": "global:global:PreToolUse:Read",
+      "source": "global",
+      "owner": null,
+      "event": "PreToolUse",
+      "matcher": "Read",
+      "disposition": "omitted",
+      "warning": null,
+      "advisory": null
+    },
+    {
+      "id": "global:global:SessionStart:*",
+      "source": "global",
+      "owner": null,
+      "event": "SessionStart",
+      "matcher": null,
+      "disposition": "sessionStart.additional_context",
+      "warning": null,
+      "advisory": null
+    },
+    {
+      "id": "global:global:SubagentStart:*",
+      "source": "global",
+      "owner": null,
+      "event": "SubagentStart",
+      "matcher": null,
+      "disposition": "prompt",
+      "warning": null,
+      "advisory": null
+    },
+    {
+      "id": "global:global:UserPromptSubmit:*",
+      "source": "global",
+      "owner": null,
+      "event": "UserPromptSubmit",
+      "matcher": null,
+      "disposition": "omitted",
+      "warning": null,
+      "advisory": null
+    }
+  ],
+  "mcpDispositions": [
+    {
+      "name": "axiom",
+      "disposition": "external-runtime-mcp",
+      "command": "npx -y axiom-mcp",
+      "bundled": false
+    }
+  ],
+  "binaryDispositions": [
+    {
+      "name": "xclog",
+      "disposition": "external-via-axiom-mcp"
+    },
+    {
+      "name": "xcprof",
+      "disposition": "external-via-axiom-mcp"
+    },
+    {
+      "name": "xcsym",
+      "disposition": "external-via-axiom-mcp"
+    },
+    {
+      "name": "xcui",
+      "disposition": "external-unbundled-no-mcp-wrapper"
+    }
+  ],
+  "cloudDispositions": [
+    {
+      "name": "Cursor Cloud Agents",
+      "disposition": "unsupported"
+    }
+  ]
+}

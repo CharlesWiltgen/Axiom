@@ -1,0 +1,1353 @@
+
+# SwiftUI 26 Features
+
+## Overview
+
+Comprehensive guide to new SwiftUI features in iOS 26, iPadOS 26, macOS Tahoe, watchOS 26, and visionOS 26. From the Liquid Glass design system to rich text editing, these enhancements make SwiftUI more powerful across all Apple platforms.
+
+**Core principle** From low level performance improvements all the way up through the buttons in your user interface, there are some major improvements across the system.
+
+## When to Use This Skill
+
+- Adopting the Liquid Glass design system
+- Implementing rich text editing with AttributedString
+- Embedding web content with WebView
+- Optimizing list and scrolling performance
+- Using the @Animatable macro for custom animations
+- Building 3D spatial layouts on visionOS
+- Bridging SwiftUI scenes to UIKit/AppKit apps
+- Implementing drag and drop with multiple items
+- Creating 3D charts with Chart3D
+- Adding widgets to visionOS or CarPlay
+- Adding custom tick marks to sliders (chapter markers, value indicators)
+- Constraining slider selection ranges with `enabledBounds`
+- Customizing slider appearance (thumb visibility, current value labels)
+- Creating sticky safe area bars with blur effects
+- Opening URLs in in-app browser
+- Using system-styled close and confirm buttons
+- Applying glass button styles (iOS 26.1+)
+- Controlling button sizing behavior
+- Implementing compact search toolbars
+- Adjusting line height or baseline spacing for text
+
+## System Requirements
+
+#### iOS 26+, iPadOS 26+, macOS Tahoe+, watchOS 26+, visionOS 26+
+
+---
+
+## Liquid Glass Design System
+
+**For comprehensive coverage**, see `axiom-design (skills/liquid-glass.md)` (design principles, variants, review pressure) and `axiom-design (skills/liquid-glass-ref.md)` (app-wide adoption guide). This section covers WWDC 256-specific APIs only.
+
+### Automatic Adoption
+
+Recompile with iOS 26 SDK — navigation containers, tab bars, toolbars, toggles, segmented pickers, and sliders automatically adopt the new design. Bordered buttons default to capsule shape. Sheets get Liquid Glass background (remove any `presentationBackground` customizations).
+
+### Toolbar APIs (iOS 26)
+
+#### ToolbarSpacer
+
+```swift
+.toolbar {
+    ToolbarItem(placement: .bottomBar) { Button("Archive", systemImage: "archivebox") { } }
+    ToolbarSpacer(.flexible, placement: .bottomBar)  // Push items apart
+    ToolbarItem(placement: .bottomBar) { Button("Compose", systemImage: "square.and.pencil") { } }
+}
+// .fixed separates groups visually; .flexible pushes apart (like Spacer in HStack)
+```
+
+#### ToolbarItemGroup (Visual Grouping)
+
+Items in a `ToolbarItemGroup` share a single glass background "pill". `ToolbarItemPlacement` controls visual appearance: `confirmationAction` → `glassProminent` styling, `cancellationAction` → standard glass. Use `.sharedBackgroundVisibility(.hidden)` to exclude items (e.g., avatars) from group background.
+
+#### Toolbar Morphing
+
+Attach `.toolbar {}` to individual views inside NavigationStack (not to NavigationStack itself). iOS 26 morphs between per-view toolbars during push/pop. Use `toolbar(id:)` with matching `ToolbarItem(id:)` across screens for items that should stay stable (no bounce):
+
+```swift
+// MailboxList
+.toolbar(id: "main") {
+    ToolbarItem(id: "filter", placement: .bottomBar) { Button("Filter") { } }
+    ToolbarSpacer(.flexible, placement: .bottomBar)
+    ToolbarItem(id: "compose", placement: .bottomBar) { Button("New Message") { } }
+}
+// MessageList — "filter" absent (animates out), "compose" stays stable
+.toolbar(id: "main") {
+    ToolbarSpacer(.flexible, placement: .bottomBar)
+    ToolbarItem(id: "compose", placement: .bottomBar) { Button("New Message") { } }
+}
+```
+
+**#1 gotcha**: Toolbar on NavigationStack = nothing to morph between.
+
+#### DefaultToolbarItem
+
+Reposition system-provided items (like search) within your toolbar layout:
+
+```swift
+DefaultToolbarItem(kind: .search, placement: .bottomBar)
+// Replaces system's default placement of matching kind
+```
+
+Use in collapsed `NavigationSplitView` sidebar to specify which column shows search on iPhone. Wrap in `if #available(iOS 26.0, *)` for backward compatibility.
+
+#### User-Customizable Toolbars
+
+`toolbar(id:)` enables user customization (rearrange, show/hide). Only `.secondaryAction` items support customization on iPadOS. Use `showsByDefault: false` for optional items. Add `ToolbarCommands()` for macOS menu item.
+
+#### Other Toolbar Features
+
+- `.navigationSubtitle("3 unread")` — Secondary line below title
+- `.badge(3)` on toolbar items — Notification counts
+- Monochrome icon rendering — Reduces visual noise; tint for meaning, not decoration
+- Scroll edge blur — Automatic, no code required
+
+### Bottom-Aligned Search
+
+**Foundational search APIs**: See `skills/search-ref.md`. This section covers iOS 26 refinements only.
+
+```swift
+NavigationSplitView {
+    List { }.searchable(text: $searchText)
+}
+// Bottom-aligned on iPhone, top trailing on iPad (automatic)
+// Use placement: .sidebar to restore sidebar-embedded search on iPad
+```
+
+- `searchToolbarBehavior(.minimize)` — Compact search that expands on tap
+- `Tab(role: .search)` — Dedicated search tab; search field replaces tab bar. See swiftui-nav-ref Section 5.7
+
+#### Known Issue: `.onGeometryChange` breaks `Tab(role: .search)` morph on first activation
+
+**Symptom** On first activation of the search-role tab, the search field renders as a separate top bar (legacy `.navigationBarDrawer` placement) instead of morphing from the tab icon. The circular search-role icon still appears in the tab bar, so the visible failure is "two search affordances" rather than "no search." Subsequent activations render correctly.
+
+**Cause** `.onGeometryChange(...) action: { state = ... }` *anywhere* in the TabView's subtree — on the body containing the TabView, on the TabView itself, or on any individual tab's content. The geometry-driven state write triggers a TabView re-render during initial layout that the search-tab morph integration doesn't recover from. Cached state on subsequent activations bypasses the issue.
+
+**Fix** Don't write observable state from `.onGeometryChange` for any value the TabView's structure depends on. For one-time window-size reads at launch (e.g., to gate tab inclusion), seed `@State` once via `UIApplication.shared.connectedScenes`:
+
+```swift
+@State private var windowWidth: CGFloat = {
+    UIApplication.shared.connectedScenes
+        .compactMap { $0 as? UIWindowScene }
+        .first?.screen.bounds.width ?? 0
+}()
+```
+
+For continuous size tracking, push the observer outside the TabView's coordinate space (sibling `Color.clear`) or read from a `GeometryReader` *above* the TabView.
+
+**Status** Reproduced on iOS 26.0. Retest on iOS 26.1+ — adjacent `tabViewBottomAccessory` AttributeGraph cycle bug ([Apple Forums 801431](https://developer.apple.com/forums/thread/801431)) was fixed in Xcode 26.1; this may be too. See `skills/nav-diag.md` Pattern 4e for full diagnosis, all 4 fix options, and verification steps.
+
+### Glass Effect for Custom Views
+
+```swift
+Button("To Top", systemImage: "chevron.up") { scrollToTop() }
+    .padding()
+    .glassEffect()  // Add .interactive for custom controls on iOS
+```
+
+- `GlassEffectContainer` — Required when multiple glass elements are nearby (glass can't sample glass)
+- `glassEffectID(_:in:)` — Fluid morphing transitions between glass elements using a namespace
+- Sheet morphing — Use `.matchedTransitionSource` + `.navigationTransition(.zoom(...))` to morph sheets from buttons
+
+### Button & Control Changes
+
+- Capsule shape default for bordered buttons (override with `.buttonBorderShape(.roundedRectangle)`)
+- `.controlSize(.extraLarge)` — extra-large control size (available since iOS 17)
+- `.controlSize(.small)` on containers — Preserve pre-iOS 26 density
+- `.buttonStyle(.glass)` / `.glassProminent` / `.glass(.regular.tint(.blue))` — Glass button styles (the `GlassButtonStyle(_:)` initializer is iOS 26.1+)
+- `.buttonSizing(.automatic/.flexible/.fitted)` — Control button layout behavior
+- `Button(role: .close)` / `Button(role: .confirm)` — System-styled close/confirm
+- `ConcentricRectangle()` — corners resolve concentric with the container's (see Corner Concentricity below)
+- Menus: icons on leading edge, consistent iOS/macOS
+
+### Corner Concentricity (`ConcentricRectangle`)
+
+A `Shape` whose corners resolve concentric to the container shape's corners — sharing a center with the container's corner radius — instead of using a hardcoded value. System containers (sheets, glass containers, widgets) provide the container shape automatically; give a custom container one with `.containerShape(_:)`. When a corner sits far from the container's corner the resolved radius can be zero (square corner) — pass `.concentric(minimum:)` to guarantee a floor. If the container shape isn't a `RoundedRectangularShape`, the result is an inset version of the container shape.
+
+```swift
+// Inside a sheet/glass container/widget the container shape is provided;
+// on a custom container, set .containerShape(.rect(cornerRadius: 32)) on the container.
+CardContent()
+    .padding(12)
+    .background(ConcentricRectangle(corners: .concentric(minimum: .fixed(8))).fill(.background))
+```
+
+| API | Notes |
+|-----|-------|
+| `ConcentricRectangle()` | All four corners `.concentric` |
+| `init(corners:isUniform:)` | One `Edge.Corner.Style` for every corner; `isUniform: true` resolves each corner, then applies the largest radius to all |
+| Per-corner/per-edge inits | `topLeadingCorner:…`, `uniformTopCorners:uniformBottomCorners:`, `uniformLeadingCorners:uniformTrailingCorners:`, plus mixed edge+corner combinations — mix concentric and fixed corners in one shape |
+| `.rect(corners:isUniform:)` and friends | Static `Shape` sugar mirroring each initializer |
+| `Edge.Corner.Style` | `.fixed(_:)`, `.concentric`, `.concentric(minimum:)`; expressible by int/float literal (`corners: 12`); animatable |
+| `RoundedRectangularShape` | Protocol for containers whose corners resolve concentrically (`Capsule` conforms); `corners(in:)` → `RoundedRectangularShapeCorners?` |
+| `GeometryProxy.containerCornerInsets` | Insets of the container's corners, for manual layout near corners |
+| `GeometryProxy.concentricCornerRadii` / `concentricCornerRadii(in:)` `OS27` | Read back the resolved concentric radii for a frame |
+
+There is no `.containerConcentric` corner style. Use `RoundedRectangle`/`Capsule` when the radius must not track the container; `ConcentricRectangle` supersedes `ContainerRelativeShape` (iOS 14, rounded-rect only) for concentric nesting.
+
+---
+
+## Slider Enhancements
+
+iOS 26 adds custom tick marks, constrained selection ranges, current value labels, and thumb visibility control.
+
+### Slider Ticks
+
+Core types: `SliderTick<V>`, `SliderTickContentForEach`, `SliderTickBuilder`
+
+```swift
+// Static ticks with labels
+Slider(value: $value, in: 0...10) {
+    Text("Rating")
+} ticks: {
+    SliderTick(0) { Text("Min") }
+    SliderTick(5) { Text("Mid") }
+    SliderTick(10) { Text("Max") }
+}
+
+// Dynamic ticks from collection
+SliderTickContentForEach(stops, id: \.self) { value in
+    SliderTick(value) { Text("\(Int(value))°").font(.caption2) }
+}
+
+// Step-based ticks (called for each step value)
+Slider(value: $volume, in: 0...10, step: 2, label: { Text("Volume") }, tick: { value in
+    SliderTick(value) { Text("\(Int(value))") }
+})
+```
+
+**API constraint**: `SliderTickContentForEach` requires `Data.Element` to match `SliderTick<V>` value type. For custom structs, extract numeric values: `chapters.map(\.time)` then look up labels via `chapters.first(where: { $0.time == time })`.
+
+### Full-Featured Slider
+
+```swift
+Slider(
+    value: $rating, in: 0...100,
+    neutralValue: 50,           // Starting point / center value
+    enabledBounds: 20...80,     // Restrict selectable range
+    label: { Text("Rating") },
+    currentValueLabel: { Text("\(Int(rating))") },
+    minimumValueLabel: { Text("0") },
+    maximumValueLabel: { Text("100") },
+    ticks: { SliderTick(50) { Text("Mid") } },
+    onEditingChanged: { editing in print(editing ? "Started" : "Ended") }
+)
+```
+
+### sliderThumbVisibility
+
+`.sliderThumbVisibility(.hidden)` — Hide thumb for media progress indicators and minimal UI. Options: `.automatic`, `.visible`, `.hidden`. Always visible on watchOS.
+
+---
+
+## New View Modifiers
+
+### safeAreaBar
+
+Sticky bars with integrated progressive blur:
+
+```swift
+List { ForEach(1...20, id: \.self) { Text("\($0). Item") } }
+    .safeAreaBar(edge: .bottom) {
+        Text("Bottom Action Bar").padding(.vertical, 15)
+    }
+    .scrollEdgeEffectStyle(.soft, for: .bottom) // or .hard
+```
+
+Works like `safeAreaInset` but with blur. Bar remains fixed while content scrolls beneath.
+
+### Section Index (`sectionIndexLabel`, `listSectionIndexVisibility`)
+
+The vertical strip of letters on a list's trailing edge that jumps to a section. `sectionIndexLabel(_:)` gives a `Section` its entry; `listSectionIndexVisibility(_:)` overrides whether the strip shows.
+
+```swift
+List(sections) { section in
+    Section(section.title) {
+        ForEach(section.rows) { row in
+            RowView(row)
+        }
+    }
+    .sectionIndexLabel(section.indexTitle)   // typically a single character
+}
+```
+
+`sectionIndexLabel` must be attached to the **`Section`**, as above — it is implemented as a view trait, so putting it on a row or on the `List` silently does nothing, with no compiler error. Passing `nil` is legal and explicitly means "no label for this section", which is how you drop a section from the index when the title is computed.
+
+**The index appears by default** as soon as any section carries an index label — `.listSectionIndexVisibility(.visible)` only forces it, `.hidden` suppresses it. Sections without a label are omitted from the index, which is the supported way to keep some sections out of it.
+
+**To show a letter that has no content** (a full A–Z strip over sparse data), add an empty section that carries the index label and hide its header.
+
+**Deriving the labels is where this actually goes wrong.** SwiftUI gives you the strip; choosing each section's letter is your code, and a naive `first.uppercased()` is an i18n bug:
+
+- Diacritics land in the wrong bucket — fold first (`name.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)`) so *Ángel* files under A rather than a catch-all.
+- Non-Latin scripts break entirely. Japanese, Korean, Chinese, Greek and Cyrillic names all collapse into one bucket. The correct tool is UIKit's `UILocalizedIndexedCollation` — `currentCollation`, `sectionIndexTitles`, and `sectionForObject(_:collationStringSelector:)` — which produces kana sections for `ja`, jamo for `ko`, and so on. It needs an `@objc` sort-key on an `NSObject` subclass, so budget real time for it rather than assuming A–Z generalizes.
+- If the data comes from `CNContactStore`, honor `CNContactsUserDefaults.shared().sortOrder` — users can choose First/Last, and ignoring it makes your sections disagree with every other app on the device.
+
+| API | Availability |
+|-----|--------------|
+| `sectionIndexLabel(_:)` | iOS, macOS, tvOS, watchOS, visionOS 26 |
+| `listSectionIndexVisibility(_:)` | iOS, watchOS, visionOS 26 — unavailable on macOS, tvOS |
+
+Mind the asymmetry: `sectionIndexLabel` compiles on macOS and tvOS, but those platforms have no index to display it in, so the label is dead weight there.
+
+**watchOS presents it differently** — instead of a persistent strip, the current section's index label appears beside the scroll indicator while the user turns the crown.
+
+**HIG constraint** — do not put an index on a list whose rows carry trailing controls such as disclosure indicators. Both occupy the trailing edge and users cannot reliably hit one without the other. See axiom-design (skills/hig.md), "Should this list have a section index?".
+
+The usual resolution is not to drop the `NavigationLink` but to hide its chevron — the row keeps pushing and keeps announcing as a link:
+
+```swift
+List(groups) { group in
+    Section(group.letter) {
+        ForEach(group.people) { person in
+            NavigationLink(value: person) { Text(person.displayName) }
+        }
+    }
+    .sectionIndexLabel(group.letter)
+}
+.navigationLinkIndicatorVisibility(.hidden)   // iOS 17+
+```
+
+### Section Margins (`listSectionMargins`)
+
+```swift
+Section("Recents") {
+    ForEach(recents) { RowView($0) }
+}
+.listSectionMargins(.horizontal, nil)   // nil = system margins, explicitly
+```
+
+`listSectionMargins(_ edges: Edge.Set = .all, _ length: CGFloat?)`. Default margins derive from the list style, list section spacing, and the list's content margins; **this modifier overrides all of that completely** for the edges named, leaving other edges unchanged. For sections with headers or footers, the margins apply around those, not just the rows.
+
+iOS 26 and visionOS 26 only — unavailable on macOS, tvOS and watchOS.
+
+Unlike `.padding()`, `length` here has **no default**, so the argument is mandatory — but `nil` is a legal value and restores the system margins. Mandatory argument, not mandatory number. Reach for a real value only when the system's section margins are demonstrably wrong; see axiom-design (skills/hig.md), "What spacing, padding, or margin value should I use?".
+
+### dataDetection OS27
+
+`.dataDetection(_:options:)` makes detected data in a view's text content tappable — links, emails, phone numbers, postal addresses, calendar events, money, measurements, flight/shipment numbers, payment IDs. iOS/macOS/watchOS/visionOS 27; **not tvOS**. SwiftUI equivalent of UIKit's `UITextView.dataDetectorTypes`, backed by the semantic `DataDetector` engine (not legacy `NSDataDetector`).
+
+```swift
+// From the _DataDetection_SwiftUI cross-import overlay
+Text(message).dataDetection()                              // .all
+Text(message).dataDetection([.link, .phoneNumber, .calendarEvent])
+```
+
+`DataDetector.MatchType` (DataDetection, iOS 26+): `.link`, `.emailAddress`, `.phoneNumber`, `.postalAddress`, `.calendarEvent`, `.moneyAmount`, `.measurement`, `.flightNumber`, `.shipmentTrackingNumber`, `.paymentIdentifier`, `.all`. `Options` supplies document date/timeZone/languageCode/region for relative parsing. For non-UI detection use `String.dataDetectorMatches(_:options:)` (async sequence of `DataDetector.Match`); in 27 the whole `Match` tree also gains `Codable`/`Hashable`.
+
+### onOpenURL Enhancement
+
+```swift
+@Environment(\.openURL) var openURL
+// openURL(url, prefersInApp: true) — Opens in SFSafariViewController-style in-app browser
+// Default Link opens in Safari; prefersInApp keeps users in your app
+```
+
+### searchToolbarBehavior
+
+See `skills/search-ref.md` for foundational `.searchable` APIs. iOS 26 adds:
+
+```swift
+.searchable(text: $searchText)
+.searchToolbarBehavior(.minimize)  // Compact button, expands on tap
+```
+
+Also: `.searchPresentationToolbarBehavior(.avoidHidingContent)` (iOS 17.1+) keeps title visible during search.
+
+**Backward-compatible wrapper** for apps targeting iOS 18+26:
+
+```swift
+extension View {
+    @ViewBuilder func minimizedSearch() -> some View {
+        if #available(iOS 26.0, *) {
+            self.searchToolbarBehavior(.minimize)
+        } else { self }
+    }
+}
+
+// Usage
+.searchable(text: $searchText)
+.minimizedSearch()
+```
+
+**Availability pattern for toolbar items**:
+
+```swift
+.toolbar {
+    if #available(iOS 26.0, *) {
+        DefaultToolbarItem(kind: .search, placement: .bottomBar)
+        ToolbarSpacer(.flexible, placement: .bottomBar)
+    }
+    ToolbarItem(placement: .bottomBar) {
+        NewNoteButton()
+    }
+}
+.searchable(text: $searchText)
+```
+
+**Button roles, GlassButtonStyle, buttonSizing** — See Liquid Glass Design System section above.
+
+### lineHeight (iOS 26)
+
+Sets the baseline-to-baseline distance between text lines. More intuitive than `.lineSpacing()` which measures bottom-of-line to top-of-next-line.
+
+#### Presets
+
+```swift
+Text("Lorem ipsum...")
+    .lineHeight(.loose)     // Increased spacing for open layouts
+    .lineHeight(.tight)     // Reduced spacing for compact layouts
+    .lineHeight(.normal)    // Constant height based on point size multiple
+    .lineHeight(.variable)  // Uses font metrics for height calculation
+```
+
+#### Precise Control
+
+```swift
+// Scale proportionally to font size
+Text("Scales with text size")
+    .lineHeight(.multiple(factor: 2))
+
+// Relative to point size with fixed increase
+Text("Point-size relative")
+    .lineHeight(.leading(increase: 30))
+
+// Absolute fixed value — does NOT scale with Dynamic Type
+Text("Fixed height")
+    .lineHeight(.exact(points: 30))
+```
+
+#### AttributedString Support
+
+```swift
+var s = AttributedString("Paragraph\nwith multiple\nlines.")
+s.lineHeight = .exact(points: 32)
+s.lineHeight = .multiple(factor: 2.5)
+s.lineHeight = .loose
+```
+
+#### Comparison with Existing APIs
+
+| API | Measures | Available |
+|-----|----------|-----------|
+| `.lineHeight()` | Baseline to baseline | iOS 26+ |
+| `.lineSpacing()` | Bottom of line to top of next | iOS 13+ |
+| `.font(.body.leading(.tight))` | Font-level leading preset | iOS 14+ |
+
+**Cross-reference** `axiom-design (skills/typography-ref.md)` — Full typography system including Dynamic Type, tracking, and internationalization
+
+---
+
+## iPad Enhancements
+
+### Menu Bar
+
+#### Access common actions via swipe-down menu
+
+```swift
+.commands {
+    TextEditingCommands() // Same API as macOS menu bar
+
+    CommandGroup(after: .newItem) {
+        Button("Add Note") {
+            addNote()
+        }
+        .keyboardShortcut("n", modifiers: [.command, .shift])
+    }
+}
+// Creates menu bar on iPad when people swipe down
+```
+
+### Resizable Windows
+
+#### Fluid resizing on iPad
+
+```swift
+// MIGRATION REQUIRED:
+// Remove deprecated property list key in iPadOS 26:
+// UIRequiresFullScreen (entire key deprecated, all values)
+
+// For split view navigation, system automatically shows/hides columns
+// based on available space during resize
+NavigationSplitView {
+    Sidebar()
+} detail: {
+    Detail()
+}
+// Adapts to resizing automatically
+```
+
+---
+
+## macOS Window Enhancements
+
+### Synchronized Window Resize Animations
+
+```swift
+.windowResizeAnchor(.topLeading) // Tailor where animation originates
+
+// SwiftUI now synchronizes animation between content view size changes
+// and window resizing - great for preserving continuity when switching tabs
+```
+
+---
+
+## Performance Improvements
+
+### List Performance (macOS Focus)
+
+#### Massive gains for large lists
+
+- **6x faster loading** for lists of 100,000+ items on macOS
+- **16x faster updates** for large lists
+- Even bigger gains for larger lists
+- Improvements benefit all platforms (iOS, iPadOS, watchOS)
+
+```swift
+List(trips) { trip in // 100k+ items
+    TripRow(trip: trip)
+}
+// Loads 6x faster, updates 16x faster on macOS (iOS 26+)
+```
+
+### Scrolling Performance
+
+#### Reduced dropped frames
+
+SwiftUI has improved scheduling of user interface updates on iOS and macOS. This improves responsiveness and lets SwiftUI do even more work to prepare for upcoming frames. All in all, it reduces the chance of your app dropping a frame while scrolling quickly at high frame rates.
+
+### Nested ScrollViews with Lazy Stacks
+
+#### Photo carousels and multi-axis scrolling
+
+```swift
+ScrollView(.horizontal) {
+    LazyHStack {
+        ForEach(photoSets) { photoSet in
+            ScrollView(.vertical) {
+                LazyVStack {
+                    ForEach(photoSet.photos) { photo in
+                        PhotoView(photo: photo)
+                    }
+                }
+            }
+        }
+    }
+}
+// Nested scrollviews now properly delay loading with lazy stacks
+// Great for building photo carousels
+```
+
+### SwiftUI Performance Instrument
+
+#### New profiling tool in Xcode
+
+Available lanes:
+- **Long view body updates** — Identify expensive body computations
+- **Platform view updates** — Track UIKit/AppKit bridging performance
+- Other performance problem areas
+
+**Cross-reference** skills/swiftui-performance.md — Master the SwiftUI Instrument
+
+---
+
+## Swift Concurrency Integration
+
+### Compile-Time Data Race Safety
+
+```swift
+@Observable
+class TripStore {
+    var trips: [Trip] = []
+
+    func loadTrips() async {
+        trips = await TripService.fetchTrips()
+        // Swift 6 verifies data race safety at compile time
+    }
+}
+```
+
+**Benefits** Find bugs in concurrent code before they affect your app
+
+**Cross-reference** axiom-concurrency — Swift 6 strict concurrency patterns
+
+---
+
+## @Animatable Macro
+
+### Overview
+
+Simplifies custom animations by automatically synthesizing `animatableData` property.
+
+#### Before (@Animatable macro)
+
+```swift
+struct HikingRouteShape: Shape {
+    var startPoint: CGPoint
+    var endPoint: CGPoint
+    var elevation: Double
+    var drawingDirection: Bool // Don't want to animate this
+
+    // Tedious manual animatableData declaration
+    var animatableData: AnimatablePair<CGPoint.AnimatableData,
+                        AnimatablePair<Double, CGPoint.AnimatableData>> {
+        get {
+            AnimatablePair(startPoint.animatableData,
+                          AnimatablePair(elevation, endPoint.animatableData))
+        }
+        set {
+            startPoint.animatableData = newValue.first
+            elevation = newValue.second.first
+            endPoint.animatableData = newValue.second.second
+        }
+    }
+}
+```
+
+#### After (@Animatable macro)
+
+```swift
+@Animatable
+struct HikingRouteShape: Shape {
+    var startPoint: CGPoint
+    var endPoint: CGPoint
+    var elevation: Double
+
+    @AnimatableIgnored
+    var drawingDirection: Bool // Excluded from animation
+
+    // animatableData automatically synthesized!
+}
+```
+
+#### Key benefits
+- Delete manual `animatableData` property
+- Use `@AnimatableIgnored` for properties to exclude
+- SwiftUI automatically synthesizes animation data
+
+**Cross-reference** SwiftUI Animation (swiftui-animation-ref skill) — Comprehensive animation guide covering VectorArithmetic, Animatable protocol, @Animatable macro, animation types, Transaction system, and performance optimization
+
+---
+
+## 3D Spatial Layout (visionOS)
+
+### Alignment3D
+
+#### Depth-based layout
+
+```swift
+struct SunPositionView: View {
+    @State private var timeOfDay: Double = 12.0
+
+    var body: some View {
+        HikingRouteView()
+            .overlay(alignment: sunAlignment) {
+                SunView()
+                    .spatialOverlay(alignment: sunAlignment)
+            }
+    }
+
+    var sunAlignment: Alignment3D {
+        // Align sun in 3D space based on time of day
+        Alignment3D(
+            horizontal: .center,
+            vertical: .top,
+            depth: .back
+        )
+    }
+}
+```
+
+### Manipulable Modifier
+
+#### Interactive 3D objects
+
+```swift
+Model3D(named: "WaterBottle")
+    .manipulable() // People can pick up and move the object
+```
+
+### Surface Snapping APIs
+
+```swift
+@Environment(\.surfaceSnappingInfo) var snappingInfo: SurfaceSnappingInfo
+
+var body: some View {
+    VStackLayout().depthAlignment(.center) {
+        Model3D(named: "waterBottle")
+            .manipulable()
+
+        Pedestal()
+            .opacity(snappingInfo.classification == .table ? 1.0 : 0.0)
+    }
+}
+```
+
+---
+
+## Scene Bridging
+
+### Overview
+
+Scene bridging allows your UIKit and AppKit lifecycle apps to interoperate with SwiftUI scenes. Apps can use it to open SwiftUI-only scene types or use SwiftUI-exclusive features right from UIKit or AppKit code.
+
+### Supported Scene Types
+
+#### From UIKit/AppKit apps, you can now use
+
+- `MenuBarExtra` (macOS)
+- `ImmersiveSpace` (visionOS)
+- `RemoteImmersiveSpace` (macOS → Vision Pro)
+- `AssistiveAccess` (iOS 26)
+
+### Scene Modifiers
+
+Works with scene modifiers like:
+- `.windowStyle()`
+- `.immersiveEnvironmentBehavior()`
+
+### RemoteImmersiveSpace
+
+#### Mac app renders stereo content on Vision Pro
+
+```swift
+// In your macOS app
+@main
+struct MyMacApp: App {
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+        }
+
+        RemoteImmersiveSpace(id: "stereoView") {
+            // Render stereo content on Apple Vision Pro
+            // Uses CompositorServices
+        }
+    }
+}
+```
+
+#### Features
+- Mac app renders stereo content on Vision Pro
+- Hover effects and input events supported
+- Uses CompositorServices and Metal
+
+### AssistiveAccess Scene
+
+#### Special mode for users with cognitive disabilities
+
+```swift
+@main
+struct MyApp: App {
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+        }
+
+        AssistiveAccess {
+            SimplifiedUI() // UI shown when iPhone is in Assistive Access mode
+        }
+    }
+}
+```
+
+---
+
+## AppKit Integration Enhancements
+
+### SwiftUI Sheets in AppKit
+
+```swift
+// Show SwiftUI view in AppKit sheet
+let hostingController = NSHostingController(rootView: SwiftUISettingsView())
+presentAsSheet(hostingController)
+// Great for incremental SwiftUI adoption
+```
+
+### NSGestureRecognizerRepresentable
+
+```swift
+// Bridge AppKit gestures to SwiftUI
+struct AppKitPanGesture: NSGestureRecognizerRepresentable {
+    func makeNSGestureRecognizer(context: Context) -> NSPanGestureRecognizer {
+        NSPanGestureRecognizer()
+    }
+
+    func updateNSGestureRecognizer(_ recognizer: NSPanGestureRecognizer, context: Context) {
+        // Update configuration
+    }
+}
+```
+
+### NSHostingView in Interface Builder
+
+NSHostingView can now be used directly in Interface Builder for gradual SwiftUI adoption.
+
+---
+
+## RealityKit Integration
+
+### Observable Entities
+
+```swift
+@Observable
+class RealityEntity {
+    var position: SIMD3<Float>
+    var rotation: simd_quatf
+}
+
+struct MyView: View {
+    @State private var entity = RealityEntity()
+
+    var body: some View {
+        // SwiftUI views automatically observe changes
+        Text("Position: \(entity.position.x)")
+    }
+}
+```
+
+### PresentationComponent
+
+Present SwiftUI popovers, alerts, and sheets directly from RealityKit entities.
+
+```swift
+// Present SwiftUI popovers from RealityKit entities
+let popover = Entity()
+mapEntity.addChild(popover)
+popover.components[PresentationComponent.self] = PresentationComponent(
+    isPresented: $popoverPresented,
+    configuration: .popover(arrowEdge: .bottom),
+    content: DetailsView()
+)
+```
+
+### Additional Improvements
+
+- `ViewAttachmentComponent` — add SwiftUI views to entities
+- `GestureComponent` — entity touch and gesture responsiveness
+- Enhanced coordinate conversion API
+- Synchronizing animations, binding to components
+- New sizing behaviors for RealityView
+
+---
+
+## WebView & WebPage
+
+### Overview
+
+WebKit now provides full SwiftUI APIs for embedding web content, eliminating the need to drop down to UIKit.
+
+### WebView
+
+#### Display web content
+
+```swift
+import WebKit
+
+struct ArticleView: View {
+    let articleURL: URL
+
+    var body: some View {
+        WebView(url: articleURL)
+    }
+}
+```
+
+### WebPage (Observable Model)
+
+#### Rich interaction with web content
+
+```swift
+import WebKit
+
+struct InAppBrowser: View {
+    @State private var page = WebPage()
+
+    var body: some View {
+        VStack {
+            Text(page.title.isEmpty ? "Loading…" : page.title)
+
+            WebView(page)
+                .ignoresSafeArea()  // full-bleed ONLY — see the NavigationStack note below
+                .onAppear {
+                    page.load(URLRequest(url: articleURL))
+                }
+
+            HStack {
+                Button("Back") {
+                    if let item = page.backForwardList.backList.last { page.load(item) }
+                }
+                .disabled(page.backForwardList.backList.isEmpty)
+                Button("Forward") {
+                    if let item = page.backForwardList.forwardList.first { page.load(item) }
+                }
+                .disabled(page.backForwardList.forwardList.isEmpty)
+            }
+        }
+    }
+}
+```
+
+#### WebPage features
+- History navigation via `backForwardList` (`backList` / `forwardList` / `currentItem`) + `load(_ item:)` — there are no `goBack()`/`goForward()`/`canGoBack`/`canGoForward` members
+- Access page properties (`title` is a non-optional `String`, `url` is `URL?`, `estimatedProgress`)
+- Observable — SwiftUI views update automatically
+
+### WebView view modifiers
+
+Nine modifiers, all `iOS 26.0` / `macOS 26.0`, none iOS-unavailable. Verified against the iPhoneOS 27.0 SDK.
+
+| Modifier | Argument |
+|---|---|
+| `webViewScrollPosition(_:)` | `Binding<ScrollPosition>` — read/restore scroll offset |
+| `webViewOnScrollGeometryChange(for:of:action:)` | observes the internal scroll view's `ScrollGeometry` |
+| `webViewScrollInputBehavior(_:for:)` | `ScrollInputBehavior` + `ScrollInputKind` — **not usable on iOS**, see below |
+| `webViewContentBackground(_:)` | `Visibility` — whether the web content paints its own background |
+| `webViewBackForwardNavigationGestures(_:)` | `.automatic` / `.enabled` / `.disabled` |
+| `webViewMagnificationGestures(_:)` | `.automatic` / `.enabled` / `.disabled` |
+| `webViewLinkPreviews(_:)` | `.automatic` / `.enabled` / `.disabled` |
+| `webViewElementFullscreenBehavior(_:)` | `.automatic` / `.enabled` / `.disabled` |
+| `webViewTextSelection(_:)` | any `TextSelectability` |
+
+**These modifiers carry no doc comments in the SDK.** Signatures and availability are verifiable; Apple's stated semantics are not. Treat behavioral claims below as ranked suspects to test, not as guarantees.
+
+#### `webViewScrollInputBehavior` is uncallable on iOS
+
+The modifier is available on iOS 26, but every member of its `ScrollInputKind` argument — `handGestureShortcut`, `look`, `look(axes:)` — is `@available(iOS, unavailable)` (watchOS and visionOS respectively). There is no iOS-constructible value to pass. It is not the fix for an iOS scrolling problem; don't spend time on it.
+
+#### WebView inside NavigationStack
+
+A `WebView` owns an internal scroll view, and a navigation container computes safe-area insets so content scrolls under the bar. Those two facts collide, and the collisions look like "scrolling is broken."
+
+- **`.ignoresSafeArea()` is the first thing to remove.** It is correct for a full-bleed presentation and wrong inside a `NavigationStack` with a toolbar — it discards the insets the stack just computed, and the internal scroll view's content inset is what suffers. The `InAppBrowser` example above is the full-bleed shape.
+- **Bar looks wrong rather than scrolling?** Try `webViewContentBackground(.hidden)`. If the web content paints an opaque background there is nothing for the bar material or scroll-edge effect to sample.
+- **Diagnose with `webViewOnScrollGeometryChange`** rather than guessing. It reports the real `ScrollGeometry`, which turns "feels wrong" into whether `contentInsets` is off by exactly the bar height.
+
+**Toolbar requires a navigation container.** `.toolbar` and `.navigationTitle` render into a `NavigationStack` / `NavigationSplitView` (or a sheet with its own stack). Outside one they silently do nothing — so toolbar chrome around a `WebView` means accepting the stack's inset management, not avoiding it.
+
+#### Form-submission hook + navigation tweaks OS27
+
+`WebPage.NavigationDeciding` gains `willSubmit(formInfo:) async` (default no-op), observing form submissions: `WebPage.FormInfo` (`@MainActor`, so implicitly `Sendable`) carries `targetFrame` / `sourceFrame` (`FrameInfo`), `submissionURL`, `httpMethod`, and `formValues: [String: String]`. `WebPage.NavigationPreferences` adds `alternateRequest: URLRequest?`, `overrideReferrer: String?`, `isGlobalPrivacyControlEnabled: Bool`, and `allowsJSHandleCreationInPageWorld: Bool`. Confirmed on iOS 27, macOS 27, and visionOS 27 (beta 5); **not watchOS/tvOS**, which are marked `unavailable` explicitly.
+
+As of beta 5 the iOS SDK stamps **real versions for all three platforms** — `@available(macOS 27.0, iOS 27.0, visionOS 27.0, *)`. Through beta 4 it wrote `macOS 9999, visionOS 9999` (the cross-SDK "not yet stamped" sentinel), so an availability check written against an early-beta SDK may be narrower than what actually ships.
+
+**tvOS**: WebView and WebPage are **not available on tvOS**. tvOS has no WKWebView at all. For web content parsing on tvOS, use JavaScriptCore. See `axiom-swift (skills/tvos.md)` for alternatives.
+
+### Advanced WebKit Features
+
+- Custom user agents
+- JavaScript execution
+- Custom URL schemes
+- And more
+
+---
+
+## TextEditor with AttributedString
+
+### Overview
+
+SwiftUI's new support for rich text editing is great for experiences like commenting on photos. TextView now supports AttributedString!
+
+**Note** The WWDC transcript uses "TextView" as editorial language. The actual SwiftUI API is `TextEditor` which now supports `AttributedString` binding for rich text editing.
+
+#### Plain Text vs Rich Text
+
+- **For plain text**: Prefer `TextField("Label", text: $text, axis: .vertical)` over `TextEditor` — supports placeholder text, consistent styling, and automatic vertical expansion (iOS 16+)
+- **For rich text**: Use `TextEditor` with `AttributedString` binding (iOS 26+) — `TextField` does not support `AttributedString`
+
+### Rich Text Editing
+
+```swift
+struct CommentView: View {
+    @State private var comment = AttributedString("Enter your comment")
+
+    var body: some View {
+        TextEditor(text: $comment)
+            // Built-in text formatting controls included
+            // Users can apply bold, italic, underline, etc.
+    }
+}
+```
+
+#### Features
+- Built-in text formatting controls (bold, italic, underline, colors, etc.)
+- Binding to `AttributedString` preserves formatting
+- Automatic toolbar with formatting options
+
+### Advanced AttributedString Features
+
+#### Customization options
+- Paragraph styles
+- Attribute transformations
+- Constrain which attributes users can apply
+
+**Cross-reference** axiom-integration — AttributedString for Apple Intelligence Use Model action
+
+---
+
+## Drag and Drop Enhancements
+
+### Multiple Item Dragging
+
+#### Drag multiple items based on selection
+
+```swift
+struct PhotoGrid: View {
+    @State private var selectedPhotos: [Photo.ID] = []
+
+    var body: some View {
+        ScrollView {
+            LazyVGrid(columns: gridColumns) {
+                ForEach(model.photos) { photo in
+                    view(photo: photo)
+                        .draggable(containerItemID: photo.id)
+                }
+            }
+        }
+        .dragContainer(for: Photo.self) { draggedIDs in
+            photos(ids: draggedIDs)
+        }
+        .dragContainerSelection(selectedPhotos)
+    }
+}
+```
+
+**Key APIs**:
+- `.draggable(containerItemID:containerNamespace:)` marks each item as part of a drag container (namespace defaults to `nil`)
+- `.dragContainer(for:in:)` provides the typed items lazily when a drop occurs; the payload closure receives the dragged item IDs
+- `.dragContainerSelection(_:containerNamespace:)` supplies the current selection — it is a separate modifier, not a `dragContainer` argument
+
+### DragConfiguration
+
+#### Customize supported operations
+
+```swift
+.dragConfiguration(DragConfiguration(allowMove: false, allowDelete: true))
+```
+
+### Observing Drag Events
+
+```swift
+.onDragSessionUpdated { session in
+    let ids = session.draggedItemIDs(for: Photo.ID.self)
+    if session.phase == .ended(.delete) {
+        trash(ids)
+        deletePhotos(ids)
+    }
+}
+```
+
+### Drag Preview Formations
+
+```swift
+.dragPreviewsFormation(.stack) // Items stack nicely on top of one another
+
+// Other formations: .default, .pile, .list, .none
+// (there is no .grid formation)
+```
+
+Combine all modifiers (`.dragContainer`, `.dragConfiguration`, `.dragPreviewsFormation`, `.onDragSessionUpdated`) on the same scroll view for a complete multi-item drag experience.
+
+---
+
+## 3D Charts
+
+### Overview
+
+Swift Charts supports three-dimensional plotting with `Chart3D`. Key components: `Chart3D` (container), `SurfacePlot` (continuous surfaces), `Chart3DPose` (camera control), `Chart3DSurfaceStyle` (surface appearance).
+
+#### Gotcha: conditional `ChartContent` crashes below a 27.0 deployment target
+
+This applies to **all** Swift Charts, not just `Chart3D`. With a minimum deployment target below 27.0, an `if`/`else` inside a `Chart { … }` closure triggers the warning "Conformance of `_ConditionalContent<TrueContent, FalseContent>` to `ChartContent` is only available in 27.0 or newer," and the app **can crash at runtime** when that content loads. Extract the conditional into a function or computed property annotated with `@ChartContentBuilder`:
+
+```swift
+@ChartContentBuilder
+func marks(for dp: DataPoint) -> some ChartContent {
+    if selectedMetric == "Rate" {
+        LineMark(x: .value("X", dp.index), y: .value("Y", dp.rate)).foregroundStyle(.blue)
+    } else {
+        LineMark(x: .value("X", dp.index), y: .value("Y", dp.signal))
+    }
+}
+// Chart(dataPoints, id: \.index) { marks(for: $0) }
+```
+
+### Chart3D Container
+
+```swift
+import Charts
+
+Chart3D {
+    SurfacePlot(x: "x", y: "y", z: "z") { x, y in
+        sin(x) * cos(y)
+    }
+    .foregroundStyle(Gradient(colors: [.orange, .pink]))
+}
+.chartXScale(domain: -3...3)
+.chartYScale(domain: -3...3)
+.chartZScale(domain: -3...3)
+```
+
+`Chart3D` also accepts data collections:
+
+```swift
+Chart3D(dataPoints) { point in
+    // 3D mark for each data point
+}
+```
+
+### SurfacePlot
+
+Renders continuous surfaces from a mathematical function mapping (x, y) to z values.
+
+```swift
+SurfacePlot(x: "X Axis", y: "Y Axis", z: "Z Axis") { x, y in
+    sin(sqrt(x * x + y * y))
+}
+```
+
+#### Surface Styling
+
+```swift
+SurfacePlot(x: "X", y: "Y", z: "Z") { x, y in sin(x) * cos(y) }
+    .foregroundStyle(.blue)                        // Solid color
+    .roughness(0.3)                                // 0 = smooth, 1 = rough
+
+// Height-based coloring (color maps to z-value)
+    .foregroundStyle(Chart3DSurfaceStyle.heightBased(yRange: -1.0...1.0))
+
+// Custom gradient mapped to height
+    .foregroundStyle(Chart3DSurfaceStyle.heightBased(
+        Gradient(colors: [.blue, .green, .yellow, .red]),
+        yRange: -1.0...1.0
+    ))
+```
+
+Available surface styles: `.heightBased` (color by z-value), `.normalBased` (color by surface normal direction).
+
+#### Multiple Surfaces
+
+```swift
+Chart3D {
+    SurfacePlot(x: "X", y: "Y", z: "Z") { x, y in sin(x) * cos(y) }
+    SurfacePlot(x: "X", y: "Y", z: "Z") { x, y in cos(x) * sin(y) + 2 }
+}
+```
+
+### Chart3DPose (Camera Control)
+
+Controls the viewing angle. Pass as value for static positioning, or bind for interactive rotation.
+
+```swift
+@State private var chartPose: Chart3DPose = .default
+
+Chart3D { /* ... */ }
+    .chart3DPose(chartPose)      // Static — read-only
+    .chart3DPose($chartPose)     // Binding — enables drag-to-rotate
+```
+
+Predefined poses: `.default`, `.front`, `.back`, `.top`, `.bottom`, `.left`, `.right`
+
+Custom pose with specific angles:
+
+```swift
+Chart3DPose(azimuth: .degrees(45), inclination: .degrees(30))
+```
+
+Animate between poses:
+
+```swift
+Button("Top View") { withAnimation { chartPose = .top } }
+```
+
+### Chart3DCameraProjection
+
+Controls how 3D depth is projected to 2D.
+
+```swift
+Chart3D { /* ... */ }
+    .chart3DCameraProjection(.perspective)    // Objects shrink with distance
+    .chart3DCameraProjection(.orthographic)   // Objects maintain size regardless of depth
+    .chart3DCameraProjection(.automatic)      // System decides
+```
+
+### Z-Axis Modifiers
+
+All existing chart axis modifiers have z-axis equivalents:
+- `.chartZScale(domain:)` — Set z-axis range
+- `.chartZAxis()` — Configure z-axis labels and grid lines
+
+---
+
+## Widgets & Controls
+
+### Controls on watchOS and macOS
+
+#### watchOS 26
+
+```swift
+struct FavoriteLocationControl: ControlWidget {
+    var body: some ControlWidgetConfiguration {
+        StaticControlConfiguration(kind: "FavoriteLocation") {
+            ControlWidgetButton(action: MarkFavoriteIntent()) {
+                Label("Mark Favorite", systemImage: "star")
+            }
+        }
+    }
+}
+// Access from watch face or Shortcuts
+```
+
+#### macOS
+
+Controls now appear in Control Center on Mac.
+
+### Widgets on visionOS
+
+#### Level of detail customization
+
+```swift
+struct CountdownWidget: Widget {
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: "Countdown") { entry in
+            CountdownView(entry: entry)
+        }
+    }
+}
+
+struct PhotoCountdownView: View {
+    @Environment(\.levelOfDetail) var levelOfDetail: LevelOfDetail
+
+    var body: some View {
+        switch levelOfDetail {
+        case .default:
+            RecentPhotosView() // Full detail when close
+        case .simplified:
+            CountdownView()   // Simplified when further away
+        default:
+            CountdownView()
+        }
+    }
+}
+```
+
+### Widgets on CarPlay
+
+#### Live Activities on CarPlay
+
+Live Activities now appear on CarPlay displays for glanceable information while driving.
+
+### Additional Widget Features
+
+- Push-based updating API
+- New relevance APIs for watchOS
+
+---
+
+## Migration Checklist
+
+### Deprecated APIs
+
+#### ❌ Remove in iPadOS 26
+```xml
+<key>UIRequiresFullScreen</key>
+<!-- Entire property list key is deprecated (all values) -->
+```
+
+Apps must support resizable windows on iPad.
+
+### Automatic Adoptions (Recompile Only)
+
+✅ Liquid Glass design for navigation, tab bars, toolbars
+✅ Bottom-aligned search on iPhone
+✅ List performance improvements (6x loading, 16x updating)
+✅ Scrolling performance improvements
+✅ System controls (toggles, pickers, sliders) new appearance
+✅ Bordered buttons default to capsule shape
+✅ Updated control heights (slightly taller on macOS)
+✅ Monochrome icon rendering in toolbars
+✅ Menus: icons on leading edge, consistent across iOS and macOS
+✅ Sheets morph out of dialogs automatically
+✅ Scroll edge blur/fade under system toolbars
+
+### Audit Items (Remove Old Customizations)
+
+⚠️ Remove `presentationBackground` from sheets (let Liquid Glass material shine)
+⚠️ Remove extra backgrounds/darkening effects behind toolbar areas
+⚠️ Remove hard-coded control heights (use automatic sizing)
+⚠️ Update section headers to title-style capitalization (no longer auto-uppercased)
+
+### Manual Adoptions (Code Changes)
+
+🔧 Toolbar spacers (`.fixed`)
+🔧 Tinted prominent buttons in toolbars
+🔧 Glass effect for custom views (`.glassEffect()`)
+🔧 `glassEffectID` for morphing transitions between glass elements
+🔧 `GlassEffectContainer` for multiple nearby glass elements
+🔧 `sharedBackgroundVisibility(.hidden)` to remove toolbar item from group background
+🔧 Sheet morphing from buttons (`.navigationTransition(.zoom(sourceID:in:))`)
+🔧 Search tab role (`Tab(role: .search)`)
+🔧 Compact search toolbar (`.searchToolbarBehavior(.minimize)`)
+🔧 Extra large control size (`.controlSize(.extraLarge)`, available since iOS 17)
+🔧 Concentric rectangle shape (`ConcentricRectangle`)
+🔧 iPad menu bar (`.commands`)
+🔧 Window resize anchor (`.windowResizeAnchor()`)
+🔧 @Animatable macro for custom shapes/modifiers
+🔧 WebView for web content
+🔧 TextEditor with AttributedString binding
+🔧 Enhanced drag and drop with `.dragContainer`
+🔧 Slider ticks (`SliderTick`, `SliderTickContentForEach`)
+🔧 Slider thumb visibility (`.sliderThumbVisibility()`)
+🔧 Safe area bars with blur (`.safeAreaBar()` + `.scrollEdgeEffectStyle()`)
+🔧 In-app URL opening (`openURL(url, prefersInApp: true)`)
+🔧 Close and confirm button roles (`Button(role: .close)`)
+🔧 Glass button styles (`.glass`/`.glassProminent`; the `GlassButtonStyle(_:)` init is iOS 26.1+)
+🔧 Button sizing control (`.buttonSizing()`)
+🔧 Toolbar morphing transitions (per-view `.toolbar {}` inside NavigationStack)
+🔧 DefaultToolbarItem for system components in toolbars
+🔧 Stable toolbar items (`toolbar(id:)` with matched IDs across screens)
+🔧 User-customizable toolbars (`toolbar(id:)` with `CustomizableToolbarContent`)
+🔧 Line height control (`.lineHeight()` — baseline-to-baseline distance)
+🔧 Tab bar minimization (`.tabBarMinimizeBehavior(.onScrollDown)`)
+🔧 Tab view bottom accessory (`.tabViewBottomAccessory(isEnabled:content:)` — iOS 26.1+)
+
+---
+
+## Best Practices
+
+- **Performance**: Profile with new SwiftUI Instrument; use lazy stacks in nested ScrollViews; trust automatic list performance improvements
+- **Liquid Glass**: Recompile and test first; use toolbar spacers; attach `.toolbar {}` to individual views (not NavigationStack); remove `presentationBackground` from sheets; use `GlassEffectContainer` for nearby glass elements
+- **Layout**: Use `.safeAreaPadding()` for edge-to-edge (not `.padding()`). See `skills/layout-ref.md` for full guide
+- **Rich Text**: Bind `AttributedString` to `TextEditor`; constrain attributes for your UX
+- **Spatial (visionOS)**: Use `Alignment3D` for depth; `.manipulable()` only where it makes sense
+
+---
+
+## Troubleshooting
+
+| Symptom | Fix |
+|---------|-----|
+| Old design after updating to iOS 26 SDK | Clean build (Shift-Cmd-K), rebuild targeting iOS 26 SDK, check deployment target |
+| Search remains at top on iPhone | Place `.searchable` on `NavigationSplitView`, not on `List` directly |
+| @Animatable "does not conform" | All properties must be `VectorArithmetic` or marked `@AnimatableIgnored` |
+| Rich text formatting lost in TextEditor | Bind `AttributedString`, not `String` |
+| Drag delete not working | Enable `.dragConfiguration(allowDelete: true)` AND observe `.onDragSessionUpdated` |
+| SliderTickContentForEach won't compile | Iterate over numeric values (`chapters.map(\.time)`), not custom structs — see Slider section |
+| Toolbar not morphing during navigation | Move `.toolbar {}` from NavigationStack to each view inside it — see Liquid Glass section |
+| `.toolbarBackground` on TabView ignored | Known buggy/no-op at the TabView level on iOS 26. Apply `toolbarBackground`/`toolbarBackgroundVisibility`/`toolbarColorScheme` for `.tabBar` on each Tab's content instead. (Separate from the wrong-glass-variant cold-start bug, which no modifier fixes — see `axiom-design (skills/liquid-glass.md)` Known iOS 26 Limitations.) |
+
+---
+
+## Resources
+
+**WWDC**: 2025-256, 2025-278 (What's new in widgets), 2025-287 (Meet WebKit for SwiftUI), 2025-310 (Optimize SwiftUI performance with instruments), 2025-323 (Build a SwiftUI app with the new design), 2025-325 (Bring Swift Charts to the third dimension), 2025-341 (Cook up a rich text experience in SwiftUI with AttributedString)
+
+**Docs**: /swiftui, /swiftui/defaulttoolbaritem, /swiftui/toolbarspacer, /swiftui/searchtoolbarbehavior, /swiftui/view/toolbar(id:content:), /swiftui/view/tabbarminimizebehavior(_:), /swiftui/view/tabviewbottomaccessory(isenabled:content:), /swiftui/slider, /swiftui/slidertick, /swiftui/slidertickcontentforeach, /webkit, /foundation/attributedstring, /charts, /charts/chart3d, /charts/surfaceplot, /charts/chart3dpose, /charts/chart3dcameraprojection, /charts/chart3dsurfacestyle, /realitykit/presentationcomponent, /swiftui/view/sectionindexlabel(_:), /swiftui/view/listsectionindexvisibility(_:), /swiftui/view/listsectionmargins(_:_:)
+
+**Skills**: skills/swiftui-performance.md, axiom-design (skills/liquid-glass.md), axiom-design (skills/hig.md), axiom-concurrency, axiom-integration, skills/search-ref.md
+
+---
+
+**Primary source** WWDC 2025-256 "What's new in SwiftUI". Additional content from 2025-323 (Build a SwiftUI app with the new design), 2025-287 (Meet WebKit for SwiftUI), and Apple documentation.
+**Version** iOS 26+, iPadOS 26+, macOS Tahoe+, watchOS 26+, visionOS 26+
