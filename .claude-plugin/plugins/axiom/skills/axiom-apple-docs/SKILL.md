@@ -200,7 +200,7 @@ User question about Apple API/framework?
 
 If `AXIOM_XCODE_PATH` is unset, or the path doesn't exist, or the `IDEIntelligenceChat.framework` directory is missing (older Xcode), fall back to:
 
-1. **sosumi.ai** (markdown mirror of developer.apple.com — see `axiom-tools/apple-docs-research.md`)
+1. **sosumi.ai** (markdown mirror of developer.apple.com — see `skills/apple-docs-research.md`)
 2. **WebFetch** of the equivalent developer.apple.com URL
 3. **Suggest** installing the latest Xcode for full Apple docs coverage
 

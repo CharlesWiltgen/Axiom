@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "axiom": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "axiom-mcp"
+      ]
+    }
+  }
+}

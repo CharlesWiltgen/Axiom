@@ -1,0 +1,17 @@
+{
+  "name": "axiom-cursor-marketplace",
+  "owner": {
+    "name": "Charles Wiltgen",
+    "email": "charles@wiltgen.net"
+  },
+  "metadata": {
+    "description": "Native Cursor plugin for Axiom Apple platform development skills, agents, commands, hooks, and MCP."
+  },
+  "plugins": [
+    {
+      "name": "axiom",
+      "source": "./axiom-cursor",
+      "description": "Battle-tested skills, agents, commands, hooks, and MCP for modern Apple platform development."
+    }
+  ]
+}
