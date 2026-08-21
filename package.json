@@ -16,17 +16,18 @@
     "build:audit-areas": "node scripts/build-audit-areas.ts",
     "build:auditors": "node scripts/build-inlined-auditors.ts",
     "build:codex": "node scripts/build-codex.ts",
-    "build:mcp": "cd axiom-mcp && pnpm run build:bundle",
     "build:docs": "vitepress build docs",
+    "build:mcp": "cd axiom-mcp && pnpm run build:bundle",
+    "check:refs": "node scripts/check-cross-refs.js",
     "docs:build": "npm run build:docs",
     "docs:dev": "vitepress dev docs",
     "docs:preview": "vitepress preview docs",
+    "predeploy": "npm run test:unit && npm run build:mcp && node scripts/pre-deploy.ts",
     "test": "node scripts/pre-deploy.ts --static",
+    "test:cursor": "node --test 'scripts/cursor/**/*.test.ts'",
     "test:full": "node scripts/pre-deploy.ts",
-    "test:unit": "node --test scripts/*.test.ts",
     "test:routing": "node scripts/test-routing.ts",
-    "check:refs": "node scripts/check-cross-refs.js",
-    "predeploy": "npm run test:unit && npm run build:mcp && node scripts/pre-deploy.ts"
+    "test:unit": "node --test 'scripts/**/*.test.ts'"
   },
   "devDependencies": {
     "gray-matter": "^4.0.3",

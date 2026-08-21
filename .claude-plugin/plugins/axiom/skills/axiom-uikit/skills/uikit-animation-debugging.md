@@ -471,4 +471,3 @@ If you've spent >30 minutes and the animation is still broken:
 **Last Updated**: 2025-11-30
 **Status**: TDD-tested with pressure scenarios
 **Framework**: UIKit CAAnimation
-
