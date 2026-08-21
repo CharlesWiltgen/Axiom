@@ -1,0 +1,23 @@
+{
+  "name": "axiom",
+  "version": "27.0.0-beta.48",
+  "description": "Battle-tested Cursor skills, agents, commands, hooks, and MCP for modern Apple platform development.",
+  "author": {
+    "name": "Charles Wiltgen",
+    "url": "https://charleswiltgen.github.io/Axiom/"
+  },
+  "homepage": "https://charleswiltgen.github.io/Axiom/",
+  "repository": "https://github.com/CharlesWiltgen/Axiom",
+  "license": "MIT",
+  "displayName": "Axiom",
+  "keywords": [
+    "ios",
+    "swift",
+    "swiftui",
+    "xcode",
+    "apple",
+    "mobile",
+    "development"
+  ],
+  "logo": "assets/logo.svg"
+}

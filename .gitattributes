@@ -1,3 +1,9 @@
 
 # Use bd merge for beads JSONL files
 .beads/issues.jsonl merge=beads
+
+# Generated, installable plugin distributions. Keep these committed while
+# suppressing their machine-generated contents in GitHub diffs and statistics.
+axiom-codex/** linguist-generated
+axiom-cursor/** linguist-generated
+.cursor-plugin/** linguist-generated
