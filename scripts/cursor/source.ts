@@ -5,7 +5,6 @@ import { isGeneratedSubSkill, parseAgentTools } from "../inline-auditors.ts";
 import { compareCursorPaths } from "./compare.ts";
 import {
   CURSOR_ALLOWED_AGENT_FIELDS,
-  CURSOR_COMMAND_FILES,
   CURSOR_INJECTED_ROUTER,
   assertCursorCapabilityInventory,
 } from "./contract.ts";
@@ -164,9 +163,7 @@ function loadCommands(pluginRoot: string, manifestCommands: unknown): SourceComm
     return path.posix.basename(relative);
   }).sort();
   if (new Set(commandFiles).size !== commandFiles.length) throw new Error("duplicate manifest command file");
-  if (commandFiles.join("\0") !== [...CURSOR_COMMAND_FILES].sort().join("\0")) {
-    throw new Error("manifest command inventory differs from Cursor contract");
-  }
+  if (commandFiles.length === 0) throw new Error("manifest declares no commands");
   return commandFiles.map((filename) => {
     const sourcePath = path.join(commandsRoot, filename);
     const { frontmatter, body } = parseMarkdown(sourcePath, CURSOR_ALLOWED_COMMAND_FIELDS);

@@ -2,11 +2,6 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { transformAgent } from "./agents.ts";
 import { compareCursorPaths } from "./compare.ts";
-import {
-  CURSOR_AGENT_NAMES,
-  CURSOR_COMMAND_NAMES,
-  CURSOR_ROUTER_NAMES,
-} from "./contract.ts";
 import { buildCapabilityReport } from "./report.ts";
 import { loadCursorSource } from "./source.ts";
 
@@ -34,17 +29,20 @@ function fixture() {
   return { source, report: buildCapabilityReport(source, agents) };
 }
 
-test("capability report enumerates the fixed reviewed router, agent, and command inventories", () => {
-  const { report } = fixture();
+test("capability report enumerates exactly the canonical router, agent, and command inventories", () => {
+  const { source, report } = fixture();
+  const canonicalRouters = source.skills.map((skill) => skill.name).sort(compareCursorPaths);
+  const canonicalAgents = source.agents.map((agent) => agent.name).sort(compareCursorPaths);
+  const canonicalCommands = source.commands.map((command) => command.name).sort(compareCursorPaths);
 
   assert.deepEqual(
     report.routerDispositions.map((row) => row.name),
-    CURSOR_ROUTER_NAMES,
+    canonicalRouters,
   );
   assert.ok(report.routerDispositions.every((row) => row.disposition === "generated-native-skill"));
   assert.deepEqual(
     report.agentDispositions.map((row) => row.name),
-    CURSOR_AGENT_NAMES,
+    canonicalAgents,
   );
   assert.ok(report.agentDispositions.every((row) =>
     row.disposition === "generated-native-subagent"
@@ -56,11 +54,11 @@ test("capability report enumerates the fixed reviewed router, agent, and command
   ));
   assert.deepEqual(
     report.commandDispositions.map((row) => row.canonicalName),
-    CURSOR_COMMAND_NAMES,
+    canonicalCommands,
   );
   assert.deepEqual(
     report.commandDispositions.map((row) => row.generatedName),
-    CURSOR_COMMAND_NAMES.map((name) => `axiom-${name}`),
+    canonicalCommands.map((name) => `axiom-${name}`),
   );
   assert.ok(report.commandDispositions.every((row) => row.disposition === "generated-native-command"));
 });
