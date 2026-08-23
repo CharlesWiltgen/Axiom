@@ -167,8 +167,14 @@ function loadCommands(pluginRoot: string, manifestCommands: unknown): SourceComm
   return commandFiles.map((filename) => {
     const sourcePath = path.join(commandsRoot, filename);
     const { frontmatter, body } = parseMarkdown(sourcePath, CURSOR_ALLOWED_COMMAND_FIELDS);
-    const name = typeof frontmatter.name === "string" ? frontmatter.name : path.basename(filename, ".md");
-    return { name, filename, frontmatter, body };
+    const stem = path.basename(filename, ".md");
+    // transformCommand emits the file as `axiom-<stem>.md` but the frontmatter name as
+    // `axiom-<name>`, so a divergence ships a command whose filename and name disagree.
+    // Skills and agents already assert this; commands did not.
+    if (typeof frontmatter.name === "string" && frontmatter.name !== stem) {
+      throw new Error(`command frontmatter name must match filename: ${filename} declares ${frontmatter.name}`);
+    }
+    return { name: stem, filename, frontmatter, body };
   });
 }
 

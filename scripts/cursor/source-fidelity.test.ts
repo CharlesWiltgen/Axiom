@@ -62,3 +62,17 @@ test("loadCursorSource reports every command the canonical manifest declares", (
     .sort(compareCursorPaths);
   assert.deepEqual(loaded, rawManifestCommands());
 });
+
+test("a command whose frontmatter name diverges from its filename is rejected", () => {
+  // transformCommand derives the emitted path from the filename and the emitted
+  // `name:` from frontmatter, so a divergence would ship a mismatched command.
+  const commands = loadCursorSource(process.cwd()).commands;
+  for (const command of commands) {
+    assert.equal(
+      command.name,
+      command.filename.replace(/\.md$/, ""),
+      `${command.filename} must declare a name matching its filename`,
+    );
+  }
+  assert.ok(commands.length > 0);
+});
