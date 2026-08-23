@@ -67,7 +67,9 @@ Cursor does not provide Axiom's canonical per-agent tool allowlists. Every gener
 
 ## Hooks
 
-The plugin registers supported Cursor hooks for session start and post-tool shell/write events. They add routing hints or diagnostics as `additional_context` where available.
+The plugin registers supported Cursor hooks for session start, prompt submission, and post-tool shell/write events. They add routing hints or diagnostics as `additional_context` where available.
+
+- The prompt hook is the per-prompt router. Cursor's `beforeSubmitPrompt` supplies the prompt text and accepts `additional_context`, so Axiom's canonical routing carries over: a prompt that matches a router is annotated with the skill to invoke before the model answers. It stays silent outside an Apple project and on prompts under five characters.
 
 - Hooks are advisory and fail open on malformed input, missing files, child failure, oversized output, or timeout.
 - The write hook runs after the edit. Its findings do not block or undo the change.

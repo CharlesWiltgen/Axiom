@@ -32,6 +32,7 @@ const RUNTIME_FILES = [
   "hooks/posttool-bash-hints.py",
   "hooks/project_detect.py",
   "hooks/swift-guardrails.py",
+  "hooks/user-prompt-submit.py",
 ];
 
 function assertSafeRelativePath(relativePath: string): void {

@@ -199,7 +199,7 @@ test("hook counts and dispositions remain tied to canonical sources", () => {
     if (event === "SessionStart" && entry.matcher === undefined) {
       expected = "sessionStart.additional_context";
     } else if (event === "UserPromptSubmit" && entry.matcher === undefined) {
-      expected = "omitted";
+      expected = "beforeSubmitPrompt.additional_context";
     } else if (event === "PreToolUse" && entry.matcher === "Read") {
       expected = "omitted";
     } else if (

@@ -83,7 +83,7 @@ export const CURSOR_ALLOWED_AGENT_FIELDS = new Set([
 
 export const CURSOR_HOOK_DISPOSITIONS = Object.freeze({
   SessionStart: "sessionStart.additional_context",
-  UserPromptSubmit: "omitted",
+  UserPromptSubmit: "beforeSubmitPrompt.additional_context",
   "PreToolUse(Read)": "omitted",
   "PostToolUse(Bash)": "postToolUse.additional_context",
   "PostToolUse(Write|Edit)": "postToolUse.additional_context",

@@ -116,6 +116,7 @@ Confirm Cursor shows the plugin as installed from the local marketplace and that
 | No-argument command | Run one `/axiom-*` command without arguments | Native command appears and follows its translated workflow | _pending_ |
 | Argument command | Run one argument-bearing command with benign and injection-oriented text | Arguments remain task input, not shell interpolation or authorization | _pending_ |
 | Session hook | Start Apple-positive and non-Apple sessions | Compact context appears only where project detection allows it | _pending_ |
+| Prompt router hook | Send an Apple-platform prompt in an Apple project, then the same prompt in a non-Apple one | Router guidance is injected only in the Apple project; the model names the matched skill | _pending_ |
 | Shell hook | Exercise a fixture that emits a known Axiom hint | Advisory `additional_context`; no permission or denial field | _pending_ |
 | Write hook | Exercise a Swift write fixture | Post-edit advisory context only; the edit is not blocked or undone | _pending_ |
 | Hook failures | Malformed, oversized, missing-file, invalid-child-JSON, nonzero, noisy-child, and timeout fixtures | Sanitized diagnostic, `{}` result, exit 0, no enforcement fields | _pending_ |
@@ -140,7 +141,7 @@ Review `axiom-cursor/reports/capability-disposition.json` on the final SHA.
 - Confirm the release has exactly 30 read-only/background and 12 writable/foreground agents.
 - Confirm all writable agents, including `screenshot-validator`, are foreground.
 - Confirm prompts and hooks are described as guidance or advisory context, never as security boundaries.
-- Confirm omitted global hook behavior and all six per-agent hook dispositions are represented in the report.
+- Confirm omitted global hook behavior and all six per-agent hook dispositions are represented in the report. UserPromptSubmit is ported to `beforeSubmitPrompt`, not omitted; confirm the report says so.
 - Confirm supported hooks fail open and do not emit `decision`, `permission`, or `failClosed` fields.
 
 Any authority-class failure blocks publication. Do not silently downgrade the shipping profile or broaden a tool surface; return through a reviewed source/compiler change and rerun the complete final-SHA matrix.

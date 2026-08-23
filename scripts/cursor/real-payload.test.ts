@@ -84,3 +84,51 @@ test("live Cursor Shell tool_output is a JSON string keyed exitCode/output", () 
   assert.equal(typeof raw, "string", "tool_output is a JSON-encoded string, not an object");
   assert.deepEqual(Object.keys(JSON.parse(raw as string)).sort(), ["exitCode", "output"]);
 });
+
+function applePackage(): string {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "axiom-prompt-probe-"));
+  fs.writeFileSync(
+    path.join(dir, "Package.swift"),
+    "// swift-tools-version: 6.0\nimport PackageDescription\nlet package = Package(name: \"Demo\")\n",
+  );
+  return dir;
+}
+
+test("beforeSubmitPrompt routes an Apple prompt into additional_context", () => {
+  const workspace = applePackage();
+  try {
+    const payload = { ...FIXTURE["prompt-submit"], workspace_roots: [workspace] };
+    assert.ok(!("cwd" in payload), "the recorded Cursor payload has no cwd");
+    const { response, stderr } = invoke("prompt-submit", payload);
+    assert.equal(stderr, "", "routing must not emit a diagnostic on a well-formed payload");
+    assert.match(
+      (response as { additional_context?: string }).additional_context ?? "",
+      /^Axiom: This prompt matches/,
+      "an Apple-platform prompt must inject router guidance",
+    );
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test("beforeSubmitPrompt stays silent outside an Apple project", () => {
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "axiom-prompt-plain-"));
+  try {
+    const payload = { ...FIXTURE["prompt-submit"], workspace_roots: [workspace] };
+    assert.deepEqual(invoke("prompt-submit", payload).response, {});
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test("beforeSubmitPrompt ignores an absent or trivial prompt", () => {
+  const workspace = applePackage();
+  try {
+    for (const prompt of [undefined, "", "hi"]) {
+      const payload = { ...FIXTURE["prompt-submit"], workspace_roots: [workspace], prompt };
+      assert.deepEqual(invoke("prompt-submit", payload).response, {}, `prompt=${JSON.stringify(prompt)}`);
+    }
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});

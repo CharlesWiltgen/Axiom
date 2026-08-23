@@ -7,6 +7,12 @@
         "timeout": 5
       }
     ],
+    "beforeSubmitPrompt": [
+      {
+        "command": "python3 ./scripts/cursor-hook-adapter.py prompt-submit",
+        "timeout": 5
+      }
+    ],
     "postToolUse": [
       {
         "command": "python3 ./scripts/cursor-hook-adapter.py post-shell",

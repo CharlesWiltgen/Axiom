@@ -91,6 +91,9 @@ test("renders the native Cursor hook manifest and non-executable runtime copies"
       sessionStart: [
         { command: "python3 ./scripts/cursor-hook-adapter.py session-start", timeout: 5 },
       ],
+      beforeSubmitPrompt: [
+        { command: "python3 ./scripts/cursor-hook-adapter.py prompt-submit", timeout: 5 },
+      ],
       postToolUse: [
         { command: "python3 ./scripts/cursor-hook-adapter.py post-shell", matcher: "Shell", timeout: 5 },
         { command: "python3 ./scripts/cursor-hook-adapter.py post-write", matcher: "Write", timeout: 5 },
@@ -103,6 +106,7 @@ test("renders the native Cursor hook manifest and non-executable runtime copies"
     "scripts/posttool-bash-hints.py",
     "scripts/project_detect.py",
     "scripts/swift-guardrails.py",
+    "scripts/user-prompt-submit.py",
   ]);
   for (const file of files) assert.equal(file.mode, 0o644);
   for (const filename of ["posttool-bash-hints.py", "project_detect.py", "swift-guardrails.py"]) {
