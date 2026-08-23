@@ -43,6 +43,24 @@
       "/private/tmp/claude-501/-Users-Charles-Projects-Axiom/c34226d0-844f-4b47-a186-2f755305d484/scratchpad/cursor-hook-probe"
     ]
   },
+  "prompt-submit": {
+    "attachments": [],
+    "composer_mode": "agent",
+    "conversation_id": "<redacted-conversation_id>",
+    "cursor_version": "3.17.8",
+    "generation_id": "<redacted-generation_id>",
+    "hook_event_name": "beforeSubmitPrompt",
+    "model": "Cursor Grok 4.6",
+    "model_id": "<redacted-model_id>",
+    "model_params": {},
+    "prompt": "My SwiftUI list scrolls badly on device, what should I check?",
+    "session_id": "<redacted-session_id>",
+    "transcript_path": "<redacted-transcript_path>",
+    "user_email": "<redacted-user_email>",
+    "workspace_roots": [
+      "<workspace>"
+    ]
+  },
   "session-start": {
     "composer_mode": "agent",
     "conversation_id": "<redacted-conversation_id>",

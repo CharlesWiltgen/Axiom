@@ -20,6 +20,9 @@ const HOOKS_DOCUMENT = {
     sessionStart: [
       { command: "python3 ./scripts/cursor-hook-adapter.py session-start", timeout: 5 },
     ],
+    beforeSubmitPrompt: [
+      { command: "python3 ./scripts/cursor-hook-adapter.py prompt-submit", timeout: 5 },
+    ],
     postToolUse: [
       { command: "python3 ./scripts/cursor-hook-adapter.py post-shell", matcher: "Shell", timeout: 5 },
       { command: "python3 ./scripts/cursor-hook-adapter.py post-write", matcher: "Write", timeout: 5 },
@@ -32,7 +35,7 @@ function readFile(source: string): string {
 }
 
 export function renderCursorHooks(): VirtualFile[] {
-  const runtime = ["project_detect.py", "posttool-bash-hints.py", "swift-guardrails.py"].map((filename) => ({
+  const runtime = ["project_detect.py", "posttool-bash-hints.py", "swift-guardrails.py", "user-prompt-submit.py"].map((filename) => ({
     path: `scripts/${filename}`,
     content: readFile(path.join(canonicalHooksDirectory, filename)),
     mode: 0o644 as const,

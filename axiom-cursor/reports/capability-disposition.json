@@ -408,7 +408,7 @@
     "PreToolUse(Read)": "omitted",
     "SessionStart": "sessionStart.additional_context",
     "SubagentStart": "prompt",
-    "UserPromptSubmit": "omitted",
+    "UserPromptSubmit": "beforeSubmitPrompt.additional_context",
     "per-agent PreToolUse": "advisory"
   },
   "routerDispositions": [
@@ -1315,7 +1315,7 @@
       "owner": null,
       "event": "UserPromptSubmit",
       "matcher": null,
-      "disposition": "omitted",
+      "disposition": "beforeSubmitPrompt.additional_context",
       "warning": null,
       "advisory": null
     }

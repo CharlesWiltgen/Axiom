@@ -15,12 +15,20 @@ import tempfile
 import time
 from typing import Any, Dict, List, Optional, Tuple
 
+# Importing the sibling detector would otherwise write __pycache__ into the plugin
+# directory Cursor manages. A hook must not litter the user's install.
+sys.dont_write_bytecode = True
+
 
 MAX_STDIN_BYTES = 1024 * 1024
 MAX_CHILD_OUTPUT_BYTES = 64 * 1024
 # Keep the post-write boundary deliberately small. Files above 1 MiB fail open
 # without a scan.
 MAX_POST_WRITE_FILE_BYTES = 1024 * 1024
+# The canonical router ignores prompts under 5 chars and caps its scan at 2000.
+MIN_ROUTED_PROMPT_CHARS = 5
+MAX_ROUTED_PROMPT_CHARS = 2000
+MAX_ROUTED_CONTEXT_CHARS = 2048
 # Cursor gives this hook 5 seconds. Leave 1.25 seconds for process-group teardown
 # and JSON emission if the canonical child reaches its internal deadline.
 CHILD_TIMEOUT_SECONDS = 3.75
@@ -109,7 +117,7 @@ def stop_and_drain(process: subprocess.Popen, selector: selectors.BaseSelector) 
             pass
 
 
-def run_child(filename: str, payload: Dict[str, Any], env: Optional[Dict[str, str]] = None) -> str:
+def run_child(filename: str, payload: Dict[str, Any], env: Optional[Dict[str, str]] = None, cwd: Optional[str] = None) -> str:
     child = os.path.join(SCRIPT_DIRECTORY, filename)
     if not os.path.isfile(child):
         raise AdapterError("missing child")
@@ -123,11 +131,12 @@ def run_child(filename: str, payload: Dict[str, Any], env: Optional[Dict[str, st
             stdin_file.write(child_input)
             stdin_file.seek(0)
             process = subprocess.Popen(
-                [sys.executable, child],
+                [sys.executable, "-B", child],  # -B: no __pycache__ in the plugin directory
                 stdin=stdin_file,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 env=env,
+                cwd=cwd,
                 start_new_session=True,
             )
             assert process.stdout is not None
@@ -180,14 +189,66 @@ def run_child(filename: str, payload: Dict[str, Any], env: Optional[Dict[str, st
     return bytes(buffers["stdout"]).decode("utf-8", errors="replace")
 
 
+def _workspace_root(payload: Dict[str, Any]) -> str:
+    """Best available workspace directory for a Cursor hook payload.
+
+    Cursor sends `cwd` on some events and `workspace_roots` on all of them, so prefer
+    the explicit value, fall back to the first root, and only then to the adapter's own
+    directory. Children run their own project gate against the directory they start in.
+    """
+    cwd = payload.get("cwd")
+    if isinstance(cwd, str) and cwd and os.path.isdir(cwd):
+        return cwd
+    roots = payload.get("workspace_roots")
+    if isinstance(roots, list) and roots and isinstance(roots[0], str) and os.path.isdir(roots[0]):
+        return roots[0]
+    return os.getcwd()
+
+
+def prompt_submit(payload: Dict[str, Any]) -> Dict[str, str]:
+    """Port of the canonical UserPromptSubmit router to Cursor's beforeSubmitPrompt.
+
+    Cursor supplies the prompt text and accepts `additional_context` in the response,
+    so per-prompt router injection carries over intact rather than being dropped.
+    """
+    prompt = payload.get("prompt")
+    if not isinstance(prompt, str) or len(prompt) < MIN_ROUTED_PROMPT_CHARS:
+        return {}
+    if len(prompt) > MAX_ROUTED_PROMPT_CHARS:
+        prompt = prompt[:MAX_ROUTED_PROMPT_CHARS]
+    workspace = _workspace_root(payload)
+    child_output = run_child("user-prompt-submit.py", {"prompt": prompt}, cwd=workspace)
+    if not child_output.strip():
+        return {}
+    try:
+        response = json.loads(child_output)
+    except json.JSONDecodeError:
+        raise AdapterError("invalid child JSON")
+    if not isinstance(response, dict):
+        raise AdapterError("invalid child JSON")
+    specific = response.get("hookSpecificOutput")
+    if not isinstance(specific, dict):
+        return {}
+    context = specific.get("additionalContext")
+    if not isinstance(context, str):
+        return {}
+    context = context.strip()
+    # The router emits a fixed template naming skills from its own table, never prompt
+    # text, so bound the length and reject anything that is not that shape rather than
+    # forwarding arbitrary child output into the model's turn.
+    if not context.startswith("Axiom:") or len(context) > MAX_ROUTED_CONTEXT_CHARS:
+        raise AdapterError("unexpected router context")
+    if _has_control_characters(context):
+        raise AdapterError("unexpected router context")
+    return {"additional_context": context}
+
+
 def session_start(payload: Dict[str, Any]) -> Dict[str, str]:
     try:
         from project_detect import resolve_context_decision
     except Exception as error:
         raise AdapterError("missing project detector") from error
-    cwd = payload.get("cwd")
-    if not isinstance(cwd, str) or not cwd:
-        cwd = os.getcwd()
+    cwd = _workspace_root(payload)
     if not resolve_context_decision(cwd, os.environ.get("AXIOM_SESSION_CONTEXT")):
         return {}
 
@@ -478,6 +539,8 @@ def dispatch(mode: str, payload: Dict[str, Any]) -> Dict[str, str]:
         return post_shell(payload)
     if mode == "post-write":
         return post_write(payload)
+    if mode == "prompt-submit":
+        return prompt_submit(payload)
     raise AdapterError("unknown mode")
 
 

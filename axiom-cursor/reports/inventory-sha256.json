@@ -313,8 +313,8 @@
     },
     {
       "path": "hooks/hooks.json",
-      "sha256": "bae5d85865ac96c23e49009c22ff4929f2c8bdfd9e53b4249a55fffd44edc932",
-      "bytes": 486
+      "sha256": "d63d2468b177b85a62f4b1fbc5d6d2b9646eb4a26ac059d6020e2c514698200d",
+      "bytes": 635
     },
     {
       "path": "mcp.json",
@@ -323,13 +323,13 @@
     },
     {
       "path": "reports/capability-disposition.json",
-      "sha256": "6cf3314f08d0974455eb8006c8cc7a6570bf8d81cc17c4761c9e0295a2664683",
-      "bytes": 35324
+      "sha256": "e860f887a730dda802b98138598154b5b33a3fdd51407bffd82c2931893e509f",
+      "bytes": 35384
     },
     {
       "path": "scripts/cursor-hook-adapter.py",
-      "sha256": "ce5cf529b51fbb4331006ce9bf4ea9e2448fcff654b08c41685e98c13d226292",
-      "bytes": 18812
+      "sha256": "a867c232a9e920e90528794f3a683e47a261823caca454dcc65cd5f4820eb265",
+      "bytes": 21685
     },
     {
       "path": "scripts/posttool-bash-hints.py",
@@ -345,6 +345,11 @@
       "path": "scripts/swift-guardrails.py",
       "sha256": "700681916e570fb6e31208241c1a071c7c80b4d2cfa937b119464e937e7aaaa6",
       "bytes": 12348
+    },
+    {
+      "path": "scripts/user-prompt-submit.py",
+      "sha256": "0fdba48bc3c05ac6e104ffeec8e540054362dffd250c930f3429102508bdf8f1",
+      "bytes": 39327
     },
     {
       "path": "skills/axiom-accessibility/SKILL.md",
@@ -1848,8 +1853,8 @@
     }
   ],
   "totals": {
-    "files": 369,
-    "bytes": 7072139
+    "files": 370,
+    "bytes": 7114548
   },
   "excludedMirrors": 30,
   "classes": {
