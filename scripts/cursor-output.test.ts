@@ -1,0 +1,38 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { isCursorGeneratedPath } from "./cursor-output.js";
+
+test("recognises every path the Cursor build regenerates", () => {
+  for (const generated of [
+    "axiom-cursor/README.md",
+    "axiom-cursor/.cursor-plugin/plugin.json",
+    "axiom-cursor/skills/axiom-swiftui/SKILL.md",
+    "axiom-cursor/reports/inventory-sha256.json",
+    "axiom-cursor/scripts/cursor-hook-adapter.py",
+    ".cursor-plugin/marketplace.json",
+  ]) {
+    assert.equal(isCursorGeneratedPath(generated), true, generated);
+  }
+});
+
+test("does not absolve unrelated working-tree changes", () => {
+  // The point of the --tag preflight is refusing to tag a dirty tree. Widening it
+  // for generated output must not turn it into a blanket pass.
+  for (const unrelated of [
+    "scripts/set-version.js",
+    "docs/start/cursor-install.md",
+    "CURSOR-MARKETPLACE-SUBMISSION.md",
+    ".claude-plugin/plugins/axiom/agents/build-fixer.md",
+    "axiom-codex/skills/axiom-swiftui/SKILL.md",
+    "axiom-cursor-notes.md",
+    ".cursor-plugin/other.json",
+    "",
+  ]) {
+    assert.equal(isCursorGeneratedPath(unrelated), false, unrelated);
+  }
+});
+
+test("normalises Windows separators", () => {
+  assert.equal(isCursorGeneratedPath("axiom-cursor\\README.md"), true);
+  assert.equal(isCursorGeneratedPath(".cursor-plugin\\marketplace.json"), true);
+});
