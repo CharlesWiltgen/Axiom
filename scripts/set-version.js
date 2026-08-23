@@ -551,6 +551,15 @@ try {
     throw err;
   }
 
+  // Cursor manifests and reports are generated from the canonical manifest.
+  // Keep this after the atomic canonical writes: a generation failure leaves a
+  // truthful diagnostic rather than silently shipping a stale Cursor release.
+  try {
+    execSync('node scripts/build-cursor.ts', { cwd: root, stdio: 'inherit' });
+  } catch (err) {
+    throw new Error(`canonical version changed but Cursor output is stale: ${err.message}`);
+  }
+
   // Create annotated tag (after successful writes) if --tag passed
   if (tagFlag) {
     try {

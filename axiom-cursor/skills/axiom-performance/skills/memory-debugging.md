@@ -1,0 +1,501 @@
+## Cursor MCP Tool Boundary
+
+The `xclog`, `xcsym`, and `xcprof` examples below are reference syntax, not executable commands for Cursor. Map each subcommand to the same-named MCP tool—for example, `xclog launch` to `axiom_xclog_launch`, `xcsym crash` to `axiom_xcsym_crash`, and `xcprof record` to `axiom_xcprof_record`—and preserve its arguments as structured fields. Do not run a bare helper binary. If a required MCP tool is unavailable, stop and report that the Axiom MCP integration is missing; do not fall back to a same-named executable.
+
+
+# Memory Debugging
+
+## Overview
+
+Memory issues manifest as crashes after prolonged use. **Core principle** 90% of memory leaks follow 3 patterns (retain cycles, timer/observer leaks, collection growth). Diagnose systematically with Instruments, never guess.
+
+## Example Prompts
+
+- "My app crashes after 10-15 minutes with no error messages"
+- "Memory jumps from 50MB to 200MB+ on a specific action — leak or cache?"
+- "View controllers don't deallocate after dismiss"
+- "Timers/observers causing memory leaks — how to verify?"
+- "App uses 200MB and I don't know if that's normal"
+
+---
+
+## Red Flags — Memory Leak Likely
+
+- Progressive memory growth: 50MB → 100MB → 200MB (not plateauing)
+- App crashes after 10-15 minutes with no error in Xcode console
+- Memory warnings appear repeatedly in device logs
+- View controllers don't deallocate after dismiss (visible in Memory Graph Debugger)
+- Same operation run multiple times causes linear memory growth
+
+**Leak vs normal**: Normal = stays at 100MB. Leak = 50MB → 100MB → 150MB → 200MB → CRASH.
+
+## Mandatory First Steps
+
+**ALWAYS diagnose FIRST** (before reading code):
+
+1. Check device logs for "Memory pressure critical", "Jetsam killed", "Low Memory"
+2. Use Memory Graph Debugger (below) — shows object count growth
+3. Xcode → Product → Profile → Memory. Perform action 5 times, note if memory keeps growing
+
+**What this tells you**: Flat = not a leak. Linear growth = classic leak. Spike then flat = normal cache. Spikes stacking = compound leak.
+
+**Why diagnostics first**: Finding leak with Instruments: 5-15 min. Guessing: 45+ min.
+
+## Detecting Leaks — Step by Step
+
+### Step 1: Memory Graph Debugger (Fastest)
+
+1. Open app in simulator
+2. Debug → Memory Graph Debugger (or toolbar icon)
+3. Look for PURPLE/RED circles with "⚠" badge
+4. Click them → Xcode shows retain cycle chain
+
+### Step 2: Instruments (Detailed Analysis)
+
+1. Product → Profile (Cmd+I) → "Memory" template
+2. Perform action 5-10 times
+3. Memory line goes UP for each action? = Leak confirmed
+
+Key instruments: Heap Allocations (object count), Leaked Objects (direct detection), VM Tracker (by type).
+
+### Step 3: Deallocation Check
+
+```swift
+// Add deinit logging to suspect classes
+class MyViewController: UIViewController {
+    deinit { print("✅ MyViewController deallocated") }
+}
+
+@MainActor
+class ViewModel: ObservableObject {
+    deinit { print("✅ ViewModel deallocated") }
+}
+```
+
+Navigate to view, navigate away. See "✅ deallocated"? Yes = no leak. No = retained somewhere.
+
+## Jetsam (Memory Pressure Termination)
+
+**Jetsam is not a bug** — iOS terminates background apps to free memory. Not a crash (no crash log), but frequent kills hurt UX.
+
+| Termination | Cause | Solution |
+|-------------|-------|----------|
+| **Memory Limit Exceeded** | Your app used too much memory | Reduce peak footprint |
+| **Jetsam** | System needed memory for other apps | Reduce background memory to <50MB |
+
+### Measure Peak, Not Resting
+
+The table above says "reduce peak footprint" for one row and "reduce background memory" for the other, and that split is real — the two terminations are judged against different numbers:
+
+| Termination | Judged against | Number to reduce |
+|---|---|---|
+| Memory Limit Exceeded | Your instantaneous footprint, checked continuously | Peak |
+| Jetsam under system pressure | Your footprint at the moment the kernel picks victims — for a backgrounded app, its resting figure | Resting |
+
+So peak is what explains a limit kill you cannot reproduce; resting is what governs whether you survive someone else's memory pressure. The kernel tracks both, plus your headroom, in one call:
+
+```swift
+import os
+
+func footprint() -> (currentMB: Double, peakMB: Double, headroomMB: Double)? {
+    var info = task_vm_info_data_t()
+    var count = mach_msg_type_number_t(
+        MemoryLayout<task_vm_info_data_t>.size / MemoryLayout<integer_t>.size
+    )
+    let kr = withUnsafeMutablePointer(to: &info) {
+        $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
+            task_info(mach_task_self_, task_flavor_t(TASK_VM_INFO), $0, &count)
+        }
+    }
+    guard kr == KERN_SUCCESS else { return nil }
+    return (Double(info.phys_footprint) / 1_048_576,
+            Double(info.ledger_phys_footprint_peak) / 1_048_576,
+            Double(os_proc_available_memory()) / 1_048_576)
+}
+```
+
+- `phys_footprint` is what Xcode's memory gauge shows.
+- `ledger_phys_footprint_peak` is the high-water mark since launch.
+- `os_proc_available_memory()` is your remaining headroom — the same value as the struct's `limit_bytes_remaining`. iOS, tvOS, and watchOS only; not macOS. Without it a peak has nothing to be judged against: 300 MB is unremarkable on an iPad Pro reporting 5 GB of headroom and fatal in an app extension with 50 MB. `current + headroom` gives you that device's actual limit, which is the number to put beside a colleague's "we're only at 180 MB".
+
+**A zero headroom reading is ambiguous — never read it as "plenty of room".** `<os/proc.h>` defines 0 as: the calling process is not an app, **or** it has already exceeded its memory limit. Those are opposite situations. Disambiguate with `phys_footprint` from the same call — a small footprint beside a 0 means the reading does not apply to this process; a large one means you are already over the line.
+
+**The peak never resets.** There is no API to clear it, and it outlives the free that hides the spike from the gauge. A single read after your test hands you the process-lifetime maximum — which may have been set during launch, or on a screen the user visited ten minutes ago. **Read it before the interaction and after, and take the delta**, or relaunch between runs.
+
+**Sampling is not a substitute.** A transient spike outruns any polling rate you are willing to pay for. In the lazy-container case below, polling on every step of a scroll still missed a peak several times higher than anything it recorded.
+
+**Simulator readings are not device readings.** In the simulator your process is a macOS process: `phys_footprint` measures host memory, there is no iOS dirty-memory limit, and `os_proc_available_memory()` is not meaningful. Peak work belongs on hardware.
+
+**Where peaks hide**: transitions, not steady states — a list scrolling back through rows it already passed, a document reopening, a share sheet loading previews, an image pipeline decoding faster than it releases. The measured case, with numbers, is `axiom-swiftui (skills/layout-ref.md)` — Lazy Container Gotchas, where iOS 27 releases rows continuously and still peaks several times above rest.
+
+**In production**, `MXMetricPayload.memoryMetrics.peakMemoryUsage` is the field counterpart to this call — see Monitoring with MetricKit below.
+
+### Reducing Jetsam Rate
+
+Clear caches on backgrounding:
+
+```swift
+// SwiftUI
+.onChange(of: scenePhase) { _, newPhase in
+    if newPhase == .background {
+        imageCache.clearAll()
+        URLCache.shared.removeAllCachedResponses()
+    }
+}
+```
+
+### State Restoration
+
+Users shouldn't notice jetsam. Use `@SceneStorage` (SwiftUI) or `stateRestorationActivity` (UIKit) to restore navigation position, drafts, and scroll position.
+
+### Monitoring with MetricKit
+
+```swift
+class JetsamMonitor: NSObject, MXMetricManagerSubscriber {
+    func didReceive(_ payloads: [MXMetricPayload]) {
+        for payload in payloads {
+            guard let exitData = payload.applicationExitMetrics else { continue }
+            let bgData = exitData.backgroundExitData
+            if bgData.cumulativeMemoryPressureExitCount > 0 {
+                // Send to analytics
+            }
+        }
+    }
+}
+```
+
+On `iOS27`, MetricKit adds a **memory exception diagnostic** — when the app (or an extension) is killed for exceeding its memory limit, a `DiagnosticReport` with `.memoryException` arrives carrying the call stack at termination, and the `.backgroundTermination`/`.foregroundTermination` metrics break out `memoryLimitTerminationCount`. See `axiom-performance (skills/metrickit-ref.md)` Part 1.
+
+```
+App memory grows while in USE? → Memory leak (fix retention)
+App memory grows only WHILE SCROLLING a long list, on iOS 26? → Not a leak.
+  Lazy containers and List never free a visited row's state on 26; the memory is
+  reachable, so leak detection reports nothing. Move heavy payloads out of per-row
+  state. See axiom-swiftui (skills/layout-ref.md) — Lazy Container Gotchas
+App killed in BACKGROUND? → Jetsam (reduce bg memory)
+```
+
+## Common Memory Leak Patterns (With Fixes)
+
+### Pattern 1: Timer Leaks (Most Common — 50% of leaks)
+
+**Why `[weak self]` alone doesn't fix timer leaks**: The RunLoop retains scheduled timers. `[weak self]` only prevents the closure from retaining `self` — the Timer object itself continues to exist and fire. You must explicitly `invalidate()` to break the RunLoop's retention.
+
+#### ❌ Leak — Timer never invalidated
+```swift
+progressTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+    self?.updateProgress()
+}
+// Timer never stopped → RunLoop keeps it alive and firing forever
+```
+
+#### ✅ Best fix: Combine (auto-cleanup)
+```swift
+cancellable = Timer.publish(every: 1.0, tolerance: 0.1, on: .main, in: .default)
+    .autoconnect()
+    .sink { [weak self] _ in self?.updateProgress() }
+// No deinit needed — cancellable auto-cleans when released
+```
+
+**Alternative**: Call `timer?.invalidate(); timer = nil` in both the appropriate teardown method (`viewWillDisappear`, stop method, etc.) AND `deinit`.
+
+> For timer crash patterns (EXC_BAD_INSTRUCTION) and RunLoop mode issues, see `axiom-integration` (skills/timer-patterns.md).
+
+### Pattern 2: Observer/Notification Leaks (25% of leaks)
+
+#### ❌ Leak — No removeObserver
+```swift
+NotificationCenter.default.addObserver(self, selector: #selector(handle),
+    name: AVAudioSession.routeChangeNotification, object: nil)
+// No matching removeObserver → accumulates listeners
+```
+
+#### ✅ Best fix: Combine publisher
+```swift
+NotificationCenter.default.publisher(for: AVAudioSession.routeChangeNotification)
+    .sink { [weak self] _ in self?.handleChange() }
+    .store(in: &cancellables)  // Auto-cleanup with viewModel
+```
+
+**Alternative**: `NotificationCenter.default.removeObserver(self)` in `deinit`.
+
+### Pattern 3: Closure Capture Leaks (15% of leaks)
+
+#### ❌ Leak — Closure in array captures self
+```swift
+updateCallbacks.append { [self] track in
+    self.refreshUI(with: track)  // Strong capture → cycle
+}
+```
+
+#### ✅ Fix: Use [weak self]
+```swift
+updateCallbacks.append { [weak self] track in
+    self?.refreshUI(with: track)
+}
+```
+
+Clear callback arrays in `deinit`. Use `[unowned self]` only when certain self outlives the closure.
+
+### Pattern 4: Strong Reference Cycles
+
+#### ❌ Leak — Mutual strong references
+```swift
+player?.onPlaybackEnd = { [self] in self.playNextTrack() }
+// self → player → closure → self (cycle)
+```
+
+#### ✅ Fix: [weak self] in closure
+```swift
+player?.onPlaybackEnd = { [weak self] in self?.playNextTrack() }
+```
+
+### Pattern 5: View/Layout Callback Leaks
+
+Use the delegation pattern with `AnyObject` protocol (enables weak references) instead of closures that capture view controllers.
+
+### Pattern 6: PhotoKit Image Request Leaks
+
+`PHImageManager.requestImage()` returns a `PHImageRequestID` that must be cancelled. Without cancellation, pending requests queue up and hold memory when scrolling.
+
+```swift
+class PhotoCell: UICollectionViewCell {
+    private var imageRequestID: PHImageRequestID = PHInvalidImageRequestID
+
+    func configure(with asset: PHAsset, imageManager: PHImageManager) {
+        if imageRequestID != PHInvalidImageRequestID {
+            imageManager.cancelImageRequest(imageRequestID)
+        }
+        imageRequestID = imageManager.requestImage(for: asset, targetSize: PHImageManagerMaximumSize,
+            contentMode: .aspectFill, options: nil) { [weak self] image, _ in
+            self?.imageView.image = image
+        }
+    }
+
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        if imageRequestID != PHInvalidImageRequestID {
+            PHImageManager.default().cancelImageRequest(imageRequestID)
+            imageRequestID = PHInvalidImageRequestID
+        }
+        imageView.image = nil
+    }
+}
+```
+
+Similar patterns: `AVAssetImageGenerator` → `cancelAllCGImageGeneration()`, `URLSession.dataTask()` → `cancel()`.
+
+## Weak Inner Capture Inside a Strong Outer Closure `OS27`
+
+Swift 6.4 (Xcode 27) adds the **default-on** `[#ImplicitStrongCapture]` warning. It fires when an inner closure captures `self` with `[weak self]` while an **outer escaping closure already captured `self` implicitly strong**. The weak inner is a false sense of safety — the outer closure governs `self`'s lifetime, so the inner's `[weak self]` shortens nothing. This is the exact cycle that used to surface only in Instruments; now the compiler flags it at build time.
+
+Fires only for **escaping** outer closures (`Task {}`, `DispatchQueue.async {}`, stored closures). Non-escaping outers (`forEach`, `map`) don't capture past the call, so they never trigger it. Severity tracks the outer closure's lifetime: a one-shot async hop retains `self` only briefly, but a **stored** outer closure (`store.onChange = { self.x = { [weak self] … } }`) holds `self` for the store's lifetime — a real leak the weak inner does nothing to prevent.
+
+#### ❌ Warns — weak inner, implicit strong outer
+```swift
+DispatchQueue.main.async {           // implicitly captures self STRONG
+    self.doWork()
+    self.handler = { [weak self] in  // false safety — self already retained above
+        self?.doWork()
+    }
+}
+```
+```
+warning: 'weak' ownership of capture 'self' differs from implicitly-captured
+strong reference in outer scope [#ImplicitStrongCapture]
+  note: 'self' implicitly strongly captured here
+  note: add 'self' as a capture list item to silence
+```
+
+#### ✅ Fix by intent, not by silencing
+
+The warning asks one question — did you mean for the outer closure to retain `self`?
+
+| Intent | Fix |
+|--------|-----|
+| `self` SHOULD live for the outer closure | `[self]` on the OUTER closure — makes the strong capture explicit |
+| `self` should NOT be retained (why you wrote weak) | `[weak self]` on the OUTER closure + `guard let self else { return }` |
+
+```swift
+// Intent: don't retain self — weaken the OUTER, not just the inner
+DispatchQueue.main.async { [weak self] in
+    guard let self else { return }
+    self.doWork()
+    self.handler = { [weak self] in self?.doWork() }
+}
+```
+
+**Silencing is not fixing.** `[weak self = self]` on the inner closure also clears the warning, but `self` is still strongly held by the outer — you've muted the diagnostic without changing the retention. Pick the fix that matches intent (see Pattern 3 and Pattern 4 above). Diagnostic group id: `[#ImplicitStrongCapture]`.
+
+## Systematic Debugging Workflow
+
+### Phase 1: Confirm Leak (5 min)
+
+Profile with Memory template, repeat action 10 times. Flat = not a leak (stop). Steady climb = leak (continue).
+
+### Phase 2: Locate Leak (10-15 min)
+
+Memory Graph Debugger → purple/red circles → click → read retain cycle chain.
+
+Common locations: Timers (50%), Notifications/KVO (25%), Closures in collections (15%), Delegate cycles (10%).
+
+### Phase 3: Fix and Verify (5 min)
+
+Apply fix from patterns above. Add `deinit { print("✅ deallocated") }`. Run Instruments again — memory should stay flat.
+
+### Compound Leaks
+
+Real apps often have 2-3 leaks stacking. Fix the largest first, re-run Instruments, repeat until flat.
+
+## Non-Reproducible / Intermittent Leaks
+
+When Instruments prevents reproduction (Heisenbug) or leaks only happen with specific user data:
+
+**Lightweight diagnostics** (when Instruments can't be attached):
+1. **deinit logging as primary diagnostic** — Add `deinit { print("✅ ClassName deallocated") }` to all suspect classes. Run 20+ sessions. When the leak occurs (e.g., 1 in 5 runs), missing deinit messages reveal which objects are retained.
+2. **Isolate the trigger** — Test each navigation path independently. Rapidly toggle background/foreground if timing-dependent. Narrow to the specific path that leaks.
+3. **MetricKit for field diagnostics** — Monitor peak memory in production via `MXMetricPayload.memoryMetrics.peakMemoryUsage`. Alert when exceeding threshold (e.g., 400MB). This catches leaks that only manifest with real user data volumes. When `MXCrashDiagnostic` payloads arrive, symbolicate with xcsym (`xcsym crash --from-metrickit <file>`) — a `pattern_tag=jetsam_oom` confirms the threshold-exceedance hypothesis and the crashed-thread frames localize the retaining owner.
+
+**Common cause of intermittent leaks**: Notification observers added on lifecycle events (`viewWillAppear`, `applicationDidBecomeActive`) without removing duplicates first. Each re-registration accumulates a listener — timing determines whether the duplicate fires.
+
+**TestFlight verification**: Ship diagnostic build to affected users. Add `os_log` memory milestones. Monitor MetricKit for 24-48 hours after fix deployment.
+
+## Common Mistakes
+
+- **[weak self] without invalidate()** — Timer keeps running, consuming CPU. ALWAYS call `invalidate()` or `cancel()`
+- **Invalidate without nil** — `timer?.invalidate()` stops firing but reference remains. Always follow with `timer = nil`
+- **Local AnyCancellable** — Goes out of scope immediately, subscription dies. Store in `Set<AnyCancellable>` property
+- **deinit with only logging** — Add actual cleanup (invalidate timers, remove observers), not just print statements
+- **Wrong Instruments template** — Memory shows usage. Leaks detects actual leaks. Use both
+
+## Instruments Quick Reference
+
+| Scenario | Tool | What to Look For |
+|----------|------|------------------|
+| Progressive memory growth | Memory | Line steadily climbing = leak |
+| Specific object leaking | Memory Graph | Purple/red circles = leak objects |
+| Direct leak detection | Leaks | Red "! Leak" badge = confirmed leak |
+| Memory by type | VM Tracker | Objects consuming most memory |
+| Cache behavior | Allocations | Objects allocated but not freed |
+
+## CLI Quick Checks (No Instruments)
+
+Xcode ships CLI tools for fast memory diagnostics without opening Instruments. Use these for quick checks during development.
+
+### leaks — Detect Leaks in Running Process
+
+```bash
+# Check running app by name (positional argument, not --process)
+xcrun leaks MyApp
+
+# Check by PID
+xcrun leaks 12345
+
+# Show full stack traces for each leak
+xcrun leaks --fullStacks MyApp
+
+# Analyze a memgraph file (from Xcode's Debug Memory Graph)
+xcrun leaks MyApp.memgraph
+```
+
+**When to use**: Quick leak check without recording an Instruments trace. Run after exercising a suspect code path.
+
+### heap — Inspect Live Heap Allocations
+
+```bash
+# Show heap summary by class (process name is positional)
+xcrun heap MyApp
+
+# Show all instances of a specific class
+xcrun heap --addresses=MyViewController MyApp
+
+# Sort by size (find biggest consumers)
+xcrun heap -s MyApp
+
+# Analyze a memgraph
+xcrun heap MyApp.memgraph
+```
+
+**When to use**: Finding what's consuming memory right now. Answers "how many MyViewController instances exist?" without Instruments.
+
+### vmmap — Virtual Memory Map
+
+```bash
+# Summary view (dirty, clean, swapped)
+xcrun vmmap --summary MyApp.memgraph
+
+# Full memory regions
+xcrun vmmap MyApp.memgraph
+```
+
+**When to use**: Understanding memory composition. Shows dirty pages (your data), clean pages (mapped files), and compressed memory.
+
+### stringdups — Find Duplicate Strings
+
+```bash
+# Find duplicate strings in running process (positional argument)
+xcrun stringdups MyApp
+
+# Analyze a memgraph
+xcrun stringdups MyApp.memgraph
+```
+
+**When to use**: Reducing memory footprint from repeated string allocations. No GUI equivalent.
+
+### malloc_history — Track Allocation Origins
+
+```bash
+# Enable malloc logging first: set MallocStackLogging=1 in scheme env vars
+# Then query a specific address
+xcrun malloc_history <pid> <address>
+
+# Show all allocations sorted by size
+xcrun malloc_history <pid> -allBySize
+```
+
+**When to use**: Tracing where a leaked object was allocated. Requires `MallocStackLogging=1` environment variable in scheme.
+
+### Quick Diagnosis Workflow
+
+```bash
+# 1. Is there a leak? (30 seconds)
+xcrun leaks MyApp
+
+# 2. What's on the heap? (30 seconds)
+xcrun heap -s MyApp
+
+# 3. Any duplicate strings wasting memory? (30 seconds)
+xcrun stringdups MyApp
+
+# 4. Where is memory allocated? (requires memgraph)
+xcrun vmmap --summary MyApp.memgraph
+```
+
+**Time cost**: 2 minutes for a full CLI memory check vs 10+ minutes launching Instruments.
+
+### xctrace (Headless Instruments)
+
+```bash
+# Record memory trace without GUI
+xcrun xctrace record --instrument 'Allocations' --attach 'MyApp' --time-limit 30s --output memory.trace
+
+# Record leak detection
+xcrun xctrace record --instrument 'Leaks' --attach 'MyApp' --time-limit 30s --output leaks.trace
+```
+
+## Real-World Impact
+
+**Before**: 50+ PlayerViewModel instances with uncleared timers → 50MB → 200MB → Crash (13min)
+**After**: Timer properly invalidated → 50MB stable for hours
+
+**Key insight** 90% of leaks come from forgetting to stop timers, observers, or subscriptions. Always clean up in `deinit` or use reactive patterns that auto-cleanup.
+
+---
+
+## Resources
+
+**WWDC**: 2021-10180, 2020-10078, 2018-416
+
+**Docs**: /xcode/gathering-information-about-memory-use, /metrickit/mxbackgroundexitdata
+
+**Skills**: skills/performance-profiling.md, skills/objc-block-retain-cycles.md, skills/metrickit-ref.md, axiom-build (skills/lldb.md), axiom-tools (skills/xcsym-ref.md)

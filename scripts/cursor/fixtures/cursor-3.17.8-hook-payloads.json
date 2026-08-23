@@ -1,0 +1,128 @@
+{
+  "post-shell": {
+    "conversation_id": "<redacted-conversation_id>",
+    "cursor_version": "3.17.8",
+    "cwd": "/private/tmp/claude-501/-Users-Charles-Projects-Axiom/c34226d0-844f-4b47-a186-2f755305d484/scratchpad/cursor-hook-probe",
+    "duration": 11554.364,
+    "generation_id": "<redacted-generation_id>",
+    "hook_event_name": "postToolUse",
+    "model": "grok-4.6",
+    "session_id": "<redacted-session_id>",
+    "tool_input": {
+      "command": "swift build",
+      "cwd": "/private/tmp/claude-501/-Users-Charles-Projects-Axiom/c34226d0-844f-4b47-a186-2f755305d484/scratchpad/cursor-hook-probe",
+      "timeout": 30000
+    },
+    "tool_name": "Shell",
+    "tool_output": "{\"output\":\"Building for debugging...\\n[Planning deferred tasks]\\n[18\u2009/\u200926]\\n[19\u2009/\u200927] Demo\\n[29\u2009/\u200995]\\n[32\u2009/\u200995]\\n[40\u2009/\u200995]\\n[42\u2009/\u200995]\\n[43\u2009/\u200995]\\n[48\u2009/\u200995]\\n[50\u2009/\u200995]\\n[52\u2009/\u200995]\\n[55\u2009/\u200995]\\n[60\u2009/\u200995]\\n[63\u2009/\u200995]\\n[65\u2009/\u200995]\\n[66\u2009/\u200995]\\n[76\u2009/\u200995]\\n[78\u2009/\u200995]\\n[79\u2009/\u200995]\\n[82\u2009/\u200995]\\n[84\u2009/\u200995]\\n[87\u2009/\u200995] Demo\\n[93\u2009/\u200995] Demo\\nBuild complete! (10.18 sec)\\n\",\"exitCode\":0}",
+    "tool_use_id": "<redacted-tool_use_id>",
+    "transcript_path": "<redacted-transcript_path>",
+    "user_email": "<redacted-user_email>",
+    "workspace_roots": [
+      "/private/tmp/claude-501/-Users-Charles-Projects-Axiom/c34226d0-844f-4b47-a186-2f755305d484/scratchpad/cursor-hook-probe"
+    ]
+  },
+  "post-write": {
+    "conversation_id": "<redacted-conversation_id>",
+    "cursor_version": "3.17.8",
+    "duration": 41.25,
+    "generation_id": "<redacted-generation_id>",
+    "hook_event_name": "postToolUse",
+    "model": "grok-4.6",
+    "session_id": "<redacted-session_id>",
+    "tool_input": {
+      "content": "<redacted-content>",
+      "file_path": "/private/tmp/claude-501/-Users-Charles-Projects-Axiom/c34226d0-844f-4b47-a186-2f755305d484/scratchpad/cursor-hook-probe/Sources/Demo/Counter.swift"
+    },
+    "tool_name": "Write",
+    "tool_output": "{\"file_path\":\"/private/tmp/claude-501/-Users-Charles-Projects-Axiom/c34226d0-844f-4b47-a186-2f755305d484/scratchpad/cursor-hook-probe/Sources/Demo/Counter.swift\",\"success\":true}",
+    "tool_use_id": "<redacted-tool_use_id>",
+    "transcript_path": "<redacted-transcript_path>",
+    "user_email": "<redacted-user_email>",
+    "workspace_roots": [
+      "/private/tmp/claude-501/-Users-Charles-Projects-Axiom/c34226d0-844f-4b47-a186-2f755305d484/scratchpad/cursor-hook-probe"
+    ]
+  },
+  "pretool-read": {
+    "conversation_id": "<redacted-conversation_id>",
+    "cursor_version": "3.17.8",
+    "generation_id": "<redacted-generation_id>",
+    "hook_event_name": "preToolUse",
+    "model": "Cursor Grok 4.6",
+    "session_id": "<redacted-session_id>",
+    "tool_input": {
+      "file_path": "<workspace>/Sample.ips"
+    },
+    "tool_name": "Read",
+    "tool_use_id": "<redacted-tool_use_id>",
+    "transcript_path": "<redacted-transcript_path>",
+    "user_email": "<redacted-user_email>",
+    "workspace_roots": [
+      "<workspace>"
+    ]
+  },
+  "prompt-submit": {
+    "attachments": [],
+    "composer_mode": "agent",
+    "conversation_id": "<redacted-conversation_id>",
+    "cursor_version": "3.17.8",
+    "generation_id": "<redacted-generation_id>",
+    "hook_event_name": "beforeSubmitPrompt",
+    "model": "Cursor Grok 4.6",
+    "model_id": "<redacted-model_id>",
+    "model_params": {},
+    "prompt": "My SwiftUI list scrolls badly on device, what should I check?",
+    "session_id": "<redacted-session_id>",
+    "transcript_path": "<redacted-transcript_path>",
+    "user_email": "<redacted-user_email>",
+    "workspace_roots": [
+      "<workspace>"
+    ]
+  },
+  "session-start": {
+    "composer_mode": "agent",
+    "conversation_id": "<redacted-conversation_id>",
+    "cursor_version": "3.17.8",
+    "generation_id": "<redacted-generation_id>",
+    "hook_event_name": "sessionStart",
+    "is_background_agent": false,
+    "model": "cursor-grok-4.6-medium",
+    "model_id": "grok-4.6",
+    "model_params": [
+      {
+        "id": "effort",
+        "value": "medium"
+      },
+      {
+        "id": "fast",
+        "value": "false"
+      }
+    ],
+    "session_id": "<redacted-session_id>",
+    "transcript_path": "<redacted-transcript_path>",
+    "user_email": "<redacted-user_email>",
+    "workspace_roots": [
+      "/private/tmp/claude-501/-Users-Charles-Projects-Axiom/c34226d0-844f-4b47-a186-2f755305d484/scratchpad/cursor-hook-probe"
+    ]
+  },
+  "subagent-start": {
+    "conversation_id": "<redacted-conversation_id>",
+    "cursor_version": "3.17.8",
+    "generation_id": "<redacted-generation_id>",
+    "hook_event_name": "subagentStart",
+    "is_parallel_worker": false,
+    "model": "Cursor Grok 4.6",
+    "parent_conversation_id": "<redacted-parent_conversation_id>",
+    "session_id": "<redacted-session_id>",
+    "subagent_id": "<redacted-subagent_id>",
+    "subagent_model": "cursor-grok-4.6-medium",
+    "subagent_type": "memory-auditor",
+    "task": "You are the memory-auditor. Run your audit and return your complete output.",
+    "tool_call_id": "<redacted-tool_call_id>",
+    "transcript_path": "<redacted-transcript_path>",
+    "user_email": "<redacted-user_email>",
+    "workspace_roots": [
+      "<workspace>"
+    ]
+  }
+}

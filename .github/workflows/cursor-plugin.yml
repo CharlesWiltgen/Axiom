@@ -1,0 +1,42 @@
+name: Cursor Plugin
+
+on:
+  pull_request:
+    paths:
+      - '.claude-plugin/plugins/axiom/**'
+      - 'scripts/cursor/**'
+      - 'scripts/build-cursor.ts'
+      - 'scripts/inline-auditors.ts'
+      - '.cursor-plugin/**'
+      - 'axiom-cursor/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'README.md'
+      - 'CURSOR-MARKETPLACE-SUBMISSION.md'
+      - 'docs/**'
+      - '.github/workflows/cursor-plugin.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: macos-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24'
+
+      - run: npm ci --legacy-peer-deps
+      - run: npm run test:cursor
+      - run: npm run check:cursor
