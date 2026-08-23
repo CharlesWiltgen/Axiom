@@ -328,8 +328,8 @@
     },
     {
       "path": "scripts/cursor-hook-adapter.py",
-      "sha256": "04a7b2f0a2ce181ea3e347ea4f49f5cbbc3d2bfefd579d5e852b774fa4c619ec",
-      "bytes": 17227
+      "sha256": "8a044a9ef0b0460d4fecd61997fba9f46e4dafd1cc0636ff7063e3190ca2b9ba",
+      "bytes": 18172
     },
     {
       "path": "scripts/posttool-bash-hints.py",
@@ -1849,7 +1849,7 @@
   ],
   "totals": {
     "files": 369,
-    "bytes": 7070554
+    "bytes": 7071499
   },
   "excludedMirrors": 30,
   "classes": {
