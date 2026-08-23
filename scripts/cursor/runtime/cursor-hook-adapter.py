@@ -205,6 +205,69 @@ def _workspace_root(payload: Dict[str, Any]) -> str:
     return os.getcwd()
 
 
+# The canonical crash hints name the bare `xcsym` binary, which Cursor installs has no
+# access to — the plugin routes xcsym through MCP. Map the invocation forms, longest
+# first, and fail closed if any backticked invocation survives: shipping no hint is
+# strictly better than telling the model to run a binary that is not there.
+_XCSYM_CRASH_FORMS = (
+    (re.compile(r'`xcsym crash --format=summary "([^"\n]*)"`'),
+     r'the `axiom_xcsym_crash` MCP tool with `file: "\1"` and `format: "summary"`'),
+    (re.compile(r"`xcsym crash --format=summary <path>`"),
+     'the `axiom_xcsym_crash` MCP tool with `format: "summary"`'),
+    (re.compile(r"`xcsym crash --format=summary`"),
+     'the `axiom_xcsym_crash` MCP tool with `format: "summary"`'),
+    (re.compile(r"`xcsym crash`"), "the `axiom_xcsym_crash` MCP tool"),
+)
+
+
+def _cursor_crash_hint(context: str) -> str:
+    for pattern, replacement in _XCSYM_CRASH_FORMS:
+        context = pattern.sub(replacement, context)
+    if "`xcsym" in context:
+        raise AdapterError("unmapped xcsym invocation in crash hint")
+    return context
+
+
+def pretool_read(payload: Dict[str, Any]) -> Dict[str, str]:
+    """Port of the canonical PreToolUse(Read) crash routing to Cursor's preToolUse.
+
+    Emits advisory context only. No `permission` field is returned, so the read is
+    never gated by this plugin.
+    """
+    if payload.get("tool_name") != "Read":
+        raise AdapterError("unexpected read tool")
+    tool_input = payload.get("tool_input")
+    if not isinstance(tool_input, dict):
+        return {}
+    file_path = tool_input.get("file_path")
+    if not isinstance(file_path, str) or not file_path or _has_control_characters(file_path):
+        return {}
+    child_output = run_child(
+        "pretool-crash-route.py",
+        {"tool_name": "Read", "tool_input": {"file_path": file_path}},
+        cwd=_workspace_root(payload),
+    )
+    if not child_output.strip():
+        return {}
+    try:
+        response = json.loads(child_output)
+    except json.JSONDecodeError:
+        raise AdapterError("invalid child JSON")
+    if not isinstance(response, dict):
+        raise AdapterError("invalid child JSON")
+    specific = response.get("hookSpecificOutput")
+    if not isinstance(specific, dict):
+        return {}
+    context = specific.get("additionalContext")
+    if not isinstance(context, str):
+        return {}
+    context = context.strip()
+    # The hint interpolates the file path, so it carries caller-influenced text.
+    if not context or len(context) > MAX_ROUTED_CONTEXT_CHARS or _has_control_characters(context):
+        raise AdapterError("unexpected crash hint")
+    return {"additional_context": _cursor_crash_hint(context)}
+
+
 def prompt_submit(payload: Dict[str, Any]) -> Dict[str, str]:
     """Port of the canonical UserPromptSubmit router to Cursor's beforeSubmitPrompt.
 
@@ -541,6 +604,8 @@ def dispatch(mode: str, payload: Dict[str, Any]) -> Dict[str, str]:
         return post_write(payload)
     if mode == "prompt-submit":
         return prompt_submit(payload)
+    if mode == "pretool-read":
+        return pretool_read(payload)
     raise AdapterError("unknown mode")
 
 

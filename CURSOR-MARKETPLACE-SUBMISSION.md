@@ -116,6 +116,7 @@ Confirm Cursor shows the plugin as installed from the local marketplace and that
 | No-argument command | Run one `/axiom-*` command without arguments | Native command appears and follows its translated workflow | _pending_ |
 | Argument command | Run one argument-bearing command with benign and injection-oriented text | Arguments remain task input, not shell interpolation or authorization | _pending_ |
 | Session hook | Start Apple-positive and non-Apple sessions | Compact context appears only where project detection allows it | _pending_ |
+| Crash read hook | Open an `.ips` path, then an ordinary source file | Crash path yields advisory context naming the `axiom_xcsym_crash` MCP tool and never a bare `xcsym` command; ordinary file yields nothing; neither read is gated | _pending_ |
 | Prompt router hook | Send an Apple-platform prompt in an Apple project, then the same prompt in a non-Apple one | Router guidance is injected only in the Apple project; the model names the matched skill | _pending_ |
 | Shell hook | Exercise a fixture that emits a known Axiom hint | Advisory `additional_context`; no permission or denial field | _pending_ |
 | Write hook | Exercise a Swift write fixture | Post-edit advisory context only; the edit is not blocked or undone | _pending_ |

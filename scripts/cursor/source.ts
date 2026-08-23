@@ -30,6 +30,7 @@ export const CURSOR_ALLOWED_COMMAND_FIELDS = new Set([
 const RESOURCE_DIRECTORIES = new Set(["skills", "references", "scripts", "assets"]);
 const RUNTIME_FILES = [
   "hooks/posttool-bash-hints.py",
+  "hooks/pretool-crash-route.py",
   "hooks/project_detect.py",
   "hooks/swift-guardrails.py",
   "hooks/user-prompt-submit.py",

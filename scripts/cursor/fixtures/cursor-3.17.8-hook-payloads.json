@@ -43,6 +43,24 @@
       "/private/tmp/claude-501/-Users-Charles-Projects-Axiom/c34226d0-844f-4b47-a186-2f755305d484/scratchpad/cursor-hook-probe"
     ]
   },
+  "pretool-read": {
+    "conversation_id": "<redacted-conversation_id>",
+    "cursor_version": "3.17.8",
+    "generation_id": "<redacted-generation_id>",
+    "hook_event_name": "preToolUse",
+    "model": "Cursor Grok 4.6",
+    "session_id": "<redacted-session_id>",
+    "tool_input": {
+      "file_path": "<workspace>/Sample.ips"
+    },
+    "tool_name": "Read",
+    "tool_use_id": "<redacted-tool_use_id>",
+    "transcript_path": "<redacted-transcript_path>",
+    "user_email": "<redacted-user_email>",
+    "workspace_roots": [
+      "<workspace>"
+    ]
+  },
   "prompt-submit": {
     "attachments": [],
     "composer_mode": "agent",
