@@ -13,6 +13,12 @@
         "timeout": 5
       }
     ],
+    "subagentStart": [
+      {
+        "command": "python3 ./scripts/cursor-hook-adapter.py subagent-start",
+        "timeout": 5
+      }
+    ],
     "preToolUse": [
       {
         "command": "python3 ./scripts/cursor-hook-adapter.py pretool-read",

@@ -407,7 +407,7 @@
     "PostToolUse(Write|Edit)": "postToolUse.additional_context",
     "PreToolUse(Read)": "preToolUse.additional_context",
     "SessionStart": "sessionStart.additional_context",
-    "SubagentStart": "prompt",
+    "SubagentStart": "subagentStart.additional_context",
     "UserPromptSubmit": "beforeSubmitPrompt.additional_context",
     "per-agent PreToolUse": "advisory"
   },
@@ -1305,7 +1305,7 @@
       "owner": null,
       "event": "SubagentStart",
       "matcher": null,
-      "disposition": "prompt",
+      "disposition": "subagentStart.additional_context",
       "warning": null,
       "advisory": null
     },

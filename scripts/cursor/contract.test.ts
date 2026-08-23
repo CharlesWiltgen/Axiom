@@ -208,7 +208,7 @@ test("hook counts and dispositions remain tied to canonical sources", () => {
     ) {
       expected = "postToolUse.additional_context";
     } else if (event === "SubagentStart" && entry.matcher === undefined) {
-      expected = "prompt";
+      expected = "subagentStart.additional_context";
     } else {
       throw new Error(`unreviewed canonical global hook: ${key}`);
     }
