@@ -235,8 +235,10 @@ def post_shell(payload: Dict[str, Any]) -> Dict[str, str]:
         "tool_name": "Bash",
         "tool_input": {"command": command},
     }
-    if isinstance(duration, int) and not isinstance(duration, bool):
-        canonical_payload["duration_ms"] = duration
+    # Cursor sends fractional milliseconds (e.g. 11554.364), so an int-only check
+    # silently drops every duration and no duration hint can ever fire.
+    if isinstance(duration, (int, float)) and not isinstance(duration, bool) and duration > 0:
+        canonical_payload["duration_ms"] = int(duration)
     environment = dict(os.environ)
     environment["CURSOR_TOOL_OUTPUT"] = output_text
     child_output = run_child("posttool-bash-hints.py", canonical_payload, environment)
@@ -260,6 +262,13 @@ def _contained(pathname: str, roots: List[str]) -> bool:
 
 def _validated_post_write_context(payload: Dict[str, Any]) -> Tuple[str, str, int, bytes]:
     cwd_value = payload.get("cwd")
+    if cwd_value is None:
+        # Cursor's postToolUse(Write) payload carries workspace_roots but no cwd
+        # (verified against a live Cursor 3.17.8 capture). Fall back to the first
+        # workspace root; every validation below still applies to it unchanged.
+        roots_value = payload.get("workspace_roots")
+        if isinstance(roots_value, list) and roots_value and isinstance(roots_value[0], str):
+            cwd_value = roots_value[0]
     if (
         not isinstance(cwd_value, str)
         or not cwd_value
