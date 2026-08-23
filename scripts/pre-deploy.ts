@@ -80,11 +80,7 @@ import { findDashViolations } from "./docs-dashes.ts";
 import { renderCursorDistribution } from "./cursor/render.ts";
 import { compareCursorPaths } from "./cursor/compare.ts";
 import { validateCursorInventory } from "./cursor/inventory.ts";
-import {
-  CURSOR_AGENT_NAMES,
-  CURSOR_COMMAND_NAMES,
-  CURSOR_ROUTER_NAMES,
-} from "./cursor/contract.ts";
+import { CURSOR_AGENT_ADVISORIES } from "./cursor/agents.ts";
 
 const root = path.resolve(import.meta.dirname!, "..");
 const pluginDir = path.join(root, ".claude-plugin/plugins/axiom");
@@ -2308,8 +2304,21 @@ heading("12r. Cursor Generated Distribution");
     }
 
     const count = (prefix: string, suffix: string) => [...actual.keys()].filter((file) => file.startsWith(prefix) && file.endsWith(suffix)).length;
-    if (count("skills/", "/SKILL.md") !== 27 || count("agents/", ".md") !== 42 || count("commands/", ".md") !== 17) {
-      error("cursor-inventory", `Cursor component totals drifted (skills ${count("skills/", "/SKILL.md")}/27, agents ${count("agents/", ".md")}/42, commands ${count("commands/", ".md")}/17)`);
+    const canonicalManifest = JSON.parse(fs.readFileSync(path.join(pluginDir, "claude-code.json"), "utf8")) as { commands?: unknown[] };
+    const canonicalRouters = fs.readdirSync(path.join(pluginDir, "skills"), { withFileTypes: true })
+      .filter((entry) => entry.isDirectory() && fs.existsSync(path.join(pluginDir, "skills", entry.name, "SKILL.md")))
+      .map((entry) => entry.name);
+    const canonicalAgents = fs.readdirSync(path.join(pluginDir, "agents"))
+      .filter((file) => file.endsWith(".md"))
+      .map((file) => path.basename(file, ".md"));
+    const canonicalCommands = (canonicalManifest.commands ?? [])
+      .map((entry) => path.posix.basename(String(entry), ".md"));
+    if (
+      count("skills/", "/SKILL.md") !== canonicalRouters.length
+      || count("agents/", ".md") !== canonicalAgents.length
+      || count("commands/", ".md") !== canonicalCommands.length
+    ) {
+      error("cursor-inventory", `Cursor component totals drifted from the canonical tree (skills ${count("skills/", "/SKILL.md")}/${canonicalRouters.length}, agents ${count("agents/", ".md")}/${canonicalAgents.length}, commands ${count("commands/", ".md")}/${canonicalCommands.length})`);
     }
     const mcp = JSON.parse(actual.get("mcp.json")!.content.toString("utf8"));
     const hooks = JSON.parse(actual.get("hooks/hooks.json")!.content.toString("utf8"));
@@ -2335,22 +2344,17 @@ heading("12r. Cursor Generated Distribution");
     const agentRows = Array.isArray(disposition.agentDispositions) ? disposition.agentDispositions : [];
     const commandRows = Array.isArray(disposition.commandDispositions) ? disposition.commandDispositions : [];
     const hookRows = Array.isArray(disposition.hookDispositions) ? disposition.hookDispositions : [];
-    const expectedHookWarnings: Record<string, string> = {
-      "agent:build-fixer:PreToolUse:Bash": "Warning: Destructive command detected.",
-      "agent:build-optimizer:PreToolUse:Edit|Write": "Warning: Modifying Xcode project file. Ensure backup exists.",
-      "agent:iap-implementation:PreToolUse:Edit|Write": "Warning: Modifying StoreKit configuration.",
-      "agent:simulator-tester:PreToolUse:Bash": "Warning: Simulator state change command.",
-      "agent:test-debugger:PreToolUse:Bash": "Warning: About to delete test results.",
-      "agent:test-runner:PreToolUse:Bash": "Warning: About to delete test results.",
-    };
-    const expectedHookAdvisories: Record<string, string> = {
-      "agent:build-fixer:PreToolUse:Bash": "Before running a shell command containing `killall`, deleting DerivedData with `rm -rf`, or erasing a simulator with `xcrun simctl erase`, warn: \"Destructive command detected.\"",
-      "agent:build-optimizer:PreToolUse:Edit|Write": "Before editing or writing a `.pbxproj` file, warn: \"Modifying Xcode project file. Ensure backup exists.\"",
-      "agent:iap-implementation:PreToolUse:Edit|Write": "Before editing or writing a StoreKit-related path or `.storekit` file, warn: \"Modifying StoreKit configuration.\"",
-      "agent:simulator-tester:PreToolUse:Bash": "Before running a `simctl` command that erases, deletes, shuts down, or boots simulator state, warn: \"Simulator state change command.\"",
-      "agent:test-debugger:PreToolUse:Bash": "Before deleting `.xcresult` test results with `rm -rf`, warn: \"About to delete test results.\"",
-      "agent:test-runner:PreToolUse:Bash": "Before deleting `.xcresult` test results with `rm -rf`, warn: \"About to delete test results.\"",
-    };
+    const advisoryEntries = Object.entries(CURSOR_AGENT_ADVISORIES);
+    const expectedHookWarnings: Record<string, string> = Object.fromEntries(
+      advisoryEntries.map(([owner, mapping]) => {
+        const warnings = [...mapping.command.matchAll(/\becho "(Warning: [^"]+)"/g)].map((match) => match[1]);
+        if (warnings.length !== 1) throw new Error(`per-agent advisory lacks exactly one warning: ${owner}`);
+        return [`agent:${owner}:${mapping.event}:${mapping.matcher}`, warnings[0]];
+      }),
+    );
+    const expectedHookAdvisories: Record<string, string> = Object.fromEntries(
+      advisoryEntries.map(([owner, mapping]) => [`agent:${owner}:${mapping.event}:${mapping.matcher}`, mapping.advisory]),
+    );
     const expectedGlobalHookIds = [
       "global:global:PostToolUse:Bash",
       "global:global:PostToolUse:Write|Edit",
@@ -2359,22 +2363,21 @@ heading("12r. Cursor Generated Distribution");
       "global:global:SubagentStart:*",
       "global:global:UserPromptSubmit:*",
     ];
-    const capabilityOkay = disposition.routers === 27
-      && disposition.agents === 42
-      && disposition.commands === 17
-      && disposition.excludedMirrors === 30
-      && disposition.releasedReadonlyBackground === 30
-      && disposition.releasedWritableForeground === 12
+    const capabilityOkay = disposition.routers === canonicalRouters.length
+      && disposition.agents === canonicalAgents.length
+      && disposition.commands === canonicalCommands.length
+      && Number.isSafeInteger(disposition.excludedMirrors)
+      && disposition.excludedMirrors >= 0
       && Array.isArray(disposition.authorityExpansions)
-      && exactStrings(routerNames, CURSOR_ROUTER_NAMES)
-      && exactStrings(agentNames, CURSOR_AGENT_NAMES)
-      && exactStrings(commandNames, CURSOR_COMMAND_NAMES.map((name) => `axiom-${name}`))
-      && exactStrings(disposition.authorityExpansions.map((row: { agent?: unknown }) => row.agent), CURSOR_AGENT_NAMES)
+      && exactStrings(routerNames, canonicalRouters)
+      && exactStrings(agentNames, canonicalAgents)
+      && exactStrings(commandNames, canonicalCommands.map((name) => `axiom-${name}`))
+      && exactStrings(disposition.authorityExpansions.map((row: { agent?: unknown }) => row.agent), canonicalAgents)
       && Object.keys(disposition.dispositions ?? {}).length === 7
-      && exactStrings(routerRows.map((row: { name?: unknown }) => row.name), CURSOR_ROUTER_NAMES)
+      && exactStrings(routerRows.map((row: { name?: unknown }) => row.name), canonicalRouters)
       && routerRows.every((row: { disposition?: unknown; listedInCanonicalManifest?: unknown }) =>
         row.disposition === "generated-native-skill" && typeof row.listedInCanonicalManifest === "boolean")
-      && exactStrings(agentRows.map((row: { name?: unknown }) => row.name), CURSOR_AGENT_NAMES)
+      && exactStrings(agentRows.map((row: { name?: unknown }) => row.name), canonicalAgents)
       && agentRows.every((row: { disposition?: unknown; authority?: unknown; sourceBackground?: unknown; releasedBackground?: unknown; sourceTools?: unknown; inheritedAuthority?: unknown }) =>
         row.disposition === "generated-native-subagent"
         && (row.authority === "readonly" || row.authority === "writable")
@@ -2383,10 +2386,10 @@ heading("12r. Cursor Generated Distribution");
         && Array.isArray(row.sourceTools)
         && row.sourceTools.length > 0
         && row.inheritedAuthority === "Cursor agent inherits its host tool and MCP access.")
-      && agentRows.filter((row: { authority?: unknown; releasedBackground?: unknown }) => row.authority === "readonly" && row.releasedBackground === true).length === 30
-      && agentRows.filter((row: { authority?: unknown; releasedBackground?: unknown }) => row.authority === "writable" && row.releasedBackground === false).length === 12
-      && exactStrings(commandRows.map((row: { generatedName?: unknown }) => row.generatedName), CURSOR_COMMAND_NAMES.map((name) => `axiom-${name}`))
-      && exactStrings(commandRows.map((row: { canonicalName?: unknown }) => row.canonicalName), CURSOR_COMMAND_NAMES)
+      && agentRows.filter((row: { authority?: unknown; releasedBackground?: unknown }) => row.authority === "readonly" && row.releasedBackground === true).length === disposition.releasedReadonlyBackground
+      && agentRows.filter((row: { authority?: unknown; releasedBackground?: unknown }) => row.authority === "writable" && row.releasedBackground === false).length === disposition.releasedWritableForeground
+      && exactStrings(commandRows.map((row: { generatedName?: unknown }) => row.generatedName), canonicalCommands.map((name) => `axiom-${name}`))
+      && exactStrings(commandRows.map((row: { canonicalName?: unknown }) => row.canonicalName), canonicalCommands)
       && commandRows.every((row: { disposition?: unknown }) => row.disposition === "generated-native-command")
       && exactStrings(hookRows.map((row: { id?: unknown }) => row.id), [...expectedGlobalHookIds, ...Object.keys(expectedHookWarnings)])
       && hookRows.filter((row: { source?: unknown }) => row.source === "agent").every((row: { id: string; disposition?: unknown; warning?: unknown; advisory?: unknown }) =>

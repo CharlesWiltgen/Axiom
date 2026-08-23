@@ -182,10 +182,12 @@ test("fails closed when an unmatched Claude token remains", () => {
 test("loads canonical source in lexical order and excludes generated mirrors", () => {
   const source = loadCursorSource(process.cwd());
   assert.deepEqual(source.skills.map((entry) => entry.name), [...source.skills.map((entry) => entry.name)].sort());
-  assert.equal(source.manifestSkillNames.length, 26);
-  assert.equal(source.skills.length, 27);
-  assert.equal(source.agents.length, 42);
-  assert.equal(source.commands.length, 17);
+  assert.equal(
+    source.manifestSkillNames.length,
+    source.skills.length - 1,
+    "the manifest lists every router except the injected one",
+  );
+  assert.ok(source.skills.length > 0 && source.agents.length > 0 && source.commands.length > 0);
   assert.equal(
     source.skills.flatMap((entry) => entry.resources).filter((resource) => resource.content.startsWith("<!-- GENERATED from agents/")).length,
     0,

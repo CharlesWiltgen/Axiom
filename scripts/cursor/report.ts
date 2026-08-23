@@ -1,6 +1,7 @@
 import {
-  CURSOR_EXPECTED,
+  CURSOR_FORCED_FOREGROUND,
   CURSOR_HOOK_DISPOSITIONS,
+  CURSOR_HOOK_EXPECTATIONS,
   classifyAgentTools,
 } from "./contract.ts";
 import { CURSOR_AGENT_ADVISORIES } from "./agents.ts";
@@ -43,24 +44,44 @@ function hookId(hook: CursorSource["hooks"][number]): string {
 }
 
 export function buildCapabilityReport(source: CursorSource, agents: TransformedAgent[]): CapabilityReport {
-  assertEqual(source.skills.length, CURSOR_EXPECTED.filesystemRouters, "source routers");
-  assertEqual(source.manifestSkillNames.length, CURSOR_EXPECTED.manifestRouters, "manifest routers");
-  assertEqual(source.agents.length, CURSOR_EXPECTED.agents, "source agents");
-  assertEqual(source.commands.length, CURSOR_EXPECTED.commands, "source commands");
-  assertEqual(source.excludedMirrors, CURSOR_EXPECTED.generatedMirrors, "excluded generated mirrors");
-
-  const sourceClasses = { readonlyBackground: 0, writableBackground: 0, writableForeground: 0 };
   for (const agent of source.agents) {
-    const authority = classifyAgentTools(agent.tools);
-    const background = agent.frontmatter.background === true;
-    if (authority === "readonly" && background) sourceClasses.readonlyBackground++;
-    else if (authority === "writable" && background) sourceClasses.writableBackground++;
-    else if (authority === "writable") sourceClasses.writableForeground++;
-    else throw new Error(`unexpected source agent class: ${agent.name}`);
+    // A read-only foreground agent has no Cursor disposition — fail closed rather than ship it.
+    if (classifyAgentTools(agent.tools) === "readonly" && agent.frontmatter.background !== true) {
+      throw new Error(`unexpected source agent class: ${agent.name}`);
+    }
   }
-  assertEqual(sourceClasses.readonlyBackground, 30, "source readonly background agents");
-  assertEqual(sourceClasses.writableBackground, 1, "source writable background agents");
-  assertEqual(sourceClasses.writableForeground, 11, "source writable foreground agents");
+  // CURSOR_FORCED_FOREGROUND is the reviewed set of agents released foreground in Cursor.
+  // Two-sided check: a writable background agent is downgraded to foreground by the authority
+  // rule whether anyone decided so or not, so it must appear here to make that decision explicit;
+  // and an entry that is not a canonical background agent is stale. A readonly background agent
+  // may also be listed — that is a deliberate override, honored by transformAgent.
+  const canonicalBackground = new Set(
+    source.agents.filter((agent) => agent.frontmatter.background === true).map((agent) => agent.name),
+  );
+  const unacknowledged = source.agents
+    .filter((agent) =>
+      agent.frontmatter.background === true
+      && classifyAgentTools(agent.tools) === "writable"
+      && !CURSOR_FORCED_FOREGROUND.has(agent.name))
+    .map((agent) => agent.name)
+    .sort(compareCursorPaths);
+  const stale = [...CURSOR_FORCED_FOREGROUND]
+    .filter((name) => !canonicalBackground.has(name))
+    .sort(compareCursorPaths);
+  if (unacknowledged.length > 0 || stale.length > 0) {
+    const problems: string[] = [];
+    if (unacknowledged.length > 0) {
+      problems.push(
+        `writable background agents Cursor will release foreground without a reviewed decision (add to CURSOR_FORCED_FOREGROUND): ${unacknowledged.join(", ")}`,
+      );
+    }
+    if (stale.length > 0) {
+      problems.push(
+        `CURSOR_FORCED_FOREGROUND names that are not canonical background agents (remove): ${stale.join(", ")}`,
+      );
+    }
+    throw new Error(problems.join("; "));
+  }
 
   if (agents.length !== source.agents.length) throw new Error("transformed agent inventory differs from source");
   const sourceNames = source.agents.map((agent) => agent.name).sort(compareCursorPaths);
@@ -70,13 +91,11 @@ export function buildCapabilityReport(source: CursorSource, agents: TransformedA
   }
   const releasedReadonlyBackground = agents.filter((agent) => agent.authority === "readonly" && agent.releasedBackground).length;
   const releasedWritableForeground = agents.filter((agent) => agent.authority === "writable" && !agent.releasedBackground).length;
-  assertEqual(releasedReadonlyBackground, CURSOR_EXPECTED.releasedReadonlyBackground, "released readonly background agents");
-  assertEqual(releasedWritableForeground, CURSOR_EXPECTED.releasedWritableForeground, "released writable foreground agents");
 
   const globalHookEntries = source.hooks.filter((hook) => hook.source === "global");
   const perAgentHooks = source.hooks.filter((hook) => hook.source === "agent");
-  assertEqual(globalHookEntries.length, CURSOR_EXPECTED.globalHookEntries, "global hook entries");
-  assertEqual(perAgentHooks.length, CURSOR_EXPECTED.perAgentHooks, "per-agent hooks");
+  assertEqual(globalHookEntries.length, CURSOR_HOOK_EXPECTATIONS.globalHookEntries, "global hook entries");
+  assertEqual(perAgentHooks.length, CURSOR_HOOK_EXPECTATIONS.perAgentHooks, "per-agent hooks");
   const dispositionKeys = new Set(source.hooks.map((hook) => hookDispositionKey(hook.event, hook.matcher, hook.source)));
   const expectedDispositionKeys = Object.keys(CURSOR_HOOK_DISPOSITIONS);
   if (dispositionKeys.size !== expectedDispositionKeys.length || expectedDispositionKeys.some((key) => !dispositionKeys.has(key))) {

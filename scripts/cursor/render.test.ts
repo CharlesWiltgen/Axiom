@@ -4,6 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 import { renderCursorDistribution, writeCursorDistribution } from "./render.ts";
+import { loadCursorSource } from "./source.ts";
 
 const root = process.cwd();
 const marketplacePath = ".cursor-plugin/marketplace.json";
@@ -60,9 +61,10 @@ test("renders a separate nested Cursor marketplace and complete plugin tree", ()
   assert.ok(files.has("assets/logo.svg"));
   assert.ok(files.has("reports/capability-disposition.json"));
   assert.ok(files.has("reports/inventory-sha256.json"));
-  assert.equal([...files.keys()].filter((file) => file.startsWith("skills/") && file.endsWith("/SKILL.md")).length, 27);
-  assert.equal([...files.keys()].filter((file) => file.startsWith("agents/") && file.endsWith(".md")).length, 42);
-  assert.equal([...files.keys()].filter((file) => file.startsWith("commands/") && file.endsWith(".md")).length, 17);
+  const canonical = loadCursorSource(root);
+  assert.equal([...files.keys()].filter((file) => file.startsWith("skills/") && file.endsWith("/SKILL.md")).length, canonical.skills.length);
+  assert.equal([...files.keys()].filter((file) => file.startsWith("agents/") && file.endsWith(".md")).length, canonical.agents.length);
+  assert.equal([...files.keys()].filter((file) => file.startsWith("commands/") && file.endsWith(".md")).length, canonical.commands.length);
 });
 
 test("generated README installs a local checkout through Cursor's marketplace flow", () => {

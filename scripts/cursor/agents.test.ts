@@ -3,6 +3,7 @@ import { test } from "node:test";
 import matter from "gray-matter";
 import { CURSOR_AGENT_ADVISORIES, transformAgent } from "./agents.ts";
 import { buildCapabilityReport } from "./report.ts";
+import { CURSOR_HOOK_EXPECTATIONS } from "./contract.ts";
 import { loadCursorSource } from "./source.ts";
 import type { SourceAgent } from "./types.ts";
 
@@ -249,29 +250,31 @@ test("builds the reviewed capability report from canonical source", () => {
     excludedMirrors: report.excludedMirrors,
     globalHookEntries: report.globalHookEntries,
     perAgentHooks: report.perAgentHooks,
-    releasedReadonlyBackground: report.releasedReadonlyBackground,
-    releasedWritableForeground: report.releasedWritableForeground,
   }, {
-    routers: 27,
-    agents: 42,
-    commands: 17,
-    excludedMirrors: 30,
-    globalHookEntries: 6,
-    perAgentHooks: 6,
-    releasedReadonlyBackground: 30,
-    releasedWritableForeground: 12,
+    routers: source.skills.length,
+    agents: source.agents.length,
+    commands: source.commands.length,
+    excludedMirrors: source.excludedMirrors,
+    globalHookEntries: CURSOR_HOOK_EXPECTATIONS.globalHookEntries,
+    perAgentHooks: CURSOR_HOOK_EXPECTATIONS.perAgentHooks,
   });
-  assert.equal(report.authorityExpansions.length, 42);
+  assert.equal(
+    report.releasedReadonlyBackground + report.releasedWritableForeground,
+    source.agents.length,
+    "every released agent is either read-only background or writable foreground",
+  );
+  assert.equal(report.authorityExpansions.length, source.agents.length);
 });
 
-test("reports and validates the observed generated-mirror count", () => {
+test("reports the observed generated-mirror count without pinning it", () => {
   const source = loadCursorSource(process.cwd());
   const agents = source.agents.map((agent) => transformAgent(agent, "full"));
-  assert.equal(source.excludedMirrors, 30);
+  assert.ok(Number.isSafeInteger(source.excludedMirrors) && source.excludedMirrors >= 0);
   assert.equal(buildCapabilityReport(source, agents).excludedMirrors, source.excludedMirrors);
-  assert.throws(
-    () => buildCapabilityReport({ ...source, excludedMirrors: 29 }, agents),
-    /excluded generated mirrors: expected 30, got 29/,
+  assert.equal(
+    buildCapabilityReport({ ...source, excludedMirrors: source.excludedMirrors + 1 }, agents).excludedMirrors,
+    source.excludedMirrors + 1,
+    "the mirror count is reported from source, not asserted against a frozen literal",
   );
 });
 

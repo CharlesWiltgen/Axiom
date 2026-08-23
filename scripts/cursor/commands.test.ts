@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import matter from "gray-matter";
-import { CURSOR_COMMAND_FILES } from "./contract.ts";
 import { transformCommand } from "./commands.ts";
 import { loadCursorSource } from "./source.ts";
 import type { SourceCommand } from "./types.ts";
+
+const canonicalCommandFiles = loadCursorSource(process.cwd()).commands.map((command) => command.filename);
 
 function command(overrides: Partial<SourceCommand> = {}): SourceCommand {
   return {
@@ -17,12 +18,12 @@ function command(overrides: Partial<SourceCommand> = {}): SourceCommand {
 }
 
 test("maps every canonical command filename to an axiom-prefixed Cursor path", () => {
-  const paths = CURSOR_COMMAND_FILES.map((filename) => transformCommand(command({
+  const paths = canonicalCommandFiles.map((filename) => transformCommand(command({
     name: pathStem(filename),
     filename,
   })).path);
 
-  assert.deepEqual(paths, CURSOR_COMMAND_FILES.map((filename) => `commands/axiom-${filename}`));
+  assert.deepEqual(paths, canonicalCommandFiles.map((filename) => `commands/axiom-${filename}`));
 });
 
 test("removes Claude launch syntax from no-argument commands", () => {
@@ -306,7 +307,7 @@ test("derives a missing command name from its filename and emits Cursor fields o
 
 test("transforms every canonical command without Claude-only placeholders", () => {
   const files = loadCursorSource(process.cwd()).commands.map(transformCommand);
-  assert.deepEqual(files.map((file) => file.path), CURSOR_COMMAND_FILES.map((filename) => `commands/axiom-${filename}`));
+  assert.deepEqual(files.map((file) => file.path), canonicalCommandFiles.map((filename) => `commands/axiom-${filename}`));
   for (const file of files) {
     assert.doesNotMatch(file.content, /\/axiom:|TaskOutput|AskUserQuestion|CLAUDE_PLUGIN_ROOT|\$ARGUMENTS|(?<!\$)\{\{|<\/?Task>|subagent_type|run_in_background|^\s*prompt:|\bAgent calls?\b|delegated subagent result(?: tool)?|\b(?:agent|auditor)s?['’]s? launch\b|\b(?:automatically\s+)?launch(?:es|ed|ing)?\b(?=[^\n.]{0,120}\b(?:agent|subagent|auditor)s?\b)|Delegate to the `(?:that|each|appropriate|corresponding|specific)` subagent/im);
   }
