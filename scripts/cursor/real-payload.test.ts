@@ -187,3 +187,41 @@ test("preToolUse(Read) never returns a permission field", () => {
     fs.rmSync(workspace, { recursive: true, force: true });
   }
 });
+
+test("subagentStart maps Cursor's subagent_type onto the canonical agent_type", () => {
+  // Captured from a live Cursor 3.17.8 delegation. The hook fires and delivers this
+  // payload even on a plan that then refuses to start the subagent.
+  const workspace = applePackage();
+  try {
+    const payload = { ...FIXTURE["subagent-start"], workspace_roots: [workspace] };
+    assert.equal(payload.subagent_type, "memory-auditor");
+    assert.ok(!("agent_type" in payload), "Cursor names the field subagent_type");
+    const { response, stderr } = invoke("subagent-start", payload);
+    assert.equal(stderr, "");
+    assert.match(
+      (response as { additional_context?: string }).additional_context ?? "",
+      /skill/i,
+      "a named Axiom agent must receive skill awareness",
+    );
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test("subagentStart stays silent for subagent types the router excludes", () => {
+  // Generic types like general-purpose are deliberately NOT excluded: a generic
+  // subagent working in an Apple project should still learn the skills exist.
+  const workspace = applePackage();
+  try {
+    for (const subagent_type of ["statusline-setup", "beads:task-agent", "probe-noskills", ""]) {
+      const payload = { ...FIXTURE["subagent-start"], workspace_roots: [workspace], subagent_type };
+      assert.deepEqual(
+        invoke("subagent-start", payload).response,
+        {},
+        `subagent_type=${JSON.stringify(subagent_type)}`,
+      );
+    }
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});

@@ -67,8 +67,9 @@ Cursor does not provide Axiom's canonical per-agent tool allowlists. Every gener
 
 ## Hooks
 
-The plugin registers supported Cursor hooks for session start, prompt submission, file reads, and post-tool shell/write events. They add routing hints or diagnostics as `additional_context` where available.
+The plugin registers supported Cursor hooks for session start, prompt submission, subagent start, file reads, and post-tool shell/write events. They add routing hints or diagnostics as `additional_context` where available.
 
+- The subagent hook adds Axiom skill awareness when a subagent starts, alongside the per-agent Required Skills preamble in the agent file. The hook is confirmed to fire and receive the subagent type; whether its context reaches the subagent has not been verified, because a Cursor plan that refuses to start subagents cannot demonstrate it. If it does not, the preamble still carries each agent's declared skills.
 - The read hook routes crash reports. Opening an `.ips`, legacy `.crash`, or `.xccrashpoint` path adds a note pointing at the `axiom_xcsym_crash` MCP tool instead of reading the raw file. It emits no `permission` field, so it never gates the read.
 - The prompt hook is the per-prompt router. Cursor's `beforeSubmitPrompt` supplies the prompt text and accepts `additional_context`, so Axiom's canonical routing carries over: a prompt that matches a router is annotated with the skill to invoke before the model answers. It stays silent outside an Apple project and on prompts under five characters.
 

@@ -104,5 +104,25 @@
     "workspace_roots": [
       "/private/tmp/claude-501/-Users-Charles-Projects-Axiom/c34226d0-844f-4b47-a186-2f755305d484/scratchpad/cursor-hook-probe"
     ]
+  },
+  "subagent-start": {
+    "conversation_id": "<redacted-conversation_id>",
+    "cursor_version": "3.17.8",
+    "generation_id": "<redacted-generation_id>",
+    "hook_event_name": "subagentStart",
+    "is_parallel_worker": false,
+    "model": "Cursor Grok 4.6",
+    "parent_conversation_id": "<redacted-parent_conversation_id>",
+    "session_id": "<redacted-session_id>",
+    "subagent_id": "<redacted-subagent_id>",
+    "subagent_model": "cursor-grok-4.6-medium",
+    "subagent_type": "memory-auditor",
+    "task": "You are the memory-auditor. Run your audit and return your complete output.",
+    "tool_call_id": "<redacted-tool_call_id>",
+    "transcript_path": "<redacted-transcript_path>",
+    "user_email": "<redacted-user_email>",
+    "workspace_roots": [
+      "<workspace>"
+    ]
   }
 }

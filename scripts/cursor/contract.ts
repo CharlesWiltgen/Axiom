@@ -87,7 +87,7 @@ export const CURSOR_HOOK_DISPOSITIONS = Object.freeze({
   "PreToolUse(Read)": "preToolUse.additional_context",
   "PostToolUse(Bash)": "postToolUse.additional_context",
   "PostToolUse(Write|Edit)": "postToolUse.additional_context",
-  SubagentStart: "prompt",
+  SubagentStart: "subagentStart.additional_context",
   "per-agent PreToolUse": "advisory",
 });
 

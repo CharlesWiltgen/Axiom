@@ -32,6 +32,7 @@ const RUNTIME_FILES = [
   "hooks/posttool-bash-hints.py",
   "hooks/pretool-crash-route.py",
   "hooks/project_detect.py",
+  "hooks/subagent-start.py",
   "hooks/swift-guardrails.py",
   "hooks/user-prompt-submit.py",
 ];

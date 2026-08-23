@@ -94,6 +94,9 @@ test("renders the native Cursor hook manifest and non-executable runtime copies"
       beforeSubmitPrompt: [
         { command: "python3 ./scripts/cursor-hook-adapter.py prompt-submit", timeout: 5 },
       ],
+      subagentStart: [
+        { command: "python3 ./scripts/cursor-hook-adapter.py subagent-start", timeout: 5 },
+      ],
       preToolUse: [
         { command: "python3 ./scripts/cursor-hook-adapter.py pretool-read", matcher: "Read", timeout: 5 },
       ],
@@ -109,6 +112,7 @@ test("renders the native Cursor hook manifest and non-executable runtime copies"
     "scripts/posttool-bash-hints.py",
     "scripts/pretool-crash-route.py",
     "scripts/project_detect.py",
+    "scripts/subagent-start.py",
     "scripts/swift-guardrails.py",
     "scripts/user-prompt-submit.py",
   ]);

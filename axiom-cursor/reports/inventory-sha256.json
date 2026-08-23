@@ -313,8 +313,8 @@
     },
     {
       "path": "hooks/hooks.json",
-      "sha256": "e84521fd58405fdedef4632c493d5d1b4f8cca99cca171ceec53e86c07646083",
-      "bytes": 802
+      "sha256": "9bceb38ff9082316e23ef2f176a3b3d9cd7ed30569fc9119e8dc1b166ca2dff3",
+      "bytes": 947
     },
     {
       "path": "mcp.json",
@@ -323,13 +323,13 @@
     },
     {
       "path": "reports/capability-disposition.json",
-      "sha256": "51531c8f398bb98a5df45e63235315f1281edd676693e8381ae55127cc55409c",
-      "bytes": 35428
+      "sha256": "8a98c10c8e8cb98d94ad496aca5069225bfffb3d053601d4a86f1412436234bf",
+      "bytes": 35480
     },
     {
       "path": "scripts/cursor-hook-adapter.py",
-      "sha256": "057e22bb2f4df0fc1cd143abb6250876238c1039182e70f097291532ebf53a14",
-      "bytes": 24459
+      "sha256": "d581f30fb83c2350f765d0d0acce4cc1497cd16f16a2be5360b0528f0d090565",
+      "bytes": 26497
     },
     {
       "path": "scripts/posttool-bash-hints.py",
@@ -345,6 +345,11 @@
       "path": "scripts/project_detect.py",
       "sha256": "8fbd3975b329995d563c2f129c56c49c5056ea6a6f26541131c7c065c0c5be7c",
       "bytes": 6103
+    },
+    {
+      "path": "scripts/subagent-start.py",
+      "sha256": "98fbef899fd412e0f54f6b98ac9de8db7639ae17726d98e25b082e107a29b2ea",
+      "bytes": 6008
     },
     {
       "path": "scripts/swift-guardrails.py",
@@ -1858,8 +1863,8 @@
     }
   ],
   "totals": {
-    "files": 371,
-    "bytes": 7123102
+    "files": 372,
+    "bytes": 7131345
   },
   "excludedMirrors": 30,
   "classes": {

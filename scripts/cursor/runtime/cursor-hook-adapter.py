@@ -29,6 +29,8 @@ MAX_POST_WRITE_FILE_BYTES = 1024 * 1024
 MIN_ROUTED_PROMPT_CHARS = 5
 MAX_ROUTED_PROMPT_CHARS = 2000
 MAX_ROUTED_CONTEXT_CHARS = 2048
+# Skill-awareness guidance is legitimately multi-paragraph.
+MAX_SUBAGENT_CONTEXT_CHARS = 8192
 # Cursor gives this hook 5 seconds. Leave 1.25 seconds for process-group teardown
 # and JSON emission if the canonical child reaches its internal deadline.
 CHILD_TIMEOUT_SECONDS = 3.75
@@ -268,6 +270,46 @@ def pretool_read(payload: Dict[str, Any]) -> Dict[str, str]:
     return {"additional_context": _cursor_crash_hint(context)}
 
 
+def subagent_start(payload: Dict[str, Any]) -> Dict[str, str]:
+    """Port of the canonical SubagentStart skill awareness to Cursor's subagentStart.
+
+    Cursor names the field `subagent_type`; the canonical hook reads `agent_type`.
+    This is additive to the per-agent Required Skills preamble in the generated agent
+    files: the preamble carries that agent's declared skills, this carries the general
+    skill-usage awareness the canonical hook injects, gated by agent type.
+    """
+    subagent_type = payload.get("subagent_type")
+    if not isinstance(subagent_type, str) or not subagent_type:
+        return {}
+    if _has_control_characters(subagent_type):
+        return {}
+    child_output = run_child(
+        "subagent-start.py",
+        {"agent_type": subagent_type},
+        cwd=_workspace_root(payload),
+    )
+    if not child_output.strip():
+        return {}
+    try:
+        response = json.loads(child_output)
+    except json.JSONDecodeError:
+        raise AdapterError("invalid child JSON")
+    if not isinstance(response, dict):
+        raise AdapterError("invalid child JSON")
+    specific = response.get("hookSpecificOutput")
+    if not isinstance(specific, dict):
+        return {}
+    context = specific.get("additionalContext")
+    if not isinstance(context, str):
+        return {}
+    context = context.strip()
+    if not context:
+        return {}
+    if len(context) > MAX_SUBAGENT_CONTEXT_CHARS or _has_unsafe_control_characters(context):
+        raise AdapterError("unexpected subagent context")
+    return {"additional_context": context}
+
+
 def prompt_submit(payload: Dict[str, Any]) -> Dict[str, str]:
     """Port of the canonical UserPromptSubmit router to Cursor's beforeSubmitPrompt.
 
@@ -368,6 +410,14 @@ def post_shell(payload: Dict[str, Any]) -> Dict[str, str]:
     child_output = run_child("posttool-bash-hints.py", canonical_payload, environment)
     lines = [line.strip() for line in child_output.splitlines() if line.strip()]
     return {"additional_context": "\n".join(lines)} if lines else {}
+
+
+def _has_unsafe_control_characters(value: str) -> bool:
+    """Control characters other than newline and tab.
+
+    Multi-line guidance is legitimate for injected context; raw escapes and NULs are not.
+    """
+    return any((ord(ch) < 32 or ord(ch) == 127) and ch not in "\n\t" for ch in value)
 
 
 def _has_control_characters(value: str) -> bool:
@@ -606,6 +656,8 @@ def dispatch(mode: str, payload: Dict[str, Any]) -> Dict[str, str]:
         return prompt_submit(payload)
     if mode == "pretool-read":
         return pretool_read(payload)
+    if mode == "subagent-start":
+        return subagent_start(payload)
     raise AdapterError("unknown mode")
 
 
