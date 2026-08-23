@@ -84,6 +84,13 @@ function runHook(prompt: string): string[] {
     input: JSON.stringify({ prompt }),
     encoding: "utf8",
     timeout: 5000,
+    // Force the session-context gate on so this harness tests ROUTING, not project
+    // detection. Without it the hook falls back to deciding from cwd, and the Axiom
+    // repo carries no Apple marker within project_detect's DOWNWARD_MAX_DEPTH, so
+    // every scenario fails in a clean checkout and only "passes" where a stray
+    // .swift file in the checkout or an ancestor rescues the scan. Detection has its
+    // own coverage in hooks/project_detect_test.py.
+    env: { ...process.env, AXIOM_SESSION_CONTEXT: "always" },
   });
   if (result.status !== 0) {
     throw new Error(
