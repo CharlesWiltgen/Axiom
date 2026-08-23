@@ -242,7 +242,7 @@ func placeSubviews(...) {
 
 ## onGeometryChange
 
-Efficient geometry reading without layout side effects. 
+Efficient geometry reading without layout side effects.
 
 ### Basic Usage
 

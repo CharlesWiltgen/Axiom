@@ -73,7 +73,7 @@ digraph toolbars {
     bottom [shape=box label="ToolbarItemGroup(.bottomBar)"];
     custom [shape=diamond label="User-customizable?"];
     customYes [shape=box label="toolbar(id:) + ToolbarItem(id:)\n+ ToolbarSpacer for breaks"];
-    
+
     start -> inNav;
     inNav -> addNav [label="no"];
     inNav -> purpose [label="yes"];
@@ -240,11 +240,11 @@ Lets users rearrange, add, and remove toolbar items via a customization sheet. R
         Button { goBack() } label: { Image(systemName: "chevron.left") }
     }
     .customizationBehavior(.disabled)  // Always present, not removable
-    
+
     ToolbarItem(id: "share", placement: .secondaryAction) {
         ShareLink(item: currentURL)
     }
-    
+
     ToolbarItem(id: "bookmarks", placement: .secondaryAction) {
         Button { showBookmarks() } label: { Image(systemName: "book") }
     }
@@ -296,11 +296,11 @@ ContentView()
     // Show or hide a bar
     .toolbar(.visible, for: .bottomBar)
     .toolbar(.hidden, for: .navigationBar)
-    
+
     // Background material/color
     .toolbarBackground(.regularMaterial, for: .navigationBar)
     .toolbarBackground(.visible, for: .navigationBar)
-    
+
     // Color scheme (e.g., dark toolbar on light app)
     .toolbarColorScheme(.dark, for: .navigationBar)
 ```
