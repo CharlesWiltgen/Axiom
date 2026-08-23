@@ -13,6 +13,13 @@
         "timeout": 5
       }
     ],
+    "preToolUse": [
+      {
+        "command": "python3 ./scripts/cursor-hook-adapter.py pretool-read",
+        "matcher": "Read",
+        "timeout": 5
+      }
+    ],
     "postToolUse": [
       {
         "command": "python3 ./scripts/cursor-hook-adapter.py post-shell",

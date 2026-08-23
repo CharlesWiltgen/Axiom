@@ -405,7 +405,7 @@
   "dispositions": {
     "PostToolUse(Bash)": "postToolUse.additional_context",
     "PostToolUse(Write|Edit)": "postToolUse.additional_context",
-    "PreToolUse(Read)": "omitted",
+    "PreToolUse(Read)": "preToolUse.additional_context",
     "SessionStart": "sessionStart.additional_context",
     "SubagentStart": "prompt",
     "UserPromptSubmit": "beforeSubmitPrompt.additional_context",
@@ -1285,7 +1285,7 @@
       "owner": null,
       "event": "PreToolUse",
       "matcher": "Read",
-      "disposition": "omitted",
+      "disposition": "preToolUse.additional_context",
       "warning": null,
       "advisory": null
     },

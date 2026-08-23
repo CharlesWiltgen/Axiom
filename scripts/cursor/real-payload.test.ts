@@ -132,3 +132,58 @@ test("beforeSubmitPrompt ignores an absent or trivial prompt", () => {
     fs.rmSync(workspace, { recursive: true, force: true });
   }
 });
+
+test("preToolUse(Read) routes a crash file to the MCP tool, not a bare binary", () => {
+  const workspace = applePackage();
+  try {
+    const crash = path.join(workspace, "Sample.ips");
+    fs.writeFileSync(crash, '{"app_name":"Demo"}\n');
+    const payload = {
+      ...FIXTURE["pretool-read"],
+      workspace_roots: [workspace],
+      tool_input: { file_path: crash },
+    };
+    assert.ok(!("cwd" in payload), "the recorded Cursor payload has no cwd");
+    const { response, stderr } = invoke("pretool-read", payload);
+    assert.equal(stderr, "");
+    const context = (response as { additional_context?: string }).additional_context ?? "";
+    assert.match(context, /axiom_xcsym_crash/, "the hint must name the MCP tool");
+    assert.doesNotMatch(context, /`xcsym/, "no bare xcsym invocation may reach Cursor");
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test("preToolUse(Read) stays silent on an ordinary file", () => {
+  const workspace = applePackage();
+  try {
+    const plain = path.join(workspace, "notes.txt");
+    fs.writeFileSync(plain, "hello\n");
+    const payload = {
+      ...FIXTURE["pretool-read"],
+      workspace_roots: [workspace],
+      tool_input: { file_path: plain },
+    };
+    assert.deepEqual(invoke("pretool-read", payload).response, {});
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test("preToolUse(Read) never returns a permission field", () => {
+  const workspace = applePackage();
+  try {
+    const crash = path.join(workspace, "Sample.ips");
+    fs.writeFileSync(crash, '{"app_name":"Demo"}\n');
+    const { response } = invoke("pretool-read", {
+      ...FIXTURE["pretool-read"],
+      workspace_roots: [workspace],
+      tool_input: { file_path: crash },
+    });
+    for (const field of ["permission", "decision", "failClosed"]) {
+      assert.ok(!(field in (response as object)), `${field} must not be emitted`);
+    }
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
