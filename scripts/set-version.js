@@ -4,6 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
 import { VERSION_RE, VERSION_CORE } from './version-regex.js';
+import { isCursorGeneratedPath } from './cursor-output.js';
 import { DOC_STAT_FILES, docStatValues, applyDocStats, checkMarkerSpec } from './doc-stats.js';
 import { isGeneratedSubSkill } from './inline-auditors.ts';
 
@@ -510,7 +511,10 @@ try {
       throw new Error(`--tag requires a git repository: ${err.message}`);
     }
     const dirtyFiles = status.split('\n').filter(Boolean).map(l => l.slice(3));
-    const unexpected = dirtyFiles.filter(f => !expectedRelative.has(f));
+    // The Cursor distribution is regenerated below, after these writes, so the
+    // preflight would otherwise refuse on output this script is about to produce
+    // itself. Only paths build:cursor owns are absolved; everything else still blocks.
+    const unexpected = dirtyFiles.filter(f => !expectedRelative.has(f) && !isCursorGeneratedPath(f));
     if (unexpected.length) {
       throw new Error(
         `--tag refused: working tree has unrelated changes. Commit or stash them first:\n  ` +
