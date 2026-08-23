@@ -7,7 +7,11 @@ import { transformCommand } from "./commands.ts";
 import { renderCursorHooks } from "./hooks.ts";
 import { renderCursorMcp, validateMcpVariables } from "./mcp.ts";
 import { buildCapabilityReport } from "./report.ts";
-import { validateCursorReferences } from "./references.ts";
+import {
+  assertHostClaimRewritesFired,
+  resetHostClaimRewriteTracking,
+  validateCursorReferences,
+} from "./references.ts";
 import { transformSkill } from "./skills.ts";
 import { loadCursorSource } from "./source.ts";
 import type { AgentProfile, CapabilityReport, VirtualFile } from "./types.ts";
@@ -146,6 +150,7 @@ function inventoryReport(files: ReadonlyMap<string, VirtualFile>, report: Capabi
 /** Produce both repository-level marketplace data and the nested plugin tree. */
 export function renderCursorDistribution(sourceRoot: string, options: { profile: AgentProfile }): CursorDistribution {
   if (options.profile !== "full") throw new Error(`unsupported Cursor profile: ${options.profile}`);
+  resetHostClaimRewriteTracking();
   const source = loadCursorSource(sourceRoot);
   const agents = source.agents.map((agent) => transformAgent(agent, options.profile));
   const report = buildCapabilityReport(source, agents);
@@ -169,6 +174,9 @@ export function renderCursorDistribution(sourceRoot: string, options: { profile:
   for (const skill of source.skills) for (const file of transformSkill(skill)) addFile(files, file);
   for (const agent of agents) addFile(files, agent.file);
   for (const command of source.commands) addFile(files, transformCommand(command));
+  // Every host-claim rewrite must have matched real canonical prose; a dead pattern means
+  // the canonical wording moved and Cursor output silently kept a Claude-only claim.
+  assertHostClaimRewritesFired();
   for (const file of renderCursorHooks()) addFile(files, cursorRuntime(file));
   addFile(files, renderCursorMcp());
   addFile(files, {

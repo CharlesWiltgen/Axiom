@@ -3,7 +3,7 @@ import { test } from "node:test";
 import matter from "gray-matter";
 import { CURSOR_AGENT_ADVISORIES, transformAgent } from "./agents.ts";
 import { buildCapabilityReport } from "./report.ts";
-import { CURSOR_HOOK_EXPECTATIONS } from "./contract.ts";
+import { CURSOR_FORCED_FOREGROUND, CURSOR_HOOK_EXPECTATIONS } from "./contract.ts";
 import { loadCursorSource } from "./source.ts";
 import type { SourceAgent } from "./types.ts";
 
@@ -293,3 +293,23 @@ test("rejects duplicate transformed names that omit a canonical agent", () => {
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
+
+test("forced-foreground exclusion reaches the emitted frontmatter, not just the report", () => {
+  const forced = [...CURSOR_FORCED_FOREGROUND][0];
+  const transformed = transformAgent(
+    {
+      name: forced,
+      filename: `${forced}.md`,
+      frontmatter: { name: forced, description: "Probe agent.", background: true, tools: ["Glob", "Grep", "Read"] },
+      body: "Probe body.",
+      tools: ["Glob", "Grep", "Read"],
+    },
+    "full",
+  );
+  assert.equal(transformed.releasedBackground, false, "report must say foreground");
+  assert.match(
+    transformed.file.content,
+    /^is_background: false$/m,
+    "emitted frontmatter must agree with the report",
+  );
+});

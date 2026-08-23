@@ -160,7 +160,12 @@ export function transformAgent(agent: SourceAgent, profile: AgentProfile): Trans
   assertCanonicalAgent(agent);
   const authority = classifyAgentTools(agent.tools) as Authority;
   const sourceBackground = agent.frontmatter.background === true;
-  const releasedBackground = profile === "full" && authority === "readonly" && sourceBackground;
+  // Apply the forced-foreground exclusion once, before it reaches frontmatter — emitting
+  // `is_background: true` here while reporting foreground downstream ships inconsistent metadata.
+  const releasedBackground = profile === "full"
+    && authority === "readonly"
+    && sourceBackground
+    && !CURSOR_FORCED_FOREGROUND.has(agent.name);
   const description = normalizeAgentDescription(agent.frontmatter.description);
   const frontmatter = profile === "full"
     ? [
@@ -183,7 +188,7 @@ export function transformAgent(agent: SourceAgent, profile: AgentProfile): Trans
     name: agent.name,
     authority,
     sourceBackground,
-    releasedBackground: releasedBackground && !CURSOR_FORCED_FOREGROUND.has(agent.name),
+    releasedBackground,
     authorityExpansion: [...agent.tools],
     file: {
       path: `agents/${agent.filename}`,

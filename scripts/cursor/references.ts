@@ -78,15 +78,55 @@ function mcpToolFor(command: string): string {
   return tool;
 }
 
+interface HostClaimRewrite {
+  id: string;
+  pattern: RegExp;
+  replacement: string;
+}
+
+/**
+ * Rewrites that strip Claude-host capability claims ("xclog is on PATH, just run it")
+ * from canonical prose. Each pattern is pinned to current canonical wording, so a
+ * reword upstream would silently stop matching and ship Cursor users instructions to
+ * run a binary the plugin does not install. `assertHostClaimRewritesFired` turns that
+ * silent rot into a build failure.
+ */
+const HOST_CLAIM_REWRITES: ReadonlyArray<HostClaimRewrite> = [
+  { id: "xclog-on-path", pattern: /`xclog` is on PATH as a bare command \(Claude Code[^\n]*\)\. Just run `xclog <subcommand>` — no prefix, no path lookup\./g, replacement: "In Cursor, the bare `xclog` binary is unavailable; map the reference examples below to the corresponding `axiom_xclog_*` MCP tools." },
+  { id: "xcsym-on-path", pattern: /`xcsym` is on PATH as a bare command \(Claude Code[^\n]*\)\. Just run `xcsym <subcommand>` — no prefix, no path lookup\./g, replacement: "In Cursor, the bare `xcsym` binary is unavailable; map the reference examples below to the corresponding `axiom_xcsym_*` MCP tools." },
+  { id: "xcprof-front-ends", pattern: /xcprof has two front-ends over the same engine — use whichever your harness provides:\n\n- \*\*Claude Code\*\*[^\n]*\n- \*\*MCP clients[^\n]*/g, replacement: "In Cursor, use the `axiom_xcprof_*` MCP tools. The plugin does not provide a bare `xcprof` executable on `PATH`." },
+  { id: "xcui-on-path", pattern: /On \*\*Claude Code\*\*, `xcui` is already on PATH[^\n]*\n\nOn \*\*Codex, Pi, and MCP installs there is no bundled binary\*\*:[^\n]*/g, replacement: "In Cursor, `xcui` is external and is not placed on `PATH` by the plugin. Check `command -v xcui` before following an `xcui` workflow." },
+  { id: "xcui-check-first", pattern: /\*\*Check first: `command -v xcui`\.\*\* It is on PATH automatically only on Claude Code\.[^\n]*/g, replacement: "**Check first: `command -v xcui`.** In Cursor it is external. If absent, use AXe only for compatible input verbs; do not substitute AXe for xcui-only test-harness workflows." },
+  { id: "xcui-bundled-semantics", pattern: /`xcui` \(bundled\) adds the test-harness semantics AXe lacks\./g, replacement: "When installed externally, `xcui` adds the test-harness semantics AXe lacks." },
+  { id: "xcui-bundled-bullet", pattern: /- \*\*xcui\*\*: bundled —/g, replacement: "- **xcui**: external —" },
+];
+
+const hostClaimHits = new Map<string, number>(HOST_CLAIM_REWRITES.map((rewrite) => [rewrite.id, 0]));
+
+export function resetHostClaimRewriteTracking(): void {
+  for (const rewrite of HOST_CLAIM_REWRITES) hostClaimHits.set(rewrite.id, 0);
+}
+
+/** Fail the build when a host-claim rewrite matched nothing across the whole corpus. */
+export function assertHostClaimRewritesFired(): void {
+  const dead = HOST_CLAIM_REWRITES
+    .filter((rewrite) => (hostClaimHits.get(rewrite.id) ?? 0) === 0)
+    .map((rewrite) => rewrite.id);
+  if (dead.length > 0) {
+    throw new Error(
+      `Cursor host-claim rewrite matched no canonical text (the canonical wording likely changed — update the pattern): ${dead.join(", ")}`,
+    );
+  }
+}
+
 function rewriteCursorHostClaims(content: string): string {
-  return content
-    .replace(/`xclog` is on PATH as a bare command \(Claude Code[^\n]*\)\. Just run `xclog <subcommand>` — no prefix, no path lookup\./g, "In Cursor, the bare `xclog` binary is unavailable; map the reference examples below to the corresponding `axiom_xclog_*` MCP tools.")
-    .replace(/`xcsym` is on PATH as a bare command \(Claude Code[^\n]*\)\. Just run `xcsym <subcommand>` — no prefix, no path lookup\./g, "In Cursor, the bare `xcsym` binary is unavailable; map the reference examples below to the corresponding `axiom_xcsym_*` MCP tools.")
-    .replace(/xcprof has two front-ends over the same engine — use whichever your harness provides:\n\n- \*\*Claude Code\*\*[^\n]*\n- \*\*MCP clients[^\n]*/g, "In Cursor, use the `axiom_xcprof_*` MCP tools. The plugin does not provide a bare `xcprof` executable on `PATH`.")
-    .replace(/On \*\*Claude Code\*\*, `xcui` is already on PATH[^\n]*\n\nOn \*\*Codex, Pi, and MCP installs there is no bundled binary\*\*:[^\n]*/g, "In Cursor, `xcui` is external and is not placed on `PATH` by the plugin. Check `command -v xcui` before following an `xcui` workflow.")
-    .replace(/\*\*Check first: `command -v xcui`\.\*\* It is on PATH automatically only on Claude Code\.[^\n]*/g, "**Check first: `command -v xcui`.** In Cursor it is external. If absent, use AXe only for compatible input verbs; do not substitute AXe for xcui-only test-harness workflows.")
-    .replace(/`xcui` \(bundled\) adds the test-harness semantics AXe lacks\./g, "When installed externally, `xcui` adds the test-harness semantics AXe lacks.")
-    .replace(/- \*\*xcui\*\*: bundled —/g, "- **xcui**: external —");
+  let rewritten = content;
+  for (const rewrite of HOST_CLAIM_REWRITES) {
+    const before = rewritten;
+    rewritten = rewritten.replace(rewrite.pattern, rewrite.replacement);
+    if (rewritten !== before) hostClaimHits.set(rewrite.id, (hostClaimHits.get(rewrite.id) ?? 0) + 1);
+  }
+  return rewritten;
 }
 
 function referenceCall(command: string, argumentsText: string, inline: boolean): string {

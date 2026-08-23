@@ -417,6 +417,21 @@ def post_write(payload: Dict[str, Any]) -> Dict[str, str]:
     child = os.path.join(SCRIPT_DIRECTORY, "swift-guardrails.py")
     if not os.path.isfile(child):
         raise AdapterError("missing child")
+    # Gate on the extension before any filesystem work. Validation reads up to
+    # MAX_POST_WRITE_FILE_BYTES, so validating first spends that I/O on files with no
+    # guardrails to run and reports "write file too large" for large non-Swift writes.
+    #
+    # Enforcement is unchanged: this hook is advisory, and no payload reaches the
+    # guardrails child on one path but not the other (a symlink is rejected by lstat
+    # before the suffix is ever consulted). The tradeoff is observability — for a
+    # non-.swift path, unsafe-cwd and workspace-boundary violations are no longer
+    # reported to stderr. A missing or non-string file_path still falls through to
+    # full validation and keeps its diagnostic.
+    tool_input = payload.get("tool_input")
+    if isinstance(tool_input, dict):
+        raw_path = tool_input.get("file_path")
+        if isinstance(raw_path, str) and not raw_path.endswith(".swift"):
+            return {}
     file_path, cwd, line_count, validated_source = _validated_post_write_context(payload)
     if not file_path.endswith(".swift"):
         return {}
