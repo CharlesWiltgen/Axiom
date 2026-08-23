@@ -98,8 +98,10 @@ Install the actual merged upstream SHA locally. Remove any earlier Axiom install
 In Cursor:
 
 1. Open **Customize** and choose **Add → From Local Repo**.
-2. Select the Axiom repository root—the directory containing `.cursor-plugin/marketplace.json`—and choose **Add Plugins**.
+2. Select the Axiom repository root — the directory containing `.cursor-plugin/marketplace.json` — and choose **Add Plugins**.
 3. Open **Browse Marketplace**. Under **Axiom Cursor Marketplace**, choose **Add** for Axiom.
+
+The agent rows below require a Cursor plan that allows named models. Cursor Free refuses every delegation with `Named models unavailable. Free plans can only use Auto.`, so agents register but cannot be exercised; record the account tier used for the run.
 
 Confirm Cursor shows the plugin as installed from the local marketplace and that the source repository remains on the recorded final SHA. Keep sanitized evidence in the pull request or a linked review artifact, not in the repository. Automated inventory tests cover all definitions; manual execution samples each behavior class.
 
@@ -125,6 +127,8 @@ Confirm Cursor shows the plugin as installed from the local marketplace and that
 | MCP blocked | Block `axiom` using Cursor's MCP allowlist/blocklist controls | Server cannot make calls; UI/error behavior recorded | _pending_ |
 | Missing Node | Test with `node`/`npx` unavailable in Cursor's environment | Actionable startup failure; plugin does not claim MCP availability | _pending_ |
 | Missing Python | Test with `python3` unavailable in Cursor's environment | Hook failure is advisory/fail-open; plugin content remains inspectable | _pending_ |
+| Agent plan gate | Attempt one delegation on the account tier used for the run | Delegation either runs, or fails with the recorded Free-plan model error; agent rows above are marked not-applicable rather than passed | _pending_ |
+| Plugin hook gate | Confirm plugin hooks are active, not merely present | Hook fires and returns context; note that Cursor's `enable_cc_plugin_import` gate can clear plugin hooks silently, so an absent result is not a pass | _pending_ |
 
 The MCP command is exactly `npx -y axiom-mcp`. The `-y` flag suppresses npm's install confirmation; it does not pre-approve the MCP server or bypass Cursor's allowlist/blocklist. Record the exact npm-resolved package version and compare it with the intended release. A version mismatch, unexpected tool, or changed consent surface blocks submission pending maintainer review.
 

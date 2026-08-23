@@ -10,6 +10,7 @@ The plugin is a generated distribution. Contributors should change the canonical
 - **Node.js 18 or newer.** The plugin's root `mcp.json` launches `npx -y axiom-mcp`.
 - **Python 3.** Cursor invokes the shipped advisory hook adapters as Python source.
 - **Apple development tools as needed.** Individual Axiom workflows may require Xcode or Apple command-line tools, but they are not bundled by this plugin.
+- **A Cursor plan that allows named models, to use the agents.** Cursor Free restricts model selection to Auto and refuses subagent delegation with `Named models unavailable. Free plans can only use Auto.` Skills, commands, hooks, and MCP work on Free; the 42 agents do not run there.
 
 The generated plugin contains Markdown, JSON, Python source, and static assets. It ships no compiled or executable binary payload. The npm-resolved MCP runtime is a separate dependency and may need network access on first use.
 
@@ -30,7 +31,7 @@ Clone Axiom to a stable absolute path and check out the revision you intend to t
 In Cursor:
 
 1. Open **Customize** and choose **Add → From Local Repo**.
-2. Select the Axiom repository root—the directory containing `.cursor-plugin/marketplace.json`—and choose **Add Plugins**. Do not select `axiom-cursor/` directly.
+2. Select the Axiom repository root — the directory containing `.cursor-plugin/marketplace.json` — and choose **Add Plugins**. Do not select `axiom-cursor/` directly.
 3. Open **Browse Marketplace**. Under **Axiom Cursor Marketplace**, choose **Add** for Axiom.
 
 Cursor imports the local marketplace into its plugin cache; it does not follow later checkout changes automatically. After pulling a different revision or running `npm run build:cursor`, uninstall Axiom, remove **Axiom Cursor Marketplace**, and repeat the local-repository flow before testing the new bytes.
@@ -60,6 +61,8 @@ The released plugin has two agent classes:
 
 The canonical `screenshot-validator` is writable and is deliberately forced into the foreground for the Cursor release.
 
+Agent delegation depends on the Cursor plan. On Cursor Free every delegation fails before the agent starts, so the plugin's agents register and appear in the picker but cannot run. Verified on Cursor 3.17.8: the plugin's 42 agents load, and delegation returns `Named models unavailable. Free plans can only use Auto.` regardless of an agent's `model` field.
+
 Cursor does not provide Axiom's canonical per-agent tool allowlists. Every generated agent inherits host tool and MCP access that may be broader than its source declaration. Before delegating, review the agent, Cursor's tool approvals, and the MCP allowlist/blocklist. `readonly`, prompts, and advisory hooks reduce accidental scope; they are not substitutes for an enforced sandbox or user approval. Writable agents can change the shared checkout.
 
 ## Hooks
@@ -71,7 +74,9 @@ The plugin registers supported Cursor hooks for session start and post-tool shel
 - No hook is a permission boundary, and no emitted hook uses fail-closed behavior.
 - Hook scripts are non-executable Python source invoked through `python3`.
 
-If Python 3 is unavailable, plugin content can still appear, but the advisory hook behavior cannot run.
+- Plugin-supplied hooks load behind a Cursor feature gate (`enable_cc_plugin_import`). It is enabled by default, but Cursor controls it remotely, and when it is off Cursor clears plugin hooks silently rather than reporting an error.
+
+If Python 3 is unavailable, plugin content can still appear, but the advisory hook behavior cannot run. Because hooks fail open and the feature gate is silent, absent hook context never means a check passed.
 
 ## MCP Behavior
 
@@ -106,10 +111,17 @@ For a local checkout, uninstall Axiom in **Customize**, then open **Browse Marke
 - Run `npm run check:cursor` from the Axiom checkout to detect stale generated output.
 - If check mode reports drift, regenerate with `npm run build:cursor` and inspect the complete delta before reloading Cursor.
 
+### Agents appear but will not run
+
+- Confirm the Cursor plan allows named models. Cursor Free refuses delegation with `Named models unavailable. Free plans can only use Auto.`
+- Confirm the agent appears in the picker. Registration and delegation fail independently: an agent can load and still be unable to start.
+- Registration is verifiable without running an agent by comparing the picker against the expected 42.
+
 ### Hooks do not add context
 
 - Run `python3 --version` and confirm Cursor can find the same `python3` executable.
 - Treat absent hook context as a diagnostic problem, not proof that a safety check passed.
+- Confirm the plugin itself loaded. Cursor's `enable_cc_plugin_import` gate can disable plugin hooks without surfacing an error, leaving skills and commands working while hooks are silently inert.
 - Report sanitized hook diagnostics; never include source code, secrets, personal paths, or MCP credentials unnecessarily.
 
 ### MCP does not start
