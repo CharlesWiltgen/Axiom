@@ -3,12 +3,12 @@
   "files": [
     {
       "path": ".cursor-plugin/plugin.json",
-      "sha256": "172c2da588e3714ad23fba1a4f4fb14426a424e438f92c705673fa98970206d7",
+      "sha256": "66314093da32024bcda237990624cd99a176777543b25618d85e879a453c26a7",
       "bytes": 586
     },
     {
       "path": "README.md",
-      "sha256": "887541b8575388b7a1ca46fd7b4257be039c36ea75f0852e93d0dd495fd0fb1d",
+      "sha256": "1918cac7987e049e562cf3a267c2a46b5b2e973d37cc209c203257a92cb53b9c",
       "bytes": 3322
     },
     {
@@ -233,8 +233,8 @@
     },
     {
       "path": "commands/axiom-ask.md",
-      "sha256": "6b8710e785d1f0e0441ae8653859d31f398427a27c07bf3b0cb52de3376b98bf",
-      "bytes": 7815
+      "sha256": "6c785ed582b0e63160f9f6344c6e36101591eac9e9bf530f20010333296930fd",
+      "bytes": 7759
     },
     {
       "path": "commands/axiom-audit.md",
@@ -548,8 +548,8 @@
     },
     {
       "path": "skills/axiom-data/SKILL.md",
-      "sha256": "9899d368fa0f38e8c4cef64f78992bf3d907ea2ffc1a5efc11361e9bfffffe82",
-      "bytes": 12071
+      "sha256": "c77c0fbda23b280ee503774a7f8169918990ef2c94217aa90309941061345576",
+      "bytes": 12078
     },
     {
       "path": "skills/axiom-data/skills/cloud-sync-diag.md",
@@ -1864,7 +1864,7 @@
   ],
   "totals": {
     "files": 372,
-    "bytes": 7131345
+    "bytes": 7131296
   },
   "excludedMirrors": 30,
   "classes": {

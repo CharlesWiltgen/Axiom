@@ -3,5 +3,6 @@
   "referenceSkills": 82,
   "diagnosticSkills": 27,
   "commands": 17,
-  "agents": 42
+  "agents": 42,
+  "routers": 27
 }
