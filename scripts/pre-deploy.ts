@@ -1839,6 +1839,36 @@ heading("12k. Pi Install Manifest");
       }
     }
   }
+
+  // Pi runs a bare `npm install --omit=dev` in its clone. --omit=dev skips
+  // INSTALLING devDependencies but npm still RESOLVES the whole graph, so a
+  // devDependency peer conflict aborts the install before Axiom — which declares
+  // no runtime dependencies at all — delivers anything. That is GH #54: a
+  // vitepress/vitepress-plugin-mermaid peer clash broke the documented
+  // `pi install git:` command for every user while CI stayed green, because CI
+  // passed --legacy-peer-deps. Same silent-Pi-breakage class as the path check
+  // above, so it is gated in the same step.
+  if (process.argv.slice(2).includes("--static")) {
+    console.log("  ⊘ Skipped (--static: needs the npm registry)");
+  } else {
+    try {
+      execSync("npm install --omit=dev --dry-run", { cwd: root, stdio: "pipe" });
+      console.log("  ✓ `npm install --omit=dev` resolves — Pi's install path is clear");
+    } catch (e: unknown) {
+      const err = e as { stderr?: Buffer | string; stdout?: Buffer | string };
+      const out = `${err.stderr ?? ""}${err.stdout ?? ""}`;
+      // Discriminate: only a resolution conflict is Axiom's bug. Any other
+      // failure (offline, registry down) must not fail the release.
+      if (out.includes("ERESOLVE")) {
+        error(
+          "pi-manifest",
+          "root dependency graph does not resolve: `npm install --omit=dev` fails with ERESOLVE, so `pi install git:` aborts before installing anything (GH #54). Fix the peer conflict with a narrow `overrides` entry — passing --legacy-peer-deps only hides it from this gate.",
+        );
+      } else {
+        console.log("  ⊘ Skipped (npm --dry-run unavailable — offline?)");
+      }
+    }
+  }
 }
 
 // ── 12l. Codex Hooks Fidelity ──
