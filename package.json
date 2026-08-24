@@ -34,8 +34,13 @@
   "devDependencies": {
     "gray-matter": "^4.0.3",
     "mermaid": "^11.12.2",
-    "vitepress": "2.0.0-alpha.15",
+    "vitepress": "2.0.0-alpha.19",
     "vitepress-plugin-mermaid": "^2.0.17"
+  },
+  "overrides": {
+    "vitepress-plugin-mermaid": {
+      "vitepress": "$vitepress"
+    }
   },
   "keywords": [
     "claude-code",

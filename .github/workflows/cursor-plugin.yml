@@ -37,6 +37,6 @@ jobs:
         with:
           node-version: '24'
 
-      - run: npm ci --legacy-peer-deps
+      - run: npm ci
       - run: npm run test:cursor
       - run: npm run check:cursor
