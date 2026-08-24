@@ -103,6 +103,21 @@ updates, unlike editing plugin files):
 
 Set it in your shell profile or a project `.envrc`.
 
+Your home directory is never treated as a project in its own right. Everything
+lives under `~`, so asking whether it *contains* an Apple project is always true
+there — detection falls back to markers sitting directly in `~`, which normally
+means Axiom stays quiet. If you habitually start sessions from `~` and want the
+context anyway, `AXIOM_SESSION_CONTEXT=always` is the switch. Note that `never`
+cannot be scoped to `~` through settings, because a home directory's
+project-level settings file is the user-global one.
+
+The same applies to the very top of the filesystem. If your project is checked
+out at a single-level path — `/app` or `/workspace`, as containers often do —
+detection needs either a marker at that top level or a `.git` there. An image
+built with `COPY . /app` that excludes `.git`, and whose Xcode project sits in a
+subdirectory, is the one case that falls through both; `AXIOM_SESSION_CONTEXT=always`
+turns it back on.
+
 ## Also Available
 
 - **[Codex Plugin](/start/codex-install)** – Native skills for the OpenAI Codex CLI, web app, and IDE extensions

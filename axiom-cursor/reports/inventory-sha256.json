@@ -343,8 +343,8 @@
     },
     {
       "path": "scripts/project_detect.py",
-      "sha256": "8fbd3975b329995d563c2f129c56c49c5056ea6a6f26541131c7c065c0c5be7c",
-      "bytes": 6103
+      "sha256": "3c7a5f0c8092e0712848a22052c7d49e7d04cef8b93826413f7d1f24b6f936b4",
+      "bytes": 10189
     },
     {
       "path": "scripts/subagent-start.py",
@@ -1864,7 +1864,7 @@
   ],
   "totals": {
     "files": 372,
-    "bytes": 7131296
+    "bytes": 7135382
   },
   "excludedMirrors": 30,
   "classes": {

@@ -116,7 +116,19 @@ const UPWARD_MAX_LEVELS = 6;
 const DOWNWARD_MAX_DEPTH = 4;
 const MAX_ENTRIES = 10_000;
 
+/**
+ * True if `name` identifies an Apple project.
+ *
+ * HIDDEN entries never count. A dot-prefixed marker is tool state, not a
+ * project: SwiftPM creates ~/.swiftpm (cache/, configuration/, security/) on any
+ * machine where it has run, and ".swiftpm" ends with a marker suffix. That made
+ * $HOME — and every non-git directory under it, since the upward walk checks
+ * markers at each ancestor — read as an Apple project on every Apple developer's
+ * machine (GH #52). Nothing real is lost: a package's own <pkg>/.swiftpm always
+ * sits beside a visible Package.swift.
+ */
 function isMarker(name: string): boolean {
+  if (name.startsWith(".")) return false;
   return APPLE_MARKER_NAMES.has(name) || APPLE_MARKER_SUFFIXES.some((s) => name.endsWith(s));
 }
 
@@ -143,7 +155,11 @@ function downwardHasMarker(root: string): boolean {
     for (const e of entries) {
       if (++seen > MAX_ENTRIES) return true;
       if (isMarker(e.name)) return true;
-      if (depth < DOWNWARD_MAX_DEPTH && !PRUNE_DIRS.has(e.name)) {
+      // Hidden dirs are skipped, not merely unnamed as markers: the ~/.swiftpm
+      // cache holds CLONED PACKAGES, each with a visible Package.swift, so
+      // descending would re-break the fix one level down — and burn entries
+      // toward the fail-open cap.
+      if (depth < DOWNWARD_MAX_DEPTH && !e.name.startsWith(".") && !PRUNE_DIRS.has(e.name)) {
         let isDir = false;
         try {
           isDir = e.isDirectory();
@@ -157,6 +173,30 @@ function downwardHasMarker(root: string): boolean {
   return false;
 }
 
+/**
+ * True when "does this contain an Apple project?" is a meaningless question.
+ *
+ * A home directory and the top of the filesystem contain EVERYTHING, so a
+ * containment scan rooted there finds SOME project — or trips MAX_ENTRIES and
+ * fails open — regardless of what the session is about. $HOME is what GH #52
+ * reported; `/`, `/Users`, `/tmp`, and `/Volumes` are the same defect one level
+ * up. Depth, not a denylist, so no list of special paths needs maintaining.
+ * Direct markers are checked before this and still win.
+ */
+export function isVacuousScanRoot(dir: string, home: string | null, isRepoRoot: boolean): boolean {
+  if (home !== null && dir === home) return true;
+  // A .git directory IS a project boundary, so containment is meaningful even at
+  // a shallow path — a repo at a container workdir (/app, /workspace, /src) with
+  // markers in a subdir must not be silenced.
+  const depth = dir.split(path.sep).filter(Boolean).length;
+  // The filesystem root is never a project root, `git init /` notwithstanding —
+  // without this floor the repo exemption re-opens the scan of / that the depth
+  // rule exists to prevent.
+  if (depth === 0) return true;
+  if (isRepoRoot) return false;
+  return depth <= 1;
+}
+
 /** True if `start` is inside, or contains, an Apple project. Errors → fail-open. */
 export function isAppleProject(start: string): boolean {
   try {
@@ -164,19 +204,35 @@ export function isAppleProject(start: string): boolean {
     if (!fs.existsSync(cur) || !fs.statSync(cur).isDirectory()) return true;
     const home = process.env.HOME ? path.resolve(process.env.HOME) : null;
     let scanRoot = cur;
+    let foundRepoRoot = false;
+    let prev: string | null = null;
     let levels = 0;
     for (;;) {
       if (levels <= UPWARD_MAX_LEVELS && dirHasMarker(cur)) return true;
       if (fs.existsSync(path.join(cur, ".git"))) {
-        scanRoot = cur;
+        // A .git at $HOME (dotfiles repo) must NOT widen the scan root: that hands
+        // the whole home directory to the vacuous-root check, which refuses —
+        // silently disabling Axiom for every real project under ~ whose markers
+        // sit in a subdirectory. Stop ascending, keep the original scan root.
+        if (home === null || cur !== home) {
+          scanRoot = cur;
+          foundRepoRoot = true;
+        } else if (prev !== null) {
+          // $HOME is the repo root (dotfiles). Scanning all of ~ is the GH #52
+          // bug; scanning from a deep cwd misses a marker sitting up-and-over.
+          // The branch of ~ we came through is both.
+          scanRoot = prev;
+        }
         break;
       }
       const parent = path.dirname(cur);
       if (parent === cur) break;
       if (home !== null && cur === home) break;
+      prev = cur;
       levels++;
       cur = parent;
     }
+    if (isVacuousScanRoot(scanRoot, home, foundRepoRoot)) return false;
     return downwardHasMarker(scanRoot);
   } catch {
     return true;

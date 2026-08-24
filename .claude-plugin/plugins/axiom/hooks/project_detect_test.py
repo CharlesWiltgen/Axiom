@@ -45,6 +45,20 @@ class TestDirHasMarker(unittest.TestCase):
     def test_unreadable_dir_returns_false(self):
         self.assertFalse(pd._dir_has_marker("/no/such/path/xyz"))
 
+    def test_hidden_swiftpm_is_not_a_marker(self):
+        # GH #52: SwiftPM creates ~/.swiftpm (cache/configuration/security) on any
+        # machine where it has run. It ends with the ".swiftpm" marker suffix, so
+        # counting it made every Apple developer's home directory read as a project.
+        with tempfile.TemporaryDirectory() as d:
+            os.mkdir(os.path.join(d, ".swiftpm"))
+            self.assertFalse(pd._dir_has_marker(d))
+
+    def test_visible_swiftpm_package_is_still_a_marker(self):
+        # Guard against over-correcting: a real Swift Playgrounds app package counts.
+        with tempfile.TemporaryDirectory() as d:
+            os.mkdir(os.path.join(d, "MyApp.swiftpm"))
+            self.assertTrue(pd._dir_has_marker(d))
+
 
 class TestDownwardHasMarker(unittest.TestCase):
     def test_finds_marker_at_root(self):
@@ -83,6 +97,20 @@ class TestDownwardHasMarker(unittest.TestCase):
             touch(os.path.join(d, "pkg", "main.go"))
             self.assertFalse(pd._downward_has_marker(d))
 
+    def test_hidden_dir_is_not_a_marker_in_scan(self):
+        with tempfile.TemporaryDirectory() as d:
+            os.mkdir(os.path.join(d, ".swiftpm"))
+            touch(os.path.join(d, "index.js"))
+            self.assertFalse(pd._downward_has_marker(d))
+
+    def test_hidden_dirs_are_not_descended(self):
+        # The descent skip is load-bearing, not tidiness: ~/.swiftpm/cache holds
+        # CLONED PACKAGES, each with a visible Package.swift. Skipping the name but
+        # still walking in would re-break the fix one level down.
+        with tempfile.TemporaryDirectory() as d:
+            touch(os.path.join(d, ".swiftpm", "cache", "repos", "Pkg", "Package.swift"))
+            self.assertFalse(pd._downward_has_marker(d))
+
     def test_entry_cap_fails_open(self):
         # An inconclusive scan (cap hit before any marker) must inject, not skip.
         original = pd.MAX_ENTRIES
@@ -92,6 +120,45 @@ class TestDownwardHasMarker(unittest.TestCase):
             for i in range(10):
                 touch(os.path.join(d, f"file{i}.txt"))  # 10 non-marker entries > cap 3
             self.assertTrue(pd._downward_has_marker(d))
+
+
+class TestIsVacuousScanRoot(unittest.TestCase):
+    """GH #52: containment is meaningless at $HOME and at the top of the filesystem."""
+
+    HOME = "/Users/someone"
+
+    def test_filesystem_root_and_its_children_are_vacuous(self):
+        for path in ("/", "/Users", "/tmp", "/Volumes", "/home"):
+            self.assertTrue(pd._is_vacuous_scan_root(path, self.HOME, False), path)
+
+    def test_home_is_vacuous(self):
+        self.assertTrue(pd._is_vacuous_scan_root(self.HOME, self.HOME, False))
+
+    def test_home_is_vacuous_even_as_a_repo_root(self):
+        # Dotfiles repo: home wins over the repo-boundary exemption. This is the
+        # case GH #52 actually reported.
+        self.assertTrue(pd._is_vacuous_scan_root(self.HOME, self.HOME, True))
+
+    def test_filesystem_root_is_vacuous_even_as_a_repo_root(self):
+        # `git init /` must not re-open the 51-second scan of / that the depth
+        # rule exists to prevent. The floor is checked before the exemption.
+        self.assertTrue(pd._is_vacuous_scan_root("/", self.HOME, True))
+
+    def test_repo_root_overrides_the_depth_rule(self):
+        # Container/devcontainer workdirs are single-component paths. A repo
+        # checked out there with markers in a subdir MUST still be found —
+        # refusing it would be a regression against pre-GH-#52 behaviour.
+        for path in ("/app", "/workspace", "/src"):
+            self.assertFalse(pd._is_vacuous_scan_root(path, self.HOME, True), path)
+            self.assertTrue(pd._is_vacuous_scan_root(path, self.HOME, False), path)
+
+    def test_real_project_paths_are_not_vacuous(self):
+        for path in ("/Users/someone/Projects/App", "/Volumes/Ext/Code/App", "/opt/src/App"):
+            self.assertFalse(pd._is_vacuous_scan_root(path, self.HOME, False), path)
+
+    def test_unset_home_still_gates_the_filesystem_top(self):
+        self.assertTrue(pd._is_vacuous_scan_root("/", None, False))
+        self.assertFalse(pd._is_vacuous_scan_root("/Users/someone/App", None, False))
 
 
 class TestIsAppleProject(unittest.TestCase):
@@ -157,6 +224,134 @@ class TestIsAppleProject(unittest.TestCase):
             deep = os.path.join(d, "Tests", "A", "B", "C", "D", "E", "F")  # 7 levels deep
             os.makedirs(deep)
             self.assertTrue(pd.is_apple_project(deep))
+
+
+    def test_home_with_only_swiftpm_is_not_apple(self):
+        # GH #52 defect 2: the direct-marker hit at $HOME short-circuits before any
+        # containment scan, so this fired on every Apple developer's machine.
+        with tempfile.TemporaryDirectory() as d:
+            home = os.path.join(d, "home")
+            os.makedirs(os.path.join(home, ".swiftpm"))
+            with mock.patch.dict(os.environ, {"HOME": home}):
+                self.assertFalse(pd.is_apple_project(home))
+
+    def test_non_git_dir_under_home_is_not_apple(self):
+        # GH #52 defect 2, wider blast radius: the upward walk checks markers at
+        # every ancestor INCLUDING home, so ANY non-git dir under ~ inherited the
+        # ~/.swiftpm false positive.
+        with tempfile.TemporaryDirectory() as d:
+            home = os.path.join(d, "home")
+            os.makedirs(os.path.join(home, ".swiftpm"))
+            opened = os.path.join(home, "scratch", "pyproj")
+            os.makedirs(opened)
+            touch(os.path.join(opened, "main.py"))
+            with mock.patch.dict(os.environ, {"HOME": home}):
+                self.assertFalse(pd.is_apple_project(opened))
+
+    def test_home_containment_does_not_inject(self):
+        # GH #52 defect 1: a home directory is not a project. "Contains an Apple
+        # project" is vacuous for ~ — everything is under ~.
+        with tempfile.TemporaryDirectory() as d:
+            home = os.path.join(d, "home")
+            touch(os.path.join(home, "Projects", "App", "Package.swift"))
+            with mock.patch.dict(os.environ, {"HOME": home}):
+                self.assertFalse(pd.is_apple_project(home))
+
+    def test_dotfiles_repo_home_does_not_inject(self):
+        # Home as its own git root (dotfiles setups) makes home the scan root by the
+        # other path; it must reach the same verdict.
+        with tempfile.TemporaryDirectory() as d:
+            home = os.path.join(d, "home")
+            os.makedirs(os.path.join(home, ".git"))
+            touch(os.path.join(home, "Projects", "App", "Package.swift"))
+            with mock.patch.dict(os.environ, {"HOME": home}):
+                self.assertFalse(pd.is_apple_project(home))
+
+    def test_git_managed_home_does_not_hijack_a_nested_project(self):
+        # REGRESSION (found in final review): probing for .git at every ancestor
+        # used to WIDEN scan_root from the meaningful cwd all the way to $HOME,
+        # which the vacuous-root check then refused — silently disabling Axiom for
+        # every project under a dotfiles-repo home whose markers sit in a subdir.
+        # A .git at home stops the ascent WITHOUT being adopted as the scan root.
+        with tempfile.TemporaryDirectory() as d:
+            home = os.path.join(d, "home")
+            os.makedirs(os.path.join(home, ".git"))          # dotfiles repo
+            app = os.path.join(home, "Projects", "App")
+            touch(os.path.join(app, "ios", "App.xcodeproj", "x"))  # marker NESTED
+            with mock.patch.dict(os.environ, {"HOME": home}):
+                self.assertTrue(pd.is_apple_project(app))
+
+    def test_git_managed_home_scans_the_branch_when_opened_deep(self):
+        # Second half of the same regression: falling back to the deep cwd misses
+        # a marker that sits up-and-over (App/ios/ when opened in App/Sources/x).
+        # The branch of ~ we came through is the right scan root — narrower than
+        # all of ~ (the GH #52 bug), wider than the cwd.
+        with tempfile.TemporaryDirectory() as d:
+            home = os.path.join(d, "home")
+            os.makedirs(os.path.join(home, ".git"))
+            app = os.path.join(home, "Projects", "App")
+            touch(os.path.join(app, "ios", "App.xcodeproj", "x"))
+            opened = os.path.join(app, "Sources", "Feature", "Sub")
+            os.makedirs(opened)
+            with mock.patch.dict(os.environ, {"HOME": home}):
+                self.assertTrue(pd.is_apple_project(opened))
+
+    def test_git_managed_home_does_not_scan_all_of_home(self):
+        # The narrowing that keeps GH #52 fixed: an Apple project in a DIFFERENT
+        # branch of ~ must not make an unrelated branch read as Apple.
+        with tempfile.TemporaryDirectory() as d:
+            home = os.path.join(d, "home")
+            os.makedirs(os.path.join(home, ".git"))
+            touch(os.path.join(home, "Projects", "App", "Package.swift"))
+            opened = os.path.join(home, "scratch", "pyproj")
+            os.makedirs(opened)
+            touch(os.path.join(opened, "main.py"))
+            with mock.patch.dict(os.environ, {"HOME": home}):
+                self.assertFalse(pd.is_apple_project(opened))
+
+    def test_home_as_repo_root_is_a_known_false_negative(self):
+        # Documented limit, not an oversight. Refusing containment at $HOME cannot
+        # be told apart from the dotfiles-repo case this fix exists for — both are
+        # a .git hit at home. The dotfiles case is what GH #52 reported, so it wins;
+        # devcontainers that set HOME=/workspace with markers only in subdirectories
+        # need AXIOM_SESSION_CONTEXT=always. Change this assertion only with a signal
+        # that actually separates the two.
+        with tempfile.TemporaryDirectory() as d:
+            home = os.path.join(d, "home")
+            os.makedirs(os.path.join(home, ".git"))
+            touch(os.path.join(home, "ios", "App.xcodeproj", "x"))
+            with mock.patch.dict(os.environ, {"HOME": home}):
+                self.assertFalse(pd.is_apple_project(home))
+
+    def test_direct_marker_at_home_still_injects(self):
+        # The home rule kills CONTAINMENT, not direct markers. Someone who really
+        # does keep a project at ~ still gets Axiom.
+        with tempfile.TemporaryDirectory() as d:
+            home = os.path.join(d, "home")
+            os.makedirs(home)
+            touch(os.path.join(home, "App.xcodeproj", "x"))
+            with mock.patch.dict(os.environ, {"HOME": home}):
+                self.assertTrue(pd.is_apple_project(home))
+
+    def test_real_project_under_home_still_detected(self):
+        # The regression that matters: a normal Apple project living under ~.
+        with tempfile.TemporaryDirectory() as d:
+            home = os.path.join(d, "home")
+            proj = os.path.join(home, "Projects", "App")
+            os.makedirs(os.path.join(home, ".swiftpm"))
+            touch(os.path.join(proj, "Package.swift"))
+            with mock.patch.dict(os.environ, {"HOME": home}):
+                self.assertTrue(pd.is_apple_project(proj))
+
+    def test_containment_under_home_still_detected(self):
+        # Scan root is NOT home here, so containment still applies normally.
+        with tempfile.TemporaryDirectory() as d:
+            home = os.path.join(d, "home")
+            work = os.path.join(home, "work")
+            os.makedirs(os.path.join(home, ".swiftpm"))
+            touch(os.path.join(work, "ios", "App.xcodeproj", "x"))
+            with mock.patch.dict(os.environ, {"HOME": home}):
+                self.assertTrue(pd.is_apple_project(work))
 
 
 class TestResolveContextDecision(unittest.TestCase):

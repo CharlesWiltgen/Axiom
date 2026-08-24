@@ -39,13 +39,28 @@ DOWNWARD_MAX_DEPTH = 4  # downward-scan depth below the scan root
 MAX_ENTRIES = 10000     # downward scan safety cap → fail-open on hit
 
 
+def _is_marker(name: str) -> bool:
+    """True if `name` identifies an Apple project.
+
+    HIDDEN entries never count. A dot-prefixed marker is tool state, not a
+    project: SwiftPM creates ~/.swiftpm (cache/, configuration/, security/) on
+    any machine where it has run, and ".swiftpm" ends with a marker suffix. That
+    made $HOME — and every non-git directory under it, since the upward walk
+    checks markers at each ancestor — read as an Apple project on every Apple
+    developer's machine (GH #52). Nothing real is lost: a package's own
+    <pkg>/.swiftpm always sits beside a visible Package.swift.
+    """
+    if name.startswith("."):
+        return False
+    return name in APPLE_MARKER_NAMES or name.endswith(APPLE_MARKER_SUFFIXES)
+
+
 def _dir_has_marker(path: str) -> bool:
     """True if `path` directly contains an Apple marker. Unreadable → False."""
     try:
         with os.scandir(path) as it:
             for entry in it:
-                name = entry.name
-                if name in APPLE_MARKER_NAMES or name.endswith(APPLE_MARKER_SUFFIXES):
+                if _is_marker(entry.name):
                     return True
     except OSError:
         return False
@@ -71,9 +86,15 @@ def _downward_has_marker(root: str) -> bool:
                     if seen > MAX_ENTRIES:
                         return True  # inconclusive → fail-open
                     name = entry.name
-                    if name in APPLE_MARKER_NAMES or name.endswith(APPLE_MARKER_SUFFIXES):
+                    if _is_marker(name):
                         return True
-                    if depth < DOWNWARD_MAX_DEPTH and name not in PRUNE_DIRS:
+                    # Hidden dirs are skipped, not just unnamed as markers: the
+                    # ~/.swiftpm cache holds CLONED PACKAGES, each with a visible
+                    # Package.swift, so descending would re-break the fix one
+                    # level down — and burn entries toward the fail-open cap.
+                    if (depth < DOWNWARD_MAX_DEPTH
+                            and not name.startswith(".")
+                            and name not in PRUNE_DIRS):
                         try:
                             is_dir = entry.is_dir(follow_symlinks=False)
                         except OSError:
@@ -83,6 +104,43 @@ def _downward_has_marker(root: str) -> bool:
         except OSError:
             continue
     return False
+
+
+def _is_vacuous_scan_root(path: str, home: str | None, is_repo_root: bool) -> bool:
+    """True when "does this contain an Apple project?" is a meaningless question.
+
+    A home directory and the top of the filesystem contain EVERYTHING, so a
+    containment scan rooted there finds SOME project — or trips MAX_ENTRIES and
+    fails open — regardless of what the session is about. $HOME is what GH #52
+    reported; `/`, `/Users`, `/tmp`, and `/Volumes` are the same defect one level
+    up, and `/` additionally cost 50-115s of blocking scan (measured twice,
+    different conditions) in a hook that runs on every prompt, not just at
+    session start.
+
+    Depth, not a denylist: anything at or within one level of the filesystem root
+    qualifies, so no list of special paths needs maintaining. Direct markers are
+    checked before this and still win, so a project that genuinely sits at one of
+    these paths is unaffected.
+    """
+    if home is not None and path == home:
+        return True
+    depth = len([p for p in path.split(os.sep) if p])
+    if depth == 0:
+        # The filesystem root is never a project root, `git init /` notwithstanding
+        # — without this floor the repo exemption re-opens the 50-115s scan of /
+        # that the depth rule exists to prevent. Deliberate trade: a `COPY . /`
+        # image with .git at / goes unrecognised (use AXIOM_SESSION_CONTEXT=always),
+        # which is rarer than a minute-long stall on every prompt.
+        return True
+    if is_repo_root:
+        # A .git directory IS a project boundary, so containment is meaningful
+        # even at a shallow path. Without this, a repo checked out at a
+        # container-style workdir (/app, /workspace, /src — all one component)
+        # with its markers in a subdirectory would be refused and Axiom would go
+        # silently off: the cardinal sin, and a REGRESSION against pre-GH-#52
+        # behaviour, which detected those correctly.
+        return False
+    return depth <= 1
 
 
 def is_apple_project(start: str) -> bool:
@@ -101,6 +159,8 @@ def is_apple_project(start: str) -> bool:
         home = os.environ.get("HOME")
         home = os.path.abspath(home) if home else None
         scan_root = cur
+        found_repo_root = False
+        prev = None
         levels = 0
         while True:
             # Marker scan is bounded to UPWARD_MAX_LEVELS ancestors (the no-git
@@ -111,15 +171,31 @@ def is_apple_project(start: str) -> bool:
             if levels <= UPWARD_MAX_LEVELS and _dir_has_marker(cur):
                 return True
             if os.path.exists(os.path.join(cur, ".git")):  # file (worktree) or dir
-                scan_root = cur                # repo root → scan repo-wide
+                # A .git at $HOME (dotfiles repo) must NOT widen the scan root:
+                # doing so hands the whole home directory to the vacuous-root
+                # check, which then refuses — silently disabling Axiom for every
+                # real project under ~ whose markers sit in a subdirectory. Stop
+                # ascending, but keep the original start as the scan root.
+                if home is None or cur != home:
+                    scan_root = cur            # repo root → scan repo-wide
+                    found_repo_root = True
+                elif prev is not None:
+                    # $HOME is the repo root (dotfiles). Scanning all of ~ is the
+                    # GH #52 bug; scanning from a deep cwd misses a marker that
+                    # sits up-and-over (App/ios/ when opened in App/Sources/x).
+                    # The branch of ~ we actually came through is both.
+                    scan_root = prev
                 break
             parent = os.path.dirname(cur)
             if parent == cur:
                 break                          # filesystem root
             if home is not None and cur == home:
                 break                          # do not ascend past $HOME (scanned above)
+            prev = cur
             levels += 1
             cur = parent
+        if _is_vacuous_scan_root(scan_root, home, found_repo_root):
+            return False
         return _downward_has_marker(scan_root)
     except Exception:
         return True  # fail-open: never misclassify an Apple project as non-Apple
