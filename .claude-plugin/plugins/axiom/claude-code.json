@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "27.0.0-beta.48",
+  "version": "27.0.0-beta.49",
   "description": "Battle-tested Claude Code skills, agents, and tools for modern xOS (iOS, iPadOS, macOS, watchOS, tvOS) development",
   "author": "Charles Wiltgen",
   "license": "MIT",
@@ -30,7 +30,7 @@
     },
     {
       "name": "axiom-testing",
-      "description": "Use when writing ANY test, debugging flaky tests, making tests faster, or asking about Swift Testing vs XCTest. Covers unit tests, UI tests, fast tests without simulator, async testing, test architecture."
+      "description": "Use when writing ANY test, debugging flaky tests, making tests faster, or choosing Swift Testing vs XCTest. Covers unit tests, UI tests, async testing, test architecture."
     },
     {
       "name": "axiom-swiftui",
@@ -42,7 +42,7 @@
     },
     {
       "name": "axiom-concurrency",
-      "description": "Use when writing ANY code with async, actors, threads, or seeing ANY concurrency error. Covers Swift 6 concurrency, @MainActor, Sendable, data races, async/await patterns, performance optimization."
+      "description": "Use when writing ANY async code, actors, threads, or seeing ANY concurrency error. Covers Swift 6 concurrency, @MainActor, Sendable, data races, async/await patterns."
     },
     {
       "name": "axiom-performance",
@@ -50,7 +50,7 @@
     },
     {
       "name": "axiom-networking",
-      "description": "Use when implementing or debugging ANY network connection, API call, or socket. Covers URLSession, Network.framework, NetworkConnection, deprecated APIs, connection diagnostics, structured concurrency networking."
+      "description": "Use when implementing or debugging ANY network connection, API call, or socket. Covers URLSession, Network.framework, NetworkConnection, connection diagnostics."
     },
     {
       "name": "axiom-integration",
@@ -66,7 +66,7 @@
     },
     {
       "name": "axiom-ai",
-      "description": "Use when implementing, testing, or evaluating ANY Apple Intelligence, on-device AI, speech-to-text, or custom ML feature. Covers Foundation Models, @Generable, LanguageModelSession, eval suites, model-as-judge scoring, SpeechTranscriber, CoreML."
+      "description": "Use when implementing, testing, or evaluating ANY Apple Intelligence, on-device AI, or speech-to-text feature. Covers Foundation Models, @Generable, LanguageModelSession, Tool protocol, eval suites, model-as-judge scoring, SpeechTranscriber, CoreML."
     },
     {
       "name": "axiom-vision",
@@ -86,11 +86,11 @@
     },
     {
       "name": "axiom-xcode-mcp",
-      "description": "Use when connecting to Xcode via MCP, using xcrun mcpbridge or the headless mcp-server, launching agents from Xcode, or working with ANY Xcode MCP tool (XcodeRead, BuildProject, RunSomeTests, RenderPreview). Covers setup, tools, troubleshooting."
+      "description": "Use when connecting to Xcode via MCP, using xcrun mcpbridge or the headless mcp-server, or working with ANY Xcode MCP tool (XcodeRead, BuildProject, RunSomeTests, RenderPreview). Covers setup, tool reference, workflows, troubleshooting."
     },
     {
       "name": "axiom-shipping",
-      "description": "Use when preparing ANY app for submission, handling App Store rejections, writing appeals, or managing App Store Connect. Covers submission checklists, rejection troubleshooting, metadata, privacy manifests, age ratings, export compliance."
+      "description": "Use when preparing ANY app for submission, handling App Store rejections, writing appeals, or managing App Store Connect. Covers submission checklists, rejection troubleshooting, metadata requirements, privacy manifests, age ratings, export compliance."
     },
     {
       "name": "axiom-security",
