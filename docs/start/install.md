@@ -70,7 +70,7 @@ Axiom's routers are meant to fire on their own — that is how a question about 
 
 **Routers are all-or-nothing.** If you want Axiom quieter than that, the only supported control is disabling the plugin in `/plugin`. Claude Code's per-skill `skillOverrides` setting does **not** apply here: its documentation states plainly that *"Plugin skills are not affected by `skillOverrides`. Manage those through `/plugin` instead."* If you have seen a `skillOverrides` entry appear to suppress an `axiom:*` skill, it was not doing so by a supported route, and it will not survive a version bump — plugin skills can also appear under a version-prefixed namespace that a hand-written override key won't match.
 
-If Axiom is firing on work where it doesn't belong, that is usually a routing bug worth [reporting](https://github.com/CharlesWiltgen/Axiom/issues) rather than something to suppress — see [Non-Apple projects](#non-apple-projects) for the case Axiom already guards against.
+If Axiom is firing on work where it doesn't belong, that is usually a routing bug worth [reporting](https://github.com/CharlesWiltgen/Axiom/issues) rather than something to suppress — see [Non-Apple Projects](#non-apple-projects) for the case Axiom already guards against.
 
 ## Troubleshooting
 
@@ -87,7 +87,7 @@ Axiom skills route automatically based on iOS-specific keywords in your question
 - [Report issues](https://github.com/CharlesWiltgen/Axiom/issues)
 - [Discussions](https://github.com/CharlesWiltgen/Axiom/discussions)
 
-## Non-Apple projects
+## Non-Apple Projects
 
 Axiom's session hook auto-detects whether your working directory is part of an
 Apple project (Xcode project/workspace, Swift package, or Swift sources) and
@@ -104,9 +104,9 @@ updates, unlike editing plugin files):
 Set it in your shell profile or a project `.envrc`.
 
 Your home directory is never treated as a project in its own right. Everything
-lives under `~`, so asking whether it *contains* an Apple project is always true
-there — detection falls back to markers sitting directly in `~`, which normally
-means Axiom stays quiet. If you habitually start sessions from `~` and want the
+lives under `~`, so asking whether it *contains* an Apple project tells you
+nothing — some project is always in there somewhere. Detection falls back to
+markers sitting directly in `~`, which normally means Axiom stays quiet. If you habitually start sessions from `~` and want the
 context anyway, `AXIOM_SESSION_CONTEXT=always` is the switch. Note that `never`
 cannot be scoped to `~` through settings, because a home directory's
 project-level settings file is the user-global one.
