@@ -8,6 +8,9 @@
 
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   applyDocStats,
   extractDocStats,
@@ -26,8 +29,10 @@ const STATS = {
   diagnosticSkills: 25,
   agents: 40,
   commands: 15,
+  routers: 26,
 };
 const VALUES = docStatValues(STATS);
+const repoRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 describe("docStatValues", () => {
   it("derives the headline skills total as the sum of the three categories", () => {
@@ -38,7 +43,16 @@ describe("docStatValues", () => {
       diagnostic: 25,
       agents: 40,
       commands: 15,
+      routers: 26,
     });
+  });
+
+  it("keeps routers independent of the headline skills total", () => {
+    // 26 routers alongside 254 skills: the router count is the number of
+    // layer-1 suites, not one of the three skill categories summed into
+    // `skills`. Folding it in would inflate every "N skills" figure in docs.
+    assert.equal(docStatValues(STATS).routers, 26);
+    assert.equal(docStatValues(STATS).skills, 151 + 78 + 25);
   });
 
   it("treats missing stat fields as zero", () => {
@@ -49,6 +63,7 @@ describe("docStatValues", () => {
       diagnostic: 0,
       agents: 0,
       commands: 0,
+      routers: 0,
     });
   });
 });
@@ -162,12 +177,31 @@ describe("module config", () => {
     }
   });
 
-  it("lists the seven maintained doc pages with valid spec keys", () => {
-    assert.equal(DOC_STAT_FILES.length, 7);
+  it("every maintained page exists on disk with valid spec keys", () => {
+    // Asserting the files EXIST beats asserting a path prefix: the registry now
+    // includes README.md (outside docs/), and a registered-but-deleted page
+    // would otherwise fail only at release time inside pre-deploy.
+    assert.equal(DOC_STAT_FILES.length, 9);
     for (const { file, markers } of DOC_STAT_FILES) {
-      assert.ok(file.startsWith("docs/") && file.endsWith(".md"), `${file} path`);
+      assert.ok(file.endsWith(".md"), `${file} should be markdown`);
+      assert.ok(
+        fs.existsSync(path.join(repoRoot, file)),
+        `${file} is registered for count maintenance but does not exist`,
+      );
       for (const key of Object.keys(markers)) {
         assert.ok(DOC_STAT_KEYS.includes(key), `${file}: '${key}' is a valid key`);
+      }
+    }
+  });
+
+  it("declares the marker count each page actually contains", () => {
+    // The spec's per-key number is how pre-deploy knows a marker was deleted in
+    // a reword. A spec that disagrees with the file silently stops guarding it.
+    for (const { file, markers } of DOC_STAT_FILES) {
+      const content = fs.readFileSync(path.join(repoRoot, file), "utf8");
+      for (const [key, expected] of Object.entries(markers)) {
+        const found = content.split(`<!--ax:${key}-->`).length - 1;
+        assert.equal(found, expected, `${file}: spec says ${expected} '${key}' marker(s), file has ${found}`);
       }
     }
   });
