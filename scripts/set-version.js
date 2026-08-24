@@ -7,6 +7,7 @@ import { VERSION_RE, VERSION_CORE } from './version-regex.js';
 import { isCursorGeneratedPath } from './cursor-output.js';
 import { DOC_STAT_FILES, docStatValues, applyDocStats, checkMarkerSpec } from './doc-stats.js';
 import { isGeneratedSubSkill } from './inline-auditors.ts';
+import { manifestSkillsFromDisk } from './skill-listing.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -308,7 +309,9 @@ try {
     referenceSkills: referenceCount,
     diagnosticSkills: diagnosticCount,
     commands: commandsCount,
-    agents: agentsCount
+    agents: agentsCount,
+    // Layer-1 router count — the "27 skill routers" the install guides quote.
+    routers: suiteCount
   };
 
   // Prepare all updates
@@ -333,6 +336,14 @@ try {
     throw new Error(`Failed to parse claude-code.json: ${err.message}`);
   }
   claudeCode.version = version;
+  // Regenerate the skills array from SKILL.md frontmatter. Claude Code builds
+  // its listing from the frontmatter and never reads this file, so a
+  // hand-edited array silently drifts — seven descriptions had, and /axiom:ask
+  // (generated below from this array) shipped the stale text to users.
+  claudeCode.skills = manifestSkillsFromDisk(
+    pluginDir,
+    (claudeCode.skills ?? []).map((s) => s.name),
+  );
   updates.push({
     path: claudeCodePath,
     content: JSON.stringify(claudeCode, null, 2) + '\n',
@@ -346,6 +357,27 @@ try {
     path: askMdPath,
     content: askMdContent,
     label: '.claude-plugin/plugins/axiom/commands/ask.md'
+  });
+
+  // 1b. Prepare .claude-plugin/plugin.json — the manifest Claude Code actually
+  // reads. Without it the plugin name falls back to the install directory (a
+  // version, in a marketplace cache), namespacing skills/agents/commands as
+  // `27.0.0-beta.N:axiom-swiftui`. See Axiom-6vd / GH #53.
+  const pluginManifestPath = path.join(pluginDir, '.claude-plugin/plugin.json');
+  if (!fs.existsSync(pluginManifestPath)) {
+    throw new Error(`Plugin manifest not found: ${pluginManifestPath}`);
+  }
+  let pluginManifest;
+  try {
+    pluginManifest = JSON.parse(fs.readFileSync(pluginManifestPath, 'utf8'));
+  } catch (err) {
+    throw new Error(`Failed to parse .claude-plugin/plugin.json: ${err.message}`);
+  }
+  pluginManifest.version = version;
+  updates.push({
+    path: pluginManifestPath,
+    content: JSON.stringify(pluginManifest, null, 2) + '\n',
+    label: '.claude-plugin/plugins/axiom/.claude-plugin/plugin.json'
   });
 
   // 2. Read and prepare marketplace.json update

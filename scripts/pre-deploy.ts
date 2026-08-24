@@ -15,6 +15,21 @@ import path from "node:path";
 import { execSync } from "node:child_process";
 import { VERSION_CORE } from "./version-regex.js";
 import {
+  MAX_ENTRY_CHARS,
+  auditListing,
+  readShippedListing,
+} from "./skill-listing.ts";
+import {
+  CHARS_PER_TOKEN,
+  FOOTPRINT_CEILINGS,
+  measureFootprints,
+} from "./always-on-footprint.ts";
+import {
+  NPM_PACKAGE,
+  classifyReleaseSync,
+  fetchPublishedVersions,
+} from "./release-sync.ts";
+import {
   shippedRouterCount,
   expectedCodexSkillCount,
   agentToSkillName,
@@ -202,30 +217,110 @@ try {
   error("json", `marketplace.json parse error: ${(e as Error).message}`);
 }
 
-heading("3. Character Budget");
-if (claudeCode) {
-  let total = 0;
-  const oversize: string[] = [];
-  for (const skill of claudeCode.skills || []) {
-    total += skill.description.length;
-    if (skill.description.length > 300) {
-      oversize.push(`${skill.name} (${skill.description.length} chars)`);
-    }
-  }
-  if (total > 15000) {
+heading("3. Skill Listing Budget");
+{
+  // Measured from skills/*/SKILL.md frontmatter — the text Claude Code actually
+  // lists. This check previously read claude-code.json (which Claude Code never
+  // reads) against a 15,000/300 limit that does not exist.
+  const audit = auditListing(readShippedListing(pluginDir));
+  const pct = Math.round((audit.total / audit.budget) * 100);
+
+  if (audit.overBudget) {
     error(
       "budget",
-      `Total ${total}/15,000 chars — EXCEEDS BUDGET (skills invisible to Claude)`,
+      `Listing ${audit.total} chars exceeds the ${audit.budget}-char budget ` +
+        `(${pct}%) — Claude Code drops descriptions least-invoked-first`,
     );
-  } else if (total > 14000) {
-    warn("budget", `Total ${total}/15,000 chars — dangerously close to budget`);
+  } else if (audit.overPolicy) {
+    warn(
+      "budget",
+      `Listing ${audit.total} chars exceeds Axiom's self-imposed share of the ` +
+        `shared listing budget — other plugins compete for the same ${audit.budget}`,
+    );
   } else {
     console.log(
-      `  ✓ Budget OK: ${total}/15,000 chars (${15000 - total} headroom)`,
+      `  ✓ Listing ${audit.total}/${audit.budget} chars (${pct}%, ` +
+        `${audit.budget - audit.total} headroom)`,
     );
   }
-  for (const s of oversize) {
-    warn("budget", `Router description over 300 chars: ${s}`);
+
+  for (const entry of audit.oversize) {
+    error(
+      "budget",
+      `${entry.name} description is ${entry.description.length} chars — ` +
+        `Claude Code truncates each entry at ${MAX_ENTRY_CHARS}`,
+    );
+  }
+}
+
+heading("3b. Always-On Footprint");
+{
+  // Everything Axiom injects before the user speaks, per harness. The skill
+  // listing checked above is only ~10% of it on Claude Code; agent descriptions
+  // dominate. Harnesses running small-context non-Anthropic models pay this
+  // total, and Claude Code's listing budget does not govern them.
+  for (const f of measureFootprints(root)) {
+    const ceiling = FOOTPRINT_CEILINGS[f.harness];
+    const tokens = Math.round(f.total / CHARS_PER_TOKEN).toLocaleString();
+    if (ceiling === undefined) {
+      warn("footprint", `${f.harness} has no tracked ceiling (${f.total} chars)`);
+    } else if (f.total > ceiling) {
+      error(
+        "footprint",
+        `${f.harness} always-on footprint ${f.total} chars exceeds ceiling ` +
+          `${ceiling} — reduce the footprint; do not raise the ceiling ` +
+          `(scripts/always-on-footprint.ts)`,
+      );
+    } else {
+      console.log(`  ✓ ${f.harness}: ${f.total}/${ceiling} chars (~${tokens} tokens)`);
+    }
+  }
+}
+
+heading("3c. Release Surface Sync");
+{
+  // The plugin ships the moment a tag is pushed (the marketplace is just `main`);
+  // npm needs a manual publish. A skipped Step 4 of /xpublish therefore leaves
+  // plugin users ahead of MCP users with nothing detecting it — which is exactly
+  // what happened to 27.0.0-beta.48. Checked here so the gap surfaces on the NEXT
+  // release attempt instead of never.
+  if (process.argv.slice(2).includes("--static")) {
+    console.log("  ⊘ Skipped (--static: needs the npm registry)");
+  } else {
+    try {
+      const pushedTags = execSync("git ls-remote --tags origin", { encoding: "utf8" })
+        .split("\n")
+        .map((l) => l.split("refs/tags/")[1])
+        .filter((t): t is string => Boolean(t) && !t.endsWith("^{}"));
+      const published = await fetchPublishedVersions();
+      const canonical = claudeCode?.version ?? "";
+      const { unresolved, superseded } = classifyReleaseSync({
+        canonical,
+        pushedTags,
+        publishedToNpm: published,
+      });
+      if (unresolved.length) {
+        error(
+          "release-sync",
+          `${unresolved.join(", ")} shipped to plugin users but is missing from ` +
+            `npm ${NPM_PACKAGE}, and no pending release closes the gap — publish ` +
+            `with \`cd axiom-mcp && fnox exec -- npm publish --tag latest\``,
+        );
+      }
+      if (superseded.length) {
+        console.log(
+          `  ℹ ${superseded.join(", ")} never reached npm; publishing ${canonical} ` +
+            `supersedes it (npm users go straight to ${canonical})`,
+        );
+      }
+      if (!unresolved.length && !superseded.length) {
+        console.log(`  ✓ Plugin and npm surfaces agree through ${canonical}`);
+      }
+    } catch (e: unknown) {
+      // Never fail the build on a network problem — the check is about release
+      // hygiene, not connectivity.
+      warn("release-sync", `Could not verify npm sync: ${(e as Error).message}`);
+    }
   }
 }
 
@@ -487,6 +582,13 @@ heading("8. Version Consistency");
 const versions: Record<string, string> = {};
 
 if (claudeCode) versions["claude-code.json"] = claudeCode.version;
+try {
+  versions[".claude-plugin/plugin.json"] = JSON.parse(
+    fs.readFileSync(path.join(pluginDir, ".claude-plugin/plugin.json"), "utf8"),
+  ).version;
+} catch (e: unknown) {
+  error("json", `.claude-plugin/plugin.json unreadable: ${(e as Error).message}`);
+}
 
 if (marketplace) {
   const plugin = marketplace.plugins?.find((p) => p.name === "axiom");

@@ -32,7 +32,7 @@ Then search for "axiom" in the `/plugin` menu and install.
 
 ### Cursor (native plugin)
 
-Axiom's generated Cursor plugin includes 27 skill routers, 42 agents, 17 `/axiom-*` commands, advisory hooks, and automatic discovery of its MCP server configuration. See the [Cursor install and support guide](https://charleswiltgen.github.io/Axiom/start/cursor-install) for the macOS support boundary and local installation steps.
+Axiom's generated Cursor plugin includes <!--ax:routers-->27<!--/ax--> skill routers, <!--ax:agents-->42<!--/ax--> agents, <!--ax:commands-->17<!--/ax--> `/axiom-*` commands, advisory hooks, and automatic discovery of its MCP server configuration. See the [Cursor install and support guide](https://charleswiltgen.github.io/Axiom/start/cursor-install) for the macOS support boundary and local installation steps.
 
 ### MCP (VS Code, Cursor MCP-only, Gemini CLI, and more)
 
