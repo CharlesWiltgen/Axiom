@@ -3,12 +3,12 @@
   "files": [
     {
       "path": ".cursor-plugin/plugin.json",
-      "sha256": "66314093da32024bcda237990624cd99a176777543b25618d85e879a453c26a7",
+      "sha256": "8941b337b6c9533baab91dafa6834e8fb234a662ecaa5ccded5ea6d91e33281f",
       "bytes": 586
     },
     {
       "path": "README.md",
-      "sha256": "1918cac7987e049e562cf3a267c2a46b5b2e973d37cc209c203257a92cb53b9c",
+      "sha256": "210fef4ffc47fb3cbbbadcf261a2efdc1baaf9708c429adbe7cb55a08e1aeaa1",
       "bytes": 3322
     },
     {
