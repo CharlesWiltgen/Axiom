@@ -214,6 +214,15 @@ mapTemplate.showPanel(panel) { success, error in }   // or pushPanel(_:completio
 - `CPMapPanelItem` (a `CPPanelItem`) is built from a `CPTrip`, `CPTravelEstimates`, `CPRouteChoice`, an array of `CPRouteDetail`, a `CPChargingStationConnection`, a `CPMapTemplateWaypoint` (+ optional image), grid buttons (`init(gridButtons:)`), or a plain `CPListItem` — each (except the list item) taking a selection handler.
 - `CPMultiStopCardConfiguration` configures a multi-stop card within a panel.
 
+**Waypoints in a multi-stop trip** — the stops the driver can edit are `CPNavigationWaypoint`
+(iOS 26.4), a distinct type from the panel-item `CPMapTemplateWaypoint` above. `CPMapTemplateDelegate`
+reports edits via `mapTemplate(_:didRequestToRemove:)` (the ObjC selector is
+`didRequestToRemoveWaypoint:` — Swift drops the noun) and `mapTemplate(_:didRequestToRemoveDestination:)`
+(which keeps it), and asks whether to offer the feature at all via
+`mapTemplateShouldProvideMultiStopRouting(_:)`. `iOS27` adds `nameVariants` and `addressVariants`
+(both `[String]`) so the display string can be shortened to fit the vehicle's width — pick from the
+variants rather than truncating a single string yourself.
+
 **EV charging** `iOS27` — `CPChargingStationConnection` describes a charger a vehicle can route to: a `connector` (`CPChargingStationConnectionConnector` — `.ccs1`/`.ccs2`/`.j1772`/`.chaDeMo`/`.mennekes`/`.gbtDC`/`.gbtAC`/`.nacsDC`/`.nacsAC`), a `voltage` (`Measurement<UnitElectricPotentialDifference>`), and a `power` (`Measurement<UnitPower>`). Surface it as a `CPMapPanelItem` so the driver can pick a charging stop; an EV vehicle can also propose one back through CarPlay's route-sharing flow (`CPMapTemplateDelegate.mapTemplateShouldProvideRouteSharing` + `CPTrip.routeSegmentsAvailableForRegion`, iOS 26.4+).
 
 Source: WWDC26-212; CarPlay SDK headers (iOS 27.0).
@@ -275,7 +284,7 @@ let alert = CPNavigationAlert(
     secondaryAction: CPAlertAction(title: "Continue", style: .cancel, handler: { _ in }),
     duration: 30.0  // 0 for no auto-dismiss
 )
-mapTemplate.present(alert, animated: true)
+mapTemplate.present(navigationAlert: alert, animated: true)
 ```
 
 "Navigation alerts can be configured to automatically disappear after a fixed interval. They may also be shown as a notification, even when your app is not in the foreground."
@@ -283,6 +292,35 @@ mapTemplate.present(alert, animated: true)
 iOS 16+ adds: longer subtitle text (prior versions limited to 3 lines), no action buttons (simple close), and action buttons with custom colors.
 
 Source: *Developer Guide* p.39, p.45.
+
+#### Avatar alerts and an action array `iOS27`
+
+27 adds a second initializer that replaces the fixed primary/secondary pair with an `actions` array
+and splits imagery into two roles — an `avatarImage` (who the alert is about: a rider, a contact)
+and an `alert` image (what it is about):
+
+```swift
+let alert = CPNavigationAlert(
+    titleVariants: ["Rider is waiting", "Rider waiting"],
+    subtitleVariants: ["Arrive in 2 min"],
+    avatarImage: riderPhoto,
+    alert: nil,
+    actions: [CPAlertAction(title: "Message", style: .default) { _ in }],
+    duration: 30.0
+)
+alert.showsCloseButton = true
+mapTemplate.present(navigationAlert: alert, animated: true)
+```
+
+**The Swift label is `alert:`, not `alertImage:`.** The ObjC selector is
+`initWithTitleVariants:subtitleVariants:avatarImage:alertImage:actions:duration:`, but the Swift
+name drops the `Image` suffix on that one parameter only — `avatarImage:` keeps it. Writing
+`alertImage:` in Swift fails with *"has been renamed to
+`init(titleVariants:subtitleVariants:avatarImage:alert:actions:duration:)`"*.
+
+`showsCloseButton` is settable independently of the actions. Budget against the class properties
+rather than hardcoding — `CPNavigationAlert.maximumActionsCount`,
+`.maximumAvatarImageSize`, `.maximumAlertImageSize` — since these are per-vehicle.
 
 ### End guidance
 
@@ -295,6 +333,54 @@ Source: *Developer Guide* p.45, reinforcing navigation rule #6 on p.6.
 "Starting in iOS 17.4, your app can programmatically return to an active guidance state. Use the `CPNavigationSession` method `resumeTrip` and provide a `CPRouteInformation` object with details about the new route."
 
 Source: *Developer Guide* p.45.
+
+### Route sharing `iOS27`
+
+The built-in system can consume your route to drive vehicle features (range estimation, charging
+stops, cluster displays). `CPNavigationSession` exposes both halves:
+
+| Property | Meaning |
+|---|---|
+| `isRouteSharingSupported` | the vehicle can consume a shared route at all |
+| `isRouteSharingEnabled` | a vehicle feature relying on the built-in route is currently on |
+
+Enablement is **driven by the system, not by you** — observe
+`mapTemplate(_:didUpdateRouteSharingEnabled:)` rather than polling:
+
+```swift
+func mapTemplate(_ mapTemplate: CPMapTemplate, didUpdateRouteSharingEnabled enabled: Bool) {
+    // Vehicle features now rely on the built-in navigation route.
+}
+```
+
+Check `isRouteSharingSupported` before surfacing any route-sharing UI; unsupported vehicles never
+fire the delegate.
+
+### Reroute with a replacement trip `iOS27`
+
+`resumeTrip` (17.4) resumes the *existing* trip. 27 adds a form that swaps in a new trip and states
+why, so the system can distinguish a missed turn from a mandated detour:
+
+```swift
+session.resumeNavigation(
+    updatedTrip: newTrip,
+    routeSegments: segments,
+    currentSegment: current,
+    rerouteReason: .missedTurn
+)
+```
+
+`CPRerouteReason`: `.unknown`, `.alternateRoute`, `.mandated`, `.missedTurn`, `.offline`,
+`.waypointModified`.
+
+### Options panel on an active session `iOS27`
+
+`CPNavigationSession.optionsPanel` takes a `CPMapPanel` (see "Map panels" above) and surfaces
+in-guidance options without leaving the session:
+
+```swift
+session.optionsPanel = CPMapPanel(/* sections, button configuration */)
+```
 
 ## Multitouch (iOS 26+)
 

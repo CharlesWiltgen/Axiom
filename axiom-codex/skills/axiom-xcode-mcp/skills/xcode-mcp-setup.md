@@ -150,8 +150,9 @@ After configuration, call `XcodeListWorkspaces` (no parameters). You should see:
 mode, open a project in Xcode. In headless mode that's the expected starting state — open one with
 `xcrun mcp-server open <path>` or have the agent call `XcodeOpenWorkspace`.
 
-If the call **never returns at all**, see Permissions below — you are almost certainly blocked on
-an unanswered dialog.
+If the call comes back rejected with *"This agent isn't approved to use Xcode's tools yet"* — or, on
+beta 5 and earlier, **never returns at all** — see Permissions below. Both mean the same thing: the
+agent has not been approved.
 
 ## Permissions
 
@@ -175,14 +176,37 @@ sudo xcrun mcp-server clear-permissions             # revoke everything
 
 Get the `<id>` from `xcrun mcp-server status`.
 
-**An unapproved agent blocks forever, and nothing says so.** This is the biggest headless trap:
+**An unapproved agent is rejected, not served — and beta 6 changed how loudly.** Through beta 5 this
+was the biggest headless trap: `initialize` succeeded and returned full `serverInfo`, then the first
+`tools/call` hung indefinitely with no error and no timeout, while `mcp-server status --format json`
+reported `running: true` with **no** pending-request field. On a headless or CI machine nobody saw the
+dialog, so the agent waited forever.
 
-- `initialize` **succeeds** and returns full `serverInfo` — the connection looks healthy
-- the first `tools/call` hangs indefinitely: no error, no timeout
-- `mcp-server status --format json` reports `running: true` and has **no** pending-request field
+Beta 6 returns a descriptive error instead, and it names the fix:
 
-On a headless or CI machine nobody sees the dialog, so the agent waits forever. **Before issuing
-tool calls, confirm your agent appears under `Permitted agents` in `xcrun mcp-server status`.**
+```
+This agent isn't approved to use Xcode's tools yet. Call XcodeOpenWorkspace or XcodeNewProject
+first: opening or creating a project is what asks the user to approve this agent, together with
+access to that project's folder. Run `xcrun mcp-server status` to check it, then retry.
+```
+
+Two things follow. **`tools/list` is not gated** — it answers fully for an unapproved agent, so a
+successful tool listing is not evidence you can call anything. And **approval is requested by
+`XcodeOpenWorkspace` / `XcodeNewProject`**, not by connecting: opening or creating a project is the
+act that prompts the user, and it grants the agent *and* that project's folder together.
+
+**Before issuing tool calls, confirm your agent appears under `Permitted agents` in
+`xcrun mcp-server status`.** Its output also lists `Permitted folders` and `Open workspaces`:
+
+```
+Permission: enabled
+Permitted agents:
+  328846EC-…: signed Q6L2SF6YDW com.anthropic.claude-code
+Permitted folders:
+  2BC53B43-…: /path/to/project
+mcp-server: running
+Open workspaces: none
+```
 
 **Unsigned agents cannot hold durable trust.** A shell-launched client (`/bin/zsh`, `/bin/bash`)
 gets a time-boxed grant even when you click "Always allow" — matching `approve --help`, where
@@ -276,26 +300,28 @@ claude mcp add --transport stdio xcode -- env MCP_XCODE_PID=12345 xcrun mcpbridg
 digraph troubleshoot {
     rankdir=TB;
     "Connection failed?" [shape=diamond];
-    "tools/call never returns?" [shape=diamond];
+    "tools/call fails or hangs?" [shape=diamond];
     "tools/list empty?" [shape=diamond];
     "Wrong project?" [shape=diamond];
     "Repeated permission prompts?" [shape=diamond];
 
     "Headless: mcp-server start" [shape=box];
     "Attached: launch Xcode + toggle on" [shape=box];
-    "STOP: unapproved agent blocking on a dialog" [shape=octagon];
-    "Check mcp-server status permittedAgents" [shape=box];
-    "Open a workspace (mcp-server open / XcodeOpenWorkspace)" [shape=box];
+    "STOP: agent not approved" [shape=octagon];
+    "XcodeOpenWorkspace to trigger the prompt" [shape=box];
+    "Check mcp-server status Permitted agents" [shape=box];
+    "Restart: mcp-server start" [shape=box];
     "Pass workspaceIdentifier from XcodeListWorkspaces" [shape=box];
     "Expected: unsigned agents get time-boxed grants" [shape=box];
 
     "Connection failed?" -> "Headless: mcp-server start" [label="refused, headless"];
     "Connection failed?" -> "Attached: launch Xcode + toggle on" [label="refused, attached"];
-    "Connection failed?" -> "tools/call never returns?" [label="connects OK"];
-    "tools/call never returns?" -> "STOP: unapproved agent blocking on a dialog" [label="hangs, no error"];
-    "STOP: unapproved agent blocking on a dialog" -> "Check mcp-server status permittedAgents";
-    "tools/call never returns?" -> "tools/list empty?" [label="returns"];
-    "tools/list empty?" -> "Open a workspace (mcp-server open / XcodeOpenWorkspace)" [label="no tools"];
+    "Connection failed?" -> "tools/call fails or hangs?" [label="connects OK"];
+    "tools/call fails or hangs?" -> "STOP: agent not approved" [label="'isn't approved' (27b6) or hangs (<=27b5)"];
+    "STOP: agent not approved" -> "XcodeOpenWorkspace to trigger the prompt";
+    "XcodeOpenWorkspace to trigger the prompt" -> "Check mcp-server status Permitted agents";
+    "tools/call fails or hangs?" -> "tools/list empty?" [label="succeeds"];
+    "tools/list empty?" -> "Restart: mcp-server start" [label="no tools"];
     "tools/list empty?" -> "Wrong project?" [label="tools listed"];
     "Wrong project?" -> "Pass workspaceIdentifier from XcodeListWorkspaces" [label="yes"];
     "Wrong project?" -> "Repeated permission prompts?" [label="no"];
@@ -307,11 +333,11 @@ digraph troubleshoot {
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
-| **`tools/call` hangs forever, no error** | Agent not approved — a dialog is waiting where nobody can see it | Confirm your agent under `Permitted agents` in `xcrun mcp-server status`; approve on the host or `sudo xcrun mcp-server approve <id>` |
+| **`tools/call` rejected: "This agent isn't approved…"** (beta 6) or **hangs forever, no error** (through beta 5) | Agent not approved | Call `XcodeOpenWorkspace` to trigger the prompt; confirm under `Permitted agents` in `xcrun mcp-server status`; or `sudo xcrun mcp-server approve <id>` |
 | "Connection refused" (attached) | Xcode not running or MCP toggle off | Launch Xcode, enable MCP in Settings > Intelligence |
 | "Connection refused" (headless) | Service not running, or headless never enabled | `xcrun mcp-server status`; then `xcrun mcp-server start`, or `sudo xcrun mcp-server enable` first |
-| tools/list returns empty | Permission not granted | Check for a permission dialog; verify with `mcp-server status` |
-| `DocumentationSearch` missing from tools/list | It is workspace-gated (53 tools without, 54 with) | Open a workspace, then re-list |
+| tools/list returns empty | Server not reachable — **not** approval: beta 6 lists all 54 tools to an unapproved agent | `xcrun mcp-server status`; restart with `xcrun mcp-server start` |
+| `DocumentationSearch` missing from tools/list | Tool set is dynamic (`listChanged: true`) — but on beta 6 all 54 list with no workspace open | Re-list; if still missing, check `xcrun mcp-server status` |
 | "workspaceIdentifier is required" | Identifier omitted — required even with one workspace open | Use the identifier the error itself lists, or call `XcodeListWorkspaces` |
 | Tools target wrong project | Multiple workspaces open | Call `XcodeListWorkspaces`, pass the right `workspaceIdentifier` |
 | Repeated permission prompts | Unsigned agents get time-boxed grants; "Always allow" still expires | Expected — re-approve, or run a signed agent binary |

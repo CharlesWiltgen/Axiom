@@ -488,6 +488,53 @@ func commit() async throws {
 }
 ```
 
+There is also a **synchronous overload**, `withTaskCancellationShield { }` with a non-`async`
+operation, for shielding a blocking region. It behaves identically.
+
+**The shield MASKS cancellation — it does not merely stop throws.** Measured on macOS 27 inside a
+cancelled task:
+
+| Query, inside the shield | Result |
+|---|---|
+| `Task.isCancelled` | `false` |
+| `try Task.checkCancellation()` | does not throw |
+| `try await Task.sleep(for:)` | completes normally |
+| `Task.hasActiveCancellationShield` | `true` |
+
+The trap follows directly: **a `while !Task.isCancelled` loop inside a shield never exits.** The
+condition it polls is the one the shield is suppressing. Shield a bounded operation, never a poll
+loop. Same for `withTaskCancellationHandler` — an `onCancel` registered *inside* a shield does not
+fire for an already-pending cancellation.
+
+Cancellation is masked for the duration of the region only. Once the shield exits, `Task.isCancelled`
+reads `true` again, and a structured child that outlives the region observes the cancellation
+normally — shielding a spawn does **not** permanently detach the child.
+
+Nesting is safe: an inner shield popping leaves the outer one installed.
+
+#### Detecting a shield: `hasActiveCancellationShield` (OS27)
+
+`Task.hasActiveCancellationShield` (static) and `UnsafeCurrentTask.hasActiveCancellationShield`
+(instance) report whether the **current task** has a shield installed. Use it in library code whose
+cancellation contract changes under a shield — for example, to refuse to enter a poll loop that
+could never terminate:
+
+```swift
+@available(anyAppleOS 27, *)
+func drainUntilCancelled() async {
+    guard !Task.hasActiveCancellationShield else {
+        assertionFailure("drainUntilCancelled polls Task.isCancelled; a shield would hang it")
+        return
+    }
+    while !Task.isCancelled { await Task.yield() }
+}
+```
+
+**It is per-task, not per-region.** A structured child running inside the parent's shielded region
+reports `hasActiveCancellationShield == false` — it has no shield of its own — even though it *does*
+observe `isCancelled == false` while the region is active. Do not use it to ask "is cancellation
+currently masked for me"; it answers only "did *this* task install a shield".
+
 ### Task.sleep
 
 Suspends the current task for a duration. Supports cancellation — throws `CancellationError` if cancelled during sleep.

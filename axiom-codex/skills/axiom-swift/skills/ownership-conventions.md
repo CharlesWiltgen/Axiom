@@ -493,15 +493,52 @@ func consumeIDs(_ x: consuming UniqueArray<Int>) { _ = x.count }
 
 Paren-free optional existentials and opaque types now compile under Swift 6.4 — `var overlay: any Drawable?` and `some P?` no longer have to be written `(any Drawable)?`.
 
+### Borrowing iteration `OS27`
+
+`for`-in over a `~Copyable` / `~Escapable` container without copying it. The protocol is `Iterable`, with `BorrowingIteratorProtocol` supplying `nextSpan(maxCount:)`. Usable with no experimental flag.
+
+```swift
+@available(anyAppleOS 27, *)
+func sum(_ span: Span<Int>) -> Int {
+    var total = 0
+    for x in span { total += x }      // borrows; no copy of the container
+    return total
+}
+
+@available(anyAppleOS 27, *)
+func sum(_ a: borrowing UniqueArray<Int>) -> Int {
+    var total = 0
+    for x in a { total += x }
+    return total
+}
+```
+
+Conforming stdlib types: `Span`, `RawSpan`, `MutableSpan`, `MutableRawSpan`, `OutputSpan`, `OutputRawSpan`, `InlineArray`, `UniqueArray`.
+
+`Array`, `Set`, and `Dictionary` do **not** conform — `Iterable` is for the ownership containers, not a retrofit of the copyable collections. Keep using `Sequence` for those.
+
+A generic helper needs `Failure == Never` to iterate without `try`, because `Iterable` carries a typed `Failure`:
+
+```swift
+@available(anyAppleOS 27, *)
+func total<S: Iterable>(_ s: borrowing S) -> Int
+where S: ~Copyable & ~Escapable, S.Element == Int, S.Failure == Never {
+    var t = 0
+    for x in s { t += x }
+    return t
+}
+```
+
+Drop the `S.Failure == Never` constraint and the loop must be written `for try x in s` in a `throws` function.
+
 ### Still forthcoming (re-check each beta)
 
-Other 6.4 stdlib features are **not yet usable** as of Xcode 27 beta 4 (confirmed by compile-probe, build swiftlang-6.4.0.27.1):
+Other 6.4 stdlib features are **not yet usable** as of Xcode 27 beta 6 (confirmed by compile-probe, build swiftlang-6.4.0.33.1):
 
 | Feature | State in beta |
 |---------|---------------|
 | `Dictionary.mapKeyedValues` | Absent |
 | `FilePath` as a stdlib type | Still requires `import System` |
-| `for`-loop borrowing iteration | Shipped as `BorrowingSequence` / `BorrowingIteratorProtocol` (renamed from "Iterable"), but gated behind `-enable-experimental-feature BorrowingSequence` — present, not yet shippable |
 
 Treat these as forthcoming; re-probe on each new beta and fold what flips.
 
