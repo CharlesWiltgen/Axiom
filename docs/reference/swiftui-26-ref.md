@@ -97,7 +97,7 @@ Questions you can ask Claude that will draw from this reference:
 - Form-submission hook (iOS/macOS/visionOS 27) — `WebPage.FormInfo`, `willSubmit(formInfo:)`, `NavigationPreferences.alternateRequest` / `overrideReferrer` / `isGlobalPrivacyControlEnabled` / `allowsJSHandleCreationInPageWorld`
 
 ### Data Detection (iOS 27)
-- `.dataDetection(_:options:)` – makes links, phone numbers, addresses, dates, and money in a view's text tappable
+- `.dataDetection(_:options:)` – makes links, phone numbers, addresses, dates, and money in a view's text tappable (iOS / watchOS / visionOS 27 only — not macOS or tvOS)
 - `DataDetector.MatchType` options; iOS/macOS/watchOS/visionOS 27, not tvOS
 
 ### Rich Text Editing
