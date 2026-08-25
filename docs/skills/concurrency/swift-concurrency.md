@@ -33,6 +33,7 @@ Questions you can ask Claude that will draw from this skill:
 - "When do I need an actor vs just @MainActor?"
 - "My app compiles but crashes with data race. How do I debug?"
 - "How do I report progress from a long async operation with ProgressManager?" (iOS 27)
+- "Why does my loop never exit inside `withTaskCancellationShield`?" (iOS 27)
 
 ## What This Skill Provides
 
