@@ -47,7 +47,8 @@ Questions developers ask that this reference answers:
 - **Locations and beacons** – schema and 10-item caps
 - **`PKPassLibrary`** – instance methods, modern `PKPassType` cases (`.any`, `.barcode`, `.secureElement`; `.payment` was renamed), threading constraint (not thread-safe; main-thread confinement)
 - **`PKPassLibrary` notifications** – `PKPassLibraryDidChange`, `PKPassLibraryRemoteSecureElementPassesDidChange` (formerly `RemotePaymentPasses`)
-- **`PKAddPassesViewController`** – `init(pass:)` and `init(passes:)`, delegate
+- **`PKAddPassesViewController`** – `init(pass:)` and `init(passes:)`, delegate; `init(passesArchiveAt:)` / `init(passesArchiveData:)` / `init(passesData:)` (iOS 27, failable)
+- **Pass-archive ingestion (iOS 27)** – `PKPassLibrary.addPasses(fromArchiveAt:completion:)` / `addPasses(fromArchiveData:completion:)` / `addPasses(data:completion:)`, with the `PKPassLibraryAddPassesStatus` review flow. iOS / visionOS only
 - **Image filename and dimension reference** – `icon`, `logo`, `strip`, `background`, `thumbnail`, `footer` at `@2x` and `@3x`; which images each style requires; pointer to the HIG for exact pixel dimensions (numbers change; pin the doc)
 - **Localization** – `.lproj` directory layout, `pass.strings` UTF-16, system-formatted date/currency auto-localization
 - **Multipass bundles** – `.pkpasses` zip, MIME types (`application/vnd.apple.pkpass`, `application/vnd.apple.pkpasses`), 10-pass and 150 MB caps
