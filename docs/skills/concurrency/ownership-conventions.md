@@ -17,11 +17,13 @@ description: Parameter ownership modifiers for performance optimization — borr
 - Reducing ARC retain/release traffic
 - Factory methods that consume builder objects
 - Performance-critical code where copies show in profiling
+- Iterating a `Span`, `InlineArray`, or `UniqueArray` without copying it (iOS 27 `Iterable`)
 
 ❌ **Do NOT use this skill for**:
 - Simple types (Int, Bool, small structs)
 - Compiler optimization is sufficient (most cases)
 - You're not certain about the performance impact
+
 
 ## Quick Reference
 
