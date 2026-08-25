@@ -20,14 +20,12 @@ Questions you can ask Claude that will draw from this reference:
 - "How do I use HPKE for hybrid encryption?"
 - "What's the difference between P256, P384, and P521 curves?"
 - "What are the ML-KEM key encapsulation APIs?"
-- "How do I use `Insecure.UnauthenticatedAES` to interoperate with a protocol that specifies raw AES?"
 
 ## What's Covered
 
 - Hashing: SHA256, SHA384, SHA512, Insecure.MD5, Insecure.SHA1
 - HMAC: message authentication with all hash functions
 - Symmetric encryption: AES-GCM and ChaChaPoly sealed boxes
-- Unauthenticated primitives (iOS 27): `Insecure.UnauthenticatedAES.permute` / `inversePermute`, `Insecure.UnauthenticatedChaCha20.encrypt` — raw, in-place, no authentication tag
 - Signing and verification: P256, P384, P521 ECDSA, Curve25519 (Ed25519)
 - Key agreement: P256, P384, P521 ECDH, Curve25519 (X25519)
 - Secure Enclave types: SecureEnclave.P256 for signing and key agreement
