@@ -5,12 +5,13 @@ Complete reference for every tool exposed by Xcode's MCP server. `xcrun mcpbridg
 transport; on Xcode 27 the service behind it can run headless (`xcrun mcp-server`) — see
 `axiom-xcode-mcp (skills/xcode-mcp-setup.md)`.
 
-**Source**: live `tools/list` on Xcode 27 beta 5 (27A5237l), `serverInfo` version 25280.8,
+**Source**: live `tools/list` on Xcode 27 beta 6 (27A5252f), `serverInfo` version 25295.11,
 protocol 2025-06-18.
 
-**Tool count is 53 without a workspace open, 54 with.** The server advertises
-`capabilities.tools.listChanged: true`, and `DocumentationSearch` is the sole workspace-gated
-tool. A tool missing from `tools/list` may just mean no workspace is open.
+**All 54 tools are listed even with no workspace open** (verified on beta 6: `xcrun mcp-server
+status` reported `Open workspaces: none` and `tools/list` still returned 54, `DocumentationSearch`
+included). The server does advertise `capabilities.tools.listChanged: true`, so treat the set as
+dynamic rather than fixed — but do not read a short list as "open a workspace".
 
 **`workspaceIdentifier` is required in practice wherever tested** — even when only one workspace
 is open, and even though it appears in no tool's `required` list. 46 of the 54 tools accept it;
@@ -25,7 +26,15 @@ workspaces, or open one with XcodeOpenWorkspace:
 ```
 
 Get identifiers from `XcodeListWorkspaces`. They are readable slugs (`workspace-Gxw7GRzGoI`), not
-UUIDs. `tabIdentifier` — the Xcode 26.x targeting parameter — appears in **zero** tools on 27.
+UUIDs.
+
+**`tabIdentifier` is gone as of beta 6 — but it was still live in beta 5.** Xcode 27 briefly served two
+different tool surfaces from the same `xcrun mcpbridge` command, depending on whether Xcode.app was
+running: with Xcode up, beta 5 returned 53 tools addressed by `tabIdentifier` (plus `XcodeListWindows`,
+`XcodeGetCurrentFile`, `XcodeListNavigatorIssues`); with Xcode closed, the headless service returned the
+54-tool workspace surface documented here. Beta 6 converged them — the running-Xcode path now serves the
+workspace surface too, `tabIdentifier` appears in **zero** tools, and the three window/editor-centric
+tools are gone. Code written against a beta-5 running-Xcode capture will break.
 
 **Reading the entries below**: `*` marks required fields. `(+ workspaceIdentifier)` on the Params
 line means the tool accepts it; it is omitted from each list to avoid repeating it 46 times.

@@ -13,7 +13,7 @@ Use this skill when:
 - Setting up Xcode MCP for the first time on this machine
 - Configuring a new MCP client (Claude Code, Cursor, Codex, VS Code, Gemini CLI)
 - Running MCP in CI, or on a machine where you don't want Xcode open
-- A tool call hangs forever with no error and no timeout
+- A tool call is rejected with "This agent isn't approved to use Xcode's tools yet" (Xcode 27 beta 6+), or hangs forever with no error (earlier builds)
 - A client connects but `tools/list` returns empty
 - Seeing "Connection refused" from mcpbridge
 - Permission prompts reappear every session
@@ -24,6 +24,7 @@ Use this skill when:
 - "How do I set up Xcode MCP with Claude Code?"
 - "How do I run Xcode MCP without keeping Xcode open?"
 - "My MCP tool call just hangs and never returns"
+- "Why does Xcode say my agent isn't approved to use its tools?"
 - "My mcpbridge connection keeps failing"
 - "Why do I have to re-approve my agent every day?"
 - "Where do I enable MCP in Xcode Settings?"
