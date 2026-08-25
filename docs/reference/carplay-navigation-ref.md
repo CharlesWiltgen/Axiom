@@ -32,6 +32,7 @@ Questions you can ask Claude that will draw from this reference:
 - "How do I update trip estimates without spamming the system?"
 - "What multitouch gestures does `CPMapTemplate` deliver on iOS 26+?"
 - "How do I show a CarPlay map panel for route choices on iOS 27?"
+- "How do I tell whether the vehicle is using my route (route sharing) on iOS 27?"
 - "How do I surface an EV charging stop with `CPChargingStationConnection`?"
 - "How do I handle `mapTemplateDidCancelNavigation` when the car's native nav takes over?"
 
@@ -41,7 +42,7 @@ Questions you can ask Claude that will draw from this reference:
 - **Base view contract** – exclusively a map, no overlays or UI; how to receive `contentStyle` light/dark signals; safe area handling around buttons
 - **Application scene manifest** for declaring main CarPlay, Dashboard, and instrument cluster scenes, plus the corresponding `CPTemplateApplicationScene` delegate roles
 - **Scene delegate lifecycle** – receiving `CPInterfaceController` and `CPWindow`, retaining both for the session, setting the root map template
-- **Route guidance lifecycle** – destination selection (via list/grid/search/voice-control templates with the 5-level depth rule), trip preview panel (up to 12 `CPTrip` objects, route choice descriptions in descending length order), choose-route-and-start-guidance, in-guidance maneuver updates, end guidance, re-route (iOS 17.4+ via `resumeTrip`)
+- **Route guidance lifecycle** – destination selection (via list/grid/search/voice-control templates with the 5-level depth rule), trip preview panel (up to 12 `CPTrip` objects, route choice descriptions in descending length order), choose-route-and-start-guidance, in-guidance maneuver updates, end guidance, re-route (iOS 17.4+ via `resumeTrip`; iOS 27 adds `resumeNavigation(updatedTrip:…rerouteReason:)`), system-driven route sharing, avatar navigation alerts, and an in-guidance options panel (iOS 27)
 - **`CPManeuver` content** – symbol set (light/dark variants), instruction variants in descending length order, attributed instruction variants with embedded images, maneuver metadata (maneuverType, maneuverState, junctionType, trafficSide, lane guidance)
 - **Lane guidance via the second maneuver** – the 120×18 pt symbol-only convention and `CPManeuverDisplayStyleSymbolOnly`
 - **Estimate updates** – `CPNavigationSession.updateEstimates(_:for:)` for per-maneuver, `CPMapTemplate.updateEstimates(_:for:)` for trip-level, and the "significant changes only" guidance
