@@ -249,12 +249,47 @@ Consumer-side library — for iOS / iPadOS / macOS / Catalyst / visionOS / watch
 | `passes(of: PKPassType)` | Filtered. Modern cases: `.any`, `.barcode`, `.secureElement`. (`.payment` was renamed to `.secureElement` when Apple generalized payment-pass APIs.) |
 | `pass(withPassTypeIdentifier:serialNumber:)` | Lookup by key |
 | `containsPass(_:)` | Exists check |
-| `addPasses(_:withCompletionHandler:)` | Multi-pass add via system UI |
+| `addPasses(_:withCompletionHandler:)` | Multi-pass add via system UI, from `[PKPass]` |
+| `addPasses(fromArchiveAt:completion:)` `OS27` | Add from a `.pkpasses` archive on disk |
+| `addPasses(fromArchiveData:completion:)` `OS27` | Add from a `.pkpasses` archive already in memory |
+| `addPasses(data:completion:)` `OS27` | Add from an array of raw `.pkpass` `Data` blobs |
 | `replacePass(with:)` | Replace existing |
 | `removePass(_:)` | Remove from user library |
 | `openPaymentSetup()` | Open Wallet's payment setup |
 | `requestAuthorization(for:completion:)` | Permission flow |
 | `authorizationStatus(for:)` | Check current permission |
+
+### Adding passes without parsing them first `OS27`
+
+Before 27, handing Wallet a downloaded bundle meant unarchiving it yourself and constructing a
+`PKPass` per file — and a malformed member threw on `PKPass(data:)` before you could add any of them.
+27 lets you pass the bytes straight through:
+
+```swift
+@available(iOS 27, visionOS 27, *)
+func install(archiveAt url: URL, in library: PKPassLibrary) {
+    library.addPasses(fromArchiveAt: url) { status in
+        switch status {
+        case .didAddPasses:       break              // done, nothing to present
+        case .shouldReviewPasses: break              // present PKAddPassesViewController
+        case .didCancelAddPasses: break              // user declined
+        @unknown default:         break
+        }
+    }
+}
+```
+
+Three intake shapes, all with the same `PKPassLibraryAddPassesStatus` completion:
+`fromArchiveAt:` (a `.pkpasses` archive URL), `fromArchiveData:` (that archive in memory), and
+`data:` (an array of individual `.pkpass` blobs).
+
+**Narrower availability than the rest of the class.** These are **iOS / visionOS 27 only** —
+explicitly `unavailable` on macOS *and* watchOS, unlike `addPasses(_:withCompletionHandler:)`. Gate
+them separately rather than assuming the class-level platform list above applies.
+
+**`.shouldReviewPasses` is not an error.** It means Wallet wants the user to confirm, and you must
+present a `PKAddPassesViewController` built from the same source — see below. Treating it as failure
+silently drops passes the user asked for.
 
 **Threading:** `PKPassLibrary` is **not thread-safe**. Apple's guidance: confine each instance to a single thread (typically the main thread). Don't share an instance across threads.
 
@@ -279,6 +314,19 @@ present(controller, animated: true)
 ```
 
 System UI to review-then-add. Initialize with one `PKPass` or use `init(passes:)` for multiple. Conform to `PKAddPassesViewControllerDelegate` to learn when the user finishes.
+
+`OS27` adds three initializers that skip the `PKPass` step, mirroring the `PKPassLibrary` intake
+shapes above — use the one matching what you already hold when a call returns `.shouldReviewPasses`:
+
+| Initializer | Source |
+|---|---|
+| `init(passesArchiveAt:)` | `.pkpasses` archive URL |
+| `init(passesArchiveData:)` | that archive in memory |
+| `init(passesData:)` | array of raw `.pkpass` `Data` blobs |
+
+All three are **failable** and **iOS / visionOS 27 only** (`unavailable` on watchOS) — a `nil` return
+means the bytes did not parse, which is where a malformed archive surfaces now that you are no longer
+constructing `PKPass` values yourself.
 
 For SwiftUI, `AddPassToWalletButton(action:)` wraps this (iOS 16+).
 
