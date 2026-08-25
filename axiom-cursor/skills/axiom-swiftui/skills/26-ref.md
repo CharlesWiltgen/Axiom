@@ -326,7 +326,7 @@ Unlike `.padding()`, `length` here has **no default**, so the argument is mandat
 
 ### dataDetection OS27
 
-`.dataDetection(_:options:)` makes detected data in a view's text content tappable — links, emails, phone numbers, postal addresses, calendar events, money, measurements, flight/shipment numbers, payment IDs. iOS/macOS/watchOS/visionOS 27; **not tvOS**. SwiftUI equivalent of UIKit's `UITextView.dataDetectorTypes`, backed by the semantic `DataDetector` engine (not legacy `NSDataDetector`).
+`.dataDetection(_:options:)` makes detected data in a view's text content tappable — links, emails, phone numbers, postal addresses, calendar events, money, measurements, flight/shipment numbers, payment IDs. **iOS / watchOS / visionOS 27 only** — the `_DataDetection_SwiftUI` overlay ships in no other SDK, and the modifier is marked `unavailable` on macOS, macCatalyst, and tvOS. (Through beta 5 the iOS SDK's clause also named `macOS 27.0`; beta 6 corrected it. Reading availability off one platform's interface would have said macOS was supported — it never was.) SwiftUI equivalent of UIKit's `UITextView.dataDetectorTypes`, backed by the semantic `DataDetector` engine (not legacy `NSDataDetector`).
 
 ```swift
 // From the _DataDetection_SwiftUI cross-import overlay
@@ -928,9 +928,9 @@ A `WebView` owns an internal scroll view, and a navigation container computes sa
 
 #### Form-submission hook + navigation tweaks OS27
 
-`WebPage.NavigationDeciding` gains `willSubmit(formInfo:) async` (default no-op), observing form submissions: `WebPage.FormInfo` (`@MainActor`, so implicitly `Sendable`) carries `targetFrame` / `sourceFrame` (`FrameInfo`), `submissionURL`, `httpMethod`, and `formValues: [String: String]`. `WebPage.NavigationPreferences` adds `alternateRequest: URLRequest?`, `overrideReferrer: String?`, `isGlobalPrivacyControlEnabled: Bool`, and `allowsJSHandleCreationInPageWorld: Bool`. Confirmed on iOS 27, macOS 27, and visionOS 27 (beta 5); **not watchOS/tvOS**, which are marked `unavailable` explicitly.
+`WebPage.NavigationDeciding` gains `willSubmit(formInfo:) async` (default no-op), observing form submissions: `WebPage.FormInfo` (`@MainActor`, so implicitly `Sendable`) carries `targetFrame` / `sourceFrame` (`FrameInfo`), `submissionURL`, `httpMethod`, and `formValues: [String: String]`. `WebPage.NavigationPreferences` adds `alternateRequest: URLRequest?`, `overrideReferrer: String?`, `isGlobalPrivacyControlEnabled: Bool`, and `allowsJSHandleCreationInPageWorld: Bool`. Confirmed on iOS 27, macOS 27, and visionOS 27 (re-verified beta 6); **not watchOS/tvOS**, which are marked `unavailable` explicitly.
 
-As of beta 5 the iOS SDK stamps **real versions for all three platforms** — `@available(macOS 27.0, iOS 27.0, visionOS 27.0, *)`. Through beta 4 it wrote `macOS 9999, visionOS 9999` (the cross-SDK "not yet stamped" sentinel), so an availability check written against an early-beta SDK may be narrower than what actually ships.
+As of beta 5 — still true at beta 6 — the iOS SDK stamps **real versions for all three platforms** — `@available(macOS 27.0, iOS 27.0, visionOS 27.0, *)`. Through beta 4 it wrote `macOS 9999, visionOS 9999` (the cross-SDK "not yet stamped" sentinel), so an availability check written against an early-beta SDK may be narrower than what actually ships.
 
 **tvOS**: WebView and WebPage are **not available on tvOS**. tvOS has no WKWebView at all. For web content parsing on tvOS, use JavaScriptCore. See `axiom-swift (skills/tvos.md)` for alternatives.
 

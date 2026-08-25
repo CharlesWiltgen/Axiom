@@ -150,7 +150,7 @@ Query Apple's documentation corpus through MCP.
 2. Cross-reference with axiom-apple-docs for bundled Xcode guides
 ```
 
-**`DocumentationSearch` only exists once a workspace is open.** It is the one workspace-gated tool — the tool list is 53 with no workspace and 54 with one. If it's missing from `tools/list`, open a workspace first rather than concluding it was removed.
+**The tool set is dynamic** — the server advertises `capabilities.tools.listChanged: true`. On beta 6 all 54 tools list even with no workspace open (`DocumentationSearch` included), so a short list points at the server, not at a missing workspace. Re-list and check `xcrun mcp-server status`.
 
 `query` is required; `frameworks` is an optional array that scopes the search (all frameworks if omitted). Matching is semantic, not keyword.
 

@@ -3,12 +3,12 @@
   "files": [
     {
       "path": ".cursor-plugin/plugin.json",
-      "sha256": "8941b337b6c9533baab91dafa6834e8fb234a662ecaa5ccded5ea6d91e33281f",
+      "sha256": "06f74334aecb0555a7a9a46602c092ea9b76a0f1cc3ad719fa238e5b22fd074a",
       "bytes": 586
     },
     {
       "path": "README.md",
-      "sha256": "210fef4ffc47fb3cbbbadcf261a2efdc1baaf9708c429adbe7cb55a08e1aeaa1",
+      "sha256": "02f9894b7554077f9a1569d6deca9649d95b1c0c76d1e7f0d80855ac801925f5",
       "bytes": 3322
     },
     {
@@ -533,8 +533,8 @@
     },
     {
       "path": "skills/axiom-concurrency/skills/swift-concurrency-ref.md",
-      "sha256": "c4e3d40e91f4df4c22471f4466b4714b0d7bca861dd0be17ce22b316ccc3502f",
-      "bytes": 54128
+      "sha256": "46a93e5d9390cf242061627dd699ac06fd9315ee5321ea96453adc0428a99da0",
+      "bytes": 56387
     },
     {
       "path": "skills/axiom-concurrency/skills/swift-concurrency.md",
@@ -883,12 +883,12 @@
     },
     {
       "path": "skills/axiom-integration/skills/background-assets-ref.md",
-      "sha256": "f76564d51e293d42cdd6baf4447fd8218e90c08fc6ad18d5f3165ca34df62d81",
+      "sha256": "42d6832cb92ddd0683b031df7df634514479cac50df682359dab01f4da154463",
       "bytes": 39624
     },
     {
       "path": "skills/axiom-integration/skills/background-assets.md",
-      "sha256": "c72c198a0e9c22602eb6e80e13b74bc6eae9c38170e85e49f8ffcf217f910e28",
+      "sha256": "28e982e2647220a201315364006cc980562048ca89b03021b421cc20bdc08ed2",
       "bytes": 26055
     },
     {
@@ -1013,7 +1013,7 @@
     },
     {
       "path": "skills/axiom-integration/skills/storekit-ref.md",
-      "sha256": "10463ac67cc382bbcc62a264ce67c2a2f3ea7b92fe40a95d9df9977e875bc40a",
+      "sha256": "16ed62ccd1351d78cd20d0b384dc103bdca6fa121a3912425c65646a5635555a",
       "bytes": 51193
     },
     {
@@ -1163,8 +1163,8 @@
     },
     {
       "path": "skills/axiom-media/skills/carplay-navigation-ref.md",
-      "sha256": "c45b947dc7d59e2b3867ea563af3defb6ce0a218f18472d7bd4b0829b1a2791c",
-      "bytes": 30277
+      "sha256": "f38848ddf869d6ca9346a4f852d096c1fa67c690525d2fe2a84e095c98e89343",
+      "bytes": 33912
     },
     {
       "path": "skills/axiom-media/skills/carplay-templates-ref.md",
@@ -1238,8 +1238,8 @@
     },
     {
       "path": "skills/axiom-media/skills/system-media-routing.md",
-      "sha256": "fd4e4dfc4b851f22a31bdc6996dcfc8cac72fcedfa24637744ebac474a5982b4",
-      "bytes": 20260
+      "sha256": "fac0298bbfa0e4f49883a13a3b59726c13b7bca8f4dc7f2b67657df1f62e2682",
+      "bytes": 20598
     },
     {
       "path": "skills/axiom-networking/SKILL.md",
@@ -1328,8 +1328,8 @@
     },
     {
       "path": "skills/axiom-payments/skills/wallet-passes-ref.md",
-      "sha256": "56586a7169872a64d6ddfd9588da5cf3ad8bbf5f5639f720a3e64b135c776b98",
-      "bytes": 18631
+      "sha256": "7be4de0448975b95186fe0426aa02398e7aa0c88106f3a60a02fa0b305ae6e3c",
+      "bytes": 21126
     },
     {
       "path": "skills/axiom-payments/skills/wallet-passes.md",
@@ -1433,8 +1433,8 @@
     },
     {
       "path": "skills/axiom-security/skills/cryptokit-ref.md",
-      "sha256": "4094b60ff2467352cb2db14a4eae3d0b9ce37a99677826655bfb91b3b9696365",
-      "bytes": 25284
+      "sha256": "9b1dd109d04f5aacc0f957e1f8a088cbd5499194735566309a4443a6fba20895",
+      "bytes": 23969
     },
     {
       "path": "skills/axiom-security/skills/cryptokit.md",
@@ -1538,8 +1538,8 @@
     },
     {
       "path": "skills/axiom-swift/skills/ownership-conventions.md",
-      "sha256": "b73088dfa084e2b60ee2f8251211eb7710f8b7c82dc49666d8893cdea9c250a3",
-      "bytes": 17282
+      "sha256": "f28e4373591c778b006f086b9a5cd064cd55c0786c638947ee48471484441f58",
+      "bytes": 18397
     },
     {
       "path": "skills/axiom-swift/skills/swift-modern.md",
@@ -1563,8 +1563,8 @@
     },
     {
       "path": "skills/axiom-swiftui/skills/26-ref.md",
-      "sha256": "4c4477b0c58cf2f4d177d41a296d0df663e46546c59df8d7711ecc8a18b50ca8",
-      "bytes": 51412
+      "sha256": "3dd10abc5371c876db8b5648f4fbea2402594574091a7cca2499bc784f2e92b3",
+      "bytes": 51771
     },
     {
       "path": "skills/axiom-swiftui/skills/animation-ref.md",
@@ -1848,23 +1848,23 @@
     },
     {
       "path": "skills/axiom-xcode-mcp/skills/xcode-mcp-ref.md",
-      "sha256": "213b020db180c97d2f35ed43c549f9dee146fbcee893950a0d3350f1aaa92468",
-      "bytes": 31354
+      "sha256": "00565592c72121b3d52aeca92c9cf0a015753e596530e9baa02a7f80e7c94723",
+      "bytes": 32094
     },
     {
       "path": "skills/axiom-xcode-mcp/skills/xcode-mcp-setup.md",
-      "sha256": "1c8cdb78ef0f2d2a6a50e58af99ae124cd1f9c0e1ab16da1bf10ddd2e5f065b9",
-      "bytes": 15207
+      "sha256": "680deac8ab6a6dd60bdbe9857656f2386a60500c6b152dd80a73296019c98e55",
+      "bytes": 16596
     },
     {
       "path": "skills/axiom-xcode-mcp/skills/xcode-mcp-tools.md",
-      "sha256": "64140fcb200cd1509a64e3ce393b01a232bbc46d2daf0c774134cbe59fb861ad",
-      "bytes": 13638
+      "sha256": "13788b3cff8382acb251bbe6659f215f9238f887edf9fc536cf2678210385933",
+      "bytes": 13678
     }
   ],
   "totals": {
     "files": 372,
-    "bytes": 7135382
+    "bytes": 7146437
   },
   "excludedMirrors": 30,
   "classes": {

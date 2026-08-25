@@ -202,28 +202,6 @@ let unwrapped = try AES.KeyWrap.unwrap(wrapped, using: wrappingKey)
 // unwrapped: SymmetricKey
 ```
 
-### Unauthenticated Primitives `OS27`
-
-Raw block/stream primitives with **no authentication tag**. They live under `Insecure` for the same reason `Insecure.MD5` does: reach for them only to interoperate with a protocol that already specifies them. For anything you control, use `AES.GCM` or `ChaChaPoly`.
-
-```swift
-@available(anyAppleOS 27, *)
-func permuteBlock(_ block: inout MutableRawSpan, key: SymmetricKey) throws {
-    try Insecure.UnauthenticatedAES.permute(&block, key: key)
-    try Insecure.UnauthenticatedAES.inversePermute(&block, key: key)
-}
-```
-
-| API | Signature |
-|---|---|
-| `Insecure.UnauthenticatedAES.permute` | `(_ payload: inout MutableRawSpan, key: SymmetricKey) throws` |
-| `Insecure.UnauthenticatedAES.inversePermute` | `(_ payload: inout MutableRawSpan, key: SymmetricKey) throws` |
-| `Insecure.UnauthenticatedChaCha20.encrypt` | `(inplace: inout MutableRawSpan, using: SymmetricKey, nonce: RawSpan, counter: UInt32) throws` |
-
-`permute`/`inversePermute` also take a generic `inout Payload where Payload: MutableCollection, Payload.Element == UInt8`. All mutate **in place** — there is no `Data`-returning form.
-
-**No tag means no integrity.** A ciphertext an attacker flipped bits in decrypts without error. If you use these, you are responsible for a separate MAC over the ciphertext.
-
 ---
 
 ## Key Agreement (ECDH)
