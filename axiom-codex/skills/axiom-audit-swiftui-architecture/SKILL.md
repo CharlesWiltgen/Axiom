@@ -86,10 +86,10 @@ Run all 5 existing detection categories. For every grep match, use Read to verif
 
 ### 3. Property Wrapper Misuse (HIGH)
 
-**Pattern**: `@State var item: Item` (non-private) where Item is passed in from parent
-**Search**: `@State var` without `private` — read context to check if value comes from parent
-**Issue**: Creates a local copy that loses updates from the parent source of truth
-**Fix**: `let item: Item` (read-only), `@Binding var item: Item` (mutable value type), or `@Bindable var model: ItemModel` (mutable `@Observable` class). `@Bindable` on a struct does not compile.
+**Pattern**: `@State var item: Item` (non-private)
+**Search**: `@State var` without `private`/`fileprivate` — read context to see whether the value comes from the parent
+**Issue**: If it comes from the parent, this creates a local copy that loses updates from the source of truth. If the view genuinely owns it, the declaration is still `internal`, which forfeits the Xcode 27 `@State` macro's deferred initial value — the initializer then runs on **every** view init instead of at most once per view identity. `private(set)` does not help; its getter is internal.
+**Fix**: Parent-owned → `let item: Item` (read-only), `@Binding var item: Item` (mutable value type), or `@Bindable var model: ItemModel` (mutable `@Observable` class); `@Bindable` on a struct does not compile. View-owned → add `private`.
 
 ### 4. God ViewModel (MEDIUM)
 

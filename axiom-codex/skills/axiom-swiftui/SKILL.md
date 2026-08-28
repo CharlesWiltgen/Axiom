@@ -35,6 +35,7 @@ license: MIT
 | Layout API reference | See `skills/layout-ref.md` |
 | Performance/lag/slow scroll | See `skills/swiftui-performance.md` |
 | Architecture/testability | See `skills/architecture.md` |
+| `@State` object rebuilt every view init, or an `init` assignment ignored at runtime | See `skills/architecture.md` (`@State` is a macro now) |
 | Animation issues | See `skills/animation-ref.md` |
 | Stacks/grids/outlines | See `skills/containers-ref.md` |
 | Custom containers / List replacement (iOS 18+) | See `skills/containers-ref.md` Part 7 |
@@ -136,5 +137,6 @@ digraph swiftui {
 | "I'll just add a Done button" | Sheets without Cancel break the HIG (updated 2026-03-24). `.cancellationAction` / `.confirmationAction` produce HIG-correct placement automatically — `skills/toolbars.md` Pattern 2 has the rules. |
 | "A sheet is a sheet, nothing to configure" | Detents, compact adaptation, background interaction, and iOS 18 sizing decide how it behaves across window shapes. `skills/presentations.md` covers the adaptation traps (landscape sheets silently become full-screen covers). |
 | "Previews are slow forever, I'll just use the simulator" | Five concrete fixes in `skills/previews.md`. Rule 4 (auto-refresh off) is 30 seconds and often halves perceived slowness. |
+| "`@State` is lazy in Xcode 27, I read the release notes" | Only when the property is `private`/`fileprivate`. `skills/architecture.md` has the gate, the three TN3211 breaks, and the one that compiles and is wrong at runtime. |
 | "I'll just write a wrapper view for `@State` in this preview" | `@Previewable @State` (Xcode 16+) eliminates that boilerplate. `skills/previews-ref.md` has the macro signature. |
 | "I'll just rebuild and relaunch every time" | Hot reload edits the running app in place, state preserved. `skills/hot-reload.md` has the InjectionNext + Inject setup and the verify-via-`xclog` loop. |
