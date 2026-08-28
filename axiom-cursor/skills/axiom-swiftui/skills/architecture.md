@@ -218,20 +218,126 @@ struct DonutLabel: View {
 }
 ```
 
-### `@State` is a macro now (Xcode 27) — two source-compat breaks
+### `@State` is a macro now (Xcode 27) — lazy initial value, three source-compat breaks
 
-Xcode 27 reimplements `@State` as a Swift **macro** so an initial-value expression (`@State private var model = Model()`) is evaluated once instead of on every view re-instantiation. The new behavior back-deploys to the iOS 17-aligned OSes and is mostly source-compatible — but two patterns that compiled under the property-wrapper `@State` no longer do:
+Xcode 27 reimplements `@State` as a Swift **macro**. A declaration-site initial value is now evaluated at most once for the lifetime of the view's identity instead of on every re-instantiation. Apple's stated motivation is reference types: a `@State` object used to heap-allocate on every view init. The `private` is load-bearing.
 
-1. **Initial value at the declaration *and* an assignment in `init`, with the `@State` assigned first.** The macro's accessor touches `self` before definite initialization finishes, so you get `error: variable 'self.title' used before being initialized`. Assigning the plain properties first still compiles; dropping the declaration's initial value is the cleaner fix.
-   ```swift
-   @State private var page: StickerPage              // no initial-value expression
-   init(title: String) { self.page = StickerPage(title: title); self.title = title }   // compiles
-   ```
-2. **Composing `@State` with another property wrapper or macro is unsupported.**
+The cost is that `@State` "now participates in initialization the same way any stored property does" (TN3211), so the compiler diagnoses patterns it used to accept. Those breaks are build-time behavior of the Xcode 27 toolchain — they bite the moment you build with the 27 SDK, at any deployment target.
 
-Also: generic-argument inference is slightly less flexible — write the `@State` type explicitly if inference fails. There's no availability gate (the change back-deploys); it's a build-time behavior of the Xcode 27 toolchain, so it bites the moment you build with the 27 SDK regardless of deployment target.
+#### The access-level gate
 
-**Deferral scope — declaration only.** This single-evaluation behavior covers only the initial-value expression on the *declaration* (`@State private var model = Model()`). An initial value you compute yourself in a custom `init` — `self.model = Model()` (as in break #1) or the legacy `_model = State(initialValue: Model())` — still runs on **every** re-instantiation; the macro defers only the declaration's expression. So relocating an expensive or side-effecting initializer into `init` to "seed from a parameter" does not buy the once-per-lifetime guarantee. For that, give the declaration a default value, or move the work to `.task`/`onAppear` or an `@Observable` that outlives the view.
+Only a `private` or `fileprivate` declaration gets the deferral. Anything wider keeps the old eager behavior, with no diagnostic either way.
+
+| Declaration | Initial value | Memberwise init parameter |
+|---|---|---|
+| `@State private var m = M()` | deferred | `_m: State<M>`, defaulted |
+| `@State fileprivate var m = M()` | deferred | `_m: State<M>`, defaulted |
+| `@State var m = M()` (internal, package, public) | eager, every init | `m: M` |
+| `@State private(set) var m = M()` | eager, every init — its getter is internal | `m: M` |
+
+Both columns are one mechanism: the deferred form expands to `State._makeStorage({ M() })`, a closure; the eager form to `State(initialValue: M())`, an ordinary stored-property default. Dropping `private` so a parent can pass a value in through the memberwise init therefore forfeits the deferral, on top of the ownership bug it already is — use `@Binding` or `@Bindable` (Anti-Pattern 3).
+
+#### Break 1 — assign `@State` last in a custom `init`
+
+Assigning a `@State` before the view's other stored properties are initialized is a use of `self` before full initialization.
+
+```swift
+struct ReportView: View {
+    @State private var model: Model
+    let id: String
+    let title: String
+}
+
+// ❌ @State assigned first
+//    error: variable 'self.id' used before being initialized
+//    error: 'self' used in property access '_model' before 'super.init' call
+init(id: String, title: String) {
+    self.model = Model(id: id)
+    self.id = id
+    self.title = title
+}
+
+// ✅ every non-@State stored property first, @State last
+init(id: String, title: String) {
+    self.id = id
+    self.title = title
+    self.model = Model(id: id)
+}
+```
+
+TN3211 documents the ❌ form as an error, but the diagnostic does not fire on every 27 toolchain — it does not on Xcode 27.0 (27A5252f). The compiler is not a reliable gate here; order it correctly regardless.
+
+#### The silent one — never pair an inline initial value with an `init` assignment
+
+This **compiles** and is wrong at runtime: the inline value wins and the `init` assignment is discarded, with no diagnostic.
+
+```swift
+// ❌ body observes counter == 0, not 42
+@State private var counter: Int = 0
+init() { self.counter = 42 }
+
+// ✅ omit the inline default when init supplies the value
+@State private var counter: Int
+init() { self.counter = 42 }
+```
+
+**Why**: the declaration's initial value already initializes the property, so `self.counter = 42` compiles as a *setter* call, not as the macro's init accessor. That setter writes through `State`'s `nonmutating set` into storage SwiftUI has not installed in the render tree yet, so the write has nowhere to land and is dropped. Omit the inline default and the property is uninitialized at that point, so the identical line compiles as the init accessor instead — and the value sticks.
+
+#### Break 2 — no composing another property wrapper with `@State`
+
+```
+error: invalid redeclaration of synthesized property '_counter'
+```
+
+The wrapper and the macro both synthesize the same underscore-prefixed storage (and `$counter`). Remove the other wrapper — `@State @AppStorage("k") private var x = 1` is the common shape.
+
+#### Break 3 — a deferred `@State` is renamed in the synthesized memberwise init
+
+A struct whose stored properties are all private gets a private memberwise initializer its own extensions can call. When a `@State` takes the deferred path, its parameter there is **renamed and retyped** — `_isOn: State<Bool>`, and defaulted — instead of `isOn: Bool`. Existing call sites stop resolving:
+
+```swift
+struct FilterChip: View {
+    @State private var isOn = false
+    private let label: String
+}
+extension FilterChip {
+    init(_ label: String, initiallyOn: Bool) {
+        // ❌ error: incorrect argument label in call
+        //           (have 'isOn:label:', expected '_isOn:label:')
+        self.init(isOn: initiallyOn, label: label)
+    }
+}
+```
+
+**The obvious fix loses data silently.** `_isOn` is defaulted, so deleting the failing argument compiles — and discards the caller's value, leaving the declaration's `false`. Two real fixes: pass the wrapper (`self.init(_isOn: State(initialValue: initiallyOn), label: label)`), or **drop the declaration's initial value** — with nothing to defer the parameter reverts to `isOn: Bool`, required, and every existing call site compiles unchanged.
+
+Also: generic-argument inference is slightly less flexible — write the `@State` type explicitly if inference fails.
+
+#### Deferral scope — declaration only
+
+The deferral covers only the initial-value expression on the *declaration*. A value you compute in a custom `init` runs on **every** re-instantiation — and `init` runs every time SwiftUI builds the view value, which for an eagerly-built `NavigationLink(title) { Destination() }` destination is once per row realized while scrolling.
+
+```swift
+// ❌ NOT deferred. Expands to the eager State(initialValue:) path even with `private`.
+@State private var model: Model
+init(id: String) { self.id = id; _model = State(initialValue: Model(id: id)) }
+
+// ❌ NOT deferred, same reason.
+@State private var model: Model
+init(id: String) { self.id = id; self.model = Model(id: id) }
+
+// ✅ Deferred — a declaration-site expression on a private property, no custom init.
+@State private var model = Model()
+
+// ✅ When the value must come from a parameter, no @State spelling defers it.
+//    Move the work out of init entirely.
+@State private var model: Model?
+var body: some View {
+    content.task(id: id) { model = await Model.make(id: id) }
+}
+```
+
+**Seeding from an `init` parameter and getting the once-per-identity guarantee are mutually exclusive.** No spelling of `@State` reconciles them — `.task(id:)`, `onAppear`, or an `@Observable` that outlives the view is the answer. Adding `private` to a view that seeds in `init` buys nothing, and if a declaration-site default is still present it silently makes that default win (see "The silent one").
 
 ## @Observable Model Pattern
 
@@ -601,7 +707,7 @@ struct DetailView: View {
 A SwiftUI `View` is a value-typed description of state — it already fills much of the view-model role, and Apple's guidance prescribes observable *models* read directly by views without a ViewModel layer. Two concrete costs before you add one:
 
 - **`DynamicProperty` wrappers don't work in an `@Observable` class.** `@Environment`, `@FocusState`, `@AppStorage`, `@SceneStorage`, `@ScaledMetric`, and `@Namespace` all fail to compile there — `@Observable` rewrites stored properties to computed ones, and property wrappers can't apply to those. State you move into a ViewModel is state you can no longer wire to SwiftUI.
-- **The "view structs are recreated constantly, so objects can't live there" argument is obsolete.** In Xcode 27 `@State` is a macro whose declaration-site initial value is evaluated once.
+- **The "view structs are recreated constantly, so objects can't live there" argument is obsolete.** In Xcode 27 `@State` is a macro whose declaration-site initial value is evaluated at most once — provided the property is `private` or `fileprivate` (see "`@State` is a macro now").
 
 ## When to Use MVVM
 
@@ -1138,8 +1244,9 @@ struct OrderListView: View {
 After extraction, pick the wrapper by **who owns the model**:
 
 ```swift
-// View owns it. Assign in `init` — do NOT use `_viewModel = State(initialValue:)`,
-// which the Xcode 27 @State macro no longer defers (see "@State is a macro now").
+// View owns it. Assign in `init` — do NOT use `_viewModel = State(initialValue:)`.
+// Either way the model is rebuilt on every view init: the Xcode 27 macro defers only
+// a declaration-site initial value (see "`@State` is a macro now").
 struct OrderListView: View {
     @State private var viewModel: OrderListViewModel
 

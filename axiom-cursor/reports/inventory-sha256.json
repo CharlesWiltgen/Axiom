@@ -3,12 +3,12 @@
   "files": [
     {
       "path": ".cursor-plugin/plugin.json",
-      "sha256": "06f74334aecb0555a7a9a46602c092ea9b76a0f1cc3ad719fa238e5b22fd074a",
+      "sha256": "ec6e7f3e56ddca7a2d179789dc7ffbacad6cebd44d46db3111b3c5ee4b6871bc",
       "bytes": 586
     },
     {
       "path": "README.md",
-      "sha256": "02f9894b7554077f9a1569d6deca9649d95b1c0c76d1e7f0d80855ac801925f5",
+      "sha256": "91416a1dc00554f40adc67a7fd10f5d53650d3fdc1a5b42af589a45a7bf0f8ed",
       "bytes": 3322
     },
     {
@@ -168,8 +168,8 @@
     },
     {
       "path": "agents/swiftui-architecture-auditor.md",
-      "sha256": "55f710fcdfcc245689c7aabd3d3c527aaa8f9e083713c024b991ef48e81e80e2",
-      "bytes": 12148
+      "sha256": "06363f0df4ff812520a9ee06cd5595142aa5397260d2adeb007bbf7a0bd6a7ab",
+      "bytes": 12498
     },
     {
       "path": "agents/swiftui-layout-auditor.md",
@@ -1558,8 +1558,8 @@
     },
     {
       "path": "skills/axiom-swiftui/SKILL.md",
-      "sha256": "8ad5ea6bdf0f415c43e4480a5c7e3bfbc46994232b6f9b4efb6619f5b9014677",
-      "bytes": 9714
+      "sha256": "6394b6676c654cfbd795223db1797fe40ff33b13b670ab7b79f3e4b7a2e23f7c",
+      "bytes": 10088
     },
     {
       "path": "skills/axiom-swiftui/skills/26-ref.md",
@@ -1573,8 +1573,8 @@
     },
     {
       "path": "skills/axiom-swiftui/skills/architecture.md",
-      "sha256": "b64265954a488da5f6dd60c31e4b805e0d361616029369ce8cd452bffdca5485",
-      "bytes": 60292
+      "sha256": "3c817f25ab556c41e6e2923900bbfd4b1961bdb5697cb001a570936977bc8e99",
+      "bytes": 65114
     },
     {
       "path": "skills/axiom-swiftui/skills/containers-ref.md",
@@ -1864,7 +1864,7 @@
   ],
   "totals": {
     "files": 372,
-    "bytes": 7146437
+    "bytes": 7151983
   },
   "excludedMirrors": 30,
   "classes": {
