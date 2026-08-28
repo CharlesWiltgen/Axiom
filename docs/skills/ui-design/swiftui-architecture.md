@@ -30,6 +30,8 @@ Questions you can ask Claude that will draw from this skill:
 - "Where should formatters and calculations go?"
 - "Which property wrapper do I use?"
 - "My @State property stopped compiling after upgrading to Xcode 27"
+- "Why is my @State model being recreated every time the view is rebuilt?"
+- "I set my @State value in init but the view shows the old one"
 
 ## What This Skill Provides
 
@@ -40,7 +42,8 @@ Questions you can ask Claude that will draw from this skill:
 - Synchronous UI updates for animations
 - `.task` modifier lifecycle (cancels on view destruction or identity change, not body re-evaluation; `.task(id:)` pitfalls)
 - Bridging actor state to SwiftUI via `@Observable` proxy layer, and `Observations` for the reverse direction
-- **@State is a macro** (Xcode 27) — two source-compat breaks: init-plus-declaration ordering, no wrapper composition
+- **@State is a macro** (Xcode 27) — the initial value is evaluated at most once instead of on every view init, but only for `private`/`fileprivate` declarations
+- The three TN3211 source-compat breaks, plus the one that compiles and is still wrong: pairing an inline initial value with an `init` assignment silently discards the `init` value
 
 ### MVVM Pattern
 - When MVVM adds value (complex presentation logic)
@@ -162,4 +165,4 @@ This page documents the `axiom-swiftui-architecture` skill — architecture patt
 
 **WWDC**: 2025-266, 2024-10150, 2023-10149
 
-**Docs**: /swiftui/model-data, /observation
+**Docs**: /swiftui/model-data, /observation, /technotes/tn3211
