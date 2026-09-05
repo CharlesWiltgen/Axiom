@@ -1958,6 +1958,16 @@
       "axiom-vision"
     ]
   },
+  "axiom-media--music-library": {
+    "category": "media",
+    "tags": [
+      "musickit",
+      "playparameters"
+    ],
+    "related": [
+      "axiom-media"
+    ]
+  },
   "axiom-media--music-understanding": {
     "category": "media",
     "tags": [

@@ -3,12 +3,12 @@
   "files": [
     {
       "path": ".cursor-plugin/plugin.json",
-      "sha256": "ec6e7f3e56ddca7a2d179789dc7ffbacad6cebd44d46db3111b3c5ee4b6871bc",
+      "sha256": "9d70d816199d96287dabb8c5e631810687d56c5572d1e9bf0f9729a4ddd53593",
       "bytes": 586
     },
     {
       "path": "README.md",
-      "sha256": "91416a1dc00554f40adc67a7fd10f5d53650d3fdc1a5b42af589a45a7bf0f8ed",
+      "sha256": "2781db57a52a92e81493f40bbd2ed10584695475ec0e239372c92299bf100167",
       "bytes": 3322
     },
     {
@@ -38,8 +38,8 @@
     },
     {
       "path": "agents/concurrency-auditor.md",
-      "sha256": "abe7f215474182d62bbc25c94c1feb46592b4bee58a480bad9fd3fa4e692f6d6",
-      "bytes": 12258
+      "sha256": "8cf7bb7fc4fe7cfc5aca1fee40f977eb29bef2991be45db01db75f02954849ad",
+      "bytes": 14060
     },
     {
       "path": "agents/core-data-auditor.md",
@@ -233,8 +233,8 @@
     },
     {
       "path": "commands/axiom-ask.md",
-      "sha256": "6c785ed582b0e63160f9f6344c6e36101591eac9e9bf530f20010333296930fd",
-      "bytes": 7759
+      "sha256": "35cc570df2375fd4f3aab86d53d8dd0f477f675dd5b51103c8c70d18d22ff351",
+      "bytes": 7791
     },
     {
       "path": "commands/axiom-audit.md",
@@ -258,8 +258,8 @@
     },
     {
       "path": "commands/axiom-health-check.md",
-      "sha256": "9fd2fec5648305401d07de858c6db1cb3bf97319466522fb0fd0ddbca4108028",
-      "bytes": 3044
+      "sha256": "fb1d0888520cfac4954434df08983fb5173604dbb5a38a04195014c5622202e7",
+      "bytes": 5755
     },
     {
       "path": "commands/axiom-modernize.md",
@@ -1128,8 +1128,8 @@
     },
     {
       "path": "skills/axiom-media/SKILL.md",
-      "sha256": "e7c1161a2d516b171a9a041a0ef6080196e455b16a9c77380dbae38826573689",
-      "bytes": 13576
+      "sha256": "305794ff464a1716a46a3307ac4a2e40c6e02c97a1b397d12ee21435fdd4f60a",
+      "bytes": 16127
     },
     {
       "path": "skills/axiom-media/skills/avfoundation-ref.md",
@@ -1187,6 +1187,11 @@
       "bytes": 8970
     },
     {
+      "path": "skills/axiom-media/skills/music-library.md",
+      "sha256": "964a056335a55d6291834caa54f51ea46858641aed049d9f21187509b8339834",
+      "bytes": 36619
+    },
+    {
       "path": "skills/axiom-media/skills/music-understanding.md",
       "sha256": "58e090514b443f6a1e10570b38d6b5365b9b47256ca190fbabef954dee7ac323",
       "bytes": 7070
@@ -1198,8 +1203,8 @@
     },
     {
       "path": "skills/axiom-media/skills/now-playing-musickit.md",
-      "sha256": "e51ac3f5fe3128d0c9394c8f35510e3fff6fda778975727734564b97307d9d5e",
-      "bytes": 8430
+      "sha256": "55567b8ad29e87d7928c6db4f3e574b98b5009d00f45bd2f3b45912fc5b6b4a0",
+      "bytes": 15523
     },
     {
       "path": "skills/axiom-media/skills/now-playing.md",
@@ -1863,8 +1868,8 @@
     }
   ],
   "totals": {
-    "files": 372,
-    "bytes": 7151983
+    "files": 373,
+    "bytes": 7202791
   },
   "excludedMirrors": 30,
   "classes": {

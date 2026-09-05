@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "27.0.0-beta.52",
+  "version": "27.0.0-beta.53",
   "description": "Battle-tested Claude Code skills, agents, and tools for modern xOS (iOS, iPadOS, macOS, watchOS, tvOS) development",
   "author": "Charles Wiltgen",
   "license": "MIT",
@@ -58,7 +58,7 @@
     },
     {
       "name": "axiom-media",
-      "description": "Use when working with camera, photos, audio, haptics, ShazamKit, or Now Playing. Covers AVCaptureSession, PHPicker, PhotosPicker, AVFoundation, Core Haptics, audio recognition, MediaPlayer, CarPlay, MusicKit."
+      "description": "Use when working with camera, photos, audio, haptics, ShazamKit, the user's Apple Music library, or Now Playing. Covers AVCaptureSession, PHPicker, PhotosPicker, AVFoundation, Core Haptics, audio recognition, MediaPlayer, CarPlay, MusicKit playback and library enumeration."
     },
     {
       "name": "axiom-accessibility",
