@@ -14,11 +14,12 @@ Delegate to the `health-check` subagent to perform a comprehensive project audit
 
 ## Argument Parsing
 
-Inspect the user's command arguments and bucket every token into one of three independent modifiers. All three may appear together, in any order. Whatever doesn't match the first two falls into the third.
+Inspect the user's command arguments and bucket every token into one of four independent modifiers. All four may appear together, in any order. Whatever doesn't match the first three falls into the fourth.
 
 1. **Diff-scope mode** — the literal token `diff`. Triggers branch-scoped auditing (see below).
-2. **Auditor exclusions** — one or more `skip <auditor>` pairs (e.g., `skip camera`, `skip memory skip energy`).
-3. **Freeform emphasis** — everything else, kept verbatim. Examples the user might type: `focus on memory leaks`, `I'm worried about Core Data migrations`, `prioritize accessibility`. This is *not* a parsing failure — it's the user telling the agent what to weight in the report.
+2. **Compiler lane** — the literal token `compiler`. Builds once and hands real compiler diagnostics to the auditors (see below). Opt-in because it costs a full non-incremental build.
+3. **Auditor exclusions** — one or more `skip <auditor>` pairs (e.g., `skip camera`, `skip memory skip energy`).
+4. **Freeform emphasis** — everything else, kept verbatim. Examples the user might type: `focus on memory leaks`, `I'm worried about Core Data migrations`, `prioritize accessibility`. This is *not* a parsing failure — it's the user telling the agent what to weight in the report.
 
 ### Diff-scope mode
 
@@ -48,6 +49,38 @@ If `diff` is present, compute the file scope yourself before Delegate to the `th
 
    Do not Delegate to the `the` subagent.
 
+### Compiler lane
+
+If `compiler` is present, produce real compiler diagnostics before Delegate to the `the` subagent. Auditors have no Bash tool, so this runs here, exactly once per health-check — never once per auditor.
+
+1. **Check for existing builds.** Run `pgrep -x xcodebuild | wc -l`. If non-zero, do not start a build. Skip the lane and note it; a concurrent `xcodebuild` spawns 50-100+ child processes that persist if interrupted.
+
+2. **Find a scheme.** Run `xcodebuild -list -json` in the project root. Take the first entry of `.workspace.schemes` or `.project.schemes`. If the command fails or lists no schemes, skip the lane.
+
+3. **Build once**, into a scratch result bundle:
+
+   ```bash
+   xcodebuild -scheme <scheme> -destination 'platform=macOS' \
+     -resultBundlePath <scratch>/health.xcresult \
+     OTHER_SWIFT_FLAGS='-strict-concurrency=complete' build
+   ```
+
+   Use a simulator destination instead for an iOS-only scheme. Do not pipe this through `grep`/`tail` — interrupting it orphans the build. Let it finish, then read the bundle.
+
+   **A non-zero exit is not a failure of this lane.** A build that fails *because of* the concurrency errors being audited still produces them. Proceed to step 4 regardless of exit code; only skip the lane if no result bundle was written.
+
+4. **Extract diagnostics:**
+
+   ```bash
+   xcrun xcresulttool get build-results --path <scratch>/health.xcresult --compact
+   ```
+
+   The JSON carries `errors[]` and `warnings[]`. Each entry has `issueType`, `message`, and a `sourceURL` whose **line number lives in the URL fragment** (`#StartingLineNumber=12`), not in a field of its own — parse it out.
+
+   `issueType` is sometimes a structured identifier (`SendingClosureRisksDataRace`) and sometimes the generic `Swift Compiler Error`, in which case the `message` text is what identifies the diagnostic.
+
+5. **Skip cleanly on any failure.** No scheme, no bundle, extraction error — omit the block and let the auditors use their grep fallbacks. Never abort the health check over the compiler lane.
+
 ### Building the subagent delegation prompt
 
 Assemble the prompt from whichever buckets fired:
@@ -61,6 +94,18 @@ Assemble the prompt from whichever buckets fired:
   Changed Swift files (N):
   <one path per line>
   ```
+
+- If the compiler lane produced diagnostics, include this block verbatim:
+
+  ```
+  COMPILER DIAGNOSTICS
+  Scheme: <scheme> | Destination: <destination> | Build status: <succeeded|failed>
+  Flags: -strict-concurrency=complete
+  Diagnostics (N):
+  <file>:<line> [<issueType>] <message>
+  ```
+
+  One diagnostic per line, errors before warnings. If the lane was requested but skipped, say so instead and give the reason: `COMPILER DIAGNOSTICS: unavailable (<reason>)`.
 
 - If exclusions are present, list them: `EXCLUSIONS: skip <auditor>, skip <auditor>`.
 

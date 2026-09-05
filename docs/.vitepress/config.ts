@@ -444,6 +444,7 @@ export default withMermaid(defineConfig({
             { text: 'Localization', link: '/skills/integration/localization' },
             { text: 'MapKit', link: '/skills/integration/mapkit' },
             { text: 'Media Intelligence', link: '/skills/computer-vision/media-intelligence' },
+            { text: 'Music Library (Apple Music)', link: '/skills/integration/music-library' },
             { text: 'Music Understanding', link: '/skills/integration/music-understanding' },
             { text: 'Networking', link: '/skills/integration/networking' },
             { text: 'Networking (Legacy iOS 12-25)', link: '/skills/integration/networking-legacy' },
@@ -759,7 +760,7 @@ export default withMermaid(defineConfig({
 
     footer: {
       message: 'Released under the MIT License',
-      copyright: 'Copyright © 2026 Charles Wiltgen • v27.0.0-beta.52'
+      copyright: 'Copyright © 2026 Charles Wiltgen • v27.0.0-beta.53'
     }
   }
 }))
