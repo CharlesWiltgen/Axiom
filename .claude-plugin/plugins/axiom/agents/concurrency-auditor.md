@@ -86,6 +86,19 @@ Present this map in the output before proceeding.
 
 Run all 8 existing detection patterns. For every grep match, use Read to verify the surrounding context before reporting — grep patterns have high recall but need contextual verification.
 
+### Compiler diagnostics take precedence
+
+Patterns 4, 5, and 8 ask questions the Swift compiler answers exactly. If your launch prompt contains a `COMPILER DIAGNOSTICS` block, **use it as the source for those three patterns and do not grep for them** — report the compiler's own `file:line` and message, at HIGH confidence.
+
+Two limits on the block, both of which you must respect:
+
+- **It is a floor, not a complete list.** The compiler stops reporting after the first errors in a file, so later violations in that same file are invisible until the earlier ones are fixed. Never state or imply that zero diagnostics means zero violations.
+- **It covers one build configuration** — one scheme, one destination, one set of `#if` branches. Code excluded from that configuration was not checked. Say so when it matters.
+
+If there is no `COMPILER DIAGNOSTICS` block, fall back to the grep patterns for 4, 5, and 8 and label those findings **LOW confidence (no compiler verification)**.
+
+Patterns 1, 2, 3, 6, and 7 are unaffected — the compiler has nothing to say about them.
+
 ### 1. Missing @MainActor on UI Classes (CRITICAL/HIGH)
 
 **Pattern**: UIViewController, UIView, ObservableObject without @MainActor
@@ -110,17 +123,19 @@ Run all 8 existing detection patterns. For every grep match, use Read to verify 
 **Issue**: "Sending 'self' risks causing data races" in Swift 6
 **Fix**: Capture values before Task, use captured values inside
 
-### 4. Sendable Violations (HIGH/LOW)
+### 4. Sendable Violations (HIGH/HIGH with diagnostics)
 
 **Pattern**: Non-Sendable types across actor boundaries
-**Search**: `@Sendable`, `: Sendable` patterns
+**Source**: `COMPILER DIAGNOSTICS` — `issueType: SendingClosureRisksDataRace`, or messages containing "risks causing data races" / "non-Sendable"
+**Fallback search**: `@Sendable`, `: Sendable` patterns — LOW confidence. This searches for *correctly annotated* code, so it locates places to read rather than violations; report nothing from it without reading the surrounding code.
 **Issue**: Data races
-**Note**: High false positive rate — compiler is more reliable. Flag but defer to `-strict-concurrency=complete`.
+**Fix**: Make the type Sendable, or transfer ownership with `sending`
 
-### 5. Actor Isolation Problems (MEDIUM/MEDIUM)
+### 5. Actor Isolation Problems (MEDIUM/HIGH with diagnostics)
 
 **Pattern**: Actor property accessed without await
-**Search**: `actor\s+` declarations — requires code reading for context
+**Source**: `COMPILER DIAGNOSTICS` — messages of the form "Actor-isolated property 'x' can not be referenced from a nonisolated context"
+**Fallback search**: `actor\s+` declarations — LOW confidence, locates actors rather than violations; requires reading each use site
 **Issue**: Compiler errors in Swift 6 strict mode
 **Fix**: Add `await` or restructure
 
@@ -141,7 +156,8 @@ Run all 8 existing detection patterns. For every grep match, use Read to verify 
 ### 8. Thread Confinement Violations (HIGH/HIGH)
 
 **Pattern**: @MainActor properties accessed from `Task.detached`
-**Search**: `Task\.detached` — Read context for @MainActor access
+**Source**: `COMPILER DIAGNOSTICS` — messages of the form "Main actor-isolated property 'x' can not be mutated from a nonisolated context"
+**Fallback search**: `Task\.detached` — Read context for @MainActor access; LOW confidence without compiler verification
 **Issue**: Crashes or data corruption
 **Fix**: Use `await MainActor.run { }`
 
