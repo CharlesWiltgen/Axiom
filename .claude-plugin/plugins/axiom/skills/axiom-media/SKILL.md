@@ -1,6 +1,6 @@
 ---
 name: axiom-media
-description: Use when working with camera, photos, audio, haptics, ShazamKit, or Now Playing. Covers AVCaptureSession, PHPicker, PhotosPicker, AVFoundation, Core Haptics, audio recognition, MediaPlayer, CarPlay, MusicKit.
+description: Use when working with camera, photos, audio, haptics, ShazamKit, the user's Apple Music library, or Now Playing. Covers AVCaptureSession, PHPicker, PhotosPicker, AVFoundation, Core Haptics, audio recognition, MediaPlayer, CarPlay, MusicKit playback and library enumeration.
 license: MIT
 ---
 
@@ -46,7 +46,8 @@ license: MIT
 | CarPlay templates reference (all 12 templates, availability matrix, depth limits) | See `skills/carplay-templates-ref.md` |
 | CarPlay navigation reference (base view, route guidance, cluster/HUD, multitouch, voice prompts, map panels + EV charging iOS 27) | See `skills/carplay-navigation-ref.md` |
 | CarPlay Now Playing template customization + sports mode | See `skills/now-playing-carplay.md` |
-| MusicKit Now Playing | See `skills/now-playing-musickit.md` |
+| MusicKit Now Playing, ApplicationMusicPlayer playback, subscription/authorization | See `skills/now-playing-musickit.md` |
+| Enumerate the user's Apple Music **library** — MusicLibraryRequest vs MPMediaQuery, reconciling the two, playlist entries, sync, library identity, per-device `Song.id`, missing `PlayParameters`, MusicKit bulk-property pool starvation | See `skills/music-library.md` |
 | DockKit motorized stands / gimbals, subject tracking, custom motor control | See `skills/dockkit.md` |
 | Speech-to-text / transcription (SpeechAnalyzer, mic → transcript) | **Invoke axiom-ai** (`skills/ios-ml.md`) |
 
@@ -67,6 +68,7 @@ digraph media {
     what -> "skills/media-intelligence.md" [label="face grouping /\nvideo highlights (OS27)"];
     what -> "skills/haptics.md" [label="haptic feedback"];
     what -> "skills/now-playing.md" [label="Now Playing\n/ remote commands"];
+    what -> "skills/music-library.md" [label="enumerate Apple Music\nlibrary / identity"];
     what -> "skills/system-media-routing.md" [label="cast to non-AirPlay\n(Chromecast/DLNA, iOS27)"];
     what -> "skills/screen-capture.md" [label="screen capture /\nrecording (OS27)"];
     what -> "skills/carplay-hig.md" [label="CarPlay app design\n/ categories / entitlements"];
@@ -82,11 +84,12 @@ digraph media {
 6. On-device face grouping (cluster faces into people across a library) or video highlights / key-frame detection? → `skills/media-intelligence.md` (`OS27`)
 7. Haptics? → `skills/haptics.md`
 8. Now Playing / remote commands? → `skills/now-playing.md`, `skills/now-playing-carplay.md`, `skills/now-playing-musickit.md`
-9. Cast / route media to non-AirPlay devices (Google Cast/Chromecast, DLNA) as system routes? → `skills/system-media-routing.md` (`iOS27`, EU-gated/beta)
-10. Screen capture / recording / streaming the screen or your own app (ScreenCaptureKit)? → `skills/screen-capture.md` (`OS27` — new on iOS/iPadOS/tvOS/visionOS 27)
-11. CarPlay app design, category selection, entitlement request? → `skills/carplay-hig.md` (start here for any CarPlay work)
-12. DockKit motorized stands / gimbals, subject tracking, custom motor control? → `skills/dockkit.md`
-13. Want camera code audit? → Launch `camera-auditor` agent (detects deprecated APIs and architectural gaps: missing interruption handlers, runtime-error recovery, audio session deactivation, permission-denied UX, RotationCoordinator on iOS 17+; scores RELIABLE / FRAGILE / BROKEN)
+9. Reading the user's Apple Music **library** (enumerate songs/playlists, library identity, sync)? → `skills/music-library.md` — a different problem from playback; read it before any library walk
+10. Cast / route media to non-AirPlay devices (Google Cast/Chromecast, DLNA) as system routes? → `skills/system-media-routing.md` (`iOS27`, EU-gated/beta)
+11. Screen capture / recording / streaming the screen or your own app (ScreenCaptureKit)? → `skills/screen-capture.md` (`OS27` — new on iOS/iPadOS/tvOS/visionOS 27)
+12. CarPlay app design, category selection, entitlement request? → `skills/carplay-hig.md` (start here for any CarPlay work)
+13. DockKit motorized stands / gimbals, subject tracking, custom motor control? → `skills/dockkit.md`
+14. Want camera code audit? → Launch `camera-auditor` agent (detects deprecated APIs and architectural gaps: missing interruption handlers, runtime-error recovery, audio session deactivation, permission-denied UX, RotationCoordinator on iOS 17+; scores RELIABLE / FRAGILE / BROKEN)
 
 ## Cross-Domain Routing
 
@@ -107,6 +110,12 @@ digraph media {
 - `SpeechAnalyzer` / `SpeechTranscriber`, the ~2-simultaneous-analyzer cap, the `OS27` input providers → **invoke axiom-ai** (`skills/ios-ml.md`)
 - Audio session category/mode, `AVCaptureSession` wiring → **stay here** (avfoundation-ref, camera-capture)
 - **The trap**: `CaptureInputSequenceProvider.providerWithSession(...)` (`OS27`) automatically reconfigures your app's default `AVAudioSession`. If this suite's audio-session setup "randomly breaks" after transcription is added, that's the cause — use `provider(from:in:)` and add its `captureAudioDataOutput` to your own session.
+
+**Apple Music library + playback + persistence**:
+- Enumerating the library, library identity, `PlayParameters` availability, Sync Library hazards → **stay here** (music-library)
+- Queuing and playing what you found, Now Playing publishing → **stay here** (now-playing-musickit)
+- Storing library rows in your own database (which column is the durable key, migrations for a re-key) → **invoke axiom-data** — but take the identity rules from music-library first; `persistentID` is not a durable key
+- `MusicAuthorization` prompt copy / privacy manifest → **invoke axiom-integration** (privacy-ux reference)
 
 **Photo library + privacy**:
 - Photo picker (PHPicker, PhotosPicker) → **stay here** (photo-library) — no permissions needed
@@ -134,6 +143,9 @@ digraph media {
 | "ShazamKit is just SHSession + a delegate" | iOS 17+ has SHManagedSession which eliminates all AVAudioEngine boilerplate. |
 | "Now Playing info is just setting metadata" | Remote commands, artwork handling, and state sync have 15+ gotchas. |
 | "I'll use UIImagePickerController for photos" | PHPicker/PhotosPicker are the modern API — no permissions required. |
+| "MediaPlayer reports fewer playlist members than MusicKit, so sync is incomplete" | The gap is exact and permanent — MusicKit shows the catalog, MediaPlayer shows what is local, and the difference equals the entries with no `playParameters`. A shipped guard built on this premise silently skipped 9 of 15 playlists forever. Read `skills/music-library.md`. |
+| "Reading the music library is just a MusicLibraryRequest" | Reading one MusicKit property across a large library starves the cooperative pool and then wedges every later MusicKit request, with no error thrown. Batching the request is ~100x *slower*, not safer. |
+| "`Song.id` is a stable key I can store" | Its *format* differs per device for the same library (`i.…` on one, bare numeric on another). Never parse it, never use it as a cross-device key. |
 | "DockKit is just pairing a stand" | Custom control needs system tracking disabled, handles inverted dock states, and two different coordinate origins. |
 | "Grouping faces is just Vision face detection" | Vision detects faces in one image; MediaIntelligence clusters them into persistent people (entities) across a whole library, with its own working directory and state. |
 | "Casting to Chromecast means bundling the Google Cast SDK" | On iOS 27, AVSystemRouting exposes non-AirPlay routes as system routes — you adopt one Apple API (observe events, start a session, drive playbackControl) instead of a per-vendor SDK. Likely EU-gated/beta — gate and keep a fallback. |
@@ -178,6 +190,9 @@ User: "Cast to Chromecast / Google Cast without the Cast SDK" / "support non-Air
 
 User: "Record / stream the iPad screen" / "ScreenCaptureKit on iOS" / "screen recording in my app" / "capture just my app's content"
 → Read: `skills/screen-capture.md`
+
+User: "List every song in the user's Apple Music library" / "enumerate their playlists" / "MPMediaQuery vs MusicKit" / "sync Apple Music playlists" / "MediaPlayer and MusicKit report different playlist counts" / "my MusicKit requests stop responding after a library scan" / "store a stable id for each song across devices" / "playlists went empty after the user turned on Sync Library"
+→ Read: `skills/music-library.md`
 
 User: "Track a subject with a motorized stand" / "Control a DockKit gimbal"
 → Read: `skills/dockkit.md`

@@ -44,9 +44,11 @@ This page documents the `axiom-media` reference skill -- MusicKit-specific Now P
 
 - For core Now Playing setup (MPNowPlayingInfoCenter, remote commands, artwork), see [now-playing](/skills/integration/now-playing)
 - For CarPlay integration, see [now-playing-carplay](/reference/now-playing-carplay)
+- For *reading* the user's library rather than playing it — enumerating songs and playlists, library identity, sync — see [music-library](/skills/integration/music-library). Do not walk the library with the playback patterns here; a bulk MusicKit property read can stop the framework responding for the rest of the run.
 
 ## Related
 
+- [music-library](/skills/integration/music-library) – Reading the Apple Music library (MusicLibraryRequest vs MPMediaQuery, identity, sync); the other half of MusicKit
 - [now-playing](/skills/integration/now-playing) – Core Now Playing patterns (manual MPNowPlayingInfoCenter setup)
 - [now-playing-carplay](/reference/now-playing-carplay) – CarPlay Now Playing with CPNowPlayingTemplate customization
 - [avfoundation-ref](/reference/avfoundation-ref) – AVAudioSession and AVPlayer for non-MusicKit audio content
