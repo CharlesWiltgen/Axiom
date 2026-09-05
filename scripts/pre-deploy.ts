@@ -616,13 +616,41 @@ if (fs.existsSync(mcpPkgPath)) {
   versions["axiom-mcp/package.json"] = mcpPkg.version;
 }
 
-const cursorPluginManifestPath = path.join(root, "axiom-cursor/.cursor-plugin/plugin.json");
-if (fs.existsSync(cursorPluginManifestPath)) {
-  const cursorPlugin = JSON.parse(fs.readFileSync(cursorPluginManifestPath, "utf8"));
-  if (typeof cursorPlugin.version === "string") versions["axiom-cursor/.cursor-plugin/plugin.json"] = cursorPlugin.version;
-  else error("version", "Cursor plugin manifest has no string version");
-} else {
-  error("version", "Cursor plugin manifest not found — run: npm run build:cursor");
+// Every generated variant manifest that CARRIES a version must be listed here.
+//
+// Codex was missing until 2026-09-05 and the omission was invisible: gate 12f
+// (Codex staleness) compares skill/agent mtimes against the manifest, and a pure
+// version bump touches neither, so the Codex manifest could sit at the PREVIOUS
+// version through a fully green Phase 1. Confirmed by reverting it and watching
+// the suite pass. Root package.json had the identical hole — it is written by
+// set-version.js:448 but was only ever read here for the `pi` manifest block,
+// and `pi install` resolves against it.
+//
+// Adding a version-carrying file? Add it to this list AND to the expected-key
+// assertion in scripts/version-parity.test.ts, which fails if they diverge.
+const VERSION_CARRYING_FILES: ReadonlyArray<readonly [label: string, relPath: string, rebuild: string]> = [
+  ["Cursor plugin manifest", "axiom-cursor/.cursor-plugin/plugin.json", "npm run build:cursor"],
+  ["Codex plugin manifest", "axiom-codex/.codex-plugin/plugin.json", "npm run build:codex"],
+  ["root package.json", "package.json", "node scripts/set-version.js <version>"],
+];
+
+for (const [label, relPath, rebuild] of VERSION_CARRYING_FILES) {
+  const abs = path.join(root, relPath);
+  if (!fs.existsSync(abs)) {
+    error("version", `${label} not found at ${relPath} — run: ${rebuild}`);
+    continue;
+  }
+  // build-codex.ts rmSync's its output tree and rebuilds in place with no
+  // staging, so a half-written manifest is a live failure mode. Report it as a
+  // structured error naming the file rather than aborting the gate on a bare
+  // SyntaxError (CLAUDE.md E-2/E-4).
+  try {
+    const parsed = JSON.parse(fs.readFileSync(abs, "utf8"));
+    if (typeof parsed.version === "string") versions[relPath] = parsed.version;
+    else error("version", `${label} (${relPath}) has no string version`);
+  } catch (e: unknown) {
+    error("json", `${label} (${relPath}) unreadable: ${(e as Error).message}`);
+  }
 }
 
 const versionValues = Object.values(versions);
