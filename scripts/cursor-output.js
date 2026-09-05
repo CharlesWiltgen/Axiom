@@ -8,8 +8,12 @@
 //   - this module's test, which pins the boundary
 //
 // Deliberately narrow. The preflight's job is refusing to tag a dirty tree, so
-// this absolves only paths the script itself regenerates — never a sibling like
-// `axiom-codex/` or a stray `axiom-cursor-notes.md`.
+// this absolves only paths the script itself regenerates — never a stray sibling
+// like `axiom-cursor-notes.md`.
+//
+// `axiom-codex/` is NOT this module's business, but it is no longer "unrelated"
+// either: since 2026-09-05 set-version also runs build-codex, so the preflight
+// composes this predicate with `isCodexGeneratedPath` from `codex-output.js`.
 
 const CURSOR_MARKETPLACE_PATH = '.cursor-plugin/marketplace.json';
 const CURSOR_PLUGIN_ROOT = 'axiom-cursor/';

@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
 import { VERSION_RE, VERSION_CORE } from './version-regex.js';
 import { isCursorGeneratedPath } from './cursor-output.js';
+import { isCodexGeneratedPath } from './codex-output.js';
 import { DOC_STAT_FILES, docStatValues, applyDocStats, checkMarkerSpec } from './doc-stats.js';
 import { isGeneratedSubSkill } from './inline-auditors.ts';
 import { manifestSkillsFromDisk } from './skill-listing.ts';
@@ -543,10 +544,14 @@ try {
       throw new Error(`--tag requires a git repository: ${err.message}`);
     }
     const dirtyFiles = status.split('\n').filter(Boolean).map(l => l.slice(3));
-    // The Cursor distribution is regenerated below, after these writes, so the
-    // preflight would otherwise refuse on output this script is about to produce
-    // itself. Only paths build:cursor owns are absolved; everything else still blocks.
-    const unexpected = dirtyFiles.filter(f => !expectedRelative.has(f) && !isCursorGeneratedPath(f));
+    // The Cursor AND Codex distributions are regenerated below, after these writes,
+    // so the preflight would otherwise refuse on output this script is about to
+    // produce itself. Only paths those two builds own are absolved; everything else
+    // still blocks. (Codex joined this carve-out on 2026-09-05, when set-version
+    // started regenerating it — before that it was correctly treated as a sibling.)
+    const unexpected = dirtyFiles.filter(
+      (f) => !expectedRelative.has(f) && !isCursorGeneratedPath(f) && !isCodexGeneratedPath(f),
+    );
     if (unexpected.length) {
       throw new Error(
         `--tag refused: working tree has unrelated changes. Commit or stash them first:\n  ` +
@@ -587,13 +592,22 @@ try {
     throw err;
   }
 
-  // Cursor manifests and reports are generated from the canonical manifest.
-  // Keep this after the atomic canonical writes: a generation failure leaves a
-  // truthful diagnostic rather than silently shipping a stale Cursor release.
-  try {
-    execSync('node scripts/build-cursor.ts', { cwd: root, stdio: 'inherit' });
-  } catch (err) {
-    throw new Error(`canonical version changed but Cursor output is stale: ${err.message}`);
+  // Cursor and Codex variants embed the version in their own plugin manifests, so
+  // both go stale on a bump and would ship version-mismatched. Keep these after the
+  // atomic canonical writes: a generation failure leaves a truthful diagnostic
+  // rather than silently shipping a stale variant.
+  //
+  // Codex was previously omitted here. Nothing caught it: pre-deploy's Codex
+  // staleness gate (12f) compares skill/agent mtimes against the manifest, and a
+  // pure version bump touches neither — so `axiom-codex/.codex-plugin/plugin.json`
+  // sat at the OLD version through a fully green `npm test`. Verified 2026-09-05 by
+  // reverting the manifest to the prior version and watching Phase 1 pass.
+  for (const [label, script] of [['Cursor', 'build-cursor.ts'], ['Codex', 'build-codex.ts']]) {
+    try {
+      execSync(`node scripts/${script}`, { cwd: root, stdio: 'inherit' });
+    } catch (err) {
+      throw new Error(`canonical version changed but ${label} output is stale: ${err.message}`);
+    }
   }
 
   // Create annotated tag (after successful writes) if --tag passed
