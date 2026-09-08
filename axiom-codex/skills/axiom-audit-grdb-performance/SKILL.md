@@ -177,15 +177,23 @@ Run the six detection patterns. For every grep match, use Read to verify the sur
 **Fix**: Make the table a rowid table (drop `WITHOUT ROWID`), or have every writer call `try db.notifyChanges(in: <Table>.all())` inside the same write. See `axiom-data (skills/grdb-performance.md)` §7 and §10.
 **Limitation in report**: "Record-to-table binding resolved by explicit `databaseTableName` / `@Table` only. Types relying on GRDB's default naming convention are matched heuristically — verify manually."
 
-### Pattern 11: `WITHOUT ROWID` Upsert Below GRDB 7.11 (HIGH/HIGH)
+### Pattern 11: `WITHOUT ROWID` Upsert (HIGH/HIGH)
 
 **Gating**: Library == Raw GRDB or Both, **AND** at least one `WITHOUT ROWID` table found in Pattern 10 step 1.
-**Issue**: GRDB generated wrong SQL for upsert against `WITHOUT ROWID` tables before **7.11.0**.
+**Issue**: GRDB generates wrong SQL for upsert against `WITHOUT ROWID` tables. This is **two** bugs with different fix versions, so the GRDB version narrows the pattern rather than clearing it:
+
+| GRDB version | Which `WITHOUT ROWID` tables are affected |
+|---|---|
+| Below 7.11.0 | **All** of them |
+| 7.11.0 – 7.11.1 (latest) | Only those whose primary key is **INTEGER** |
+
+7.11.0 fixed the general case. The INTEGER-primary-key case is a separate defect in `Database+Schema.swift`, where an integer primary key is treated as a rowid alias without checking whether the table actually has a rowid. It is **still unfixed in 7.11.1** — the fix is open but unmerged. Symptom: `SQLite error 1: no such column: "rowid"`.
 **Search**:
 - Glob `**/Package.resolved`, `**/Package.swift`, `**/*.podspec`, `**/Podfile.lock` — read the resolved GRDB version
 - `\.upsert\(`, `upsertAndFetch\(` — upsert call sites
-**Verify**: Resolve the GRDB version first. If it is 7.11.0 or later, skip this pattern entirely. If below 7.11.0 (or unresolvable), check whether any upsert call site targets a record bound to a `WITHOUT ROWID` table from Pattern 10.
-**Fix**: Upgrade to GRDB 7.11.0+.
+- For each `WITHOUT ROWID` table from Pattern 10 step 1, read its `CREATE TABLE` / migration body for an `INTEGER` primary-key column — `INTEGER\s+PRIMARY\s+KEY`, or a GRDB column builder `\.column\(\s*"[^"]+"\s*,\s*\.integer\s*\)[^\n]*primaryKey`
+**Verify**: Resolve the GRDB version first, then apply the table above. On 7.11.0+, report **only** upsert call sites targeting a `WITHOUT ROWID` table with an INTEGER primary key. Below 7.11.0, report any upsert against any `WITHOUT ROWID` table.
+**Fix**: Below 7.11.0, upgrade to 7.11.1. For the INTEGER-primary-key case there is no released fix — change the primary key to `TEXT`/`BLOB`, drop `WITHOUT ROWID` from that table, or replace the upsert with an explicit `INSERT … ON CONFLICT DO UPDATE` written as raw SQL.
 **Note**: report an unresolvable GRDB version as a LOW-confidence finding with the reason, not as a clean pass.
 
 ## Phase 3: Reason About Performance Completeness
@@ -248,7 +256,7 @@ Cross-auditor overlap notes:
 | Pattern 8 (Record subclass — optional) | N matches |
 | Pattern 9 (`INSERT OR REPLACE` as upsert) | N matches |
 | Pattern 10 (observation on `WITHOUT ROWID`) | N matches |
-| Pattern 11 (`WITHOUT ROWID` upsert < 7.11) | N matches / GRDB version |
+| Pattern 11 (`WITHOUT ROWID` upsert) | N matches / GRDB version / PK types |
 | Phase 3 completeness gaps | N |
 | Compound severity bumps | N |
 | **Health** | **SAFE / FRAGILE / DANGEROUS** |
@@ -314,7 +322,7 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details.
 - `INSERT OR REPLACE` where delete-then-insert is the intended semantics — full-row cache replacement, or a table with no unlisted columns, no cascading FK, and no observation (Pattern 9)
 - A `WITHOUT ROWID` table that is written but never observed — the schema choice is correct there, and §7 recommends it (Pattern 10)
 - A `WITHOUT ROWID` table whose every writer already calls `notifyChanges(in:)` — the observation works as intended (Pattern 10)
-- Upsert against `WITHOUT ROWID` on GRDB 7.11.0+ — fixed upstream; check the resolved version before flagging (Pattern 11)
+- Upsert against a `WITHOUT ROWID` table with a **non-INTEGER** primary key on GRDB 7.11.0+ — fixed upstream; check the resolved version *and* the primary-key type before flagging (Pattern 11)
 
 **Phase-3 caveats (not Phase-2 false positives):**
 

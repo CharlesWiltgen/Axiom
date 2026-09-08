@@ -45,6 +45,7 @@ Use this skill when working with:
 | GRDB shared across app + widget/extension (App Group) | See `skills/grdb-app-groups.md` |
 | SQLiteData @Table, CRUD, SyncEngine | See `skills/sqlitedata.md` |
 | SQLiteData advanced patterns, CTEs, views | See `skills/sqlitedata-ref.md` |
+| `@Shared` / `@SharedReader`, appStorage or fileStorage persistence, custom SharedKey, `isLoading` / `loadError` on `@FetchAll` | See `skills/swift-sharing.md` |
 | Core Data stack, relationships, concurrency | See `skills/core-data.md` |
 | Core Data migration crashes, thread errors | See `skills/core-data-diag.md` |
 | ANY schema migration safety | See `skills/database-migration.md` |
@@ -72,7 +73,7 @@ Use this skill when working with:
 **iCloud audit** → `axiom-audit-icloud` (entitlement checks, file coordination, incomplete CKError matrix coverage, missing account-change observation, polling vs CKSubscriptions, SwiftData + CloudKit unsupported features, compound risks like uncoordinated I/O across extensions)
 **Storage audit** → `axiom-audit-storage` (wrong file locations, missing backup exclusions, sensitive data on disk vs Keychain, missing App Group containers, unbounded cache growth, orphan files, compound risks like user data in tmp/ + critical content)
 **Database schema audit** → `axiom-audit-database-schema` (unsafe ALTER TABLE, DROP operations, missing idempotency, FK constraints declared but not enforced, incomplete upgrade paths, compound risks like INSERT OR REPLACE on FK-referenced tables)
-**GRDB performance audit** → `axiom-audit-grdb-performance` (raw SQL string interpolation, missing FK indexes in raw SQL, missing PRAGMA optimize for raw-GRDB apps, journal mode mismatch for app-group DBs, missing observesSuspensionNotifications for shared DBs, prefix-redundant indexes in raw SQL, legacy Record subclass, INSERT OR REPLACE misused as upsert, observation on WITHOUT ROWID tables, WITHOUT ROWID upsert below GRDB 7.11)
+**GRDB performance audit** → `axiom-audit-grdb-performance` (raw SQL string interpolation, missing FK indexes in raw SQL, missing PRAGMA optimize for raw-GRDB apps, journal mode mismatch for app-group DBs, missing observesSuspensionNotifications for shared DBs, prefix-redundant indexes in raw SQL, legacy Record subclass, INSERT OR REPLACE misused as upsert, observation on WITHOUT ROWID tables, WITHOUT ROWID upsert bugs)
 **SwiftData audit** → `axiom-audit-swiftdata` (struct models, missing schema registration, array relationships without defaults, background context misuse, N+1 patterns, stale predicates, CloudKit conformance gaps, compound risks like struct model + array relationship)
 
 ## Decision Tree
@@ -84,6 +85,7 @@ Use this skill when working with:
 3b. FTS5 (full-text search, any layer)? → `skills/sqlite-fts-ref.md`
 3c. DB shared across app + extension/widget/Live Activity? → `skills/grdb-app-groups.md`
 4. SQLiteData? → `skills/sqlitedata.md`, `skills/sqlitedata-ref.md`
+4a. `@Shared`/`@SharedReader`, or the loading/error state behind `@FetchAll`? → `skills/swift-sharing.md`
 5. ANY schema migration? → `skills/database-migration.md` (ALWAYS — prevents data loss)
 6. Realm migration? → `skills/realm-migration-ref.md`
 7. SwiftData vs SQLiteData? → `skills/sqlitedata-migration.md`
@@ -121,6 +123,7 @@ Use this skill when working with:
 | "Simple query, I don't need the skill" | Query patterns prevent N+1 and thread-safety issues. The skill has copy-paste solutions. |
 | "CloudKit sync is straightforward" | CloudKit has 15+ failure modes. cloud-sync-diag diagnoses them systematically. |
 | "I know Codable well enough" | Codable has silent data loss traps (try? swallows errors). codable skill prevents production bugs. |
+| "@Shared is just @AppStorage with extra steps" | Mutation goes through `$shared.withLock`; the plain setter is deprecated, and a compile error below Sharing 2.8 on Swift 6.3. swift-sharing has the migration. |
 | "I'll use local storage on tvOS" | tvOS has NO persistent local storage. System deletes Caches at any time. See axiom-swift (skills/tvos.md) for the iCloud-first pattern. |
 | "UserDefaults is fine for this token" | UserDefaults is unencrypted, backed up to iCloud, and visible to MDM profiles. One audit catches it. keychain stores tokens securely. |
 | "I'll encrypt it myself with CommonCrypto" | CryptoKit replaced CommonCrypto's buffer-management nightmares with one-line APIs. cryptokit prevents misuse. |
@@ -147,6 +150,12 @@ User: "CloudKit sync isn't working"
 
 User: "Should I use SwiftData or SQLiteData?"
 → Read: `skills/sqlitedata-migration.md`
+
+User: "How do I persist a setting to UserDefaults and observe it everywhere?"
+→ Read: `skills/swift-sharing.md`
+
+User: "Why is my @FetchAll empty — is it loading or did it fail?"
+→ Read: `skills/swift-sharing.md`
 
 User: "Check my Core Data code for safety issues"
 → Launch: `core-data-auditor` agent

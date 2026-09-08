@@ -281,7 +281,7 @@ Storage: ~half. Speed: nearly 2× for suitable schemas.
 **Two gotchas before adopting it.** Both bite the same tables the win case describes — small rows, text primary key, i.e. settings and key-value stores.
 
 - **`WITHOUT ROWID` tables are never observed.** SQLite's update hook doesn't fire for them, so a `ValueObservation` on such a table delivers its initial value and then goes silent permanently — no error, no warning. No GRDB setting fixes this; the writer must call `notifyChanges(in:)` itself. See §10. If the table is observed, keep it a rowid table.
-- **Upsert needs GRDB 7.11+.** GRDB generated wrong SQL for upsert against `WITHOUT ROWID` tables before 7.11.0.
+- **Upsert is still partly broken.** GRDB generated wrong SQL for upsert against *all* `WITHOUT ROWID` tables before 7.11.0. 7.11.0 fixed the general case but left a second defect: a `WITHOUT ROWID` table whose primary key is **INTEGER** still fails with `SQLite error 1: no such column: "rowid"`, because `Database+Schema.swift` treats an integer primary key as a rowid alias without checking that the table has a rowid. Unfixed as of 7.11.1. A text primary key — the shape recommended above — is unaffected.
 
 ### Generated columns
 
@@ -531,6 +531,7 @@ If you're using Point-Free's SQLiteData, the SQLite tuning in this skill applies
 1. **Decode path.** SQLiteData uses a direct SQLite-3 decoder, not `Codable` round-trips. Bulk fetches are faster than GRDB's Codable record path on large result sets. Raw GRDB users get equivalent direct access via `fetchCursor` (§9).
 2. **Observation.** `@FetchAll` / `@FetchOne` behave like `ValueObservation.shared(in:)` w.r.t. coalescing semantics — initial value + change broadcasts, fan-out across subscribers.
 3. **Property-wrapper observability.** `@FetchAll` works in `@Observable` classes and UIKit view controllers, not just SwiftUI — wider applicability than GRDB's `@Query` from GRDBQuery.
+4. **Statement caching.** Since SQLiteData 1.11.0, `@FetchAll` / `@FetchOne` cache their prepared statements, so a re-fired observation skips re-preparation. 1.11.0 also cut `String`, `Date`, and `UUID` coding costs. Neither is something you configure — it is a reason to prefer the property wrappers over hand-rolled re-fetching, and a reason to be on 1.11+ before profiling the decode path.
 
 What *doesn't* change:
 - PRAGMAs (§4)
@@ -562,7 +563,8 @@ Cross-link `sqlitedata.md` for SQLiteData-specific patterns and decisions.
 | Fetch-then-branch instead of upsert | Race window between the read and the write under concurrent writers | Single `upsert` statement | `grdb.md` — Upsert |
 | `ValueObservation` on a `WITHOUT ROWID` table | Initial value arrives, then no update ever — silently | Use a rowid table, or call `notifyChanges(in:)` in every writer | §7, §10 |
 | `requiresDatabaseEventKind = false` left on by default | Truncate optimization disabled database-wide; `DELETE FROM t` degrades to per-row | Only attach such an observer when indirect writers exist; prefer routing writes through GRDB | §10 |
-| `WITHOUT ROWID` + upsert on GRDB < 7.11 | Wrong SQL generated for the upsert | Bump to GRDB 7.11+ | §7 |
+| `WITHOUT ROWID` + upsert on GRDB < 7.11 | Wrong SQL generated for the upsert | Bump to GRDB 7.11.1 | §7 |
+| `WITHOUT ROWID` + INTEGER primary key + upsert, any GRDB through 7.11.1 | `no such column: "rowid"` | Use a TEXT primary key, drop `WITHOUT ROWID`, or hand-write `ON CONFLICT DO UPDATE` | §7 |
 
 ## 13 — When to profile, when to read
 
