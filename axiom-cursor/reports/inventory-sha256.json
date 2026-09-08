@@ -3,12 +3,12 @@
   "files": [
     {
       "path": ".cursor-plugin/plugin.json",
-      "sha256": "9d70d816199d96287dabb8c5e631810687d56c5572d1e9bf0f9729a4ddd53593",
+      "sha256": "c030d2fae0693b56963beaf4f162377500b19429db9799b04da84adfc0528834",
       "bytes": 586
     },
     {
       "path": "README.md",
-      "sha256": "2781db57a52a92e81493f40bbd2ed10584695475ec0e239372c92299bf100167",
+      "sha256": "b84953f574f49eeaa15cf3bf0c78434d0686d9e0ddd44f7fb74d822b75bb4341",
       "bytes": 3322
     },
     {
@@ -68,8 +68,8 @@
     },
     {
       "path": "agents/grdb-performance-auditor.md",
-      "sha256": "39397ff12c96b8ad5417a35e59b332563bf8ddf3eb01a4815c99b6b26957e47a",
-      "bytes": 24395
+      "sha256": "7cfff92667276e98ba7f4e0fb59d85bb51cf50e517800095569fa1995496b381",
+      "bytes": 25584
     },
     {
       "path": "agents/health-check.md",
@@ -548,8 +548,8 @@
     },
     {
       "path": "skills/axiom-data/SKILL.md",
-      "sha256": "c77c0fbda23b280ee503774a7f8169918990ef2c94217aa90309941061345576",
-      "bytes": 12078
+      "sha256": "97754454c5ccc95eb0e69d9f8bfb9317bc7a2df774fcbe85f253cd03b0d754ff",
+      "bytes": 12770
     },
     {
       "path": "skills/axiom-data/skills/cloud-sync-diag.md",
@@ -593,13 +593,13 @@
     },
     {
       "path": "skills/axiom-data/skills/grdb-performance.md",
-      "sha256": "739c211e086faaab90536316c0950eb3623b04a9ca1ba8a99b3a3e4dfc607e79",
-      "bytes": 30219
+      "sha256": "3e00f696c79322202e55fa52f8b388b89680565ffff65447117e23b8c824d3e9",
+      "bytes": 31212
     },
     {
       "path": "skills/axiom-data/skills/grdb.md",
-      "sha256": "f4b19da69ba43bfe806bb809f7f8e8e0f8b7bec92eff4c5c62c51d25894c78fb",
-      "bytes": 24496
+      "sha256": "4656717580541812f8ec2549e15997d2f9f4713c9254a98710b309dd0d5207e5",
+      "bytes": 24569
     },
     {
       "path": "skills/axiom-data/skills/icloud-drive-ref.md",
@@ -613,8 +613,8 @@
     },
     {
       "path": "skills/axiom-data/skills/sql-json-ref.md",
-      "sha256": "1b37e3aaa619100ed65490cb89cb9c4143981ce3774d68f957c541fadd869866",
-      "bytes": 15859
+      "sha256": "458b812985f947b40b17d0fa70f44b78b5f0f79ca42e42d9a748030a4f31640c",
+      "bytes": 19408
     },
     {
       "path": "skills/axiom-data/skills/sqlite-fts-ref.md",
@@ -628,13 +628,13 @@
     },
     {
       "path": "skills/axiom-data/skills/sqlitedata-ref.md",
-      "sha256": "ad8d5d26c8be2c85e6e866b1b1b2d91343a167310d3ddcff8ef189d6cf4afbb7",
-      "bytes": 24997
+      "sha256": "b487dfc49b34ce31a108e275042f5a26544f73a6891b4c03c7cbe0bf67e1c2b3",
+      "bytes": 32352
     },
     {
       "path": "skills/axiom-data/skills/sqlitedata.md",
-      "sha256": "3ecfaa9f3d5c11249ef026518aba13ff94d08a99e045877b63ad4d3b87dadef2",
-      "bytes": 22510
+      "sha256": "00c7e8852622de0418520de2b65a4461ee31893afa621f3df34ab9818242efa7",
+      "bytes": 31531
     },
     {
       "path": "skills/axiom-data/skills/storage-diag.md",
@@ -650,6 +650,11 @@
       "path": "skills/axiom-data/skills/storage.md",
       "sha256": "74fa79516b1a89a6f89462b5ef67eab640510d886f36b293a5171035068bb9eb",
       "bytes": 16963
+    },
+    {
+      "path": "skills/axiom-data/skills/swift-sharing.md",
+      "sha256": "ca61cc980347ef5badb76340efde69cd2ae0d6a1495055cdeb17937fb7498eb7",
+      "bytes": 12159
     },
     {
       "path": "skills/axiom-data/skills/swiftdata-migration-diag.md",
@@ -1868,8 +1873,8 @@
     }
   ],
   "totals": {
-    "files": 373,
-    "bytes": 7202791
+    "files": 374,
+    "bytes": 7237822
   },
   "excludedMirrors": 30,
   "classes": {

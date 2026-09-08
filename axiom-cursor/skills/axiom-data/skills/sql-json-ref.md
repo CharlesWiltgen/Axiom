@@ -46,9 +46,19 @@ JSON1 functions and the `->`/`->>` operators arrived in SQLite 3.38.0 and are bu
 |---|---|---|
 | `json_extract`, `json_set`, `json_each`, all JSON1 functions | 3.38 | iOS 16 / macOS 13 |
 | `->` and `->>` path operators | 3.38 | iOS 16 / macOS 13 |
-| JSONB binary format, `jsonb()` / `jsonb_extract()` family | 3.45 | iOS 18 / macOS 15 |
+| JSONB binary format, `jsonb()` / `jsonb_extract()` family | 3.45 | **iOS 26 / macOS 26** |
 
-iOS 26 / macOS 26 ship SQLite 3.51. Axiom targets iOS 18+ / macOS 15+, so the entire JSON1 surface **and** JSONB are available everywhere you deploy — no runtime version checks needed. The only floor that bites: if you still support iOS 17, JSONB (§3) is unavailable there; the TEXT-JSON path (§2) works back to iOS 16.
+**JSONB is a 26-cycle feature, not an 18-cycle one.** Apple's SQLite went 3.43.2 — shipped unchanged from iOS 17.2 all the way through 18.x — straight to 3.51.0 in the 26 cycle, skipping 3.44 through 3.50 entirely. There is no intermediate OS to target. Point-Free states it outright: *"the JSONB family of functions requires SQLite 3.45, which first shipped with iOS 26, macOS 26, tvOS 26, and watchOS 26."*
+
+| OS | Bundled SQLite | JSONB |
+|---|---|---|
+| iOS 17.2 – 18.x / macOS 14.x – 15 | 3.43.2 | No |
+| iOS 26.x / macOS 26.x | 3.51.0 | Yes |
+| iOS 27 / macOS 27 | 3.54.0 | Yes |
+
+So on Axiom's iOS 18+ / macOS 15+ floor, the JSON1 surface (§2) is available everywhere with no runtime checks — but **JSONB (§3) is not**. Gate it with `@available(iOS 26, macOS 26, *)` and keep the TEXT-JSON path as the fallback, or accept an iOS 26 floor for that feature.
+
+**The library layer enforces this for you.** StructuredQueries annotates its JSONB API `@available(iOS 26, macOS 26, tvOS 26, watchOS 26, *)`, with a few members at 27 (see §6) — so the query builder refuses to compile a call the deployed SQLite could not answer. Raw SQL through GRDB has no such guard: GRDB gates its JSON1 API at iOS 16 but leaves all 14 `jsonb*` functions ungated, so a `jsonb_extract` in a `#sql` string or a `db.execute(sql:)` compiles fine and fails at runtime on iOS 18 with `no such function: jsonb_extract`. The `SuppressPlatformSQLiteAvailability` trait removes the compile-time gate and is **only** correct when you link your own SQLite (SQLCipher, a vendored static build).
 
 > The floor is the *system* SQLite. A wrapper built against a vendored SQLite (e.g. GRDB-SQLCipher, or a custom static build) ships its own version — check that build's SQLite, not the OS table above.
 
@@ -119,6 +129,8 @@ json_group_object(key, value)                    -- aggregate rows -> JSON objec
 
 ## 3 — JSONB (binary format)
 
+**Requires iOS 26 / macOS 26** (SQLite 3.45; see §1). On iOS 18 these functions do not exist — raw SQL fails at runtime with `no such function: jsonb_extract`. Everything in this section needs an availability gate unless your deployment target is already 26.
+
 JSONB stores SQLite's parsed representation as a BLOB, skipping the re-parse that every TEXT-JSON function pays on every call. `jsonb_*` mirrors the JSON1 set (`jsonb_extract`, `jsonb_set`, `jsonb_insert`, …) but returns/consumes BLOBs.
 
 ```sql
@@ -134,9 +146,9 @@ JSONB is *not* human-readable and is not a stable wire format — it is an on-di
 | Readable in a DB browser | yes | no (`json()` to read) |
 | Repeated `*_extract` on the same column | re-parses each call | parsed once on write |
 | Storage size | larger | ~5–10% smaller |
-| Floor | iOS 16 | iOS 18 |
+| Floor | iOS 16 | **iOS 26** |
 
-Default to **TEXT** — it is debuggable and the difference is invisible at small scale. Switch a column to **JSONB** only when profiling (`xcprof` / `EXPLAIN QUERY PLAN`) shows JSON parsing is a measured hot path, typically many extracts per row over a large table. Store one or the other consistently per column; `CHECK (json_valid(col, 0x08))` validates JSONB (the `0x08` flag is strict JSONB — plain `json_valid(col)` checks TEXT JSON).
+Default to **TEXT** — it is debuggable, the difference is invisible at small scale, and it works on every OS Axiom targets. Switch a column to **JSONB** only when profiling (`xcprof` / `EXPLAIN QUERY PLAN`) shows JSON parsing is a measured hot path — typically many extracts per row over a large table — **and** your deployment target is iOS 26 / macOS 26 or you can gate the feature. Store one or the other consistently per column; `CHECK (json_valid(col, 0x08))` validates JSONB (the `0x08` flag is strict JSONB — plain `json_valid(col)` checks TEXT JSON).
 
 ## 4 — Indexing JSON [load-bearing]
 
@@ -163,7 +175,7 @@ If you index more than one or two fields of a JSON column, that is the signal th
 |---|---|
 | You filter / sort / join on the field | a real column |
 | Whole-value read/write; rarely query inside | TEXT JSON column |
-| Same as above, large table, extract is a measured hot path | JSONB column (§3) |
+| Same as above, large table, extract is a measured hot path | JSONB column (§3) — iOS 26+ only |
 | One row owns many of these, queried independently | a child table |
 | A handful of JSON fields are queried hot | generated columns + index (§4) |
 
@@ -202,6 +214,44 @@ let byStore = try Store.group(by: \.id)
 ```
 
 `jsonGroupArray()` and `jsonObject(...)` are documented under Aggregation in `sqlitedata-ref.md`. For a field you filter on, add a generated column in the migration (§4) and query that column normally — don't extract in the `WHERE`.
+
+### JSONB storage and typed access
+
+`JSONRepresentation` stores TEXT. Its binary sibling stores a `BLOB` — smaller and cheaper to parse, at the cost of an availability gate:
+
+```swift
+@available(iOS 26, macOS 26, tvOS 26, watchOS 26, *)
+@Table struct Profile {
+    let id: UUID
+    @Column(as: Author.JSONBRepresentation.self)
+    var author: Author
+}
+```
+
+Inserts emit `jsonb('…')`; selects wrap the column in `json(…)` automatically, so decoding is unchanged.
+
+Extraction is key-path based and typed, rather than a stringly `'$.path'`:
+
+```swift
+Profile.select { $0.author.jsonExtract(\.links[0].homepage) }
+// json_extract("profiles"."author", '$."links"[0]."homepage"')
+```
+
+Mutation helpers — `jsonSet`, `jsonInsert`, `jsonReplace`, `jsonAppend`, `jsonRemove`, `jsonArrayInsert`, each with a `jsonb`-prefixed variant — fuse consecutive same-function calls into one SQL call rather than nesting them.
+
+`jsonEach()` turns a JSON array or object column into a real select statement with `key` and `value` columns, usable as a subquery, with `.exists()`, or joined. A `NULL` document iterates as empty.
+
+#### Availability
+
+Verified against StructuredQueries 0.39.2.
+
+| API | Gate |
+|---|---|
+| `JSONRepresentation`, most `json*` functions, `jsonEach()` | None |
+| `JSONBRepresentation`, most `jsonb*` functions | iOS 26 / macOS 26 / tvOS 26 / watchOS 26 |
+| `jsonArrayInsert`, `jsonbArrayInsert`, `jsonbEach()` | iOS 27 / macOS 27 / tvOS 27 / watchOS 27 |
+
+Apps embedding their own SQLite (SQLCipher, a vendored build) can enable the `SuppressPlatformSQLiteAvailability` trait to drop these gates.
 
 **CloudKit note** A synchronized table sees the JSON column as one opaque field; a partial update ships the whole value. Keep independently-edited fields out of a shared JSON blob (§5, concurrent updates).
 
@@ -243,7 +293,7 @@ let players = try Player
 // .jsonGroupArray(_:filter:), .jsonGroupObject(key:value:filter:), .jsonIsValid(_:)
 ```
 
-**JSONB** SQL support (the `jsonb_*` functions through GRDB's query interface) landed in **GRDB 7**; on an older GRDB you can still call them via raw SQL. As elsewhere, index a hot field with a generated column (§4) rather than filtering on an extract.
+**JSONB** SQL support (the `jsonb_*` functions through GRDB's query interface) landed in **GRDB 7**; on an older GRDB you can still call them via raw SQL. The GRDB version is not the binding constraint, though — the *system SQLite* is, and it does not carry JSONB before iOS 26 / macOS 26 (§1). GRDB adds no availability annotations here, so this is the path that compiles and then fails at runtime. As elsewhere, index a hot field with a generated column (§4) rather than filtering on an extract.
 
 ```swift
 // Raw SQL escape hatch — always bind, never interpolate user input
@@ -281,7 +331,7 @@ Backfill in one `UPDATE` for small tables; batch by rowid range for large ones t
 | Indexing many fields of one JSON column | the fields are really columns | promote them (§5) |
 | JSON array you search by element | each element is unindexable | child table, or FTS5 |
 | Concurrent `json_set` on different keys | read-modify-write of the whole blob; last write wins | separate columns |
-| JSONB to "save space" by default | unreadable, ties data to SQLite version, gain is tiny | TEXT until profiling says otherwise |
+| JSONB to "save space" by default | unreadable, ties data to SQLite version, gain is tiny, and it needs iOS 26 | TEXT until profiling says otherwise |
 | Foreign key "into" a JSON field | not enforceable | a real column with a real FK |
 | Interpolating a user value into a JSON SQL string | injection | bind parameters (`?` / `#bind`) |
 | Encoding JSON without `sortedKeys` (GRDB) | ValueObservation misses changes | set `.sortedKeys` (§7) |

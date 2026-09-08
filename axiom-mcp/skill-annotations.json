@@ -691,6 +691,18 @@
       "axiom-data"
     ]
   },
+  "axiom-data--swift-sharing": {
+    "category": "data",
+    "tags": [
+      "@fetchall",
+      "@fetchone",
+      "@shared",
+      "@sharedreader"
+    ],
+    "related": [
+      "axiom-data"
+    ]
+  },
   "axiom-data--swiftdata": {
     "category": "data",
     "tags": [

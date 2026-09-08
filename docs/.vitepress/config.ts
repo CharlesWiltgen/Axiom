@@ -407,6 +407,7 @@ export default withMermaid(defineConfig({
             { text: 'GRDB', link: '/skills/persistence/grdb' },
             { text: 'GRDB Across App Groups', link: '/skills/persistence/grdb-app-groups' },
             { text: 'GRDB Performance', link: '/skills/persistence/grdb-performance' },
+            { text: 'Sharing', link: '/skills/persistence/swift-sharing' },
             { text: 'SQLiteData', link: '/skills/persistence/sqlitedata' },
             { text: 'SQLiteData Migration', link: '/skills/persistence/sqlitedata-migration' },
             { text: 'Storage Decisions', link: '/skills/persistence/storage' },
@@ -760,7 +761,7 @@ export default withMermaid(defineConfig({
 
     footer: {
       message: 'Released under the MIT License',
-      copyright: 'Copyright © 2026 Charles Wiltgen • v27.0.0-beta.53'
+      copyright: 'Copyright © 2026 Charles Wiltgen • v27.0.0-beta.54'
     }
   }
 }))

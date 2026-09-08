@@ -82,7 +82,7 @@ try database.write { db in
 
 // QUERY
 Item.where(\.isActive)                     // Keypath (simple)
-Item.where { $0.title.contains("phone") }  // Closure (complex)
+Item.where { $0.title.like("%phone%") }    // Closure (complex)
 Item.where { $0.status.eq(#bind(.done)) }  // Enum comparison
 Item.order(by: \.title)                    // Sort
 Item.order { $0.createdAt.desc() }         // Sort descending
@@ -394,6 +394,8 @@ prepareDependencies {
 
 ### Property Wrappers (@FetchAll, @FetchOne)
 
+Both wrap a `SharedReader` from Point-Free's swift-sharing, so `$items.isLoading`, `$items.loadError`, and `try await $items.load(otherQuery)` are available on every fetch. See `skills/swift-sharing.md`.
+
 The primary way to observe database changes in SwiftUI:
 
 ```swift
@@ -427,6 +429,75 @@ struct StatsView: View {
 }
 ```
 
+### @FetchOne on a Single Record
+
+**Pass a statement, not a record.** The seeded form looks equivalent and is not:
+
+```swift
+// ❌ observes the right row at first, then never re-points
+@FetchOne var item: Item
+init(item: Item) { _item = FetchOne(wrappedValue: item) }
+
+// ✅ re-points whenever the id changes
+@FetchOne var item: Item?
+init(id: Item.ID) { _item = FetchOne(Item.find(id)) }
+```
+
+Three separate causes produce the identical symptom, and upgrading fixes only the first.
+
+**Initial row (fixed in 1.10.0).** Before 1.10.0 the seeded form ignored the value's identity and observed the *first row of the table*. A pair of `PrimaryKeyedTable`-constrained inits now build `.find(Value.PrimaryKey(queryOutput: wrappedValue.primaryKey))`, so the first row rendered is correct.
+
+**Not primary-keyed at all (any version).** The seeded form has two overloads. The `PrimaryKeyedTable` one builds `.find(...)`; the plain `Table` one builds `Value.all.selectStar().asSelect().limit(1)` — **no `WHERE`**, so it renders whatever row SQLite yields first. Overload resolution picks silently. `@Table` conforms `PrimaryKeyedTable` only when it found a key: `isPrimaryKey = primaryKey == nil && identifier.text == "id"`. A table whose key is `reminderID` or `uuid` gets `Table` only and falls to the `LIMIT 1` overload on **every** version. Check it with a one-line probe:
+
+```swift
+func _requiresPrimaryKey<T: PrimaryKeyedTable>(_: T.Type) {}
+_requiresPrimaryKey(Reminder.self)      // compile error = not primary-keyed
+```
+
+Fix the model — rename the key to `id` or mark it `@Column(primaryKey: true)` — since without the conformance you also lose `find`, sync metadata, and CloudKit eligibility (`SyncEngine` requires `each T: PrimaryKeyedTable`).
+
+**Re-pointing (still broken at 1.12.0).** Those two inits assign `sharedReader` directly and never call `setFetchKeyID`, which every statement-taking init does. `FetchBox.update(from:)` opens with `guard let otherFetchKeyID = other.fetchKeyID else { return }`, so with a nil key it bails before adopting the new query. When SwiftUI *reuses* the view's storage rather than creating fresh identity, `init` runs again and builds a new box, but the persisted box keeps observing the original row — live, correct data, wrong record.
+
+That reuse is the common case in exactly the places this pattern is used: a `NavigationSplitView` detail column as `selection` changes, a sheet driven by separately-tracked state, re-entry into a `navigationDestination`. Push/pop with distinct identities looks fine, which is why it reads as intermittent.
+
+Prefer `Item?` too — the non-optional request throws `NotFound` when the row is deleted out from under an open detail view, leaving a `loadError` and a frozen copy of a row that no longer exists.
+
+For a view whose id can change without `init` re-running, reload explicitly:
+
+```swift
+.task(id: itemID) { try? await $item.load(Item.find(itemID)) }
+```
+
+### Sectioned Results (v1.8.0+)
+
+`sectionBy:` groups rows in the database rather than in Swift, so section boundaries are computed by SQL and stay correct as rows change:
+
+```swift
+@FetchAll(Reminder.order(by: \.title), sectionBy: \.category)
+var reminders
+
+var body: some View {
+    List {
+        ForEach($reminders.sections) { section in
+            Section(section.name ?? "Uncategorized") {
+                ForEach(section) { reminder in Text(reminder.title) }
+            }
+        }
+    }
+}
+```
+
+`$reminders.sections` is a `ResultsSectionCollection<Reminder, String?>` — a `RandomAccessCollection` of `ResultsSection`, each `Identifiable` by its `name`. The collection also offers `sectionNames`, `subscript(sectionName:)`, `contains(sectionName:)`, and `index(ofSectionNamed:)`.
+
+The section expression is **prepended to the query's `ORDER BY`**, so the sort you write is applied *within* each section. Pass a closure for an arbitrary SQL expression or an explicit ordering:
+
+```swift
+@FetchAll(Reminder.order(by: \.title), sectionBy: { $0.category.desc() })
+var reminders
+```
+
+`SelectStatement.fetchAll(_:sectionBy:)` is the imperative equivalent for one-shot reads.
+
 ### Lifecycle-Aware Fetching (v1.4.0+)
 
 Use `.task` to automatically cancel observation when view disappears:
@@ -446,7 +517,7 @@ struct ItemsList: View {
         .task(id: searchQuery) {
             // Automatically cancels when view disappears or searchQuery changes
             try? await $items.load(
-                Item.where { $0.title.contains(searchQuery) }
+                Item.where { $0.title.like("%\(searchQuery)%") }
                     .order(by: \.title)
             ).task  // ← .task for auto-cancellation
         }
@@ -480,9 +551,9 @@ let active = Item.where(\.isActive)
 // Complex closure filter
 let recent = Item.where { $0.createdAt > lastWeek && !$0.isArchived }
 
-// Contains/prefix/suffix
-let matches = Item.where { $0.title.contains("phone") }
-let starts = Item.where { $0.title.hasPrefix("iPhone") }
+// Contains/prefix/suffix — all spelled with `like`
+let matches = Item.where { $0.title.like("%phone%") }
+let starts = Item.where { $0.title.like("iPhone%") }
 ```
 
 ### Sorting
@@ -531,6 +602,22 @@ try database.write { db in
     .execute(db)
 }
 ```
+
+#### Drafts and lazily-initialized columns
+
+`Draft` is the insert-shaped twin of a table: the primary key is optional because the database assigns it. Since StructuredQueries 0.33, `@Column(lazyInitializable: true)` extends that to any column — the property becomes optional *in the Draft only*, for values the database fills in (a `DEFAULT CURRENT_TIMESTAMP`) or that you set after inserting a parent row (a foreign key):
+
+```swift
+@Table struct Item {
+    let id: Int
+    var title: String
+    @Column(lazyInitializable: true) var createdAt: Date
+}
+
+try Item.insert { Item.Draft(title: "New") }.execute(db)   // createdAt omitted
+```
+
+A table gets a `Draft` if it has a primary key **or** any lazy-initializable column — drafts are no longer exclusive to primary-keyed tables. The `LazyInitializableByDefault` trait makes every defaulted-less property behave this way; it is documented upstream as a future default.
 
 ### Insert with RETURNING (get generated ID)
 
@@ -872,6 +959,12 @@ let sharedItems = try Item.all
     .fetchAll(db)
 ```
 
+### Sharing Records Across iCloud Accounts
+
+`CloudSharingView` presents the system share sheet for a record. Since 1.5.0 it is a plain SwiftUI `View` rather than a `UIViewControllerRepresentable`, branching on `@Dependency(\.context)`: live contexts get the real controller, **previews and tests get a SwiftUI mock** showing the thumbnail, title, and participants. Sharing UI is therefore previewable — it no longer blanks out or crashes the canvas.
+
+Since 1.11.1, share operations resolve the CloudKit database **per record** (`container.database(for: recordID)`) instead of assuming `privateCloudDatabase`. That is what makes a record someone else shared with you editable; before, writes against a shared record were aimed at the wrong database. If sync metadata is missing, the error now tells you to call `syncEngine.sendChanges()`.
+
 ### Migration Helpers
 
 Migrate primary keys when switching sync strategies:
@@ -882,6 +975,51 @@ try await syncEngine.migratePrimaryKeys(
     to: NewItem.self
 )
 ```
+
+---
+
+## Testing and Previews
+
+`defaultDatabase()` is context-sensitive: a pool in the app container when live, and a temporary **on-disk** pool for both previews and tests. Use it rather than hand-rolling per-context setup:
+
+```swift
+prepareDependencies { $0.defaultDatabase = try! defaultDatabase() }
+```
+
+(The library's own docstring says previews get an in-memory database; the code has said `temporaryDatabasePool` for both `.preview` and `.test` since 1.11.1. Nothing depends on it being in-memory, but don't assume the file is absent.)
+
+**The sync engine does not auto-start under test (since 1.5.1).** Any test that exercises synchronization must start it explicitly:
+
+```swift
+@Test func syncsNewReminder() async throws {
+    let syncEngine = try SyncEngine(for: database, tables: Reminder.self)
+    try await syncEngine.start()          // ← required; without it, sync never runs
+    // …
+}
+```
+
+This changed behavior without a compile error, so a suite written against 1.5.0 or earlier still builds and simply stops testing sync — assertions pass against a sync engine that never ran. Audit for it when upgrading past 1.5.1.
+
+CloudKit itself is mocked in tests, so no container or entitlement is needed.
+
+---
+
+## Package Traits
+
+SQLiteData declares seven SwiftPM traits — six real ones plus `SQLiteDataTagged`, a deprecated alias for `Tagged`. All are opt-in, and three are documented upstream as becoming default behavior in the next major release; enable those now rather than migrating later.
+
+| Trait | Effect | Note |
+|-------|--------|------|
+| `CasePaths` | Enum tables / single-table inheritance via `@Selection enum` | See `skills/sqlitedata-ref.md` |
+| `Tagged` | `Tagged<Self, Int>` identifiers in schemas | `SQLiteDataTagged` is a deprecated alias |
+| `ColumnCoding` | `Codable` `CodingKeys` follow `@Column("…")` names, not property names | **Future default.** With it on, writing your own `CodingKeys` is a compile error |
+| `LazyInitializableByDefault` | Draft properties with no default become optional | **Future default** |
+| `StrictDecoding` | Throw on storage/expected type mismatch instead of coercing | **Future default** |
+| `SuppressPlatformSQLiteAvailability` | Drop `@available` gates on APIs needing a newer SQLite than the platform bundles | Only for apps embedding their own SQLite/SQLCipher |
+
+`ColumnCoding` is the one to reach for first: without it, a table with `@Column("is_completed") var isCompleted` encodes JSON keyed `"isCompleted"` while the database column is `is_completed`, and the mismatch surfaces only when something round-trips through `Codable`.
+
+On toolchains earlier than Swift 6.3, a trait that introduces a dependency (`CasePaths`, `Tagged`) also needs that package declared explicitly in your `Package.swift` — a SwiftPM resolution bug fixed in 6.3.
 
 ---
 
@@ -907,10 +1045,10 @@ SQLiteData with CloudKit SyncEngine is the **recommended tvOS data solution**. t
 
 **GitHub**: pointfreeco/sqlite-data, pointfreeco/swift-structured-queries, groue/GRDB.swift
 
-**Skills**: axiom-data (skills/sqlitedata-ref.md), axiom-data (skills/sqlitedata-migration.md), axiom-data (skills/database-migration.md), axiom-data (skills/grdb.md)
+**Skills**: axiom-data (skills/sqlitedata-ref.md), axiom-data (skills/sqlitedata-migration.md), axiom-data (skills/database-migration.md), axiom-data (skills/grdb.md), axiom-data (skills/swift-sharing.md)
 
 ---
 
 **Targets:** iOS 17+, Swift 6
-**Framework:** SQLiteData 1.4+
+**Framework:** SQLiteData 1.12+ (StructuredQueries 0.39+, GRDB 7.11+)
 **History:** See git log for changes
