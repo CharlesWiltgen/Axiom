@@ -10,7 +10,7 @@ Advanced query patterns and schema composition techniques for [SQLiteData](https
 **This reference covers** advanced querying, schema composition, views, and custom aggregates.
 
 **Requires** iOS 17+, Swift 6 strict concurrency
-**Framework** SQLiteData 1.4+
+**Framework** SQLiteData 1.12+
 
 ---
 
@@ -267,7 +267,7 @@ Extend `Where<Item>` to add composable filters:
 ```swift
 extension Where<Item> {
     func matching(_ search: String) -> Where<Item> {
-        self.where { $0.title.contains(search) || $0.notes.contains(search) }
+        self.where { $0.title.like("%\(search)%") || $0.notes.like("%\(search)%") }
     }
 }
 let results = try Item.inStock.matching(searchText).fetchAll(db)
@@ -326,7 +326,7 @@ Key benefits: atomic reads, automatic observation, type-safe results.
 | `length()` | `$0.title.length()` | LENGTH |
 | `instr(search)` | `$0.title.instr("search") > 0` | INSTR |
 | `like(pattern)` | `$0.title.like("%phone%")` | LIKE |
-| `hasPrefix` / `hasSuffix` / `contains` | `$0.title.contains("Max")` | Swift-style |
+| ~~`hasPrefix`/`hasSuffix`/`contains`~~ | Deprecated — use `like("Max%")` / `like("%Max")` / `like("%Max%")` | LIKE |
 | `collate(.nocase)` | `$0.title.collate(.nocase).eq(#bind("X"))` | COLLATE |
 
 ### Null Handling
@@ -341,7 +341,38 @@ let noDue = try Reminder.where { $0.dueDate.is(nil) }.fetchAll(db)
 
 // Null-safe ordering
 let sorted = try Item.order { $0.priority.desc(nulls: .last) }.fetchAll(db)
+
+// nullif — collapse a sentinel to NULL (inverse of coalesce)
+let cleaned = try User.select { $0.nickname.nullif("") }.fetchAll(db)
 ```
+
+### Dates and Times
+
+Call a date column as a function to apply SQLite date modifiers, rather than computing bounds in Swift and binding them:
+
+```swift
+// Everything since the start of the day, 7 days ago
+Reminder.where { $0.createdAt > .now(.startOfDay.days(-7)) }
+
+// Normalize to the start of the month
+Reminder.select { $0.dueDate(.startOfMonth) }
+```
+
+`DateTimeModifier` chains: `years(_:)`, `months(_:)`, `days(_:)`, `hours(_:)`, `minutes(_:)`, `seconds(_:)`, `milliseconds(_:)`, `weekday(_:)`, `startOfDay`, `startOfMonth`, `startOfYear`. The current date is a *separate* expression, `.now`, which takes the same modifiers — `.now(.days(-7))` — and is what you compare a column against. The `years(_:_:)` / `months(_:_:)` overloads taking an `Overflow` are gated `@available(iOS 26, macOS 26, tvOS 26, watchOS 26, *)`; the rest are ungated.
+
+Extract components without a round trip through `Date`:
+
+```swift
+Reminder.where { $0.dueDate.year.eq(2026) && $0.dueDate.month.eq(1) }
+Reminder.group { $0.createdAt.weekday }
+Reminder.select { $0.createdAt.strftime("%Y-W%W") }
+```
+
+Accessors: `year`, `month`, `day`, `hour`, `minute`, `second`, `weekday`, `dayOfYear`, each `QueryExpression<Int>`; `fractionalSecond` is `QueryExpression<Double>`; `strftime(_:)` returns `QueryExpression<String?>`.
+
+**Storage-aware.** The emitted SQL follows the column's representation — a column stored as `unixepoch` gets `unixepoch(…, 'unixepoch', '1 months')` where an ISO-8601 text column gets `datetime(…, '1 months', 'subsec')`. You write the same Swift either way.
+
+**Why this beats Swift-side math.** Bounds computed in Swift bind a fixed instant, so a long-lived `ValueObservation` or a cached statement keeps comparing against the moment the query was built. Expressing the boundary in SQL re-evaluates it per execution.
 
 ### Range and Set Membership
 
@@ -363,7 +394,7 @@ let midRange = try Item.where { $0.price.between(10, and: 100) }.fetchAll(db)
 
 ```swift
 // Offset-based
-let items = try Item.order(by: \.createdAt).limit(20, offset: page * 20).fetchAll(db)
+let items = try Item.order(by: \.createdAt).limit(20).offset(page * 20).fetchAll(db)
 
 // Cursor-based (more efficient for deep pages)
 let items = try Item.where { $0.id > lastSeenId }.order(by: \.id).limit(20).fetchAll(db)
@@ -438,6 +469,20 @@ let employeesWithManagers = try Employee
 
 ---
 
+---
+
+## Aliasing a Built Statement
+
+`TableAlias` names a table up front. `select.as(_:)` renames a statement *after* it is built — the way to join against a derived or table-valued subquery. The alias is an `AliasName` enum, and the joined side exposes `jsonEach`'s own `key` / `value` columns, not the element's fields:
+
+```swift
+enum Approach: AliasName {}
+
+Trip.join(Trip.approach.jsonEach().as(Approach.self)) {
+    $0.id.eq($1.value.jsonExtract(\.tripID))
+}
+```
+
 ## Case Expressions
 
 ```swift
@@ -463,6 +508,22 @@ try Reminder.find(id).update {
 ```
 
 ---
+
+---
+
+## Literal Row Sets with `Values`
+
+`Values` builds a real SQL `VALUES (…), (…)` clause — a literal set of rows you can select from, join against, or use to seed a CTE, without a temporary table:
+
+```swift
+Select(Values { (1, "Hello", true); (2, "Goodbye", false) }).where { $2 }
+// SELECT "column1", "column2", "column3"
+// FROM (VALUES (1, 'Hello', 1), (2, 'Goodbye', 0)) WHERE ("column3")
+```
+
+Columns are auto-named `"column1"…"columnN"`. Rows of `@Selection` or `@Table` values alias those back to the real column names, which is what makes a wrapped `Values` a convenient CTE seed.
+
+It lives in `StructuredQueriesSQLiteCore`. Note the name changed meaning: before StructuredQueries 0.38, `Values(…)` was a `StructuredQueriesCore` helper emitting a plain `SELECT`; that spelling is now a deprecated free function renamed to `Select(_:)`.
 
 ## Common Table Expressions (CTEs)
 
@@ -789,6 +850,44 @@ Common uses: mode, median, weighted average, custom filtering. Functions run in 
 
 ---
 
+## Custom Collations (v1.12.0+)
+
+A collation decides how SQLite compares and orders TEXT — for `ORDER BY`, `=`, `<`, `GROUP BY`, and `DISTINCT`. SQLite ships three (`BINARY`, `NOCASE`, `RTRIM`), all byte-oriented, so Unicode-equivalent strings that differ in bytes sort apart and compare unequal. `"café"` written pre-composed (U+00E9) and decomposed (U+0065 U+0301) are the same string to Swift and two different strings to SQLite.
+
+SQLiteData installs a `canonical` collation that orders text by Unicode Canonical Equivalence, matching Swift's own `String` comparison:
+
+```swift
+Reminder.order { $0.title.collate(.canonical) }
+```
+
+**`defaultDatabase(path:configuration:)` registers it for you** via `configuration.prepareDatabase`. GRDB's `prepareDatabase` appends rather than replaces, so your own preparation closure — an SQLCipher passphrase, a custom function — still runs. On a hand-built `DatabaseQueue`/`DatabasePool`, register it yourself:
+
+```swift
+configuration.prepareDatabase { db in db.add(collation: .canonical) }
+```
+
+`Database.remove(collation:)` unregisters one.
+
+Define your own with `@DatabaseCollation` (from StructuredQueries), the same shape as `@DatabaseFunction`:
+
+```swift
+@DatabaseCollation
+func localized(_ lhs: String, _ rhs: String) -> CollationOrder {
+    CollationOrder(lhs.localizedCompare(rhs))
+}
+
+configuration.prepareDatabase { db in db.add(collation: $localized) }
+let sorted = try Reminder.order { $0.title.collate($localized) }.fetchAll(db)
+```
+
+`CollationOrder` is `.ascending` / `.same` / `.descending`, constructible from any `Comparable` pair or a `ComparisonResult`.
+
+**Collations are not indexes.** An index built under one collation cannot serve a query using another — `CREATE INDEX … ON reminder(title)` is a `BINARY` index and will not satisfy `ORDER BY title COLLATE canonical`. Declare the collation on the index too (`CREATE INDEX … ON reminder(title COLLATE canonical)`), or the sort falls back to a full scan. Verify with `EXPLAIN QUERY PLAN`; see `skills/grdb-performance.md` §5.
+
+**This is comparison, not search.** FTS5 matching is tokenizer-driven and unaffected by collation — normalize input on both the index and query paths instead. See `skills/sqlite-fts-ref.md`.
+
+---
+
 ## Batch Upsert Performance
 
 For high-volume sync (50K+ records), use cached statements instead of the type-safe API:
@@ -836,6 +935,36 @@ try database.write { db in
     .execute(db)
 }
 ```
+
+#### Triggers under CloudKit sync
+
+A trigger fires for **every** write to its table — including writes the `SyncEngine` makes when pulling records from CloudKit. Left unguarded, the trigger above renumbers `position` on every synced insert, fighting the values arriving from other devices.
+
+Gate on `SyncEngine.$isSynchronizing`, a database function the sync engine installs on the connection. It returns true when the current write originates from the sync engine:
+
+```swift
+try Reminder.createTemporaryTrigger(
+    after: .insert { new in
+        Reminder.find(new.id).update {
+            $0.position = Reminder.select { ($0.position.max() ?? -1) + 1 }
+        }
+    } when: { _ in
+        !SyncEngine.$isSynchronizing
+    }
+)
+.execute(db)
+```
+
+Use the projected `$isSynchronizing`, not the bare `SyncEngine.isSynchronizing`. The bare form is evaluated once at trigger *creation* and reports an issue telling you so; the projection is the SQL expression evaluated at trigger *execution*. In raw SQL, interpolate it into the `WHEN` clause: `FOR EACH ROW WHEN NOT \(SyncEngine.$isSynchronizing)`.
+
+**Not every trigger wants the guard.** The question is whether the trigger derives data that CloudKit already carries:
+
+| Trigger's job | Guard? | Why |
+|---|---|---|
+| Maintain a value that syncs (`position`, `updatedAt`) | Yes — `!$isSynchronizing` | The synced record already holds the authoritative value; recomputing it locally overwrites the peer's |
+| Maintain a purely local index (FTS5 shadow table, cached counts) | No — run always | The index is local and must reflect every row change, whoever wrote it |
+
+`SyncEngine.isSynchronizingChanges()` is the older spelling and is deprecated in favor of `$isSynchronizing`.
 
 ### Custom Update Logic
 
@@ -896,5 +1025,5 @@ let shared = try Customer.select(\.email).intersect(Supplier.select(\.email)).fe
 ---
 
 **Targets:** iOS 17+, Swift 6
-**Framework:** SQLiteData 1.4+
+**Framework:** SQLiteData 1.12+ (StructuredQueries 0.39+, GRDB 7.11+)
 **History:** See git log for changes

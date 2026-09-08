@@ -21,6 +21,7 @@ flowchart LR
         codable["codable"]:::discipline
         cloud_sync["cloud-sync"]:::discipline
         storage["storage"]:::discipline
+        swift_sharing["swift-sharing"]:::discipline
     end
     axiom_data --> skills_d
 
@@ -54,6 +55,10 @@ flowchart LR
 - **[SQLiteData Migration](/skills/persistence/sqlitedata-migration)** – Migration guide from SwiftData to SQLiteData
   - *"SwiftData's CloudKit sync is causing conflicts. Should I migrate to SQLiteData?"*
   - *"How do I convert my @Model classes to @Table? What's the equivalent of @Relationship?"*
+
+- **[Sharing](/skills/persistence/swift-sharing)** – `@Shared` persistence and observation, the layer under `@FetchAll`
+  - *"How do I persist a setting to UserDefaults and observe it from several views?"*
+  - *"My `@FetchAll` is empty — is it still loading, or did the query fail?"*
 
 - **[GRDB](/skills/persistence/grdb)** – Raw SQL queries, ValueObservation, and DatabaseMigrator patterns
   - *"I need to query messages with their authors and reaction counts in one query. How do I write the JOIN?"*

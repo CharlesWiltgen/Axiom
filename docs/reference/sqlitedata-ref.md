@@ -33,6 +33,9 @@ Questions you can ask Claude that will draw from this reference:
 - "How do I aggregate child records as JSON in a single query?"
 - "I need a self-join for comparing records in the same table."
 - "How do I write a custom aggregate function in SQLiteData?"
+- "How do I filter by 'the last 7 days' without computing the date in Swift?"
+- "How do I sort text the way Swift does, so 'café' and 'cafe\u{0301}' compare equal?"
+- "My trigger fires on every CloudKit sync. How do I make it skip synced writes?"
 
 ## What's Covered
 
@@ -45,8 +48,22 @@ Questions you can ask Claude that will draw from this reference:
 ### Advanced Queries
 - Recursive CTEs for hierarchical data (trees, graphs)
 - Database views with `@Selection`
-- `TableAlias` for self-joins
+- `TableAlias` for self-joins; `select.as(_:)` to alias an already-built statement
 - Complex predicates and joins
+- `Values` – literal multi-row `VALUES` sets, joinable and usable as a CTE seed
+- `nullif` alongside coalesce for null handling
+
+### Dates and Times
+- Date columns called as functions: `$0.createdAt(.startOfDay.days(-7))`
+- `DateTimeModifier` – `years`/`months`/`days`/`hours`/`minutes`/`seconds`/`weekday`, `startOfDay`/`startOfMonth`/`startOfYear`, `.now`
+- Component accessors: `year`, `month`, `day`, `hour`, `minute`, `second`, `weekday`, `dayOfYear`, `strftime(_:)`
+- Storage-aware output (`unixepoch` vs `datetime`)
+
+### Collations and Triggers
+- `.canonical` – Unicode canonical-equivalence ordering, auto-installed by `defaultDatabase(path:configuration:)`
+- `@DatabaseCollation` for Swift-defined collating sequences; `Database.add(collation:)` / `remove(collation:)`
+- Collation-aware indexes — an index under one collation cannot serve a query using another
+- `createTemporaryTrigger` and guarding it with `SyncEngine.$isSynchronizing` under CloudKit sync
 
 ### Aggregation
 - JSON aggregation (`jsonGroupArray`)
@@ -105,6 +122,7 @@ This reference covers advanced SQLiteData patterns for experienced developers. F
 - [grdb](/skills/persistence/grdb) – Raw GRDB when you need maximum SQL control
 - [database-migration](/skills/persistence/database-migration) – Safe schema evolution patterns
 - [swift-concurrency](/skills/concurrency/swift-concurrency) – Swift 6 concurrency for database actors
+- [swift-sharing](/skills/persistence/swift-sharing) – The `SharedReader` layer under these property wrappers
 
 ## Resources
 

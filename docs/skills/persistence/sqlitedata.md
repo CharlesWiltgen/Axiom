@@ -37,6 +37,10 @@ Questions you can ask Claude that will draw from this skill:
 - "How do I do a bulk insert efficiently?"
 - "How do I set up CloudKit sync with SQLiteData?"
 - "What's the difference between @FetchAll and @FetchOne?"
+- "How do I group my list into sections the way SwiftData does, but in SQL?"
+- "My @FetchOne shows the wrong row — I passed the record but it loads a different one."
+- "Which SQLiteData package traits should I turn on?"
+- "My tests pass but sync is never exercised. What am I missing?"
 
 ## What This Skill Provides
 
@@ -49,10 +53,12 @@ Questions you can ask Claude that will draw from this skill:
 
 ### Queries
 - @FetchAll for array results
-- @FetchOne for single value/aggregate
+- @FetchOne for single value/aggregate, and why single-record observation must be seeded with a statement rather than a record
 - where() with keypaths and closures
 - order(by:) and limit/offset
 - Static helpers: fetchAll, find (v1.4.0+)
+- Sectioned results with `sectionBy:` (v1.8.0+) — `ResultsSectionCollection`, `ResultsSection`
+- Loading and error state inherited from [Sharing](/skills/persistence/swift-sharing) (`isLoading`, `loadError`)
 
 ### Mutations
 - insert with Draft pattern
@@ -63,7 +69,16 @@ Questions you can ask Claude that will draw from this skill:
 ### CloudKit Sync
 - SyncEngine configuration
 - prepareDependencies setup
-- Record sharing
+- Record sharing, with per-record database resolution (v1.11.1+)
+- Previewable sharing UI — `CloudSharingView` mocks in previews and tests (v1.5.0+)
+
+### Package Traits
+- Six traits — CasePaths, Tagged, ColumnCoding, LazyInitializableByDefault, StrictDecoding, SuppressPlatformSQLiteAvailability — plus `SQLiteDataTagged`, a deprecated alias for `Tagged`
+- Which three become default behavior in the next major release
+
+### Testing and Previews
+- Context-driven database provisioning (in-memory for previews, temporary pool for tests)
+- The sync engine no longer auto-starts under test (v1.5.1+) — `await syncEngine.start()` is required
 
 ### Advanced Patterns
 - #sql macro for raw SQL
@@ -134,6 +149,7 @@ This page documents the `axiom-data` skill — SQLiteData patterns Claude uses w
 - [sqlitedata-ref](/reference/sqlitedata-ref) – Advanced patterns: CTEs, views, aggregates, @Selection
 - [grdb](/skills/persistence/grdb) – Raw GRDB for complex queries
 - [database-migration](/skills/persistence/database-migration) – Safe schema evolution patterns
+- [swift-sharing](/skills/persistence/swift-sharing) – The layer `@FetchAll` and `@FetchOne` are built on; `isLoading`, `loadError`, and custom persistence strategies live there
 
 ## Resources
 
