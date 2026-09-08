@@ -72,7 +72,7 @@ Questions you can ask Claude that will draw from this skill:
 
 ### Schema Choices That Affect Performance
 - `WITHOUT ROWID` for small-row tables with non-integer PKs
-- The two traps that come with it: such tables are never observed, and upsert needs GRDB 7.11+
+- The two traps that come with it: such tables are never observed, and upsert is still partly broken — fixed generally in 7.11.0, still failing through 7.11.1 for INTEGER primary keys
 - Generated columns (VIRTUAL by default; indexable)
 - `PRAGMA table_xinfo` (not `table_info`) to inspect generated columns
 
@@ -101,7 +101,7 @@ Questions you can ask Claude that will draw from this skill:
 - `@FetchAll` ≈ `ValueObservation.shared(in:)` semantics
 
 ### Anti-Patterns Reference
-- 19-row anti-pattern table covering: SQL string interpolation, missing FK indexes, unbounded `fetchAll`, opening/closing DB per query, missing `PRAGMA optimize`, partial-index WHERE mismatch, `ORDER BY` without supporting index, `.immediate` on slow ValueObservation, `Record` subclass, `databaseSelection` as `static let`, copying `.sqlite` alone, stored generated columns for indexable lookups, string concatenation for case-insensitive search, `INSERT OR REPLACE` as an upsert, fetch-then-branch instead of upsert, observing a `WITHOUT ROWID` table, leaving `requiresDatabaseEventKind = false` on, `WITHOUT ROWID` upsert below GRDB 7.11
+- 19-row anti-pattern table covering: SQL string interpolation, missing FK indexes, unbounded `fetchAll`, opening/closing DB per query, missing `PRAGMA optimize`, partial-index WHERE mismatch, `ORDER BY` without supporting index, `.immediate` on slow ValueObservation, `Record` subclass, `databaseSelection` as `static let`, copying `.sqlite` alone, stored generated columns for indexable lookups, string concatenation for case-insensitive search, `INSERT OR REPLACE` as an upsert, fetch-then-branch instead of upsert, observing a `WITHOUT ROWID` table, leaving `requiresDatabaseEventKind = false` on, `WITHOUT ROWID` upsert bugs
 - Each anti-pattern cross-references the explaining section
 
 ### When to Profile vs Read

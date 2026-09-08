@@ -34,6 +34,7 @@ Questions you can ask Claude that will draw from this reference:
 - "Why is my `WHERE json_extract(data, '$.status') = 'active'` so slow?"
 - "How do I index a field inside a JSON column?"
 - "Should I use TEXT JSON or JSONB? What iOS version do I need for JSONB?"
+- "Why won't my `jsonb_extract` call compile through SQLiteData?"
 - "How do I rename a key inside a JSON column across every row?"
 - "What's the difference between `->` and `->>` in SQLite?"
 - "When should I use a JSON column versus a child table?"
@@ -41,9 +42,12 @@ Questions you can ask Claude that will draw from this reference:
 ## What's Covered
 
 ### Version Floor
-- JSON1 + `->`/`->>` → SQLite 3.38 (iOS 16+); JSONB → SQLite 3.45 (iOS 18+)
-- iOS 26 / macOS 26 ship SQLite 3.51 — the whole surface is available on Axiom's iOS 18+ floor
-- The system-vs-vendored SQLite caveat (SQLCipher / custom builds)
+- JSON1 + `->`/`->>` → SQLite 3.38 (iOS 16+)
+- JSONB → SQLite 3.45, which first shipped in the **26 cycle** (iOS 26 / macOS 26), not iOS 18
+- Measured: iOS 17.2–18.x ship SQLite 3.43.2; iOS 26 ships 3.51.0; iOS 27 ships 3.54.0
+- JSON1 is available across Axiom's whole iOS 18+ floor; **JSONB is not** — gate it or take an iOS 26 floor
+- StructuredQueries `@available`-gates JSONB so it cannot compile below 26; raw SQL through GRDB fails at runtime instead
+- The system-vs-vendored SQLite caveat (SQLCipher / custom builds, and the `SuppressPlatformSQLiteAvailability` trait)
 
 ### JSON1 Functions and Operators
 - Extract: `json_extract`, `->` (JSON), `->>` (SQL scalar)
@@ -54,7 +58,11 @@ Questions you can ask Claude that will draw from this reference:
 
 ### JSONB (Binary Format)
 - `jsonb()` / `jsonb_extract()` family; round-trip via `json()` for display
-- TEXT vs JSONB decision — default TEXT; switch only when profiling shows parse cost
+- TEXT vs JSONB decision — default TEXT; switch only when profiling shows parse cost **and** you can take iOS 26
+- `JSONBRepresentation` via `@Column(as:)` for storing a Codable value as a BLOB
+- Key-path `jsonExtract(\.links[0].homepage)` — typed extraction, no stringly `'$.path'`
+- `jsonEach()` as a joinable select statement; `jsonSet` / `jsonInsert` / `jsonReplace` / `jsonAppend` / `jsonRemove` / `jsonArrayInsert` with call fusion
+- Per-API availability: ungated / iOS 26 / iOS 27 tiers
 
 ### Indexing JSON (Load-Bearing)
 - A JSON extract in `WHERE` is a full scan — generated column + index is the fix

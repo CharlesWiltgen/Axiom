@@ -33,6 +33,7 @@ Questions you can ask Claude that will draw from this skill:
 - "I need GROUP BY with HAVING clause. Raw SQL seems easier than type-safe queries."
 - "My sync overwrites rows the user just edited. How do I insert new rows without touching existing ones?"
 - "Should I encrypt my SQLite database, or is iOS file protection enough?"
+- "My upsert fails with `no such column: "rowid"`. What's going on?"
 
 ## What This Skill Provides
 
@@ -50,6 +51,7 @@ Questions you can ask Claude that will draw from this skill:
 - `upsert` and `upsertAndFetch` for insert-or-update in one statement
 - Scoping which columns a conflict updates (`UpsertUpdateStrategy`)
 - Why `INSERT OR REPLACE` is not an upsert, and what it silently destroys
+- `WITHOUT ROWID` upsert bugs — fixed generally in 7.11.0, still broken through 7.11.1 for INTEGER primary keys
 
 ### Querying
 - Raw SQL with fetchAll, fetchOne

@@ -24,7 +24,7 @@ This is the runtime-and-idioms counterpart to [audit-database-schema](/commands/
 7. **Legacy `Record` subclasses** – discouraged since GRDB 7, and awkward to make `Sendable`
 8. **`INSERT OR REPLACE` misused as an upsert** – deletes and re-inserts, so unlisted columns reset to defaults and `ON DELETE CASCADE` fires
 9. **Observation on a `WITHOUT ROWID` table** – SQLite's update hook never fires for these, so the observation goes silent permanently with no error
-10. **`WITHOUT ROWID` upsert below GRDB 7.11** – GRDB generated wrong SQL for that pairing before 7.11.0
+10. **`WITHOUT ROWID` upsert bugs** – GRDB generated wrong SQL for that pairing before 7.11.0, and still does through 7.11.1 when the table's primary key is `INTEGER`
 
 ## Usage
 

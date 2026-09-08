@@ -212,7 +212,7 @@ Use `upsert`. Choose `.replace` only when delete-then-insert is genuinely the se
 
 ### `WITHOUT ROWID` tables
 
-Two constraints, both covered in `skills/grdb-performance.md` §7: upsert against a `WITHOUT ROWID` table needs **GRDB 7.11+**, and such tables are **never observed** — `ValueObservation` on one goes silent after its initial value. Settings and key-value stores are the common case for all three of "`WITHOUT ROWID`", "upsert target", and "observed", so check before combining them.
+Two constraints, both covered in `skills/grdb-performance.md` §7. Upsert against a `WITHOUT ROWID` table needs **GRDB 7.11+**, and still fails on 7.11.1 when that table's primary key is `INTEGER`. Such tables are also **never observed** — a `ValueObservation` on one goes silent after its initial value. Settings and key-value stores are the common case for all three of "`WITHOUT ROWID`", "upsert target", and "observed", so check before combining them.
 
 ## Raw SQL Queries
 
