@@ -16,7 +16,8 @@ Use this reference when:
 - Fetching assets with PHFetchOptions predicates and sort descriptors
 - Requesting images from PHImageManager with delivery modes
 - Creating assets with PHAssetCreationRequest including deferred photo proxies
-- Implementing PHPhotoLibraryChangeObserver for library sync
+- Implementing PHPhotoLibraryChangeObserver for library sync, or tracking changes across launches with the iOS 27 persistent change observer
+- Editing asset keywords, ratings, and captions (iOS 27)
 - Checking which PhotoKit types are `Sendable` and which callbacks fire once vs repeatedly
 
 ## Example Prompts
@@ -35,12 +36,17 @@ Questions you can ask Claude that will draw from this reference:
 - "How do I write a PHPhotoLibraryChangeObserver under Swift 6?"
 - "How do I strip location metadata from photos the user picks?"
 - "How do I present the shared album creation sheet?"
+- "How do I find out what changed in the photo library while my app wasn't running?"
+- "How do I add keywords or a star rating to a photo?"
+- "How do I show an Apple Reference Image in my app?"
+- "How do I turn on background photo uploads with Wi-Fi only on macOS 27?"
 
 ## What's Covered
 
 - PHPickerViewController configuration, filters, delegate, and embedded mode (iOS 17+)
 - Picker metadata stripping and search seeding (iOS 27) — `PHPickerMetadataOptions`, `PHPickerSearchText`, `photosPickerMetadataOptions(_:)`, `photosPickerSearchText(_:)`
 - Shared album sheets (iOS 27) — `photosSharedAlbumCreationSheet` / `…PostingSheet` / `…CustomizationSheet`, `PHSharedAlbumCreationResult`, `PHSharedAlbumCreationSharingPolicy`
+- Apple Reference Image (iOS and macOS 27) — `PHReferenceImageInfo`, `imageContainsReferenceImageData`, and the four `photosReferenceImageViewer(…)` modifiers
 - PhotosPicker styles (presentation, inline, compact), selection behaviors, disabled capabilities, and HDR preservation
 - PhotosPickerItem loading with Transferable and custom transfer representations
 - PHPhotoLibrary authorization statuses, access levels (.readWrite, .addOnly), and limited library picker
@@ -49,13 +55,18 @@ Questions you can ask Claude that will draw from this reference:
 - PHFetchResult access patterns and enumeration
 - PHImageManager image/video requests, delivery modes, and secondary degraded images (iOS 17+)
 - PHChange handling with incremental updates for collection views
+- Persistent change history observer (iOS 27) — `PHPhotoLibraryPersistentChangesObserver`, `register(_:)` / `unregisterPersistentChangesObserver(_:)`, `fetchPersistentChanges(since:)`, `PHPhotosError.persistentChangeTokenExpired`
+- Asset metadata editing (iOS 27) — `addKeyword(_:)` / `removeKeyword(_:)`, `rating` (`PHAsset.Rating`), `caption`, `setLivePhotoVideoPlaybackEnabled(_:)`, `revertAssetContent(to:)`, `originalResourceChoice`, `PHAssetExtendedMetadata`, `prefetchAssetExtendedMetadata`
+- Collections and identifiers (iOS 27) — `PHCollectionListSubtype.rootFolder`, `localIdentifierMappings(forSynced:)`
+- CloudKit server-side asset export (iOS 27) — `PHAssetResourceManager.exportedAssetID(for:)`, `PHAssetResource.dataSize`
+- Background asset resource upload (iOS and macOS 27) — `enableUploadJobExtension(with:)`, `setUploadJobExtensionOptions(_:)`, `disableUploadJobExtension()`, `PHAssetResourceUploadJobOptions`, `PHAssetResource.assetResource(forUploadJob:)`, `PHBackgroundResourceUploadJobExtension`
 - Sendable annotations across PHAsset, PHObject, PHFetchResult, PHChange, and PHPhotoLibrary
 - Isolation requirements for `photoLibraryDidChange` and `performChanges` change blocks
 - Callback arity per PHImageManager request method (`requestImage` fires one or more times; `requestImageDataAndOrientation` fires exactly once)
 
 ## Documentation Scope
 
-This page documents the `axiom-media` skill. It provides complete API documentation for PhotoKit classes and photo picker views. For guided implementation patterns, use the discipline skill.
+This page documents the `photo-library-ref` skill in the `axiom-media` suite. It provides complete API documentation for PhotoKit classes and photo picker views. For guided implementation patterns, use the discipline skill.
 
 - For implementation guidance, use [photo-library](/skills/integration/photo-library)
 - For camera capture, see [camera-capture](/skills/integration/camera-capture)

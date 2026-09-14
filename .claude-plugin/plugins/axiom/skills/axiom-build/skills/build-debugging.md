@@ -173,6 +173,18 @@ rm Package.resolved
 swift package resolve
 ```
 
+### Issue 6: `-ld_classic` Silently Ignored (Xcode 27)
+
+**Symptom**: a target that passes `-ld_classic` in `OTHER_LDFLAGS` still links, but behaves as though the flag were absent. The build log carries `ld: warning: -ld_classic is no longer supported and will be ignored`.
+
+**Cause**: Xcode 27 removed the classic linker (ld64). The toolchain ships a single `ld`, and the flag is accepted and discarded. This is a **warning, not an error** — so a project pinned to classic-linker behavior keeps building green while quietly getting the new linker, and only the downstream symptom (duplicate symbols, `-force_load` / `-all_load` ordering, dead-strip differences) shows up.
+
+**Fix**: drop `-ld_classic` from `OTHER_LDFLAGS`, xcconfigs, and CI scripts, then re-test whatever the flag was masking — that original problem is still there and now needs a real fix. The older `-ld64` spelling is worse: it parses as `-l d64` and fails the link with `library 'd64' not found`.
+
+Verified on Xcode 27.0 (27A266a): `clang -Wl,-ld_classic` exits 0 with that warning, and `ld -v` reports `PROJECT:ld-27037.1`.
+
+**Same release, adjacent trap**: Apple's 27 release notes state the Swift dependency scanner now requires **every Clang module reachable from a single dependency-scan action to have a unique module name**; duplicates were previously tolerated and can now error the scan. If scanning started failing right after the upgrade, look for two modules vending the same name rather than for a code change — typically vendored third-party sources that ship a `module.modulemap` redeclaring an SDK module.
+
 ## Dependency Resolution Strategies
 
 ### Strategy 1: Lock to Specific Versions
@@ -500,7 +512,3 @@ xcodebuild -showBuildSettings  # Show all build settings
 **GitHub**: Carthage/Carthage
 
 **Skills**: axiom-build (skills/xcode-debugging.md)
-
----
-
-**History:** See git log for changes

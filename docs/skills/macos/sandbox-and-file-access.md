@@ -17,6 +17,7 @@ Use this skill when you're:
 - Persisting access to user-selected files across app launches
 - Preparing a macOS app for App Store review or notarization
 - Deciding which sandbox entitlements to request
+- Finding that access to another developer team's app container stopped working on macOS 27
 
 ## Example Prompts
 
@@ -28,6 +29,7 @@ Questions you can ask Claude that will draw from this skill:
 - "Should I request `files.all` or `files.user-selected.read-write`?"
 - "Where do I check why an operation was denied?"
 - "What's the difference between starting access on a panel URL vs. a resolved bookmark?"
+- "My app can no longer read another team's app container on macOS 27, and no prompt appears. Why?"
 
 ## What This Skill Provides
 
@@ -59,6 +61,9 @@ Questions you can ask Claude that will draw from this skill:
 - Console.app subsystem `com.apple.sandbox.reporting` filter and the `violation` category
 - `log stream` for live diagnostic output
 - Quinn's diagnostic flow: confirm sandbox is the cause, check entitlements, check for stale bookmarks, check code signing identity
+
+### Cross-Team Container Access (macOS 27)
+- macOS 27 denies access to other developer teams' app data and app group containers by default, without prompting; the user manages exceptions in Privacy & Security settings
 
 ## Key Pattern
 

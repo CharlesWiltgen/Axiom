@@ -7,7 +7,7 @@ apple_platforms: iOS 27+, iPadOS 27+, tvOS 27+, visionOS 27+, macOS 12.3+
 
 # Screen Capture (ScreenCaptureKit)
 
-`import ScreenCaptureKit` captures the screen — or just your own app — as a live video + audio stream, records it to a file, or buffers recent content for instant-replay clips. It's **new on iOS 27, iPadOS 27, tvOS 27, and visionOS 27** (beta); macOS has had it since 12.3. On iOS it's the modern successor to ReplayKit-style capture.
+`import ScreenCaptureKit` captures the screen — or just your own app — as a live video + audio stream, records it to a file, or buffers recent content for instant-replay clips. It's **new on iOS 27, iPadOS 27, tvOS 27, and visionOS 27**; macOS has had it since 12.3. On iOS it's the modern successor to ReplayKit-style capture.
 
 ## When to Use
 
@@ -22,6 +22,7 @@ Use this skill when you're:
 - "Capture just my own app's content and stream the frames."
 - "How is ScreenCaptureKit different on iOS than on macOS?"
 - "Record the screen straight to an .mp4 file."
+- "How do I add a camera video effect to in-app screen capture, and find out when it fails?"
 
 ## What This Skill Provides
 

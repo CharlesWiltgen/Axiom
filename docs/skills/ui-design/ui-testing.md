@@ -18,6 +18,7 @@ Use this skill when you're:
 - Tests fail on iPad but pass on iPhone
 - Want to test across multiple network conditions
 - Testing a resizable app: window-dimension matrix, RTL/pseudolocalization passes, live-resize checks
+- Asserting what VoiceOver actually speaks for your UI, not just that a label exists (iOS 27)
 
 **Core principle:** Wait for conditions, not arbitrary timeouts. Flaky tests come from guessing how long operations take.
 
@@ -34,6 +35,7 @@ Questions you can ask Claude that will draw from this skill:
 - "How do I test slow-network or offline behavior in CI without sudo or the Network Link Conditioner GUI?"
 - "How do I run my UI tests in RTL with AppleLanguages?"
 - "How do I test my app at different window sizes automatically?"
+- "How do I drive VoiceOver from a UI test and check what it reads for my button?"
 
 ## What This Skill Provides
 
@@ -54,6 +56,7 @@ Questions you can ask Claude that will draw from this skill:
 - Avoiding hardcoded localized labels
 - Accessibility Inspector for reviewing elements
 - `performAccessibilityAudit()` in tests
+- `XCUIDevice.shared.voiceOverService` (iOS 27) – move the VoiceOver cursor and assert the spoken output
 
 ### Test Plans
 - Multiple device/language configurations

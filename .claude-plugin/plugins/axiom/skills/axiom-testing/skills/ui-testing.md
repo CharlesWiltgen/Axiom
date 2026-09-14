@@ -170,6 +170,33 @@ func testAnimatedTransition() {
 }
 ```
 
+### Pattern 7: Driving VoiceOver `OS27`
+
+XCTest gained a first-party VoiceOver driver: `XCUIDevice.shared.voiceOverService` (iOS / macOS / tvOS / watchOS / visionOS 27, `@MainActor`). Instead of asserting that a label *exists*, you move the VoiceOver cursor and read back what it actually speaks.
+
+```swift
+let service = XCUIDevice.shared.voiceOverService
+try service.enable()
+defer { try? service.disable() }
+
+let focused = try service.moveForward()
+XCTAssertEqual(focused.utterance, "Submit, button")
+XCTAssertEqual(try service.currentSpeech().utterance, "Submit, button")
+```
+
+| API | Notes |
+|-----|-------|
+| `enable()` / `disable()` / `isEnabled` | `enable()` / `disable()` throw; `isEnabled` is a plain `Bool`. Turn VoiceOver on for the test and off afterwards |
+| `XCUIVoiceOverService.Error` | `.failedToStart`, `.notRunning`, `.noSpeech`, `.failedToStop` — useful when diagnosing a flaky run |
+| `moveForward()` / `moveBackward()` | Move the cursor; returns the `XCUIVoiceOverService.Output` for the newly focused element |
+| `currentSpeech()` | Re-read the focused element without moving |
+| `moveIn()` / `moveOut()` | Enter or leave a container — **iOS and macOS only**, unavailable on tvOS/watchOS/visionOS |
+| `XCUIVoiceOverService.Output.utterance` | The spoken string |
+
+This is the assertion that catches an accessible-looking UI that reads badly: a control with a label but no trait speaks as "Submit" rather than "Submit, button", and an assertion that the label merely exists passes either way.
+
+Utterances are localized speech. Unlike Pattern 4's identifiers, the string *is* what's under test, so run these tests on a fixed locale rather than applying the hardcoded-label rule below.
+
 ## Testing Checklist
 
 ### Before Writing Tests
@@ -1316,7 +1343,3 @@ func testPhotosLoadUnderStress() {
 **Docs**: /xctest, /xcuiautomation/recording-ui-automation-for-testing, /xctest/xctwaiter, /accessibility/delivering_an_exceptional_accessibility_experience, /accessibility/performing_accessibility_testing_for_your_app
 
 **Note**: This skill focuses on reliability patterns and Recording UI Automation. For TDD workflow, see superpowers:test-driven-development.
-
----
-
-**History:** See git log for changes

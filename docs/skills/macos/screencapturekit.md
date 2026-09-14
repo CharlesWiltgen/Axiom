@@ -20,8 +20,9 @@ Use this skill when you're:
 - Taking a high-quality programmatic screenshot
 - Recording screen content straight to a file (macOS 15+)
 - Migrating off `CGDisplayStream` / `CGWindowListCreateImage` / `AVCaptureScreenInput`
+- Saving instant-replay clips or showing the system preview and share UI for a finished recording (macOS 27)
 
-This is **macOS only**. For iOS screen capture, use ReplayKit (see the axiom-media suite).
+This page covers the **macOS** API. ScreenCaptureKit also ships on iOS, iPadOS, tvOS, and visionOS 27, but with a picker-only model — see [Screen Capture](/skills/integration/screen-capture). Below iOS 27, iOS screen capture uses ReplayKit.
 
 ## Example Prompts
 
@@ -31,6 +32,9 @@ This is **macOS only**. For iOS screen capture, use ReplayKit (see the axiom-med
 - "How do I add the system screen-sharing picker?"
 - "How do I take a programmatic screenshot of a window?"
 - "How do I record a stream to a .mov file?"
+- "How do I save the last 15 seconds of the screen as an instant-replay clip?"
+- "How do I show the system preview and share UI after a recording finishes?"
+- "Which ScreenCaptureKit APIs work on iOS 27, and which are macOS-only?"
 
 ## Key Concepts
 
@@ -54,11 +58,15 @@ Without the user's TCC consent, `SCShareableContent` returns nothing. Handle the
 
 `SCScreenshotManager.captureImage(contentFilter:configuration:)` (macOS 14+) grabs one frame. `SCRecordingOutput` (macOS 15+) records a stream straight to a file — no manual `AVAssetWriter`.
 
+### What macOS 27 adds
+
+`SCClipBufferingOutput` keeps a rolling buffer of up to 15 seconds for instant-replay clips, and `SCRecordingEditor` presents the system preview and share UI for a finished recording. Smaller additions include `SCStream.isCapturing`, `SCContentSharingPicker.isAvailable`, `SCRecordingOutputConfiguration.mixesAudioWithMicrophone`, and the `insufficientStorage` and `notSupported` stream error codes.
+
 ## Common Mistakes
 
 | Mistake | Cost | Fix |
 |---------|------|-----|
-| Building for iOS | No API there | Use ReplayKit |
+| Porting macOS capture code to iOS | `SCShareableContent` and the `SCContentFilter` initializers don't exist on iOS 27 | Start from `SCContentSharingPicker`; use ReplayKit below iOS 27 |
 | Ignoring denied permission | No frames, no error you handle | Handle empty `SCShareableContent` |
 | Heavy work on the sample queue | Dropped frames, hitches | Copy out fast; dedicated serial queue |
 | Retaining video buffers | Pool exhaustion, stalls | Release promptly; tune `queueDepth` |
@@ -68,11 +76,12 @@ Without the user's TCC consent, `SCShareableContent` returns nothing. Handle the
 ## Related
 
 - [Sandbox & File Access](/skills/macos/sandbox-and-file-access) – TCC consent and entitlements for capture
-- For iOS screen recording (ReplayKit) and CMSampleBuffer handling, see the axiom-media suite
+- [Screen Capture](/skills/integration/screen-capture) – ScreenCaptureKit on iOS and iPadOS 27, where the system picker is the only way to obtain a content filter
+- For ReplayKit below iOS 27 and CMSampleBuffer handling, see the axiom-media suite
 - For serial queues and async sequences around the capture callback, see the axiom-concurrency suite
 
 ## Resources
 
 **WWDC**: 2022-10156, 2022-10155, 2023-10136, 2024-10088
 
-**Docs**: /screencapturekit, /screencapturekit/scstream, /screencapturekit/sccontentfilter, /screencapturekit/scstreamconfiguration, /screencapturekit/sccontentsharingpicker, /screencapturekit/scscreenshotmanager, /screencapturekit/screcordingoutput
+**Docs**: /screencapturekit, /screencapturekit/scstream, /screencapturekit/sccontentfilter, /screencapturekit/scstreamconfiguration, /screencapturekit/sccontentsharingpicker, /screencapturekit/scscreenshotmanager, /screencapturekit/screcordingoutput, /screencapturekit/scclipbufferingoutput, /screencapturekit/screcordingeditor

@@ -37,6 +37,8 @@ try AVAudioSession.sharedInstance().setCategory(
 )
 ```
 
+On 27, `engine.connect` and `player.play()` are **deprecated**, while `setActive` merely gains an async alternative (it is not deprecated) — see Async Activation and the Deactivation Model and Throwing Engine and Node APIs below.
+
 ---
 
 ## AVAudioSession
@@ -84,6 +86,8 @@ try AVAudioSession.sharedInstance().setCategory(
 ```
 
 ### Interruption Handling
+
+This pattern warns on 27 — `InterruptionType` and `InterruptionOptions` are deprecated. See Async Activation and the Deactivation Model below.
 
 ```swift
 NotificationCenter.default.addObserver(
@@ -147,6 +151,106 @@ NotificationCenter.default.addObserver(
     }
 }
 ```
+
+---
+
+## Async Activation and the Deactivation Model OS27
+
+Unavailable on macOS. This replaces the interruption-notification model for tracking why audio stopped.
+
+### Async activate and deactivate
+
+`setActive(_:)` blocks the calling thread. The 27 calls return immediately and deliver the result asynchronously. Both also have `completionHandler:` forms.
+
+```swift
+@available(iOS 27, *)
+func beginPlayback() async throws {
+    let session = AVAudioSession.sharedInstance()
+    try session.setCategory(.playback)
+    _ = try await session.activate()
+}
+
+@available(iOS 27, *)
+func endPlayback() async throws {
+    _ = try await AVAudioSession.sharedInstance()
+        .deactivate(options: .notifyOthersOnDeactivation)
+}
+```
+
+| API | Introduced | Notes |
+|---|---|---|
+| `activate(options:)` | iOS/tvOS/visionOS 27, watchOS 5 | Not new on watchOS. **On watchOS** under the long-form audio routing policy it may present a route picker and fail if the user cancels |
+| `deactivate(options:)` | 27 | Async alternative to `setActive(false, options:)` (not deprecated) |
+| `AVAudioSessionDeactivationOptions.notifyOthersOnDeactivation` | 27 | Signals an interrupted app that it may resume |
+
+### Deactivation and resumption notifications
+
+| Notification | userInfo key | Payload |
+|---|---|---|
+| `AVAudioSession.didBecomeActiveNotification` | none | no payload |
+| `AVAudioSession.didBecomeInactiveNotification` | `AVAudioSession.deactivationContextKey` | `AVAudioSession.DeactivationContext` |
+| `AVAudioSession.resumptionRecommendationNotification` | `AVAudioSession.resumptionContextKey` | `AVAudioSession.ResumptionContext` |
+
+| Type | Members |
+|---|---|
+| `DeactivationContext` | `source` (`.app` / `.system`), `interruptionContext` — non-nil only when another app caused the interruption |
+| `InterruptionContext` | `reason: AVAudioSession.InterruptionReason` |
+| `ResumptionContext` | `recommendation` (`.shouldResume` / `.shouldNotResume`) |
+
+```swift
+@available(iOS 27, *)
+func audioDidBecomeInactive(_ notification: Notification, player: AVAudioPlayerNode) {
+    guard let context = notification.userInfo?[AVAudioSession.deactivationContextKey]
+            as? AVAudioSession.DeactivationContext else { return }
+
+    if context.source == .system, context.interruptionContext != nil {
+        player.pause()
+    }
+}
+```
+
+### Typed notification messages
+
+The same three notifications ship as `NotificationCenter.Message` types. The typed path fuses source and interruption into one `DeactivationResult` enum, which the userInfo path does not expose.
+
+```swift
+@available(iOS 27, *)
+@MainActor
+func observeSession() {
+    let session = AVAudioSession.sharedInstance()
+
+    _ = NotificationCenter.default.addObserver(
+        of: session,
+        for: AVAudioSession.DidBecomeInactiveMessage.self
+    ) { message in
+        switch message.deactivationResult {
+        case .appDeactivated:
+            break
+        case .systemInterruption(let context):
+            _ = context.reason
+        @unknown default:
+            break
+        }
+    }
+
+    _ = NotificationCenter.default.addObserver(
+        of: session,
+        for: AVAudioSession.ResumptionRecommendationMessage.self
+    ) { message in
+        if message.recommendation == .shouldResume {
+            // resume playback
+        }
+    }
+}
+```
+
+### Legacy interruption API status
+
+`AVAudioSession.InterruptionType` and `AVAudioSession.InterruptionOptions` are deprecated in 27, directing callers to the notifications above. The Swift `interruptionNotification` constant and its userInfo keys are *not* themselves marked deprecated, but decoding the payload requires the deprecated types — so the legacy handler still builds, warning on `InterruptionType` and `InterruptionOptions`.
+
+### New port
+
+`AVAudioSession.Port.mediaDeviceExtension` — iOS 27 only, unavailable on watchOS, tvOS, visionOS, and macOS. Output to a media device vended through a user-installed system-wide extension.
 
 ---
 
@@ -224,6 +328,8 @@ inputNode.installTap(onBus: 0, bufferSize: 1024, format: format) { buffer, time 
 inputNode.removeTap(onBus: 0)
 ```
 
+`installTap(onBus:bufferSize:format:block:)` is deprecated in 27 — see Throwing Engine and Node APIs below.
+
 ### Format Conversion
 
 ```swift
@@ -252,6 +358,74 @@ converter.convert(to: outputBuffer, error: &error) { inNumPackets, outStatus in
     return inputBuffer
 }
 ```
+
+---
+
+## Throwing Engine and Node APIs OS27
+
+27 replaces the AVAudioEngine surface that trapped on misuse with throwing equivalents. The originals are deprecated, so existing code keeps building with warnings.
+
+| Deprecated in 27 | Replacement |
+|---|---|
+| `connect(_:to:format:)` | `connectNode(_:to:format:) throws` |
+| `connect(_:to:fromBus:toBus:format:)` | `connectNode(_:to:fromBus:toBus:format:) throws` |
+| `connect(_:to:fromBus:format:)` (to `[AVAudioConnectionPoint]`) | `connectNode(_:to:fromBus:format:) throws` |
+| `play()` | `playAudio() throws` |
+| `play(at:)` | `playAudio(at:) throws` |
+| `installTap(onBus:bufferSize:format:block:)` | `installAudioTap(onBus:bufferSize:format:tapProvider:) throws` |
+| `connectMIDI(_:to:format:eventListBlock:)` | `connectMIDI(_:to:format:eventListProvider:)` — the block type changes with it, `AUMIDIEventListBlock?` → `AVMIDIEventListBlock?`, so a straight rename hits a type error |
+| `AVAudioFormat.init(cmAudioFormatDescription:)` | `AVAudioFormat.init(formatDescription:)`, now failable |
+
+A format mismatch that used to crash the process now throws.
+
+```swift
+@available(iOS 27, *)
+func buildGraph(engine: AVAudioEngine, player: AVAudioPlayerNode, format: AVAudioFormat) throws {
+    engine.attach(player)
+    try engine.connectNode(player, to: engine.mainMixerNode, format: format)
+    try engine.start()
+    try player.playAudio()
+}
+```
+
+### Taps deliver a read-only buffer
+
+`installAudioTap` hands the callback an `AVReadOnlyAudioPCMBuffer` and takes a `@Sendable` closure. `channelData(_:)` returns a `Span`-carrying enum instead of a raw pointer.
+
+```swift
+@available(iOS 27, *)
+func meterInput(engine: AVAudioEngine) throws {
+    let input = engine.inputNode
+    let format = input.outputFormat(forBus: 0)
+
+    try input.installAudioTap(onBus: 0, bufferSize: 1024, format: format) { buffer, time in
+        guard case .float(let samples) = buffer.channelData(0) else { return }
+        var sum: Float = 0
+        for i in 0..<samples.count {
+            sum += samples[i] * samples[i]
+        }
+        let rms = (sum / Float(samples.count)).squareRoot()
+        _ = 20 * log10(rms)
+    }
+}
+```
+
+`AVAudioPCMBuffer` gains matching accessors in 27 — `channelData(_:)`, `mutableChannelData(_:)`, `init(copying:)`, `withUnsafeAudioBufferList(_:)` — but not on identical terms: both of its channel-data accessors are marked `@unsafe`, whereas `AVReadOnlyAudioPCMBuffer.channelData(_:)` is not.
+
+### Realtime-safe render blocks are ObjC only
+
+All four are marked `__SWIFT_UNAVAILABLE_MSG("Swift is not supported for use with audio realtime threads")` and do not appear in Swift at all. Write realtime render and receive callbacks in ObjC or C.
+
+| ObjC selector | Type |
+|---|---|
+| `initWithRealtimeSafeRenderBlock:` | `AVAudioSourceNode` |
+| `initWithFormat:realtimeSafeRenderBlock:` | `AVAudioSourceNode` |
+| `initWithRealtimeSafeReceiverBlock:` | `AVAudioSinkNode` |
+| `setRealtimeSafeManualRenderingInputPCMFormat:inputBlock:` | `AVAudioInputNode` |
+
+### Reverb preset
+
+`AVAudioUnitReverbPreset.outdoorGeneral` — new in 27, unavailable on watchOS.
 
 ---
 
@@ -587,6 +761,8 @@ NotificationCenter.default.addObserver(
 )
 ```
 
+On 27, observe `didBecomeInactiveNotification` and `resumptionRecommendationNotification` instead.
+
 ### Tap Memory Leaks
 
 ```swift
@@ -608,6 +784,8 @@ engine.connect(playerNode, to: mixerNode, format: wrongFormat)  // Crash!
 // CORRECT — use nil for automatic format negotiation, or match exactly
 engine.connect(playerNode, to: mixerNode, format: nil)
 ```
+
+On 27, prefer `connectNode(_:to:format:)`, which throws instead of trapping.
 
 ### Forgetting to Activate Session
 
@@ -631,6 +809,5 @@ try AVAudioSession.sharedInstance().setActive(true)
 
 ---
 
-**Targets:** iOS 12+ (core), iOS 26+ (spatial features)
+**Targets:** iOS 12+ (core), iOS 26+ (spatial features), iOS 27 (async activation, throwing engine APIs)
 **Frameworks:** AVFoundation, AVKit, Cinematic (iOS 26+)
-**History:** See git log for changes

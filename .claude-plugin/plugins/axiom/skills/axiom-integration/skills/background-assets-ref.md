@@ -97,7 +97,7 @@ try await AssetPackManager.shared.ensureLocalAvailability(
 )
 ```
 
-The `Set`-based overload throws `AssetPackManager.LocalAvailabilityError` when any pack fails, carrying `successes: Set<AssetPack>` and `failures: [AssetPack: any Error]` so you can retry only what failed.
+The `Set`-based overload throws when the system can't ensure one or more packs' local availability. Cast with `as? AssetPackManager.LocalAvailabilityError` (documented as possible, not guaranteed); when it matches, it carries `successes: Set<AssetPack>` and `failures: [AssetPack: any Error]`, so you can retry only what failed.
 
 ### Status streaming
 
@@ -240,7 +240,7 @@ Localized asset packs let the system deliver only the assets matching the user's
 
 When no pack matches the user-selected language exactly, the system falls back automatically:
 
-1. **Regional fallback** — another variant of the same base language (e.g. user selects English-UK, no en-GB pack exists → the en-US pack is used)
+1. **Regional fallback** — another variant of the same base language (e.g. user selects English-UK, no en-GB pack exists → the en-US pack is used). Not stated in any header; the SDK says only that `localizedAssetPacks(for:)` "may not exactly match the specified language", so treat the exact selection rule as unverified
 2. **Primary app language** — if no similar regional variant exists at all (e.g. user selects Spanish, no Spanish pack and no regional variant → the app's primary language, English, is used)
 
 ### Manifest declaration
@@ -272,11 +272,37 @@ Upload localized variants of your asset packs to App Store Connect to reduce per
 | Reconcile downloads after change | `AssetPackManager.shared.reconcilePreferredLanguages() async throws` |
 | Read a localized file | `contents(at:asLocalizedFor:options:)`, `descriptor(for:asLocalizedFor:)`, `url(for:asLocalizedFor:)` |
 
+### Reading localized files
+
+The `asLocalizedFor:` overloads exist for one situation: you deliberately ship the **same relative path** in several differently localized packs. All asset packs share a single namespace, so with split-language functionality installed, `contents(at:searchingInAssetPackWithID:options:)` would read from an undefined pack. Passing a `Locale.Language` resolves the ambiguity without making you look up a pack ID. In every other situation, prefer the `searchingInAssetPackWithID:` forms.
+
+```swift
+let language = Locale.Language(identifier: "he")
+
+// Searches only packs localized for `language`
+let data = try AssetPackManager.shared.contents(
+    at: "Videos/Introduction.m4v",
+    asLocalizedFor: language,
+    options: .mappedIfSafe
+)
+
+// Only the URL form resolves whole directories (including packages),
+// merging the matching slices from every localized pack
+let url = try AssetPackManager.shared.url(
+    for: "Videos",
+    asLocalizedFor: language
+)
+```
+
+Language matching follows Unicode CLDR implicit script and region tags: `en` matches `en-US` and `en-Latn-US`, but **not** `en-CA`. All three overloads are `nonisolated` and synchronous, like their non-localized siblings. `url(for:asLocalizedFor:)` is the least efficient of the three and returns a well-formed URL even when nothing exists at the path. It is synchronous, so call it off the main thread, and don't use it to reach the namespace root.
+
 ### Behavior notes
 
 - `resolvedLanguage` respects a language your app sets manually; set it to `nil` to revert to the user's system-wide preference. Setting it does **not** immediately download or remove packs — call `reconcilePreferredLanguages()` to reconcile.
-- `reconcilePreferredLanguages()` downloads missing localized packs, waits for those downloads, and removes unneeded ones. Don't use it if your app offers split-language functionality — handle reconciliation manually in that case.
+- Setting `resolvedLanguage` also changes the app's **display language**. Never set it from inside your downloader extension.
+- `reconcilePreferredLanguages()` downloads missing localized packs, waits for those downloads, and removes unneeded ones. Don't use it if your app offers split-language functionality — handle reconciliation manually in that case. It won't remove localized packs you downloaded manually, and it can throw `LocalAvailabilityError` (possible, not guaranteed) when some or all packs fail to reconcile.
 - If the user recently changed their preferred language, `resolvedLanguage` can be temporarily out of sync with the set of locally available packs.
+- The extension side of a language change arrives as `BAContentRequest.languageChange` — see the BAContentRequest table below.
 
 ---
 
@@ -360,7 +386,7 @@ import ExtensionFoundation
 @main
 struct DownloaderExtension: BADownloaderExtension {
     // The scheduling entry point: the system asks which downloads to start
-    // for an install / periodic / update content request.
+    // for an install / update / periodic / language-change content request.
     func downloads(
         for request: BAContentRequest,
         manifestURL: URL,
@@ -426,6 +452,32 @@ try manager.startForegroundDownload(download)
 try manager.scheduleDownload(download)
 ```
 
+### Exclusive control
+
+`BADownloadManager` is shared between the app and its downloader extension, so both sides must serialize access or they schedule against each other. Both must call this API for it to mean anything — one-sided use buys nothing.
+
+```swift
+// Acquire, run the body, relinquish
+let scheduled = try await BADownloadManager.shared.withExclusiveControl { @Sendable in
+    try BADownloadManager.shared.scheduleDownload(download)
+    return true
+}
+
+// Give up if control can't be acquired by a deadline.
+// Passing Date() attempts acquisition and fails instantly if unavailable.
+try await BADownloadManager.shared.withExclusiveControl(
+    before: Date().addingTimeInterval(5)
+) { @Sendable in
+    try BADownloadManager.shared.scheduleDownload(download)
+}
+```
+
+The body must be `@Sendable`: the overlay is `@concurrent`, so an unannotated closure written in main-actor code fails Swift 6 with "sending value of non-Sendable type".
+
+These `async` overloads are Swift-overlay additions carrying `@backDeployed(before: iOS 27, macOS 27, tvOS 27, visionOS 27)`, so building with the 27 SDK makes them callable from an **iOS 16.1 / macOS 13 / tvOS 18.4 / visionOS 2.4** deployment target. New spelling, not new availability — do not gate them behind `if #available(iOS 27, *)`.
+
+The completion-handler forms they replace — `withExclusiveControl { acquired, error in }` and `withExclusiveControl(beforeDate:perform:)` — are **deprecated in Swift at 27** (each carries its own message — "Use the asynchronous overload of `withExclusiveControl(_:)` instead" and "Use `withExclusiveControl(before:_:)` instead"). The deprecation is Swift-only; the Objective-C `performWithExclusiveControl:` spelling is not deprecated. Unavailable on watchOS.
+
 ### BAURLDownload
 
 ```swift
@@ -463,15 +515,34 @@ public struct Priority { /* RawRepresentable over Int */ }
 
 ### BAContentRequest
 
-The framework distinguishes three content-request types, delivered to your extension's `downloads(for:manifestURL:extensionInfo:)` scheduling entry point:
+The framework distinguishes four content-request types, delivered to your extension's `downloads(for:manifestURL:extensionInfo:)` scheduling entry point:
 
 ```swift
 public enum BAContentRequest {
-    case install     // First-install event
-    case periodic    // System-scheduled periodic refresh
-    case update      // App-update event
+    case install         // raw value 1
+    case update          // 2
+    case periodic        // 3
+    case languageChange  // 4
 }
 ```
+
+| Case | Delivered when |
+|------|----------------|
+| `install` | The app was installed |
+| `update` | The app was updated |
+| `periodic` | The system requests updated content within the app |
+| `languageChange` `OS27` | Someone changed the app's preferred language |
+
+`languageChange` is the extension-side counterpart to localized asset packs: it fires when the preferred language changes, so the extension can schedule the newly needed language variants. The case is iOS 27 / macOS 27 / tvOS 27 / visionOS 27 (iPadOS follows iOS); the enum itself dates to iOS 16.1 and is unavailable on watchOS.
+
+What recompiling a 26-era `switch` against the 27 SDK costs you depends on its shape:
+
+| The 26-era switch | Building against the 27 SDK |
+|---|---|
+| No `@unknown default` | **Build break** — `error: switch must be exhaustive ... add missing case: '.languageChange'` |
+| Already has `@unknown default` | Compiles — `warning: switch must be exhaustive` |
+
+In Swift 6 language mode you need **both** the new case and `@unknown default`: adding only the case gives `error: switch covers known cases, but 'BAContentRequest' may have additional unknown values, possibly added in future versions`. And `@unknown default` on its own silently routes real language-change requests into the default branch, which is how this change turns into a bug rather than a build error. Pattern position is safe for older deployment targets — `case .languageChange:` compiles unguarded down to iOS 16.1; only using the case as a *value* needs a version gate.
 
 ---
 
@@ -605,6 +676,8 @@ public enum ManagedBackgroundAssetsError: CustomStringConvertible, LocalizedErro
 |------|---------|----------|
 | `assetPackNotFound` | Pack ID not present in manifest (or not yet downloaded) | Verify `assetPackID` matches manifest and server response |
 | `fileNotFound` | File missing within an otherwise-available pack | Verify `fileSelectors` in manifest match the path you're querying |
+
+`ManagedBackgroundAssetsError` has exactly these two Swift cases. Objective-C carries a third code, `BAManagedErrorCodeLocalAvailabilityFailure`, whose Swift surface is the separate `AssetPackManager.LocalAvailabilityError` struct `OS27` — which the `Set`-based `ensureLocalAvailability` and `reconcilePreferredLanguages()` may throw. Its `successes` / `failures` properties refine away the `BASuccessesErrorKey` and `BAFailuresErrorKey` `userInfo` keys, so Swift code never reads those keys directly.
 
 ### BAErrorCode
 
@@ -978,7 +1051,8 @@ struct CustomDownloaderExtension: BADownloaderExtension {
 - **`AssetPackManager.LocalAvailabilityError`** (27) — `successes: Set<AssetPack>`, `failures: [AssetPack: any Error]`
 - **`AssetPack.Status`** — `OptionSet` flags (membership-test, don't switch): `downloadAvailable`, `downloading`, `downloaded`, `upToDate`, `outOfDate`, `obsolete`, `updateAvailable`; stream-only `DownloadStatusUpdate` enum cases (unlabeled payloads): `began(AssetPack)`, `paused(AssetPack)`, `downloading(AssetPack, Progress)`, `finished(AssetPack)`, `failed(AssetPack, Error)`
 - **Extensions** — `StoreDownloaderExtension` (Apple-hosted), `BADownloaderExtension` (server-hosted), `ManagedDownloaderExtension` (parent)
-- **Unmanaged types** — `BADownloadManager`, `BAURLDownload`, `BADownload`, `BADownload.State`, `BADownload.Priority`, `BAContentRequest`
+- **Unmanaged types** — `BADownloadManager`, `BAURLDownload`, `BADownload`, `BADownload.State`, `BADownload.Priority`, `BAContentRequest` (`.install`, `.update`, `.periodic`, `.languageChange` (27))
+- **Exclusive control** — `BADownloadManager.withExclusiveControl(_:)` / `withExclusiveControl(before:_:)` — `async` Swift-overlay overloads, back-deployed to iOS 16.1 / macOS 13 / tvOS 18.4 / visionOS 2.4; the completion-handler spellings are deprecated in Swift at 27
 - **Errors** — `ManagedBackgroundAssetsError.assetPackNotFound`, `.fileNotFound`; `BAErrorCode.downloadAlreadyScheduled`, `.downloadBackgroundActivityProhibited`, `.downloadWouldExceedAllowance`, `.sessionDownloadAllowanceExceeded`
 - **Info.plist** — `BAHasManagedAssetPacks`, `BAUsesAppleHosting`, `BAAppGroupID`, `BAManifestURL`, `BAEssentialMaxInstallSize`, `BAMaxInstallSize`, `BAInitialDownloadRestrictions`
 - **Tooling** — `xcrun ba-package template`, `xcrun ba-package <manifest> -o <archive>`, `xcrun ba-package download-manifest` (self-hosted), `xcrun ba-package convert` (Steam `.vdf` → manifest, Xcode 27), `xcrun ba-package evaluate` (Xcode 27), `xcrun ba-serve --host <host> <archives...>`, `xcrun ba-serve url-override <url>`, Xcode 27 auto-attached mock server (scheme Run settings)
@@ -996,7 +1070,5 @@ struct CustomDownloaderExtension: BADownloaderExtension {
 
 ---
 
-**Last Updated**: 2026-06-11
-**Platforms**: iOS 26+, iPadOS 26+, macOS 26+, tvOS 26+, visionOS 26+ (managed); iOS 16.1+ (unmanaged legacy)
-**Skill Type**: Reference
+**Platforms**: OS26 for managed assets, not watchOS; iOS 16.1+ for unmanaged legacy
 **Content**: All public APIs, Info.plist keys, manifest schema, tooling commands, Foundation Models adapter bridge

@@ -16,6 +16,7 @@ Use this reference when you're:
 - Working with SwiftUI TextEditor and AttributedString (iOS 26+)
 - Debugging text layout issues or unexpected fallbacks to TextKit 1
 - Customizing rendering surfaces or attachment view recycling from inside a UITextView subclass (iOS 27+)
+- Checking grammar programmatically with `UITextChecker`, styling individual edges of a text block, or hit-testing text drawn through a transform (iOS 27+)
 
 **Not sure if you need TextKit 2?** If you're using standard `Text`, `TextField`, or `UILabel`, you probably don't. TextKit 2 is for custom text rendering, syntax highlighting, or rich text editing beyond what built-in controls provide.
 
@@ -31,6 +32,9 @@ Questions you can ask Claude that will draw from this reference:
 - "What's the difference between NSTextRange and NSRange?"
 - "How do I customize text fragment rendering inside a UITextView without losing input or accessibility?"
 - "How do I recycle inline attachment views in my text editor?"
+- "How do I run grammar checking on a string with `UITextChecker`?"
+- "How do I put a border on only the bottom edge of an `NSTextBlock` on iOS?"
+- "My custom text view draws rotated text — how do I make taps select the right characters?"
 
 ## What's Covered
 
@@ -66,9 +70,14 @@ Questions you can ask Claude that will draw from this reference:
 - `registerTextAttachmentViewProviderReusePolicy(_:forTextAttachmentViewProviderType:)` – recycle inline attachment views instead of rebuilding them
 - Collapsible content via `shouldEnumerate` — exclude collapsed paragraphs from layout using the `NSTextContentStorageDelegate`
 
+### Text Blocks, Hit Testing & Grammar Checking (iOS 27)
+- Per-edge `NSTextBlock` borders, padding, and margins – `setBorderColor(_:rectEdge:)`, `borderColor(for:)`, `setWidth(_:type:for:rectEdge:)`, `width(for:rectEdge:)`, `widthValueType(for:rectEdge:)`
+- Transformed-text hit testing – `NSTextSelectionDataSource.convertInteractionPoint(_:toContainerAt:)`
+- Grammar checking – `UITextChecker.requestGrammarChecking(of:range:waitForAllResults:)`, `ignoreGrammarRange(_:inSentence:)`, and the macOS-only `grammarDetails` keys
+
 ## Documentation Scope
 
-This page documents the `axiom-uikit` skill — a comprehensive reference Claude uses when answering TextKit 2 questions. The skill contains detailed API documentation, code examples, and migration patterns.
+This page documents the `textkit-ref` skill in the `axiom-uikit` suite — a comprehensive reference Claude uses when answering TextKit 2 questions. The skill contains detailed API documentation, code examples, and migration patterns.
 
 **For automated scanning:** Use the [textkit-auditor](/agents/textkit-auditor) agent to scan your codebase for TextKit 1 fallback triggers and migration opportunities.
 

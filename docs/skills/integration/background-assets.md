@@ -17,6 +17,8 @@ Use this skill when:
 - Wiring `Info.plist` for managed asset packs (`BAHasManagedAssetPacks`, `BAUsesAppleHosting`, `BAAppGroupID`)
 - Handling `BAErrorCode.downloadBackgroundActivityProhibited` and other delivery failure modes
 - Testing asset packs locally with `xcrun ba-serve` before uploading to App Store Connect
+- Migrating off On-Demand Resources, which the 27 SDKs deprecate, or shipping localized asset packs (OS 27)
+- Coordinating an app and its downloader extension that both schedule `BADownloadManager` downloads
 
 ## Example Prompts
 
@@ -30,11 +32,13 @@ Real questions developers ask that this skill answers:
 - "How big can my asset packs be?"
 - "Should I just bundle 8 GB of textures into the IPA — it's simpler?"
 - "Can I use URLSession with a background configuration instead of Background Assets?"
+- "I call `withExclusiveControl` in my app — why does my downloader extension still schedule over it?"
 
 ## What This Skill Provides
 
-- **Channel decision** – when Background Assets is the right tool vs. app bundle, iCloud, URLSession, `BGProcessingTask`, or CloudKit assets
-- **Apple-hosted vs server-hosted decision** – cost / latency / quota / App Review tradeoffs between `StoreDownloaderExtension` (Apple-hosted, two-line boilerplate) and `BADownloaderExtension` (server-hosted, custom logic); 200 GB / 100-pack Apple-hosted quota
+- **Channel decision** – when Background Assets is the right tool vs. app bundle, iCloud, URLSession, or `BGProcessingTask`
+- **Apple-hosted vs server-hosted decision** – cost / latency / quota / App Review tradeoffs between `StoreDownloaderExtension` (Apple-hosted, two-line boilerplate) and server hosting via `ManagedDownloaderExtension` (managed) or `BADownloaderExtension` (unmanaged legacy); 200 GB / 100-pack Apple-hosted quota
+- **Red flags** – the delivery mistakes that lead to oversized IPAs, brittle download stacks, or quota surprises, including taking `BADownloadManager` exclusive control on only one side (the app and its extension must both use it)
 - **Download policy cheatsheet** – `essential` (during install, counts toward App Store install progress), `prefetch` (starts during install, may continue after), `onDemand` (your code triggers via `ensureLocalAvailability(of:)`); Foundation Models adapters are always `onDemand`
 - **Info.plist setup** – managed Apple-hosted minimal set (`BAHasManagedAssetPacks=true` + `BAUsesAppleHosting=true` + `BAAppGroupID`), managed server-hosted, and legacy unmanaged variants
 - **Foundation Models adapter delivery pattern** – `compatibleAdapterIdentifiers(name:)` for variant selection, `AssetPackManager.shared.statusUpdates(forAssetPackWithID:)` streaming, `SystemLanguageModel.Adapter.removeObsoleteAdapters()` lifecycle, base-model fallback when no compatible variant is available

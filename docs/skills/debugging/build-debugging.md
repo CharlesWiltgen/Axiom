@@ -17,6 +17,7 @@ Use this skill when you're:
 - CocoaPods install succeeds but build still fails
 - SPM resolution hangs or times out
 - Framework version conflicts in error logs
+- After upgrading to Xcode 27: a `-ld_classic` warning in the build log, or dependency scanning failing on duplicate Clang module names
 
 **Core principle:** Check dependencies BEFORE blaming code. 80% of persistent build failures are dependency resolution issues, not code bugs.
 
@@ -29,6 +30,7 @@ Questions you can ask Claude that will draw from this skill:
 - "CocoaPods installed dependencies but the build still fails."
 - "My build works on my Mac but fails on CI."
 - "I'm getting framework version conflicts."
+- "My build log says '-ld_classic is no longer supported and will be ignored' — does that matter?"
 
 ## What This Skill Provides
 
@@ -49,6 +51,10 @@ Questions you can ask Claude that will draw from this skill:
 - Framework search path issues
 - Environment-specific paths
 - CI vs local differences
+
+### Xcode 27 Toolchain Changes
+- `-ld_classic` accepted with a warning and ignored now that the classic linker is gone, so whatever the flag was masking resurfaces
+- Dependency scanning that requires unique Clang module names
 
 ### Resolution Strategies
 - Dependency graph analysis

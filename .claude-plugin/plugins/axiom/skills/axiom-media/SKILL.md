@@ -23,12 +23,14 @@ license: MIT
 | Camera capture, AVCaptureSession | See `skills/camera-capture.md` |
 | Slow camera launch / deferred start (iOS 26+), ProRes recording via Pro Video Storage (`OS27`) | See `skills/camera-capture.md` Patterns 8-9 |
 | Camera API (RotationCoordinator, etc.) | See `skills/camera-capture-ref.md` |
+| Lens aperture / shutter / ISO priority modes, exposure signals, continuous autofocus tracking, low-light video noise reduction, cinematic video metadata capture (`OS27`) | See `skills/camera-capture-ref.md` |
 | Center Stage front camera (iPhone 17), dynamic aspect ratio, smart framing, 24/48 MP capture | See `skills/camera-capture-ref.md` |
+| iPhone Duo front cameras (virtual front camera, inner/outer ultra-wide), camera direction vs position | See `skills/camera-capture.md` Pattern 6 and `skills/camera-capture-ref.md` (iPhone Duo Front Cameras) |
 | Camera freezes, black preview, rotation | See `skills/camera-capture-diag.md` |
 | Photo pickers, library access | See `skills/photo-library.md` |
-| PHPicker, PhotosPicker API reference | See `skills/photo-library-ref.md` |
+| PHPicker, PhotosPicker, PhotoKit API reference: asset metadata editing (keywords, rating, caption), persistent change observer, background resource upload (`OS27`) | See `skills/photo-library-ref.md` |
 | PhotoKit + Swift 6 strict concurrency, `nonisolated` observer, `performChanges` isolation, `_dispatch_assert_queue_fail` | See axiom-concurrency (skills/isolation-inheritance-diag.md) |
-| Audio, AVFoundation, spatial audio | See `skills/avfoundation-ref.md` |
+| Audio, AVFoundation, spatial audio, async session activation, throwing AVAudioEngine APIs (`OS27`) | See `skills/avfoundation-ref.md` |
 | Video write/export/playback, sample-buffer engine, resumable export, Apple Log 2, iOS 27 deprecations (`OS27`) | See `skills/avfoundation-video-ref.md` |
 | Audio recognition, ShazamKit | See `skills/shazamkit.md` |
 | ShazamKit API reference | See `skills/shazamkit-ref.md` |
@@ -40,7 +42,7 @@ license: MIT
 | Now Playing metadata, remote commands | See `skills/now-playing.md` |
 | Animated lock-screen artwork (iOS 26+) | See `skills/now-playing.md` Pattern 8 |
 | NowPlaying framework (`import NowPlaying`, Swift-native `MediaSession`, `OS27`) | See `skills/now-playing.md` (NowPlaying Framework section) |
-| Cast / route media to non-AirPlay devices (Google Cast/Chromecast, DLNA) as system routes, AVSystemRouting (`iOS27`, EU-gated/beta) | See `skills/system-media-routing.md` |
+| Cast / route media to non-AirPlay devices (Google Cast/Chromecast, DLNA) as system routes, AVSystemRouting (`iOS27`, likely EU-gated) | See `skills/system-media-routing.md` |
 | Screen capture / recording / streaming the screen or your own app, ScreenCaptureKit (`OS27` — new on iOS/iPadOS/tvOS/visionOS 27; macOS 12.3+) | See `skills/screen-capture.md` |
 | CarPlay HIG, app categories, design rules, entitlements | See `skills/carplay-hig.md` |
 | CarPlay templates reference (all 12 templates, availability matrix, depth limits) | See `skills/carplay-templates-ref.md` |
@@ -85,7 +87,7 @@ digraph media {
 7. Haptics? → `skills/haptics.md`
 8. Now Playing / remote commands? → `skills/now-playing.md`, `skills/now-playing-carplay.md`, `skills/now-playing-musickit.md`
 9. Reading the user's Apple Music **library** (enumerate songs/playlists, library identity, sync)? → `skills/music-library.md` — a different problem from playback; read it before any library walk
-10. Cast / route media to non-AirPlay devices (Google Cast/Chromecast, DLNA) as system routes? → `skills/system-media-routing.md` (`iOS27`, EU-gated/beta)
+10. Cast / route media to non-AirPlay devices (Google Cast/Chromecast, DLNA) as system routes? → `skills/system-media-routing.md` (`iOS27`, likely EU-gated)
 11. Screen capture / recording / streaming the screen or your own app (ScreenCaptureKit)? → `skills/screen-capture.md` (`OS27` — new on iOS/iPadOS/tvOS/visionOS 27)
 12. CarPlay app design, category selection, entitlement request? → `skills/carplay-hig.md` (start here for any CarPlay work)
 13. DockKit motorized stands / gimbals, subject tracking, custom motor control? → `skills/dockkit.md`
@@ -148,7 +150,7 @@ digraph media {
 | "`Song.id` is a stable key I can store" | Its *format* differs per device for the same library (`i.…` on one, bare numeric on another). Never parse it, never use it as a cross-device key. |
 | "DockKit is just pairing a stand" | Custom control needs system tracking disabled, handles inverted dock states, and two different coordinate origins. |
 | "Grouping faces is just Vision face detection" | Vision detects faces in one image; MediaIntelligence clusters them into persistent people (entities) across a whole library, with its own working directory and state. |
-| "Casting to Chromecast means bundling the Google Cast SDK" | On iOS 27, AVSystemRouting exposes non-AirPlay routes as system routes — you adopt one Apple API (observe events, start a session, drive playbackControl) instead of a per-vendor SDK. Likely EU-gated/beta — gate and keep a fallback. |
+| "Casting to Chromecast means bundling the Google Cast SDK" | On iOS 27, AVSystemRouting exposes non-AirPlay routes as system routes — you adopt one Apple API (observe events, start a session, drive playbackControl) instead of a per-vendor SDK. Likely EU-gated — gate and keep a fallback. |
 | "I'll sync SharePlay playback by broadcasting the current time over the messenger" | The messenger has no clock. `AVDelegatingPlaybackCoordinatorPlayCommand.hostClockTime` gives you an absolute `CMClockGetHostTimeClock()` start time; hand-rolling reinvents startup barriers, seek ordering, stalls, and interruptions badly. |
 | "The playback coordinator handles interruptions for me" | Only `AVPlayerPlaybackCoordinator` does. `AVDelegatingPlaybackCoordinator` adds **no** automatic suspensions — a custom engine begins *and* ends every one, and a suspension never ended hangs the whole group. |
 | "ScreenCaptureKit on iPad works like the Mac (enumerate displays/windows)" | On iOS/iPadOS `SCShareableContent` and all `SCContentFilter` initializers are macOS-only — you get a filter ONLY from the system `SCContentSharingPicker`. New on iOS/iPadOS/tvOS/visionOS 27. Also not `ImageRenderer` (that snapshots your own SwiftUI view). |
@@ -163,6 +165,9 @@ User: "My camera app takes a second before preview appears"
 
 User: "Support the Center Stage front camera" / "Capture 48MP photos"
 → Read: `skills/camera-capture-ref.md`
+
+User: "How do I switch cameras on iPhone Duo?" / "Choose a camera by direction instead of position"
+→ Read: `skills/camera-capture.md` (Pattern 6) and `skills/camera-capture-ref.md` (iPhone Duo Front Cameras)
 
 User: "Camera freezes when I get a phone call"
 → Read: `skills/camera-capture-diag.md`
