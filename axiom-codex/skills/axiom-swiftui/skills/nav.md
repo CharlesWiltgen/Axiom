@@ -823,5 +823,4 @@ checks and fallback UI for older devices."
 
 ---
 
-**Last Updated** Based on WWDC 2022-2025 navigation sessions
 **Platforms** iOS 18+, iPadOS 18+, macOS 15+, watchOS 11+, tvOS 18+

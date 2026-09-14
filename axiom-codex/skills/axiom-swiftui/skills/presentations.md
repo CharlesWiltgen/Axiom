@@ -70,6 +70,7 @@ Button("Filters") { showingFilters = true }
 - Presentation modifiers (`presentationDetents`, `presentationCompactAdaptation`, ...) go on the presented **content**, not on the presenting view.
 - System presentation containers ship with system-maintained dismissal affordances, and standard controls receive translated indirect input (trackpad, scroll devices, iPhone Mirroring) correctly. A custom ZStack overlay posing as a presentation only gets whatever gestures you wire, and custom pan/drag handling needs explicit indirect-input support — one more reason to use the system containers (see axiom-uikit (skills/uikit-modernization.md)).
 - Keyboard inside a sheet: `scrollDismissesKeyboard(.interactively)` on the sheet's scroll view controls how scrolling dismisses it.
+- **iPhone Duo**: sheets adapt per display — a sheet's toolbar goes vertical on the outer display, sheets center with horizontal bars on the inner display, and a partially folded device slides sheets clear of the fold. Rules and exceptions: skills/iphone-duo.md (Vertical Bars; The Fold and the Camera).
 
 ## Resources
 

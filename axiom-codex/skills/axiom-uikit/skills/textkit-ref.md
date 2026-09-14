@@ -440,6 +440,21 @@ attributedString.addAttribute(
 
 **NSTextList** available in UIKit (iOS 16+), previously AppKit-only.
 
+#### Per-edge block borders `OS27`
+
+Per-edge border color and width were **AppKit-only** before 27 — `setBorderColor:forEdge:` / `widthForLayer:edge:`, taking `NSRectEdge`, back to macOS 10.0 — while UIKit could set only **all four edges at once**. 27 adds a `CGRectEdge`-based `rectEdge:` variant of each on all platforms, watchOS included. On macOS these replace the old `NSRectEdge` family, which the 27 SDK marks to-be-deprecated (`API_TO_BE_DEPRECATED` with a named replacement, no compiler warning yet); on iOS/tvOS/visionOS/watchOS they are genuinely new capability:
+
+```swift
+block.setBorderColor(.gray, rectEdge: .minYEdge)
+block.setWidth(1, type: .absolute, for: .border, rectEdge: .minYEdge)
+
+let color = block.borderColor(for: .minYEdge)
+let width = block.width(for: .border, rectEdge: .minYEdge)
+let type = block.widthValueType(for: .border, rectEdge: .minYEdge)
+```
+
+The `for:` label is overloaded across this family: in the three width methods it takes an `NSTextBlock.Layer` (`.padding`, `.border`, `.margin`), so per-edge control extends to padding and margins — but in `borderColor(for:)` the `for:` label *is* the `CGRectEdge`. The all-edges methods are unchanged. This is model-level styling on `NSTextBlock` — it does not lift the TextKit 2 table-layout limitation noted under Known Limitations below.
+
 ### Hit Testing & Selection Geometry
 
 ```swift
@@ -460,6 +475,19 @@ textLayoutManager.enumerateTextSegments(
     return true
 }
 ```
+
+#### Hit-testing transformed text `OS27`
+
+A custom `NSTextSelectionDataSource` that draws text through a display transform (rotation, flip, path layout) can now undo it before hit-testing, via the **optional** `convertInteractionPoint(_:toContainerAt:)`:
+
+```swift
+func convertInteractionPoint(_ point: CGPoint,
+                             toContainerAt containerLocation: any NSTextLocation) -> CGPoint {
+    point.applying(transform.inverted())
+}
+```
+
+`NSTextSelectionNavigation` calls it before hit-testing; return `point` unchanged when no transform is active. Being optional, it leaves existing data sources unaffected. macOS/iOS/tvOS/visionOS 27, not watchOS.
 
 ## Writing Tools (iOS 18+)
 
@@ -648,6 +676,39 @@ if attributedString.runs[\.presentationIntent].contains(where: { $0?.components.
     // This is a heading
 }
 ```
+
+## Grammar Checking `OS27`
+
+`UITextChecker` gains programmatic **grammar** checking to sit beside its long-standing spell checking. iOS/tvOS/visionOS/Mac Catalyst 27; the class itself has never been available on watchOS. `UITextChecker` is main-actor isolated.
+
+```swift
+@MainActor
+func proofread(_ text: String) async {
+    let checker = UITextChecker()
+    let whole = NSRange(text.startIndex..., in: text)
+
+    let results = await checker.requestGrammarChecking(
+        of: text, range: whole, waitForAllResults: true)
+
+    for result in results where result.resultType == .grammar {
+        let sentence = (text as NSString).substring(with: result.range)
+        // An absent NSGrammarRange means the issue spans the whole sentence
+        let issue = NSRange(location: 0, length: (sentence as NSString).length)
+        checker.ignoreGrammarRange(issue, inSentence: sentence)
+    }
+}
+```
+
+| API | Notes |
+|---|---|
+| `requestGrammarChecking(of:range:waitForAllResults:)` | `async` returning `[NSTextCheckingResult]`; a completion-handler overload exists too |
+| `waitForAllResults` | `true` waits for all grammar analysis; `false` returns only the results available quickly |
+| result types | `.grammar` or `.correction`, sorted by range origin, then range end, then result type |
+| `ignoreGrammarRange(_:inSentence:)` | suppresses one issue — `sentence` is the substring at the result's `range`, and the range is an offset **within that sentence**, not into the document |
+
+#### The grammarDetails keys are macOS-only
+
+`result.grammarDetails` is `[[String: Any]]?`, and Apple's own iOS header comment directs you to its `NSGrammarRange` entry — but `NSGrammarRange`, `NSGrammarUserDescription` and `NSGrammarCorrections` are declared in macOS's `NSSpellServer.h` as `API_UNAVAILABLE(ios, watchos, tvos)`. On iOS the constant does not exist (`error: cannot find 'NSGrammarRange' in scope`); the identical line compiles on macOS. Don't design an iOS feature around reading those detail dictionaries by name — `ignoreGrammarRange(_:inSentence:)` takes a plain `NSRange` offset within the sentence. Foundation defines an absent `NSGrammarRange` as the whole sentence, which is the documented fallback when you can't read the detail.
 
 ## SwiftUI TextEditor + AttributedString (iOS 26+)
 
@@ -977,4 +1038,4 @@ Unsupported in TextKit 2:
 
 **WWDC**: 2021-10061, 2022-10090, 2023-10058, 2024-10168, 2025-265, 2025-280, 2026-370
 
-**Docs**: /uikit/nstextlayoutmanager, /appkit/textkit/using_textkit_2_to_interact_with_text, /uikit/display-text-with-a-custom-layout, /swiftui/building-rich-swiftui-text-experiences, /foundation/attributedstring, /foundation/attributedstring/textalignment, /foundation/attributedstring/lineheight, /foundation/discontiguousattributedsubstring, /uikit/writing-tools, /appkit/enhancing-your-custom-text-engine-with-writing-tools
+**Docs**: /uikit/nstextlayoutmanager, /appkit/textkit/using_textkit_2_to_interact_with_text, /uikit/display-text-with-a-custom-layout, /swiftui/building-rich-swiftui-text-experiences, /foundation/attributedstring, /foundation/attributedstring/textalignment, /foundation/attributedstring/lineheight, /foundation/discontiguousattributedsubstring, /uikit/writing-tools, /appkit/enhancing-your-custom-text-engine-with-writing-tools, /uikit/uitextchecker, /uikit/nstextblock, /uikit/nstextselectiondatasource

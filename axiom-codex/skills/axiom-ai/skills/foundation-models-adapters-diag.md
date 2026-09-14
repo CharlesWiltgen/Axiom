@@ -550,6 +550,4 @@ These are not adapter-specific — they affect any `@Generable` usage. Apply the
 
 ---
 
-**Last Updated**: 2026-05-16
 **Toolkit Version**: 26.0.0
-**Skill Type**: Diagnostic

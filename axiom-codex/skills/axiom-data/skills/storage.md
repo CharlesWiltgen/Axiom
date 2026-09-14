@@ -546,8 +546,6 @@ When changing storage approach:
 
 ---
 
-**Last Updated**: 2025-12-12
-**Skill Type**: Discipline
 **Related WWDC Sessions**:
 - WWDC 2023-10187: Meet SwiftData
 - WWDC 2023-10188: Sync to iCloud with CKSyncEngine

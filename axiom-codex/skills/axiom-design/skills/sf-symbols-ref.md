@@ -1042,5 +1042,4 @@ Symbol names are easy to invent and the compiler never checks them: `Image(syste
 
 ---
 
-**Last Updated** Based on WWDC 2023/10257-10258, WWDC 2024/10188, WWDC 2025/337
 **Version** iOS 13+ (display), iOS 15+ (rendering modes), iOS 17+ (effects), iOS 18+ (Wiggle/Rotate/Breathe), iOS 26+ (Draw, Gradients)

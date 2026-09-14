@@ -246,6 +246,8 @@ let cameras = discoverySession.devices
 | `.builtInTrueDepthCamera` | Front TrueDepth (Face ID) |
 | `.builtInLiDARDepthCamera` | LiDAR depth |
 
+iPhone Duo adds inner and outer ultra-wide front cameras and a virtual front camera; the individual cameras' device types are announced for the iOS 27.1 SDK — see iPhone Duo Front Cameras below.
+
 ### Device Configuration
 
 ```swift
@@ -276,6 +278,79 @@ do {
 }
 ```
 
+### Lens Aperture and Exposure Priority Modes `OS27`
+
+iOS / Mac Catalyst / tvOS 27 — **not macOS, visionOS, or watchOS**. `AVCaptureDevice.lensAperture` (iOS 8) stays **read-only** in 27; what 27 adds is a setter *method* for devices with an adjustable diaphragm.
+
+```swift
+let format = device.activeFormat
+format.minLensAperture           // Float 𝑓-numbers
+format.maxLensAperture
+format.defaultLensAperture
+format.recommendedLensApertureStops   // [Float], sorted — ONE element means the aperture is fixed
+
+// Not every combination is supported — validate first
+guard format.supportsExposureModeCustom(lensAperture: 2.8,
+                                        duration: CMTime(value: 1, timescale: 120),
+                                        iso: 400) else { return }
+
+try device.lockForConfiguration()
+defer { device.unlockForConfiguration() }
+let syncTime = await device.setExposureModeCustom(lensAperture: 2.8,
+                                                  duration: CMTime(value: 1, timescale: 120),
+                                                  iso: 400)
+```
+
+**Priority modes** come from passing a sentinel for whatever the system should keep adjusting:
+
+| Sentinel | Effect |
+|-----|------|
+| `AVCaptureDevice.autoLensAperture` | System drives the aperture |
+| `AVCaptureDevice.autoExposureDuration` | System drives the exposure duration |
+| `AVCaptureDevice.autoISO` | System drives the gain |
+| `AVCaptureDevice.currentLensAperture` | Lock at the current aperture — the device may be mid-adjustment, so this can differ from a `lensAperture` you just read |
+
+Aperture priority is `(2.8, .autoExposureDuration, .autoISO)`; shutter priority is `(.autoLensAperture, duration, .autoISO)`. The duration and ISO sentinels also work with the older `setExposureModeCustom(duration:iso:)`.
+
+Read back what the system is driving — `automaticallyAdjustsLensAperture`, `automaticallyAdjustsExposureDuration`, `automaticallyAdjustsISO`, all read-only.
+
+Two behaviors worth knowing before you tune: `autoExposureLensApertureRateLimit` smooths aperture motion while auto-exposure holds any parameter, but a fully explicit call (no sentinels) applies aperture changes immediately with no rate limit; and `activeMaxExposureDuration` caps streaming frames when **either aperture or ISO** is Auto, while a call with no Auto parameter ignores it and applies your duration as specified.
+
+### Exposure Signals `OS27`
+
+Scene characteristics the auto-exposure system may react to. iOS / Mac Catalyst / tvOS 27.
+
+| Signal | What auto-exposure may do |
+|-----|------|
+| `.subjectMotion` | Close the aperture or shorten exposure to cut motion blur |
+| `.groupPhoto` | Close the aperture for more depth of field when several faces are present |
+| `.document` | Close the aperture to sharpen textual scenes |
+| `.starburst` | Open the aperture to remove diffraction artifacts from point light sources |
+| `.flicker` | Adjust the aperture so exposure duration can avoid artificial-lighting frequencies |
+
+`supportedExposureSignals` is what the device allows; `activeExposureSignals` (KVO) is what auto-exposure currently associates with the scene.
+
+`enabledExposureSignals` is assignable **only** while `automaticallyEnablesExposureSignals` is `false` — assigning under the default `true` throws `NSInvalidArgumentException`, and assigning without `lockForConfiguration()` throws `NSGenericException`.
+
+### Continuous Autofocus Tracking `OS27`
+
+macOS / iOS / Mac Catalyst / tvOS 27 — not visionOS or watchOS. Keeps the subject at `focusPointOfInterest` in focus as it moves through the scene.
+
+**Subscribing the metadata output is a precondition, not a nicety.** The header is explicit: unless the device is connected to an `AVCaptureMetadataOutput` subscribing `.focusTrackedObject`, no tracking updates are delivered at all and `isContinuousAutoFocusTrackingSubjectAcquired` stays `false`.
+
+```swift
+metadataOutput.metadataObjectTypes = [.focusTrackedObject]   // required, or nothing tracks
+
+guard device.activeFormat.isContinuousAutoFocusTrackingSupported else { return }
+try device.lockForConfiguration()
+device.isContinuousAutoFocusTrackingEnabled = true
+device.continuousAutoFocusTrackingLensPositionBias = 0   // -1 nearest … 0 median depth … 1 furthest
+device.focusMode = .continuousAutoFocus                 // assign LAST — this is what engages tracking
+device.unlockForConfiguration()
+```
+
+Order matters twice over: assigning `focusMode` is the engage trigger, and a later bias change takes effect only if you assign `focusMode = .continuousAutoFocus` **again** after it. `isContinuousAutoFocusTrackingSubjectAcquired` (KVO) reports *whether* a subject is tracked, not which one — read the `AVMetadataFocusTrackedObject`s from the metadata output to identify it.
+
 ### Switching Cameras
 
 ```swift
@@ -303,6 +378,8 @@ func switchCamera() {
 ```
 
 **Important**: Always switch on the session queue, within beginConfiguration/commitConfiguration.
+
+**iPhone Duo**: `position` doesn't say which way a camera faces — see iPhone Duo Front Cameras.
 
 ### Authorization
 
@@ -421,6 +498,21 @@ connection.preferredVideoStabilizationMode = .lowLatency
 ```
 
 Bonus (iOS 26+, iOS-only): `device.nominalFocalLengthIn35mmFilm` — nominal 35mm-equivalent focal length (`0` for virtual/external devices).
+
+### iPhone Duo Front Cameras — Announced for the iOS 27.1 SDK
+
+From Apple's tech talk 111465. **Absent from the 27.0 SDK; announced for 27.1, and names can change before it ships. Check the installed SDK first (`xcrun --sdk iphoneos --show-sdk-version`). Below 27.1: don't write these in code as if they compile — describe them, name the talk, and use the virtual front camera (existing discovery API) today. On 27.1 or later, betas included: grep the SDK's `.swiftinterface` and headers for the declaration; if it's there, the SDK's spelling and signature win over this table; if it's missing, say it was renamed or dropped. A filename or `#import` hit isn't a declaration — `AVKit/AVCaptureDeviceDirectionCoordinator.h` ships in 27.0 as an empty stub. Don't call them fictional. Don't fill in parameters, types, or cases this table doesn't give.** Spellings follow the talk's code where the narration differs.
+
+iPhone Duo has two front cameras, both square-sensor ultra-wides: one on the outer display and an under-display camera on the inner one. Direction replaces position as the question to ask — a `.front` camera can face away from the user, and a rear camera faces the user when the device is flipped open.
+
+| Key | API | Behavior | Talk |
+|---|---|---|---|
+| `camera.virtual` | (no type name given) | Discovered by a discovery session for `.front` with the wide-angle or ultra-wide type; switches automatically — inner camera when open, outer when closed, "the most relevant front camera for your app"; the talk doesn't say which it picks when flipped open with the app on the outer display — don't assume either; only shared capabilities — up to 1080p and 60 fps, no depth | 111465 0:57 |
+| `camera.types` | `.builtInOuterUltraWideCamera`, `.builtInInnerUltraWideCamera` | Individual cameras with full capabilities — outer up to 4K and up to 120 fps, inner 1080p up to 60 fps; depth only here; your app switches on open and close | 111465 1:44 |
+| `camera.direction` | `AVCaptureDeviceDirectionCoordinator(view:deviceTypes:changeHandler:)` (AVKit) | Reports which cameras face toward and away from the user relative to one view, and calls the handler when that view's display changes — as the device opens or closes, or as the app moves to the outer display while flipped open. Main-actor; one per view, so two when showing UI on both displays | 111465 4:06 |
+| `camera.descriptor` | `AVCaptureDeviceDescriptor` | Main-actor-safe, Sendable stand-in for an `AVCaptureDevice`; the coordinator provides descriptors rather than devices (the sample's handler receives a value named `map` — its type isn't shown). Pass them to your camera actor and reconfigure the session there — don't call AVFoundation from the handler | 111465 5:38 |
+
+When the handler fires: hand the forward-facing camera's descriptor to your camera actor, which reconfigures the session and applies mirroring (mirror when a rear camera faces the user), and update UI from the handler (the coordinator is main-actor). To override automatic mirroring, the actor sets the preview connection's `automaticallyAdjustsVideoMirroring = false` before setting `isVideoMirrored`, and only when `isVideoMirroringSupported`, or AVFoundation throws `NSInvalidArgumentException`. From then on the app owns mirroring on every switch: `isVideoMirrored = true` whenever the camera in use faces the user, `false` when it faces away. Today's APIs that still apply on Duo: `videoGravity` to fit or fill the preview on the inner display (a full-field-of-view rear-camera stream leaves room around it for controls), `setDynamicAspectRatio(_:)` for a landscape crop from the square sensor (see Dynamic Aspect Ratio above), the rotation coordinator (it updates when the app changes displays), and sensor-orientation compensation — on by default for every Duo front camera; disable it once you apply the rotation coordinator's capture angle (see Sensor Orientation Compensation above). Apple articles: "Choosing a Camera by the Direction it Faces", "Supporting Device Rotation in Your Camera App".
 
 ---
 
@@ -838,6 +930,52 @@ extension CameraManager: AVCaptureFileOutputRecordingDelegate {
 }
 ```
 
+### Low-Light Video Noise Reduction `OS27`
+
+Lives on `AVCaptureConnection`, not the session. macOS / iOS / Mac Catalyst / tvOS / visionOS 27, not watchOS.
+
+| API | Notes |
+|-----|-------|
+| `AVCaptureDevice.Format.isLowLightVideoNoiseReductionSupported` | Format-level capability |
+| `AVCaptureConnection.isLowLightVideoNoiseReductionSupported` | KVO. Reflects the *active* configuration — flips as active format, video stabilization mode, auto video frame rate, or max frame rate change |
+| `automaticallyEnablesLowLightVideoNoiseReduction` | Defaults to `true` on movie file output connections. Buys quality with power |
+| `isLowLightVideoNoiseReductionEnabled` | Settable only after the automatic flag is `false`, and only when supported — either violation throws `NSInvalidArgumentException` |
+
+### Cinematic Video Metadata `OS27`
+
+Records a metadata track alongside video so the Cinematic framework can apply cinematic (rack-focus) editing after capture. macOS / iOS / Mac Catalyst / tvOS 27, not visionOS or watchOS.
+
+| API | Notes |
+|-----|-------|
+| `AVCaptureDevice.Format.isCinematicVideoMetadataCaptureSupported` | Format-level capability |
+| `AVCaptureMovieFileOutput.isCinematicVideoMetadataCaptureSupported` | Also requires a 16:9 or 9:16 (or unset) dynamic aspect ratio and spatial video capture off; changes as you switch camera, format, or features |
+| `automaticallyAdjustsCinematicVideoMetadataCaptureEnabled` | Default `true` — the framework decides, and capture is **not guaranteed** even when supported. Set `false` to control it yourself |
+| `isCinematicVideoMetadataCaptureEnabled` | Settable only when the automatic flag is `false` and capture is supported — either violation throws `NSInvalidArgumentException` |
+| `AVMetadataObject.ObjectType.cinematicVideoMetadata` | For an `AVCaptureMetadataOutput` pipeline — delivers `AVMetadataCinematicVideoMetadataObject` (opaque payload in `timedMetadataGroup`) |
+
+**Editing what you captured** — `import Cinematic`, macOS / iOS 27 (capability and status checks are also tvOS):
+
+```swift
+switch await CNAssetInfo.cinematicCapability(for: asset) {   // replaces deprecated isCinematic(asset:)
+case .renderable:
+    break                                              // ready for CNRenderingSession
+case .needsPreprocessing:
+    if CNAssetInfo.resourceStatus() == .needsDownloading {
+        try await CNAssetInfo.downloadResources()      // device-wide, cached, honors Task cancellation
+    }
+    let info = try await CNAssetInfo(asset: asset)
+    let config = CNAssetPreprocessConfiguration(destinationAssetURL: destinationURL)
+    config.referenceSourceAssetTracks = false          // default: copy tracks — portable, ~2x storage
+    _ = try await info.preprocessAsset(configuration: config)   // generates the disparity track
+case .none:
+    break                                              // no cinematic metadata track present
+@unknown default:
+    break
+}
+```
+
+`CNResourceStatus` also reports `.unsupportedDevice` and `.unsupportedAsset`; a failed download surfaces as `CNCinematicError.Code.downloadFailed`. Axiom does not otherwise cover Cinematic editing (`CNRenderingSession` and the detection/script APIs); note 27 deprecates that class's `CVPixelBuffer` `encodeRender` overloads in favor of `CVReadOnlyPixelBuffer` ones.
+
 ### Pro Video Storage `OS27`
 
 Pre-allocated, system-wide storage for high-data-rate captures (e.g. ProRes) giving deterministic file-write performance — normal file I/O is non-deterministic under load (WWDC 2026-303). User controls capacity in Camera settings. Not on visionOS/watchOS.
@@ -851,6 +989,7 @@ Pre-allocated, system-wide storage for high-data-rate captures (e.g. ProRes) giv
 | `openSettings()` | Jump to the Settings allocation UI |
 | `AVCaptureMovieFileOutput.isProVideoStorageSupported` / `usesProVideoStorage` | Setting the flag while unsupported raises an exception. Recording writes to pre-allocated storage, then moves to your URL when capture finishes |
 | `AVAssetWriter.isProVideoStorageSupported` / `usesProVideoStorage` | Same pair for `AVCaptureVideoDataOutput`-based recording |
+| `AVError` `.notEnoughSpaceForProVideoStorageReplenishment` (-11897) | The pool could not be refilled — macOS / iOS / tvOS 27, not visionOS or watchOS |
 
 Guided adoption flow: camera-capture.md Pattern 9.
 
@@ -863,6 +1002,8 @@ Guided adoption flow: camera-capture.md Pattern 9.
 | `AVCaptureBroadcastVideoOutput` | Broadcast-quality video + ancillary data over the DisplayPort hardware interface (USB-C DP Alt Mode). Delegate reports dropped frames; `maxBufferedFrameCount` (default 0 = drop late frames) vs class `maxSupportedBufferedFrameCount`; `resetFrameBuffer()`; `droppedFrameReplacementPolicy` `.repeatPreviousFrame` (default) / `.blackFrame`; `videoSettings` reports the negotiated SMPTE ST 377 (MXF) format. Verify the format supports it via `AVCaptureDevice.Format.unsupportedCaptureOutputClasses` before adding. Not visionOS/watchOS |
 | `AVExternalStorageDevice.reasonsNotRecommendedForCaptureUse` | Typed reasons (`.encrypted`, `.unsupportedFileSystem`, `.slowWritingSpeed`, `.unknownWritingSpeed`) replacing the deprecated boolean `isNotRecommendedForCaptureUse` |
 | External-sync `AVError` cases (iOS only) | `.followExternalSyncFailed` (-11894), `.externalSyncDeviceFrequencyHigherThanSpecified` (-11895), `.externalSyncDeviceFrequencyLowerThanSpecified` (-11896) for the iOS 26 `AVExternalSyncDevice` frame-sync feature |
+| `AVCaptureBroadcastVideoOutput.ancillaryDataEncoder` | Vends an `AVCaptureAncillaryDataEncoder` (macOS / iOS / Mac Catalyst / tvOS 27) that sends per-frame lens, camera, and user-defined acquisition data with the broadcast video. `isEnabled` toggles encoding; `setRDD18AncillaryData(_:forTag:)` / `setRDD18AncillaryDataString(_:forTag:)` (SMPTE RDD 18 tags 0xE011–0xFFFF) and `setUserInstanceUID(_:forUserUDAMVersion:)` write the user portion; `currentUserDefinedAncillaryData` reads it back keyed by `AVCaptureAncillaryDataUserKey` (`.rdd18InstanceUID`, `.rdd18UDAMSetVersion`, `.rdd18UserItems`); `userDefinedAncillaryDataSizeRemaining` is the remaining byte budget |
+| `AVCaptureDevice.setPrimaryConstituentDeviceSwitchingBehaviorLockedWith(_:)` | Pins a virtual camera to one constituent device (macOS / iOS / Mac Catalyst / tvOS 27). Gate on `isPrimaryConstituentDeviceSwitchingBehaviorLockedWithDeviceSupported` — calling it unsupported throws `NSInvalidArgumentException` — and hold `lockForConfiguration()`. A `videoZoomFactor` outside the locked device's range is clamped to the nearest supported value |
 
 ---
 
@@ -1004,6 +1145,8 @@ extension CameraManager: AVCapturePhotoCaptureDelegate {
 ## Resources
 
 **WWDC**: 2023-10105, 2026-303, 2026-304, 2026-341
+
+**Tech Talks**: 111465
 
 **Docs**: /avfoundation/avcapturesession, /avfoundation/avcapturedevice, /avfoundation/avcapturephotosettings, /avfoundation/avcapturedevice/rotationcoordinator, /avfoundation/avprovideostorage, /avfoundation/avcapturesmartframingmonitor
 

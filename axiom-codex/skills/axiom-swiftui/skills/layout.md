@@ -287,6 +287,16 @@ UIKit's `readableContentGuide` does all of this automatically, including the Dyn
 
 **Key insight:** Size class only goes `.compact` on iPad at ~33% width or Slide Over. For finer control, use geometry.
 
+## Size Class Truth Table (iPhone Duo)
+
+| Display | Horizontal | Vertical |
+|---|---|---|
+| Outer, portrait | `.compact` | `.regular` |
+| Outer, landscape | `.compact` | `.compact` |
+| Inner | `.regular` | `.regular` |
+
+Opening the device moves the app to the inner display mid-session: horizontal becomes `.regular`, and vertical does too if the outer display was in landscape — adapt, and keep state. Full guidance: skills/iphone-duo.md.
+
 ---
 
 ## iOS 26 Free-Form Windows

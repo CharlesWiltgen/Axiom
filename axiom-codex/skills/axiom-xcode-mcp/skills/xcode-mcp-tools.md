@@ -150,7 +150,7 @@ Query Apple's documentation corpus through MCP.
 2. Cross-reference with axiom-apple-docs for bundled Xcode guides
 ```
 
-**The tool set is dynamic** — the server advertises `capabilities.tools.listChanged: true`. On beta 6 all 54 tools list even with no workspace open (`DocumentationSearch` included), so a short list points at the server, not at a missing workspace. Re-list and check `xcrun mcp-server status`.
+**The tool set is dynamic** — the server advertises `capabilities.tools.listChanged: true`. On beta 6 and the 27.0 RC all 54 tools list even with no workspace open (`DocumentationSearch` included), so a short list points at the server, not at a missing workspace. The RC's tool set and schemas are identical to beta 6 (`serverInfo` 25295.11 → 25317). Re-list and check `xcrun mcp-server status`.
 
 `query` is required; `frameworks` is an optional array that scopes the search (all frameworks if omitted). Matching is semantic, not keyword.
 
@@ -202,24 +202,23 @@ Runs code in the context of a specific Swift file — has access to that file's 
 
 ## Gotchas and Anti-Patterns
 
-### A Blocked Permission Dialog Hangs You Forever `OS27`
+### An Unapproved Agent Is Rejected `OS27`
 
-The top headless hazard. When an agent identity has not been approved, the tool call **blocks
-indefinitely** waiting on a GUI dialog owned by `XcodeService` — which nobody sees on a headless
-or CI machine.
-
-There is no in-band signal at all:
-- `initialize` **succeeds** and returns full `serverInfo`, so the connection looks healthy
-- only `tools/call` blocks — no error, no timeout
-- `mcp-server status --format json` reports `running: true` and has **no** pending-request field
+Until an agent identity is approved, every `tools/call` fails with *"This agent isn't approved to
+use Xcode's tools yet. Call XcodeOpenWorkspace or XcodeNewProject first…"* — while `initialize`
+and `tools/list` still succeed, so a full tool list does not mean you can call anything. (Xcode 27
+beta 5 and earlier hung on the call instead of failing.)
 
 **Pre-flight check**: before issuing tool calls, confirm your agent appears in
-`xcrun mcp-server status` under `Permitted agents`. If it doesn't, a dialog is waiting — approve
-it on the host, or `sudo xcrun mcp-server approve <id>`.
+`xcrun mcp-server status` under `Permitted agents`. If it doesn't, call `XcodeOpenWorkspace` or
+`XcodeNewProject` to raise the approval prompt on the host, or `sudo xcrun mcp-server approve <id>`.
 
 **Unsigned agents can't hold durable trust.** Clicking "Always allow" for a shell-launched client
 still yields a ~24-hour grant, matching `approve --help` ("`--always` — signed agents and folders
-only"). Re-approval is the steady state; don't treat the re-prompt as a bug.
+only"). Re-approval is the steady state; don't treat the re-prompt as a bug. Durable options: run the
+client from a signed binary, or — only on an isolated machine — `sudo xcrun mcp-server enable
+--unsafe-always-allow-all-agents`, which approves every agent indefinitely (see
+`skills/xcode-mcp-setup.md` for the risk).
 
 ### Workspace Identifier Staleness
 
@@ -258,7 +257,7 @@ After `XcodeUpdate`, the project may need a build to surface new diagnostics. Do
 | "Read tool works fine for Xcode files" | `XcodeRead` sees Xcode's project view including generated files and resolved packages |
 | "Skip the identifier, I only have one project" | `workspaceIdentifier` is required even with one workspace open, despite being absent from `required`. Call `XcodeListWorkspaces` first. |
 | "No workspace is open, so MCP is broken" | Normal headless starting state. `XcodeOpenWorkspace` or `XcodeNewProject` — don't ask the user to open Xcode. |
-| "The call is just slow, I'll wait" | An unapproved agent blocks forever on a dialog you can't see. Check `mcp-server status` for your agent first. |
+| "tools/list worked, so I'm approved" | `tools/list` is not gated; only `tools/call` checks approval. Confirm your agent under `Permitted agents` first. |
 | "Run all tests every time" | `RunSomeTests` for iteration, `RunAllTests` for verification — saves minutes per cycle |
 | "I'll parse the build log for errors" | `GetBuildLog` filters by `severity`, `pattern`, and `glob` server-side — filter, don't post-process |
 | "XcodeWrite to update a file" | `XcodeUpdate` for edits. `XcodeWrite` creates/overwrites. Wrong tool = data loss. |

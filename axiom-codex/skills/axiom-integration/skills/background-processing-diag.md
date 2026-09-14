@@ -477,5 +477,4 @@ Missing any step = issue at that stage.
 
 ---
 
-**Last Updated**: 2025-12-31
 **Platforms**: iOS 13+

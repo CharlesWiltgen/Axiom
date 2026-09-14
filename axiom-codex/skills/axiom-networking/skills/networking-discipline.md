@@ -603,7 +603,6 @@ For apps supporting iOS 12-18 that can't use async/await yet, see `skills/networ
 - Pattern 2c: NWListener (accepting connections, Bonjour)
 - Pattern 2d: Network Discovery (NWBrowser for service discovery)
 
-
 ## Pressure Scenarios
 
 ### Scenario 1: Reachability Race Condition Under App Store Deadline
@@ -917,7 +916,6 @@ For detailed migration guides from legacy networking APIs, see `skills/networkin
 - Migration 2: NWConnection → NetworkConnection (iOS 26+)
 - Migration 3: URLSession StreamTask → NetworkConnection
 
-
 ## Checklist
 
 Before shipping networking code, verify:
@@ -1019,9 +1017,3 @@ Before shipping networking code, verify:
 **WWDC**: 2018-715, 2025-250, 2026-265
 
 **Skills**: See `skills/networking-diag.md`, `skills/network-framework-ref.md`
-
----
-
-**Last Updated** 2025-12-02
-**Status** Production-ready patterns from WWDC 2018 and WWDC 2025
-**Tested** Patterns validated against Apple documentation and WWDC transcripts

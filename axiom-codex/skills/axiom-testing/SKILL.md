@@ -30,6 +30,7 @@ license: MIT
 | confirmation for callbacks | See `skills/testing-async.md` |
 | @MainActor tests, parallel execution | See `skills/testing-async.md` |
 | Writing UI tests, XCUITest | See `skills/ui-testing.md` |
+| Driving VoiceOver from a UI test, asserting spoken output (`OS27`) | See `skills/ui-testing.md` Pattern 7 |
 | Condition-based waiting patterns | See `skills/ui-testing.md` |
 | Recording UI Automation (Xcode 26) | See `skills/ui-testing.md` |
 | Network conditioning, multi-factor testing | See `skills/ui-testing.md` |

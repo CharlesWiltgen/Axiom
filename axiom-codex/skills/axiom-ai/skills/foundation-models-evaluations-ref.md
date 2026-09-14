@@ -586,6 +586,4 @@ expectation.allowsAdditionalCalls = false
 
 ---
 
-**Last Updated**: 2026-07-12
-**Platforms**: iOS / iPadOS / macOS / watchOS / visionOS 27+ (not tvOS)
-**Skill Type**: Reference
+**Platforms**: OS27, not tvOS

@@ -37,11 +37,14 @@ license: MIT
 | UIScene lifecycle required, resizable apps, size classes, tab sidebar `OS27` | See `skills/uikit-modernization.md` |
 | iPhone Mirroring compat: indirect input, companion Face ID, portrait trap | See `skills/uikit-modernization.md` |
 | Scene edges: teardown, activation requests, per-scene restoration, external display, activeAppearance | See `skills/uikit-modernization.md` |
-| Automated resize-readiness scan (scene lifecycle, UIScreen.main, fixed-canvas, Mirroring input) | `axiom-audit-resize` |
+| Nav bar title and subtitle: `UINavigationItem.subtitle`, `largeSubtitleView`, `attributedTitle`/`attributedSubtitle`, subtitle text attributes (iOS 26) | See `skills/uikit-modernization.md` |
+| Automated resize-readiness scan (scene lifecycle, UIScreen.main, fixed-canvas, Mirroring input, iPhone Duo) | `axiom-audit-resize` |
+| iPhone Duo in UIKit: vertical bars, the fold, window requests on the outer display | See axiom-swiftui (skills/iphone-duo.md) — UIKit equivalents sit beside each SwiftUI API |
 | TextKit 2 architecture, NSTextLayoutManager | See `skills/textkit-ref.md` |
 | Writing Tools integration (iOS 26) | See `skills/textkit-ref.md` |
 | Viewport rendering surfaces, attachment reuse, collapsible text `OS27` | See `skills/textkit-ref.md` |
 | SwiftUI TextEditor, TextKit 1 migration | See `skills/textkit-ref.md` |
+| Grammar checking (`UITextChecker`), per-edge text-block borders `OS27` | See `skills/textkit-ref.md` |
 | PencilKit canvas, PKToolPicker, drawing persistence | See `skills/pencilkit-paperkit.md` |
 | Apple Pencil Pro (squeeze, barrel roll, hover, haptics) | See `skills/pencilkit-paperkit.md` |
 | Handwriting recognition (PKStrokeRecognizer), stroke identity/slicing `OS27` | See `skills/pencilkit-paperkit-ref.md` |
@@ -69,6 +72,7 @@ digraph uikit {
 
 0. Scene-lifecycle migration, "app won't launch on 27", resizability, size classes, tab sidebar? → `skills/uikit-modernization.md`
 0b. App misbehaves in iPhone Mirroring (gestures dead, Face ID blocked, layout stuck portrait)? → `skills/uikit-modernization.md`
+0c. iPhone Duo / foldable iPhone (vertical bars, the fold, outer-display window requests)? → axiom-swiftui (`skills/iphone-duo.md`)
 1. UIViewRepresentable / UIViewControllerRepresentable / UIHostingController? → `skills/uikit-bridging.md`
 2. "Unable to simultaneously satisfy constraints" / layout bugs? → `skills/auto-layout-debugging.md`
 2b. Building a layout that adapts (layout guides, size-class constraint sets, compositional column math, self-sizing cells)? → `skills/adaptive-layout.md`

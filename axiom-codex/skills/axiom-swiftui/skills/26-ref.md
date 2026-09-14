@@ -32,7 +32,7 @@ Comprehensive guide to new SwiftUI features in iOS 26, iPadOS 26, macOS Tahoe, w
 
 ## System Requirements
 
-#### iOS 26+, iPadOS 26+, macOS Tahoe+, watchOS 26+, visionOS 26+
+#### OS26, not tvOS
 
 ---
 
@@ -98,7 +98,7 @@ Use in collapsed `NavigationSplitView` sidebar to specify which column shows sea
 
 #### Other Toolbar Features
 
-- `.navigationSubtitle("3 unread")` — Secondary line below title
+- `.navigationSubtitle("3 unread")` — Secondary line below title; custom subtitle placements and gotchas in `skills/toolbars.md` Pattern 14
 - `.badge(3)` on toolbar items — Notification counts
 - Monochrome icon rendering — Reduces visual noise; tint for meaning, not decoration
 - Scroll edge blur — Automatic, no code required
@@ -172,6 +172,8 @@ CardContent()
     .padding(12)
     .background(ConcentricRectangle(corners: .concentric(minimum: .fixed(8))).fill(.background))
 ```
+
+On iPhone Duo, concentricity follows each display's corner shape — `ConcentricRectangle` (UIKit: `UICornerConfiguration`) fits both displays without per-device radii. See skills/iphone-duo.md (Match the new corners and support landscape).
 
 | API | Notes |
 |-----|-------|
@@ -928,9 +930,9 @@ A `WebView` owns an internal scroll view, and a navigation container computes sa
 
 #### Form-submission hook + navigation tweaks OS27
 
-`WebPage.NavigationDeciding` gains `willSubmit(formInfo:) async` (default no-op), observing form submissions: `WebPage.FormInfo` (`@MainActor`, so implicitly `Sendable`) carries `targetFrame` / `sourceFrame` (`FrameInfo`), `submissionURL`, `httpMethod`, and `formValues: [String: String]`. `WebPage.NavigationPreferences` adds `alternateRequest: URLRequest?`, `overrideReferrer: String?`, `isGlobalPrivacyControlEnabled: Bool`, and `allowsJSHandleCreationInPageWorld: Bool`. Confirmed on iOS 27, macOS 27, and visionOS 27 (re-verified beta 6); **not watchOS/tvOS**, which are marked `unavailable` explicitly.
+`WebPage.NavigationDeciding` gains `willSubmit(formInfo:) async` (default no-op), observing form submissions: `WebPage.FormInfo` (`@MainActor`, so implicitly `Sendable`) carries `targetFrame` / `sourceFrame` (`FrameInfo`), `submissionURL`, `httpMethod`, and `formValues: [String: String]`. `WebPage.NavigationPreferences` adds `alternateRequest: URLRequest?`, `overrideReferrer: String?`, `isGlobalPrivacyControlEnabled: Bool`, and `allowsJSHandleCreationInPageWorld: Bool`. Confirmed on iOS 27, macOS 27, and visionOS 27 (re-verified on the 27.0 RC); **not watchOS/tvOS**, which are marked `unavailable` explicitly.
 
-As of beta 5 — still true at beta 6 — the iOS SDK stamps **real versions for all three platforms** — `@available(macOS 27.0, iOS 27.0, visionOS 27.0, *)`. Through beta 4 it wrote `macOS 9999, visionOS 9999` (the cross-SDK "not yet stamped" sentinel), so an availability check written against an early-beta SDK may be narrower than what actually ships.
+As of beta 5 — still true in the 27.0 RC — the iOS SDK stamps **real versions for all three platforms** — `@available(macOS 27.0, iOS 27.0, visionOS 27.0, *)`. Through beta 4 it wrote `macOS 9999, visionOS 9999` (the cross-SDK "not yet stamped" sentinel), so an availability check written against an early-beta SDK may be narrower than what actually ships.
 
 **tvOS**: WebView and WebPage are **not available on tvOS**. tvOS has no WKWebView at all. For web content parsing on tvOS, use JavaScriptCore. See `axiom-swift (skills/tvos.md)` for alternatives.
 
@@ -1350,4 +1352,3 @@ Apps must support resizable windows on iPad.
 ---
 
 **Primary source** WWDC 2025-256 "What's new in SwiftUI". Additional content from 2025-323 (Build a SwiftUI app with the new design), 2025-287 (Meet WebKit for SwiftUI), and Apple documentation.
-**Version** iOS 26+, iPadOS 26+, macOS Tahoe+, watchOS 26+, visionOS 26+

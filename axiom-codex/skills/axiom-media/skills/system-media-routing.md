@@ -5,7 +5,7 @@
 
 Historically iOS exposed only **one** native streaming protocol (AirPlay); supporting Chromecast etc. meant bundling each vendor's SDK and your own cast button. AVSystemRouting replaces that with **one Apple API**: the protocol is supplied by a system **route provider**, and your app drives playback through a uniform interface.
 
-> **Availability is narrow and in flux.** This capability is reported to be driven by the EU Digital Markets Act, so it is **likely region-gated (EU)** and is **beta** as of the Xcode 27 betas. Treat third-party routes as *may or may not be present*: always `#available`-gate, and keep your existing AirPlay / in-app cast path as the fallback. Confirm regional + provider availability before relying on it.
+> **Availability is narrow and in flux.** This capability is reported to be driven by the EU Digital Markets Act, so it is **likely region-gated (EU)**. Treat third-party routes as *may or may not be present*: always `#available`-gate, and keep your existing AirPlay / in-app cast path as the fallback. Confirm regional + provider availability before relying on it.
 
 ## When to Use
 
@@ -113,7 +113,7 @@ Drop the `@MainActor` and Swift 6 rejects every write: *"main actor-isolated pro
 Use the `dataChannel` for the `.application` companion-app model. Note there are two data channels: the route exposes a non-optional `AVSystemRoute.routeDataChannel`, while the started media session exposes the optional `AVSystemRouteMediaSession.dataChannel` used above.
 
 > **Use `AVPlaybackUserInterface*`, not the early-beta `AVInterface*` names.** Apple shipped an `AVInterface*`
-> family in an early 27 beta, then removed it — still gone as of Xcode 27 beta 6.
+> family in an early 27 beta, then removed it — still gone in the Xcode 27.0 RC.
 > `playbackControl` is typed `(any AVKit.AVPlaybackUserInterfaceControllable)?`. Older code or AI-suggested
 > snippets that still reference `AVInterfaceControllable` (from an outdated SDK or stale training data) fail
 > to compile — replace the whole `AVInterface*` family with its `AVPlaybackUserInterface*` equivalent.

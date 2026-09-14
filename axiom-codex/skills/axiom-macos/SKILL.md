@@ -16,11 +16,12 @@ license: MIT
 | Menu bar, commands, keyboard shortcuts | See `skills/menus-and-commands.md` |
 | Table, Inspector, NavigationSplitView, focus | See `skills/swiftui-differences.md` |
 | App Sandbox, file access, security-scoped bookmarks | See `skills/sandbox-and-file-access.md` |
+| Another team's app or app group container access denied without a prompt (`OS27`) | See `skills/sandbox-and-file-access.md` |
 | Developer ID, notarization, Sparkle auto-updates | See `skills/direct-distribution.md` |
 | NSViewRepresentable, NSHostingController, AppKit bridging, @Observable in AppKit, NSHostingMenu, SwiftUI scenes from AppKit | See `skills/appkit-interop.md` |
 | Modernizing AppKit: mouseDown replacement, control events, status-item sessions, state restoration, concentric corners, touch (`OS27`) | See `skills/appkit-modernization.md` |
 | Screen recording, sharing, or capture (ScreenCaptureKit) | See `skills/screencapturekit.md` |
-| SCStream / SCContentFilter / screenshots / file recording API | See `skills/screencapturekit-ref.md` |
+| SCStream / SCContentFilter / screenshots / file recording API, clip buffering, recording editor (`OS27`) | See `skills/screencapturekit-ref.md` |
 | Bring an iOS app to Mac: Catalyst adoption, Designed for iPad, Mac availability opt-out | See `skills/ios-apps-on-mac.md` |
 | Apple Pay on Mac / Catalyst | See `axiom-payments/skills/apple-pay.md` (Catalyst section) |
 

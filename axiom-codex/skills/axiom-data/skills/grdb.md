@@ -789,4 +789,3 @@ The write case *is* a mistake, and it's the first entry above: N inserts outside
 
 **Targets:** Axiom floor — iOS 18+/macOS 15+
 **Framework:** GRDB.swift 7.9+ (current 7.11.1), Swift 6.1+, Xcode 16.3+
-**History:** See git log for changes

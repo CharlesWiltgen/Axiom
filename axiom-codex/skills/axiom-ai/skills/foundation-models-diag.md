@@ -1230,9 +1230,3 @@ Post-mortem items:
 - WWDC 2025-286: Meet the Foundation Models framework
 - WWDC 2025-301: Deep dive into the Foundation Models framework
 - Instruments Foundation Models Template
-
----
-
-**Last Updated**: 2026-07-12
-**Version**: 1.0.0
-**Skill Type**: Diagnostic

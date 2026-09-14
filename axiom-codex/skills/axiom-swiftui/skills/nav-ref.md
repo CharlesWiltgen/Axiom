@@ -1033,5 +1033,4 @@ NavigationPath(codableRepresentation)  // For decoding
 
 ---
 
-**Last Updated** Based on WWDC 2022-10054, WWDC 2024-10147, WWDC 2025-256, WWDC 2025-323 (Build a SwiftUI app with the new design)
 **Platforms** iOS 16+, iPadOS 16+, macOS 13+, watchOS 9+, tvOS 16+

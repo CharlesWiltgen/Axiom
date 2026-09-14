@@ -22,17 +22,17 @@ Filters and configurations can be swapped **on the fly** without tearing down th
 - Recording screen content straight to a file (macOS 15+)
 - Migrating off `CGDisplayStream` / `CGWindowListCreateImage` / `AVCaptureScreenInput`
 
-This is **macOS only**. For iOS screen capture, use ReplayKit (`RPScreenRecorder` / broadcast extensions) — see axiom-media. For the full type/property surface, see `skills/screencapturekit-ref.md`. For sandbox/entitlement details, see `skills/sandbox-and-file-access.md`.
+This file documents the **macOS** surface. ScreenCaptureKit is **no longer macOS-only** — it ships on iOS 27, iPadOS 27, tvOS 27, and visionOS 27 — but the iOS model differs in kind: no `SCShareableContent`, and none of the `SCContentFilter` initializers, so the picker is the entry point. For that, see axiom-media (`skills/screen-capture.md`); ReplayKit (`RPScreenRecorder` / broadcast extensions) remains the path below iOS 27. For the full type/property surface, see `skills/screencapturekit-ref.md`. For sandbox/entitlement details, see `skills/sandbox-and-file-access.md`.
 
 ## System Requirements
 
 | API | Availability |
 |-----|--------------|
 | `SCStream`, `SCShareableContent`, `SCContentFilter`, `SCStreamConfiguration`, `SCStreamOutput` | macOS |
-| `SCContentSharingPicker`, `SCScreenshotManager`, Presenter Overlay (`outputEffectDidStart`) | macOS |
+| `SCContentSharingPicker`, `SCScreenshotManager`, Presenter Overlay (`outputVideoEffectDidStart`) | macOS |
 | `SCRecordingOutput`, microphone capture (`captureMicrophone`), HDR (`captureDynamicRange`) | macOS 15.0+ |
 | Mac Catalyst | 18.2+ |
-| iOS / iPadOS | **Not available — use ReplayKit** |
+| iOS / iPadOS | **iOS 27+**, picker-based capture only — see axiom-media (`skills/screen-capture.md`). Use ReplayKit below 27 |
 
 Screen capture requires the user's **Screen Recording** permission (TCC). Without it, `SCShareableContent` returns no shareable content. A background/login-item capturer (VNC, remote desktop) additionally needs the **Persistent Content Capture** entitlement.
 
@@ -40,7 +40,7 @@ Screen capture requires the user's **Screen Recording** permission (TCC). Withou
 
 | Gotcha | Why it bites | Fix |
 |--------|--------------|-----|
-| Building for iOS | ScreenCaptureKit is macOS-only | Use ReplayKit on iOS |
+| Porting this file's code to iOS | iOS 27 ships ScreenCaptureKit but without `SCShareableContent` or the `SCContentFilter` initializers | Drive capture from `SCContentSharingPicker` on iOS 27+; ReplayKit below 27 |
 | No frames ever arrive | Screen Recording permission not granted | `SCShareableContent` is empty without TCC consent — request it and handle the empty case |
 | UI hitches / dropped frames | Heavy work on the sample-handler queue | Pass a dedicated **serial** `DispatchQueue`; copy what you need and return fast |
 | Memory balloons or the stream stalls | Holding IOSurface-backed buffers past `queueDepth` | Process and release each `CMSampleBuffer` promptly; tune `queueDepth` |
@@ -177,7 +177,7 @@ try await stream.startCapture()
 
 ## Common Mistakes
 
-- Shipping screen capture on iOS — that's ReplayKit, not ScreenCaptureKit.
+- Assuming ScreenCaptureKit is still macOS-only — it ships on iOS 27+, with a picker-first API shape rather than this file's enumerate-then-filter model.
 - Not handling the empty `SCShareableContent` case when Screen Recording permission is denied.
 - Doing real work (encoding, disk I/O, UI updates) directly on the sample-handler queue.
 - Retaining IOSurface-backed video buffers — exhausts the pool and stalls capture.
@@ -191,4 +191,4 @@ try await stream.startCapture()
 
 **Docs**: /screencapturekit, /screencapturekit/scstream, /screencapturekit/scshareablecontent, /screencapturekit/sccontentfilter, /screencapturekit/scstreamconfiguration, /screencapturekit/sccontentsharingpicker, /screencapturekit/scscreenshotmanager, /screencapturekit/screcordingoutput
 
-**Skills**: skills/screencapturekit-ref.md, skills/sandbox-and-file-access.md (TCC, entitlements), axiom-media (ReplayKit for iOS, CMSampleBuffer handling), axiom-concurrency (async sequences, serial queues)
+**Skills**: skills/screencapturekit-ref.md, skills/sandbox-and-file-access.md (TCC, entitlements), axiom-media (skills/screen-capture.md — iOS 27 ScreenCaptureKit, ReplayKit below 27, CMSampleBuffer handling), axiom-concurrency (async sequences, serial queues)

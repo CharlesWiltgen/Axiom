@@ -23,10 +23,12 @@ license: MIT
 |----------------|-----------|
 | Design decisions, HIG compliance, colors, backgrounds | See `skills/hig.md` |
 | Spacing, padding, margins, insets — what value to use | See `skills/hig.md` |
+| Designing for iPhone Duo — poses, controls on the side, keeping UI out of the fold | See axiom-swiftui (skills/iphone-duo.md) |
 | Section index / A–Z index strip / alphabet scrubber — should this list have one | See `skills/hig.md` |
 | Semantic colors, custom color patterns, material styles | See `skills/hig-ref.md` |
 | Liquid Glass effects, adoption, migration from blur effects | See `skills/liquid-glass.md` |
-| App-wide Liquid Glass adoption, backward compatibility | See `skills/liquid-glass-ref.md` |
+| App-wide Liquid Glass adoption, platform differences | See `skills/liquid-glass-ref.md` |
+| Backward compatibility: the `UIDesignRequiresCompatibility` opt-out, and why the 27 SDK ignores it on OS 27 | See `skills/liquid-glass.md` (Backward Compatibility) |
 | SF Symbols rendering modes, effects, animations | See `skills/sf-symbols.md` |
 | SF Symbols API signatures, UIKit equivalents, availability | See `skills/sf-symbols-ref.md` |
 | Verify a symbol name exists / check one symbol's availability or supported modes (`sfsymbols` CLI) | See `skills/sf-symbols-ref.md` (Part 11) |
@@ -45,8 +47,8 @@ digraph design {
     what -> "skills/hig.md" [label="design decision,\nHIG compliance,\ncolor/background choice"];
     what -> "skills/hig.md" [label="spacing/padding/margin value"];
     what -> "skills/hig-ref.md" [label="semantic color API,\ncustom color code,\nmaterial style details"];
-    what -> "skills/liquid-glass.md" [label="Liquid Glass effects,\nmigrate from blur,\nRegular vs Clear"];
-    what -> "skills/liquid-glass-ref.md" [label="app-wide Liquid Glass plan,\nplatform differences,\nbackward compat"];
+    what -> "skills/liquid-glass.md" [label="Liquid Glass effects,\nmigrate from blur,\nRegular vs Clear,\nopt-out key"];
+    what -> "skills/liquid-glass-ref.md" [label="app-wide Liquid Glass plan,\nplatform differences"];
     what -> "skills/sf-symbols.md" [label="rendering mode choice,\nsymbol effects/animations,\ncustom symbols"];
     what -> "skills/sf-symbols-ref.md" [label="SF Symbols API syntax,\nUIKit equivalents,\navailability matrix"];
     what -> "skills/typography-ref.md" [label="font selection,\nDynamic Type,\ntext styles, tracking"];
@@ -57,7 +59,8 @@ digraph design {
 1. Design decision / HIG compliance / choosing colors or backgrounds? → `skills/hig.md`
 1a. Need semantic color API, custom color code, or material style details? → `skills/hig-ref.md`
 2. Liquid Glass effects / migrating from blur / Regular vs Clear variant? → `skills/liquid-glass.md`
-2a. Planning app-wide Liquid Glass adoption / platform differences / backward compatibility? → `skills/liquid-glass-ref.md`
+2a. Planning app-wide Liquid Glass adoption / platform differences? → `skills/liquid-glass-ref.md`
+2b. Opting out of Liquid Glass / `UIDesignRequiresCompatibility` / backward compatibility? → `skills/liquid-glass.md` (Backward Compatibility)
 3. SF Symbols rendering mode / symbol effects / custom symbols? → `skills/sf-symbols.md`
 3a. Need SF Symbols API syntax / UIKit equivalents / availability check? → `skills/sf-symbols-ref.md`
 4. Font selection / Dynamic Type / text styles / tracking / leading? → `skills/typography-ref.md`
@@ -65,7 +68,7 @@ digraph design {
 6. SwiftUI view implementation? → `/skill axiom-swiftui`
 7. TextKit / rich text editing / Writing Tools? → `/skill axiom-uikit`
 8. Accessibility compliance (VoiceOver, contrast, touch targets)? → `/skill axiom-accessibility`
-9. Audit UI for Liquid Glass adoption? → liquid-glass-auditor (Agent — surfaces migration opportunities AND adoption-completeness gaps: variant discipline, nesting hygiene, availability gating, primary-action tinting, accessibility re-check; scores ADOPTED / PARTIAL / NOT ADOPTED)
+9. Audit UI for Liquid Glass adoption? → liquid-glass-auditor (Agent — surfaces migration opportunities AND adoption-completeness gaps: variant discipline, nesting hygiene, unstyled pre-26 fallbacks, semantic toolbar placement, the `UIDesignRequiresCompatibility` opt-out, accessibility re-check; scores ADOPTED / PARTIAL / NOT ADOPTED)
 10. CarPlay app design, categories, driver-distraction rules? → `/skill axiom-media` (carplay-hig.md)
 
 #### Platform-specific HIG
@@ -114,11 +117,11 @@ digraph design {
 - Migration strategy from pre-iOS 26 materials
 - Tinting, legibility, and adaptive behavior troubleshooting
 - Expert review criteria for Liquid Glass implementations
+- The `UIDesignRequiresCompatibility` opt-out and its measured SDK × OS behavior
 
 **Liquid Glass Adoption** (`skills/liquid-glass-ref.md`):
 - App-wide adoption planning (icons, controls, navigation, menus)
 - Platform-specific behavior (iOS, iPadOS, macOS, tvOS, watchOS)
-- Backward compatibility strategy for supporting pre-Liquid Glass
 - Accessibility compliance with Liquid Glass interfaces
 
 **SF Symbols** (`skills/sf-symbols.md`):

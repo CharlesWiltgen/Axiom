@@ -687,7 +687,5 @@ For server-hosted delivery (`BADownloaderExtension`), see `axiom-integration (sk
 
 ---
 
-**Last Updated**: 2026-06-11
 **Toolkit Version**: 26.0.0
 **Platforms**: iOS / iPadOS / macOS / visionOS **26.0–26.x only** (runtime deprecated 26.4, obsoleted 27.0; never watchOS/tvOS); macOS 14+ Apple silicon ≥32 GB or Linux GPU (training)
-**Skill Type**: Reference

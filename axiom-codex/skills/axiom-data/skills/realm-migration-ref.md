@@ -787,7 +787,5 @@ Settings → [Your Name] → iCloud → Check CloudKit status
 
 ---
 
-**Created**: 2025-11-30
-**Status**: Production-ready migration guide
 **Urgency**: Realm Device Sync sunset September 30, 2025
 **Estimated Migration Time**: 2-8 weeks depending on app complexity
