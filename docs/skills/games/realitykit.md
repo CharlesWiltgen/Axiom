@@ -75,7 +75,7 @@ Use this skill when:
 - Applying forces and velocities
 
 ### RealityKit 27 at a Glance
-- Navigation meshes, LOD, soft shadows, lightmaps, Gaussian splats (visionOS), custom reverb meshes
+- Navigation meshes, LOD, soft shadows, lightmaps, Gaussian splats (iOS/macOS/visionOS 27), custom reverb meshes
 - Thermal adaptation pattern for heavy rendering features
 - Reality Composer Pro 3 as the authoring companion
 

@@ -662,12 +662,12 @@ For moving/deforming geometry, store previous-frame world positions (or skin twi
 
 | `MTLTensorDataType` | Format |
 |---------------------|--------|
-| `.float8E4M3` / `.float8E5M2` | 8-bit float (4 or 5 exponent bits) |
-| `.float4E2M1` | 4-bit float |
+| `.metalFloat8e4m3` / `.metalFloat8e5m2` | 8-bit float (4 or 5 exponent bits) |
+| `.metalFloat4e2m1` | 4-bit float |
 | `.int2` / `.uint2` | 2-bit integer |
-| `.float8UE8M0` | Scale-factor format for block-wise (MX) quantization |
+| `.metalFloat8ue8m0` | Scale-factor format for block-wise (MX) quantization |
 
-Scales attach as an auxiliary plane on the same tensor — `MTLTensorAuxiliaryPlaneDescriptor` (with `blockFactors`, e.g. one scale per 32×1 block) registered in an `MTLTensorAuxiliaryPlaneDescriptorMap` for `MTLTensorPlaneTypeScales`, assigned to `MTLTensorDescriptor.auxiliaryPlanes`. Note: Apple's session slide uses `MTLTensorDataTypeMetalFloat8E4M3` — the shipping header has no `Metal` infix (`MTLTensorDataTypeFloat8E4M3`). The new types carry extra alignment requirements; check the Metal docs.
+Scales attach as an auxiliary plane on the same tensor — `MTLTensorAuxiliaryPlaneDescriptor` (with `blockFactors`, e.g. one scale per 32×1 block) registered in an `MTLTensorAuxiliaryPlaneDescriptorMap` for `MTLTensorPlaneTypeScales`, assigned to `MTLTensorDescriptor.auxiliaryPlanes`. Note the spelling: the new 27 float formats carry a `Metal` infix in ObjC (`MTLTensorDataTypeMetalFloat8E4M3`), and Swift lowercases the suffix — `.metalFloat8e4m3`, `.metalFloat8e5m2`, `.metalFloat4e2m1`, `.metalFloat8ue8m0` (compile-verified on iOS and macOS 27). Beta-era spellings such as `.float8E4M3` fail with `type 'MTLTensorDataType' has no case 'float8E4M3'`. `.int4` / `.uint4` are 26.4, not 27. The new types carry extra alignment requirements; check the Metal docs.
 
 MSL side, declare the plane and tensor types, then TensorOps dequantizes automatically:
 
@@ -695,6 +695,13 @@ using mxfp8_tensor = tensor<device metal_fp8_e4m3_format, dextents<int, 2>,
 | MetalFX content regions | `contentWidth/Height` (frame interpolator), `colorContentOffsetX/Y` (temporal scaler), plus depth/motion/reactive-mask/output/distortion offsets — all `API_UNAVAILABLE(visionos)` |
 | MetalFX reactive mask rename | `reactiveMaskTextureUsage` replaces deprecated `reactiveTextureUsage` |
 | MetalFX frame interpolation | `isDistortionTextureEnabled` + distortion texture/region, `requiresPrevColorTexture`, `worldToViewMatrix`/`viewToClipMatrix`; temporal scaler gains output-resolution and jittered motion-vector options |
+| Persistent-kernel compute | `optimizeForPersistentKernel` on `MTLComputePipelineDescriptor` and `MTL4ComputePipelineDescriptor`, plus `MTLComputePipelineState.recommendedPersistentThreadgroupsPerGrid(forThreadsPerThreadgroup:)` for sizing the launch. The 27.0 headers ship these with **no doc comments** — names and types are the whole of what Apple documents |
+| `MTLForwardProgressUsage` | `.automatic` / `.weak` / `.simdGroupParallel`; settable on both compute descriptors, read-only on `MTLComputePipelineState`. Undocumented beyond the case names |
+| `MTLContentionRelief` | `.automatic` / `.none`; settable on both compute descriptors. Undocumented beyond the case names |
+| Three-channel pixel formats | `.rgb8Unorm/Snorm/Uint/Sint`, `.rgb16Unorm/Snorm/Uint/Sint/Float`, `.rgb32Uint/Sint/Float`. Texture-buffer only — the descriptor's `textureType` must be `.textureBuffer` and its `usage` must not include `.shaderWrite` |
+| `minLOD` | Settable on `MTLTextureViewDescriptor`, read-only on `MTLTexture`; default `0.0`. Clamps the LOD range for views built from the descriptor, applied after sampler LOD clamping and view level-range offsets. Read needs `floor(minLOD) ≤ mip level`, gather needs `floor(minLOD) ≤ levelRange.location`, sample needs `minLOD ≤ levelRange.location + levelRange.length` — otherwise the operation returns its out-of-bounds value |
+
+The last five rows need the Xcode 27.0 release SDK; the WWDC betas lacked them. Their headers name only `macos` and `ios`, but all five compile against the tvOS and visionOS 27 SDKs too — the omitted platforms inherit rather than exclude.
 
 For CoreML-level model conversion, quantization, and deployment (including the 27-cycle Core AI tooling for PyTorch models with custom Metal kernels — `TorchMetalKernel`, `coreai-torch`, the `.aimodel` runtime), see axiom-ai (skills/core-ai.md) — this part covers only the Metal-side surface.
 
@@ -708,6 +715,4 @@ For CoreML-level model conversion, quantization, and deployment (including the 2
 
 ---
 
-**Last Updated**: 2026-06-10
 **Platforms**: iOS 12+, macOS 10.14+, tvOS 12+
-**Status**: Complete shader conversion and API mapping reference

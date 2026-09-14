@@ -5,7 +5,7 @@ description: Complete parameter, return-shape, and behavior reference for all 54
 
 # Xcode MCP Tool Reference
 
-Complete reference for every tool exposed by Xcode's MCP server — the Model Context Protocol interface that lets an AI assistant drive Xcode directly. Covers parameters, return shapes, and the behavioral caveats that the tool descriptions leave out. Generated from a live `tools/list` capture on Xcode 27 beta 6 (27A5252f, server 25295.11), not from documentation.
+Complete reference for every tool exposed by Xcode's MCP server — the Model Context Protocol interface that lets an AI assistant drive Xcode directly. Covers parameters, return shapes, and the behavioral caveats that the tool descriptions leave out. Generated from a live `tools/list` capture on Xcode 27.0 (27A266a, server 25317), not from documentation.
 
 ## When to Use This Reference
 
@@ -30,7 +30,7 @@ Use this reference when:
 
 ## Two Things That Trip Everyone Up
 
-**All 54 tools list even with no workspace open.** Verified on beta 6: `xcrun mcp-server status` reported `Open workspaces: none` and `tools/list` still returned all 54, `DocumentationSearch` included. The server does advertise `capabilities.tools.listChanged: true`, so treat the set as dynamic — but a short list is a server problem, not a missing workspace.
+**All 54 tools list even with no workspace open.** Verified on beta 6 and again on the Xcode 27.0 RC: `xcrun mcp-server status` reported `Open workspaces: none` and `tools/list` still returned all 54, `DocumentationSearch` included. The server does advertise `capabilities.tools.listChanged: true`, so treat the set as dynamic — but a short list is a server problem, not a missing workspace.
 
 **`workspaceIdentifier` is required even though it never appears in a `required` list.** All 46 tools that accept it demand it, even when a single workspace is open. The error names the valid identifiers, so a missed one costs a round trip rather than a wrong-target write. Identifiers are readable slugs (`workspace-Gxw7GRzGoI`), not UUIDs, and come from `XcodeListWorkspaces`. On Xcode 26.x this parameter was `tabIdentifier`. It survived into Xcode 27 beta 5 on the running-Xcode path, and beta 6 removed it everywhere — along with `XcodeListWindows`, `XcodeGetCurrentFile`, and `XcodeListNavigatorIssues`. Code written against a beta-5 capture taken with Xcode open will break.
 

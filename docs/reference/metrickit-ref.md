@@ -26,6 +26,7 @@ Questions you can ask Claude that will draw from this reference:
 - "How do I set up MetricKit to collect crash data?"
 - "How do I migrate from MXMetricManager to MetricManager?"
 - "Can I get hitch metrics per tab or per experiment arm?"
+- "Where did the scroll hitch metric go in the new MetricKit API?"
 - "How do I attach custom metadata to my reported app states?"
 - "How do I symbolicate MetricKit call stacks?"
 - "What background exit types does MetricKit track?"
@@ -36,7 +37,7 @@ Questions you can ask Claude that will draw from this reference:
 
 ## What's Covered
 
-- The new Swift API (27): MetricManager setup, MetricReport interval entries, the full MetricResult metric inventory (including Metal frame rate and storage metrics), launch-task tracking, typed diagnostics with termination categories, and memory exception diagnostics
+- The new Swift API (27): MetricManager setup, MetricReport interval entries, the full MetricResult metric inventory (including Metal frame rate and storage metrics, and `HitchTimeMetric` with its `HitchTimeRatio` unit — the Swift API has no scroll-specific hitch metric), launch-task tracking, typed diagnostics with termination categories, and memory exception diagnostics
 - Per-state metrics: StateReporting domains, state transitions, the `@ReportableMetadata` macro, and state-grouped report encoding
 - Crash reporter extensions (27): the CrashReportExtension framework — CrashedProcess, in-extension symbolication, binary image inventory
 - Migration map from the soft-deprecated MX* API to the 27 API

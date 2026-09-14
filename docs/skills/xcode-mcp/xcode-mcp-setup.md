@@ -13,7 +13,7 @@ Use this skill when:
 - Setting up Xcode MCP for the first time on this machine
 - Configuring a new MCP client (Claude Code, Cursor, Codex, VS Code, Gemini CLI)
 - Running MCP in CI, or on a machine where you don't want Xcode open
-- A tool call is rejected with "This agent isn't approved to use Xcode's tools yet" (Xcode 27 beta 6+), or hangs forever with no error (earlier builds)
+- A tool call is rejected with "This agent isn't approved to use Xcode's tools yet" (Xcode 27.0; introduced in beta 6), or hangs forever with no error (earlier builds)
 - A client connects but `tools/list` returns empty
 - Seeing "Connection refused" from mcpbridge
 - Permission prompts reappear every session
@@ -49,7 +49,7 @@ Attached suits a developer already working in Xcode. Headless suits CI, agents t
 - **Per-client config** for Claude Code, Codex, Cursor, VS Code + GitHub Copilot, Gemini CLI
 - **Connection verification** – call `XcodeListWorkspaces`, and how to read an empty result
 - **The approval model** – the Xcode dialog for attached mode, `sudo` grants for headless, and why unsigned agents only ever get time-boxed trust
-- **The blocked-dialog trap** – why a call can hang forever with `status` reporting everything healthy, and the pre-flight check that avoids it
+- **The unapproved-agent trap** – why a tool call is rejected with "This agent isn't approved…" on Xcode 27.0 (and hung forever, with `status` reporting everything healthy, on beta 5 and earlier), and the `Permitted agents` pre-flight check that avoids it
 - **Multi-Xcode targeting** – auto-detection fallback plus `MCP_XCODE_PID`, `MCP_XCODE_SESSION_ID`, and `DEVELOPER_DIR`
 - **Troubleshooting decision tree and table** – hangs, connection failures, empty tool lists, wrong workspace, repeated prompts
 - **Letting Xcode launch the agent** – `xcrun agent` (alias for `xcrun mcpbridge run-agent`) starts an agent with Xcode's resolved config; `xcrun agent skills export` dumps Xcode's 10 built-in skill bundles to disk

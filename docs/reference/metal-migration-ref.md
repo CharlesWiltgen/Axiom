@@ -29,6 +29,7 @@ Use this reference when:
 - "What are the buffer storage modes in Metal?"
 - "How do I integrate MetalFX denoising into my path tracer?"
 - "What quantized `MTLTensorDataType` formats are available in the 27 SDKs?"
+- "Can I create a three-channel RGB Metal texture without an alpha channel?"
 
 ## What's Covered
 
@@ -43,6 +44,7 @@ Use this reference when:
 - **Buffer storage modes** – Shared, private, managed (macOS) with use case guidance
 - **Buffer alignment** – Critical float3/SIMD3 alignment rules for CPU-GPU shared structs
 - **Metal 4 ML and neural rendering** – MetalFX denoising best practices, quantized Metal tensors and MX scale formats (27 cycle), TensorOps in-shader networks, MSL 4.1
+- **Other 27-cycle Metal additions** – persistent-kernel compute flags, forward-progress and contention-relief modes, three-channel RGB texture-buffer formats, and texture-view `minLOD`
 
 ## Documentation Scope
 

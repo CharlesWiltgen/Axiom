@@ -26,6 +26,7 @@ Questions you can ask Claude that will draw from this skill:
 - "Why does my HealthKit code compile on macOS but never return data?"
 - "Where should I store my `HKHealthStore` instance in a SwiftUI app?"
 - "Why is my UI freezing after a HealthKit query completes?"
+- "Can HealthKit give me RMSSD heart rate variability, or only SDNN?"
 
 ## What This Skill Provides
 
@@ -41,9 +42,10 @@ Questions you can ask Claude that will draw from this skill:
 
 ### Data Type Hierarchy
 - The `HKObjectType` tree — characteristic types versus sample types
-- The seven sample kinds (quantity, category, correlation, workout, series, clinical, audiogram, electrocardiogram, activity summary)
+- The sample kinds (quantity, category, correlation, workout, series, clinical, audiogram, electrocardiogram, activity summary)
 - Why `HKQuantitySample` became abstract in iOS 13 and when to cast to cumulative or discrete subclasses
 - Aggregation styles that govern statistics queries (cumulative, discrete arithmetic, temporally weighted, equivalent continuous level)
+- The `heartRateVariabilityRMSSD` quantity type (27 platform releases), HealthKit's second heart rate variability metric alongside SDNN
 
 ### Platform Availability and Threading
 - "Full" vs "Limited" HealthKit store support per platform (iOS, iPadOS 17+, watchOS, visionOS have full; macOS and Mac Catalyst are compile-only)

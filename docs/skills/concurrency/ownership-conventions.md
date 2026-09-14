@@ -24,6 +24,12 @@ description: Parameter ownership modifiers for performance optimization — borr
 - Compiler optimization is sufficient (most cases)
 - You're not certain about the performance impact
 
+## Example Prompts
+
+- "Should this large struct parameter be `borrowing` or `consuming`?"
+- "How do I make a noncopyable file handle type with `~Copyable`?"
+- "How do I loop over a `Span` or `UniqueArray` without copying it?"
+- "Can I use `Dictionary.mapKeyedValues` or the stdlib `FilePath` in Xcode 27?"
 
 ## Quick Reference
 

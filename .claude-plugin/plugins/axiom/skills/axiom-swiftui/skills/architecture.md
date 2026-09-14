@@ -265,7 +265,7 @@ init(id: String, title: String) {
 }
 ```
 
-TN3211 documents the ❌ form as an error, but the diagnostic does not fire on every 27 toolchain — it does not on Xcode 27.0 (27A5252f). The compiler is not a reliable gate here; order it correctly regardless.
+TN3211 documents the ❌ form as an error, but Xcode 27.0 (27A266a) compiles it with no diagnostic. The compiler is not a reliable gate here; order it correctly regardless.
 
 #### The silent one — never pair an inline initial value with an `init` assignment
 
@@ -1870,6 +1870,5 @@ struct OrderRow: View {
 
 ---
 
-**Platforms**: iOS 26+, iPadOS 26+, macOS Tahoe+, watchOS 26+, visionOS 26+
+**Platforms**: OS26, not tvOS
 **Xcode**: 26+ (see "`@State` is a macro now" for Xcode 27 build-time changes)
-**Status**: Production-ready (v1.0)

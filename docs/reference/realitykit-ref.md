@@ -44,7 +44,7 @@ Use this reference when:
 - **Animation** – Transform animation with timing functions, USD animation playback, AnimationPlaybackController
 - **Audio** – AudioFileResource, SpatialAudioComponent, AmbientAudioComponent, ChannelAudioComponent, playback control
 - **RealityRenderer** – Low-level Metal integration for rendering RealityKit content to Metal textures
-- **RealityKit 27 additions** – Navigation mesh pathfinding, level of detail, soft shadows, projective textures, physical space lighting (visionOS/macOS), lightmaps, Gaussian splats (visionOS), custom reverb meshes, ARKit object tracking, cloth simulation (`ClothBodyComponent`, iOS/macOS/visionOS 27), ComputeGraph framework (programmatic node graphs)
+- **RealityKit 27 additions** – Navigation mesh pathfinding, level of detail, soft shadows, projective textures, physical space lighting (visionOS/macOS), lightmaps, Gaussian splats (iOS/macOS/visionOS 27), custom reverb meshes, ARKit object tracking, cloth simulation (`ClothBodyComponent`, iOS/macOS/visionOS 27), ComputeGraph framework (programmatic node graphs)
 
 ### Renderer layer (iOS 27)
 

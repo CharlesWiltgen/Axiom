@@ -424,7 +424,7 @@ Currently limited to `Int` parameters. Enables stack-allocated, fixed-size abstr
 
 ## Swift 6.4 Additions (OS27)
 
-The 6.4 toolchain (Xcode 27) extends the ownership toolkit. These are verified against the Xcode 27.0 beta compiler:
+The 6.4 toolchain (Xcode 27) extends the ownership toolkit. These are verified against the Xcode 27.0 compiler:
 
 ### `borrow` / `mutate` accessors
 
@@ -450,7 +450,7 @@ struct FileHandle: ~Copyable, Equatable {
 
 ### Single-value & unique containers
 
-The 6.4 stdlib adds lightweight ownership containers — verified usable in the Xcode 27 beta (no experimental flag). Each gates on `@available(anyAppleOS 27, *)`:
+The 6.4 stdlib adds lightweight ownership containers — verified usable in Xcode 27.0 (no experimental flag). Each gates on `@available(anyAppleOS 27, *)`:
 
 | Type | Copyability | Init | Role |
 |------|-------------|------|------|
@@ -489,7 +489,7 @@ func buildIDs() {
 func consumeIDs(_ x: consuming UniqueArray<Int>) { _ = x.count }
 ```
 
-`Ref`/`MutableRef` are the single-value analog of `Span`/`MutableSpan`: non-escapable, so the borrow can't outlive its source. On the concurrency side, `withTaskCancellationShield` is usable now and the single-resume `Continuation` is present but limited in this beta — see `swift-concurrency-ref`.
+`Ref`/`MutableRef` are the single-value analog of `Span`/`MutableSpan`: non-escapable, so the borrow can't outlive its source. On the concurrency side, `withTaskCancellationShield` is usable now and the single-resume `Continuation` is present but limited in 27.0 — see `swift-concurrency-ref`.
 
 Paren-free optional existentials and opaque types now compile under Swift 6.4 — `var overlay: any Drawable?` and `some P?` no longer have to be written `(any Drawable)?`.
 
@@ -531,16 +531,16 @@ where S: ~Copyable & ~Escapable, S.Element == Int, S.Failure == Never {
 
 Drop the `S.Failure == Never` constraint and the loop must be written `for try x in s` in a `throws` function.
 
-### Still forthcoming (re-check each beta)
+### Announced for 6.4, absent from Xcode 27.0
 
-Other 6.4 stdlib features are **not yet usable** as of Xcode 27 beta 6 (confirmed by compile-probe, build swiftlang-6.4.0.33.1):
+Two stdlib features announced at WWDC 2026-262 are not in Xcode 27.0 (swiftlang-6.4.0.34.1, compile-verified):
 
-| Feature | State in beta |
+| Feature | State in 27.0 |
 |---------|---------------|
 | `Dictionary.mapKeyedValues` | Absent |
 | `FilePath` as a stdlib type | Still requires `import System` |
 
-Treat these as forthcoming; re-probe on each new beta and fold what flips.
+Don't write code that waits for them; on a newer toolchain, compile-check before using them.
 
 ## Decision Tree
 

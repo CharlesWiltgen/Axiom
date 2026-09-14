@@ -18,7 +18,7 @@ Use this skill when:
 - Running test iterations and trying to avoid full-suite runs on every change
 - Rendering SwiftUI previews to verify a layout change
 - About to call `XcodeRM` or `XcodeMV` — both can break the project if invoked carelessly
-- A tool call hangs with no error at all
+- A tool call is rejected with "This agent isn't approved to use Xcode's tools yet" — or, on Xcode 27 beta 5 and earlier, hangs with no error at all
 
 ## Example Prompts
 
@@ -40,7 +40,7 @@ Use this skill when:
 - **IssueTriage workflow** – server-side severity, pattern, and glob filtering on `GetBuildLog` for project-wide diagnostics; `XcodeRefreshCodeIssuesInFile` for a single file
 - **File-operation decision table** – when MCP file tools beat standard Read/Write/Grep (generated files, package products, build context)
 - **Destructive-operation rules** – confirm with the user before `XcodeRM` or `XcodeMV`; Trash-by-default and import-breakage risks, and the fact that `XcodeWrite` overwrites wholesale
-- **The blocked-dialog trap** – an unapproved agent hangs indefinitely on a dialog nobody sees, while `initialize` succeeds and status looks healthy; includes the pre-flight check
+- **The unapproved-agent trap** – on Xcode 27.0 an unapproved agent's tool calls are rejected with "This agent isn't approved…" (beta 5 and earlier hung indefinitely on a dialog nobody saw, while `initialize` succeeded and status looked healthy); includes the `Permitted agents` pre-flight check
 - **Anti-patterns table** – "I'll just use xcodebuild", "Skip the identifier", "No workspace is open so MCP is broken", "The call is just slow", "Parse the build log for errors"
 
 ## Related

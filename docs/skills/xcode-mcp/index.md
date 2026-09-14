@@ -68,7 +68,7 @@ This is a router skill with four sub-skills:
 
 ## The Xcode MCP Tools
 
-The server exposes 53 tools with no workspace open and 54 with one — `DocumentationSearch` is the only workspace-gated tool. The full per-tool reference is in [Xcode MCP Reference](/reference/xcode-mcp-ref).
+The server lists all 54 tools whether or not a workspace is open, `DocumentationSearch` included — so a shorter list points at the server, not at a missing workspace. The full per-tool reference is in [Xcode MCP Reference](/reference/xcode-mcp-ref).
 
 | Category | Tools |
 |----------|-------|

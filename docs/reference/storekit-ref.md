@@ -53,7 +53,7 @@ Questions you can ask Claude that will draw from this reference:
 - RenewalInfo for upcoming renewals
 - SubscriptionStatus for current state
 - Grace period detection
-- Offer types (introductory, promotional, win-back, retention)
+- Offer types (introductory, promotional, win-back), plus retention offers, which appear only as a server-side `offerType` 5 with no client `OfferType` case
 - Monthly subscriptions with a 12-month commitment (PricingTerms, billing plans, from 26.4)
 
 ### StoreKit Views (iOS 17+)

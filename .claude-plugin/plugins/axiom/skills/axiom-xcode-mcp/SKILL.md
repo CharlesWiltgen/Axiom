@@ -8,7 +8,7 @@ license: MIT
 
 **You MUST use this skill for ANY Xcode MCP interaction — setup, tool usage, workflow patterns, or troubleshooting.**
 
-Xcode ships an MCP server exposing IDE tools to external AI clients. `xcrun mcpbridge` is the stdio transport clients register, available since Xcode 26.3. Xcode 27 adds an explicit "Allow external agents to use Xcode tools" gate, the `run-agent` launch path, an agent-extension model (custom MCP servers, skills, plug-ins), and a headless server. This skill suite covers setup, tool reference, workflow patterns, and troubleshooting.
+Xcode ships an MCP server exposing IDE tools to external AI clients. `xcrun mcpbridge` is the stdio transport clients register, available since Xcode 26.3. Xcode 27 adds an explicit "Allow External Agents to Use Xcode Tools" setting, the `run-agent` launch path, an agent-extension model (custom MCP servers, skills, plug-ins), and a headless server. This skill suite covers setup, tool reference, workflow patterns, and troubleshooting.
 
 **On Xcode 26.x, mcpbridge requires a running Xcode with a project open.** If that's a liability, the device/simulator half of these operations has a fully Xcode-independent CLI path: `devicectl` + `simctl` + Axiom's `xcui`/`xclog`/`xcsym`/`xcprof`. See `axiom-tools (skills/device-control-ref.md)`.
 
