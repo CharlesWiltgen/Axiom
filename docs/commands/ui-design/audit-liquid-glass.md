@@ -9,20 +9,21 @@ Scan your SwiftUI codebase for Liquid Glass adoption opportunities, toolbar impr
 
 ## What It Scans
 
-### High Priority (Migration)
-- `UIBlurEffect` and `NSVisualEffectView` usage
-- `.blur()` modifier on backgrounds
-- `Material` that could migrate to Liquid Glass
+### High Priority
+- `UIBlurEffect`, `NSVisualEffectView`, and SwiftUI `Material` on surfaces that float over content
+- An app-wide opt-out through `UIDesignRequiresCompatibility` while adoption work remains, since the key stops applying on iOS 27 once the app builds with the 27 SDK
+- Regular glass over photos, video, or maps, where Clear belongs
+- Glass nested inside glass
 
-### Medium Priority (Improvements)
-- Toolbar buttons missing `.borderedProminent`
-- `.borderedProminent` without `.tint()`
-- Toolbars that could use `Spacer(.fixed)` for grouping
-- `.searchable()` not in NavigationSplitView
+### Medium Priority
+- Sheet and editor toolbars that place Save, Done, or Cancel by position instead of with `.confirmationAction` / `.cancellationAction`
+- Custom floating views that could benefit from `.glassEffect()`
+- Search outside the platform pattern: `.searchable()` not in NavigationSplitView, or a tab-based app without a `Tab(role: .search)` tab
+- `if #available(iOS 26, *)` fallbacks that leave iOS 18 users with an unstyled surface
 
-### Low Priority (Enhancements)
-- Custom views that could benefit from `.glassBackgroundEffect()`
-- Search-related tabs missing `.tabRole(.search)`
+### Low Priority
+- Prominent buttons whose meaning (such as a confirmation) needs a semantic tint rather than the default accent color
+- Custom tappable glass without interactive glass (`.glassEffect(.regular.interactive())`)
 
 ## Usage
 
@@ -40,15 +41,19 @@ Scan your SwiftUI codebase for Liquid Glass adoption opportunities, toolbar impr
 ```
 === Liquid Glass Adoption Audit ===
 
-HIGH Priority (Migration):
+HIGH Priority:
   src/Views/OverlayView.swift:67
-    Current: .background(.ultraThinMaterial)
+    Current: .background(.ultraThinMaterial) on a floating overlay
     Recommendation: .glassEffect() for iOS 26+
 
-MEDIUM Priority (Improvements):
-  src/Views/MainToolbar.swift:23
-    Toolbar missing button grouping
-    Add Spacer(.fixed) between button groups
+MEDIUM Priority:
+  src/Views/EditItemSheet.swift:41
+    Current: Save placed with .topBarTrailing
+    Recommendation: .confirmationAction, which gets prominent glass automatically
+
+  src/Views/RootTabView.swift:12
+    TabView has no search tab
+    Recommendation: add Tab(role: .search)
 
 Summary:
   - 6 migration opportunities (old blur effects)

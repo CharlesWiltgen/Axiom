@@ -2,7 +2,7 @@
 name: liquid-glass
 description: Use when implementing Liquid Glass effects, reviewing UI for Liquid Glass adoption, debugging visual artifacts, optimizing performance, or requesting expert review of Liquid Glass implementation — provides comprehensive design principles, API patterns, and troubleshooting guidance from WWDC 2025
 version: 1.2.0
-apple_platforms: iOS 26+, iPadOS 26+, macOS Tahoe+, visionOS 3+
+apple_platforms: iOS 26+, iPadOS 26+, macOS Tahoe+, tvOS 26+, watchOS 26+
 ---
 
 # Liquid Glass
@@ -32,6 +32,7 @@ Questions you can ask Claude that will draw from this skill:
 - "We want to do a design review of our Liquid Glass implementation. What are the expert criteria?"
 - "When should I use Clear variant vs Regular variant?"
 - "My designer wants Clear variant everywhere. How do I push back professionally?"
+- "Does `UIDesignRequiresCompatibility` still work after I update to Xcode 27?"
 
 ## What This Skill Provides
 
@@ -41,15 +42,15 @@ Questions you can ask Claude that will draw from this skill:
 - Adaptive behavior — content-aware, platform-aware, no fixed light/dark
 
 ### Variants
-- **Regular** (default, 95% of cases) — full adaptive behavior, automatic legibility
-- **Clear** (special cases) — requires 3 conditions: media-rich background, dimming layer acceptable, bold/bright content above
+- **Regular** (default, 95% of cases) – full adaptive behavior, automatic legibility
+- **Clear** (special cases) – requires 3 conditions: media-rich background, dimming layer acceptable, bold/bright content above
 
 ### Implementation
-- `glassEffect()` modifier basics
-- `glassBackgroundEffect()` for custom views (iOS 26+)
+- `glassEffect()` modifier basics, for custom views on iOS, iPadOS, macOS, tvOS, and watchOS (visionOS uses `glassBackgroundEffect()`)
 - `scrollEdgeEffectStyle(_:for:)` for custom bars
 - `GlassEffectContainer` for performance optimization
-- Toolbar patterns with `Spacer(.fixed)` and tinted buttons
+- Toolbar patterns with `ToolbarSpacer` and tinted buttons
+- The `UIDesignRequiresCompatibility` opt-out, and why building with the 27 SDK ends it on iOS 27
 - Bottom-aligned search and search tab role
 
 ### Design Principles

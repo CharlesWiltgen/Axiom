@@ -538,7 +538,7 @@ Documented platform behaviors with no reliable fix from user code as of iOS 26.0
 
 **Workarounds** (tradeoffs, not fixes):
 - Match the launch-screen color to your app background — papers over the cold-start flash only; does nothing for the pop-back or tab-switch cases.
-- Set `UIDesignRequiresCompatibility=true` — forces the pre-Liquid-Glass appearance but disables Liquid Glass app-wide (heavy hammer; see the UIDesignRequiresCompatibility section under Backward Compatibility below).
+- Set `UIDesignRequiresCompatibility=true` — forces the pre-Liquid-Glass appearance but disables Liquid Glass app-wide (heavy hammer, and ignored on iOS 27 once the app builds with the 27 SDK; see the UIDesignRequiresCompatibility section under Backward Compatibility below).
 
 **Do not reach for `UITabBar.appearance()`**: `UITabBar.appearance().standardAppearance` was the iOS 15–25 escape hatch for forcing SwiftUI `TabView` bar appearance. On iOS 26's floating pill this bridge is unreliable — the new render path does not consistently honor the proxy — so it is a dead end here, not a workaround.
 
@@ -588,24 +588,33 @@ See `axiom-design (skills/liquid-glass-ref.md)` for complete UIBlurEffect migrat
 
 ## Backward Compatibility
 
-### UIDesignRequiresCompatibility Key (iOS 26)
+### UIDesignRequiresCompatibility Key
 
-To ship with latest SDKs while maintaining previous appearance:
+A temporary opt-out from the new design (iOS, iPadOS, macOS, tvOS 26):
 
 ```xml
 <key>UIDesignRequiresCompatibility</key>
 <true/>
 ```
 
-**Effect**: App built with iOS 26 SDK, appearance matches iOS 18 and earlier, Liquid Glass effects disabled, previous blur/material styles used.
+**Effect**: the system runs the app in a UI compatibility mode, so it looks as it did when built against earlier SDKs; system bars and controls use their previous styles.
 
-**When to use**: Need time to audit interface changes, gradual adoption strategy, or maintain exact appearance temporarily.
+**Building with the 27 SDK turns the key off on OS 27.** Apple's documentation: "The system ignores this key when you build for iOS 27 or later, iPadOS 27 or later, Mac Catalyst 27 or later, macOS 27 or later, or tvOS 27 or later." What decides it is the SDK the app links together with the OS it runs on, not the deployment target. Measured on iPhone simulators with the key set; the 26 SDK row is an emulated 26-SDK build (the binary's Mach-O SDK version rewritten with `vtool`, minimum OS unchanged):
+
+| Built with | Runs on iOS 26.5 | Runs on iOS 27.0 |
+|---|---|---|
+| 26 SDK | compatibility mode | compatibility mode |
+| 27 SDK | compatibility mode | new design, key ignored |
+
+Consequences:
+- Updating to Xcode 27 ends the opt-out for iOS 27 users. Finish adopting the new design before or with that SDK update, not after.
+- A 27-SDK app that keeps the key shows compatibility mode on iOS 26 and the new design on iOS 27, so it ships two appearances; test both. Code that needs the new design (navigation subtitles don't render in compatibility mode) runs only under `#available(iOS 27, *)` while the key remains, with a fallback on 26.x.
+- Staying on the 26 SDK only postpones this. App Store Connect periodically raises the minimum SDK required for uploads, and the first update built with the 27 SDK loses compatibility mode on OS 27.
 
 **Migration strategy**:
-1. Ship with `UIDesignRequiresCompatibility` enabled
-2. Audit interface changes in separate build
-3. Update interface incrementally
-4. Remove key when ready for Liquid Glass
+1. While on the 26 SDK, ship with the key only if you need time; audit in a build without it
+2. Update the interface incrementally, then remove the key
+3. Complete adoption before or with the move to the 27 SDK, where the key stops applying on OS 27
 
 ---
 
@@ -619,12 +628,11 @@ For complete API reference including `glassEffect()`, `GlassEffectContainer`, `g
 
 **WWDC**: 2025-219, 2025-256, 2025-323 (Build a SwiftUI app with the new design)
 
-**Docs**: /technologyoverviews/adopting-liquid-glass, /swiftui/landmarks-building-an-app-with-liquid-glass, /swiftui/applying-liquid-glass-to-custom-views
+**Docs**: /technologyoverviews/adopting-liquid-glass, /swiftui/landmarks-building-an-app-with-liquid-glass, /swiftui/applying-liquid-glass-to-custom-views, /bundleresources/information-property-list/uidesignrequirescompatibility
 
 **Skills**: axiom-design (skills/liquid-glass-ref.md)
 
 ---
 
-**Platforms:** iOS 26+, iPadOS 26+, macOS Tahoe 26+, tvOS 26+, watchOS 26+ (`glassEffect` is unavailable on visionOS; only `backgroundExtensionEffect` is offered there)
-**Xcode:** 26+
-**History:** See git log for changes
+**Platforms**: OS26, not visionOS (`glassEffect` is unavailable there; only `backgroundExtensionEffect` is offered)
+**Xcode**: 26+

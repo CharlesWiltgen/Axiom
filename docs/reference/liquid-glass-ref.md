@@ -28,7 +28,7 @@ Liquid Glass is Apple's new material design system for iOS 26+, replacing tradit
 - Search fields and filters
 
 #### Platform Considerations
-- iOS vs iPadOS vs visionOS
+- iOS and iPadOS vs macOS, watchOS, tvOS, and visionOS
 - Light mode vs Dark mode
 - Accessibility (reduce transparency)
 - Performance impact
@@ -36,15 +36,14 @@ Liquid Glass is Apple's new material design system for iOS 26+, replacing tradit
 ### Migration Strategies
 
 #### From UIBlurEffect
-- Replacing `UIVisualEffectView` with `.glassBackgroundEffect()`
-- Material style mapping (light → regular, dark → clear)
+- Replacing `UIVisualEffectView` with `.glassEffect()`
+- Material style mapping (Regular for most floating surfaces, Clear over media; content-layer backgrounds keep material)
 - Animation transitions
-- Backwards compatibility patterns
+- Backwards compatibility patterns, including the `UIDesignRequiresCompatibility` opt-out
 
 #### From Custom Blurs
 - Recreating custom effects with Liquid Glass APIs
 - Tinting and vibrancy
-- Dynamic thickness adjustments
 
 ## When to Use This Reference
 
@@ -55,23 +54,34 @@ Use this reference when:
 - Reviewing UI for modern material design
 - Preparing App Store screenshots with new materials
 
+## Example Prompts
+
+Questions you can ask Claude that will draw from this reference:
+
+- "What do I need to change to adopt Liquid Glass across my whole app?"
+- "Which `UIBlurEffect` styles map to Regular glass, and which to Clear?"
+- "How do I make my tab bar adapt to a sidebar on iPad?"
+- "How does Liquid Glass differ on watchOS, tvOS, and visionOS?"
+- "Can I keep the old look with `UIDesignRequiresCompatibility` after I move to the iOS 27 SDK?"
+
 ## Key APIs
 
 ```swift
-// Basic glass effect
-.glassBackgroundEffect()
+// Glass effect (iOS, iPadOS, macOS, tvOS, watchOS 26; visionOS uses glassBackgroundEffect())
+.glassEffect()
+.glassEffect(.clear, in: .rect(cornerRadius: 16))
 
-// Toolbar spacers (iOS 26+)
-.toolbarRole(.navigationStack)
+// Toolbar spacer between ToolbarItems (iOS 26+)
+ToolbarSpacer(.fixed)
 
-// Bottom-aligned search
+// Search field
 .searchable(text: $query)
-.searchFieldPlacement(.navigationBarDrawer(displayMode: .always))
 
-// Search tab role
+// Search tab
 TabView {
-    Text("Search").tabItem { Label("Search", systemImage: "magnifyingglass") }
-}.tabRole(.search)
+    Tab("Inbox", systemImage: "tray") { InboxView() }
+    Tab(role: .search) { NavigationStack { SearchView() } }
+}
 ```
 
 ## Related Skills
@@ -104,4 +114,4 @@ Based on WWDC 2025 guidance for Liquid Glass adoption and iOS 26 material design
 
 ## Size
 
-38 KB - Comprehensive reference with complete adoption guide
+29 KB - Comprehensive reference with complete adoption guide
