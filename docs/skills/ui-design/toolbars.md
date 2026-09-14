@@ -16,6 +16,7 @@ Use this skill when you're:
 - Building a customizable toolbar where users can rearrange items
 - Setting toolbar visibility, background material, or color scheme
 - Adopting iOS 26 / macOS 26 `ToolbarSpacer` for visual breaks
+- Adding a navigation subtitle or custom content under the large title (iOS 26)
 - Migrating from deprecated `.navigationBarLeading` / `.navigationBarTrailing`
 - Debugging missing, misplaced, or flickering toolbar items
 - Reviewing toolbar code before shipping
@@ -29,11 +30,14 @@ Questions you can ask Claude that will draw from this skill:
 - "Should I use `ToolbarItem` or `ToolbarItemGroup`?"
 - "How do I make my toolbar customizable so users can rearrange items?"
 - "I'm getting a deprecation warning on `.navigationBarLeading`. What's the replacement?"
-- "Why does the spacer between my toolbar items disappear when the bar overflows?"
+- "Why won't a `Spacer()` between my toolbar items compile?"
 - "What does Apple's HIG say about Cancel and Done buttons in a sheet?"
 - "How do I control which toolbar items collapse into the overflow menu? (iOS 27)"
+- "Which toolbar items stay visible in iPhone Duo's vertical bar?"
 - "How do I make the navigation bar minimize as the user scrolls? (iOS 27)"
 - "How do I wire up EditButton and editMode for my List?"
+- "How do I show an unread count under my navigation title? (iOS 26)"
+- "Why is my `.largeSubtitle` content centered instead of aligned with the title?"
 
 ## What This Skill Provides
 
@@ -56,6 +60,7 @@ Questions you can ask Claude that will draw from this skill:
 - Toolbar overflow & visibility priority — `ToolbarOverflowMenu`, `.visibilityPriority`, `.topBarPinnedTrailing` (iOS 27)
 - Bar minimization on scroll — `toolbarMinimizationBehavior`, safe-area adjustment, and restoration, per `ToolbarPlacement` (iOS 27)
 - `EditButton`/`editMode` wiring for List editing, and the direct-manipulation alternatives on the Mac
+- Navigation subtitles — `navigationSubtitle` and the `.title` / `.subtitle` / `.largeTitle` / `.largeSubtitle` placements, what happens when the title collapses, alignment, and the fallback for iOS 18 and for apps that keep `UIDesignRequiresCompatibility`, where subtitles don't render (iOS 26)
 
 ### HIG sheet button rules
 
@@ -69,13 +74,13 @@ Questions you can ask Claude that will draw from this skill:
 - Standalone view with `.toolbar` — items silently disappear without a navigation container
 - Conditional `if` inside `.toolbar` — rebuilds the whole toolbar on state change, causing flicker
 - Two `.primaryAction` items per surface — violates HIG, SwiftUI lays them out unpredictably
-- Regular `Spacer()` between separate `ToolbarItem`s — toolbar layout is not an HStack, the spacer is ignored
+- Regular `Spacer()` between separate `ToolbarItem`s — it isn't toolbar content, so it doesn't compile; use `ToolbarSpacer`
 - `id:` on items without `.toolbar(id:)` on the parent — customization sheet stays empty
 - Custom `.background` on a child view — use `.toolbarBackground(_:for:)` instead
 
 ### Code review checklist
 
-A 10-item pre-merge checklist covering navigation containers, deprecation, sheet button placements, primary-action count, conditional content, spacer usage, customization setup, bottom-bar specifics, editor-role layouts, and Liquid Glass interaction in iOS 26 apps.
+A pre-merge checklist covering navigation containers, deprecation, sheet button placements, primary-action count, conditional content, spacer usage, customization setup, bottom-bar specifics, editor-role layouts, Liquid Glass interaction in iOS 26 apps, iOS 27 overflow gating, and navigation subtitles.
 
 ## Key Pattern
 
@@ -105,9 +110,11 @@ The `.primaryAction` placement adapts across platforms — top-trailing on iOS a
 - [liquid-glass](/skills/ui-design/liquid-glass) – iOS 26 changes how toolbar backgrounds render; consult before customizing background materials
 - [windows](/skills/macos/windows) – macOS `windowToolbarStyle`, MenuBarExtra, and window-toolbar integration
 - [hig](/skills/ui-design/hig) – broader Human Interface Guidelines context for toolbar action prioritization
+- [iPhone Duo](/skills/ui-design/iphone-duo) – iPhone Duo's vertical bars, where these placements and visibility priorities set item order and overflow
+- [UIKit Modernization](/skills/ui-design/uikit-modernization) – the UIKit side of navigation subtitles (`UINavigationItem.subtitle`, `largeSubtitleView`), for UIKit screens in the same app
 
 ## Resources
 
-**WWDC**: 2020-10146, 2021-10054, 2022-10054, 2024-10148, 2025-219, 2026-269
+**WWDC**: 2020-10146, 2021-10054, 2022-10054, 2024-10148, 2025-219, 2025-284, 2026-269
 
-**Docs**: /swiftui/toolbar, /swiftui/toolbaritem, /swiftui/toolbaritemgroup, /swiftui/toolbarspacer, /swiftui/toolbaritemplacement, /swiftui/toolbarrole, /swiftui/customizabletoolbarcontent, /swiftui/toolbaritemplacement/topbarpinnedtrailing, /swiftui/toolbaroverflowmenu, /swiftui/toolbaritemvisibilitypriority, /swiftui/view/toolbarminimizationbehavior(_:for:), /swiftui/editbutton
+**Docs**: /swiftui/toolbar, /swiftui/toolbaritem, /swiftui/toolbaritemgroup, /swiftui/toolbarspacer, /swiftui/toolbaritemplacement, /swiftui/toolbaritemplacement/title, /swiftui/toolbaritemplacement/largesubtitle, /swiftui/view/navigationsubtitle(_:), /swiftui/toolbarrole, /swiftui/customizabletoolbarcontent, /swiftui/toolbaritemplacement/topbarpinnedtrailing, /swiftui/toolbaroverflowmenu, /swiftui/toolbaritemvisibilitypriority, /swiftui/view/toolbarminimizationbehavior(_:for:), /swiftui/editbutton

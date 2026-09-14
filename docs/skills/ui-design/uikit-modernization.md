@@ -9,9 +9,11 @@ Use this skill when:
 - Building against the iOS 27 SDK and your app uses only a `UIApplicationDelegate` (no scene delegate)
 - Your app "won't launch" after updating to the latest SDK
 - Making an iPhone app adapt to arbitrary window sizes (iPhone Mirroring on Mac, iPhone apps on iPad)
+- Adapting your resizing baseline for iPhone Duo, Apple's two-display foldable iPhone
 - Replacing `UIScreen.main`, interface idiom, or orientation checks with adaptive equivalents
 - Adopting iOS 27 additive APIs — tab bar sidebar/prominent tab, nav bar minimization, menu image visibility, CoreMotion/CoreLocation Body protocols
 - Fixing behavior that breaks in iPhone Mirroring — dead custom gestures, failing Face ID prompts, layouts stuck in portrait
+- Adding a navigation bar subtitle (`subtitle`, `largeSubtitleView`) or styling one with attributed strings (iOS 26)
 - Adding pointer effects (`UIPointerInteraction`) or hardware-keyboard commands (`UIKeyCommand`, the hold-⌘ HUD) to a UIKit app
 - Planning a UIKit → scene-lifecycle migration
 
@@ -27,6 +29,8 @@ Use this skill when:
 - "My custom pinch gesture stops working in iPhone Mirroring"
 - "Why does Face ID fail when my app runs through iPhone Mirroring?"
 - "My UIKeyCommand doesn't show in the iPad hold-Command HUD"
+- "How do I put a filter button under my large title with `largeSubtitleView`?"
+- "Why does `largeSubtitleTextAttributes` have no effect?"
 - "What goes in UIApplicationSceneManifest for a single-window app?"
 - "What should I clean up in sceneDidDisconnect?"
 - "How do I open a new window from UIKit code?"
@@ -45,6 +49,7 @@ Use this skill when:
 - The new iOS 27 additive APIs — `prominentTabIdentifier`, `UITabBarControllerSidebar.preferredPlacement`, `navigationBarMinimization`, `UIMenuElement.preferredImageVisibility`, `deviceMotionBody`/`headingBody`
 - **iPhone Mirroring compatibility** – the always-portrait orientation trap, indirect trackpad/mouse input reaching custom gesture recognizers (`UIApplicationSupportsIndirectInputEvents`, scroll-type masks), companion Face ID approval on the Mac (iOS 18), and cross-device drag and drop
 - **Desktop-class input** – `UIPointerInteraction` pointer effects, `UIHoverGestureRecognizer`, `UIKeyCommand` with `discoverabilityTitle` for the hold-⌘ shortcut HUD, and Scribble (`UIScribbleInteraction` / `UIIndirectScribbleInteraction`) for Pencil handwriting
+- **Navigation bar titles and subtitles (iOS 26)** – `attributedTitle`, `subtitle`, `attributedSubtitle`, `subtitleView`, and the large-title slots (`largeTitle`, `largeSubtitle`, `largeAttributedSubtitle`, `largeSubtitleView`), which property wins, the two-line `titleView` fallback for apps that keep `UIDesignRequiresCompatibility` (where subtitles don't render), and behavior verified on iOS 26.5 and 27 (ignored `largeSubtitleTextAttributes`, `largeSubtitleView` hidden when the title collapses, empty custom views hiding the text subtitle)
 - Apple Intelligence touchpoints (menu "Ask Siri", View Annotations, drag-and-drop resource loading)
 - How to let Xcode 27's app-modernization agent do the mechanical rewrites
 
@@ -53,3 +58,5 @@ Use this skill when:
 - [UIKit-SwiftUI Bridging](/skills/ui-design/uikit-bridging) – embedding SwiftUI in a modernized scene-based UIKit app
 - [App Composition](/skills/ui-design/app-composition) – app-level integration and UIKit → SwiftUI migration priority
 - [SwiftUI Layout](/skills/ui-design/swiftui-layout) – size-class-driven adaptive layout, the recommended replacement for idiom/orientation checks
+- [iPhone Duo](/skills/ui-design/iphone-duo) – the two-display device that builds on this resizing baseline
+- [SwiftUI Toolbars](/skills/ui-design/toolbars) – the SwiftUI side of navigation subtitles (`navigationSubtitle` and the `.largeSubtitle` placement), for SwiftUI screens in the same app

@@ -53,7 +53,7 @@ Questions you can ask Claude that will draw from this reference:
 - Platform availability, including where each API is unavailable
 
 ### Liquid Glass Design
-- .glassBackgroundEffect() modifier
+- .glassEffect() modifier
 - Toolbar spacers and roles
 - ToolbarItemGroup visual grouping (shared glass backgrounds)
 - Toolbar transitions and morphing during NavigationStack push/pop
@@ -61,7 +61,7 @@ Questions you can ask Claude that will draw from this reference:
 - Combined DefaultToolbarItem + ToolbarSpacer bottom bar patterns
 - Bottom-aligned search fields (with .sidebar placement escape hatch)
 - searchToolbarBehavior(.minimize) with backward-compat wrapper
-- Tab bar with .tabRole(.search)
+- Search tab with Tab(role: .search)
 - .badge() and .tint() on Liquid Glass toolbar items
 - User-customizable toolbars (CustomizableToolbarContent, ToolbarCustomizationBehavior)
 - SearchToolbarBehavior type (.minimize, .automatic)
@@ -133,7 +133,6 @@ NavigationStack {
             }
         }
         .searchable(text: $searchText)
-        .searchFieldPlacement(.navigationBarDrawer(displayMode: .always))
 }
 ```
 

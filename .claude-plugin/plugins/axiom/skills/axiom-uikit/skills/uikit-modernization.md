@@ -70,13 +70,48 @@ The connect/foreground/background arc is the easy part; these are the edges apps
   ```
 - **External displays** — a non-interactive external screen is its own scene session under `UIWindowSceneSessionRoleExternalDisplayNonInteractive` (iOS 16; replaces the deprecated unqualified `UIWindowSceneSessionRoleExternalDisplay`). Declare a configuration for that role and the system connects a scene when a screen appears — no `UIScreen` notifications.
 
+#### Scene accessories — declare the content, let the system present it `OS27`
+
+A **scene accessory** declares supplementary content up front; the system presents it on the app's behalf when the associated functionality becomes available (at 27, an external display connecting). `iOS27` only — unavailable on Mac Catalyst, tvOS, visionOS and watchOS.
+
+```swift
+@MainActor
+final class PresenterViewController: UIViewController {
+    private var accessory: UISceneAccessoryRegistration?
+
+    func present(deckID: String) {
+        let configuration = UISceneConfiguration(name: "Presentation")
+        configuration.delegateClass = PresentationSceneDelegate.self
+        accessory = registerSceneAccessory(
+            .externalNonInteractive(sceneConfiguration: configuration, userInfo: deckID))
+    }
+
+    override func updateProperties() {
+        super.updateProperties()
+        accessory?.isEnabled = accessory?.isAvailable == true
+    }
+}
+```
+
+| Member | Role |
+|---|---|
+| `UISceneAccessory.externalNonInteractive(sceneConfiguration:)` / `(sceneConfiguration:userInfo:)` | the only accessory kind at 27 — non-interactive content on an external display |
+| `UIViewController.registerSceneAccessory(_:)` | registers it; returns a `UISceneAccessoryRegistration` handle |
+| `UISceneAccessoryRegistration.isAvailable` | read-only, the system's call — observable during the `updateProperties` and `layoutSubviews` lifecycle events |
+| `UISceneAccessoryRegistration.isEnabled` | read-write, your opt-in; it does **not** reflect availability |
+| `UIScene.ConnectionOptions.sceneAccessoryUserInfo` | reads the `userInfo` back in `scene(_:willConnectTo:options:)` |
+| `UIViewController.unregisterSceneAccessory(_:)` | unregisters, dismissing the content if it is being presented |
+
+- **The app must remain fully functional without the accessory** — it enhances the experience, it never gates it. Availability is the system's decision; enabling an unavailable accessory does not present it.
+- `UISceneConfiguration(name:)` (`iOS27`/`macCatalyst27`/`tvOS27`/`visionOS27`, not watchOS) is a new role-free initializer — sessions created from it have their role set automatically by the system, so an accessory's configuration doesn't name a session role at all.
+
 #### Adaptation traits beyond size classes
 
 `UITraitCollection` carries more adaptation inputs than the size classes: `displayGamut` (iOS 10 — P3 vs sRGB asset decisions), `legibilityWeight` (iOS 13 — Bold Text accessibility setting), and `activeAppearance` (iOS 14 — whether the UI should draw its active or inactive appearance; varies with window foreground state on macOS and in iPad Stage Manager/windowed modes). Observe any of them with `registerForTraitChanges` (see `skills/adaptive-layout.md`). There is **no public pointer-capability trait** — pointer presence is discovered through the interaction APIs themselves (see Desktop-class input below).
 
 ## Every app is now resizable
 
-iPhone apps resize freely (iPhone Mirroring on Mac; an iPhone-only app on iPad). Your UI must adapt to **any** scene size at runtime.
+iPhone apps resize freely (iPhone Mirroring on Mac; an iPhone-only app on iPad). Your UI must adapt to **any** scene size at runtime. iPhone Duo — two displays, a fold, bars on the side — builds on this model; see axiom-swiftui (skills/iphone-duo.md).
 
 #### Stop reading the screen and the idiom
 
@@ -175,13 +210,43 @@ override var keyCommands: [UIKeyCommand]? {
 }
 ```
 
+## Navigation bar titles and subtitles (iOS 26)
+
+`UINavigationItem` gained a subtitle, attributed titles, and separate content under the large title. Apple's Mail example puts the unread count in `subtitle` and, while filtering, a filter button in `largeSubtitleView`:
+
+```swift
+navigationItem.title = "Inbox"
+navigationItem.subtitle = "49 Unread"
+navigationItem.largeSubtitleView = filterButton
+```
+
+| Slot | String | Attributed (beats string) | Custom view (beats both) | When all are nil |
+|---|---|---|---|---|
+| Inline title | `title` | `attributedTitle` | `titleView` | no title |
+| Inline subtitle | `subtitle` | `attributedSubtitle` | `subtitleView` | no subtitle |
+| Large title | `largeTitle` | — | — | uses `title` |
+| Large subtitle | `largeSubtitle` | `largeAttributedSubtitle` | `largeSubtitleView` | falls back to the `subtitle` string |
+
+In Swift the attributed properties are `AttributedString?`. When `titleView` is non-nil, `attributedSubtitle` is ignored too. Everything except `title`/`titleView` is iOS 26 and unavailable on tvOS, watchOS, and visionOS.
+
+Verified on iPhone, iOS 26.5 and 27.0:
+- **`largeSubtitleTextAttributes` is ignored.** A foreground color in it had no effect whether set on the item's appearances, the bar's, or `UINavigationBar.appearance()`; the large subtitle took `subtitleTextAttributes`, even with `largeSubtitle` set. Style it with `largeAttributedSubtitle`, and the inline bar with `attributedSubtitle`; both render their attributes. Prefer attributed strings to appearance objects anyway, since the new design asks apps to drop bar background customization.
+- **`largeSubtitleView` disappears when the bar collapses**, and the inline bar shows `subtitle`. Set `subtitle` too when the status must survive scrolling.
+- **A `UIButton` in `largeSubtitleView` renders centered.** Set `contentHorizontalAlignment = .leading` and zero `contentInsets` in its configuration to align it under the large title.
+- **Custom views win their slot even when empty.** A leftover `UIView()` in `subtitleView` or `largeSubtitleView` silently hides that slot's string. To remove a subtitle, nil every variant.
+- **Subtitles need the new design.** Nothing renders in the compatibility mode `UIDesignRequiresCompatibility` requests, which applies on iOS 26.x and, for apps still built with the 26 SDK, on iOS 27 (axiom-design (skills/liquid-glass.md)). Before 26 or in compatibility mode, compose a two-line `titleView`, and set it only on that path, because a non-nil `titleView` replaces the native title. There is no runtime check for compatibility mode, so decide by build: a 27-SDK app that keeps the key sets `subtitle` only under `#available(iOS 27, *)` and the `titleView` on 26.x; a 26-SDK app with the key uses the `titleView` on every OS.
+
+Large titles now sit at the top of the scroll view and scroll with the content. Extend the scroll view fully under the navigation bar so the large title stays visible.
+
+SwiftUI peers (`.navigationSubtitle` plus the `.title`, `.subtitle`, `.largeTitle`, and `.largeSubtitle` toolbar placements) are in axiom-swiftui (skills/toolbars.md) Pattern 14.
+
 ## New 27 additive APIs
 
 | API | Scope | Use |
 |-----|-------|-----|
 | `UITabBarController.prominentTabIdentifier` | `iOS27`/`visionOS27` | mark one tab always-visible/prominent |
 | `UITabBarControllerSidebar.preferredPlacement` (`.sidebar`) + `Placement` | `iOS27`/`visionOS27` | iPhone can now opt a tab bar into a sidebar (the `sidebar` object itself is iOS 18) |
-| `UINavigationItem.navigationBarMinimization` (`UIBarMinimization`: `minimizationBehavior`/`safeAreaAdjustment`/`restorationBehavior`) | `iOS27`/`tvOS27`/`visionOS27` | control how the nav bar minimizes on scroll; SwiftUI peers are the `toolbarMinimization*` modifiers — see axiom-swiftui (skills/toolbars.md) Pattern 12 |
+| `UINavigationItem.navigationBarMinimization` (`UIBarMinimization`: `minimizationBehavior`/`safeAreaAdjustment`/`restorationBehavior`) | `iOS27` — types also tvOS/visionOS, but see below | control how the nav bar minimizes on scroll; SwiftUI peers are the `toolbarMinimization*` modifiers — see axiom-swiftui (skills/toolbars.md) Pattern 12 |
 | `UIMenuElement.preferredImageVisibility` | `iOS27` | Liquid Glass may hide menu images by default; opt an item back in |
 | `CMMotionManager.deviceMotionBody` | `iOS27`/`watchOS27`/`visionOS27` | assign a `UIView` as the motion reference frame (Body protocols) |
 | `CLLocationManager.headingBody` | `iOS27`/`macOS27`/`watchOS27` | replaces the deprecated `headingOrientation` |
@@ -189,18 +254,39 @@ override var keyCommands: [UIKeyCommand]? {
 
 `UIView` conforms to the CoreMotion/CoreLocation Body protocols, so you set `motionManager.deviceMotionBody = view` / `locationManager.headingBody = view` directly.
 
+#### Nav bar minimization in depth `OS27`
+
+In Swift `UIBarMinimization` is a **struct** (the ObjC class is refined for Swift), read and written through `UINavigationItem.navigationBarMinimization`:
+
+```swift
+item.navigationBarMinimization.minimizationBehavior = .onScrollDown
+item.navigationBarMinimization.restorationBehavior = .atScrollEdge
+item.navigationBarMinimization.safeAreaAdjustment = .enabled
+```
+
+| Property | Values | Effect |
+|---|---|---|
+| `minimizationBehavior` | `.automatic`, `.never`, `.onScrollDown`, `.onScrollUp` | whether, and in which scroll direction, the bar minimizes |
+| `safeAreaAdjustment` | `.automatic`, `.enabled`, `.disabled` | `.enabled` lets content reflow into the freed space; `.disabled` keeps the safe area fixed |
+| `restorationBehavior` | `.automatic`, `.atScrollEdge` | `.automatic` restores when the user reverses scroll direction; `.atScrollEdge` only when content reaches the scroll edge |
+
+- **`.atScrollEdge` is *currently* honored only alongside `.onScrollDown`.** Apple's wording is "Currently this is only honored alongside…", so treat it as present behavior rather than a guarantee. With any other minimization behavior the system silently falls back to `.automatic` — pairing it with `.onScrollUp` is a no-op, not an error.
+- The system already selects `.atScrollEdge` on its own for navigation items whose `preferredSearchBarPlacement` is `.integratedCentered` (iOS 26).
+- Minimizing the navigation bar also minimizes an **integrated top tab bar**. Only the navigation bar supports customizing `safeAreaAdjustment`.
+- **The three types are iOS/tvOS/visionOS 27, but every case except `.automatic` is iOS-only** — explicitly unavailable on tvOS, visionOS and watchOS. A shared helper that assigns `.onScrollDown` fails to compile for tvOS (`'onScrollDown' is unavailable in tvOS`), so gate the assignment itself, not just the property access.
+
 ## Apple Intelligence touchpoints
 
 Menus gain an automatic "Ask Siri" affordance, and UIKit adds a View Annotations API to annotate views with `AppEntity`s for Siri context (see WWDC 2026-278). If you support drag and drop, Siri may load resources via your drag handlers — avoid animations/modal UI in `sessionWillBegin` (a drag can start without a gesture); put stateful drag UI in `sessionDidMove`.
 
 ## Let Xcode do the mechanical migration
 
-Xcode 27 ships an app-modernization agent skill that rewrites `UIScreen.main` calls → `traitCollection`/scene bounds, orientation checks → size classes, and can migrate to the scene life cycle. Export the skill for other tools with `xcrun agent skills export`. See `axiom-xcode-mcp` for the agentic-Xcode workflow.
+Xcode 27 ships an app-modernization agent skill that rewrites `UIScreen.main` calls → `traitCollection`/scene bounds, orientation checks → size classes, and can migrate to the scene life cycle. Export the skill for other tools with `xcrun agent skills export`. See `axiom-xcode-mcp` for the agentic-Xcode workflow. Xcode 27.1 extends this skill to SwiftUI and iPhone Duo under a new name — see axiom-swiftui (skills/iphone-duo.md, Announced for the iOS 27.1 SDK).
 
 ## Resources
 
-**WWDC**: 2025-243, 2026-278
+**WWDC**: 2025-243, 2025-284, 2026-278
 
-**Docs**: /uikit/app-and-environment, /uikit/uiscenedelegate, /uikit/uiwindowscene, /uikit/uiscenesizerestrictions, /uikit/transitioning-to-the-uikit-scene-based-life-cycle, /uikit/uitabbarcontroller, /uikit/uitabbarcontrollersidebar, /uikit/uimenuelement, /technotes/tn3192-migrating-your-app-from-the-deprecated-uirequiresfullscreen-key, /technotes/tn3210-optimizing-your-app-for-iphone-mirroring, /technotes/tn3208-preparing-your-apps-launch-screen-to-meet-app-store-requirements, /bundleresources/information-property-list/uiapplicationscenemanifest, /bundleresources/information-property-list/uilaunchscreen, /bundleresources/information-property-list/uiapplicationsupportsindirectinputevents, /uikit/uipangesturerecognizer/allowedscrolltypesmask, /localauthentication/lapolicy, /uikit/drag-and-drop, /uikit/uiscribbleinteraction, /uikit/uiindirectscribbleinteraction, /uikit/uiresponder/undomanager
+**Docs**: /uikit/app-and-environment, /uikit/uiscenedelegate, /uikit/uiwindowscene, /uikit/uiscenesizerestrictions, /uikit/transitioning-to-the-uikit-scene-based-life-cycle, /uikit/uitabbarcontroller, /uikit/uitabbarcontrollersidebar, /uikit/uimenuelement, /technotes/tn3192-migrating-your-app-from-the-deprecated-uirequiresfullscreen-key, /technotes/tn3210-optimizing-your-app-for-iphone-mirroring, /technotes/tn3208-preparing-your-apps-launch-screen-to-meet-app-store-requirements, /bundleresources/information-property-list/uiapplicationscenemanifest, /bundleresources/information-property-list/uilaunchscreen, /bundleresources/information-property-list/uiapplicationsupportsindirectinputevents, /uikit/uipangesturerecognizer/allowedscrolltypesmask, /localauthentication/lapolicy, /uikit/drag-and-drop, /uikit/uiscribbleinteraction, /uikit/uiindirectscribbleinteraction, /uikit/uiresponder/undomanager, /uikit/uibarminimization, /uikit/uinavigationitem/navigationbarminimization, /uikit/uinavigationitem/subtitle, /uikit/uinavigationitem/largesubtitleview, /uikit/customizing-your-app-s-navigation-bar, /uikit/uisceneaccessory, /uikit/uisceneaccessoryregistration
 
-**Skills**: skills/uikit-bridging.md, axiom-xcode-mcp, axiom-swiftui (size-class-driven adaptive layout), axiom-security (skills/keychain.md), axiom-swift (skills/transferable-ref.md)
+**Skills**: skills/uikit-bridging.md, axiom-xcode-mcp, axiom-swiftui (size-class-driven adaptive layout), axiom-swiftui (skills/toolbars.md), axiom-security (skills/keychain.md), axiom-swift (skills/transferable-ref.md)
