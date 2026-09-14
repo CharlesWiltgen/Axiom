@@ -591,6 +591,4 @@ When something doesn't work:
 
 ---
 
-**Last Updated**: 2025-12-29
 **Platforms**: iOS 12+, macOS 10.14+, tvOS 12+
-**Status**: Comprehensive Metal porting diagnostics

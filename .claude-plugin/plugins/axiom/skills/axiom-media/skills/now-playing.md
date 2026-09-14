@@ -1267,9 +1267,3 @@ NowPlaying is the recommended path on 27. Apple's WWDC session does **not** depr
 **Docs**: /nowplaying, /nowplaying/publishing-media-sessions, /mediaplayer/mpnowplayinginfocenter, /mediaplayer/mpremotecommandcenter, /mediaplayer/mpnowplayingsession, /mediaplayer/mpmediaitemanimatedartwork, /mediaplayer/providing-animated-artwork-for-media-items
 
 **Skills**: skills/avfoundation-ref.md, skills/now-playing-carplay.md, skills/now-playing-musickit.md
-
----
-
-**Last Updated**: 2026-01-04
-**Status**: iOS 18+ discipline skill covering Now Playing, CarPlay, and MusicKit integration
-**Tested**: Based on WWDC 2019-501, WWDC 2022-110338 patterns

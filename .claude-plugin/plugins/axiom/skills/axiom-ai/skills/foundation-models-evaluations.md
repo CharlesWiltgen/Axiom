@@ -610,6 +610,4 @@ That is one long afternoon and it is the difference between shipping with a numb
 
 ---
 
-**Last Updated**: 2026-07-12
-**Platforms**: iOS / iPadOS / macOS / watchOS / visionOS 27+ (not tvOS)
-**Skill Type**: Discipline
+**Platforms**: OS27, not tvOS

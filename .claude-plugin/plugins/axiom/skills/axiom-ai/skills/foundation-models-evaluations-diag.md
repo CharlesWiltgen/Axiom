@@ -183,7 +183,6 @@ precondition(k != -1, "alignment was never computed — check the label")
 #expect(k > 0.6)
 ```
 
-
 ---
 
 ### Pattern 3: Tool Metrics Read `-1` and the Suite Is Green
@@ -391,6 +390,4 @@ Five errors specific to this framework:
 
 ---
 
-**Last Updated**: 2026-07-12
-**Platforms**: iOS / iPadOS / macOS / watchOS / visionOS 27+ (not tvOS)
-**Skill Type**: Diagnostic
+**Platforms**: OS27, not tvOS

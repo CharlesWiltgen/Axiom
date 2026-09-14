@@ -1009,7 +1009,6 @@ let container = try ModelContainer(
 
 ---
 
-**Created** 2025-12-09
 **Targets** iOS 17+ (focus on iOS 26+ features)
 **Framework** SwiftData (Apple)
 **Swift** 5.9+

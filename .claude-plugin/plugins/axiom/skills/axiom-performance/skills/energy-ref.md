@@ -1098,5 +1098,4 @@ func application(
 
 ---
 
-**Last Updated**: 2025-12-26
-**Platforms**: iOS 26+, iPadOS 26+
+**Platforms**: iOS26/iPadOS26

@@ -400,8 +400,3 @@ func diagnoseStorageIssue(fileURL: URL) {
 - `skills/storage.md` — Correct storage location decisions
 - axiom-security (skills/file-protection-ref.md) — Understanding protection levels
 - `skills/storage-management-ref.md` — Purge behavior and capacity APIs
-
----
-
-**Last Updated**: 2026-05-21
-**Skill Type**: Diagnostic

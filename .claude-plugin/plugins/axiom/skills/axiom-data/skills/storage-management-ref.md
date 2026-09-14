@@ -599,6 +599,4 @@ print("Protection: \(values.fileProtection ?? .none)")
 
 ---
 
-**Last Updated**: 2025-12-12
-**Skill Type**: Reference
 **Minimum iOS**: 5.0 (basic), 11.0 (modern capacity APIs)

@@ -279,7 +279,3 @@ let project = Project.find(task.projectID)
 - `skills/sqlitedata.md` — Full SQLiteData API reference
 - `skills/swiftdata.md` — SwiftData patterns if staying with Apple's framework
 - `skills/grdb.md` — Raw GRDB for complex queries
-
----
-
-**History:** See git log for changes

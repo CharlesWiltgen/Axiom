@@ -892,7 +892,3 @@ Run Script phases without defined inputs/outputs cause full rebuilds. Always spe
 **Docs**: /testing, /testing/migratingfromxctest, /testing/testing-asynchronous-code, /testing/parallelization, /testing/issue/severity
 
 **GitHub**: pointfreeco/swift-concurrency-extras, pointfreeco/swift-clocks
-
----
-
-**History:** See git log for changes

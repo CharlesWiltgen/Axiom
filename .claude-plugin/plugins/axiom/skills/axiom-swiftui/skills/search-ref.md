@@ -726,5 +726,4 @@ For bottom-aligned search, `.searchToolbarBehavior(.minimize)`, `Tab(role: .sear
 
 ---
 
-**Last Updated** Based on WWDC 2021-10176 "Searchable modifier", sosumi.ai API reference
 **Platforms** iOS 15+, iPadOS 15+, macOS 12+, watchOS 8+, tvOS 15+

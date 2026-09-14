@@ -589,6 +589,4 @@ If you've spent >30 minutes and the leak still exists:
 
 ---
 
-**Last Updated**: 2025-11-30
-**Status**: TDD-tested with pressure scenarios
 **Framework**: Objective-C, blocks (closure), ARC

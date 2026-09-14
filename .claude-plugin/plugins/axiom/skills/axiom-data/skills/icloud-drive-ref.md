@@ -482,6 +482,4 @@ class ICloudMonitor {
 
 ---
 
-**Last Updated**: 2025-12-12
-**Skill Type**: Reference
 **Minimum iOS**: 5.0 (basic), 8.0 (iCloud Drive), 11.0 (modern APIs)

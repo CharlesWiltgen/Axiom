@@ -619,5 +619,4 @@ imageView.widthAnchor.constraint(equalToConstant: 100).isActive = true // Auto L
 
 ---
 
-**Last Updated**: 2024
 **Minimum Requirements**: Xcode 12+, iOS 11+ (symbolic breakpoints work on all versions)

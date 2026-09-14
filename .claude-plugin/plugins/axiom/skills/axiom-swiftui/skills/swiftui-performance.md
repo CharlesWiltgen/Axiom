@@ -1134,6 +1134,5 @@ Problem likely elsewhere:
 
 ---
 
-**Xcode:** 26+
-**Platforms:** iOS 26+, iPadOS 26+, macOS Tahoe+, visionOS 3+
-**History:** See git log for changes
+**Xcode**: 26+
+**Platforms**: OS26, not watchOS/tvOS
