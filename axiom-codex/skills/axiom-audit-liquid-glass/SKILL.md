@@ -107,7 +107,7 @@ Present this map in the output before proceeding.
 
 ## Phase 2: Detect Known Adoption Opportunities
 
-Run all 7 detection patterns. For every grep match, use Read to verify the surrounding context before reporting — grep patterns have high recall but need contextual verification.
+Run all 8 detection patterns. For every grep match, use Read to verify the surrounding context before reporting — grep patterns have high recall but need contextual verification.
 
 ### Pattern 1: Migration from Old Blur Effects (HIGH/MEDIUM)
 
@@ -116,7 +116,7 @@ Run all 7 detection patterns. For every grep match, use Read to verify the surro
 - `UIBlurEffect`, `UIVisualEffectView`
 - `NSVisualEffectView`
 - `\.ultraThinMaterial`, `\.regularMaterial`, `\.thickMaterial`, `\.bar`
-**Verify**: Read matching files. Flag only surfaces floating over content; material on a content-layer background (a card in a list, a section background) stays material. If deployment target is iOS 26+ with no `if #available` gate, it's a direct replacement candidate; if lower, gate the glass behind `if #available(iOS 26, *)` and keep the material as the fallback.
+**Verify**: Read matching files. Flag only surfaces floating over content; material on a content-layer background (a card in a list, a section background) stays material. A material background on a bar pinned over scrolling content is reported once, under Pattern 8. If deployment target is iOS 26+ with no `if #available` gate, it's a direct replacement candidate; if lower, gate the glass behind `if #available(iOS 26, *)` and keep the material as the fallback.
 **Recommendation** (SwiftUI):
 ```swift
 if #available(iOS 26, *) {
@@ -186,6 +186,24 @@ Separate groups of ordinary items with `ToolbarSpacer(.fixed)` between `ToolbarI
 **Verify**: Read matching files; flag interactive surfaces (custom hit-testing views, gesture targets), not static cards. A standard `Button` is better served by `.buttonStyle(.glass)`.
 **Recommendation**: `interactive()` is a method on `Glass`, not a view modifier: write `.glassEffect(.regular.interactive())`. For buttons, use `.buttonStyle(.glass)` or `.buttonStyle(.glassProminent)`.
 
+### Pattern 8: Hand-Pinned Bars Over Scrolling Content (MEDIUM/MEDIUM)
+
+**Opportunity**: A custom bar pinned over a `ScrollView`, `List`, or `Form` with `.overlay` or a `ZStack` doesn't inset the safe area, so the last rows can't scroll clear of the bar. `.safeAreaInset(edge:)` fixes the inset, but rows scrolling under the bar stay sharp, with no edge effect. `safeAreaBar(edge:)` (iOS 26) insets the safe area the same way and also extends the scroll view's edge effect under the bar — the separation system bars get on iOS 26 (`axiom-design (skills/liquid-glass.md)`, Scroll Edge Effects).
+**Search**:
+- `\.overlay\(alignment:\s*\.(bottom|top)` — overlays pinned to a vertical edge
+- `ZStack\(alignment:\s*\.(bottom|top)` — a scroll view and a bar stacked together
+- `\.safeAreaInset\(edge:\s*\.(bottom|top)` — insets that may hold a bar
+**Verify**: Read matching files. Flag only when the scrolling view is a `ScrollView`, `List`, or `Form` (modified directly, or a sibling in the `ZStack`) and the pinned content is a bar: a row of controls, a composer, or a filter strip spanning the width, often with its own `.background(.bar)` or material. Skip a single floating button, a badge or toast, and views that don't scroll. If the scroll content already makes room for the bar — bottom `contentMargins`, `safeAreaPadding`, or trailing padding or a spacer after the last row — report only the missing edge effect, not clipped rows.
+**Recommendation**: Ordinary actions belong in `ToolbarItem(placement: .bottomBar)` inside a `NavigationStack`. System bars get shared glass, and built with the 27.1 SDK only system bars move to the side on iPhone Duo (`axiom-swiftui (skills/iphone-duo.md)`, Vertical Bars). A mini player above a `TabView` belongs in `.tabViewBottomAccessory` (`axiom-swiftui (skills/nav-ref.md)` 5.7). Keep `safeAreaBar` for custom bars such as a message composer or a filter strip:
+```swift
+if #available(iOS 26, *) {
+    list.safeAreaBar(edge: .bottom) { composer }
+} else {
+    list.safeAreaInset(edge: .bottom) { composer.background(.bar) }
+}
+```
+Drop the bar's own background on the iOS 26 path: a `.bar` material inside `safeAreaBar` paints a flat band over the edge effect. For UIKit, add a `UIScrollEdgeElementContainerInteraction` (iOS 26) to the view containing the bar's controls, with its `scrollView` and `edge` set. It supplies the edge effect only; inset the scroll content separately, e.g. with the view controller's `additionalSafeAreaInsets`.
+
 ## Phase 3: Reason About Adoption Completeness
 
 Using the Visual Treatment Map from Phase 1 and your domain knowledge, check for what's *missing or incomplete* — not just what's wrong.
@@ -212,7 +230,7 @@ Bump priority for these combinations:
 
 | Finding A | + Finding B | = Compound | Priority |
 |-----------|------------|-----------|----------|
-| `UIDesignRequiresCompatibility` = YES (Phase 3) | Any adoption opportunity (Patterns 1–7) | Hidden from iOS 26 users but shipped unreviewed on OS 27 by the first 27-SDK build (already live if the project builds with Xcode 27); finish adoption before or with that SDK move | HIGH |
+| `UIDesignRequiresCompatibility` = YES (Phase 3) | Any adoption opportunity (Patterns 1–8) | Hidden from iOS 26 users but shipped unreviewed on OS 27 by the first 27-SDK build (already live if the project builds with Xcode 27); finish adoption before or with that SDK move | HIGH |
 | Old `.material` on a floating surface (Pattern 1) | iOS 26+ deployment target with no `if #available` gate | Direct replacement, ship-ready | HIGH |
 | Glass over media (Phase 3) | Regular variant chosen | Color distortion over photos/videos; switch to Clear immediately | HIGH |
 | Glass adoption (Pattern 1/3) | No accessibility re-check | Contrast may drop below WCAG 4.5:1; flag for accessibility-auditor follow-up | HIGH |
@@ -224,7 +242,6 @@ Bump priority for these combinations:
 | Glass adoption | Pre-iOS-26 deployment target with an empty or unstyled `else` branch | iOS 18 users see a bare surface where iOS 26 users see glass | MEDIUM |
 | Mixed `.material` + `.glassEffect()` on same screen | No visual review | Inconsistent design language; the screen reads as "in transition" | MEDIUM |
 | Custom interactive control with glass (Pattern 7) | Frequently tapped (button, hit area) | Missing `.interactive()` makes the surface feel inert | LOW |
-
 Cross-auditor overlap notes:
 - Glass adoption potentially dropping text contrast below WCAG → compound with `accessibility-auditor` (re-run after adoption)
 - Heavy blur/glass layering on older devices → compound with `swift-performance-analyzer` and `swiftui-performance-analyzer` (frame-time impact)
@@ -245,10 +262,11 @@ Cross-auditor overlap notes:
 | Variant discipline | Regular for content / Clear for media — followed / mixed / unaware |
 | Nesting hygiene | No glass-on-glass / some nesting / many nested |
 | Pre-26 fallbacks | designed / partly unstyled / unstyled / N/A (iOS 26+ target) |
+| Custom bars over scrolling content | `safeAreaBar` / mixed / `safeAreaInset` or `.overlay` only / no custom bars |
 | **Adoption** | **ADOPTED / PARTIAL / NOT ADOPTED** |
 
 Scoring (adoption progress, not danger):
-- **ADOPTED**: Glass surfaces present on app chrome (toolbars, tabs, sidebars, primary containers), variant discipline followed (Regular for content, Clear for media), no glass-on-glass nesting, commit and dismiss actions use semantic toolbar placements, search uses `Tab(role: .search)` or split-view `.searchable`, pre-26 fallbacks designed where needed, no compatibility opt-out. The app reads as a native iOS 26 app.
+- **ADOPTED**: Glass surfaces present on app chrome (toolbars, tabs, sidebars, primary containers), variant discipline followed (Regular for content, Clear for media), no glass-on-glass nesting, commit and dismiss actions use semantic toolbar placements, search uses `Tab(role: .search)` or split-view `.searchable`, custom bars over scrolling content use `safeAreaBar`, pre-26 fallbacks designed where needed, no compatibility opt-out. The app reads as a native iOS 26 app.
 - **PARTIAL**: Some adoption (a few glass surfaces) but inconsistent — some toolbars modern and some legacy, mixed variants, some nesting, some unstyled fallbacks. The app reads as "in transition."
 - **NOT ADOPTED**: No `.glassEffect` adoption, no toolbar modernization, no `Tab(role: .search)`. Custom surfaces still use pre-26 materials; only system chrome has glass, which it got automatically. With `UIDesignRequiresCompatibility` = YES, iOS 26 users don't see even that.
 
@@ -283,7 +301,7 @@ Scoring (adoption progress, not danger):
 
 ## Recommendations
 1. [Immediate adoption — HIGH-priority items (compatibility opt-out with pending adoption, legacy blur on floating surfaces on iOS 26+, glass-on-glass mud, Regular glass over media)]
-2. [Short-term — MEDIUM-priority adoption (semantic toolbar placement, custom floating views, search modernization, unstyled pre-26 fallbacks); LOW items such as semantic tint]
+2. [Short-term — MEDIUM-priority adoption (semantic toolbar placement, custom floating views, search modernization, unstyled pre-26 fallbacks, hand-pinned bars moved to `safeAreaBar`); LOW items such as semantic tint]
 3. [Long-term — completeness gaps from Phase 3 (accessibility re-check, snapshot tests on iOS 18 + iOS 26, glass-adoption rubric)]
 4. [Test plan — visual regression on the iOS 18 fallback, accessibility contrast on glass surfaces, performance on older devices]
 ```
@@ -295,7 +313,7 @@ If >100 total opportunities: Summarize by category, show only HIGH/MEDIUM detail
 
 ## False Positives (Not Issues)
 
-- `.ultraThinMaterial` / `.regularMaterial` in the `else` branch of `if #available(iOS 26, *)` (legitimate pre-iOS 26 fallback)
+- Any material, including `.bar`, in the `else` branch of `if #available(iOS 26, *)` (legitimate pre-iOS 26 fallback)
 - Material on content-layer backgrounds (cards in a list, section backgrounds); glass is for surfaces floating over content
 - UIKit `UIBlurEffect` in legacy code paths the team has explicitly chosen not to migrate
 - `.blur(radius:)` used for intentional blur effects (loading states, censoring, depth-of-field), not as a glass substitute
@@ -305,6 +323,8 @@ If >100 total opportunities: Summarize by category, show only HIGH/MEDIUM detail
 - `UIDesignRequiresCompatibility` set to NO, or absent
 - Toolbars in deeply utility-only screens where prominence is undesired (e.g., Settings detail views)
 - `.borderedProminent` / `.glassProminent` without `.tint()` on an ordinary primary action (the accent color is already the fill)
+- `.overlay(alignment: .bottom)` / `.top`, or a `ZStack` with that alignment, holding a floating button, badge, or toast rather than a full-width bar, or over a view that doesn't scroll
+- `.safeAreaInset(edge:)` in the `else` branch of `if #available(iOS 26, *)` (the pre-26 fallback for `safeAreaBar`)
 
 ## Related
 

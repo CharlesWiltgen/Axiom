@@ -293,9 +293,10 @@ UIKit's `readableContentGuide` does all of this automatically, including the Dyn
 |---|---|---|
 | Outer, portrait | `.compact` | `.regular` |
 | Outer, landscape | `.compact` | `.compact` |
-| Inner | `.regular` | `.regular` |
+| Inner, full screen | `.regular` | `.regular` |
+| Inner, one half of Split View | not stated | not stated |
 
-Opening the device moves the app to the inner display mid-session: horizontal becomes `.regular`, and vertical does too if the outer display was in landscape — adapt, and keep state. Full guidance: skills/iphone-duo.md.
+Opening the device moves the app to the inner display mid-session: horizontal becomes `.regular`, and vertical does too if the outer display was in landscape — adapt, and keep state. Apple's talks give no size classes for a Split View half, so read them from the environment rather than inferring `.regular` from the display. Full guidance: skills/iphone-duo.md.
 
 ---
 
@@ -457,15 +458,21 @@ content
     .environment(\.horizontalSizeClass, isWide ? .regular : .compact)
 ```
 
-**Why it fails:** At 27 an iPhone app runs resizable (mirroring, iPhone-only on iPad) but stays `.phone` idiom and `.compact` no matter the width — idiom is decoupled from available space. Injecting `.regular` flips every environment reader in the subtree, and components don't respond consistently: `NavigationSplitView` may expand, but `TabView(.sidebarAdaptable)` will **not** become an iPad sidebar from injected `.regular` alone. A wide iPhone window is an adaptive iPhone presentation, not an iPad product interface.
+**Why it fails:** A wide window already reports `.regular` on its own. At 27 a resizable iPhone window (iPhone Mirroring, iPhone-only on iPad) keeps the `.phone` idiom, but its size classes follow the window (skills/layout-ref.md, Size Class Follows the Window — measured in the simulator's resize session, physical iPhone Mirroring, and an iPhone-only app on a physical iPad). At best an injected value matches the real trait; wherever it doesn't, the subtree and the scene disagree. With your own threshold, the subtree and the scene switch at different widths. With a fixed `.regular`, a narrow window keeps it, and a `.sidebarAdaptable` `TabView` with `.defaultTabBarPlacement(.sidebar)` then hides its tabs behind a collapsed sidebar at 402 points (measured on the iOS 27.0 simulator).
 
-**Fix:** Drive your *own* layout from geometry. In a wide state, show a custom sidebar and hide the tab bar; keep tab switching in state. Reserve `horizontalSizeClass` for system-container semantics (are system Tabs/Sidebars offered, should menus collapse).
+**Fix:** Read the real `horizontalSizeClass` for roomy-vs-constrained decisions, and let the system place the sidebar. Use geometry only for breakpoints finer than size class.
 
 ```swift
-// ✅ Geometry decides YOUR breakpoint; size class stays semantic
-content
-    .onGeometryChange(for: Bool.self) { $0.size.width > 700 } action: { isWide = $0 }
+// ✅ The system picks tab bar or sidebar from the real size class and available space
+TabView {
+    Tab("Summary", systemImage: "heart") { SummaryView() }
+    Tab("Browse", systemImage: "square.grid.2x2") { BrowseView() }
+}
+.tabViewStyle(.sidebarAdaptable)
+.defaultTabBarPlacement(.sidebar)   // iOS 27; gate with #available below 27
 ```
+
+Regular width doesn't guarantee a visible sidebar. Measured: a tab bar at 402 points and a sidebar at 1000 in the simulator's iPhone resize session; for an iPhone-only app on a physical iPad, a tab bar at 375 points and, at 683 points and `.regular`, the sidebar collapsed behind a toggle. When UI depends on the sidebar, read `@Environment(\.isTabViewSidebarAvailable)` (iOS 27) inside the tab content instead of the size class; Apple's doc comment says it reports a sidebar that "is (or can become) visible". For iPad apps the modifier has no effect; use `defaultAdaptableTabBarPlacement(_:)` (skills/iphone-duo.md).
 
 ---
 
@@ -499,7 +506,7 @@ content
 
 **Temptation:** `.environment(\.horizontalSizeClass, .regular)` on the root.
 
-**Response:** "A `.phone`-idiom app stays `.compact` at any width by design, and injecting `.regular` doesn't make components agree — `TabView(.sidebarAdaptable)` won't become an iPad sidebar from it. I'll read the width with `onGeometryChange` and show a custom sidebar in the wide state, keeping size class for system semantics."
+**Response:** "A wide resizable iPhone window already reports `.regular` — size classes follow the window even though the idiom stays `.phone`. Forcing `.regular` on the root keeps it when the window narrows, and a sidebar-adaptable `TabView` set to prefer a sidebar then hides its tabs. I'll adopt `.sidebarAdaptable` with `.defaultTabBarPlacement(.sidebar)` so the system shows the sidebar when there's room, and use geometry only for finer breakpoints."
 
 ---
 

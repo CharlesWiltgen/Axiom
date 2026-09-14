@@ -247,7 +247,7 @@ Slider(
 
 ### safeAreaBar
 
-Sticky bars with integrated progressive blur:
+Custom bars that inset the safe area and extend the scroll edge effect:
 
 ```swift
 List { ForEach(1...20, id: \.self) { Text("\($0). Item") } }
@@ -257,7 +257,7 @@ List { ForEach(1...20, id: \.self) { Text("\($0). Item") } }
     .scrollEdgeEffectStyle(.soft, for: .bottom) // or .hard
 ```
 
-Works like `safeAreaInset` but with blur. Bar remains fixed while content scrolls beneath.
+Insets the safe area like `safeAreaInset`, and also extends the edge effect of the scroll views that inset affects, so the scroll edge effect (`.automatic` unless set to `.soft` or `.hard` with `scrollEdgeEffectStyle`) runs under the bar. A second overload takes a horizontal edge for side bars. Prefer it to `.overlay(alignment: .bottom)`, which leaves the last rows under the bar. Give the bar no background of its own; a `.bar` material paints a flat band over the edge effect. For ordinary actions, use `ToolbarItem(placement: .bottomBar)` inside a navigation container instead.
 
 ### Section Index (`sectionIndexLabel`, `listSectionIndexVisibility`)
 
