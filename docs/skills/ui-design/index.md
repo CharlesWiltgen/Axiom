@@ -18,6 +18,7 @@ flowchart LR
         swiftui_presentations["swiftui-presentations"]:::discipline
         swiftui_performance["swiftui-performance"]:::discipline
         swiftui_layout["swiftui-layout"]:::discipline
+        iphone_duo["iphone-duo"]:::discipline
         swiftui_gestures["swiftui-gestures"]:::discipline
         swiftui_architecture["swiftui-architecture"]:::discipline
         app_composition["app-composition"]:::discipline
@@ -118,6 +119,10 @@ flowchart LR
 - **[SwiftUI Layout](/skills/ui-design/swiftui-layout)** – Adaptive layouts with ViewThatFits, AnyLayout, size classes, iOS 26 free-form windows
   - *"My layout breaks on iPad. How do I make it adaptive?"*
   - *"Should I use GeometryReader or onGeometryChange?"*
+
+- **[iPhone Duo](/skills/ui-design/iphone-duo)** – Apple's two-display foldable iPhone: poses, vertical bars, the fold, and the layout APIs announced for iOS 27.1
+  - *"How do I prepare my app for iPhone Duo?"*
+  - *"How do I keep my controls out of the fold?"*
 
 - **[UIKit Bridging](/skills/ui-design/uikit-bridging)** – UIViewRepresentable, UIViewControllerRepresentable, coordinator patterns
   - *"How do I wrap a UIKit view for SwiftUI?"*

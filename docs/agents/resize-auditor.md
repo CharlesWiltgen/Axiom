@@ -9,6 +9,7 @@ Scans your app for resize readiness under the iOS 27 windowing model — where e
 - Flags cached window geometry and hardcoded device-size constants
 - Checks rendering surfaces (Metal `drawableSize`, SpriteKit scale modes) for live-resize handling
 - Checks iPhone Mirroring input compatibility (scroll-type masks, touch-type assumptions in custom gestures)
+- Checks iPhone Duo readiness — per-side safe-area math, hand-built bars that can't move to the side, and window requests without error handling
 - Reasons about completeness: minimum window size, resize throttling, per-scene state restoration, multi-window opt-in
 - Produces a Resize Readiness Score (RESIZE-READY / PARTIAL / FIXED-CANVAS)
 - Ends with a scriptable validation step – one `xcui resize sweep --sizes … --screenshot-dir … --assert-id …` drives every breakpoint, captures a PNG at each, and asserts, so the final check runs without a human dragging a window
@@ -19,6 +20,7 @@ Scans your app for resize readiness under the iOS 27 windowing model — where e
 - "Audit my app for screen resizing support"
 - "Is my app ready for resizable windows on iOS 27?"
 - "Check whether my app will work in iPhone Mirroring"
+- "Is my app ready for iPhone Duo?"
 
 **Explicit command:**
 ```bash
@@ -31,3 +33,4 @@ Scans your app for resize readiness under the iOS 27 windowing model — where e
 - [UIKit Adaptive Layout](/skills/ui-design/uikit-adaptive-layout) – building the layouts that pass this audit
 - [swiftui-layout-auditor](/agents/swiftui-layout-auditor) – the SwiftUI-side counterpart; run both on mixed codebases
 - [spritekit-auditor](/agents/spritekit-auditor) – deeper SpriteKit findings beyond the resize strategy
+- [iPhone Duo](/skills/ui-design/iphone-duo) – the adaptation rules behind the Duo checks

@@ -3019,6 +3019,12 @@
       "axiom-swiftui"
     ]
   },
+  "axiom-swiftui--iphone-duo": {
+    "category": "ui",
+    "related": [
+      "axiom-swiftui"
+    ]
+  },
   "axiom-swiftui--layout": {
     "category": "ui",
     "tags": [

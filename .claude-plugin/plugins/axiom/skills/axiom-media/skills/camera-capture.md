@@ -14,6 +14,7 @@ Use when you need to:
 - ☑ Make camera launch fast — preview up in half the time (deferred start, iOS 26+)
 - ☑ Handle session interruptions (phone calls, multitasking)
 - ☑ Switch between front/back cameras
+- ☑ Switch cameras on iPhone Duo by direction, not position (two front cameras)
 - ☑ Configure capture quality and resolution (incl. 24/48 MP — see camera-capture-ref)
 - ☑ Support the Center Stage front camera (iPhone 17 — see camera-capture-ref)
 - ☑ Record high-data-rate video (ProRes) without dropped frames (Pro Video Storage `OS27`)
@@ -31,6 +32,7 @@ Use when you need to:
 "How do I support the Center Stage front camera?"
 "My ProRes recording drops frames"
 "How do I switch between front and back cameras?"
+"How do I choose the right camera on iPhone Duo?"
 "How do I record video with audio?"
 
 ## Red Flags
@@ -47,6 +49,7 @@ Signs you're making this harder than it needs to be:
 - ❌ Ignoring `photoQualityPrioritization` (slow captures)
 - ❌ Not handling `.notAuthorized` permission state
 - ❌ Modifying session without `beginConfiguration()`/`commitConfiguration()`
+- ❌ Assigning a 27-cycle capture property while its `automatically…` flag is still `true` (raises an ObjC exception — see Anti-Pattern 5)
 - ❌ Using UIImagePickerController for custom camera UI (limited control)
 
 ## Mandatory First Steps
@@ -290,6 +293,8 @@ func capturePhoto() {
     photoOutput.capturePhoto(with: settings, delegate: self)
 }
 ```
+
+**iPhone Duo**: The rotation coordinator updates when your app moves between displays — keep applying its angles on every change. Once you apply the capture angle, disable sensor-orientation compensation for performance; every Duo front camera enables it by default: `if #available(iOS 26, *) { photoOutput.isCameraSensorOrientationCompensationEnabled = false }` (skills/camera-capture-ref.md, Sensor Orientation Compensation).
 
 **Cost**: 45 min implementation, prevents 2+ hours debugging rotation issues
 
@@ -635,6 +640,12 @@ func switchCamera() {
 
 **Front camera mirroring**: Front camera preview is mirrored by default (matches user expectation). Captured photos are NOT mirrored (correct for sharing). This is intentional.
 
+**iPhone Duo (two front cameras)**:
+- A discovery session for `.front` with the wide-angle or ultra-wide type finds the virtual front camera, which switches automatically: inner camera when open, outer when closed — Apple says it uses "the most relevant front camera for your app". The talk doesn't say which camera it picks when the device is flipped open with your app on the outer display; don't claim it stays on the inner camera or moves to the outer one — test that pose, or use the 27.1 direction API. It offers only what both cameras share — up to 1080p and 60 fps, no depth. Apple describes discovery, not `default(_:for:position:)`, so use a discovery session.
+- An individual camera gives its full capabilities, but your app then owns the switch on open and close.
+- The toggle above flips `position`, which on Duo doesn't say which way a camera faces: a `.front` camera can face away, and flipped open with your app on the outer display, a rear camera and the outer front camera both face the user. Toggling by direction needs the 27.1 API in skills/camera-capture-ref.md (iPhone Duo Front Cameras); on the 27.0 SDK, the virtual front camera with this toggle is the available path.
+- To show UI on the outer display while the camera runs on the inner one, see axiom-swiftui (skills/iphone-duo.md, Scenes and Accessories).
+
 **Cost**: 20 min implementation
 
 ### Pattern 7: Video Recording
@@ -864,6 +875,24 @@ session.commitConfiguration()  // Atomic change
 
 **Why it matters**: Without configuration block, session may enter invalid state between calls.
 
+### Anti-Pattern 5: Manual Override While the Automatic Flag Is On `OS27`
+
+**Wrong**:
+```swift
+try device.lockForConfiguration()
+device.enabledExposureSignals = [.document]   // automaticallyEnablesExposureSignals defaults to true
+```
+
+**Right**:
+```swift
+try device.lockForConfiguration()
+defer { device.unlockForConfiguration() }
+device.automaticallyEnablesExposureSignals = false
+device.enabledExposureSignals = [.document]
+```
+
+**Why it matters**: the 27-cycle capture controls ship in pairs — an `automatically…` flag that defaults to letting the system decide, plus the value itself. Assigning the value while the flag is on raises `NSInvalidArgumentException`, and an ObjC exception is not a Swift error: `try`/`catch` does not catch it, so the app terminates. The same pair shape governs `isLowLightVideoNoiseReductionEnabled` (`automaticallyEnablesLowLightVideoNoiseReduction`, on the connection) and `isCinematicVideoMetadataCaptureEnabled` (`automaticallyAdjustsCinematicVideoMetadataCaptureEnabled`, on the movie file output). Assigning `enabledExposureSignals` without `lockForConfiguration()` raises `NSGenericException` for the same reason.
+
 ## Pressure Scenarios
 
 ### Scenario 1: "Just Make the Camera Work by Friday"
@@ -911,6 +940,8 @@ session.commitConfiguration()  // Atomic change
 
 **Push-back template**: "This is intentional Apple behavior. The preview is mirrored like a mirror so users can frame themselves, but the captured photo is unmirrored so text reads correctly when shared. We can add optional mirroring in post-processing if our use case requires it."
 
+**iPhone Duo**: "Front" no longer means "facing the user". Flipped open, a rear camera can face the user — mirror its preview so it behaves like a selfie camera (talk 111465, 6:05); captured photos stay unmirrored, as above. To override automatic mirroring, set the preview connection's `automaticallyAdjustsVideoMirroring = false` before setting `isVideoMirrored`, and only when `isVideoMirroringSupported` — otherwise AVFoundation throws `NSInvalidArgumentException`. From then on your app owns mirroring on every camera change: set `isVideoMirrored` to `true` whenever the camera in use faces the user (front or rear) and to `false` when it faces away. Make these connection changes where you reconfigure the session (camera actor or session queue).
+
 ## Checklist
 
 Before shipping camera features:
@@ -957,6 +988,16 @@ Before shipping camera features:
 - ☑ Switch happens on session queue
 - ☑ Fallback if new camera unavailable
 
+**iPhone Duo** (if supported):
+- ☑ Open/close camera switch handled — by the virtual front camera, or by your own switch for individual cameras
+- ☑ User-facing camera chosen by direction (27.1 API) or through the virtual front camera — never by `position` alone
+- ☑ Preview mirrored when a rear camera faces the user and unmirrored when it faces away
+- ☑ Rotation angles re-applied when the app changes displays
+- ☑ Sensor-orientation compensation disabled once the capture angle is applied (iOS 26+)
+- ☑ Switching between individual cameras creates a new rotation coordinator for the new device
+- ☑ Direction changes reconfigure the session on the camera actor or session queue, never on the main actor
+- ☑ Tested closed, open, and flipped open with the app on the outer display
+
 **Video Recording** (if applicable):
 - ☑ Microphone input added
 - ☑ Recording delegate handles completion
@@ -965,6 +1006,8 @@ Before shipping camera features:
 ## Resources
 
 **WWDC**: 2021-10247, 2023-10105, 2026-303, 2026-304, 2026-341
+
+**Tech Talks**: 111465
 
 **Docs**: /avfoundation/avcapturesession, /avfoundation/avcapturedevice/rotationcoordinator, /avfoundation/avcapturephotosettings, /avfoundation/avcapturephotooutputreadinesscoordinator, /avfoundation/avprovideostorage
 

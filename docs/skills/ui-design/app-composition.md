@@ -34,6 +34,7 @@ Questions you can ask Claude that will draw from this skill:
 - "How do I handle app going to background?"
 - "When should I split my app into modules?"
 - "How do I build a document-based app with the new @Observable document model?" (iOS 27)
+- "How do I only show a 'New Window' button when the environment supports it?"
 
 ## What This Skill Provides
 
@@ -163,6 +164,7 @@ This page documents the `axiom-design` skill — app-level patterns Claude uses 
 - [swiftui-architecture](/skills/ui-design/swiftui-architecture) – Feature-level patterns (MVVM, TCA)
 - [swiftui-nav](/skills/ui-design/swiftui-nav) – Navigation patterns
 - [swift-concurrency](/skills/concurrency/swift-concurrency) – Async patterns for state management
+- [iPhone Duo](/skills/ui-design/iphone-duo) – why the outer display can't create windows, and how to gate the affordance
 
 ## Resources
 

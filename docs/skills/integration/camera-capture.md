@@ -19,6 +19,7 @@ Use this skill when you're:
 - Recording high-data-rate video (ProRes) with Pro Video Storage (iOS 27)
 - Handling session interruptions (phone calls, multitasking, thermal pressure)
 - Switching between front and back cameras
+- Switching cameras on iPhone Duo's two front cameras (the virtual front camera today; a camera-direction API is announced for iOS 27.1)
 
 **Note:** If you just need users to pick existing photos, use [photo-library](/skills/integration/photo-library) instead. This skill is for building custom camera experiences with AVCaptureSession.
 
@@ -36,6 +37,7 @@ Questions you can ask Claude that will draw from this skill:
 - "My camera takes too long to capture"
 - "My camera app launches slowly — the preview takes forever to appear"
 - "My ProRes recording drops frames"
+- "How do I support the two front cameras on iPhone Duo?"
 
 ## What This Skill Provides
 
@@ -113,9 +115,12 @@ This page documents the `axiom-media` skill -- AVFoundation camera patterns Clau
 - [camera-capture-diag](/diagnostic/camera-capture-diag) – Troubleshooting camera issues (black preview, rotation, slow capture)
 - [camera-capture-ref](/reference/camera-capture-ref) – Complete AVFoundation camera API reference
 - [photo-library](/skills/integration/photo-library) – Photo picking and library access (use instead if you just need photo selection)
+- [iPhone Duo](/skills/ui-design/iphone-duo) – front-camera switching, direction vs. position, and showing camera UI on both displays
 
 ## Resources
 
 **WWDC**: 2021-10247, 2023-10105, 2026-303
+
+**Tech Talks**: 111465
 
 **Docs**: /avfoundation/avcapturesession, /avfoundation/avcapturedevice/rotationcoordinator, /avfoundation/avprovideostorage

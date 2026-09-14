@@ -778,6 +778,8 @@ struct ItemRow: View {
 }
 ```
 
+On iPhone and iPad, show new-window buttons only when `@Environment(\.supportsMultipleWindows)` is true. iPhone Duo can open new windows only from its inner display, and the talks don't say how that display reports this value — see axiom-swiftui (skills/iphone-duo.md, Gate new-window affordances).
+
 ### Dismissing Windows Programmatically
 
 ```swift

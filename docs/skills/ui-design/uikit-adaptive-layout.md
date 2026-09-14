@@ -35,3 +35,4 @@ Use this skill when:
 - [Auto Layout Debugging](/skills/debugging/auto-layout-debugging) – when the constraints you built break; this skill is how to build them
 - [UIKit Modernization](/skills/ui-design/uikit-modernization) – the geometry ground rules (scene bounds, traits, resizability at iOS 27) these patterns build on
 - [SwiftUI Layout](/skills/ui-design/swiftui-layout) – the SwiftUI side of the same adaptivity discipline
+- [iPhone Duo](/skills/ui-design/iphone-duo) – asymmetric safe-area insets when a vertical bar sits on one side

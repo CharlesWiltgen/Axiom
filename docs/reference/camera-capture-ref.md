@@ -21,6 +21,9 @@ Use this reference when:
 - Supporting the Center Stage front camera — dynamic aspect ratio, smart framing, sensor orientation compensation (iPhone 17 lineup, iOS 26 and later)
 - Capturing 24/48 megapixel photos with prepared photo settings
 - Recording ProRes with Pro Video Storage (iOS 27)
+- Setting lens aperture, shutter, or ISO priority modes, or tuning exposure signals (iOS 27)
+- Enabling continuous autofocus tracking, low-light video noise reduction, or cinematic video metadata capture (iOS 27)
+- Choosing a camera by direction on iPhone Duo (iOS 27.1, announced)
 
 ## Example Prompts
 
@@ -36,6 +39,10 @@ Questions you can ask Claude that will draw from this reference:
 - "How does deferred start work?"
 - "How do I set the front camera's aspect ratio without rotating the phone?"
 - "What resolutions does each photo quality prioritization support?"
+- "How do I choose a camera by direction instead of position on iPhone Duo?"
+- "How do I set the lens aperture, or use aperture priority, on iOS 27?"
+- "How do I keep a moving subject in focus while recording?"
+- "How do I record video I can edit cinematically afterwards?"
 
 ## What's Covered
 
@@ -44,6 +51,7 @@ Questions you can ask Claude that will draw from this reference:
 - Session hardware cost and system pressure monitoring
 - AVCaptureDevice types, discovery sessions, configuration (focus, exposure, zoom, torch)
 - Center Stage front camera: dynamic aspect ratio, smart framing monitor, sensor orientation compensation, low-latency stabilization (iOS 26 and later, iPhone 17 lineup)
+- iPhone Duo front cameras: virtual front camera, individual inner and outer ultra-wide cameras, choosing a camera by direction (iOS 27.1, announced)
 - AVCaptureDevice.RotationCoordinator setup, properties, and KVO observation (iOS 17+)
 - AVCapturePhotoOutput configuration, responsive capture APIs, and deferred processing
 - High-resolution capture (24/48 MP) with prepared photo settings
@@ -52,6 +60,9 @@ Questions you can ask Claude that will draw from this reference:
 - AVCapturePhotoCaptureDelegate callbacks including deferred proxy handling
 - AVCaptureMovieFileOutput recording, delegate, and state properties
 - Pro Video Storage for deterministic high-data-rate recording (iOS 27)
+- Lens aperture, exposure priority modes, and exposure signals (iOS 27)
+- Continuous autofocus tracking and focus-tracked metadata objects (iOS 27)
+- Low-light video noise reduction on the connection, and cinematic video metadata capture with the Cinematic-framework editing handoff (iOS 27)
 - AVCaptureVideoPreviewLayer video gravity options and SwiftUI integration
 - Complete CameraManager pattern with @MainActor, async setup, and rotation
 
@@ -101,5 +112,7 @@ This page documents the `axiom-media` skill. It provides complete API documentat
 ## Resources
 
 **WWDC**: 2023-10105, 2026-303, 2026-304, 2026-341
+
+**Tech Talks**: 111465
 
 **Docs**: /avfoundation/avcapturesession, /avfoundation/avcapturedevice, /avfoundation/avcapturephotosettings, /avfoundation/avcapturedevice/rotationcoordinator, /avfoundation/avprovideostorage, /avfoundation/avcapturesmartframingmonitor

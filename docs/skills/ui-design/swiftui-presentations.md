@@ -22,6 +22,7 @@ Use this skill when:
 - "How do I keep the map interactive behind a low sheet?"
 - "How do I size a sheet on iPad like a form?"
 - "How do I stop swipe-to-dismiss on my editing sheet without trapping users?"
+- "Why does my sheet's toolbar move to the side on iPhone Duo?"
 
 ## What This Skill Provides
 
@@ -37,3 +38,4 @@ Use this skill when:
 - [SwiftUI Layout](/skills/ui-design/swiftui-layout) – the size-class model that drives presentation adaptation
 - [SwiftUI Navigation](/skills/ui-design/swiftui-nav) – navigation containers that presentations layer on top of
 - [UIKit Modernization](/skills/ui-design/uikit-modernization) – iPhone Mirroring's indirect-input model, which standard presentation containers handle correctly and custom overlays must wire up themselves
+- [iPhone Duo](/skills/ui-design/iphone-duo) – how sheets and their toolbars adapt on each display and move clear of the fold

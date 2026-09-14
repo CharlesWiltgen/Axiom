@@ -14,6 +14,8 @@ Every guide is a `UILayoutGuide` (iOS 9) — constrain to the one that expresses
 | `view.keyboardLayoutGuide` (iOS 15) | tracks the docked keyboard; set `followsUndockedKeyboard = true` to also track undocked/floating iPad keyboards |
 | custom `UILayoutGuide` | invisible spacing/alignment regions — no dummy views |
 
+Safe-area insets aren't symmetric — on iPhone Duo a vertical bar sits on one side. Constrain each edge to its own guide anchor, and in manual layout use `bounds.inset(by: safeAreaInsets)` rather than doubling one side — see axiom-swiftui (skills/iphone-duo.md).
+
 ```swift
 textView.translatesAutoresizingMaskIntoConstraints = false
 NSLayoutConstraint.activate([

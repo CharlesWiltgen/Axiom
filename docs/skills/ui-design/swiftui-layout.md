@@ -20,6 +20,7 @@ Covers tool selection (ViewThatFits vs AnyLayout vs onGeometryChange), size clas
 - "Designer wants different layout for portrait vs landscape"
 - "Preparing app for iOS 26 window resizing"
 - "Should my iPhone app look like iPad in a wide window?" (iOS 27)
+- "What size classes does iPhone Duo report on its outer and inner displays?"
 - "My scroll position / selection / draft is lost when the window resizes"
 - "My form's Confirm button is clipped off-screen when the window is short"
 - "Text lines are unreadably wide in a large window"
@@ -58,5 +59,6 @@ Covers tool selection (ViewThatFits vs AnyLayout vs onGeometryChange), size clas
 
 - [swiftui-layout-ref](/reference/swiftui-layout-ref) – Complete API reference
 - [swiftui-debugging](/skills/ui-design/swiftui-debugging) – View update diagnostics
+- [iPhone Duo](/skills/ui-design/iphone-duo) – Size classes and layout across iPhone Duo's displays and poses
 - [WWDC 2025: Elevate the design of your iPad app](https://developer.apple.com/videos/play/wwdc2025/208/)
 - [WWDC 2024: Get started with Dynamic Type](https://developer.apple.com/videos/play/wwdc2024/10074/)

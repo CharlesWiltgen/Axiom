@@ -4,7 +4,7 @@ Scans SwiftUI layout code for issues — from known anti-patterns like GeometryR
 
 ## What It Does
 
-- Detects 10 known layout violations (GeometryReader in stacks, deprecated UIScreen/UIDevice, UIRequiresFullScreen, size class misuse, conditional stacks, hardcoded breakpoints, and more)
+- Detects 12 known layout violations (GeometryReader in stacks, deprecated UIScreen/UIDevice, UIRequiresFullScreen, size class misuse, conditional stacks, hardcoded breakpoints, controls under `.ignoresSafeArea()`, hand-built toolbar rows, and more)
 - Identifies layout completeness gaps (missing multitasking support, near-edge fixed sizing, GeometryReader in scroll contexts, no iOS 26 free-form window support)
 - Correlates findings that compound into higher severity
 - Produces a Layout Health Score (ADAPTIVE / RIGID / BROKEN)
@@ -23,7 +23,8 @@ Scans SwiftUI layout code for issues — from known anti-patterns like GeometryR
 
 ## Related
 
-- **swiftui-layout** skill — adaptive layout decision trees (ViewThatFits, AnyLayout, onGeometryChange)
-- **swiftui-layout-ref** skill — complete SwiftUI layout API reference
-- **swiftui-performance-analyzer** agent — overlaps on non-lazy ForEach and GeometryReader in scrolling contexts
-- **accessibility-auditor** agent — overlaps on fixed dimensions that clip with Dynamic Type
+- **swiftui-layout** skill – adaptive layout decision trees (ViewThatFits, AnyLayout, onGeometryChange)
+- **swiftui-layout-ref** skill – complete SwiftUI layout API reference
+- **swiftui-performance-analyzer** agent – overlaps on non-lazy ForEach and GeometryReader in scrolling contexts
+- **accessibility-auditor** agent – overlaps on fixed dimensions that clip with Dynamic Type
+- **[iphone-duo](/skills/ui-design/iphone-duo)** skill – why hand-built bars and controls under `.ignoresSafeArea()` break on iPhone Duo

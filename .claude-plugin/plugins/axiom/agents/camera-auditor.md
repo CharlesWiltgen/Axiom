@@ -264,6 +264,16 @@ Run all 10 detection patterns. For every grep match, use Read to verify the surr
 **Verify**: Read matching files; flag synchronous patterns and missing `Task { ... }` wrappers.
 **Fix**: `let image = try await item.loadTransferable(type: Data.self)`.
 
+### Pattern 11: 27-Cycle Capture Property Set While Its Automatic Flag Is On (HIGH/MEDIUM)
+
+**Issue**: the 27 capture controls ship in pairs — an `automatically…` flag that defaults to system control, plus the value itself. Assigning the value while the flag is still `true` raises `NSInvalidArgumentException`. That is an ObjC exception, not a Swift error: `try`/`catch` does not catch it and the app terminates.
+**Search**:
+- `enabledExposureSignals\s*=` — needs `automaticallyEnablesExposureSignals\s*=\s*false` first
+- `isLowLightVideoNoiseReductionEnabled\s*=` (on `AVCaptureConnection`) — needs `automaticallyEnablesLowLightVideoNoiseReduction\s*=\s*false` first
+- `isCinematicVideoMetadataCaptureEnabled\s*=` (on `AVCaptureMovieFileOutput`) — needs `automaticallyAdjustsCinematicVideoMetadataCaptureEnabled\s*=\s*false` first
+**Verify**: Read matching files; confirm the paired flag is set to `false` before the value, and that any `enabledExposureSignals` assignment sits between `lockForConfiguration()` and `unlockForConfiguration()` — without the lock it raises `NSGenericException` instead.
+**Fix**: `device.automaticallyEnablesExposureSignals = false` then `device.enabledExposureSignals = [.document]`; same shape for the other two pairs.
+
 ## Phase 3: Reason About Capture Completeness
 
 Using the Capture Map from Phase 1 and your domain knowledge, check for what's *missing* — not just what's wrong.
