@@ -45,7 +45,7 @@ Covers tool selection (ViewThatFits vs AnyLayout vs onGeometryChange), size clas
 - `UIDevice.current.userInterfaceIdiom == .pad` – iPad in 1/3 Split View is narrower than iPhone
 - Unconstrained `GeometryReader` — Greedy sizing breaks siblings
 - Size class as orientation proxy — iPad is `.regular` in both orientations
-- Injecting `.regular` to fake iPad on a wide iPhone window — `.phone` idiom stays `.compact`; drive layout from geometry
+- Injecting `.regular` to fake iPad on a wide iPhone window — a wide resizable iPhone window already reports `.regular`, and forcing it hides the tabs of a sidebar-adaptable tab view set to prefer a sidebar in narrow windows
 - Separate phone/tablet state trees — crossing the size-class boundary abandons scroll, selection, focus, and drafts; the skill maps each state type to the mechanism that survives adaptation
 
 ## iOS 26 Changes

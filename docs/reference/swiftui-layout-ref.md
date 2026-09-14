@@ -50,7 +50,7 @@ Complete guide to all SwiftUI layout APIs for building adaptive interfaces, base
 - **GeometryReader** – Layout-phase geometry access (iOS 13+)
 
 ### Trait-Based Adaptation
-- **Size Classes** – horizontalSizeClass, verticalSizeClass (coarse trait semantics, not a width sensor)
+- **Size Classes** – horizontalSizeClass, verticalSizeClass (a coarse roomy-vs-constrained signal that follows the window)
 - **Dynamic Type** – dynamicTypeSize.isAccessibilitySize
 - **ScaledMetric** – Scaled dimensions for accessibility
 
@@ -110,7 +110,7 @@ layout { content }
 
 **Key insight:** Size class only goes `.compact` on iPad at ~33% width.
 
-This table describes an app under its **native** iPad idiom. An iPhone app in a resizable window — Mac mirroring, or iPhone-only on iPad — keeps the `.phone` idiom and stays `.compact` at every width. Size class will not flip to `.regular` no matter how wide the window gets, because iOS 27 decouples host semantics (idiom, size class) from available geometry. Drive your own width breakpoints from geometry (`onGeometryChange`) and reserve `horizontalSizeClass` for system-container semantics. See [swiftui-layout](/skills/ui-design/swiftui-layout) for the "don't inject `.regular` to fake iPad" anti-pattern.
+This table describes an app under its **native** iPad idiom. An iPhone app in a resizable window — iPhone Mirroring on a Mac, or iPhone-only on iPad — keeps the `.phone` idiom, but its size classes still follow the window: a wide window reports `.regular`, and system containers adapt to it — for example, a popover presents as a popover once both size classes are regular, and a sidebar-adaptable tab view set to prefer a sidebar offers one when there's room. Use size class for roomy-vs-constrained decisions and geometry (`onGeometryChange`) for finer breakpoints. See [swiftui-layout](/skills/ui-design/swiftui-layout) for why injecting `.regular` backfires.
 
 ## Related Resources
 
