@@ -20,6 +20,7 @@ Scan your SwiftUI codebase for Liquid Glass adoption opportunities, toolbar impr
 - Custom floating views that could benefit from `.glassEffect()`
 - Search outside the platform pattern: `.searchable()` not in NavigationSplitView, or a tab-based app without a `Tab(role: .search)` tab
 - `if #available(iOS 26, *)` fallbacks that leave iOS 18 users with an unstyled surface
+- Custom bars pinned over a list or scroll view with `.overlay`, a `ZStack`, or `.safeAreaInset`, where `safeAreaBar` also insets the content and extends the scroll edge effect
 
 ### Low Priority
 - Prominent buttons whose meaning (such as a confirmation) needs a semantic tint rather than the default accent color
