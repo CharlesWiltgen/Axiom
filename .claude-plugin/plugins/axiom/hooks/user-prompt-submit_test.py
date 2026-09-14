@@ -85,6 +85,9 @@ class TestPositiveRouting(unittest.TestCase):
     def test_build(self):
         self.assertIn("axiom-build", routed_skills(
             "My Xcode build is failing with linker errors"))
+        # Xcode 27 removed ld64; the flag is now accepted and ignored
+        self.assertIn("axiom-build", routed_skills(
+            "My project passes -ld_classic and the linker ignores it"))
 
     def test_build_device_deployment(self):
         # Regression: device-deployment vocabulary must route to build
@@ -113,6 +116,21 @@ class TestPositiveRouting(unittest.TestCase):
             "My scroll position is lost when the iPad window resizes"))
         self.assertIn("axiom-swiftui", routed_skills(
             "Rotating the phone resets my selection and focus"))
+
+    def test_swiftui_iphone_duo(self):
+        for prompt in (
+            "How do I prepare my app for iPhone Duo?",
+            "How do I use onHingeChange to drive an effect?",
+            "Should I use ArrangementView or reservedRegions for the fold?",
+            "My toolbar item needs axisBehavior verticalPreferred",
+            "How do I add a sceneAccessory for an external display?",
+            "defaultTabBarPlacement sidebar isn't showing",
+            "How do I prepare my app for iPhone-Duo?",
+            "How do I use ArrangementView in SwiftUI?",
+            "How do I use ArrangementView when the phone is folded?",
+            "Does reservedRegions return anything when the device is unfolded?",
+        ):
+            self.assertIn("axiom-swiftui", routed_skills(prompt), prompt)
 
     def test_ai_speech_transcription(self):
         # REGRESSION GUARD. The OS27 Speech delta was folded into ios-ml.md while the hook's
@@ -185,6 +203,28 @@ class TestPositiveRouting(unittest.TestCase):
             "What's the difference between embedding WebKit in a NavigationStack vs "
             "without to utilize toolbar features? I'm experiencing scrolling issues "
             "when embedding the WebView inside NavigationStack."))
+
+    def test_swiftui_navigation_subtitle(self):
+        """iOS 26 nav-bar subtitles (Axiom-m34a). navigationSubtitle reached only
+        axiom-macos and the subtitle toolbar placements reached nothing."""
+        # One prompt per rule branch, so dropping any branch fails a case.
+        for prompt in (
+            "How do I show an unread count with navigationSubtitle on iPhone?",
+            "My .largeSubtitle content is centered instead of leading",
+            "Should my filter picker use placement: .subtitle?",
+            "Can I put a button in placement: .largeTitle?",
+        ):
+            self.assertIn("axiom-swiftui", routed_skills(prompt), prompt)
+
+    def test_swiftui_navigation_subtitle_plain_language(self):
+        """No API name and no framework: both suites own the answer."""
+        for prompt in (
+            "How do I add a subtitle to the nav bar in iOS 26?",
+            "I want a subtitle below the large title in my iPhone app",
+        ):
+            routed = routed_skills(prompt)
+            self.assertIn("axiom-swiftui", routed, prompt)
+            self.assertIn("axiom-uikit", routed, prompt)
 
     def test_swiftui_previews_slow(self):
         for prompt in [
@@ -314,6 +354,10 @@ class TestPositiveRouting(unittest.TestCase):
     def test_testing(self):
         self.assertIn("axiom-testing", routed_skills(
             "My XCUITest is flaky and slow"))
+        # XCUIVoiceOverService (27): VoiceOver-in-a-test must reach testing,
+        # not only accessibility
+        self.assertIn("axiom-testing", routed_skills(
+            "How do I drive VoiceOver in a UI test and assert the spoken output?"))
 
     def test_integration(self):
         self.assertIn("axiom-integration", routed_skills(
@@ -348,14 +392,40 @@ class TestPositiveRouting(unittest.TestCase):
             "How do I use AVCaptureSession for camera preview?"))
         self.assertIn("axiom-media", routed_skills(
             "How do I track a subject with a DockKit motorized stand?"))
+        # 27-cycle capture controls (RC sweep): none of these contain "avcapture"
+        # or the gated "camera <noun>" forms, so they routed nowhere before.
+        self.assertIn("axiom-media", routed_skills(
+            "How do I set the lens aperture on iOS 27?"))
+        self.assertIn("axiom-media", routed_skills(
+            "Enable low-light video noise reduction while recording"))
+        self.assertIn("axiom-media", routed_skills(
+            "Which exposure signals does the capture device support?"))
         self.assertIn("axiom-media", routed_skills(
             "My camera app launches slowly — the preview takes forever to appear"))
         self.assertIn("axiom-media", routed_skills(
             "How do I support the Center Stage front camera in my iOS app?"))
         self.assertIn("axiom-media", routed_skills(
+            "How do I switch to the front camera in my iOS app?"))
+        self.assertIn("axiom-media", routed_skills(
+            "My front camera preview is black"))
+        self.assertIn("axiom-media", routed_skills(
             "My ProRes recording drops frames"))
         self.assertIn("axiom-media", routed_skills(
             "Should I adopt deferred start for high resolution photo capture?"))
+
+    def test_media_iphone_duo_cameras(self):
+        for prompt in (
+            # Full Apple type names — DirectionCoordinator/DeviceDescriptor are not
+            # Apple-only on their own; see
+            # test_media_device_tokens_require_avcapture_prefix.
+            "How does AVCaptureDeviceDirectionCoordinator report which camera faces the user?",
+            "Is the inner ultra wide better than the virtual one on Duo?",
+            "How do I pass an AVCaptureDeviceDescriptor to my camera actor?",
+            "How do I use AVCaptureDeviceDirectionCoordinator?",
+            "What is AVCaptureDeviceDescriptor for?",
+            "Which is the outer ultra wide camera on iPhone Duo?",
+        ):
+            self.assertIn("axiom-media", routed_skills(prompt), prompt)
 
     def test_media_intelligence(self):
         self.assertIn("axiom-media", routed_skills(
@@ -707,6 +777,8 @@ class TestPositiveRouting(unittest.TestCase):
         self.assertIn("axiom-macos", routed_skills(
             "How do I build a Mac app with NSToolbar and sandboxing?"))
         self.assertIn("axiom-macos", routed_skills(
+            "macOS 27 denies access to another team's app container"))
+        self.assertIn("axiom-macos", routed_skills(
             "Should I add a Mac Catalyst destination or ship Designed for iPad?"))
         self.assertIn("axiom-macos", routed_skills(
             "Why does my iOS app on Apple silicon report isMacCatalystApp true?"))
@@ -785,6 +857,21 @@ class TestPositiveRouting(unittest.TestCase):
         self.assertNotIn("axiom-uikit", routed_skills(
             "How do I detect screen mirroring to Apple TV over AirPlay?"))
 
+    def test_uikit_navigation_subtitle(self):
+        """A user reported "nothing on largeSubtitleView" (Axiom-m34a); none of these routed.
+        One prompt per rule branch, so dropping any branch fails a case."""
+        for prompt in (
+            "How do I use largeSubtitleView?",
+            "largeSubtitleTextAttributes is ignored and my subtitle stays green",
+            "largeAttributedSubtitle ignores my font",
+            "How do I set attributedSubtitle on my navigation item?",
+            "navigationItem.subtitle never appears",
+            "What changed in UINavigationItem this year?",
+            "Setting largeSubtitle does nothing",
+            "My subtitleView is clipped under the large title",
+        ):
+            self.assertIn("axiom-uikit", routed_skills(prompt), prompt)
+
     def test_uikit_resize(self):
         # resize-auditor's own canonical example prompts must reach the suite that owns it
         self.assertIn("axiom-uikit", routed_skills(
@@ -793,16 +880,25 @@ class TestPositiveRouting(unittest.TestCase):
             "Is my app ready for resizable windows on iOS 27?"))
         self.assertIn("axiom-uikit", routed_skills(
             "My layout breaks when the user resizes the window - audit the whole app"))
-        self.assertIn("axiom-uikit", routed_skills(
-            "How do I prepare my app for the Apple foldable?"))
-        self.assertIn("axiom-uikit", routed_skills(
-            "Does my app handle the folding iPhone inner display?"))
+        # Foldable vocabulary reaches both the UIKit suite and the iPhone Duo hub (axiom-swiftui)
+        for prompt in (
+            "How do I prepare my app for the Apple foldable?",
+            "Does my app handle the folding iPhone inner display?",
+        ):
+            routed = routed_skills(prompt)
+            self.assertIn("axiom-uikit", routed, prompt)
+            self.assertIn("axiom-swiftui", routed, prompt)
         # Resizing an image is not a windowing concern
         self.assertNotIn("axiom-uikit", routed_skills(
             "How do I resize an image before uploading it?"))
         # A folder is not a foldable
         self.assertNotIn("axiom-uikit", routed_skills(
             "How do I create a folder in the documents directory?"))
+
+    def test_uikit_bar_classes(self):
+        routed = routed_skills("My custom UIToolbar doesn't go vertical on iPhone Duo")
+        self.assertIn("axiom-uikit", routed)
+        self.assertIn("axiom-swiftui", routed)
 
     def test_swift(self):
         self.assertIn("axiom-swift", routed_skills(
@@ -932,9 +1028,142 @@ class TestPositiveRouting(unittest.TestCase):
         self.assertIn("axiom-design", routed_skills(
             "My glass-effect button doesn't tint with my accent color"))
 
+    def test_design_compatibility_key(self):
+        """Neither the Liquid Glass opt-out key nor its casual name routed to axiom-design (Axiom-5jqf)."""
+        for prompt in (
+            "Does UIDesignRequiresCompatibility still work when I build with Xcode 27?",
+            "UIDesignRequiresCompatability is set but I still get the new look",
+            # The key name is Apple-only, so a non-Apple keyword must not gate it.
+            "My Flutter app sets UIDesignRequiresCompatibility but still gets the new look",
+            "UIDesignRequiresCompatiblity has no effect",
+            "My app ignores the design compatibility key on iOS 27",
+            "The design-compatibility setting in my Info.plist does nothing",
+            "My Flutter app's Info.plist design compatibility key is ignored",
+            "How do I opt out of the new iOS 26 design?",
+            "Is there an opt-out for the new iOS 26 design?",
+            "How do I opt out of the new design in my app's Info.plist?",
+        ):
+            self.assertIn("axiom-design", routed_skills(prompt), prompt)
+
 
 class TestNegativeRouting(unittest.TestCase):
     """Known false-positive traps must NOT trigger."""
+
+    def test_foldable_vocabulary_is_gated(self):
+        """REGRESSION GUARD. "foldable" is cross-platform vocabulary. It shipped ungated
+        in the UIKit rule and routed Android/Kotlin foldable prompts to axiom-uikit."""
+        for prompt in (
+            "How do I support foldables in my Android Jetpack Compose app?",
+            "Samsung foldable layout in Kotlin",
+        ):
+            routed = routed_skills(prompt)
+            self.assertNotIn("axiom-uikit", routed, prompt)
+            self.assertNotIn("axiom-swiftui", routed, prompt)
+
+    def test_duo_two_factor_does_not_route_to_swiftui(self):
+        """No bare "duo" token: Duo two-factor prompts are not about iPhone Duo."""
+        self.assertNotIn("axiom-swiftui", routed_skills(
+            "Add Duo push two-factor authentication to my iOS app"))
+
+    def test_subtitle_view_tokens_are_not_bare(self):
+        """ExoPlayer ships its own SubtitleView, and "largeSubtitle" is a plausible prop
+        name anywhere, so neither routes without Apple nav-bar context."""
+        for prompt in (
+            "How do I restyle ExoPlayer's SubtitleView captions?",
+            "ExoPlayer SubtitleView overlaps my bottom navigation bar",
+            "When navigating back the ExoPlayer SubtitleView keeps showing old cues",
+        ):
+            self.assertNotIn("axiom-uikit", routed_skills(prompt), prompt)
+        routed = routed_skills("Our TypeScript header component takes a largeSubtitle prop")
+        self.assertNotIn("axiom-uikit", routed)
+        self.assertNotIn("axiom-swiftui", routed)
+
+    def test_non_apple_design_compatibility_modes_do_not_route(self):
+        """CAD, design-system, and database tools all have a "design compatibility mode"."""
+        for prompt in (
+            "Ant Design compatibility mode in my React app",
+            "Which config key enables Ant Design compatibility mode in React?",
+            "What config key enables Ant Design compatibility mode?",
+            "How do I turn on Ant Design compatibility mode for older browsers?",
+            "Figma design compatibility mode breaks my older plugins",
+            "This Figma design compatibility mode is too simplistic",
+            "Ant Design compatibility with modern browsers on iPhone Safari",
+            "Our database design compatibility mode is set to 130 in SQL Server",
+            "How do I opt out of the new design in our React marketing site?",
+            # An app's own redesign, not the system design: no OS 26/27 token, no plist.
+            "turn off the new look for our onboarding on iOS",
+            "How do I disable the new appearance API behavior on iOS 15 where the nav bar is transparent?",
+        ):
+            self.assertNotIn("axiom-design", routed_skills(prompt), prompt)
+
+    def test_nav_subtitle_spellings_route_to_their_own_framework(self):
+        """The hook keeps 3 suggestions, so a framework-specific spelling must not
+        spend a slot on the other framework, on macOS, or on media captions."""
+        self.assertNotIn("axiom-swiftui", routed_skills('navigationItem.largeSubtitle = "3 unread"'))
+        self.assertNotIn("axiom-uikit", routed_skills("placement: .largeSubtitle is centered"))
+        self.assertNotIn("axiom-macos", routed_skills(
+            "How do I show an unread count with navigationSubtitle on iPhone?"))
+        for prompt in (
+            "How do I change the navigation bar subtitle color on iOS 26?",
+            "My .largeSubtitle styling is wrong",
+        ):
+            self.assertNotIn("axiom-accessibility", routed_skills(prompt), prompt)
+
+    def test_media_device_tokens_require_avcapture_prefix(self):
+        """REGRESSION GUARD. Bare "DirectionCoordinator"/"DeviceDescriptor"
+        are not Apple-only -- WebUSB, a flight sim, and WebGPU's GPUDeviceDescriptor all use
+        this vocabulary. Only the fully-qualified AVCaptureDevice* names are unambiguous."""
+        for prompt in (
+            "Our WebUSB code reads the DeviceDescriptor bytes to identify the connected peripheral.",
+            "How do I parse a USB DeviceDescriptor in my Linux driver?",
+            "Our flight sim has a DirectionCoordinator class for waypoint navigation.",
+            "How do I configure a GPUDeviceDescriptor for my WebGPU renderer?",
+        ):
+            self.assertNotIn("axiom-media", routed_skills(prompt), prompt)
+
+    def test_media_ultra_wide_phrases_are_gated(self):
+        """REGRESSION GUARD. "inner/outer ultra wide" and "virtual front
+        camera" are English phrases non-Apple foldables use too."""
+        for prompt in (
+            "In my Android app with CameraX, how do I pick the outer ultra wide camera on a foldable?",
+            "In my Android app with CameraX, how do I use the virtual front camera on a foldable?",
+        ):
+            self.assertNotIn("axiom-media", routed_skills(prompt), prompt)
+
+    def test_media_front_camera_phrases_are_gated(self):
+        """REGRESSION GUARD. The bare "front camera" phrase was still
+        ungated in the primary Media rule after an earlier fix only gated "virtual front
+        camera" -- the ungated substring matched first, so Android/Kotlin foldable prompts
+        using plain "front camera" still routed to axiom-media."""
+        for prompt in (
+            "My Android app simulates a virtual front camera for testing.",
+            "How do I emulate a virtual front camera on my Android foldable in Kotlin?",
+            "Should I use the virtual front camera or the physical one on this Android foldable?",
+            "How do I access the front camera on my Android phone in Kotlin?",
+        ):
+            self.assertNotIn("axiom-media", routed_skills(prompt), prompt)
+
+    def test_swiftui_arrangementview_reservedregions_require_apple_context(self):
+        """REGRESSION GUARD. "ArrangementView" (Ableton's timeline view) and
+        bare "reservedRegions" (a hardware memory-map term) are not Apple-only."""
+        for prompt in (
+            "In Ableton Live, the ArrangementView lets you edit clips over time.",
+            "What are the reservedRegions on this hardware memory map?",
+        ):
+            self.assertNotIn("axiom-swiftui", routed_skills(prompt), prompt)
+
+    def test_routers_are_not_duplicated(self):
+        """The cap dedupes first (list(dict.fromkeys(matches))); a repeat would waste one of 3 slots."""
+        for prompt in (
+            "foldable iPhone Duo SwiftUI layout with a UIKit toolbar",
+            # F5: the unguarded AI and ML rules both fire on this prompt and both
+            # append "axiom-ai".
+            "Foundation Models on-device AI: how do I convert a pytorch model to coreml for iOS?",
+        ):
+            payload = run_hook(prompt)
+            ctx = payload.get("hookSpecificOutput", {}).get("additionalContext", "")
+            names = re.findall(r"`(axiom-[a-z-]+)`", ctx)
+            self.assertEqual(len(names), len(set(names)), (prompt, names))
 
     def test_section_index_english_phrases_are_gated(self):
         """REGRESSION GUARD. "section index"/"alphabet scrubber" are CROSS-PLATFORM
