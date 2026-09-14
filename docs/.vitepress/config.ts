@@ -337,6 +337,7 @@ export default withMermaid(defineConfig({
             { text: 'Overview', link: '/skills/ui-design/' },
             { text: 'App Composition', link: '/skills/ui-design/app-composition' },
             { text: 'HIG (Human Interface Guidelines)', link: '/skills/ui-design/hig' },
+            { text: 'iPhone Duo', link: '/skills/ui-design/iphone-duo' },
             { text: 'Liquid Glass', link: '/skills/ui-design/liquid-glass' },
             { text: 'PencilKit & PaperKit', link: '/skills/ui-design/pencilkit-paperkit' },
             { text: 'Resizable Rendering', link: '/skills/ui-design/resizable-rendering' },
@@ -761,7 +762,7 @@ export default withMermaid(defineConfig({
 
     footer: {
       message: 'Released under the MIT License',
-      copyright: 'Copyright © 2026 Charles Wiltgen • v27.0.0-beta.54'
+      copyright: 'Copyright © 2026 Charles Wiltgen • v27.0.0'
     }
   }
 }))

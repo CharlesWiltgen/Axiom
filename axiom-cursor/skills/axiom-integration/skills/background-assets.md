@@ -53,6 +53,7 @@ If you see ANY of these, you're heading toward either an oversized IPA, a brittl
 - **Bundling Foundation Models `.fmadapter` files in the app bundle**: Apple explicitly prohibits this — adapters are ~160 MB and per-OS-version; bundle bloat compounds across OS versions
 - **Assuming asset packs auto-evict**: The system does NOT remove asset packs while your app is installed; call `remove(assetPackWithID:)` when done
 - **Hyphens in adapter names**: The identifier regex `/fmadapter-\w+-\w+/` breaks on hyphens; use underscores
+- **Taking exclusive control on only one side**: `BADownloadManager.withExclusiveControl` serializes your app against its downloader extension, and the header is explicit — "Both the extension and app must use this API to ensure exclusive access." A one-sided call buys nothing; the other side still schedules underneath you
 
 ---
 
@@ -231,7 +232,7 @@ try await AssetPackManager.shared.ensureLocalAvailability(of: assetPack)
 let descriptor = try AssetPackManager.shared.descriptor(
     for: "Videos/Introduction.m4v"
 )
-defer { try descriptor.close() }
+defer { try? descriptor.close() }
 ```
 
 **Lifecycle responsibilities**: call `AssetPackManager.shared.checkForUpdates()` after OS upgrades and `remove(assetPackWithID:)` when you're done with a pack — the system does NOT auto-evict.
@@ -466,7 +467,7 @@ The mock server runs HTTPS only — plain HTTP is not supported by the framework
 | Read file | `AssetPackManager.shared.contents(at:searchingInAssetPackWithID:options:)` or `.descriptor(for:...)` |
 | Force update check | `AssetPackManager.shared.checkForUpdates()` |
 | Remove pack | `AssetPackManager.shared.remove(assetPackWithID:)` |
-| Localized packs `OS27` | `manifest` `language` tag, `resolvedLanguage`, `reconcilePreferredLanguages()`, `contents(at:asLocalizedFor:options:)` — see `skills/background-assets-ref.md` |
+| Localized packs `OS27` | `manifest` `language` tag, `resolvedLanguage`, `reconcilePreferredLanguages()`, `contents(at:asLocalizedFor:options:)`; the extension side of a language change arrives as `BAContentRequest.languageChange` — see `skills/background-assets-ref.md` |
 
 ### Tooling
 
@@ -502,6 +503,4 @@ For full type signatures, all Info.plist keys, and the unmanaged (legacy) `BADow
 
 ---
 
-**Last Updated**: 2026-06-11
-**Platforms**: iOS 26+, iPadOS 26+, macOS 26+, tvOS 26+, visionOS 26+ (managed); iOS 16.1+ (unmanaged legacy)
-**Status**: Phase A — discipline file; reference and TDD pressure-test pass to follow
+**Platforms**: OS26 for managed assets, not watchOS; iOS 16.1+ for unmanaged legacy

@@ -948,7 +948,5 @@ This protects you and shows you exhausted safe options first.
 
 ---
 
-**Last Updated**: 2025-11-30
-**Status**: TDD-tested with pressure scenarios
 **Framework**: Core Data (Foundation framework)
 **Complements**: SwiftData skill (understanding relationship to Core Data)

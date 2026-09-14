@@ -131,6 +131,8 @@ Every sample carries a type, a time window, a value, optional metadata, and prov
 | `.discreteTemporallyWeighted` | Heart rate | Time-weighted average (older readings matter less) |
 | `.discreteEquivalentContinuousLevel` | Audio exposure | Continuous-level average per acoustics convention |
 
+**New quantity type `OS27`**: `HKQuantityTypeIdentifier.heartRateVariabilityRMSSD` (milliseconds, discrete arithmetic) ships on every platform at 27. HealthKit previously exposed only `.heartRateVariabilitySDNN`, so code and advice written before 27 that says SDNN is the only HRV metric is now out of date.
+
 ## Canonical Setup Pattern
 
 ```swift

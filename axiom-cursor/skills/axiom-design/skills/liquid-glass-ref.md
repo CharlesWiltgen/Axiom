@@ -445,7 +445,7 @@ List(items) { item in
 
 ### Semantic Search Tabs
 
-For Tab API patterns including `.tabRole(.search)`, see `axiom-swiftui` navigation reference, Section 5 (Tab Navigation Integration).
+For Tab API patterns including `Tab(role: .search)`, see `axiom-swiftui` navigation reference, Section 5 (Tab Navigation Integration).
 
 ---
 
@@ -550,7 +550,7 @@ Profile scrolling, animations, memory, and CPU with Instruments (Time Profiler, 
 
 ### Backward Compatibility
 
-Add `UIDesignRequiresCompatibility = true` to Info.plist to ship with iOS 26 SDK while maintaining iOS 18 appearance (Liquid Glass disabled, previous blur/material styles used). Migration strategy: ship with key enabled, audit changes in separate build, update incrementally, remove key when ready.
+Add `UIDesignRequiresCompatibility = true` to Info.plist to keep the pre-Liquid-Glass appearance temporarily (previous blur/material styles). The system ignores the key when the app is built with the 27 SDK and runs on OS 27; it still applies on 26.x (measured on iOS), and for apps still built with the 26 SDK. Migration strategy: audit in a build without the key, update incrementally, remove the key, and finish before or with the move to the 27 SDK. Details and the measured SDK × OS matrix: `skills/liquid-glass.md` (Backward Compatibility).
 
 ---
 
@@ -578,7 +578,7 @@ Add `UIDesignRequiresCompatibility = true` to Info.plist to ship with iOS 26 SDK
 ### Navigation
 - [ ] `.tabViewStyle(.sidebarAdaptable)` - Tab bar adapts to sidebar
 - [ ] `.tabBarMinimizeBehavior(_:)` - Minimize on scroll
-- [ ] `.tabRole(.search)` - Semantic search tabs
+- [ ] `Tab(role: .search)` - Semantic search tabs
 - [ ] `NavigationSplitView` for sidebar + inspector layouts
 
 ### Toolbars and Menus
@@ -597,7 +597,7 @@ Add `UIDesignRequiresCompatibility = true` to Info.plist to ship with iOS 26 SDK
 - [ ] Test with accessibility settings
 
 ### Backward Compatibility
-- [ ] `UIDesignRequiresCompatibility` in Info.plist (if needed)
+- [ ] `UIDesignRequiresCompatibility` in Info.plist only if needed, and adoption finished before or with the move to the 27 SDK (which ignores the key on OS 27)
 
 ---
 
@@ -648,7 +648,7 @@ Use this checklist when auditing app for Liquid Glass adoption. 30 highest-impac
 - [ ] watchOS: Standard toolbar APIs and button styles adopted
 - [ ] tvOS: Standard focus APIs for Liquid Glass on focus
 - [ ] `GlassEffectContainer` used for multiple nearby glass effects
-- [ ] `UIDesignRequiresCompatibility` key considered if needed
+- [ ] `UIDesignRequiresCompatibility` key considered if needed (ignored on OS 27 in 27-SDK builds)
 
 ---
 
@@ -656,7 +656,7 @@ Use this checklist when auditing app for Liquid Glass adoption. 30 highest-impac
 
 **WWDC**: 2025-219, 2025-323 (Build a SwiftUI app with the new design)
 
-**Docs**: /TechnologyOverviews/liquid-glass, /TechnologyOverviews/adopting-liquid-glass, /design/Human-Interface-Guidelines/materials
+**Docs**: /TechnologyOverviews/liquid-glass, /TechnologyOverviews/adopting-liquid-glass, /design/Human-Interface-Guidelines/materials, /bundleresources/information-property-list/uidesignrequirescompatibility
 
 **Sample Code**: /SwiftUI/Landmarks-Building-an-app-with-Liquid-Glass
 
@@ -664,7 +664,5 @@ Use this checklist when auditing app for Liquid Glass adoption. 30 highest-impac
 
 ---
 
-**Last Updated**: 2025-12-01
-**Minimum Platform**: iOS/iPadOS 26, macOS Tahoe 26, tvOS 26, watchOS 26 (`glassEffect` is unavailable on visionOS; visionOS uses `glassBackgroundEffect`)
-**Xcode Version**: Xcode 26+
-**Skill Type**: Reference (comprehensive adoption guide)
+**Platforms**: OS26, not visionOS (visionOS uses `glassBackgroundEffect`)
+**Xcode**: 26+

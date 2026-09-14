@@ -112,7 +112,7 @@ struct MoodView: View {
 
 ## Medications API
 
-**Platform:** iOS 26+, iPadOS 26+, macOS 26+, visionOS 26+, watchOS 26+
+**Platforms**: OS26, not tvOS
 
 > The Health app has had medication tracking since iOS 15, but the **public Medications API is iOS 26 and later only**. Prior-OS apps cannot read or write medication data.
 
@@ -268,7 +268,7 @@ Write purpose strings that honestly describe why the app needs mental-health or 
 | Averaging raw valence across a mix of negative and positive days | Shift to `[0, 2]` by `valence + 1.0` before averaging, then rescale to `[0, 100]`. |
 | Trying to request medication access via `requestAuthorization` | Medications use per-object authorization managed inside the Health app. The normal sheet does nothing for medication types. |
 | Expecting a framework API linking symptoms to medications | There isn't one. Apple's sample uses an RxNorm → symptom-list dictionary client-side. |
-| Using the Medications API on iOS 25 or earlier | API is iOS 26+. Check with `@available(iOS 26.0, *)`. |
+| Using the Medications API on iOS 18 or earlier | API is iOS 26+. Check with `@available(iOS 26.0, *)`. |
 | Assuming the Health app "one mood per day" rule reflects the framework | Daily mood samples can be saved multiple times per day via the API. The Health app UI shows one, but your data model can differ. |
 | Requesting every `HKStateOfMind.Label` and `.Association` up front | Request the minimum set for your feature. Broad requests feel invasive for mental-health data. |
 | Displaying raw valence numbers to users | Users understand emotional language, not `-0.2 to 0.8`. Map to the 7-bucket `ValenceClassification` or emoji. |

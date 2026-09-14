@@ -13,12 +13,12 @@ Use when:
 
 #### Related Skills
 - Use `axiom-design (skills/hig-ref.md)` for comprehensive details and code examples
-- Use `axiom-design (skills/liquid-glass.md)` for iOS 26 material design implementation and version-conditional design (supporting both pre-Liquid Glass and Liquid Glass in the same app)
-- Use `axiom-design (skills/liquid-glass-ref.md)` for iOS 26 app-wide adoption guide with backward compatibility strategy
+- Use `axiom-design (skills/liquid-glass.md)` for iOS 26 material design implementation, version-conditional design (supporting both pre-Liquid Glass and Liquid Glass in the same app), and the `UIDesignRequiresCompatibility` opt-out
+- Use `axiom-design (skills/liquid-glass-ref.md)` for iOS 26 app-wide adoption guide
 - Use `axiom-accessibility` for accessibility troubleshooting
 
 #### Version-Conditional Design
-When supporting both iOS 25 (pre-Liquid Glass) and iOS 26+, see `axiom-design (skills/liquid-glass.md)` for the adoption strategy — it covers when to use `#available(iOS 26, *)`, how to degrade gracefully, and which system components adopt Liquid Glass automatically vs which need explicit opt-in.
+When supporting both iOS 18 (pre-Liquid Glass) and iOS 26+, see `axiom-design (skills/liquid-glass.md)` for the adoption strategy — it covers when to use `#available(iOS 26, *)`, how to degrade gracefully, and which system components adopt Liquid Glass automatically vs which need explicit opt-in.
 
 ---
 
@@ -496,13 +496,8 @@ Apple Pay, Wallet, and Tap to Pay each have their own HIG with rules App Review 
 
 ## Resources
 
-**WWDC**: 356, 2019-808
+**WWDC**: 2025-356, 2019-808
 
 **Docs**: /design/human-interface-guidelines, /design/human-interface-guidelines/layout, /design/human-interface-guidelines/lists-and-tables, /design/human-interface-guidelines/color, /design/human-interface-guidelines/dark-mode, /design/human-interface-guidelines/typography, /design/human-interface-guidelines/apple-pay, /design/human-interface-guidelines/wallet, /design/human-interface-guidelines/tap-to-pay-on-iphone
 
 **Skills**: axiom-design (skills/hig-ref.md), axiom-design (skills/liquid-glass.md), axiom-design (skills/liquid-glass-ref.md), axiom-swiftui (skills/26-ref.md), axiom-accessibility, axiom-payments
-
----
-
-**Last Updated**: Based on Apple HIG (2024-2025), WWDC25-356, WWDC19-808
-**Skill Type**: Discipline (Quick decisions, checklists, pressure scenarios)

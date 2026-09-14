@@ -1112,4 +1112,3 @@ See `axiom-performance (skills/metrickit-ref.md)` for comprehensive MetricKit in
 
 **Targets:** iOS 14+, Swift 5.5+
 **Tools:** Instruments, Core Data
-**History:** See git log for changes

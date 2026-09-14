@@ -3,13 +3,13 @@
   "files": [
     {
       "path": ".cursor-plugin/plugin.json",
-      "sha256": "c030d2fae0693b56963beaf4f162377500b19429db9799b04da84adfc0528834",
-      "bytes": 586
+      "sha256": "eda902fecca53c937216e71bf2512286fa82c84d3743a484fa14a7fad1c63400",
+      "bytes": 578
     },
     {
       "path": "README.md",
-      "sha256": "b84953f574f49eeaa15cf3bf0c78434d0686d9e0ddd44f7fb74d822b75bb4341",
-      "bytes": 3322
+      "sha256": "7cb0b0e747683c87e46096b82ec41fa606d19ea1f4d3b91ffb3af44d1e70e41b",
+      "bytes": 3314
     },
     {
       "path": "agents/accessibility-auditor.md",
@@ -28,8 +28,8 @@
     },
     {
       "path": "agents/camera-auditor.md",
-      "sha256": "f393e13e997572b4ecafbefbea4126e55d0216ea220e25c5b5e0fb5bb831462f",
-      "bytes": 23438
+      "sha256": "f9f898687dc82943496c13f2d970d74e0a0dc98422dd6c90f3630f0173433c45",
+      "bytes": 24704
     },
     {
       "path": "agents/codable-auditor.md",
@@ -73,8 +73,8 @@
     },
     {
       "path": "agents/health-check.md",
-      "sha256": "8f1530966d2e4af149675fe46da52c3be8d3eee7e06c714576158549ab619b36",
-      "bytes": 9085
+      "sha256": "b7028243cb61858c8789018d8bd1d1086e07efd8d8a35ca317b1dfdd50a5f827",
+      "bytes": 9203
     },
     {
       "path": "agents/iap-auditor.md",
@@ -93,8 +93,8 @@
     },
     {
       "path": "agents/liquid-glass-auditor.md",
-      "sha256": "8f60b84aab3769a36975e9ec69039cbb61575af96f920bb01cff5dc8f3eee49d",
-      "bytes": 20373
+      "sha256": "2344976ded208cc091fc6bcffd65c663dcc7411dc06843cb7170b730c7e456a3",
+      "bytes": 24275
     },
     {
       "path": "agents/memory-auditor.md",
@@ -118,8 +118,8 @@
     },
     {
       "path": "agents/resize-auditor.md",
-      "sha256": "05d362c8cefa9a82bd73bab8239dd4ac40709da27e705016965634691498a687",
-      "bytes": 17740
+      "sha256": "817ad9daf9a4f66b89d3b97675cae1c98b1da5ebecb1df23620e60b89fd24e8c",
+      "bytes": 20515
     },
     {
       "path": "agents/screenshot-validator.md",
@@ -173,8 +173,8 @@
     },
     {
       "path": "agents/swiftui-layout-auditor.md",
-      "sha256": "9f26f8d840833ae86bf0db4b9bba3a0fbbefb6f8a94cabf8b4a922e8623ffcc0",
-      "bytes": 13885
+      "sha256": "de5836833d7e0ac1fee720c734539fb90399d9994049b1439d65e195bc9ec406",
+      "bytes": 15939
     },
     {
       "path": "agents/swiftui-nav-auditor.md",
@@ -233,8 +233,8 @@
     },
     {
       "path": "commands/axiom-ask.md",
-      "sha256": "35cc570df2375fd4f3aab86d53d8dd0f477f675dd5b51103c8c70d18d22ff351",
-      "bytes": 7791
+      "sha256": "62377cf287600bd097d176d3830cc1cea2dd0452bec0ea60fe2a05b70c79c378",
+      "bytes": 7803
     },
     {
       "path": "commands/axiom-audit.md",
@@ -358,13 +358,13 @@
     },
     {
       "path": "scripts/user-prompt-submit.py",
-      "sha256": "0fdba48bc3c05ac6e104ffeec8e540054362dffd250c930f3429102508bdf8f1",
-      "bytes": 39327
+      "sha256": "fdd123c20e276c795207bff863de92f292c7b930eb8d0922d3ddf35fcea077b6",
+      "bytes": 46842
     },
     {
       "path": "skills/axiom-accessibility/SKILL.md",
-      "sha256": "4e900826e6e979f6f6749204b99bc6e9d75dd11f963b3ee224fad0d5a17e2fe4",
-      "bytes": 8835
+      "sha256": "e485e00216002f3d86ec629ebf45490f8715e5672d5158eb534e1a2b7d1f3b32",
+      "bytes": 8977
     },
     {
       "path": "skills/axiom-accessibility/skills/accessibility-diag.md",
@@ -408,38 +408,38 @@
     },
     {
       "path": "skills/axiom-ai/skills/foundation-models-adapters-diag.md",
-      "sha256": "f71b52266e79c2aa19ad80858448438fd0a216e1438e2d329cce6d70abc19f3e",
-      "bytes": 23323
+      "sha256": "2faf36365d48d050c5f95cb145834bc10a4da5c788305b4b5d8ce6ac3eb1e086",
+      "bytes": 23267
     },
     {
       "path": "skills/axiom-ai/skills/foundation-models-adapters-ref.md",
-      "sha256": "ac3d3c2c29b3bb7afe2ae8a35e3e153f4836a7d2ede39941902f3521d753f615",
-      "bytes": 32789
+      "sha256": "38efdbb30f60e81de0259e473a86127b298272da1c5a4d435ee477019c302930",
+      "bytes": 32734
     },
     {
       "path": "skills/axiom-ai/skills/foundation-models-adapters.md",
-      "sha256": "d0dd3c657ede140b73a683df9eb62841480f10df39f13cb30174e40320e360c3",
-      "bytes": 25992
+      "sha256": "a73cd80bd0a16fac850d9a70a55ecb562ed0d1618c393bcdfe3e1e5b10e13f46",
+      "bytes": 25936
     },
     {
       "path": "skills/axiom-ai/skills/foundation-models-diag.md",
-      "sha256": "12d46250cacd1db4fb193de3e5f6640f64c7433ab0ef5556a368cf16f397e4e6",
-      "bytes": 39591
+      "sha256": "752f7b635c6742b20c9c90f9e42eb0f0aa00574f8ad1a392f0cccec7b4fe2041",
+      "bytes": 39510
     },
     {
       "path": "skills/axiom-ai/skills/foundation-models-evaluations-diag.md",
-      "sha256": "d669849d341cb5616f784783917c126d4747f6921a31056405ad34e117e066e6",
-      "bytes": 23733
+      "sha256": "96749974fd7929380e685129dd13fa9086179a947e54751f2135fcff15b2b836",
+      "bytes": 23634
     },
     {
       "path": "skills/axiom-ai/skills/foundation-models-evaluations-ref.md",
-      "sha256": "3ffdcf05fa50e5c5e1045187f223077e8af1043abd29a12a07d15fab54ef7aff",
-      "bytes": 37833
+      "sha256": "546d2962bfa724b83156df450cdce36f01c24ea685ff6adeacb8a07561ee1e3e",
+      "bytes": 37736
     },
     {
       "path": "skills/axiom-ai/skills/foundation-models-evaluations.md",
-      "sha256": "2c853626c4d5cd658208e0ad6cb3f75be4c85b7a35c556cb9755aad7a1e5cb85",
-      "bytes": 51672
+      "sha256": "0f04e8539f9029bf0d4346b0c2000c663d3e2c9e95b91451e3535171b37661de",
+      "bytes": 51574
     },
     {
       "path": "skills/axiom-ai/skills/foundation-models-guardrails.md",
@@ -448,13 +448,13 @@
     },
     {
       "path": "skills/axiom-ai/skills/foundation-models-ref.md",
-      "sha256": "8dc607e47f28afad98685f833b6cd7ef546b68eca553d2d4729f891b08cafc4f",
-      "bytes": 63983
+      "sha256": "84a74b2653481af4ab6a0a68fcc7d1cf588eacb5504db899f7b3838bcc45952d",
+      "bytes": 63928
     },
     {
       "path": "skills/axiom-ai/skills/foundation-models.md",
-      "sha256": "2921f25c2b917ac276783817c115393538ebdfa6c4600b168d70c6907062e3d5",
-      "bytes": 50591
+      "sha256": "aba666d65b2823cb3347dff1bb418fb23474460f3e87a81cf9bb4ce3cf284126",
+      "bytes": 50562
     },
     {
       "path": "skills/axiom-ai/skills/ios-ml.md",
@@ -488,8 +488,8 @@
     },
     {
       "path": "skills/axiom-build/skills/build-debugging.md",
-      "sha256": "5fe2abf77411d061b634df712b373db9906aeecacddcccadf533c4d0ea08415e",
-      "bytes": 14196
+      "sha256": "3af51c88c74bbb364a98eec2a1d9dbe08370fb835f94231cc91bd23a303b1d55",
+      "bytes": 15753
     },
     {
       "path": "skills/axiom-build/skills/build-performance.md",
@@ -533,13 +533,13 @@
     },
     {
       "path": "skills/axiom-concurrency/skills/swift-concurrency-ref.md",
-      "sha256": "46a93e5d9390cf242061627dd699ac06fd9315ee5321ea96453adc0428a99da0",
-      "bytes": 56387
+      "sha256": "dfc4e482ae4c78543097ebb36248e5a57dbda1fa0f0111a09b276ab323df1da7",
+      "bytes": 56449
     },
     {
       "path": "skills/axiom-concurrency/skills/swift-concurrency.md",
-      "sha256": "e040b44445b40eb5de3c61de409096dd4480890130ebe0e3d7cb806ee282572a",
-      "bytes": 54645
+      "sha256": "c9104c9443db91921c523c97967593760f8c242fe1e8ef7500ce40daf577d541",
+      "bytes": 54465
     },
     {
       "path": "skills/axiom-concurrency/skills/synchronization.md",
@@ -553,8 +553,8 @@
     },
     {
       "path": "skills/axiom-data/skills/cloud-sync-diag.md",
-      "sha256": "5fb8ecf249d0baa2442009fa16d8def442a3b10b5646d321b9f9f0a7d8774dec",
-      "bytes": 22122
+      "sha256": "441de1405c5b3b86a79ec3810892a489a6b3c74a78f2107edcc365d32fe29cec",
+      "bytes": 22060
     },
     {
       "path": "skills/axiom-data/skills/cloud-sync.md",
@@ -563,8 +563,8 @@
     },
     {
       "path": "skills/axiom-data/skills/cloudkit-ref.md",
-      "sha256": "8f113ca56e310599f444669fc9765fca324fa73c37eef6ba8ec1c8cdc9f2e5e3",
-      "bytes": 21146
+      "sha256": "7599b3b8e8c10018f8cdad61e973f956ce43e538ca79b2fde29bd1df99b290c6",
+      "bytes": 21091
     },
     {
       "path": "skills/axiom-data/skills/codable.md",
@@ -573,8 +573,8 @@
     },
     {
       "path": "skills/axiom-data/skills/core-data-diag.md",
-      "sha256": "ad454b0b16f75c3773d5d84cb9c7a54e0859d6e0a72841d604d997644c24ce23",
-      "bytes": 36849
+      "sha256": "abf245355ef700f0d18338541fa0b460d2d59f7e1d8b124e880f1caf1306594d",
+      "bytes": 36773
     },
     {
       "path": "skills/axiom-data/skills/core-data.md",
@@ -583,8 +583,8 @@
     },
     {
       "path": "skills/axiom-data/skills/database-migration.md",
-      "sha256": "eb44475bf5bfb3a4529e8db6bd6c46e566d84f3721f71901883f7ecfd9846341",
-      "bytes": 15169
+      "sha256": "a08c8abac81b3797e0f7bfbfc1b3db69a5aa3674f7442cd236c6219a415a8014",
+      "bytes": 15076
     },
     {
       "path": "skills/axiom-data/skills/grdb-app-groups.md",
@@ -598,18 +598,18 @@
     },
     {
       "path": "skills/axiom-data/skills/grdb.md",
-      "sha256": "4656717580541812f8ec2549e15997d2f9f4713c9254a98710b309dd0d5207e5",
-      "bytes": 24569
+      "sha256": "fa4f867b223ea39a438df543750525bfbbbad09999c1a543964e22708795500f",
+      "bytes": 24532
     },
     {
       "path": "skills/axiom-data/skills/icloud-drive-ref.md",
-      "sha256": "f7f63b248461f88b7785e18edfb1791b934b4787ec242ad6f270e450e61f259f",
-      "bytes": 12230
+      "sha256": "c98700b587e98c5ad6024e519498381bfb71a5983fb170bc39ab6daa4a6593b5",
+      "bytes": 12175
     },
     {
       "path": "skills/axiom-data/skills/realm-migration-ref.md",
-      "sha256": "018600c615a9f621f71f563c8750dc8f495e2cc6ecbf153a33052c66cae4b743",
-      "bytes": 22664
+      "sha256": "d5cecf3101972e26a5858a0e86d072fc9d22acee8a277a74cafe8122d637aca5",
+      "bytes": 22595
     },
     {
       "path": "skills/axiom-data/skills/sql-json-ref.md",
@@ -623,48 +623,48 @@
     },
     {
       "path": "skills/axiom-data/skills/sqlitedata-migration.md",
-      "sha256": "6953c2b8ac0f2c8e588e740506345627814febab58496291b5ec412b112ada4b",
-      "bytes": 8733
+      "sha256": "560146d9f3654803a12cea4d03b7f3d00290a91ecee776bc58881cc4aa6f0274",
+      "bytes": 8690
     },
     {
       "path": "skills/axiom-data/skills/sqlitedata-ref.md",
-      "sha256": "b487dfc49b34ce31a108e275042f5a26544f73a6891b4c03c7cbe0bf67e1c2b3",
-      "bytes": 32352
+      "sha256": "c1f0178a0ff4c4131d93dc1c7af37cea27615cbab99f64e35ba73004b29628e2",
+      "bytes": 32315
     },
     {
       "path": "skills/axiom-data/skills/sqlitedata.md",
-      "sha256": "00c7e8852622de0418520de2b65a4461ee31893afa621f3df34ab9818242efa7",
-      "bytes": 31531
+      "sha256": "0c2ad86c50f0c029e31cf9672891a8275b5bd94451b314d86cbd7622eefc43b2",
+      "bytes": 31494
     },
     {
       "path": "skills/axiom-data/skills/storage-diag.md",
-      "sha256": "15a892c680fcdcaad2cb41cd5b7417330fe71c9178fb14158a13650a79babd3e",
-      "bytes": 14494
+      "sha256": "03fbcf782c937bff10cc4ec1b1990a8d9cb9102f75083cc06d8189c0470889ee",
+      "bytes": 14432
     },
     {
       "path": "skills/axiom-data/skills/storage-management-ref.md",
-      "sha256": "32b5efeb6b5e9c6b998c22e2db88213340ec740a07be3e588000f9054fb3d40e",
-      "bytes": 18677
+      "sha256": "73146cc1ab24f02f18cb6a42a6785dcaee6da2bee06c1d4a7ad9ce73d5beba69",
+      "bytes": 18622
     },
     {
       "path": "skills/axiom-data/skills/storage.md",
-      "sha256": "74fa79516b1a89a6f89462b5ef67eab640510d886f36b293a5171035068bb9eb",
-      "bytes": 16963
+      "sha256": "b860aedff37d2518f6d56fbbced9069875aededfc02579ca1c05188a9e11fac7",
+      "bytes": 16907
     },
     {
       "path": "skills/axiom-data/skills/swift-sharing.md",
-      "sha256": "ca61cc980347ef5badb76340efde69cd2ae0d6a1495055cdeb17937fb7498eb7",
-      "bytes": 12159
+      "sha256": "44c92a619be8fa92d9345a1ffab9038a8f754aff739e59e666c78460a88e4bba",
+      "bytes": 12122
     },
     {
       "path": "skills/axiom-data/skills/swiftdata-migration-diag.md",
-      "sha256": "fa83a171b626700fa7a0351a509d39f6bbfe9e22a9c7a7144d2c7dde1d1bbb53",
-      "bytes": 19348
+      "sha256": "db5bc60f64fb4212b57714ec890a06173af7d64ad523abc03d2562a78e36844b",
+      "bytes": 19277
     },
     {
       "path": "skills/axiom-data/skills/swiftdata-migration.md",
-      "sha256": "661350dbe03d465cf57734878ebe92fd3935e18d728171eab67b533b9fd68746",
-      "bytes": 29509
+      "sha256": "1eeef72720c7db24d127d06c30077c3f17314d94d970425fa0432fb1dd5e82e1",
+      "bytes": 29486
     },
     {
       "path": "skills/axiom-data/skills/swiftdata.md",
@@ -673,43 +673,43 @@
     },
     {
       "path": "skills/axiom-design/SKILL.md",
-      "sha256": "9929a7b95c78525b2ab13fac998d953ff6bc9da31fd9f6b9d2ac1aa8667978a5",
-      "bytes": 10904
+      "sha256": "bc2ae3c1286a5163c8f3b38e0a5a5f6e7a3908cab8de8c371333cfb3e9c246fc",
+      "bytes": 11389
     },
     {
       "path": "skills/axiom-design/skills/app-composition.md",
-      "sha256": "ae02149fab21cce7d1aa9056169554207363a1a7f25d655538173a2a8850fba1",
-      "bytes": 46753
+      "sha256": "f02dedd491cb0fd6d8c12cc198a2ec18ab357e331e4ac6b8da0a5bbe7d0033e5",
+      "bytes": 47055
     },
     {
       "path": "skills/axiom-design/skills/hig-ref.md",
-      "sha256": "1fe982cf599d25a7081a7fab9668b0d12e935b2f794367287ee1986e3049af35",
-      "bytes": 39346
+      "sha256": "cf529906132acfe3949756dee27a9b40fc0378299383795095966852a0e810d4",
+      "bytes": 39205
     },
     {
       "path": "skills/axiom-design/skills/hig.md",
-      "sha256": "48fb2f2675e11cd642b43e96925a209e8d3d9ff53f1e8ac7d0c5e62d135f4757",
-      "bytes": 19669
+      "sha256": "22e0f861e19fe6594e8ee11169dc3ad1f013a188416293e9b32de8fe9232a2bb",
+      "bytes": 19527
     },
     {
       "path": "skills/axiom-design/skills/liquid-glass-ref.md",
-      "sha256": "5ee740e74128d146dbb0add59857b355af43dceaed77cf794a10d853c8a1a651",
-      "bytes": 29049
+      "sha256": "51fed0dde6849dbc45b3ff16c34519508f6cdcaa2a6331fae3b6166399279b0c",
+      "bytes": 29326
     },
     {
       "path": "skills/axiom-design/skills/liquid-glass.md",
-      "sha256": "c229e54f443be0146791261812b8d751480974f577d9635307a29634999c0939",
-      "bytes": 23000
+      "sha256": "60414732687aa89e4cf34184f0878ee9e219986e910bf9dcf5ad44b102874c6c",
+      "bytes": 24364
     },
     {
       "path": "skills/axiom-design/skills/sf-symbols-ref.md",
-      "sha256": "10570fb52e5af6e1c2f0fe51a30ec9bc100f7d9e88dbd0e6c0b6053bd1bac190",
-      "bytes": 32361
+      "sha256": "9b1e2b74ca0d9e150ae2ef102857c220204737bccd5e2b59908e5dd725c04b39",
+      "bytes": 32281
     },
     {
       "path": "skills/axiom-design/skills/sf-symbols.md",
-      "sha256": "adec3a5f07cf1bbc31aa2eba50dd225f413d7cb17692fbb823a0fc148856f1a1",
-      "bytes": 23591
+      "sha256": "83f3305de5e550fd652d116f01eed7074be6f4250acb88472f127cf9f600737d",
+      "bytes": 23511
     },
     {
       "path": "skills/axiom-design/skills/typography-ref.md",
@@ -743,8 +743,8 @@
     },
     {
       "path": "skills/axiom-graphics/SKILL.md",
-      "sha256": "b96806de209838a02de2c9eaba06ca3ef70bc24c5ae1bb848f3ddbefa57afeaf",
-      "bytes": 12015
+      "sha256": "ef1d1da0d81398f1df812af39aa7bafaa6c400966076afa6eeb07bfdfd583c69",
+      "bytes": 12004
     },
     {
       "path": "skills/axiom-graphics/skills/display-performance.md",
@@ -758,18 +758,18 @@
     },
     {
       "path": "skills/axiom-graphics/skills/metal-migration-diag.md",
-      "sha256": "ee6acead5fe8547d9a9765238688fa997c83d2bc4e10fe517628e7c777b58b71",
-      "bytes": 20352
+      "sha256": "0ceb0d0f897165370430f3fabb508f94b7a62ce64afff7317c0f875adeb123ce",
+      "bytes": 20271
     },
     {
       "path": "skills/axiom-graphics/skills/metal-migration-ref.md",
-      "sha256": "05f70fef3870670dd9ae66465d76d2c19f84308b57307e1596fdbba72b81c3dc",
-      "bytes": 25398
+      "sha256": "8bd6456ff7950e0c3c49ecaedf05a5c0d78e7a914317579dbde896f5db3cd6b7",
+      "bytes": 27208
     },
     {
       "path": "skills/axiom-graphics/skills/metal-migration.md",
-      "sha256": "431f5e2d89dbe50214ec0a19a52d6366c3045a8ffd16bee516c21c28c128fd58",
-      "bytes": 17217
+      "sha256": "f25193cba744fc69bd69e724e98b8718a4dc2d16f84d6d52ce5f109fd3e141b1",
+      "bytes": 17134
     },
     {
       "path": "skills/axiom-graphics/skills/realitykit-diag.md",
@@ -778,8 +778,8 @@
     },
     {
       "path": "skills/axiom-graphics/skills/realitykit-ref.md",
-      "sha256": "4cb20d598486967c2b8479f05d1b5552b7fcdfe700ae3e968595a015784a9cc4",
-      "bytes": 42167
+      "sha256": "5d647bfbef03418a340937be8df2db284d3a8c10b408a08e03c2e904e952fb93",
+      "bytes": 41959
     },
     {
       "path": "skills/axiom-graphics/skills/realitykit.md",
@@ -823,8 +823,8 @@
     },
     {
       "path": "skills/axiom-health/skills/fundamentals.md",
-      "sha256": "14dd9cbd5aa9a04e00ba3e7399dbe63a30d70f0cdc51b78a5619b0c9543583ca",
-      "bytes": 11572
+      "sha256": "e189aa28e676397f4bb4c8e599b10047da006546bcdf6be659c8518d1830214f",
+      "bytes": 11881
     },
     {
       "path": "skills/axiom-health/skills/queries.md",
@@ -838,8 +838,8 @@
     },
     {
       "path": "skills/axiom-health/skills/wellbeing-and-medications.md",
-      "sha256": "5b4859293fe6c4b0aae6c4f5e91ae54639280546cbd0f33a513a32992b728765",
-      "bytes": 13318
+      "sha256": "9c387f9d39aaebe296cdf7d39e0b4f41d20ebfa8aee86ac5bdde737f51d7c30c",
+      "bytes": 13276
     },
     {
       "path": "skills/axiom-health/skills/workoutkit.md",
@@ -888,28 +888,28 @@
     },
     {
       "path": "skills/axiom-integration/skills/background-assets-ref.md",
-      "sha256": "42d6832cb92ddd0683b031df7df634514479cac50df682359dab01f4da154463",
-      "bytes": 39624
+      "sha256": "0af4f94ab65c480cddaefbaaf687c2a8e3b49078a0e35e45c2122a8b708d54ac",
+      "bytes": 45854
     },
     {
       "path": "skills/axiom-integration/skills/background-assets.md",
-      "sha256": "28e982e2647220a201315364006cc980562048ca89b03021b421cc20bdc08ed2",
-      "bytes": 26055
+      "sha256": "350a98c3a254adf2e8e41f8919c1bd893720dde5123e75b365fae02a4e0b7b4c",
+      "bytes": 26326
     },
     {
       "path": "skills/axiom-integration/skills/background-processing-diag.md",
-      "sha256": "b34ca735de1df2ac5ea7785c1388815b35aa85762c29bc13be234312adbecd95",
-      "bytes": 15383
+      "sha256": "c1ce5df28842e2605e3b95886f5e744a030d5c37b8f8d31632a8a4ea30a9de0b",
+      "bytes": 15354
     },
     {
       "path": "skills/axiom-integration/skills/background-processing-ref.md",
-      "sha256": "763bcec44a452c67634d518bb88befe8042567fa64f703392fda0c082ec1a842",
-      "bytes": 20804
+      "sha256": "6c60c803c4ebf070bb879f0ceea6b78a260eba571651e565d8b16454e97d5b24",
+      "bytes": 20775
     },
     {
       "path": "skills/axiom-integration/skills/background-processing.md",
-      "sha256": "b61e9554980f3b62e2179a4652c31cf8091df3c818b3cf8c2d8ed7139cfc7254",
-      "bytes": 33151
+      "sha256": "c828753f5ba75e8fdab66c3204787ad76107904fe4927e12f05cc7d8fcaf9943",
+      "bytes": 33068
     },
     {
       "path": "skills/axiom-integration/skills/callkit-livecommunicationkit-ref.md",
@@ -948,8 +948,8 @@
     },
     {
       "path": "skills/axiom-integration/skills/extensions-widgets-ref.md",
-      "sha256": "98081ddfe3d41e506509e6c31d040438a5627bfe72c1a2dcd45afd00b123adcf",
-      "bytes": 37193
+      "sha256": "50522886dc1899e7a584b206ca3d3f577082c942188cb28fa30fa76841d03084",
+      "bytes": 37173
     },
     {
       "path": "skills/axiom-integration/skills/extensions-widgets.md",
@@ -1018,8 +1018,8 @@
     },
     {
       "path": "skills/axiom-integration/skills/storekit-ref.md",
-      "sha256": "16ed62ccd1351d78cd20d0b384dc103bdca6fa121a3912425c65646a5635555a",
-      "bytes": 51193
+      "sha256": "ad02dccf184f0842ba918a9c53b03ebc30a1c0360b989dd311dfbbeaeca4692f",
+      "bytes": 51208
     },
     {
       "path": "skills/axiom-integration/skills/timer-patterns-ref.md",
@@ -1073,8 +1073,8 @@
     },
     {
       "path": "skills/axiom-macos/SKILL.md",
-      "sha256": "a7c2a92517cce7066d64cd0708545295586880f05e3830fe1b23988bc1730681",
-      "bytes": 4724
+      "sha256": "1ee8f5ba4ff0ed60162f2e4413c5c0f74b04e37451e568ea4d7b2337fc30f81a",
+      "bytes": 4895
     },
     {
       "path": "skills/axiom-macos/skills/appkit-interop.md",
@@ -1103,18 +1103,18 @@
     },
     {
       "path": "skills/axiom-macos/skills/sandbox-and-file-access.md",
-      "sha256": "21b448431f5086f928bc231a2b35e0ea43757d4fd12532fd4d5ebfca0d694296",
-      "bytes": 19499
+      "sha256": "f560cea2d1a6e42875a282a39e72f46e3fda862e654825ba19bcb133846c7d98",
+      "bytes": 20152
     },
     {
       "path": "skills/axiom-macos/skills/screencapturekit-ref.md",
-      "sha256": "b2af48e80fbbe4209fa20825c31d450f4840468ec9139d5b169705fc6760f731",
-      "bytes": 8108
+      "sha256": "16760cdef6f6fbc6aa10a74f30fbc235e4e829f4b3e3c6d3179db5326772a0cd",
+      "bytes": 14790
     },
     {
       "path": "skills/axiom-macos/skills/screencapturekit.md",
-      "sha256": "5e75e8b85c4af282569b509441e5f53cacb6b60bcc3344b67002a693e9826707",
-      "bytes": 10342
+      "sha256": "8ac26cb10af1c6b8b910b9bc0e03a604278064242749307773d67cd2f992fb1d",
+      "bytes": 11004
     },
     {
       "path": "skills/axiom-macos/skills/settings.md",
@@ -1133,13 +1133,13 @@
     },
     {
       "path": "skills/axiom-media/SKILL.md",
-      "sha256": "305794ff464a1716a46a3307ac4a2e40c6e02c97a1b397d12ee21435fdd4f60a",
-      "bytes": 16127
+      "sha256": "8606362667bf07662fcd832fa1df09646078e1e51165f0d5bbe3b8b1567a728f",
+      "bytes": 16951
     },
     {
       "path": "skills/axiom-media/skills/avfoundation-ref.md",
-      "sha256": "7cf1e48008b223bf439d20189cbd15bf68c6e1b4dadb11a40f79ee45d5c67fab",
-      "bytes": 15945
+      "sha256": "58db62345162aba46495d134732d729abe45dd3a62fdfca2875dda855b38743b",
+      "bytes": 23701
     },
     {
       "path": "skills/axiom-media/skills/avfoundation-video-ref.md",
@@ -1153,13 +1153,13 @@
     },
     {
       "path": "skills/axiom-media/skills/camera-capture-ref.md",
-      "sha256": "21158acb5ccce6f2d4c3e5d244e1982aeeef0caf60ab1ab3a5d69e6fe8f6ab07",
-      "bytes": 34904
+      "sha256": "5fbb349f326fb1027a8c9eb9eb22c76b8478152022c9bd86e24676d67f8b8d37",
+      "bytes": 48689
     },
     {
       "path": "skills/axiom-media/skills/camera-capture.md",
-      "sha256": "c44a6185c1c00c99410d62c37429c9ee44c11d4a16a1b743bd48e29698453b20",
-      "bytes": 34565
+      "sha256": "bd84a77515bf52d8159e4d715c82ec6f25b36610a6fdfd50c8b4b4f60d04ca37",
+      "bytes": 39357
     },
     {
       "path": "skills/axiom-media/skills/carplay-hig.md",
@@ -1213,13 +1213,13 @@
     },
     {
       "path": "skills/axiom-media/skills/now-playing.md",
-      "sha256": "75111931d624dae20c0ec09d1afb62ff12bb215bf2981caab6ab39b5c867ad2f",
-      "bytes": 52593
+      "sha256": "9e0dfc59fdfcfce7396237164d4c05d9467de47c14fb4294dc3988188d3d0986",
+      "bytes": 52403
     },
     {
       "path": "skills/axiom-media/skills/photo-library-ref.md",
-      "sha256": "bb07221116c0a4c062d57976e1d848a5bcfda212ea18021d6c21ee45a482dafc",
-      "bytes": 26359
+      "sha256": "223f0d4e40eb0607393c3e4ce9ada830fb3a0b13c1395dbf8dbf4ccb6e127163",
+      "bytes": 38122
     },
     {
       "path": "skills/axiom-media/skills/photo-library.md",
@@ -1228,8 +1228,8 @@
     },
     {
       "path": "skills/axiom-media/skills/screen-capture.md",
-      "sha256": "0f353b3658f36d59a2b469111805010a5b9c96b6063fb79ef854c0fd91a3af32",
-      "bytes": 6147
+      "sha256": "ac62a1cc78a66abb904b479d33c2a3b136094cc652cb1c3422c5f8d92f6f6a6e",
+      "bytes": 6471
     },
     {
       "path": "skills/axiom-media/skills/shareplay-playback.md",
@@ -1248,8 +1248,8 @@
     },
     {
       "path": "skills/axiom-media/skills/system-media-routing.md",
-      "sha256": "fac0298bbfa0e4f49883a13a3b59726c13b7bca8f4dc7f2b67657df1f62e2682",
-      "bytes": 20598
+      "sha256": "3efa46a9b4b5b9ad18ab4158e3a977266ce907d3667bdf4d5f547fb33890e7e3",
+      "bytes": 20556
     },
     {
       "path": "skills/axiom-networking/SKILL.md",
@@ -1258,18 +1258,18 @@
     },
     {
       "path": "skills/axiom-networking/skills/network-framework-ref.md",
-      "sha256": "57093b8522c63c487032ce4aee46a3c9cac27ea61d88acdf5d69645ef72295a9",
-      "bytes": 45862
+      "sha256": "386a99aeea011df4ccc4fbc4c467f1478d69a9d45a1713d14d31761d410a7f3f",
+      "bytes": 45767
     },
     {
       "path": "skills/axiom-networking/skills/networking-diag.md",
-      "sha256": "483a230240f94f42b4951f46fdfdfca17d77da47b72589a6ee64f25f6b926d7e",
-      "bytes": 45246
+      "sha256": "5cdacae6871b8b833915d533c7c264ab67ff9daa2a98b7481d7e7f4a0af773c6",
+      "bytes": 45080
     },
     {
       "path": "skills/axiom-networking/skills/networking-discipline.md",
-      "sha256": "2dba32a803a1fbfefded9442182f98bb7a790ecc59fe42f5516ac92cd530204a",
-      "bytes": 38841
+      "sha256": "3fa53d4fb085c8dc2fed83b23faf53a89ff3f80713abcfe0478268c563ce2f6c",
+      "bytes": 38660
     },
     {
       "path": "skills/axiom-networking/skills/networking-legacy.md",
@@ -1358,13 +1358,13 @@
     },
     {
       "path": "skills/axiom-performance/skills/energy-diag.md",
-      "sha256": "1a6cc57c225ad3f1a4bc828ad4e8e9af51eb7dcc3c348ad11f4c00b6f341932d",
-      "bytes": 15407
+      "sha256": "a6d70350c9453801b7b9a3fbcbd8b40d46b3023a6c0b03eac9adf6fa7963f750",
+      "bytes": 15373
     },
     {
       "path": "skills/axiom-performance/skills/energy-ref.md",
-      "sha256": "1a2279f6631d13eb50027be86361b17b725b84ae9f34e5134006a28924cdef38",
-      "bytes": 28921
+      "sha256": "d6900574c787b75615ce97cc954bea0daa2d96de2233088719526eb782142330",
+      "bytes": 28887
     },
     {
       "path": "skills/axiom-performance/skills/energy.md",
@@ -1383,18 +1383,18 @@
     },
     {
       "path": "skills/axiom-performance/skills/metrickit-ref.md",
-      "sha256": "de85d96a8c2ef481258452bc1ecc9d24696721c43487173dacb90d3106b285c8",
-      "bytes": 37073
+      "sha256": "be4511a368b9018d3b99f2455ae61022a6c1ba811f4ed9acacb358b2121882f0",
+      "bytes": 37923
     },
     {
       "path": "skills/axiom-performance/skills/objc-block-retain-cycles.md",
-      "sha256": "ecdbe01f10873c328b0f4a83eacf02a935f293dcdb1aa83194f41a37d945f87f",
-      "bytes": 22971
+      "sha256": "3290e13e3fad7cd86471b98d62b5b2d2e0dd127de99f827fdf8957d953932816",
+      "bytes": 22895
     },
     {
       "path": "skills/axiom-performance/skills/performance-profiling.md",
-      "sha256": "326dec644c2b1d6811ba08ea37e77fdb072fd3bdb07e65fce7016e93fd28642c",
-      "bytes": 38923
+      "sha256": "201bbc75c9f653f01af8ae600be7ff3f06f7b2c01964a3c90b5d71e05f1817dd",
+      "bytes": 38886
     },
     {
       "path": "skills/axiom-performance/skills/swift-performance.md",
@@ -1453,8 +1453,8 @@
     },
     {
       "path": "skills/axiom-security/skills/file-protection-ref.md",
-      "sha256": "40eefb2cda76873b1d3d80e4b294a79ecc46649243f748e78461c4cef73e35b9",
-      "bytes": 15559
+      "sha256": "459bfa81e268e8e85800755795f9a73a41f3eb9a2aed470f9dd28e506dceae7a",
+      "bytes": 15504
     },
     {
       "path": "skills/axiom-security/skills/keychain-diag.md",
@@ -1548,8 +1548,8 @@
     },
     {
       "path": "skills/axiom-swift/skills/ownership-conventions.md",
-      "sha256": "f28e4373591c778b006f086b9a5cd064cd55c0786c638947ee48471484441f58",
-      "bytes": 18397
+      "sha256": "eb0fe8af26bac487b6e4f5fed3b61b902706bad958a8240165e8f70c104e08db",
+      "bytes": 18383
     },
     {
       "path": "skills/axiom-swift/skills/swift-modern.md",
@@ -1568,13 +1568,13 @@
     },
     {
       "path": "skills/axiom-swiftui/SKILL.md",
-      "sha256": "6394b6676c654cfbd795223db1797fe40ff33b13b670ab7b79f3e4b7a2e23f7c",
-      "bytes": 10088
+      "sha256": "a0425326a83a8f851a9821fc8a88244555b278a17c8eb771283063c2e8cb8647",
+      "bytes": 10748
     },
     {
       "path": "skills/axiom-swiftui/skills/26-ref.md",
-      "sha256": "3dd10abc5371c876db8b5648f4fbea2402594574091a7cca2499bc784f2e92b3",
-      "bytes": 51771
+      "sha256": "6674e807bc88c5e74f10706a9063d26e2c626080697ce0877d3f84aa3bf4258a",
+      "bytes": 51982
     },
     {
       "path": "skills/axiom-swiftui/skills/animation-ref.md",
@@ -1583,8 +1583,8 @@
     },
     {
       "path": "skills/axiom-swiftui/skills/architecture.md",
-      "sha256": "3c817f25ab556c41e6e2923900bbfd4b1961bdb5697cb001a570936977bc8e99",
-      "bytes": 65114
+      "sha256": "1efe7483bb8c7e130a68bbe087d6b2eaea143a30dc2d8cc5f52550e2127cffc8",
+      "bytes": 64992
     },
     {
       "path": "skills/axiom-swiftui/skills/containers-ref.md",
@@ -1612,34 +1612,39 @@
       "bytes": 9706
     },
     {
+      "path": "skills/axiom-swiftui/skills/iphone-duo.md",
+      "sha256": "57e151e4d610b5c5881ca7e5c25f8d2c2abc9f6a20229168d259b50705d71aba",
+      "bytes": 26936
+    },
+    {
       "path": "skills/axiom-swiftui/skills/layout-ref.md",
       "sha256": "897d5acb9af2e2d21f9785cd496b73d807d7e1e5fadfda07c29e04c3b178634c",
       "bytes": 37282
     },
     {
       "path": "skills/axiom-swiftui/skills/layout.md",
-      "sha256": "8b02208c4d187fdcc8bd620a98003aadd8e55812c15eb0d12affce77253f802b",
-      "bytes": 17729
+      "sha256": "ab067808a14a91aedbe7d90dbff731e663e114c9b1d5ad024e3f9361715d3eb1",
+      "bytes": 18172
     },
     {
       "path": "skills/axiom-swiftui/skills/nav-diag.md",
-      "sha256": "203a0ae48eaaf9b60f98514ff754bdee517c6b5335b7caf9d3aeae2412930a69",
-      "bytes": 41915
+      "sha256": "1f88ff4f6f6834529efae5f605be57bb0a0b4a6bcf8a221dfc9613eae7278b30",
+      "bytes": 41767
     },
     {
       "path": "skills/axiom-swiftui/skills/nav-ref.md",
-      "sha256": "80e4f358a046f55fd2385d254366df3fb8b123d3ab1bae9d898f15966df2a783",
-      "bytes": 34890
+      "sha256": "ae27f3a361ea71125787a32fec1eb09393cd594d1a7d3a8e5a93c9bfe7341915",
+      "bytes": 34759
     },
     {
       "path": "skills/axiom-swiftui/skills/nav.md",
-      "sha256": "fb495c7ce3ae0108f2420eee768aeffca6d475474586a84157599dd83d657239",
-      "bytes": 24326
+      "sha256": "6266fa82a341bb601849e39e86d2a2041b6a92075c9cd4246fa51e9761069ad9",
+      "bytes": 24265
     },
     {
       "path": "skills/axiom-swiftui/skills/presentations.md",
-      "sha256": "f3a2ff7b49e388cddcdc9c448a596ac331ce604af03898e7d0e1247aee114fc5",
-      "bytes": 5682
+      "sha256": "e6974e6bfdafca8593da62b5ac66256b6a9bd43b8e95b3827fa5d2089c4a99b7",
+      "bytes": 5988
     },
     {
       "path": "skills/axiom-swiftui/skills/previews-ref.md",
@@ -1653,28 +1658,28 @@
     },
     {
       "path": "skills/axiom-swiftui/skills/search-ref.md",
-      "sha256": "8239fef6e41a80a391b2f9e99778fa31743678280d60c0db0772f5f4906ab013",
-      "bytes": 19918
+      "sha256": "3fb31aedba51a69495ca91d7b7aa4a078a9803ab449be076cf9321231c2f3306",
+      "bytes": 19829
     },
     {
       "path": "skills/axiom-swiftui/skills/swiftui-performance.md",
-      "sha256": "44a00e3c6e713ac64d0bf37aaa4cf6984c6634e8fc684da1d974efe3644a7dc1",
-      "bytes": 36042
+      "sha256": "806c166a0524cfd8ee86db86a70309c87b63decb19f05d3efb4276fa3ade7ca9",
+      "bytes": 35981
     },
     {
       "path": "skills/axiom-swiftui/skills/toolbars.md",
-      "sha256": "6dc3087280b87780d705e6415d901fbdac9086f2d9f93094c010fbc8a8d1609f",
-      "bytes": 28503
+      "sha256": "4b7af155c3ecfb83b6b18eb302afd310450584ba745aacdb38daa5df6ac8a613",
+      "bytes": 34182
     },
     {
       "path": "skills/axiom-testing/SKILL.md",
-      "sha256": "dc729b40a7e9bcd28fb787668eeb2d2c76be676e558ce0c3c0cce130d01954d7",
-      "bytes": 8914
+      "sha256": "1deb0b989ae3840b5bc5394ea386fe547038fcc8718782ecba6c8e56720f274b",
+      "bytes": 9024
     },
     {
       "path": "skills/axiom-testing/skills/swift-testing.md",
-      "sha256": "aefecab4e655932f13081dde7bdcf0ee5591dd7bc6457d22d5f799836600dcad",
-      "bytes": 25147
+      "sha256": "0c161d1a4617f389c7865c1c3b3049f09c0ec33fc93eb5fa3ccc89817d724cfd",
+      "bytes": 25104
     },
     {
       "path": "skills/axiom-testing/skills/testing-async.md",
@@ -1688,8 +1693,8 @@
     },
     {
       "path": "skills/axiom-testing/skills/ui-testing.md",
-      "sha256": "dbf2dd8ec146a37b349b882f5939741207d528382adfbda4734175be8c5c5f94",
-      "bytes": 50016
+      "sha256": "730e8d501a6ef3ef2f81bcbed8852f77abc41e74317fe85b3daf38444fe43713",
+      "bytes": 51684
     },
     {
       "path": "skills/axiom-testing/skills/xctest-automation.md",
@@ -1733,18 +1738,18 @@
     },
     {
       "path": "skills/axiom-uikit/SKILL.md",
-      "sha256": "5b17118b2b5629a9df6a939ec007740b141656c8c04951d6020a8c65e9a7681d",
-      "bytes": 9218
+      "sha256": "baf4c1672932e1a755c7b0e73cf37495850cd77e10661eaf66ec57565bc226f8",
+      "bytes": 9843
     },
     {
       "path": "skills/axiom-uikit/skills/adaptive-layout.md",
-      "sha256": "b81848287efd94de12313034771c53f20ce0fa1d566bbb717090d358977be99e",
-      "bytes": 5772
+      "sha256": "9586ef3b15a496773e6ea3454c2271a4e9d4d223edde08442ac6df420a2b8818",
+      "bytes": 6039
     },
     {
       "path": "skills/axiom-uikit/skills/auto-layout-debugging.md",
-      "sha256": "c840759b8870336c4e098552aa0213bb40511667ef5875ba859b8faa7142e4cf",
-      "bytes": 19007
+      "sha256": "eed27e3f0159b9cd1fa88fc2ff29e5329077bf697ec1a217010e71f57fa65ff2",
+      "bytes": 18984
     },
     {
       "path": "skills/axiom-uikit/skills/combine-patterns.md",
@@ -1763,13 +1768,13 @@
     },
     {
       "path": "skills/axiom-uikit/skills/textkit-ref.md",
-      "sha256": "f8367d8b7161ee570e363a9d705ce5318414631cedaebb74bb443e6a0e431521",
-      "bytes": 29887
+      "sha256": "6de652250700a47116bfc75a130804629678e18cf673261b671b2a947af68de7",
+      "bytes": 34205
     },
     {
       "path": "skills/axiom-uikit/skills/uikit-animation-debugging.md",
-      "sha256": "4989c2ca6d4f2576e3df1f85488eff3611f3136429a446abe53e38a171ad2e98",
-      "bytes": 18171
+      "sha256": "a11069698f3556ceae52cb71fd25ff488228dbbb30ca816b537c4084561d776b",
+      "bytes": 18095
     },
     {
       "path": "skills/axiom-uikit/skills/uikit-bridging.md",
@@ -1778,8 +1783,8 @@
     },
     {
       "path": "skills/axiom-uikit/skills/uikit-modernization.md",
-      "sha256": "80d8dcfc34fad0c36dfce681309e0482f03dbc4ddfe2a8c771f7867f4d971bf0",
-      "bytes": 18435
+      "sha256": "c060f73dc5a4cb6e4cc627fe85226a25a26d4451614b9b2bf8a8b1248c5f1711",
+      "bytes": 26344
     },
     {
       "path": "skills/axiom-vision/SKILL.md",
@@ -1848,8 +1853,8 @@
     },
     {
       "path": "skills/axiom-xcode-mcp/SKILL.md",
-      "sha256": "55672d39296a045ea9f005f329f83fcad0741721ede953775f8dbda57f66b7f9",
-      "bytes": 8510
+      "sha256": "468ae94ab6c6822164769646e386453744037b5c71cc4e89f885b2c2700b87dc",
+      "bytes": 8513
     },
     {
       "path": "skills/axiom-xcode-mcp/skills/axe-ref.md",
@@ -1858,23 +1863,23 @@
     },
     {
       "path": "skills/axiom-xcode-mcp/skills/xcode-mcp-ref.md",
-      "sha256": "00565592c72121b3d52aeca92c9cf0a015753e596530e9baa02a7f80e7c94723",
-      "bytes": 32094
+      "sha256": "3ef381c1936fe2071def5c6efe9f98491321b4167e737da2a7c80435a90b3b69",
+      "bytes": 32262
     },
     {
       "path": "skills/axiom-xcode-mcp/skills/xcode-mcp-setup.md",
-      "sha256": "680deac8ab6a6dd60bdbe9857656f2386a60500c6b152dd80a73296019c98e55",
-      "bytes": 16596
+      "sha256": "ce88b8549cdde13f9112334f00a07bceb7d50210754f0f5e4149202563234660",
+      "bytes": 16649
     },
     {
       "path": "skills/axiom-xcode-mcp/skills/xcode-mcp-tools.md",
-      "sha256": "13788b3cff8382acb251bbe6659f215f9238f887edf9fc536cf2678210385933",
-      "bytes": 13678
+      "sha256": "51658752a0ac6b2a5885345b7d0439b4187c0297c8b4f92f578a1d46dfbf3a11",
+      "bytes": 13931
     }
   ],
   "totals": {
-    "files": 374,
-    "bytes": 7237822
+    "files": 375,
+    "bytes": 7361762
   },
   "excludedMirrors": 30,
   "classes": {

@@ -10,6 +10,7 @@ Use when:
 - Building a customizable toolbar (user can rearrange items)
 - Setting toolbar visibility, background, or color scheme
 - Adopting iOS 26+ `ToolbarSpacer` for visual breaks
+- Adding a navigation subtitle, or custom views in the navigation bar's title and subtitle areas (iOS 26+)
 - Migrating from deprecated `.navigationBarLeading` / `.navigationBarTrailing`
 - Debugging missing or misplaced toolbar items
 - Requesting code review of toolbar implementation before shipping
@@ -46,7 +47,7 @@ Use when:
 | Toolbar items don't appear | `.toolbar` on a View not inside NavigationStack/SplitView | Move `.toolbar` to the navigation container's content, or wrap in `NavigationStack` |
 | Items appear in wrong order on iPad | Used `.navigationBarTrailing` (deprecated alias) | Use `.topBarTrailing` |
 | Customization sheet has nothing to customize | Used `.toolbar { }` instead of `.toolbar(id:)` | Switch to `.toolbar(id:)` and give each `ToolbarItem` an `id:` |
-| Spacer between items disappears when toolbar overflows | Used `Spacer()` instead of `ToolbarSpacer` | Use `ToolbarSpacer(.fixed)` or `ToolbarSpacer(.flexible)` (iOS 26+) |
+| "…requires that 'Spacer' conform to 'ToolbarContent'" compile error | `Spacer()` placed between separate `ToolbarItem`s | Use `ToolbarSpacer(.fixed)` or `ToolbarSpacer(.flexible)` (iOS 26+); before 26, put `Spacer()` inside a `ToolbarItemGroup` |
 | Two `.primaryAction` items but only one shows | iOS HIG: one primary action per surface | Demote one to `.secondaryAction` or `.topBarTrailing` |
 | Toolbar items flicker when state changes | Conditional `if` inside `.toolbar` rebuilds the whole toolbar | Use `.disabled()` / `.opacity()` modifiers on stable items instead |
 | Bottom bar doesn't appear on iOS | `.bottomBar` requires `.toolbar(.visible, for: .bottomBar)` or items present | Verify visibility AND content; bottom bar hides when empty |
@@ -224,7 +225,7 @@ Use `ToolbarItemGroup` when 2+ items share placement AND should be treated as a 
 }
 ```
 
-**Why not regular Spacer** A `Spacer()` between separate `ToolbarItem`s is ignored — toolbar layout doesn't honor SwiftUI flex spacing the way an HStack does. `ToolbarSpacer` is the toolbar-aware equivalent and is also customizable (users can add/remove instances).
+**Why not regular Spacer** A `Spacer()` between separate `ToolbarItem`s doesn't compile: `Spacer` is a `View`, not `ToolbarContent`, and toolbar layout isn't an HStack. `ToolbarSpacer` is the toolbar-aware equivalent and is also customizable (users can add/remove instances).
 
 **Pre-iOS 26 fallback** Group items into `ToolbarItemGroup` and use regular `Spacer()` inside the group.
 
@@ -407,6 +408,8 @@ iOS and visionOS only; on those, "top bar" is the navigation bar.
 
 **Overflowed items need names** An item that collapses into the overflow menu renders as a menu row. Build items with `Label` (or set `accessibilityLabel`) — an icon-only `Image` button that was legible in the bar becomes a nameless menu row, and VoiceOver falls back to the SF Symbol's derived name at best. Any item that *can* overflow must carry text.
 
+**iPhone Duo** The same priorities govern the vertical bar along the side of iPhone Duo, which overflows most on the outer display in landscape — see skills/iphone-duo.md (Vertical Bars).
+
 ---
 
 ## Pattern 12: Bar Minimization on Scroll (OS27)
@@ -466,6 +469,71 @@ var body: some View {
 
 ---
 
+## Pattern 14: Navigation Subtitles (iOS 26+)
+
+A subtitle carries short status or context for the screen: an unread count, the active filter, when data last refreshed. `.navigationSubtitle(_:)` is the text path; four toolbar placements swap in your own view for the title or subtitle.
+
+```swift
+NavigationStack {
+    MailboxList()
+        .navigationTitle("Inbox")
+        .navigationSubtitle("\(unreadCount) Unread")
+        .toolbar {
+            ToolbarItem(placement: .largeSubtitle) {
+                Button("Filter: \(filter.name)") { showFilters = true }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+}
+```
+
+| Placement | Shows while the title is | Takes precedence over |
+|---|---|---|
+| `.title` | inline | `navigationTitle` |
+| `.subtitle` | inline | `navigationSubtitle` |
+| `.largeTitle` | large (out-of-line) | `navigationTitle` |
+| `.largeSubtitle` | large (out-of-line) | `navigationSubtitle` |
+
+`.title` dates from iOS 14 and resolves to `.principal` before iOS 26; the other three are iOS 26.
+
+Verified on iPhone, iOS 26.5 and 27.0:
+- **Collapse** — `navigationSubtitle` text follows the title into the inline bar. `.largeSubtitle` content disappears on collapse and the inline bar shows `navigationSubtitle` (or a `.subtitle` item). Put status that must survive scrolling in `navigationSubtitle`; use `.largeSubtitle` for controls that belong at the top of the content.
+- **Alignment** — `.largeSubtitle` content is centered by default, unlike the leading system subtitle under a large title. Add `.frame(maxWidth: .infinity, alignment: .leading)`.
+- **Styling** — `.subtitle` and `.largeSubtitle` content is not restyled to match the system subtitle; plain `Text` renders at body size. Set `.font` and `.foregroundStyle` yourself.
+
+Rules:
+- Keep `.navigationTitle` set when a `.title` or `.largeTitle` item replaces it; the system uses it as the accessibility label when navigating back.
+- On iPadOS, sidebar and inspector titles default to inline in regular width, so `.largeSubtitle` content does not appear there. Use `.subtitle`, or request `.toolbarTitleDisplayMode(.large)`.
+- The four placements are iOS, iPadOS, and Mac Catalyst only. `navigationSubtitle` is iOS 26 on iPhone/iPad, Mac Catalyst 14, and macOS 11 (axiom-macos (skills/windows.md)); neither exists on tvOS, watchOS, or visionOS.
+- Subtitles need the new design: nothing renders before iOS 26 or in the compatibility mode `UIDesignRequiresCompatibility` requests. The key applies on iOS 26.x, and on iOS 27 only for apps still built with the 26 SDK (axiom-design (skills/liquid-glass.md)). A 27-SDK app that keeps the key uses `navigationSubtitle` only under `#available(iOS 27, *)` and the fallback on 26.x; a 26-SDK app with the key uses the fallback on every OS. The fallback is a `.principal` stack:
+
+```swift
+extension View {
+    @ViewBuilder
+    func inboxTitle(unread: Int) -> some View {
+        if #available(iOS 26, *) {
+            navigationTitle("Inbox")
+                .navigationSubtitle("\(unread) Unread")
+        } else {
+            navigationTitle("Inbox")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .principal) {
+                        VStack {
+                            Text("Inbox").font(.headline)
+                            Text("\(unread) Unread").font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                }
+        }
+    }
+}
+```
+
+UIKit peers (`UINavigationItem.subtitle`, `largeSubtitleView`, and their appearance gotchas) are in axiom-uikit (skills/uikit-modernization.md).
+
+---
+
 ## ToolbarItemPlacement Reference
 
 Use this table to pick the right placement. When in doubt, prefer semantic placements (`.primaryAction`, `.confirmationAction`) over positional ones (`.topBarTrailing`) — semantic placements adapt across platforms.
@@ -483,7 +551,11 @@ Use this table to pick the right placement. When in doubt, prefer semantic place
 | `.topBarTrailing` | top-trailing | top-trailing | trailing | Secondary actions when not using `.primaryAction` |
 | `.topBarPinnedTrailing` (iOS27/visionOS27) | top-trailing, pinned | top-trailing, pinned | n/a | The one critical trailing action that must resist overflow — see Pattern 11 |
 | `.bottomBar` | bottom bar | bottom bar | n/a | iOS-style action bars (3+ peer actions) |
-| `.principal` | center of nav bar | center | center | Segmented controls, custom titles |
+| `.principal` | center of nav bar | center | center | Segmented controls; for a custom title prefer `.title` |
+| `.title` | inline title area | inline title area | n/a | Custom inline title view; resolves to `.principal` before iOS 26 — Pattern 14 |
+| `.largeTitle` | large title area | large title area | n/a | Custom large-title view, shown only while the title is large (iOS 26) — Pattern 14 |
+| `.largeSubtitle` | under the large title | under the large title | n/a | A control or rich status under the large title; hidden once inline (iOS 26) — Pattern 14 |
+| `.subtitle` | inline subtitle | inline subtitle | n/a | Custom inline subtitle view (iOS 26) — Pattern 14 |
 | `.status` | n/a | n/a | status area | macOS status info (sync indicators, etc.) |
 | `.keyboard` | above keyboard | above keyboard | n/a | Input accessory items (API is macOS 12+, but no software keyboard there) |
 | `.bottomOrnament` | n/a | n/a | n/a (visionOS) | visionOS bottom ornament |
@@ -553,12 +625,12 @@ struct DetailView: View {
 ```swift
 .toolbar {
     ToolbarItem { LeftButton() }
-    Spacer()  // Ignored — toolbar layout doesn't honor this
+    Spacer()  // error: … requires that 'Spacer' conform to 'ToolbarContent'
     ToolbarItem { RightButton() }
 }
 ```
 
-**Why** Toolbar layout is not an HStack. `Spacer()` outside a `ToolbarItemGroup` is invisible to the layout engine.
+**Why** Toolbar content is `ToolbarContent`, not a `View` stack. `Spacer()` is only valid inside a `ToolbarItem` or `ToolbarItemGroup`, whose content is a view.
 
 **Fix iOS 26+** Use `ToolbarSpacer(.flexible)`. **Pre-iOS 26** Group both items in a `ToolbarItemGroup` (where Spacer works) or use placements to force separation.
 
@@ -593,6 +665,7 @@ Before merging toolbar code:
 - [ ] iOS 26+ apps reviewed against axiom-design (skills/liquid-glass.md) for background-material changes
 - [ ] macOS apps set `windowToolbarStyle` on the Scene (see axiom-macos (skills/windows.md))
 - [ ] OS27: `ToolbarOverflowMenu` / `.topBarPinnedTrailing` usage gated with `if #available(iOS 27, visionOS 27, *)` (both are iOS/visionOS-only)
+- [ ] Subtitles: scroll-surviving status in `navigationSubtitle`, `.largeSubtitle` content leading-aligned, and a fallback for pre-26 targets and for apps that keep `UIDesignRequiresCompatibility` (Pattern 14)
 
 ---
 
@@ -609,13 +682,16 @@ Before merging toolbar code:
 | Items reorder unexpectedly on macOS | User customized — use `.customizationBehavior(.disabled)` to lock |
 | `ToolbarSpacer` not recognized | Targeting < iOS 26 / macOS 26 — use `ToolbarItemGroup` + Spacer fallback |
 | Item collapses into overflow too eagerly | Default/low visibility priority — raise with `.visibilityPriority(.high)` or `.topBarPinnedTrailing` (OS27, Pattern 11) |
+| `navigationSubtitle` doesn't show | App sets `UIDesignRequiresCompatibility` (iOS 26, or iOS 27 in a 26-SDK build); or a `.subtitle` item replaces it inline, or a `.largeSubtitle` item replaces it while the title is large (Pattern 14) |
+| `.largeSubtitle` content vanishes on scroll | By design — it shows only while the title is large; keep status in `navigationSubtitle` |
+| `.largeSubtitle` content is centered | Default — add `.frame(maxWidth: .infinity, alignment: .leading)` |
 
 ---
 
 ## Resources
 
-**WWDC**: 2020-10146, 2021-10054, 2022-10054, 2024-10148, 2025-219, 2026-269
+**WWDC**: 2020-10146, 2021-10054, 2022-10054, 2024-10148, 2025-219, 2025-284, 2026-269
 
-**Docs**: /swiftui/toolbar(content:), /swiftui/toolbaritem, /swiftui/toolbaritemgroup, /swiftui/toolbarspacer, /swiftui/toolbaritemplacement, /swiftui/toolbaritemplacement/topbarpinnedtrailing, /swiftui/toolbarrole, /swiftui/customizabletoolbarcontent, /swiftui/toolbaroverflowmenu, /swiftui/toolbaritemvisibilitypriority, /swiftui/view/toolbarminimizationbehavior(_:for:), /swiftui/editbutton, /swiftui/editmode
+**Docs**: /swiftui/toolbar(content:), /swiftui/toolbaritem, /swiftui/toolbaritemgroup, /swiftui/toolbarspacer, /swiftui/toolbaritemplacement, /swiftui/toolbaritemplacement/topbarpinnedtrailing, /swiftui/toolbaritemplacement/title, /swiftui/toolbaritemplacement/subtitle, /swiftui/toolbaritemplacement/largetitle, /swiftui/toolbaritemplacement/largesubtitle, /swiftui/view/navigationsubtitle(_:), /swiftui/toolbarrole, /swiftui/customizabletoolbarcontent, /swiftui/toolbaroverflowmenu, /swiftui/toolbaritemvisibilitypriority, /swiftui/view/toolbarminimizationbehavior(_:for:), /swiftui/editbutton, /swiftui/editmode
 
-**Skills**: axiom-swiftui (skills/nav.md), axiom-macos (skills/windows.md), axiom-macos (skills/menus-and-commands.md), axiom-design (skills/liquid-glass.md)
+**Skills**: axiom-swiftui (skills/nav.md), axiom-macos (skills/windows.md), axiom-macos (skills/menus-and-commands.md), axiom-design (skills/liquid-glass.md), axiom-uikit (skills/uikit-modernization.md)

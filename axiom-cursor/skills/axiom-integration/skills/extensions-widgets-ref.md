@@ -935,7 +935,6 @@ Button(action: { /* This won't work in widgets */ }) {
 
 **Timeline entries out of order**: Ensure entry dates are chronological. Use incrementing offsets from `Date()`.
 
-
 ## Performance Issues
 
 **Symptoms**: Widget rendering slow, battery drain
@@ -1004,4 +1003,4 @@ let entries = (0..<100).map { offset in
 
 ---
 
-**Version**: 0.9 | **Platforms**: iOS 14+, iPadOS 14+, watchOS 9+, macOS 11+, visionOS 2+
+**Platforms**: iOS 14+, iPadOS 14+, watchOS 9+, macOS 11+, visionOS 2+

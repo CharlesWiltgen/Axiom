@@ -1392,8 +1392,3 @@ You do **not** have to refactor everything into a "perfect" concurrency model be
 **Docs**: /swift/adoptingswift6, /swift/sendable, /foundation/progressmanager, /foundation/subprogress
 
 **Skills**: axiom-build (skills/lldb.md) (debug actor/task state in the debugger)
-
----
-
-**Last Updated**: 2025-12-01
-**Status**: Enhanced with WWDC 2025-268 progressive journey, @concurrent attribute, isolated conformances, and approachable concurrency patterns

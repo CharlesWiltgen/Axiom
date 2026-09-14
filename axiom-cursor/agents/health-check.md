@@ -100,7 +100,7 @@ Run these only when their framework signals are present in the codebase:
 | `NavigationStack` or `sheet(` or `TabView` | ux-flow-auditor |
 | `FileManager` or `UserDefaults` or `.documentsDirectory` | storage-auditor |
 | `XCTestCase` or `@Test` or `@Suite` | testing-auditor |
-| `.glassBackgroundEffect` or `GlassEffectContainer` | liquid-glass-auditor |
+| `.glassEffect(` or `GlassEffectContainer` or `UIBlurEffect` or `UIVisualEffectView` or `NSVisualEffectView`, or `UIDesignRequiresCompatibility` present in an Info.plist | liquid-glass-auditor |
 | Screenshots folder exists (`Screenshots/` or `marketing/`) | screenshot-validator |
 
 ### User Exclusions

@@ -270,4 +270,3 @@ Consequence worth knowing: SQLiteData depends on swift-sharing 2.3.0+, so a proj
 
 **Targets:** iOS 26+/18, macOS 26+/15
 **Framework:** Sharing 2.10+ (manifests back to Swift 5.9; traits need 6.1+)
-**History:** See git log for changes

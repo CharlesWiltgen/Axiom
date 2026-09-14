@@ -701,7 +701,7 @@ func setUpCloth(simulationRoot: Entity, cloth: Entity) {
 
 **Building the cloth mesh:** create geometry with `ClothMeshResource` factories — `.patch(size:)`, `.box(size:)`, `.sphere(radius:)`, `.capsule(height:radius:)`, `.cylinder(height:radius:withCaps:)`, or `init(from: MeshResource)` — then `ClothBodyComponent(mesh:meshDraping:)`, draping from a `ClothPoseResource(positions:)`. `ClothSimulationComponent` also exposes `solver` (`.gaussSeidel(iterationCount:)` / `.jacobi(iterationCount:)`), `speedLimit`, `timeStep`, and a by-name `materials` collection where `ClothBodyMaterial` / `ClothColliderMaterial` register (referenced by each component's `materialNames`). Force/query/grab volumes take a `ClothVolumeShape` (distinct from the collider's `ClothColliderShape`).
 
-**Experimental API:** the entire cloth surface is annotated `@available(*, deprecated, message: "This API is experimental and may change or be removed in a future release.")` in the 27 beta. Adopting it emits deprecation warnings today and can source-break in a later beta — gate it behind your own flag and re-verify each beta.
+**Cloth ships unannotated in 27.0.** The betas marked the whole surface `@available(*, deprecated, message: "This API is experimental…")`; 27.0 carries no such annotation and cloth compiles warning-free, so remove any warning suppression added for the betas and treat the API as shipping.
 
 ### ComputeGraph framework (`OS27`, not watchOS)
 
@@ -762,7 +762,7 @@ Node names follow the MaterialX convention (`ND_atan2_float`), and each definiti
 | The `replace*` closures validate on return and **throw** | Joint indices vs `jointTransformCount`, adjacencies vs `indexCount / 3`, triangle indices vs `vertexCount`, and `replaceAdjacencyEndIndices` vs `renormalizing.adjacenciesCount` |
 | Buffer shapes are exact | Blend-shape offsets = `targetCount × vertexCount`; weights = `targetCount` floats |
 
-Unlike cloth, this is **not** experimental — no deprecation annotations, and it ships on tvOS too. The cloth source-break caveat does not transfer.
+It ships on tvOS too, unlike cloth.
 
 ### Runtime Skybox and IBL Generation (`OS27`, not watchOS)
 
@@ -882,9 +882,9 @@ LevelOfDetailComponent.addByScreenArea(to: entity, levels: [
 ])
 ```
 
-### Gaussian Splats (visionOS27)
+### Gaussian Splats `OS27`, not watchOS/tvOS
 
-Renders captured volumetric scenes as 3D Gaussians. No file format is assumed — you supply per-splat buffers (position, scale, rotation, opacity, spherical harmonics plus degree; degree 0 = view-independent color). In the first 27 beta the API is present only in the visionOS SDK. Each buffer parameter is a `GaussianSplatResource.BufferDescriptor` (`LowLevelBuffer` + `MTLAttributeFormat` + stride + offset); the degree is a `SphericalHarmonicDegree` enum value.
+Renders captured volumetric scenes as 3D Gaussians. No file format is assumed — you supply per-splat buffers (position, scale, rotation, opacity, spherical harmonics plus degree; degree 0 = view-independent color). Each buffer parameter is a `GaussianSplatResource.BufferDescriptor` (`LowLevelBuffer` + `MTLAttributeFormat` + stride + offset); the degree is a `SphericalHarmonicDegree` enum value.
 
 ```swift
 let buffers = try GaussianSplatResource.BufferResource(

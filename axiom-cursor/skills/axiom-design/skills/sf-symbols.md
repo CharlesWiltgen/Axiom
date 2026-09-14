@@ -594,5 +594,4 @@ Image(systemName: isFavorite ? "star.fill" : "star")
 
 ---
 
-**Last Updated** Based on WWDC 2023/10257-10258, WWDC 2024/10188, WWDC 2025/337
 **Version** iOS 17+ (effects), iOS 18+ (Wiggle/Rotate/Breathe), iOS 26+ (Draw On/Off, Variable Draw, Gradients)

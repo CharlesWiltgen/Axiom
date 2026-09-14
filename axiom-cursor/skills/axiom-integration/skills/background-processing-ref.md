@@ -777,5 +777,4 @@ e -l objc -- (void)[[BGTaskScheduler sharedScheduler] _simulateExpirationForTask
 
 ---
 
-**Last Updated**: 2025-12-31
 **Platforms**: iOS 13+, iOS 26+ (BGContinuedProcessingTask; watchOS 27 extends it to the watch)

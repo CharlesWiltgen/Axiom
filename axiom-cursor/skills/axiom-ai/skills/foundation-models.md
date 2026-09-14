@@ -1336,5 +1336,4 @@ Before shipping Foundation Models features:
 
 ---
 
-**Last Updated**: 2026-06-09
 **Target**: iOS 26+, macOS 26+, iPadOS 26+, visionOS 26+; OS27 surface verified against the Xcode 27 SDK

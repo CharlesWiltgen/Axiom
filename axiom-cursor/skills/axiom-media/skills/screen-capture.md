@@ -1,7 +1,7 @@
 
 # Screen Capture — ScreenCaptureKit on iOS/iPadOS `OS27`
 
-`import ScreenCaptureKit` — capture the screen (or your own app) as a live video + audio stream, record it to a file, or buffer recent content for instant-replay clips. **New on iOS 27, iPadOS 27, tvOS 27, visionOS 27** (all beta); macOS has had it since 12.3. This is the modern replacement for ReplayKit-style capture.
+`import ScreenCaptureKit` — capture the screen (or your own app) as a live video + audio stream, record it to a file, or buffer recent content for instant-replay clips. **New on iOS 27, iPadOS 27, tvOS 27, visionOS 27**; macOS has had it since 12.3. This is the modern replacement for ReplayKit-style capture.
 
 > **The iOS model is NOT the macOS model.** On macOS you enumerate `SCShareableContent` (displays/windows/apps) and build an `SCContentFilter` programmatically. **On iOS/iPadOS none of that exists** — `SCShareableContent`, `SCDisplay`, `SCWindow`, `SCRunningApplication`, and every `SCContentFilter` initializer are `API_UNAVAILABLE(ios)`. You get a filter **only** from the system **`SCContentSharingPicker`** (user-driven, privacy-preserving). Writing iOS capture from the macOS mental model will not compile.
 
@@ -38,13 +38,12 @@ final class ScreenCapture: NSObject, SCContentSharingPickerObserver, SCStreamDel
     // The user's choice arrives here as a ready-to-use filter.
     func contentSharingPicker(_ picker: SCContentSharingPicker,
                               didUpdateWith filter: SCContentFilter, for stream: SCStream?) {
-        Task { await begin(with: filter) }
+        begin(with: filter)
     }
     func contentSharingPicker(_ p: SCContentSharingPicker, didCancelFor s: SCStream?) {}
     func contentSharingPickerStartDidFailWithError(_ error: any Error) {}
 
-    @available(iOS 27, *)
-    func begin(with filter: SCContentFilter) async {
+    func begin(with filter: SCContentFilter) {
         let config = SCStreamConfiguration()
         config.width = 1080
         config.height = 1920
@@ -54,7 +53,7 @@ final class ScreenCapture: NSObject, SCContentSharingPickerObserver, SCStreamDel
         do {
             // Option A — raw frames as CMSampleBuffers:
             try stream.addStreamOutput(self, type: .screen, sampleHandlerQueue: .global())
-            try await stream.startCapture()
+            stream.startCapture { error in /* SCStreamError, or nil once capturing */ }
             self.stream = stream
         } catch { /* SCStreamError */ }
     }
@@ -66,7 +65,7 @@ final class ScreenCapture: NSObject, SCContentSharingPickerObserver, SCStreamDel
 }
 ```
 
-`SCContentSharingPicker` essentials: `.shared` (singleton), `.isAvailable`, `.isActive` (must be `true`), `.add(_:)` / `.remove(_:)`, `.present()` (not tvOS), `.presentForCurrentApplication()` (iOS/visionOS/tvOS — captures only your app), `.present(using:)` for a `SCShareableContentStyle`. iOS-only config knobs: `SCContentSharingPickerConfiguration.showsMicrophoneControl` and `.showsCameraControl` (in-app only) — the macOS mode/exclusion options (`allowedPickerModes`, `excludedWindowIDs`, …) are macOS-only.
+`SCContentSharingPicker` essentials: `.shared` (singleton), `.isAvailable`, `.isActive` (must be `true`), `.add(_:)` / `.remove(_:)`, `.present()` (not tvOS), `.presentForCurrentApplication()` (iOS/visionOS/tvOS — captures only your app), `.present(using:)` for a `SCShareableContentStyle`. Config knobs: `SCContentSharingPickerConfiguration.showsMicrophoneControl` (iOS/visionOS) and `.showsCameraControl` (iOS, in-app only) — the macOS mode/exclusion options (`allowedPickerModes`, `excludedWindowIDs`, …) are macOS-only.
 
 ## Output options (add to the `SCStream`)
 
@@ -75,7 +74,7 @@ final class ScreenCapture: NSObject, SCContentSharingPickerObserver, SCStreamDel
 | Raw frames | `addStreamOutput(_:type:sampleHandlerQueue:)` + `SCStreamOutput` | `CMSampleBuffer`s; `SCStreamOutputType` = `.screen` / `.audio` / `.microphone` |
 | Record to file | `addRecordingOutput(_:)` with `SCRecordingOutput(configuration:delegate:)` | `SCRecordingOutputConfiguration.outputURL` (+ `videoCodecType` default H.264, `outputFileType` default MPEG-4). Add **before** `startCapture` to catch the first frame |
 | Instant-replay clips | `addClipBufferingOutput(_:)` | rolling ~15 s buffer; export recent clips. Stream must be capturing first |
-| Camera video effects | `addVideoEffectOutput(_:)` | **iOS-only**, and only on **in-app** capture (`presentForCurrentApplication`); otherwise `SCStreamErrorNotSupported` |
+| Camera video effects | `addVideoEffectOutput(_:)` / `removeVideoEffectOutput(_:)`, both `throws`, with `SCVideoEffectOutput(cameraDevice:)` | **iOS-only**, and only on **in-app** capture (`presentForCurrentApplication`); otherwise `SCStreamErrorNotSupported`. Lifecycle arrives on `SCStreamDelegate` as three optional callbacks — `outputVideoEffectDidStart(for:)`, `outputVideoEffectDidStop(for:)`, and `outputVideoEffectDidFail(for:withError:)`; without the last one a failed effect is silent |
 
 Record-to-file sketch:
 

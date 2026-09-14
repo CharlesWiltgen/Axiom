@@ -1026,4 +1026,3 @@ let shared = try Customer.select(\.email).intersect(Supplier.select(\.email)).fe
 
 **Targets:** iOS 17+, Swift 6
 **Framework:** SQLiteData 1.12+ (StructuredQueries 0.39+, GRDB 7.11+)
-**History:** See git log for changes

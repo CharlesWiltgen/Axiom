@@ -288,6 +288,27 @@ Completion types: creation → `PHSharedAlbumCreationResult?`; posting → `Resu
 
 Deprecated in 27: `postToPhotosSharedAlbumSheet` (iOS 26.0) → `photosSharedAlbumPostingSheet`. Two breaks: `photoLibrary:` and `defaultAlbumIdentifier:` swap order, and the completion type changes `Result<Void, _>` → `Result<String, _>`.
 
+### Apple Reference Image `OS27`
+
+iOS/macOS 27 only — unavailable on tvOS/watchOS/visionOS. Detects and displays images carrying Apple Reference Image data (HEIC, JPEG, or DNG on disk, or a library asset).
+
+```swift
+let info = PHReferenceImageInfo(asset: asset)      // or PHReferenceImageInfo(fileURL:)
+if await Task.detached(operation: { info.imageContainsReferenceImageData }).value { selection = asset }
+
+// Non-nil binding presents the viewer; the closure delivers the processing result
+.photosReferenceImageViewer(asset: $selection) { (result: Result<PHAsset, any Error>) in }
+```
+
+| Modifier | Binding | Completion |
+|---|---|---|
+| `photosReferenceImageViewer(asset:onProcessingCompletion:)` | `Binding<PHAsset?>` | `Result<PHAsset, any Error>` |
+| `photosReferenceImageViewer(pickerItem:onProcessingCompletion:)` | `Binding<PhotosPickerItem?>` | `Result<PHAsset, any Error>` |
+| `photosReferenceImageViewer(pickerResult:onProcessingCompletion:)` | `Binding<PHPickerResult?>` | `Result<PHAsset, any Error>` |
+| `photosReferenceImageViewer(fileURL:onProcessingCompletion:)` | `Binding<URL?>` | `Result<URL, any Error>` |
+
+`imageContainsReferenceImageData` reads image metadata on **first access** — Apple's own guidance is to wrap it in a `Task` rather than block the main thread. Hide any "show reference image" affordance when it returns `false`; it also always returns `false` for iPad apps on visionOS.
+
 ### Loading Images from PhotosPickerItem
 
 ```swift
@@ -433,6 +454,53 @@ final class PhotoObserver: NSObject, PHPhotoLibraryChangeObserver {
 }
 ```
 
+### Persistent Change History Observer `OS27`
+
+`PHPhotoLibraryChangeObserver` (above) reports changes only while your process is running. The change-history API (`fetchPersistentChanges(since:)`, iOS 16) survives launches but had to be polled; the 27 observer pushes a notification when history advances. Requires read-write authorization.
+
+**Registration imports as `register(_:)` — an overload of the `PHPhotoLibraryChangeObserver` one.** Only the unregister keeps a distinct name, `unregisterPersistentChangesObserver(_:)`. A type conforming to **both** protocols cannot just call `register(self)` twice — it converts to both existentials, so the call fails outright with `error: ambiguous use of 'register'`. Disambiguate at the call site: `register(self as any PHPhotoLibraryPersistentChangesObserver)`, and `as any PHPhotoLibraryChangeObserver` for the in-process channel.
+
+```swift
+@available(anyAppleOS 27, *)
+@available(watchOS, unavailable)
+@MainActor
+final class LibraryHistoryObserver: NSObject, PHPhotoLibraryPersistentChangesObserver {
+    private var token: PHPersistentChangeToken
+
+    override init() {
+        token = PHPhotoLibrary.shared().currentChangeToken
+        super.init()
+        PHPhotoLibrary.shared().register(self)
+    }
+
+    deinit { PHPhotoLibrary.shared().unregisterPersistentChangesObserver(self) }
+
+    nonisolated func photoLibraryPersistentChangesDidUpdate(_ photoLibrary: PHPhotoLibrary) {
+        Task { @MainActor in
+            do {
+                for change in try photoLibrary.fetchPersistentChanges(since: self.token) {
+                    self.token = change.changeToken
+                }
+            } catch PHPhotosError.persistentChangeTokenExpired {
+                self.token = photoLibrary.currentChangeToken
+            } catch {
+                assertionFailure("fetchPersistentChanges failed: \(error)")
+            }
+        }
+    }
+}
+```
+
+| Gotcha | Consequence |
+|---|---|
+| Observer is held **weakly** | register a long-lived object or callbacks stop silently |
+| Callback runs on an arbitrary serial queue | same `nonisolated` + hop rule as `photoLibraryDidChange` above |
+| `PHPersistentChangeFetchResult` is refined into a Swift `Sequence` | iterate with `for`-`in`; `enumerateChanges` does not exist in Swift |
+| Token not advanced to each `change.changeToken` | the same history replays forever |
+| Token the library has dropped | throws `PHPhotosError.persistentChangeTokenExpired` |
+
+An expired token leaves no delta to apply. Apple documents the condition but prescribes no recovery — `PHError`'s comment says only that the token "refers to a library state that is older than the available history of persistent changes" — so treat the remedy as the sound consequence rather than stated behavior: re-baseline from `currentChangeToken` and refetch what you display. Persist the token across launches — that is the entire point of this API over the in-process observer.
+
 ---
 
 ## Sendability
@@ -516,6 +584,97 @@ let assets = PHAsset.fetchAssets(withLocalIdentifiers: [identifier], options: ni
 | `.videoHighFrameRate` | Slo-mo video |
 | `.videoTimelapse` | Timelapse |
 | `.videoCinematic` | Cinematic mode |
+
+---
+
+## Asset Metadata Editing `OS27`
+
+iOS/iPadOS/macOS/tvOS/visionOS 27. Photos ships no watchOS slice at all — there is no `Photos.framework` in the watchOS 27 SDK, so `import Photos` fails there outright and no availability guard changes that.
+
+Keywords, rating, Live Photo playback, and the RAW/compressed original choice are **change-request** writes: they exist only on `PHAssetChangeRequest` and take effect only inside `performChanges`.
+
+```swift
+@available(anyAppleOS 27, *)
+@available(watchOS, unavailable)
+func editAsset(_ asset: PHAsset) async throws {
+    try await PHPhotoLibrary.shared().performChanges { @Sendable in
+        let request = PHAssetChangeRequest(for: asset)
+        request.addKeyword("vacation")
+        request.removeKeyword("draft")
+        request.rating = .four
+        request.setLivePhotoVideoPlaybackEnabled(false)
+        request.revertAssetContent(to: .raw)
+    }
+}
+```
+
+| API | Where it lives | Notes |
+|---|---|---|
+| `addKeyword(_:)` / `removeKeyword(_:)` | `PHAssetChangeRequest` | adding a keyword already present, or removing one absent, is silently ignored |
+| `rating` | `PHAssetChangeRequest` (settable), `PHAsset` (read) | `PHAsset.Rating`: `.unset`, `.one` … `.five` |
+| `caption` | `PHAssetChangeRequest` (settable), `PHAssetExtendedMetadata` (read) | writable in 27 — `nil` or an empty string clears it |
+| `setLivePhotoVideoPlaybackEnabled(_:)` | `PHAssetChangeRequest` | `false` makes a Live Photo present as a still; Live Photos only |
+| `revertAssetContent(to:)` | `PHAssetChangeRequest` | RAW+JPEG only; unsupported on other asset types |
+| `originalResourceChoice` | `PHAsset` (read), `PHAssetCreationRequest` and `PHContentEditingInputRequestOptions` (settable) | **not** on `PHAssetChangeRequest` — the compiler rejects it there |
+
+`revertAssetContent(to:)` is not `revertAssetContentToOriginal()` plus a flag. Beyond reverting adjustments it selects which original — `.raw` or `.compressed` — becomes the unadjusted base for every later render. Apple states the local-originals requirement on the older `revertAssetContentToOriginal()`: download originals with `PHAssetResourceManager` before either call.
+
+Reading keywords back needs `PHAssetExtendedMetadata` (`OS27`). `keywords` is **not** a `PHAsset` property:
+
+```swift
+@available(anyAppleOS 27, *)
+@available(watchOS, unavailable)
+func read(_ asset: PHAsset) -> ([String], String?, PHAsset.Rating, PHAsset.OriginalResourceChoice) {
+    let meta = asset.extendedMetadata
+    return (meta.keywords, meta.caption, asset.rating, asset.originalResourceChoice)
+}
+```
+
+`extendedMetadata` (`caption`, `originalFilename`, `keywords`) fetches on demand for each asset. For a grid or any batch, prefetch it in the same fetch instead of paying that per row:
+
+```swift
+@available(anyAppleOS 27, *)
+@available(watchOS, unavailable)
+func prefetch() -> PHFetchResult<PHAsset> {
+    let options = PHFetchOptions()
+    options.prefetchAssetExtendedMetadata = true
+    return PHAsset.fetchAssets(with: .image, options: options)
+}
+```
+
+---
+
+## Collections and Identifiers `OS27`
+
+```swift
+@available(anyAppleOS 27, *)
+@available(watchOS, unavailable)
+func rootFolder() -> PHCollectionList? {
+    PHCollectionList.fetchCollectionLists(with: .folder, subtype: .rootFolder, options: nil).firstObject
+}
+
+@available(anyAppleOS 27, *)
+@available(watchOS, unavailable)
+func topLevel() -> PHFetchResult<PHCollection> {
+    PHCollection.fetchTopLevelUserCollections(with: nil)
+}
+```
+
+There is always exactly one root folder, and it refuses rename and delete. Fetching its *contents* is equivalent to the long-standing `PHCollection.fetchTopLevelUserCollections(with:)` — what the subtype adds is the list **object**, to hand to `fetchCollectionsInCollectionList(_:options:)` or to recognize the root while walking a hierarchy.
+
+`localIdentifierMappings(forSynced:)` resolves cloud identifiers using **iCloud-synced records only**:
+
+```swift
+@available(anyAppleOS 27, *)
+@available(watchOS, unavailable)
+func resolveSynced(_ ids: [PHCloudIdentifier]) -> [String] {
+    let mappings: [PHCloudIdentifier: Result<String, any Error>] =
+        PHPhotoLibrary.shared().localIdentifierMappings(forSynced: ids)
+    return mappings.values.compactMap { try? $0.get() }
+}
+```
+
+The existing `localIdentifierMappings(for:)` falls back to **media-content matching** when a cloud identifier has not synced to this device, which can map one cloud identifier onto several local identifiers (`PHPhotosError.multipleIdentifiersFound`, 3202; the doc comment's `…MultipleLocalIdentifiersFound` does not exist). The 27 method skips that fallback — reach for it when a plausible-but-wrong match is worse than no match. Both are expensive; batch every lookup into one call rather than calling per identifier. The ObjC result wrapper `PHLocalIdentifierMapping` is `NS_REFINED_FOR_SWIFT` and never surfaces in Swift — you get `Result<String, any Error>`.
 
 ---
 
@@ -653,6 +812,45 @@ func exportedID(for resource: PHAssetResource) async throws -> CKAsset.ExportedA
 - Requires network + a **cloud-enabled** photo library. A local-only library throws `PHPhotosError.requestNotSupportedForAsset` (3306). The call honors cancellation (`CancellationError`).
 - **Apple doc bug (27.0b)**: the doc comment says to gate on `PHAssetResource.TypeGroup.coreComponents`, which does NOT exist anywhere in the 27 SDK. Gate on `PHAssetResourceType` and handle the throw — quoting the doc verbatim yields non-compiling code.
 - The returned `ExportedAssetID` is device-bound and expires in days — hand it straight to `CKAsset(importing:)`; never persist or transmit it.
+
+## Background Asset Resource Upload `OS27`
+
+Host-app control of the `com.apple.photos.background-upload` extension. **iOS/iPadOS/macOS/Mac Catalyst** — explicitly unavailable on tvOS, visionOS, and watchOS, so a visionOS build fails with "is unavailable in visionOS", not a version warning. The APIs below are 27 with one exception: `uploadJobExtensionEnabled` itself dates to iOS 26.1. Requires full library access and the registered extension point.
+
+```swift
+@available(iOS 27, macOS 27, macCatalyst 27, *)
+@available(tvOS, unavailable)
+@available(visionOS, unavailable)
+@available(watchOS, unavailable)
+func configureUploads() throws {
+    let library = PHPhotoLibrary.shared()
+
+    let options = PHAssetResourceUploadJobOptions()
+    options.preventsExpensiveNetworkAccess = true
+
+    try library.enableUploadJobExtension(with: options)
+    _ = library.uploadJobExtensionEnabled
+    _ = library.uploadJobExtensionOptions
+
+    try library.setUploadJobExtensionOptions(PHAssetResourceUploadJobOptions())
+    try library.disableUploadJobExtension()
+}
+```
+
+| API | Notes |
+|---|---|
+| `enableUploadJobExtension(with:)` | enables and applies options atomically, as one change; `nil` means defaults |
+| `setUploadJobExtensionOptions(_:)` | a separate change afterward; pass a fresh `PHAssetResourceUploadJobOptions()` to reset to defaults |
+| `disableUploadJobExtension()` | |
+| `uploadJobExtensionOptions` | `nil` when the extension is disabled or the caller is unauthorized |
+| `preventsExpensiveNetworkAccess` | `false` by default; `true` confines the service to Wi-Fi/Ethernet, never cellular |
+| `PHAssetResource.assetResource(forUploadJob:)` | returns `nil` if the resource is gone; replaces `PHAssetResourceUploadJob.resource`, which is soft-deprecated on iOS and unavailable on macOS and Mac Catalyst |
+
+The three configuration calls are ObjC `BOOL` + `NSError**`, so they import as `throws` — there is no `Bool` to test. `enableUploadJobExtension(with:)` supersedes `setUploadJobExtensionEnabled(_:)`, deprecated in 27 and iOS-only. On the extension side `PHBackgroundResourceUploadExtension` is likewise deprecated in favor of `PHBackgroundResourceUploadJobExtension` (`processJobs() async` returning `PHBackgroundResourceUploadProcessingResult`, `willTerminate() async`).
+
+`PHAssetResourceUploadJob` itself is **not** new — it shipped in iOS 26.1. What 27 adds is the macOS/Mac Catalyst port plus the options and lifecycle APIs above.
+
+---
 
 ## PHFetchResult
 

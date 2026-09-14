@@ -25,7 +25,7 @@ MCP server Xcode provides. Authorize them first — the path depends on your mod
 
 1. Open Xcode **Settings** (Cmd+,)
 2. Select **Intelligence** in the sidebar
-3. Under **Model Context Protocol**, turn on **"Allow external agents to use Xcode tools"**
+3. Under **Model Context Protocol**, set **"Allow External Agents to Use Xcode Tools"** to **Always**
 
 Without this, `xcrun mcpbridge` connects but Xcode exposes no tools. Xcode alerts you when an external agent connects and when it's active, so you always know when an agent is driving your project.
 
@@ -333,11 +333,11 @@ digraph troubleshoot {
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
-| **`tools/call` rejected: "This agent isn't approved…"** (beta 6) or **hangs forever, no error** (through beta 5) | Agent not approved | Call `XcodeOpenWorkspace` to trigger the prompt; confirm under `Permitted agents` in `xcrun mcp-server status`; or `sudo xcrun mcp-server approve <id>` |
+| **`tools/call` rejected: "This agent isn't approved…"** (beta 6 and later, including 27.0) or **hangs forever, no error** (through beta 5) | Agent not approved | Call `XcodeOpenWorkspace` to trigger the prompt; confirm under `Permitted agents` in `xcrun mcp-server status`; or `sudo xcrun mcp-server approve <id>` |
 | "Connection refused" (attached) | Xcode not running or MCP toggle off | Launch Xcode, enable MCP in Settings > Intelligence |
 | "Connection refused" (headless) | Service not running, or headless never enabled | `xcrun mcp-server status`; then `xcrun mcp-server start`, or `sudo xcrun mcp-server enable` first |
-| tools/list returns empty | Server not reachable — **not** approval: beta 6 lists all 54 tools to an unapproved agent | `xcrun mcp-server status`; restart with `xcrun mcp-server start` |
-| `DocumentationSearch` missing from tools/list | Tool set is dynamic (`listChanged: true`) — but on beta 6 all 54 list with no workspace open | Re-list; if still missing, check `xcrun mcp-server status` |
+| tools/list returns empty | Server not reachable — **not** approval: beta 6 and 27.0 list all 54 tools to an unapproved agent | `xcrun mcp-server status`; restart with `xcrun mcp-server start` |
+| `DocumentationSearch` missing from tools/list | Tool set is dynamic (`listChanged: true`) — but on beta 6 and 27.0 all 54 list with no workspace open | Re-list; if still missing, check `xcrun mcp-server status` |
 | "workspaceIdentifier is required" | Identifier omitted — required even with one workspace open | Use the identifier the error itself lists, or call `XcodeListWorkspaces` |
 | Tools target wrong project | Multiple workspaces open | Call `XcodeListWorkspaces`, pass the right `workspaceIdentifier` |
 | Repeated permission prompts | Unsigned agents get time-boxed grants; "Always allow" still expires | Expected — re-approve, or run a signed agent binary |

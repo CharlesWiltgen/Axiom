@@ -123,11 +123,40 @@ _explicit_invocation = re.search(r'\b(use|using|invoke|run|load|try)\s+(the\s+)?
 axiom_meta = bool(_axiom_meta_subject) and not _explicit_invocation
 
 # Build/environment (highest priority)
-if not non_ios and re.search(r'build (fail|error|broken)|xcodebuild|simulator (crash|hang|won.t|not )|pod (install|update)|spm |swift package|linker (error|command)|module.{0,5}not found|derived data|code sign|provisioning|xcworkspace|xcodeproj|xcode (error|crash|hang|won.t)|build time|compile (error|slow|time)|lldb\b|breakpoint.{0,10}(set|conditional|symbolic)|thread\s*backtrace|\bpo\b.{0,10}(vs|variable|expression)|transport error|could not be established|\bcoredevice\b|dvtenablecoredevice|deploy(ing|ed)?.{0,30}(to\s+)?(device|watch|phone|ipad|simulator|hardware|real\s+device|physical\s+device)|connect.{0,10}(to.{0,10})?(watch|device|phone|ipad|simulator)|device.{0,10}(not.{0,10}(connect|found|recogn|appear)|won.t.{0,10}(connect|appear|show))|cannot find symbol|cannot find.{0,15}in scope|use of unresolved identifier|undefined (symbol|reference)|works? (fine )?(in|on) (the )?simulator.{0,40}(fail|crash|broken|wrong|black|empty|hang).{0,15}(on|in).{0,10}(real |physical )?device|(crash|fail|broken|wrong|black|empty|hang)\w*\s+only\s+on\s+.{0,15}device|only\s+(crash|fail|broken|hang)\w*\s+(on|in)\s+.{0,15}device|(real|physical)\s*device[- ]only|device[- ]only.{0,15}(crash|fail|broken)|after .{0,30}(updating|upgrading|installing) xcode', prompt_lower):
+if not non_ios and re.search(r'build (fail|error|broken)|xcodebuild|simulator (crash|hang|won.t|not )|pod (install|update)|spm |swift package|linker (error|command)|module.{0,5}not found|derived data|ld_classic|\bld64\b|classic linker|code sign|provisioning|xcworkspace|xcodeproj|xcode (error|crash|hang|won.t)|build time|compile (error|slow|time)|lldb\b|breakpoint.{0,10}(set|conditional|symbolic)|thread\s*backtrace|\bpo\b.{0,10}(vs|variable|expression)|transport error|could not be established|\bcoredevice\b|dvtenablecoredevice|deploy(ing|ed)?.{0,30}(to\s+)?(device|watch|phone|ipad|simulator|hardware|real\s+device|physical\s+device)|connect.{0,10}(to.{0,10})?(watch|device|phone|ipad|simulator)|device.{0,10}(not.{0,10}(connect|found|recogn|appear)|won.t.{0,10}(connect|appear|show))|cannot find symbol|cannot find.{0,15}in scope|use of unresolved identifier|undefined (symbol|reference)|works? (fine )?(in|on) (the )?simulator.{0,40}(fail|crash|broken|wrong|black|empty|hang).{0,15}(on|in).{0,10}(real |physical )?device|(crash|fail|broken|wrong|black|empty|hang)\w*\s+only\s+on\s+.{0,15}device|only\s+(crash|fail|broken|hang)\w*\s+(on|in)\s+.{0,15}device|(real|physical)\s*device[- ]only|device[- ]only.{0,15}(crash|fail|broken)|after .{0,30}(updating|upgrading|installing) xcode', prompt_lower):
     matches.append("axiom-build")
 
 # UI
 if re.search(r'swiftui|@state\b|@binding\b|@observable\b|@environment\b|navigationstack|navigationsplitview|layout.{0,10}(break|bug|wrong|issue)|preview.{0,5}(crash|fail|not |won.t|broken)|view.{0,10}(not|won.t|doesn.t).{0,10}(updat|render|show|appear)|tabview|scroll.{0,20}(jank|lag|slow|stutter)|presentationdetents?|\bdetents?\b|presentation(compactadaptation|sizing|backgroundinteraction)|popover.{0,20}(sheet|iphone|compact|anchor)|sheet.{0,20}(detent|resiz|medium|half|landscape.{0,15}full)|onhover|hovereffect|oncontinuoushover|pointerstyle|keyframeanimator|keyframetimeline|alignmentguide|layoutpriority|toolbarminimiz\w*|(scroll\s*position|selection|focus|draft|state)\w*\s*(is\s*|gets\s*|was\s*)?(lost|reset\w*|jumps?|cleared)\w*.{0,30}(rotat|resiz|window|split|size\s*class)|(rotat|resiz)\w*.{0,30}(los\w+|reset\w*|clears?|clearing)\s.{0,20}(scroll|selection|focus|state|draft)', prompt_lower):
+    matches.append("axiom-swiftui")
+
+# UI — iPhone Duo (hub: axiom-swiftui skills/iphone-duo.md). API tokens are Apple-only
+# identifiers, so they stay UNGATED. Several are announced for the iOS 27.1 SDK and absent
+# from released SDKs; they still route, because the hub is where Claude learns not to write
+# them as compiling code. No bare "duo" token — Duo two-factor prompts are not iPhone Duo.
+if "axiom-swiftui" not in matches and re.search(r'iphone[\s-]*duo|onhingechange|uihingeinteraction|uiviewreservedregion|uiarrangementviewcontroller|axisbehavior|toolbarverticaledge|verticalbaredge|toolbarverticalbehavior|preferredverticalbarbehavior|verticalbarcompression\w*|toolbarverticalcompression\w*|cameracaptureaccessory|sceneaccessory|externalnoninteractiveaccessory|defaulttabbarplacement', prompt_lower):
+    matches.append("axiom-swiftui")
+
+# Nav-bar subtitles (iOS 26; skills/toolbars.md). navigationSubtitle and a `placement:`
+# subtitle are Apple-only spellings. Bare "largeSubtitle" is a plausible prop name anywhere,
+# so it takes the non_ios gate; it also routes to UIKit, where UINavigationItem has one, unless
+# written as navigationItem.largeSubtitle. Accepted loss: the gate only knows the frameworks
+# in non_ios_keyword, so "my JSX header's largeSubtitle prop" still routes. A plain-language
+# nav-bar subtitle question names no framework, so it routes to both suites.
+nav_subtitle_phrase = ios_signal and re.search(r'subtitle.{0,30}(nav(igation)?\s*(bar|title|item)|large\s*title)|(nav(igation)?\s*(bar|title|item)|large\s*title).{0,30}subtitle', prompt_lower)
+if "axiom-swiftui" not in matches and (re.search(r'navigationsubtitle|placement:\s*\.(largesubtitle|largetitle|subtitle)\b', prompt_lower) or nav_subtitle_phrase or (not non_ios and re.search(r'(?<!navigationitem\.)\blargesubtitle\b', prompt_lower))):
+    matches.append("axiom-swiftui")
+
+# "ArrangementView" (Ableton Live's timeline view) and bare "reservedRegions" (a hardware
+# memory-map term) are not Apple-only, unlike the fully-qualified UI*/ tokens above. Require
+# Apple-platform context — the Duo hub's own vocabulary (duo/fold/hinge) counts, since these
+# two tokens name the Duo feature being asked about.
+if "axiom-swiftui" not in matches and (ios_signal or re.search(r'\bduo\b|\bfold(ed|ing|s)?\b|\bunfold\w*|\bhinge\b', prompt_lower)) and re.search(r'arrangementview|reservedregions?', prompt_lower):
+    matches.append("axiom-swiftui")
+
+# "foldable" is cross-platform vocabulary (Android/Samsung foldables), so it takes the
+# non_ios gate, like every other generic-term rule.
+if "axiom-swiftui" not in matches and not non_ios and re.search(r'foldable|folding\s*(iphone|ipad|device|display|screen)', prompt_lower):
     matches.append("axiom-swiftui")
 
 # UI — preview construction (separate from preview-crash routing above)
@@ -219,7 +248,7 @@ if not non_ios and "axiom-networking" not in matches and re.search(r'api.{0,5}(c
     matches.append("axiom-networking")
 
 # Testing
-if re.search(r'xctest|xcuitest|swift\s*testing|@test\b|@suite\b|#expect\b|ui\s*test.{0,10}(fail|flak|slow|crash|record)|test.{0,10}(without simulator|faster|speed)|pseudoloc|nsdoublelocalizedstrings|appletextdirection|applelanguages|test\w*.{0,25}(resiz|window\s*sizes|rtl|right.to.left)|(resiz|rtl).{0,20}test', prompt_lower):
+if re.search(r'xctest|xcuitest|swift\s*testing|@test\b|@suite\b|#expect\b|ui\s*test.{0,10}(fail|flak|slow|crash|record)|test.{0,10}(without simulator|faster|speed)|xcuivoiceoverservice|voiceoverservice|voice\s*over.{0,30}(ui\s*test|xctest|assert|spoken|utterance)|(ui\s*test|xctest).{0,30}voice\s*over|pseudoloc|nsdoublelocalizedstrings|appletextdirection|applelanguages|test\w*.{0,25}(resiz|window\s*sizes|rtl|right.to.left)|(resiz|rtl).{0,20}test', prompt_lower):
     matches.append("axiom-testing")
 
 # Integration
@@ -234,12 +263,15 @@ if not non_ios and "axiom-integration" not in matches and re.search(r'background
     matches.append("axiom-integration")
 
 # Media
-if re.search(r'avcapture|phpicker|photospicker|photo.{0,5}(library|picker|capture)|core\s*haptics|haptic|now\s*playing|shazamkit|audio\s*recogni|avfoundation|carplay.{0,12}(audio|now|map\s*panel|charging|mini\s*player|overlay)|cpmappanel|allowsminiplayer|cpchargingstation|musickit|camera.{0,5}(capture|preview|session|app|launch)|front\s*camera|center\s*stage|deferred\s*start|pro\s*video\s*storage|prores\b|smart\s*framing|dockkit|dockaccessory|dock\s*accessory|motorized.{0,12}(stand|dock)|playbackcoordinator|avdelegatingplaybackcoordinator|avplayerplaybackcoordinator|avplaybackcoordinationmedium|avcoordinatedplaybacksuspension|coordinatewithsession|coordinated\s*playback|playback\s*coordinat\w*|shareplay.{0,40}(playback|play|audio|video|media|sync|track|queue|position|timeline)|(playback|audio|video|media|sync|timeline).{0,40}shareplay|media\s*intelligence|facegroupanalyzer|videoanalyzer|highlightanalysisrequest|keyframeanalysisrequest|musicunderstanding|instrumentactivity', prompt_lower):
+if re.search(r'avcapture|phpicker|photospicker|photo.{0,5}(library|picker|capture)|core\s*haptics|haptic|now\s*playing|shazamkit|audio\s*recogni|avfoundation|carplay.{0,12}(audio|now|map\s*panel|charging|mini\s*player|overlay)|cpmappanel|allowsminiplayer|cpchargingstation|musickit|camera.{0,5}(capture|preview|session|app|launch)|center\s*stage|deferred\s*start|pro\s*video\s*storage|prores\b|smart\s*framing|dockkit|dockaccessory|dock\s*accessory|motorized.{0,12}(stand|dock)|playbackcoordinator|avdelegatingplaybackcoordinator|avplayerplaybackcoordinator|avplaybackcoordinationmedium|avcoordinatedplaybacksuspension|coordinatewithsession|coordinated\s*playback|playback\s*coordinat\w*|shareplay.{0,40}(playback|play|audio|video|media|sync|track|queue|position|timeline)|(playback|audio|video|media|sync|timeline).{0,40}shareplay|media\s*intelligence|facegroupanalyzer|videoanalyzer|highlightanalysisrequest|keyframeanalysisrequest|musicunderstanding|instrumentactivity|avcapturedevicedirectioncoordinator|avcapturedevicedescriptor|setexposuremodecustom|enabledexposuresignals|avcapturedeviceexposuresignal|continuousautofocustracking|cinematicvideometadata|lowlightvideonoisereduction|avcaptureancillarydata|recommendedlensaperturestops', prompt_lower):
     matches.append("axiom-media")
 
 # Media — generic terms gated (MediaIntelligence, MusicUnderstanding: "face grouping",
 # "highlight reel", "key frames", "photos by person", "tempo", "bpm", "beatsPerMinute",
-# "chorus/verse" also name OpenCV/ffmpeg/video-editing, heart-rate, and agile concepts).
+# "chorus/verse" also name OpenCV/ffmpeg/video-editing, heart-rate, and agile concepts;
+# "inner/outer ultra wide" and "front camera" are also Android/Kotlin foldable-camera English;
+# the bare "front camera" must live HERE, not in the ungated rule above — an ungated substring
+# wins before any gated superstring can help.
 # \b on `face` keeps interface/surface out; the lookbehind on `beat detect` keeps the
 # spaced "heart beat detection" out (\b already blocks the closed "heartbeat"); the
 # highlight, key-frame, tempo, bpm, and beatsPerMinute forms require detection verbs
@@ -256,11 +288,25 @@ if not non_ios and "axiom-media" not in matches and re.search(
     r'|\btempo\b.{0,40}(song|music|audio|bpm|beats?\b)'
     r'|(song|music|audio|tempo).{0,30}\bbpm\b|\bbpm\b.{0,30}(song|music|audio|tempo)'
     r'|(song|music|audio|tempo|rhythm)\w*.{0,40}beatsperminute|beatsperminute.{0,40}(song|music|audio|tempo|rhythm)'
-    r'|(song|music|track)\w*.{0,30}\b(chorus|verse)\b', prompt_lower):
+    r'|(song|music|track)\w*.{0,30}\b(chorus|verse)\b'
+    r'|(inner|outer)\s*ultra\s*wide|front\s*camera'
+    # 27-cycle capture controls. "lens aperture" and "aperture priority" are
+    # photography vocabulary either way, so routing them to the media suite is right;
+    # "exposure signals" and "autofocus tracking" also read as finance/marketing and
+    # generic CV English, so those two require camera/capture proximity.
+    r'|lens\s*aperture|aperture\s*priority'
+    r'|(exposure\s*signals?|auto\s?focus\s*tracking).{0,40}(camera|capture|avcapture|device|scene|video)'
+    r'|(camera|capture|avcapture|video).{0,40}(exposure\s*signals?|auto\s?focus\s*tracking)'
+    r'|low.?light\s*video\s*noise\s*reduction|cinematic\s*video\s*metadata', prompt_lower):
     matches.append("axiom-media")
 
 # Accessibility
-if re.search(r'voiceover|accessibility.{0,10}(label|hint|trait|value|issue|audit|fix)|dynamic type|color contrast|wcag|a11y|accessib.{0,10}(element|identif|action)|speak\s*screen|spoken\s*content|accessibility\s*reader|larger\s*text\b|accessibility\s*nutrition|\bdirect\s*touch|activation\s*point|button\s*shapes?\b|large\s*content\s*viewer|uilargecontentviewer|full\s*keyboard\s*access|switch\s*control\b(?!\s*(flow|statement|logic))|accessibilitysortpriority|(subtitle|caption)\s*(styl|font|color|appearance|preview)|generated\s*subtitle|(subtitle|caption)s?.{0,15}(video|player|avplayer)', prompt_lower):
+if re.search(r'voiceover|accessibility.{0,10}(label|hint|trait|value|issue|audit|fix)|dynamic type|color contrast|wcag|a11y|accessib.{0,10}(element|identif|action)|speak\s*screen|spoken\s*content|accessibility\s*reader|larger\s*text\b|accessibility\s*nutrition|\bdirect\s*touch|activation\s*point|button\s*shapes?\b|large\s*content\s*viewer|uilargecontentviewer|full\s*keyboard\s*access|switch\s*control\b(?!\s*(flow|statement|logic))|accessibilitysortpriority|generated\s*subtitle|(subtitle|caption)s?.{0,15}(video|player|avplayer)', prompt_lower):
+    matches.append("axiom-accessibility")
+
+# Caption styling. A navigation-bar subtitle is UI text, not a media caption, so styling
+# questions about one belong to the nav-subtitle rules above, not here.
+if "axiom-accessibility" not in matches and not re.search(r'nav(igation)?\s*(bar|item|title)|large\s*title|navigationsubtitle|largesubtitle', prompt_lower) and re.search(r'\b(subtitle|caption)\s*(styl|font|color|appearance|preview)', prompt_lower):
     matches.append("axiom-accessibility")
 
 # AI
@@ -338,7 +384,12 @@ if not non_ios and "axiom-shipping" not in matches and re.search(r'retention\s*m
 # macOS
 # Note: bare "macos"/"mac os" is intentionally NOT matched — it fires on host-OS
 # version mentions ("on macOS 26.3"). Require intent-qualifying terms instead.
-if re.search(r'mac\s*app(?:lication)?s?\b|macos.{0,15}(app|build|sandbox|develop|distribut|notariz|menubar|window|toolbar|sign)|appkit|screencapturekit|scstream\b|scshareablecontent|sccontentfilter|sccontentsharingpicker|scscreenshotmanager|screcordingoutput|nstoolbar|nsviewrepresentable|nshostingcontroller|nshostingview|nshostingmenu|nshostingscene|nsgesturerecognizerrepresentable|nsviewcontrollerrepresentable|nscontrol\b|nsstatusitem|status\s*items?\b.{0,40}(window|menu|keyboard|expand)|menu\s*bar.{0,15}status\s*item|nswindowrestoration|encoderestorablestate|nsrefreshcontroller|nstextselectionmanager|nsglasseffect|cornerconfiguration|concentric.{0,10}corner|corner.{0,12}concentric|windowgroup|menubarextra|utilitywindow|commandmenu|commandgroup|focusedscenevalue|app\s*sandbox|sandbox.{0,10}(violat|entitlement|bookmark)|security.{0,5}scoped|notariz|notarytool|developer\s*id|hardened\s*runtime|sparkle.{0,5}(update|framework|auto)|\.dmg\b|distribut.{0,10}outside|menu\s*bar.{0,5}(extra|command|item)|\bcatalyst\b|maccatalyst|designed\s*for\s*ip(?:ad|hone)|ios\s*apps?\s*on\s*(?:apple\s*silicon|mac)|isiosapponmac|tablecolumn|swiftui\s*table|multi.?column\s*table|\.inspector\b|inspector\s*(column|panel|pane)|navigationsubtitle|navigationdocument|uidocumentproperties|proxy\s*icon|uiprintinteraction\w*|nsprintoperation|backingscalefactor', prompt_lower):
+if re.search(r'mac\s*app(?:lication)?s?\b|macos.{0,15}(app|build|sandbox|develop|distribut|notariz|menubar|window|toolbar|sign)|appkit|(cross.?team|(another|other|different)\s*team\S{0,3}).{0,20}app\s*container|app\s*container.{0,25}(cross.?team|(another|other|different)\s*team)|screencapturekit|scstream\b|scshareablecontent|sccontentfilter|sccontentsharingpicker|scscreenshotmanager|screcordingoutput|nstoolbar|nsviewrepresentable|nshostingcontroller|nshostingview|nshostingmenu|nshostingscene|nsgesturerecognizerrepresentable|nsviewcontrollerrepresentable|nscontrol\b|nsstatusitem|status\s*items?\b.{0,40}(window|menu|keyboard|expand)|menu\s*bar.{0,15}status\s*item|nswindowrestoration|encoderestorablestate|nsrefreshcontroller|nstextselectionmanager|nsglasseffect|cornerconfiguration|concentric.{0,10}corner|corner.{0,12}concentric|windowgroup|menubarextra|utilitywindow|commandmenu|commandgroup|focusedscenevalue|app\s*sandbox|sandbox.{0,10}(violat|entitlement|bookmark)|security.{0,5}scoped|notariz|notarytool|developer\s*id|hardened\s*runtime|sparkle.{0,5}(update|framework|auto)|\.dmg\b|distribut.{0,10}outside|menu\s*bar.{0,5}(extra|command|item)|\bcatalyst\b|maccatalyst|designed\s*for\s*ip(?:ad|hone)|ios\s*apps?\s*on\s*(?:apple\s*silicon|mac)|isiosapponmac|tablecolumn|swiftui\s*table|multi.?column\s*table|\.inspector\b|inspector\s*(column|panel|pane)|navigationdocument|uidocumentproperties|proxy\s*icon|uiprintinteraction\w*|nsprintoperation|backingscalefactor', prompt_lower):
+    matches.append("axiom-macos")
+
+# navigationSubtitle is iPhone/iPad API too (axiom-swiftui skills/toolbars.md), so it spends a
+# macOS slot only with Mac or window-title context (skills/windows.md).
+if "axiom-macos" not in matches and re.search(r'navigationsubtitle', prompt_lower) and re.search(r'\bmac|catalyst|window|title\s*bar', prompt_lower):
     matches.append("axiom-macos")
 
 # watchOS
@@ -358,8 +409,31 @@ if re.search(r'apple\s*pay|pkpayment|pkpaymentauthorization|passkit|\bpkpass\b|w
 if re.search(r'human interface|hig\b|liquid glass|glass\s*[-]?\s*effect\b|glasseffectcontainer|glasseffectlayer|sf symbol|symbol.{0,5}(effect|variablevalue|render)|typography.{0,10}(ios|swift|app)|design.{0,5}(system|pattern|token)|app.{0,5}(entry|onboard)|launch\s*(screen|image|storyboard)\b|app\s*launch\s*(experience|animation|sequence)\b|authentication.{0,5}(flow|screen|ui)|concentric.{0,10}(corner|rectangle)|corner.{0,12}concentric', prompt_lower):
     matches.append("axiom-design")
 
+# The Liquid Glass opt-out key (skills/liquid-glass.md). Its name, in any spelling, is Apple-only
+# and stays ungated. "Design compatibility key/mode/flag/setting" is also AutoCAD, Figma, Ant
+# Design, and SQL Server vocabulary, so it needs an iOS signal or a plist mention; "key" is not
+# context ("registry key", "config key"). Opting out of / disabling / turning off "the new
+# design" needs an OS 26/27 version or a plist mention, because without one it is usually the
+# app's own redesign. Accepted loss: phrasings with no Apple context or no version.
+os_27_cycle = re.search(r'\b(i|ipad|mac|watch|tv|vision)?os\s*2[67]\b', prompt_lower)
+if "axiom-design" not in matches and (re.search(r'designrequirescompat', prompt_lower) or ((ios_signal or re.search(r'\bplist', prompt_lower)) and re.search(r'design[\s-]*compat[ai]bility\b.{0,15}\b(key|mode|flag|setting)s?\b', prompt_lower)) or ((os_27_cycle or re.search(r'\bplist', prompt_lower)) and re.search(r'(opt\w*[\s-]*out|disabl\w*|turn\w*\s*off)\b.{0,25}\bnew\s*((i|ipad|mac)?os\s*2[67][.\d]*\s*)?(design|look|appearance)\b', prompt_lower))):
+    matches.append("axiom-design")
+
 # UIKit
-if re.search(r'uikit|uiview\b|uiviewcontroller|auto\s*layout|nslayoutconstraint|uiviewrepresentable|uihostingcontroller|combine\b.{0,10}(publisher|subscriber|sink|assign)|textkit|nstextlayoutmanager|uilabel|uitableview|uicollectionview|pencilkit|pkcanvasview|pktoolpicker|pkdrawing|apple\s*pencil|paperkit|papermarkup|uicornerconfiguration|cornerconfiguration|encoderestorablestate|iphone\s*mirroring|indirectinputevents|(uiscene)?sizerestrictions|uipointerinteraction|uihovergesture|uikeycommand|discoverabilitytitle|uiapplicationscenemanifest|scene\s*manifest|readablecontentguide|uilayoutguide|layoutmarginsguide|nscollectionlayout|compositional\s*layout|self.?sizing\s*cell|systemlayoutsizefitting|scenediddisconnect|staterestorationactivity|activatescenesession|uiscenesessionactivationrequest|activeappearance|uiscribble\w*|\bscribble\b.{0,30}(handwrit|pencil|text|disable)|per.?(window|scene)\s*undo|undo\s*manager.{0,35}(window|scene)|(window|scene).{0,35}undo\s*manager|undo\w*\s.{0,20}(another|other|wrong)\s*window|resiz\w*.{0,20}(window|scene|screen|apps?\b|layout|support|readiness|ready|mode|model)|(window|scene|screen|apps?\b|layout|free.?form).{0,20}resiz\w*|foldable|folding\s*(iphone|ipad|device|display|screen)', prompt_lower):
+if re.search(r'uikit|uiview\b|uiviewcontroller|auto\s*layout|nslayoutconstraint|uiviewrepresentable|uihostingcontroller|combine\b.{0,10}(publisher|subscriber|sink|assign)|textkit|nstextlayoutmanager|uilabel|uitableview|uicollectionview|pencilkit|pkcanvasview|pktoolpicker|pkdrawing|apple\s*pencil|paperkit|papermarkup|uicornerconfiguration|cornerconfiguration|encoderestorablestate|iphone\s*mirroring|indirectinputevents|(uiscene)?sizerestrictions|uipointerinteraction|uihovergesture|uikeycommand|discoverabilitytitle|uiapplicationscenemanifest|scene\s*manifest|readablecontentguide|uilayoutguide|layoutmarginsguide|nscollectionlayout|compositional\s*layout|self.?sizing\s*cell|systemlayoutsizefitting|scenediddisconnect|staterestorationactivity|activatescenesession|uiscenesessionactivationrequest|activeappearance|uiscribble\w*|\bscribble\b.{0,30}(handwrit|pencil|text|disable)|per.?(window|scene)\s*undo|undo\s*manager.{0,35}(window|scene)|(window|scene).{0,35}undo\s*manager|undo\w*\s.{0,20}(another|other|wrong)\s*window|resiz\w*.{0,20}(window|scene|screen|apps?\b|layout|support|readiness|ready|mode|model)|(window|scene|screen|apps?\b|layout|free.?form).{0,20}resiz\w*|uitoolbar|uinavigationbar|uitabbar\w*|uibarbuttonitem', prompt_lower):
+    matches.append("axiom-uikit")
+
+# "foldable" is cross-platform vocabulary — gated. It shipped ungated in the rule above
+# and routed Android/Kotlin foldable prompts to UIKit (test_foldable_vocabulary_is_gated).
+if "axiom-uikit" not in matches and not non_ios and re.search(r'foldable|folding\s*(iphone|ipad|device|display|screen)', prompt_lower):
+    matches.append("axiom-uikit")
+
+# Nav-bar subtitles (iOS 26; skills/uikit-modernization.md). The large/attributed variants and
+# appearance keys are Apple-only. Bare "largeSubtitle" is a plausible prop name, so it takes the
+# non_ios gate and skips the `.largeSubtitle` placement spelling. Bare "subtitleView" is not
+# Apple-only (Media3/ExoPlayer ships one, and Android has navigation bars too), so it needs an
+# iOS signal or UIKit's own navigation-item/large-title vocabulary.
+if "axiom-uikit" not in matches and (re.search(r'uinavigationitem|largesubtitleview|attributedsubtitle|subtitletextattributes|navigationitem\.\w*subtitle', prompt_lower) or nav_subtitle_phrase or (not non_ios and re.search(r'(?<!\.)\blargesubtitle\b', prompt_lower)) or ((ios_signal or re.search(r'navigation\s*item|large\s*title', prompt_lower)) and re.search(r'\bsubtitleview\b', prompt_lower))):
     matches.append("axiom-uikit")
 
 # Swift language
@@ -400,8 +474,10 @@ if not matches:
     print("{}")
     sys.exit(0)
 
+# Dedupe before capping — some rules (AI, ML) append the same skill unguarded, and a
+# duplicate would waste one of the 3 slots below. dict.fromkeys preserves first-seen order.
 # Limit to top 3 matches (more is noise)
-matches = matches[:3]
+matches = list(dict.fromkeys(matches))[:3]
 
 if len(matches) == 1:
     skill = matches[0]

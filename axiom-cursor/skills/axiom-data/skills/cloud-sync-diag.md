@@ -649,8 +649,3 @@ func diagnoseCloudSyncIssue() async {
 - `skills/cloudkit-ref.md` — CloudKit implementation details
 - `skills/icloud-drive-ref.md` — iCloud Drive implementation details
 - `skills/storage.md` — Choose sync approach
-
----
-
-**Last Updated**: 2025-12-12
-**Skill Type**: Diagnostic

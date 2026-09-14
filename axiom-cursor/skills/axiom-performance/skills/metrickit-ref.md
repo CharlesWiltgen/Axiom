@@ -99,8 +99,7 @@ Typed metric structs use `Measurement`, generic `Histogram<DimensionType>` (buck
 | Case | Payload | Notes |
 |------|---------|-------|
 | `.hangTime` | `Histogram<UnitDuration>` | |
-| `.hitchTime` | ratio + totalHitchTime + totalAnimationTime | animation hitches beyond scrolling |
-| `.scrollHitchTime` | ratio + totalHitchTime + totalScrollTime | |
+| `.hitchTime` | `ratio: Measurement<HitchTimeRatio>` + `totalHitchTime` + `totalAnimationTime` (both `Measurement<UnitDuration>`) | every tracked animation — there is no scroll-specific case, see below |
 | `.timeToFirstDraw`, `.optimizedTimeToFirstDraw`, `.applicationResumeTime`, `.extendedLaunch` | `Histogram<UnitDuration>` | launch family |
 | `.foregroundTermination`, `.backgroundTermination` | per-category counts | both include watchdog; background adds taskTimeout, fileLock, highCPU, systemPressure |
 | `.cpuTime`, `.cpuInstructionsCount` | duration / count | |
@@ -116,6 +115,10 @@ Typed metric structs use `Measurement`, generic `Histogram<DimensionType>` (buck
 | `.totalForegroundTime`, `.totalBackgroundTime`, `.totalBackgroundAudioTime`, `.totalBackgroundLocationTime` | durations | iOS only |
 | `.metalFrameRate` | framesPerSecond, frameCount, activeDrawingDuration, layerName | new capability — render performance for games |
 | `.signpostInterval` | duration histogram + optional averageMemory, cpuTime, logicalWrites, hitch ratios | per signpost name/category |
+
+**Scroll hitches did not survive into the Swift API.** `MetricResult` has no `.scrollHitchTime` case and `ScrollHitchTimeMetric` does not exist — Apple's 27 release notes list both as removed (180455992) — and `MetricReport` carries no scroll-hitch entries. Use `.hitchTime`, which covers all tracked animations. Scroll-specific hitching survives only on the legacy `MXAnimationMetric.scrollHitchTimeRatio` (Part 3).
+
+**Recompile for the hitch-ratio type change.** `HitchTimeMetric.ratio` and `SignpostIntervalMetric.hitchTimeRatio` are `Measurement<HitchTimeRatio>`, and `HitchTimeRatio` is a new `Dimension` subclass (milliseconds of hitching per second). Apple's 27 release notes say to rebuild against the 27 SDK to pick up the type change and avoid crashing on launch (180024784).
 
 `MetricGroup` constants for filtering: `.cpu`, `.memory`, `.diskIO`, `.networkTransfer`, `.display`, `.animation`, `.applicationResponsiveness`, `.cellularCondition`, `.locationActivity`, `.gpu`, `.signpost`, `.appLaunch`, `.appRuntime`, `.appTermination`, `.diskSpaceUsage`, `.frameStatistics`.
 
@@ -428,7 +431,7 @@ func processExits(_ metrics: MXAppExitMetric) {
 @available(iOS 14.0, *)
 func processHitches(_ metrics: MXAnimationMetric) {
     // Scroll hitch rate (hitches per scroll)
-    let scrollHitchRate = metrics.scrollHitchTimeRatio  // Double (0.0 - 1.0)
+    let scrollHitchRate = metrics.scrollHitchTimeRatio  // Measurement<Unit>, dimensionless ratio
 }
 ```
 

@@ -1,6 +1,6 @@
 ---
 name: axiom-swiftui
-description: "Use when building, fixing, or improving ANY SwiftUI UI — views, navigation, layout, animations, performance, architecture, gestures, debugging, iOS 26 features."
+description: "Use when building, fixing, or improving ANY SwiftUI UI — views, navigation, layout, animations, performance, architecture, gestures, debugging, iOS 26 features, iPhone Duo."
 ---
 
 ## Cursor MCP Tool Boundary
@@ -40,6 +40,7 @@ Delegate to the appropriate Cursor subagent when this router calls for a special
 | Custom containers / List replacement (iOS 18+) | See `skills/containers-ref.md` Part 7 |
 | Search implementation | See `skills/search-ref.md` |
 | Toolbars, ToolbarItem, sheet button placement, customization | See `skills/toolbars.md` |
+| Navigation subtitle: `navigationSubtitle`, `.title` / `.subtitle` / `.largeTitle` / `.largeSubtitle` placements (iOS 26) | See `skills/toolbars.md` (Pattern 14) |
 | Sheets, detents, popovers, fullScreenCover, presentation adaptation | See `skills/presentations.md` |
 | Multi-column Table, sortable/resizable columns (iPad/Mac; collapses to first column in compact) | See axiom-macos (skills/swiftui-differences.md) |
 | Inspector panel (`.inspector` — trailing column in regular width, sheet in compact) | See axiom-macos (skills/swiftui-differences.md) |
@@ -47,6 +48,7 @@ Delegate to the appropriate Cursor subagent when this router calls for a special
 | Section index — the vertical A–Z index strip / alphabet scrubber on a list's trailing edge, jump-to-section | See `skills/26-ref.md` (Section Index) |
 | List section margins / insets around a `Section` | See `skills/26-ref.md` (Section Margins) |
 | Web content — `WebView` / `WebPage`, scroll modifiers, WebView-in-NavigationStack | See `skills/26-ref.md` (WebView & WebPage) |
+| iPhone Duo / foldable iPhone: poses, vertical bars, the fold, arrangements, hinge, scene accessories (SwiftUI and UIKit) | See `skills/iphone-duo.md` |
 | iOS 26 features | See `skills/26-ref.md` |
 
 ## Non-SwiftUI UI Routes
@@ -102,6 +104,7 @@ digraph swiftui {
     what -> "skills/toolbars.md" [label="toolbars / sheet buttons"];
     what -> "skills/presentations.md" [label="sheets/detents/popovers"];
     what -> "skills/26-ref.md" [label="iOS 26 features"];
+    what -> "skills/iphone-duo.md" [label="iPhone Duo / foldable"];
     what -> "skills/previews.md" [label="slow previews / building good previews"];
     what -> "skills/previews-ref.md" [label="preview API reference"];
     what -> "skills/debugging.md" [label="preview crashes / won't load"];
@@ -120,7 +123,7 @@ digraph swiftui {
 - Navigation audit → Delegate to the `swiftui-nav-auditor` subagent or `/axiom-audit` swiftui-nav
 - Layout audit → Delegate to the `swiftui-layout-auditor` subagent or `/axiom-audit` swiftui-layout
 - UX flow audit → Delegate to the `ux-flow-auditor` subagent or `/axiom-audit` ux-flow
-- Liquid Glass scan → Delegate to the `liquid-glass-auditor` subagent or `/axiom-audit` liquid-glass (detects migration opportunities AND adoption-completeness gaps: variant discipline for media surfaces, glass-on-glass nesting, missing `if #available` gates, primary-action tinting, `.tabRole(.search)`; scores ADOPTED / PARTIAL / NOT ADOPTED)
+- Liquid Glass scan → Delegate to the `liquid-glass-auditor` subagent or `/axiom-audit` liquid-glass (detects migration opportunities AND adoption-completeness gaps: variant discipline for media surfaces, glass-on-glass nesting, unstyled pre-26 fallbacks, semantic toolbar placement, `Tab(role: .search)`, the `UIDesignRequiresCompatibility` opt-out; scores ADOPTED / PARTIAL / NOT ADOPTED)
 - TextKit scan → Delegate to the `textkit-auditor` subagent or `/axiom-audit` textkit (detects fallback triggers, glyph APIs that corrupt complex scripts, missing Writing Tools wiring, AND architectural gaps like missing fallback observation, SwiftUI wrappers dropping TextKit 2 properties, missing `isWritingToolsActive` guards; scores MODERN / MIXED / LEGACY)
 
 ## Anti-Rationalization
@@ -139,3 +142,4 @@ digraph swiftui {
 | "`@State` is lazy in Xcode 27, I read the release notes" | Only when the property is `private`/`fileprivate`. `skills/architecture.md` has the gate, the three TN3211 breaks, and the one that compiles and is wrong at runtime. |
 | "I'll just write a wrapper view for `@State` in this preview" | `@Previewable @State` (Xcode 16+) eliminates that boilerplate. `skills/previews-ref.md` has the macro signature. |
 | "I'll just rebuild and relaunch every time" | Hot reload edits the running app in place, state preserved. `skills/hot-reload.md` has the InjectionNext + Inject setup and the verify-via-`xclog` loop. |
+| "Duo is just a bigger iPhone; my layout already resizes" | Bars move to the side, the fold divides the screen, and the outer display can't open windows. `skills/iphone-duo.md` covers what resizing alone misses. |

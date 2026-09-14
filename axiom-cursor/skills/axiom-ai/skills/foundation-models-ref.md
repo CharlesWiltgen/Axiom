@@ -1525,6 +1525,4 @@ Use `@Generable` with `respond(to:generating:)` instead of prompting for JSON an
 
 ---
 
-**Last Updated**: 2026-06-09
-**Skill Type**: Reference
 **Content**: WWDC 2025 + 2026 code examples; OS27 surface verified against the Xcode 27 SDK

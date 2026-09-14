@@ -50,6 +50,8 @@ Grep for:
   - `UIScreen.main`, `UIDevice.current.orientation` — deprecated APIs
   - `.width >`, `.width <`, `.height >` — numeric breakpoints
   - `UIRequiresFullScreen` in plist files
+  - `.ignoresSafeArea(` — safe-area opt-outs (read what they wrap)
+  - `.safeAreaInset(edge:` — edge-pinned custom content
 ```
 
 ### Step 3: Understand Adaptivity Strategy
@@ -74,7 +76,7 @@ Present this map in the output before proceeding.
 
 ## Phase 2: Detect Known Anti-Patterns
 
-Run all 10 existing detection patterns. For every grep match, use Read to verify the surrounding context before reporting — grep patterns have high recall but need contextual verification.
+Run all 12 existing detection patterns. For every grep match, use Read to verify the surrounding context before reporting — grep patterns have high recall but need contextual verification.
 
 ### 1. GeometryReader in Stacks Without .frame() (CRITICAL)
 
@@ -146,6 +148,20 @@ Run all 10 existing detection patterns. For every grep match, use Read to verify
 **Search**: `GeometryReader.*size\.width\s*\*`, `GeometryReader.*size\.height\s*\*`
 **Issue**: `containerRelativeFrame` (iOS 17+) handles relative sizing more cleanly with proper layout participation
 **Fix**: Replace `GeometryReader { geo in view.frame(width: geo.size.width * 0.5) }` with `.containerRelativeFrame(.horizontal) { w, _ in w * 0.5 }`
+
+### 11. ignoresSafeArea on Interactive Content (HIGH)
+
+**Pattern**: `.ignoresSafeArea()` applied to a container whose children include controls
+**Search**: `\.ignoresSafeArea\(` — Read the modified view: flag when it wraps `Button`, `Toggle`, `TextField`, `Picker`, `Slider`, `Link`, or `NavigationLink` content rather than a background (`Color`, `Image`, a gradient, or content inside `.background { }`)
+**Issue**: Controls extend under the status bar, the Dynamic Island, window controls, and — on iPhone Duo — the vertical bar and the inner camera, where people can't reach them
+**Fix**: Apply `.ignoresSafeArea()` to the background only: `content.background { Color.accentColor.ignoresSafeArea() }`
+
+### 12. Hand-Built Toolbar Rows (MEDIUM)
+
+**Pattern**: A row of bar-style action buttons (share, edit, add, filter, delete — what `.toolbar` placements exist for) pinned to an edge with `.safeAreaInset(edge:)`, `.overlay(alignment: .bottom)` / `.top`, or `VStack { Spacer(); HStack { Button… } }`, standing in for a toolbar
+**Search**: `\.safeAreaInset\(edge:`, `\.overlay\(alignment: \.(bottom|top)`, `Spacer\(\)` followed by `HStack` — Read context: flag only rows of two or more action buttons; content controls stay out — media transport (play/pause/skip) and scrubbers, composer fields, banners
+**Issue**: Hand-built bars never join system overflow, priorities, or placement. On iPhone Duo they can't move to the side when built against the 27.1 SDK, and they don't avoid the fold
+**Fix**: Move the buttons into `.toolbar` with semantic placements (axiom-swiftui skills/toolbars.md, skills/iphone-duo.md); keep `.safeAreaInset` for genuinely custom accessory content
 
 ## Phase 3: Reason About Layout Completeness
 
@@ -258,6 +274,8 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details
 - Size class checks that genuinely adapt layout (not inferring orientation)
 - GeometryReader with `.frame()` constraint (already safe)
 - Large fixed frames for full-screen backgrounds/images (intentional)
+- `.ignoresSafeArea()` on backgrounds, full-bleed images, maps, or video players
+- `.safeAreaInset` hosting content controls — media transport (play/pause/skip), a scrubber, a text composer, or a banner — rather than action buttons
 
 ## Related
 

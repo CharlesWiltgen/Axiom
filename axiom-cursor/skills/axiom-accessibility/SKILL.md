@@ -47,6 +47,7 @@ Delegate to the appropriate Cursor subagent when this router calls for a special
 
 - Full watchOS development context → See axiom-watchos
 - Live accessibility validation on the simulator (set toggles, assert announcements) → `simulator-tester` agent + `xcui` — see axiom-tools (skills/xcui-ref.md)
+- Asserting VoiceOver speech in an XCUITest (`XCUIDevice.shared.voiceOverService`, `OS27`) → axiom-testing (skills/ui-testing.md Pattern 7)
 
 ## Decision Tree
 
