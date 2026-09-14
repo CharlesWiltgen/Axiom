@@ -30,7 +30,7 @@ Use this skill when:
 - **SDK behavior** – what your app does on Duo when built with older SDKs, iOS 27.0, and iOS 27.1
 - **Readiness today** – per-side safe areas, the tab sidebar, and window-request handling that work with the current SDK
 - **Vertical bars** – which bars move to the side, item order, overflow priorities, and when to turn the behavior off
-- **The fold** – rules for keeping controls reachable without hiding them
+- **The fold** – rules for keeping controls reachable without hiding them, and for spacing and sizing custom grids around it
 - **Announced APIs** – vertical-bar overrides, reserved regions, arrangements, the hinge, and the camera accessory, clearly marked as announced for the iOS 27.1 SDK
 
 ## Related
