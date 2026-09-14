@@ -54,7 +54,7 @@ export const DOC_STAT_KEYS = Object.keys(docStatValues({}));
 export const DOC_STAT_FILES = [
   { file: "docs/start/install.md", markers: { skills: 1 } },
   { file: "docs/start/codex-install.md", markers: { skills: 1, agents: 1, commands: 1 } },
-  { file: "docs/start/skill-map.md", markers: { skills: 1, agents: 1, commands: 1 } },
+  { file: "docs/start/skill-map.md", markers: { routers: 3, skills: 2, agents: 2, commands: 2 } },
   // index.md states commands + agents twice (category bullets + a Total line).
   { file: "docs/start/index.md", markers: { discipline: 1, reference: 1, diagnostic: 1, agents: 2, commands: 2, skills: 1 } },
   { file: "docs/agents/index.md", markers: { agents: 1 } },
@@ -62,6 +62,7 @@ export const DOC_STAT_FILES = [
   // Added with the native Cursor plugin (beta.49). Both restate router/agent/
   // command counts in prose; without registration they drift on the next skill
   // or agent addition, exactly as install.md and xcode-setup.md did before.
+  { file: "docs/start/pi-install.md", markers: { agents: 2, commands: 2, skills: 3 } },
   { file: "docs/start/cursor-install.md", markers: { routers: 2, agents: 5, commands: 2 } },
   { file: "README.md", markers: { routers: 1, agents: 1, commands: 1 } },
   { file: "docs/commands/utility/ask.md", markers: { agents: 1 } },

@@ -4,7 +4,7 @@ Axiom installs into [Pi](https://pi.dev/) — the minimal, open-source terminal 
 
 ## What You Get
 
-Axiom's full skill catalog — <!--ax:skills-->254<!--/ax--> skills covering:
+Axiom's full skill catalog — <!--ax:skills-->276<!--/ax--> skills covering:
 
 - **SwiftUI** – layout, navigation, animations, performance, architecture, debugging
 - **Data** – SwiftData, Core Data, GRDB, CloudKit, migrations, Codable
@@ -16,7 +16,7 @@ Axiom's full skill catalog — <!--ax:skills-->254<!--/ax--> skills covering:
 - **Apple Intelligence** – Foundation Models, on-device AI, CoreML
 - **Accessibility** – VoiceOver, Dynamic Type, WCAG compliance
 
-Pi keeps only the 27 router *descriptions* in context and loads each skill's full instructions — and the <!--ax:skills-->254<!--/ax--> skills beneath them — on demand ([progressive disclosure](https://pi.dev/docs/latest/skills)). That's the same two-layer routing Axiom is built around, so the catalog stays cheap on tokens.
+Pi keeps only the 27 router *descriptions* in context and loads each skill's full instructions — and the <!--ax:skills-->276<!--/ax--> skills beneath them — on demand ([progressive disclosure](https://pi.dev/docs/latest/skills)). That's the same two-layer routing Axiom is built around, so the catalog stays cheap on tokens.
 
 ## Prerequisites
 
@@ -136,9 +136,9 @@ Pi consumes Axiom's skills natively, and `pi install` adds the [commands and hoo
 
 | Feature | Claude Code | Pi |
 |---------|-------------|----|
-| Skills | Full catalog | 27 routers — the full <!--ax:skills-->254<!--/ax--> skills, loaded on demand |
-| Agents | <!--ax:agents-->40<!--/ax--> autonomous auditors | Not supported — Pi has no sub-agent system |
-| Commands | <!--ax:commands-->15<!--/ax--> `/axiom:*` commands | `/axiom-*` — included with `pi install` |
+| Skills | Full catalog | 27 routers — the full <!--ax:skills-->276<!--/ax--> skills, loaded on demand |
+| Agents | <!--ax:agents-->42<!--/ax--> autonomous auditors | Not supported — Pi has no sub-agent system |
+| Commands | <!--ax:commands-->17<!--/ax--> `/axiom:*` commands | `/axiom-*` — included with `pi install` |
 | Hooks | Session + tool hooks | Included with `pi install` |
 | Built-in tools | Bundled on the plugin's PATH | Run via Pi's shell once added to your PATH (see above) |
 | Installation | `/plugin marketplace add` | `pi install git:…/Axiom` (or `npx skills … -a pi` for skills only) |
@@ -159,7 +159,7 @@ Pi loads full instructions on demand. If a match isn't triggering, name the skil
 
 ## Also Available
 
-- **[Claude Code](/start/install)** – Full Axiom experience with <!--ax:agents-->40<!--/ax--> autonomous agents and <!--ax:commands-->15<!--/ax--> commands
+- **[Claude Code](/start/install)** – Full Axiom experience with <!--ax:agents-->42<!--/ax--> autonomous agents and <!--ax:commands-->17<!--/ax--> commands
 - **[Codex Plugin](/start/codex-install)** – Native skills for the OpenAI Codex CLI, web app, and IDE extensions
 - **[MCP Server](/start/mcp-install)** – Skills in VS Code, Cursor, Gemini CLI, and any MCP-compatible tool
 - **[Xcode Integration](/start/xcode-setup)** – Direct Xcode MCP bridge for in-editor assistance

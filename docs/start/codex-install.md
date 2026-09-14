@@ -29,7 +29,7 @@ The Codex plugin includes 184 specialized skills covering:
 npx skills add CharlesWiltgen/Axiom -a codex -g
 ```
 
-This installs all <!--ax:skills-->275<!--/ax--> skills globally using [npx skills](https://skills.sh/). The `-g` flag makes skills available across all projects.
+This installs all <!--ax:skills-->276<!--/ax--> skills globally using [npx skills](https://skills.sh/). The `-g` flag makes skills available across all projects.
 
 To install for the current project only (omit `-g`):
 
@@ -130,7 +130,7 @@ The Codex plugin includes the same skill content as the Claude Code plugin, with
 
 | Feature | Claude Code | Codex |
 |---------|-------------|-------|
-| Skills | 27 routers + 303 specialized | 27 routers + 272 specialized (the other 31 are listed below) |
+| Skills | 27 routers + 306 specialized | 27 routers + 275 specialized (the other 31 are listed below) |
 | Agents | 42 autonomous auditors | All 42, converted to skills you invoke by name (`axiom-audit-memory`, `axiom-fix-build`, …) |
 | Commands | 17 `/axiom:*` commands | Not supported in Codex plugins — use the equivalent agent-skill above |
 | Hooks | Lifecycle hooks (skill routing, `@State` guardrail, version ground-truth) | Supported via the native plugin install — set `features.hooks = true` |

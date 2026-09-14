@@ -1,12 +1,12 @@
 # Skill Map
 
-Visual overview of Axiom's two-layer routing architecture. 23 routers organize <!--ax:skills-->275<!--/ax--> skills, <!--ax:agents-->42<!--/ax--> agents, and <!--ax:commands-->17<!--/ax--> commands into discoverable domains.
+Visual overview of Axiom's two-layer routing architecture. <!--ax:routers-->27<!--/ax--> routers organize <!--ax:skills-->276<!--/ax--> skills, <!--ax:agents-->42<!--/ax--> agents, and <!--ax:commands-->17<!--/ax--> commands into discoverable domains.
 
 ## How It Works
 
 Axiom uses **progressive disclosure** — you never need to memorize skill names. Ask a question, and the right router activates automatically:
 
-1. **Your question** hits one of 23 domain routers
+1. **Your question** hits one of <!--ax:routers-->27<!--/ax--> domain routers
 2. The **router** selects the right specialized skill, agent, or command
 3. You get **expert guidance** tailored to your specific issue
 
@@ -43,8 +43,8 @@ Axiom uses **progressive disclosure** — you never need to memorize skill names
 
 | Category | Count |
 |----------|-------|
-| Routers | 23 |
-| Skills | 175 |
-| Agents | 38 |
-| Commands | 12 |
+| Routers | <!--ax:routers-->27<!--/ax--> |
+| Skills | <!--ax:skills-->276<!--/ax--> |
+| Agents | <!--ax:agents-->42<!--/ax--> |
+| Commands | <!--ax:commands-->17<!--/ax--> |
 

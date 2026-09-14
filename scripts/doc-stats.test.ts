@@ -181,7 +181,7 @@ describe("module config", () => {
     // Asserting the files EXIST beats asserting a path prefix: the registry now
     // includes README.md (outside docs/), and a registered-but-deleted page
     // would otherwise fail only at release time inside pre-deploy.
-    assert.equal(DOC_STAT_FILES.length, 9);
+    assert.equal(DOC_STAT_FILES.length, 10);
     for (const { file, markers } of DOC_STAT_FILES) {
       assert.ok(file.endsWith(".md"), `${file} should be markdown`);
       assert.ok(
