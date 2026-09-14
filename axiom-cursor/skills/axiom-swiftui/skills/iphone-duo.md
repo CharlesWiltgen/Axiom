@@ -59,6 +59,7 @@ Use when:
 | "I'll hide the controls when it's folded" | Displace, never hide: move, resize, or reorganize so every function stays reachable in every pose. |
 | "I'll read the hinge angle to size my panes" | The hinge drives effects and interactions. Layout uses arrangements and reserved regions. |
 | "Each pose gets its own layout" | Design for the two horizontal size classes — compact outside, regular inside. An optional tabletop layout must keep every control and the same hierarchy. |
+| "It's on the inner display, so it's wide" | A Split View half is half the inner display, and Apple hasn't said which size class it reports. Read the size class from the environment; never key a wide layout to the display. |
 | "The New Window button can always show" | The outer display can't create windows. Gate the affordance. |
 
 ## The Device
@@ -67,7 +68,8 @@ Use when:
 |---|---|---|
 | Outer, portrait | `.compact` | `.regular` |
 | Outer, landscape | `.compact` | `.compact` |
-| Inner | `.regular` | `.regular` |
+| Inner, full screen | `.regular` | `.regular` |
+| Inner, one half of Split View | not stated | not stated |
 
 - **Poses** Closed; open in portrait or landscape; partially folded like a book; seated like a laptop (tabletop) with the inner display facing you; standing on its edges.
 - **Still an iPhone app** Adapt to size classes and scene bounds, never to the device.
@@ -172,7 +174,7 @@ The Swift name is `UIWindowScene.ActivationAction`; the ObjC name `UIWindowScene
 
 #### Test both halves of Split View
 
-Drag the app to the left half, then the right. The vertical bar follows the app's outer edge, so the larger safe-area inset switches sides.
+Drag the app to the left half, then the right. The vertical bar follows the app's outer edge, so the larger safe-area inset switches sides. The talks don't say which horizontal size class each half reports: check on the Duo simulator once Xcode 27.1 ships, and until then make the half's layout work at both size classes.
 
 ## Vertical Bars
 
@@ -246,9 +248,15 @@ The outer display's camera is always present, and system bars already lay out ar
 - Let purpose choose the destination. Book pose: alerts move to the trailing side, where they'll be when the device closes. Tabletop: content meant to be seen from a distance goes to the top region; tappable controls go to the bottom, a stable surface.
 - Stay contextual: search stays over the view it searches.
 
-System components already avoid the fold: sheets, alerts, action sheets, menus, popovers, and toolbar buttons, and split views rebalance to an even 50/50. Use them wherever you can. Inactive regions still inform high-level choices — prefer an even number of grid columns when a fold can appear.
+System components already avoid the fold: sheets, alerts, action sheets, menus, popovers, and toolbar buttons, and split views rebalance to an even 50/50. Use them wherever you can.
 
-Querying regions is announced for 27.1 — see the table below.
+#### Custom grids
+
+These change spacing and column count, not which region content lives in, so they aren't displacement.
+
+- **Keep each item inside one region while folded.** Preserve the outer margins and widen the spacing around the fold (Apple's Fitness example, 111463 5:56).
+- **Consider an even column count.** Apple suggests preferring an even number of columns when a division region exists, active or not (111463 7:36). The middle gap lands on the fold only when the grid is centered on the display and the fold runs vertically through it, as in book pose; otherwise place the gap from the region's `frame`. `GridItem(.adaptive(minimum:))` picks its own count, which can be odd.
+- **Find the fold (27.1).** Read the division region's `frame`, passing `.includeInactive` for the column decision (SwiftUI; the table gives no UIKit spelling) — `regions.query` in the table below. Before 27.1, only system components know where the fold is: don't hard-code the display's midpoint or check the device model.
 
 ## Arrangements
 
