@@ -191,4 +191,4 @@ assistant: [Delegate to the `iap-implementation` subagent]
 
 ## Scope
 
-Implements complete IAP following testing-first workflow with StoreKit configuration, centralized StoreManager, transaction handling, and restore purchases.      This agent writes code; it has no `/axiom-audit` form. To review existing IAP code instead, use `/axiom-audit` iap (the iap-auditor agent).
+Implements complete IAP following testing-first workflow with StoreKit configuration, centralized StoreManager, transaction handling, and restore purchases.      This agent writes code rather than auditing it. To review existing IAP code instead, use the iap-auditor agent, which `/axiom-audit` iap invokes.
