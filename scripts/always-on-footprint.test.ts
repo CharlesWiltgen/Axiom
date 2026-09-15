@@ -30,30 +30,35 @@ test("every harness reports parts that sum to its total", () => {
 });
 
 // Agent descriptions are `description: |` block scalars. A reader that only
-// handles single-line values would score them at 1 char and report the
-// dominant cost as negligible.
+// handles single-line values would score them at ~1 char each and report the
+// listing as negligible. The floor is well under the real value (Axiom-2fa cut
+// it to ~6k) and far over what a single-line reader can produce.
 test("reads block-scalar agent descriptions, not just the sigil", () => {
   const cc = measureFootprints(root).find((f) => f.harness === "claude-code");
   const agents = cc!.parts.find((p) => p.label === "agent listing");
   assert.ok(agents, "claude-code should measure an agent listing");
   assert.ok(
-    agents.chars > 20_000,
+    agents.chars > 4_000,
     `agent listing measured ${agents.chars} — block scalars are being missed`,
   );
 });
 
-// The Cursor build truncates agent descriptions to their first sentence. That
-// is the same content at a fraction of the cost, so the gap is a standing
-// signal about what Claude Code could reclaim.
-test("cursor carries the same agents far more cheaply than claude-code", () => {
+// Claude Code and Cursor carry the same 42 agents, and since Axiom-2fa both ship
+// the first sentence only. Near-parity is the invariant that keeps it that way:
+// it was 6.4x before the frontmatter examples moved into the agent bodies, so
+// restoring examples to the frontmatter (or any other listing growth) breaks
+// this ratio rather than silently costing every session ~33k chars.
+test("claude-code and cursor carry the same agents for about the same cost", () => {
   const by = Object.fromEntries(
     measureFootprints(root).map((f) => [f.harness, f]),
   );
   const ccAgents = by["claude-code"].parts.find((p) => p.label === "agent listing")!;
   const cursorAgents = by["cursor"].parts.find((p) => p.label === "agent listing")!;
+  const drift = Math.abs(ccAgents.chars - cursorAgents.chars) / ccAgents.chars;
   assert.ok(
-    cursorAgents.chars * 2 < ccAgents.chars,
-    `expected Cursor agents (${cursorAgents.chars}) to be far under Claude Code (${ccAgents.chars})`,
+    drift < 0.1,
+    `claude-code agents (${ccAgents.chars}) and cursor agents (${cursorAgents.chars}) ` +
+      `differ by ${(drift * 100).toFixed(0)}% — the same agents should cost about the same`,
   );
 });
 

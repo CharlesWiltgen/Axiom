@@ -347,3 +347,34 @@ For purpose-string and Privacy Manifest coverage: `security-privacy-scanner` age
 For main-thread session work: `concurrency-auditor` agent
 For HEVC encoding battery cost: `energy-auditor` agent
 For saved capture file location and protection: `storage-auditor` agent
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "Can you check my camera code for issues?"
+assistant: [Launches camera-auditor agent]
+</example>
+
+<example>
+user: "Audit my capture implementation"
+assistant: [Launches camera-auditor agent]
+</example>
+
+<example>
+user: "Is my camera code following best practices?"
+assistant: [Launches camera-auditor agent]
+</example>
+
+<example>
+user: "Check for deprecated camera APIs"
+assistant: [Launches camera-auditor agent]
+</example>
+
+<example>
+user: "Review my AVFoundation capture code"
+assistant: [Launches camera-auditor agent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `axiom-audit-camera`

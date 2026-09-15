@@ -252,3 +252,19 @@ For detailed concurrency patterns: `axiom-concurrency` skill
 For migration guidance: Enable `-strict-concurrency=complete` and fix warnings
 For memory lifecycle issues found during audit: `axiom-performance (skills/memory-debugging.md)` skill
 For symbolicating `swift_concurrency_violation` crashes: `axiom-tools (skills/xcsym-ref.md)`
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "Can you check my code for Swift 6 concurrency issues?"
+assistant: [Launches concurrency-auditor agent]
+</example>
+
+<example>
+user: "I'm getting data race warnings, can you scan for concurrency violations?"
+assistant: [Launches concurrency-auditor agent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `axiom-audit-concurrency`

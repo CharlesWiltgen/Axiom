@@ -1,20 +1,7 @@
 ---
 name: iap-implementation
 description: |
-  Use this agent when the user wants to add in-app purchases, implement StoreKit 2, or set up subscriptions. Implements complete IAP following testing-first workflow with StoreKit configuration, centralized StoreManager, transaction handling, and restore purchases.
-
-  <example>
-  user: "Implement in-app purchases for my app"
-  assistant: [Launches iap-implementation agent]
-  </example>
-
-  <example>
-  user: "Add subscription support with monthly and annual plans"
-  assistant: [Launches iap-implementation agent]
-  </example>
-
-  This agent writes code; it has no `/axiom:audit` form. To review existing
-  IAP code instead, use `/axiom:audit iap` (the iap-auditor agent).
+  Use this agent when the user wants to add in-app purchases, implement StoreKit 2, or set up subscriptions.
 model: sonnet
 color: blue
 tools:
@@ -193,3 +180,17 @@ Button("Restore Purchases") {
 For detailed patterns: `axiom-integration` (skills/in-app-purchases.md)
 For API reference: `axiom-integration` (skills/storekit-ref.md)
 For auditing: `iap-auditor` agent
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "Implement in-app purchases for my app"
+assistant: [Launches iap-implementation agent]
+</example>
+
+<example>
+user: "Add subscription support with monthly and annual plans"
+assistant: [Launches iap-implementation agent]
+</example>

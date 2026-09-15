@@ -200,3 +200,24 @@ If <=100 total findings:
 For individual audits: Use the specific auditor agent directly (e.g., `memory-auditor`, `accessibility-auditor`)
 For build-specific issues: `build-fixer` agent
 For test-specific issues: `test-failure-analyzer` agent
+
+## Invocation Examples
+
+Prompts that should Delegate to the `this` subagent:
+
+<example>
+user: "Run a health check on my project"
+assistant: [Delegate to the `health-check` subagent]
+</example>
+
+<example>
+user: "Scan everything for issues"
+assistant: [Delegate to the `health-check` subagent]
+</example>
+
+<example>
+user: "Give me a full audit of my codebase"
+assistant: [Delegate to the `health-check` subagent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom-health-check` or `/axiom-audit` all (Claude Code only)

@@ -418,3 +418,34 @@ No flaky test patterns detected.
 - Enable parallel testing to expose hidden races
 - Use Xcode's "Repeat Until Failure" for suspect tests
 ```
+
+## Invocation Examples
+
+Prompts that should Delegate to the `this` subagent:
+
+<example>
+user: "My tests fail randomly in CI"
+assistant: [Delegate to the `test-failure-analyzer` subagent]
+</example>
+
+<example>
+user: "This test passes locally but fails in CI"
+assistant: [Delegate to the `test-failure-analyzer` subagent]
+</example>
+
+<example>
+user: "I have a flaky test that fails 20% of the time"
+assistant: [Delegate to the `test-failure-analyzer` subagent]
+</example>
+
+<example>
+user: "My Swift Testing tests have race conditions"
+assistant: [Delegate to the `test-failure-analyzer` subagent]
+</example>
+
+<example>
+user: "Test passes individually, fails when run with others"
+assistant: [Delegate to the `test-failure-analyzer` subagent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom-audit` test-failures

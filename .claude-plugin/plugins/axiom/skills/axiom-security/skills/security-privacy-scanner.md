@@ -292,3 +292,34 @@ For Keychain patterns: `axiom-security` skill
 For ATS configuration: `axiom-networking` skill
 For entitlement issues: `axiom-build` skill
 For IAP-adjacent receipt security: Launch `iap-auditor` agent
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "Can you check my code for security issues?"
+assistant: [Launches security-privacy-scanner agent]
+</example>
+
+<example>
+user: "I need to prepare for App Store security review"
+assistant: [Launches security-privacy-scanner agent]
+</example>
+
+<example>
+user: "Are there any hardcoded credentials in my codebase?"
+assistant: [Launches security-privacy-scanner agent]
+</example>
+
+<example>
+user: "Do I need a Privacy Manifest?"
+assistant: [Launches security-privacy-scanner agent]
+</example>
+
+<example>
+user: "Check if I'm storing tokens securely"
+assistant: [Launches security-privacy-scanner agent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom:audit security` — which covers privacy too (Privacy Manifests, sensitive-data storage and logging)

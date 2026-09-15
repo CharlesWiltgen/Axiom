@@ -628,15 +628,17 @@ const META_AUDIT_AREAS = new Set(["all"]);
  * Order-preserving and deduplicated.
  */
 export function parseAdvertisedAuditAreas(content: string): string[] {
-  const description = parseAgentDescription(content);
-  if (!description) return [];
+  // Whole file, not just the frontmatter description — same move as
+  // parseAdvertisedCommands (Axiom-2fa): the `/axiom:audit <area>` hints now
+  // live in the agent body, and an area promised there must still exist.
+  if (!content) return [];
 
   const seen = new Set<string>();
   const areas: string[] = [];
   // `[^\S\r\n]+` — horizontal whitespace only. A bare `\s+` crosses line
   // breaks, so prose ending a line on "/axiom:audit" captures the first
   // word of the next line and reports it as an unregistered area.
-  for (const m of description.matchAll(/\/axiom:audit[^\S\r\n]+([a-z][a-z0-9-]*)/g)) {
+  for (const m of content.matchAll(/\/axiom:audit[^\S\r\n]+([a-z][a-z0-9-]*)/g)) {
     const area = m[1];
     if (seen.has(area)) continue;
     seen.add(area);
@@ -734,12 +736,16 @@ export function validateAdvertisedAreas(args: AdvertisedAreaArgs): string[] {
  * commands in prose.
  */
 export function parseAdvertisedCommands(content: string): string[] {
-  const description = parseAgentDescription(content);
-  if (!description) return [];
+  // Whole file, not just the frontmatter description: the `Explicit command:`
+  // hints that advertise these commands moved into the agent body (Axiom-2fa —
+  // the frontmatter listing is always-on in every session, the body is not).
+  // A ghost command promised in the body is exactly as broken as one promised
+  // in the frontmatter, which is what this check exists to catch.
+  if (!content) return [];
 
   const seen = new Set<string>();
   const commands: string[] = [];
-  for (const m of description.matchAll(/\/axiom:([a-z][a-z0-9-]*)/g)) {
+  for (const m of content.matchAll(/\/axiom:([a-z][a-z0-9-]*)/g)) {
     const command = m[1];
     if (seen.has(command)) continue;
     seen.add(command);

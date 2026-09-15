@@ -221,3 +221,29 @@ For architecture patterns: `axiom-swiftui` skill (architecture)
 For performance issues: `swiftui-performance-analyzer` agent
 For navigation architecture: `swiftui-nav-auditor` agent
 For local Swift cleanups inside view bodies: `swift-simplifier` agent (it does local clarity; this auditor owns structural moves)
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "Check my SwiftUI architecture for separation of concerns"
+assistant: [Launches swiftui-architecture-auditor agent]
+</example>
+
+<example>
+user: "Review my view models and state management"
+assistant: [Launches swiftui-architecture-auditor agent]
+</example>
+
+<example>
+user: "Am I using @State correctly?"
+assistant: [Launches swiftui-architecture-auditor agent]
+</example>
+
+<example>
+user: "Audit my app for testability and business logic separation"
+assistant: [Launches swiftui-architecture-auditor agent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom:audit swiftui-architecture`

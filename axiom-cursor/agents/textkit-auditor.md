@@ -319,3 +319,34 @@ For background attributed-string construction crossing actors: `concurrency-audi
 For main-thread stalls when loading large documents: `swift-performance-analyzer` agent
 For SwiftUI wrappers re-creating text views on every render: `swiftui-performance-analyzer` agent
 For saved-document file location and protection: `storage-auditor` agent
+
+## Invocation Examples
+
+Prompts that should Delegate to the `this` subagent:
+
+<example>
+user: "Can you check my text editor for TextKit issues?"
+assistant: [Delegate to the `textkit-auditor` subagent]
+</example>
+
+<example>
+user: "Why isn't Writing Tools appearing in my text view?"
+assistant: [Delegate to the `textkit-auditor` subagent]
+</example>
+
+<example>
+user: "Review my UITextView code"
+assistant: [Delegate to the `textkit-auditor` subagent]
+</example>
+
+<example>
+user: "Check for TextKit 2 compatibility"
+assistant: [Delegate to the `textkit-auditor` subagent]
+</example>
+
+<example>
+user: "I need to add a text editor, can you review the implementation?"
+assistant: [Delegate to the `textkit-auditor` subagent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom-audit` textkit

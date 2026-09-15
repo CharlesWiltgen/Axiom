@@ -444,3 +444,34 @@ File → Packages → Update to Latest Package Versions
 # Trust macro package:
 Product → Swift Packages → Trust & Enable Package Plugin
 ```
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "SPM won't resolve my dependencies"
+assistant: [Launches spm-conflict-resolver agent]
+</example>
+
+<example>
+user: "I'm getting 'No such module' after adding a package"
+assistant: [Launches spm-conflict-resolver agent]
+</example>
+
+<example>
+user: "Duplicate symbol linker error"
+assistant: [Launches spm-conflict-resolver agent]
+</example>
+
+<example>
+user: "Two packages require different versions of the same dependency"
+assistant: [Launches spm-conflict-resolver agent]
+</example>
+
+<example>
+user: "Package won't build with Swift 6"
+assistant: [Launches spm-conflict-resolver agent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `axiom-resolve-spm`

@@ -192,3 +192,24 @@ If <=100 total findings:
 For individual audits: Use the specific auditor agent directly (e.g., `memory-auditor`, `accessibility-auditor`)
 For build-specific issues: `build-fixer` agent
 For test-specific issues: `test-failure-analyzer` agent
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "Run a health check on my project"
+assistant: [Launches health-check agent]
+</example>
+
+<example>
+user: "Scan everything for issues"
+assistant: [Launches health-check agent]
+</example>
+
+<example>
+user: "Give me a full audit of my codebase"
+assistant: [Launches health-check agent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `axiom-health-check` or `/axiom:audit all` (Claude Code only)

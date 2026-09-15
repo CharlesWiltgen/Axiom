@@ -309,3 +309,34 @@ For implementation patterns: `axiom-integration` skill (skills/in-app-purchases.
 For StoreKit 2 API reference: `axiom-integration` skill (skills/storekit-ref.md)
 For complete IAP implementation: Delegate to the `iap-implementation` subagent
 For security of receipt validation: Delegate to the `security-privacy-scanner` subagent
+
+## Invocation Examples
+
+Prompts that should Delegate to the `this` subagent:
+
+<example>
+user: "Can you review my in-app purchase implementation?"
+assistant: [Delegate to the `iap-auditor` subagent]
+</example>
+
+<example>
+user: "I'm having issues with subscription renewals"
+assistant: [Delegate to the `iap-auditor` subagent]
+</example>
+
+<example>
+user: "Audit my StoreKit 2 code"
+assistant: [Delegate to the `iap-auditor` subagent]
+</example>
+
+<example>
+user: "Check if I'm handling transactions correctly"
+assistant: [Delegate to the `iap-auditor` subagent]
+</example>
+
+<example>
+user: "My restore purchases isn't working properly"
+assistant: [Delegate to the `iap-auditor` subagent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom-audit` iap

@@ -214,3 +214,34 @@ All [N] screenshots passed validation.
 - Ensure screenshots are localized for each target market
 - Test screenshots at actual App Store listing size (they appear small on device)
 ```
+
+## Invocation Examples
+
+Prompts that should Delegate to the `this` subagent:
+
+<example>
+user: "Can you check my App Store screenshots for issues?"
+assistant: [Delegate to the `screenshot-validator` subagent]
+</example>
+
+<example>
+user: "Validate my screenshots before I submit to the App Store"
+assistant: [Delegate to the `screenshot-validator` subagent]
+</example>
+
+<example>
+user: "Are my screenshots the right dimensions?"
+assistant: [Delegate to the `screenshot-validator` subagent]
+</example>
+
+<example>
+user: "Check my marketing screenshots for problems"
+assistant: [Delegate to the `screenshot-validator` subagent]
+</example>
+
+<example>
+user: "Review screenshots in ~/Desktop/AppScreenshots"
+assistant: [Delegate to the `screenshot-validator` subagent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom-audit` screenshots

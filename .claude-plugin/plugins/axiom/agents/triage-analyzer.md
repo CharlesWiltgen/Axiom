@@ -1,26 +1,7 @@
 ---
 name: triage-analyzer
 description: |
-  Use when the user wants to triage a CORPUS of production crashes/hangs from an aggregator (Sentry, App Store Connect) — grouped, counted issues — rather than a single crash file. Fetches unresolved issues, normalizes them, runs `xcsym triage` to classify + cluster + flag suspension/idle-runloop noise, merges clusters into root-cause families, and produces a ranked report.
-
-  <example>
-  user: "Triage my Sentry crashes"
-  assistant: [Launches triage-analyzer agent]
-  </example>
-
-  <example>
-  user: "What are the top crash families in production right now?"
-  assistant: [Launches triage-analyzer agent]
-  </example>
-
-  <example>
-  user: "Show me which crashes to fix first from App Store Connect"
-  assistant: [Launches triage-analyzer agent]
-  </example>
-
-  Explicit command: `/axiom:triage [sentry|asc]`
-
-  For a **single crash file** (.ips, MetricKit, .crash, .xccrashpoint), use the crash-analyzer agent instead.
+  Use when the user wants to triage a CORPUS of production crashes/hangs from an aggregator (Sentry, App Store Connect) — grouped, counted issues — rather than a single crash file.
 model: opus
 color: red
 tools:
@@ -165,3 +146,24 @@ The flagship enrichment case: `data_protection_violation` (0xdead10cc) with SQLi
 - `crash-analyzer` agent — Single crash file analysis (defer to this when the user has one .ips, not a corpus)
 - `axiom-data` — Fix guidance for 0xdead10cc + DB lock enrichment
 - `axiom-performance (skills/hang-diagnostics.md)` — Deep single-hang investigation when a family warrants it
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "Triage my Sentry crashes"
+assistant: [Launches triage-analyzer agent]
+</example>
+
+<example>
+user: "What are the top crash families in production right now?"
+assistant: [Launches triage-analyzer agent]
+</example>
+
+<example>
+user: "Show me which crashes to fix first from App Store Connect"
+assistant: [Launches triage-analyzer agent]
+</example>
+
+Explicit command: `/axiom:triage [sentry|asc]`

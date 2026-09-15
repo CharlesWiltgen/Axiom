@@ -308,3 +308,19 @@ For SpriteKit diagnostics (contacts not firing, tunneling, frame drops): `axiom-
 For action closure capture leaks: `memory-auditor` agent
 For main-thread asset loading: `concurrency-auditor` agent
 For SwiftUI host (`SpriteView`) re-creation churn: `swiftui-performance-analyzer` agent
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "Can you check my SpriteKit code for issues?"
+assistant: [Launches spritekit-auditor agent]
+</example>
+
+<example>
+user: "Audit my game for performance problems"
+assistant: [Launches spritekit-auditor agent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom:audit spritekit`

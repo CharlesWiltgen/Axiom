@@ -1,34 +1,7 @@
 ---
 name: performance-profiler
 description: |
-  Use this agent when the user wants automated performance profiling, headless Instruments analysis, or CLI-based trace collection. Records traces with xcprof and turns them into structured, honest performance reports — no Instruments GUI required.
-
-  <example>
-  user: "Profile my app's CPU usage"
-  assistant: [Launches performance-profiler agent]
-  </example>
-
-  <example>
-  user: "Run Time Profiler on my app"
-  assistant: [Launches performance-profiler agent]
-  </example>
-
-  <example>
-  user: "Check for memory leaks without opening Instruments"
-  assistant: [Launches performance-profiler agent]
-  </example>
-
-  <example>
-  user: "Profile my app's launch time"
-  assistant: [Launches performance-profiler agent]
-  </example>
-
-  <example>
-  user: "Run a headless performance trace"
-  assistant: [Launches performance-profiler agent]
-  </example>
-
-  Explicit command: Users can also invoke this agent directly with `/axiom:profile`
+  Use this agent when the user wants automated performance profiling, headless Instruments analysis, or CLI-based trace collection.
 model: sonnet
 color: orange
 tools:
@@ -199,3 +172,34 @@ Use `xcprof compare <baseline> <current> --json` to diff two traces. It reports 
 - `axiom-performance (skills/performance-profiling.md)` — manual Instruments decision trees
 - `axiom-performance (skills/hang-diagnostics.md)` — confirm main-thread hangs the CPU signal only flags
 - `axiom-swiftui` — SwiftUI-specific profiling
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "Profile my app's CPU usage"
+assistant: [Launches performance-profiler agent]
+</example>
+
+<example>
+user: "Run Time Profiler on my app"
+assistant: [Launches performance-profiler agent]
+</example>
+
+<example>
+user: "Check for memory leaks without opening Instruments"
+assistant: [Launches performance-profiler agent]
+</example>
+
+<example>
+user: "Profile my app's launch time"
+assistant: [Launches performance-profiler agent]
+</example>
+
+<example>
+user: "Run a headless performance trace"
+assistant: [Launches performance-profiler agent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom:profile`

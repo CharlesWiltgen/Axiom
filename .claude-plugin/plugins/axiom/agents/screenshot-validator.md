@@ -1,34 +1,7 @@
 ---
 name: screenshot-validator
 description: |
-  Use this agent when the user mentions App Store screenshot validation, screenshot review, checking screenshots before submission, or verifying screenshot dimensions and content. Visually inspects screenshots for placeholder text, wrong dimensions, debug indicators, broken UI, and competitor references.
-
-  <example>
-  user: "Can you check my App Store screenshots for issues?"
-  assistant: [Launches screenshot-validator agent]
-  </example>
-
-  <example>
-  user: "Validate my screenshots before I submit to the App Store"
-  assistant: [Launches screenshot-validator agent]
-  </example>
-
-  <example>
-  user: "Are my screenshots the right dimensions?"
-  assistant: [Launches screenshot-validator agent]
-  </example>
-
-  <example>
-  user: "Check my marketing screenshots for problems"
-  assistant: [Launches screenshot-validator agent]
-  </example>
-
-  <example>
-  user: "Review screenshots in ~/Desktop/AppScreenshots"
-  assistant: [Launches screenshot-validator agent]
-  </example>
-
-  Explicit command: Users can also invoke this agent directly with `/axiom:audit screenshots`
+  Use this agent when the user mentions App Store screenshot validation, screenshot review, checking screenshots before submission, or verifying screenshot dimensions and content.
 model: sonnet
 # sonnet chosen for cost/quality tradeoff; opus available for high-fidelity screenshot analysis if needed
 background: true
@@ -258,3 +231,34 @@ All [N] screenshots passed validation.
 - Ensure screenshots are localized for each target market
 - Test screenshots at actual App Store listing size (they appear small on device)
 ```
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "Can you check my App Store screenshots for issues?"
+assistant: [Launches screenshot-validator agent]
+</example>
+
+<example>
+user: "Validate my screenshots before I submit to the App Store"
+assistant: [Launches screenshot-validator agent]
+</example>
+
+<example>
+user: "Are my screenshots the right dimensions?"
+assistant: [Launches screenshot-validator agent]
+</example>
+
+<example>
+user: "Check my marketing screenshots for problems"
+assistant: [Launches screenshot-validator agent]
+</example>
+
+<example>
+user: "Review screenshots in ~/Desktop/AppScreenshots"
+assistant: [Launches screenshot-validator agent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom:audit screenshots`

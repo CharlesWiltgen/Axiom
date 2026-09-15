@@ -1,34 +1,7 @@
 ---
 name: grdb-performance-auditor
 description: |
-  Use this agent when the user mentions GRDB performance review, slow GRDB queries, app-group database setup audit, a ValueObservation that stopped updating, or pre-release GRDB scan. Detects raw SQL string interpolation, missing FK indexes (raw SQL), missing PRAGMA optimize for raw-GRDB apps, journal mode mismatch for app-group DBs, missing observesSuspensionNotifications for shared DBs, prefix-redundant indexes (raw SQL), legacy Record subclass usage, INSERT OR REPLACE misused as upsert, observation on WITHOUT ROWID tables, WITHOUT ROWID upsert bugs.
-
-  <example>
-  user: "Can you audit my GRDB code for performance issues?"
-  assistant: [Launches grdb-performance-auditor agent]
-  </example>
-
-  <example>
-  user: "Check my app-group database setup before release"
-  assistant: [Launches grdb-performance-auditor agent]
-  </example>
-
-  <example>
-  user: "Scan for raw SQL injection risks in my GRDB code"
-  assistant: [Launches grdb-performance-auditor agent]
-  </example>
-
-  <example>
-  user: "Why are my GRDB queries slow?"
-  assistant: [Launches grdb-performance-auditor agent]
-  </example>
-
-  <example>
-  user: "Review my widget-to-app database sharing"
-  assistant: [Launches grdb-performance-auditor agent]
-  </example>
-
-  Explicit command: Users can also invoke this agent directly with `/axiom:audit grdb-performance`
+  Use this agent when the user mentions GRDB performance review, slow GRDB queries, app-group database setup audit, a ValueObservation that stopped updating, or pre-release GRDB scan.
 model: sonnet
 background: true
 color: blue
@@ -374,3 +347,34 @@ For multi-process sharing (app + widget): `axiom-data (skills/grdb-app-groups.md
 For migration safety: `axiom-data (skills/database-migration.md)` + `database-schema-auditor` agent
 For GRDB primer: `axiom-data (skills/grdb.md)`
 For SQLiteData specifics: `axiom-data (skills/sqlitedata.md)` and `sqlitedata-ref.md`
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "Can you audit my GRDB code for performance issues?"
+assistant: [Launches grdb-performance-auditor agent]
+</example>
+
+<example>
+user: "Check my app-group database setup before release"
+assistant: [Launches grdb-performance-auditor agent]
+</example>
+
+<example>
+user: "Scan for raw SQL injection risks in my GRDB code"
+assistant: [Launches grdb-performance-auditor agent]
+</example>
+
+<example>
+user: "Why are my GRDB queries slow?"
+assistant: [Launches grdb-performance-auditor agent]
+</example>
+
+<example>
+user: "Review my widget-to-app database sharing"
+assistant: [Launches grdb-performance-auditor agent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom:audit grdb-performance`

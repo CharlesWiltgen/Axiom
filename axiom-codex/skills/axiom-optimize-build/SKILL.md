@@ -197,3 +197,19 @@ Generate a "Build Performance Optimization Report" with:
 3. **Be specific** - Exact settings names, exact values, exact steps
 4. **Check configurations separately** - Debug vs Release have different optimal settings
 5. **Provide commands** - Give exact bash commands for verification
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "My builds are taking forever, can you help optimize?"
+assistant: [Automatically launches build-optimizer agent]
+</example>
+
+<example>
+user: "How can I speed up my Xcode build times?"
+assistant: [Launches build-optimizer agent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `axiom-optimize-build`

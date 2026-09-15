@@ -147,3 +147,29 @@ If >50 findings in one category: show top 10 by readability impact, give the tot
 - `modernization-helper` agent — owns old→new **API** migration (incl. `.filter{}.count` detection, its Pattern 8). Coordinate: simplification of `.filter{}.count` is reported here only as a clarity finding; API-currency migrations belong to modernization-helper.
 - `swift-performance-analyzer` agent — owns **speed** rewrites. When a clarity change and a perf change conflict on the same line, defer to it.
 - `swiftui-architecture-auditor` agent — owns SwiftUI **structural** moves (extract/decompose). This agent only does local cleanups inside a body.
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "Simplify this Swift file"
+assistant: [Launches swift-simplifier agent]
+</example>
+
+<example>
+user: "Can you make MyService.swift more idiomatic?"
+assistant: [Launches swift-simplifier agent]
+</example>
+
+<example>
+user: "Point swift-simplifier at the Networking subsystem"
+assistant: [Launches swift-simplifier agent]
+</example>
+
+<example>
+user: "Too much boilerplate in this view model — clean it up"
+assistant: [Launches swift-simplifier agent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `axiom-swift-simplifier`

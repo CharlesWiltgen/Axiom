@@ -251,3 +251,34 @@ For Core Data diagnostics: `axiom-data` (core-data-diag reference)
 For SwiftData alternative: `axiom-data` (swiftdata reference)
 For safe migration patterns: `axiom-data` (database-migration reference)
 For thread safety patterns: `axiom-concurrency` skill
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "Can you check my Core Data code for safety issues?"
+assistant: [Launches core-data-auditor agent]
+</example>
+
+<example>
+user: "I'm about to ship an app with Core Data, can you review it?"
+assistant: [Launches core-data-auditor agent]
+</example>
+
+<example>
+user: "Review my code for Core Data migration risks"
+assistant: [Launches core-data-auditor agent]
+</example>
+
+<example>
+user: "I need to add a Core Data attribute, what should I check first?"
+assistant: [Launches core-data-auditor agent]
+</example>
+
+<example>
+user: "Check for thread-confinement violations in my persistence layer"
+assistant: [Launches core-data-auditor agent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom:audit core-data`

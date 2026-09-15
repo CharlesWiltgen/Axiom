@@ -265,3 +265,19 @@ For detailed optimization patterns: `axiom-performance (skills/energy.md)` skill
 For Power Profiler workflows: `axiom-performance (skills/energy-ref.md)` skill
 For timer lifecycle issues: `axiom-integration` (skills/timer-patterns.md)
 For symbolicating CPU/background/watchdog terminations: `axiom-tools (skills/xcsym-ref.md)`
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "Can you check my app for battery drain issues?"
+assistant: [Launches energy-auditor agent]
+</example>
+
+<example>
+user: "Audit my code for energy efficiency"
+assistant: [Launches energy-auditor agent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom:audit energy`

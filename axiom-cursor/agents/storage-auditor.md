@@ -288,3 +288,34 @@ For storage purging policies: `axiom-data (skills/storage-management-ref.md)`
 For iCloud Drive coordination: `icloud-auditor` agent
 For sensitive-data and credentials in Keychain: `security-privacy-scanner` agent
 For SwiftData external-storage cleanup: `swiftdata-auditor` agent
+
+## Invocation Examples
+
+Prompts that should Delegate to the `this` subagent:
+
+<example>
+user: "Check my file storage usage"
+assistant: [Delegate to the `storage-auditor` subagent]
+</example>
+
+<example>
+user: "Audit my app for storage issues"
+assistant: [Delegate to the `storage-auditor` subagent]
+</example>
+
+<example>
+user: "My app backup is too large"
+assistant: [Delegate to the `storage-auditor` subagent]
+</example>
+
+<example>
+user: "Users are reporting lost data"
+assistant: [Delegate to the `storage-auditor` subagent]
+</example>
+
+<example>
+user: "Review my file management code"
+assistant: [Delegate to the `storage-auditor` subagent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom-audit` storage

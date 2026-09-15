@@ -279,3 +279,34 @@ For Codable patterns and anti-patterns: `axiom-data` (codable reference)
 For SwiftData @Model Codable relationships: `axiom-data` (swiftdata reference)
 For Codable + Sendable across actors: `axiom-concurrency` skill
 For Network.framework `Coder` protocol: `axiom-networking` skill
+
+## Invocation Examples
+
+Prompts that should Delegate to the `this` subagent:
+
+<example>
+user: "Can you check my Codable code for issues?"
+assistant: [Delegate to the `codable-auditor` subagent]
+</example>
+
+<example>
+user: "Review my JSON encoding/decoding for best practices"
+assistant: [Delegate to the `codable-auditor` subagent]
+</example>
+
+<example>
+user: "Audit my code for proper Codable usage"
+assistant: [Delegate to the `codable-auditor` subagent]
+</example>
+
+<example>
+user: "Check for JSONSerialization that should use Codable"
+assistant: [Delegate to the `codable-auditor` subagent]
+</example>
+
+<example>
+user: "Scan for try? decoder issues before release"
+assistant: [Delegate to the `codable-auditor` subagent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom-audit` codable

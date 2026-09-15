@@ -1,19 +1,7 @@
 ---
 name: spritekit-auditor
 description: |
-  Use this agent when the user wants to audit SpriteKit game code for common issues. Automatically scans for physics bitmask problems, draw call waste, node accumulation, action memory leaks, coordinate confusion, touch handling bugs, missing object pooling, and missing debug overlays.
-
-  <example>
-  user: "Can you check my SpriteKit code for issues?"
-  assistant: [Launches spritekit-auditor agent]
-  </example>
-
-  <example>
-  user: "Audit my game for performance problems"
-  assistant: [Launches spritekit-auditor agent]
-  </example>
-
-  Explicit command: Users can also invoke this agent directly with `/axiom:audit spritekit`
+  Use this agent when the user wants to audit SpriteKit game code for common issues — physics bitmask issues, draw call waste, node accumulation, and action leaks.
 model: sonnet
 background: true
 color: green
@@ -329,3 +317,19 @@ For SpriteKit diagnostics (contacts not firing, tunneling, frame drops): `axiom-
 For action closure capture leaks: `memory-auditor` agent
 For main-thread asset loading: `concurrency-auditor` agent
 For SwiftUI host (`SpriteView`) re-creation churn: `swiftui-performance-analyzer` agent
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "Can you check my SpriteKit code for issues?"
+assistant: [Launches spritekit-auditor agent]
+</example>
+
+<example>
+user: "Audit my game for performance problems"
+assistant: [Launches spritekit-auditor agent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom:audit spritekit`

@@ -1,6 +1,6 @@
 ---
 name: energy-auditor
-description: "Use this agent when the user mentions battery drain, energy optimization, power consumption audit, or pre-release energy check."
+description: "Use this agent when the user mentions battery drain, energy optimization, power consumption audit, or pre-release energy check — timer abuse, polling patterns, continuous location, animation leaks, and background mode misuse."
 model: inherit
 readonly: true
 is_background: true
@@ -276,3 +276,19 @@ For detailed optimization patterns: `axiom-performance (skills/energy.md)` skill
 For Power Profiler workflows: `axiom-performance (skills/energy-ref.md)` skill
 For timer lifecycle issues: `axiom-integration` (skills/timer-patterns.md)
 For symbolicating CPU/background/watchdog terminations: `axiom-tools (skills/xcsym-ref.md)`
+
+## Invocation Examples
+
+Prompts that should Delegate to the `this` subagent:
+
+<example>
+user: "Can you check my app for battery drain issues?"
+assistant: [Delegate to the `energy-auditor` subagent]
+</example>
+
+<example>
+user: "Audit my code for energy efficiency"
+assistant: [Delegate to the `energy-auditor` subagent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom-audit` energy

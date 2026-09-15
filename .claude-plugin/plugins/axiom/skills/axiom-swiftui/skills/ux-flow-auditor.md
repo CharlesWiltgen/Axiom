@@ -266,3 +266,24 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details
 For navigation architecture: `axiom-swiftui` skill (navigation)
 For accessibility compliance: `axiom-accessibility` (accessibility-diag reference)
 For UX principles: `axiom-accessibility` (ux-flow-audit reference)
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "Check my app for UX dead ends"
+assistant: [Launches ux-flow-auditor agent]
+</example>
+
+<example>
+user: "Are there any dismiss traps in my sheets?"
+assistant: [Launches ux-flow-auditor agent]
+</example>
+
+<example>
+user: "Audit my app's user flows for issues"
+assistant: [Launches ux-flow-auditor agent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom:audit ux-flow`

@@ -164,3 +164,34 @@ Use `xcprof compare <baseline> <current> --json` to diff two traces. It reports 
 - `axiom-performance (skills/performance-profiling.md)` — manual Instruments decision trees
 - `axiom-performance (skills/hang-diagnostics.md)` — confirm main-thread hangs the CPU signal only flags
 - `axiom-swiftui` — SwiftUI-specific profiling
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "Profile my app's CPU usage"
+assistant: [Launches performance-profiler agent]
+</example>
+
+<example>
+user: "Run Time Profiler on my app"
+assistant: [Launches performance-profiler agent]
+</example>
+
+<example>
+user: "Check for memory leaks without opening Instruments"
+assistant: [Launches performance-profiler agent]
+</example>
+
+<example>
+user: "Profile my app's launch time"
+assistant: [Launches performance-profiler agent]
+</example>
+
+<example>
+user: "Run a headless performance trace"
+assistant: [Launches performance-profiler agent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `axiom-profile-performance`

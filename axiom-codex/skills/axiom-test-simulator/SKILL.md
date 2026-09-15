@@ -451,3 +451,29 @@ For build issues: `build-fixer` agent
 For AXe reference: `axiom-xcode-mcp` skill
 For running tests: `test-runner` agent
 For static accessibility source scanning: `accessibility-auditor` agent
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "Take a screenshot to verify this fix"
+assistant: [Launches simulator-tester agent]
+</example>
+
+<example>
+user: "Test my app with location simulation"
+assistant: [Launches simulator-tester agent]
+</example>
+
+<example>
+user: "Validate my VoiceOver announcements on the sim"
+assistant: [Launches simulator-tester agent]
+</example>
+
+<example>
+user: "Run my Dynamic Type / ADA checks on the simulator"
+assistant: [Launches simulator-tester agent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `axiom-test-simulator`

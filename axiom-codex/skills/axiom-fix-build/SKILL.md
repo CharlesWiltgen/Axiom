@@ -458,3 +458,39 @@ For test execution: `test-runner` agent
 For test debugging: `test-debugger` agent
 For simulator testing: `simulator-tester` agent
 For SPM conflicts: `spm-conflict-resolver` agent
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "My build is failing with BUILD FAILED but no error details"
+assistant: [Automatically launches build-fixer agent]
+</example>
+
+<example>
+user: "Xcode says 'No such module' after I updated packages"
+assistant: [Launches build-fixer agent]
+</example>
+
+<example>
+user: "Tests passed yesterday but now they're failing and I haven't changed anything"
+assistant: [Launches build-fixer agent]
+</example>
+
+<example>
+user: "My app builds but it's running old code"
+assistant: [Launches build-fixer agent]
+</example>
+
+<example>
+user: "Getting 'Unable to boot simulator' error"
+assistant: [Launches build-fixer agent]
+</example>
+
+<example>
+user: "Build sometimes succeeds, sometimes fails"
+assistant: [Launches build-fixer agent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `axiom-fix-build`

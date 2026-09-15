@@ -1,34 +1,7 @@
 ---
 name: foundation-models-auditor
 description: |
-  Use this agent when the user mentions Foundation Models review, on-device AI audit, LanguageModelSession issues, @Generable checking, or Apple Intelligence integration review. Automatically scans Foundation Models code for the 14 most critical violations - missing availability checks, main thread blocking, manual JSON parsing, missing error handling, session lifecycle issues, deprecated error types, and missing or uncalibrated evaluation suites - prevents crashes, guardrail violations, silent quality regressions, and poor user experience.
-
-  <example>
-  user: "Can you check my Foundation Models code for issues?"
-  assistant: [Launches foundation-models-auditor agent]
-  </example>
-
-  <example>
-  user: "Review my @Generable structs for correctness"
-  assistant: [Launches foundation-models-auditor agent]
-  </example>
-
-  <example>
-  user: "Audit my Apple Intelligence integration"
-  assistant: [Launches foundation-models-auditor agent]
-  </example>
-
-  <example>
-  user: "My LanguageModelSession keeps crashing"
-  assistant: [Launches foundation-models-auditor agent]
-  </example>
-
-  <example>
-  user: "Check if I'm handling Foundation Models errors properly"
-  assistant: [Launches foundation-models-auditor agent]
-  </example>
-
-  Explicit command: Users can also invoke this agent directly with `/axiom:audit foundation-models`
+  Use this agent when the user mentions Foundation Models review, on-device AI audit, LanguageModelSession issues, or @Generable/guardrail problems — including missing availability checks, manual JSON parsing, and guardrail handling.
 model: sonnet
 background: true
 color: cyan
@@ -479,3 +452,34 @@ For @Generable decode-time issues: `codable-auditor` agent
 For battery cost of repeated inference: `energy-auditor` agent
 For user content in prompts and privacy disclosure: `security-privacy-scanner` agent
 For AI features gated by IAP: `iap-auditor` agent
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "Can you check my Foundation Models code for issues?"
+assistant: [Launches foundation-models-auditor agent]
+</example>
+
+<example>
+user: "Review my @Generable structs for correctness"
+assistant: [Launches foundation-models-auditor agent]
+</example>
+
+<example>
+user: "Audit my Apple Intelligence integration"
+assistant: [Launches foundation-models-auditor agent]
+</example>
+
+<example>
+user: "My LanguageModelSession keeps crashing"
+assistant: [Launches foundation-models-auditor agent]
+</example>
+
+<example>
+user: "Check if I'm handling Foundation Models errors properly"
+assistant: [Launches foundation-models-auditor agent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom:audit foundation-models`

@@ -174,3 +174,34 @@ Use `axiom_xcprof_compare` with `baseline: "<baseline>"` and `current: "<current
 - `axiom-performance (skills/performance-profiling.md)` — manual Instruments decision trees
 - `axiom-performance (skills/hang-diagnostics.md)` — confirm main-thread hangs the CPU signal only flags
 - `axiom-swiftui` — SwiftUI-specific profiling
+
+## Invocation Examples
+
+Prompts that should Delegate to the `this` subagent:
+
+<example>
+user: "Profile my app's CPU usage"
+assistant: [Delegate to the `performance-profiler` subagent]
+</example>
+
+<example>
+user: "Run Time Profiler on my app"
+assistant: [Delegate to the `performance-profiler` subagent]
+</example>
+
+<example>
+user: "Check for memory leaks without opening Instruments"
+assistant: [Delegate to the `performance-profiler` subagent]
+</example>
+
+<example>
+user: "Profile my app's launch time"
+assistant: [Delegate to the `performance-profiler` subagent]
+</example>
+
+<example>
+user: "Run a headless performance trace"
+assistant: [Delegate to the `performance-profiler` subagent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom-profile`

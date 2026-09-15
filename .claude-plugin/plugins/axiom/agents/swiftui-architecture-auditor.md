@@ -1,29 +1,7 @@
 ---
 name: swiftui-architecture-auditor
 description: |
-  Use this agent when the user mentions SwiftUI architecture review, separation of concerns, testability issues, or "logic in view" problems. Automatically scans SwiftUI code for architectural anti-patterns - logic in view bodies, async boundary violations, property wrapper misuse, and testability gaps. Complements (but is distinct from) performance and navigation audits.
-
-  <example>
-  user: "Check my SwiftUI architecture for separation of concerns"
-  assistant: [Launches swiftui-architecture-auditor agent]
-  </example>
-
-  <example>
-  user: "Review my view models and state management"
-  assistant: [Launches swiftui-architecture-auditor agent]
-  </example>
-
-  <example>
-  user: "Am I using @State correctly?"
-  assistant: [Launches swiftui-architecture-auditor agent]
-  </example>
-
-  <example>
-  user: "Audit my app for testability and business logic separation"
-  assistant: [Launches swiftui-architecture-auditor agent]
-  </example>
-
-  Explicit command: Users can also invoke this agent directly with `/axiom:audit swiftui-architecture`
+  Use this agent when the user mentions SwiftUI architecture review, separation of concerns, testability issues, or "logic in view" problems.
 model: sonnet
 background: true
 color: blue
@@ -252,3 +230,29 @@ For architecture patterns: `axiom-swiftui` skill (architecture)
 For performance issues: `swiftui-performance-analyzer` agent
 For navigation architecture: `swiftui-nav-auditor` agent
 For local Swift cleanups inside view bodies: `swift-simplifier` agent (it does local clarity; this auditor owns structural moves)
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "Check my SwiftUI architecture for separation of concerns"
+assistant: [Launches swiftui-architecture-auditor agent]
+</example>
+
+<example>
+user: "Review my view models and state management"
+assistant: [Launches swiftui-architecture-auditor agent]
+</example>
+
+<example>
+user: "Am I using @State correctly?"
+assistant: [Launches swiftui-architecture-auditor agent]
+</example>
+
+<example>
+user: "Audit my app for testability and business logic separation"
+assistant: [Launches swiftui-architecture-auditor agent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom:audit swiftui-architecture`

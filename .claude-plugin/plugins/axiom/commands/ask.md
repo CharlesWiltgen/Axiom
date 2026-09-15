@@ -87,7 +87,7 @@ When user asks to "audit", "review", "scan", or "check" code, launch the appropr
 - **security-privacy-scanner** — security review
 - **simulator-tester** — simulator testing
 - **spm-conflict-resolver** — SPM resolution failures
-- **spritekit-auditor** — the user wants to audit SpriteKit game code for common issues. Automatically scans for physics bitmask problems
+- **spritekit-auditor** — the user wants to audit SpriteKit game code for common issues.
 - **storage-auditor** — file storage issues
 - **swift-performance-analyzer** — Swift performance audit
 - **swift-simplifier** — the user wants to simplify Swift code

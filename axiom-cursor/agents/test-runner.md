@@ -318,3 +318,29 @@ Tests complete
 **Docs**: /xcode/xcresulttool
 
 **Skills**: axiom-testing
+
+## Invocation Examples
+
+Prompts that should Delegate to the `this` subagent:
+
+<example>
+user: "Run my UI tests and show me what failed"
+assistant: [Delegate to the `test-runner` subagent]
+</example>
+
+<example>
+user: "Run tests for the LoginTests scheme"
+assistant: [Delegate to the `test-runner` subagent]
+</example>
+
+<example>
+user: "Export the failure screenshots from my last test run"
+assistant: [Delegate to the `test-runner` subagent]
+</example>
+
+<example>
+user: "What tests failed and why?"
+assistant: [Delegate to the `test-runner` subagent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom-run-tests`

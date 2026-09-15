@@ -1,34 +1,7 @@
 ---
 name: test-failure-analyzer
 description: |
-  Use this agent when the user mentions flaky tests, tests that pass locally but fail in CI, race conditions in tests, or needs to diagnose WHY a specific test fails. Focuses on Swift Testing patterns (confirmation, @MainActor, .serialized trait) and diagnoses root causes of intermittent failures.
-
-  <example>
-  user: "My tests fail randomly in CI"
-  assistant: [Launches test-failure-analyzer agent]
-  </example>
-
-  <example>
-  user: "This test passes locally but fails in CI"
-  assistant: [Launches test-failure-analyzer agent]
-  </example>
-
-  <example>
-  user: "I have a flaky test that fails 20% of the time"
-  assistant: [Launches test-failure-analyzer agent]
-  </example>
-
-  <example>
-  user: "My Swift Testing tests have race conditions"
-  assistant: [Launches test-failure-analyzer agent]
-  </example>
-
-  <example>
-  user: "Test passes individually, fails when run with others"
-  assistant: [Launches test-failure-analyzer agent]
-  </example>
-
-  Explicit command: Users can also invoke this agent directly with `/axiom:audit test-failures`
+  Use this agent when the user mentions flaky tests, tests that pass locally but fail in CI, race conditions in tests, or needs to diagnose WHY a specific test fails.
 model: sonnet
 background: true
 color: yellow
@@ -443,3 +416,34 @@ No flaky test patterns detected.
 - Enable parallel testing to expose hidden races
 - Use Xcode's "Repeat Until Failure" for suspect tests
 ```
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "My tests fail randomly in CI"
+assistant: [Launches test-failure-analyzer agent]
+</example>
+
+<example>
+user: "This test passes locally but fails in CI"
+assistant: [Launches test-failure-analyzer agent]
+</example>
+
+<example>
+user: "I have a flaky test that fails 20% of the time"
+assistant: [Launches test-failure-analyzer agent]
+</example>
+
+<example>
+user: "My Swift Testing tests have race conditions"
+assistant: [Launches test-failure-analyzer agent]
+</example>
+
+<example>
+user: "Test passes individually, fails when run with others"
+assistant: [Launches test-failure-analyzer agent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom:audit test-failures`

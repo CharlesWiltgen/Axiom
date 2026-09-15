@@ -256,3 +256,19 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details
 ## Related
 
 For navigation patterns, debugging, and API reference: `axiom-swiftui` skill (navigation)
+
+## Invocation Examples
+
+Prompts that should Delegate to the `this` subagent:
+
+<example>
+user: "Check my SwiftUI navigation for correctness issues"
+assistant: [Delegate to the `swiftui-nav-auditor` subagent]
+</example>
+
+<example>
+user: "My deep links aren't working, can you scan my navigation code?"
+assistant: [Delegate to the `swiftui-nav-auditor` subagent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom-audit` swiftui-nav

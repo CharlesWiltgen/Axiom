@@ -575,3 +575,34 @@ Is view using @EnvironmentObject?
 - Confirm model is actually used in SwiftUI views
 - Confirm the class actually conforms to `ObservableObject` — do not flag classes just because they are classes
 - Confirm the type is yours to change — framework classes conforming to `ObservableObject` cannot be migrated regardless of deployment target
+
+## Invocation Examples
+
+Prompts that should Delegate to the `this` subagent:
+
+<example>
+user: "How do I migrate from ObservableObject to @Observable?"
+assistant: [Delegate to the `modernization-helper` subagent]
+</example>
+
+<example>
+user: "Are there any deprecated APIs in my SwiftUI code?"
+assistant: [Delegate to the `modernization-helper` subagent]
+</example>
+
+<example>
+user: "Update my code to use modern SwiftUI patterns"
+assistant: [Delegate to the `modernization-helper` subagent]
+</example>
+
+<example>
+user: "Should I still use @StateObject?"
+assistant: [Delegate to the `modernization-helper` subagent]
+</example>
+
+<example>
+user: "Modernize my app for iOS 18"
+assistant: [Delegate to the `modernization-helper` subagent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom-audit` modernization or `/axiom-modernize`

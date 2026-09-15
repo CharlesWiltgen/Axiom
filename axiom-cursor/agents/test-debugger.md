@@ -340,3 +340,24 @@ When analyzing failures, consider:
 For test execution: `test-runner` agent
 For simulator issues: `simulator-tester` agent
 For build issues: `build-fixer` agent
+
+## Invocation Examples
+
+Prompts that should Delegate to the `this` subagent:
+
+<example>
+user: "My LoginTests are failing, help me fix them"
+assistant: [Delegate to the `test-debugger` subagent]
+</example>
+
+<example>
+user: "Debug why testCheckout keeps timing out"
+assistant: [Delegate to the `test-debugger` subagent]
+</example>
+
+<example>
+user: "Fix my flaky UI tests"
+assistant: [Delegate to the `test-debugger` subagent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom-run-tests` (for debugging, specify the failing test)

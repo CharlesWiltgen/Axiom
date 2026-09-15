@@ -258,3 +258,34 @@ For GRDB patterns: `axiom-data (skills/grdb.md)`
 For SwiftData migrations: `axiom-data (skills/swiftdata-migration.md)`
 For Core Data migrations: `core-data-auditor` agent
 For SwiftData @Model issues: `swiftdata-auditor` agent
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "Can you check my database migrations for safety?"
+assistant: [Launches database-schema-auditor agent]
+</example>
+
+<example>
+user: "Review my GRDB schema code for issues"
+assistant: [Launches database-schema-auditor agent]
+</example>
+
+<example>
+user: "Audit my SQLite migrations before release"
+assistant: [Launches database-schema-auditor agent]
+</example>
+
+<example>
+user: "I'm adding a column to my database, can you check the migration?"
+assistant: [Launches database-schema-auditor agent]
+</example>
+
+<example>
+user: "Check my database code for data loss risks"
+assistant: [Launches database-schema-auditor agent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom:audit database-schema`

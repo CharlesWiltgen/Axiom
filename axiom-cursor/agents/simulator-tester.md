@@ -469,3 +469,29 @@ For build issues: `build-fixer` agent
 For AXe reference: `axiom-xcode-mcp` skill
 For running tests: `test-runner` agent
 For static accessibility source scanning: `accessibility-auditor` agent
+
+## Invocation Examples
+
+Prompts that should Delegate to the `this` subagent:
+
+<example>
+user: "Take a screenshot to verify this fix"
+assistant: [Delegate to the `simulator-tester` subagent]
+</example>
+
+<example>
+user: "Test my app with location simulation"
+assistant: [Delegate to the `simulator-tester` subagent]
+</example>
+
+<example>
+user: "Validate my VoiceOver announcements on the sim"
+assistant: [Delegate to the `simulator-tester` subagent]
+</example>
+
+<example>
+user: "Run my Dynamic Type / ADA checks on the simulator"
+assistant: [Delegate to the `simulator-tester` subagent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom-test-simulator`

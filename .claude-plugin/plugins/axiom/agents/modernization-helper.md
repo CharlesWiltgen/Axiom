@@ -1,34 +1,7 @@
 ---
 name: modernization-helper
 description: |
-  Use this agent when the user wants to modernize iOS code to iOS 17/18 patterns, migrate from ObservableObject to @Observable, update @StateObject to @State, or adopt modern SwiftUI APIs. Scans for legacy patterns and provides migration paths with code examples.
-
-  <example>
-  user: "How do I migrate from ObservableObject to @Observable?"
-  assistant: [Launches modernization-helper agent]
-  </example>
-
-  <example>
-  user: "Are there any deprecated APIs in my SwiftUI code?"
-  assistant: [Launches modernization-helper agent]
-  </example>
-
-  <example>
-  user: "Update my code to use modern SwiftUI patterns"
-  assistant: [Launches modernization-helper agent]
-  </example>
-
-  <example>
-  user: "Should I still use @StateObject?"
-  assistant: [Launches modernization-helper agent]
-  </example>
-
-  <example>
-  user: "Modernize my app for iOS 18"
-  assistant: [Launches modernization-helper agent]
-  </example>
-
-  Explicit command: Users can also invoke this agent directly with `/axiom:audit modernization` or `/axiom:modernize`
+  Use this agent when the user wants to modernize iOS code to iOS 17/18 patterns, migrate from ObservableObject to @Observable, update @StateObject to @State, or adopt modern SwiftUI APIs.
 model: haiku
 background: true
 color: cyan
@@ -604,3 +577,34 @@ Is view using @EnvironmentObject?
 - Confirm model is actually used in SwiftUI views
 - Confirm the class actually conforms to `ObservableObject` — do not flag classes just because they are classes
 - Confirm the type is yours to change — framework classes conforming to `ObservableObject` cannot be migrated regardless of deployment target
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "How do I migrate from ObservableObject to @Observable?"
+assistant: [Launches modernization-helper agent]
+</example>
+
+<example>
+user: "Are there any deprecated APIs in my SwiftUI code?"
+assistant: [Launches modernization-helper agent]
+</example>
+
+<example>
+user: "Update my code to use modern SwiftUI patterns"
+assistant: [Launches modernization-helper agent]
+</example>
+
+<example>
+user: "Should I still use @StateObject?"
+assistant: [Launches modernization-helper agent]
+</example>
+
+<example>
+user: "Modernize my app for iOS 18"
+assistant: [Launches modernization-helper agent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom:audit modernization` or `/axiom:modernize`

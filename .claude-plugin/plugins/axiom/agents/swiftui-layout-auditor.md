@@ -1,34 +1,7 @@
 ---
 name: swiftui-layout-auditor
 description: |
-  Use this agent when the user mentions SwiftUI layout review, adaptive layout issues, GeometryReader problems, or multi-device layout checking. Automatically scans SwiftUI layout code for the 12 most critical violations - GeometryReader misuse, deprecated screen APIs, hardcoded breakpoints, identity loss from conditional stacks, missing lazy containers, controls under ignoresSafeArea, and hand-built toolbar rows - prevents layout breaks across device sizes, orientations, and iPhone Duo poses.
-
-  <example>
-  user: "Can you check my SwiftUI layouts for issues?"
-  assistant: [Launches swiftui-layout-auditor agent]
-  </example>
-
-  <example>
-  user: "Review my adaptive layout code"
-  assistant: [Launches swiftui-layout-auditor agent]
-  </example>
-
-  <example>
-  user: "My layout breaks on iPad, can you scan for problems?"
-  assistant: [Launches swiftui-layout-auditor agent]
-  </example>
-
-  <example>
-  user: "Check for GeometryReader misuse in my views"
-  assistant: [Launches swiftui-layout-auditor agent]
-  </example>
-
-  <example>
-  user: "Audit my SwiftUI code for hardcoded sizes"
-  assistant: [Launches swiftui-layout-auditor agent]
-  </example>
-
-  Explicit command: Users can also invoke this agent directly with `/axiom:audit swiftui-layout`
+  Use this agent when the user mentions SwiftUI layout review, adaptive layout issues, GeometryReader problems, or multi-device layout checking.
 model: sonnet
 background: true
 color: blue
@@ -309,3 +282,34 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details
 ## Related
 
 For SwiftUI layout patterns, reference, and containers: `axiom-swiftui` skill (layout)
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "Can you check my SwiftUI layouts for issues?"
+assistant: [Launches swiftui-layout-auditor agent]
+</example>
+
+<example>
+user: "Review my adaptive layout code"
+assistant: [Launches swiftui-layout-auditor agent]
+</example>
+
+<example>
+user: "My layout breaks on iPad, can you scan for problems?"
+assistant: [Launches swiftui-layout-auditor agent]
+</example>
+
+<example>
+user: "Check for GeometryReader misuse in my views"
+assistant: [Launches swiftui-layout-auditor agent]
+</example>
+
+<example>
+user: "Audit my SwiftUI code for hardcoded sizes"
+assistant: [Launches swiftui-layout-auditor agent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom:audit swiftui-layout`

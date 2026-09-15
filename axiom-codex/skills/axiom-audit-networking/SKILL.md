@@ -256,3 +256,19 @@ For implementation patterns: `axiom-networking` skill
 For connection troubleshooting: `axiom-networking` (networking-diag reference)
 For API reference: `axiom-networking` (network-framework-ref reference)
 For memory issues from callbacks: `axiom-performance` skill
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "Can you check my networking code for deprecated APIs?"
+assistant: [Launches networking-auditor agent]
+</example>
+
+<example>
+user: "I'm getting App Store review warnings about networking"
+assistant: [Launches networking-auditor agent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `axiom-audit-networking`

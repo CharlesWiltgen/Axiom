@@ -1,39 +1,7 @@
 ---
 name: resize-auditor
 description: |
-  Use this agent when the user mentions window resizing support, resizable-window readiness, iPhone Mirroring compatibility, iPhone Duo readiness, scene-lifecycle migration checking, or preparing an app for the 27-cycle resizing model. Automatically scans UIKit code, Info.plist, and the scene manifest for resize-readiness violations — missing scene lifecycle, UIScreen.main usage, UIRequiresFullScreen, orientation-derived layout, fixed-canvas rendering surfaces, Mirroring input gaps, symmetric safe-area math, hand-built bars, and unguarded window requests — prevents shipping an app that breaks (or fails to launch) under the 27 resize model or on iPhone Duo.
-
-  <example>
-  user: "Audit my app for screen resizing support"
-  assistant: [Launches resize-auditor agent]
-  </example>
-
-  <example>
-  user: "Is my app ready for resizable windows on iOS 27?"
-  assistant: [Launches resize-auditor agent]
-  </example>
-
-  <example>
-  user: "Check whether my app will work in iPhone Mirroring"
-  assistant: [Launches resize-auditor agent]
-  </example>
-
-  <example>
-  user: "Scan my UIKit app for UIScreen.main and scene lifecycle problems"
-  assistant: [Launches resize-auditor agent]
-  </example>
-
-  <example>
-  user: "My layout breaks when the user resizes the window — audit the whole app"
-  assistant: [Launches resize-auditor agent]
-  </example>
-
-  <example>
-  user: "Is my app ready for iPhone Duo?"
-  assistant: [Launches resize-auditor agent]
-  </example>
-
-  Explicit command: Users can also invoke this agent directly with `/axiom:audit resize`
+  Use this agent when the user mentions window resizing support, resizable-window readiness, iPhone Mirroring compatibility, iPhone Duo readiness, scene-lifecycle migration checking, or preparing an app for the 27-cycle resizing model.
 model: sonnet
 background: true
 color: blue
@@ -341,3 +309,39 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details
 ## Related
 
 For the migration content behind every fix: `axiom-uikit` skill (skills/uikit-modernization.md, skills/adaptive-layout.md). Rendering surfaces: `axiom-graphics` (skills/resizable-rendering.md). SwiftUI-side adaptivity: `swiftui-layout-auditor`.
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "Audit my app for screen resizing support"
+assistant: [Launches resize-auditor agent]
+</example>
+
+<example>
+user: "Is my app ready for resizable windows on iOS 27?"
+assistant: [Launches resize-auditor agent]
+</example>
+
+<example>
+user: "Check whether my app will work in iPhone Mirroring"
+assistant: [Launches resize-auditor agent]
+</example>
+
+<example>
+user: "Scan my UIKit app for UIScreen.main and scene lifecycle problems"
+assistant: [Launches resize-auditor agent]
+</example>
+
+<example>
+user: "My layout breaks when the user resizes the window — audit the whole app"
+assistant: [Launches resize-auditor agent]
+</example>
+
+<example>
+user: "Is my app ready for iPhone Duo?"
+assistant: [Launches resize-auditor agent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom:audit resize`

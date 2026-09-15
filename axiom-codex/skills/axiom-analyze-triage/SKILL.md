@@ -138,3 +138,24 @@ The flagship enrichment case: `data_protection_violation` (0xdead10cc) with SQLi
 - `crash-analyzer` agent — Single crash file analysis (defer to this when the user has one .ips, not a corpus)
 - `axiom-data` — Fix guidance for 0xdead10cc + DB lock enrichment
 - `axiom-performance (skills/hang-diagnostics.md)` — Deep single-hang investigation when a family warrants it
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "Triage my Sentry crashes"
+assistant: [Launches triage-analyzer agent]
+</example>
+
+<example>
+user: "What are the top crash families in production right now?"
+assistant: [Launches triage-analyzer agent]
+</example>
+
+<example>
+user: "Show me which crashes to fix first from App Store Connect"
+assistant: [Launches triage-analyzer agent]
+</example>
+
+Explicit command: `/axiom:triage [sentry|asc]`

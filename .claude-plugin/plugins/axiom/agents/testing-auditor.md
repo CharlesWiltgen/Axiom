@@ -1,34 +1,7 @@
 ---
 name: testing-auditor
 description: |
-  Use this agent when the user wants to audit test quality, find flaky test patterns, speed up test execution, or prepare for Swift Testing migration. Scans for sleep() calls, shared mutable state, missing assertions, XCTest to Swift Testing migration opportunities, and Swift 6 concurrency issues in tests.
-
-  <example>
-  user: "Can you audit my tests for issues?"
-  assistant: [Launches testing-auditor agent]
-  </example>
-
-  <example>
-  user: "Why are my tests flaky?"
-  assistant: [Launches testing-auditor agent]
-  </example>
-
-  <example>
-  user: "How can I make my tests faster?"
-  assistant: [Launches testing-auditor agent]
-  </example>
-
-  <example>
-  user: "Should I migrate to Swift Testing?"
-  assistant: [Launches testing-auditor agent]
-  </example>
-
-  <example>
-  user: "Check my tests for Swift 6 issues"
-  assistant: [Launches testing-auditor agent]
-  </example>
-
-  Explicit command: Users can also invoke this agent directly with `/axiom:audit testing`
+  Use this agent when the user wants to audit test quality, find flaky test patterns, speed up test execution, or prepare for Swift Testing migration.
 model: sonnet
 background: true
 color: green
@@ -382,3 +355,34 @@ For unit test patterns: `axiom-testing` (swift-testing reference)
 For UI test patterns: `axiom-testing` (ui-testing reference)
 For async test patterns: `axiom-testing` (testing-async reference)
 For flaky test diagnosis: `test-failure-analyzer` agent
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "Can you audit my tests for issues?"
+assistant: [Launches testing-auditor agent]
+</example>
+
+<example>
+user: "Why are my tests flaky?"
+assistant: [Launches testing-auditor agent]
+</example>
+
+<example>
+user: "How can I make my tests faster?"
+assistant: [Launches testing-auditor agent]
+</example>
+
+<example>
+user: "Should I migrate to Swift Testing?"
+assistant: [Launches testing-auditor agent]
+</example>
+
+<example>
+user: "Check my tests for Swift 6 issues"
+assistant: [Launches testing-auditor agent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom:audit testing`

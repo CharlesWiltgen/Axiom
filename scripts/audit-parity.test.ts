@@ -938,16 +938,19 @@ body`;
     assert.deepEqual(parseAdvertisedAuditAreas(agent), []);
   });
 
-  it("ignores /axiom:audit mentions in the body, reading frontmatter only", () => {
-    // The body routinely discusses other auditors in prose; only the
-    // frontmatter description is the agent's own dispatch contract.
+  it("reads the whole file, so body cross-references are validated too", () => {
+    // The `Explicit command:` hints moved out of the always-on frontmatter
+    // description into the body (Axiom-2fa), so the advertisement surface is
+    // now the file. That also means prose cross-references — "see also
+    // /axiom:audit concurrency" — are held to the same standard: a typo'd or
+    // retired area is caught wherever it is promised.
     const agent = `---
 name: memory-auditor
 description: |
   Explicit command: \`/axiom:audit memory\`
 ---
 See also \`/axiom:audit concurrency\` for data races.`;
-    assert.deepEqual(parseAdvertisedAuditAreas(agent), ["memory"]);
+    assert.deepEqual(parseAdvertisedAuditAreas(agent), ["memory", "concurrency"]);
   });
 });
 
@@ -1206,14 +1209,32 @@ body`;
     assert.deepEqual(parseAdvertisedCommands(agent), ["audit"]);
   });
 
-  it("reads frontmatter only, ignoring command mentions in the body", () => {
+  it("reads command references in the body too", () => {
     const agent = `---
 name: x
 description: |
   \`/axiom:fix-build\`
 ---
 See also \`/axiom:profile\` for traces.`;
-    assert.deepEqual(parseAdvertisedCommands(agent), ["fix-build"]);
+    assert.deepEqual(parseAdvertisedCommands(agent), ["fix-build", "profile"]);
+  });
+
+  it("catches a ghost command promised in the body", () => {
+    // The reason the scan widened: the hints live in the body now, and a
+    // command promised there that is registered nowhere cannot run.
+    const errs = validateAdvertisedCommands({
+      registered: ["fix-build"],
+      agentFiles: {
+        "build-fixer": `---
+name: build-fixer
+description: |
+  Use when the build breaks.
+---
+Explicit command: \`/axiom:build-doctor\``,
+      },
+    });
+    assert.equal(errs.length, 1);
+    assert.match(errs[0]!, /build-doctor/);
   });
 
   it("does not run past a line break onto the next word", () => {

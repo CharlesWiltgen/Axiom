@@ -273,3 +273,24 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details
 For navigation architecture: `axiom-swiftui` skill (navigation)
 For accessibility compliance: `axiom-accessibility` (accessibility-diag reference)
 For UX principles: `axiom-accessibility` (ux-flow-audit reference)
+
+## Invocation Examples
+
+Prompts that should Delegate to the `this` subagent:
+
+<example>
+user: "Check my app for UX dead ends"
+assistant: [Delegate to the `ux-flow-auditor` subagent]
+</example>
+
+<example>
+user: "Are there any dismiss traps in my sheets?"
+assistant: [Delegate to the `ux-flow-auditor` subagent]
+</example>
+
+<example>
+user: "Audit my app's user flows for issues"
+assistant: [Delegate to the `ux-flow-auditor` subagent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom-audit` ux-flow

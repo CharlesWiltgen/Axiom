@@ -1,34 +1,7 @@
 ---
 name: swift-performance-analyzer
 description: |
-  Use this agent when the user mentions Swift performance audit, code optimization, or performance review. Automatically scans Swift code for performance anti-patterns - detects unnecessary copies, ARC overhead, unspecialized generics, collection inefficiencies, actor isolation costs, and memory layout issues that cause slowdowns and excessive allocations.
-
-  <example>
-  user: "Can you check my Swift code for performance issues?"
-  assistant: [Launches swift-performance-analyzer agent]
-  </example>
-
-  <example>
-  user: "Audit my code for optimization opportunities"
-  assistant: [Launches swift-performance-analyzer agent]
-  </example>
-
-  <example>
-  user: "I'm seeing excessive memory allocations, can you scan for problems?"
-  assistant: [Launches swift-performance-analyzer agent]
-  </example>
-
-  <example>
-  user: "Review my Swift performance anti-patterns"
-  assistant: [Launches swift-performance-analyzer agent]
-  </example>
-
-  <example>
-  user: "Check if I'm using COW correctly"
-  assistant: [Launches swift-performance-analyzer agent]
-  </example>
-
-  Explicit command: Users can also invoke this agent directly with `/axiom:audit swift-performance`
+  Use this agent when the user mentions Swift performance audit, code optimization, or performance review — ARC issues, allocation patterns, and generic specialization.
 model: sonnet
 background: true
 color: orange
@@ -290,3 +263,34 @@ For SwiftUI-specific performance: `swiftui-performance-analyzer` agent
 For memory lifecycle issues: `axiom-performance (skills/memory-debugging.md)` skill
 For actor isolation patterns: `axiom-concurrency` skill
 For behavior-preserving clarity simplification: `swift-simplifier` agent (defer to it for clarity-only changes; this agent owns speed)
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "Can you check my Swift code for performance issues?"
+assistant: [Launches swift-performance-analyzer agent]
+</example>
+
+<example>
+user: "Audit my code for optimization opportunities"
+assistant: [Launches swift-performance-analyzer agent]
+</example>
+
+<example>
+user: "I'm seeing excessive memory allocations, can you scan for problems?"
+assistant: [Launches swift-performance-analyzer agent]
+</example>
+
+<example>
+user: "Review my Swift performance anti-patterns"
+assistant: [Launches swift-performance-analyzer agent]
+</example>
+
+<example>
+user: "Check if I'm using COW correctly"
+assistant: [Launches swift-performance-analyzer agent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom:audit swift-performance`

@@ -1,6 +1,6 @@
 ---
 name: foundation-models-auditor
-description: "Use this agent when the user mentions Foundation Models review, on-device AI audit, LanguageModelSession issues, @Generable checking, or Apple Intelligence integration review."
+description: "Use this agent when the user mentions Foundation Models review, on-device AI audit, LanguageModelSession issues, or @Generable/guardrail problems — including missing availability checks, manual JSON parsing, and guardrail handling."
 model: inherit
 readonly: true
 is_background: true
@@ -450,3 +450,34 @@ For @Generable decode-time issues: `codable-auditor` agent
 For battery cost of repeated inference: `energy-auditor` agent
 For user content in prompts and privacy disclosure: `security-privacy-scanner` agent
 For AI features gated by IAP: `iap-auditor` agent
+
+## Invocation Examples
+
+Prompts that should Delegate to the `this` subagent:
+
+<example>
+user: "Can you check my Foundation Models code for issues?"
+assistant: [Delegate to the `foundation-models-auditor` subagent]
+</example>
+
+<example>
+user: "Review my @Generable structs for correctness"
+assistant: [Delegate to the `foundation-models-auditor` subagent]
+</example>
+
+<example>
+user: "Audit my Apple Intelligence integration"
+assistant: [Delegate to the `foundation-models-auditor` subagent]
+</example>
+
+<example>
+user: "My LanguageModelSession keeps crashing"
+assistant: [Delegate to the `foundation-models-auditor` subagent]
+</example>
+
+<example>
+user: "Check if I'm handling Foundation Models errors properly"
+assistant: [Delegate to the `foundation-models-auditor` subagent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom-audit` foundation-models

@@ -1,6 +1,6 @@
 ---
 name: axiom-audit-memory
-description: Use when the user mentions memory leak prevention, code review for memory issues, or proactive leak checking.
+description: Use when the user mentions memory leak prevention, code review for memory issues, or proactive leak checking — retain cycles, leaks, and Timer/observer patterns.
 license: MIT
 ---
 # Memory Auditor Agent
@@ -249,3 +249,19 @@ For Instruments workflows: `axiom-performance (skills/memory-debugging.md)` skil
 For Memory Graph Debugger: `axiom-performance (skills/memory-debugging.md)` skill
 For Task lifecycle issues found during audit: `axiom-concurrency` skill
 For symbolicating field crashes (jetsam, heap corruption): `axiom-tools (skills/xcsym-ref.md)`
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "Can you check my code for memory leaks?"
+assistant: [Launches memory-auditor agent]
+</example>
+
+<example>
+user: "Review my code for retain cycles"
+assistant: [Launches memory-auditor agent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `axiom-audit-memory`

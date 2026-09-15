@@ -36,7 +36,7 @@ export const CHARS_PER_TOKEN = 3;
  * this module exists to catch — reduce the footprint instead.
  */
 export const FOOTPRINT_CEILINGS: Record<string, number> = {
-  "claude-code": 56_000,
+  "claude-code": 24_000,
   cursor: 14_000,
   codex: 12_000,
   mcp: 3_000,

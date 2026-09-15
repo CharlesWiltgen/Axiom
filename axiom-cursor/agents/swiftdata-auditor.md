@@ -289,3 +289,34 @@ For schema-level (SQLite/GRDB) audit: `database-schema-auditor` agent
 For Core Data overlap: `core-data-auditor` agent
 For CloudKit-synced models: `icloud-auditor` agent
 For @Query view performance: `swiftui-performance-analyzer` agent
+
+## Invocation Examples
+
+Prompts that should Delegate to the `this` subagent:
+
+<example>
+user: "Can you check my SwiftData code for issues?"
+assistant: [Delegate to the `swiftdata-auditor` subagent]
+</example>
+
+<example>
+user: "Review my @Model definitions for correctness"
+assistant: [Delegate to the `swiftdata-auditor` subagent]
+</example>
+
+<example>
+user: "I'm about to ship with SwiftData, can you audit it?"
+assistant: [Delegate to the `swiftdata-auditor` subagent]
+</example>
+
+<example>
+user: "Check my SwiftData migrations for safety"
+assistant: [Delegate to the `swiftdata-auditor` subagent]
+</example>
+
+<example>
+user: "My SwiftData relationships keep crashing"
+assistant: [Delegate to the `swiftdata-auditor` subagent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom-audit` swiftdata

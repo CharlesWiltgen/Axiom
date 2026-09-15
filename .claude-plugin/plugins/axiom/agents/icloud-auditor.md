@@ -1,34 +1,7 @@
 ---
 name: icloud-auditor
 description: |
-  Use this agent when the user mentions iCloud sync issues, CloudKit errors, ubiquitous container problems, or asks to audit cloud sync. Automatically runs comprehensive iCloud audit to detect missing entitlement checks, unsafe file coordination, missing error handling, and CloudKit anti-patterns - prevents sync failures and data conflicts.
-
-  <example>
-  user: "Check my iCloud integration"
-  assistant: [Launches icloud-auditor agent]
-  </example>
-
-  <example>
-  user: "Audit my CloudKit code"
-  assistant: [Launches icloud-auditor agent]
-  </example>
-
-  <example>
-  user: "My iCloud sync isn't working"
-  assistant: [Launches icloud-auditor agent]
-  </example>
-
-  <example>
-  user: "Review my file coordination code"
-  assistant: [Launches icloud-auditor agent]
-  </example>
-
-  <example>
-  user: "Check for iCloud Drive issues"
-  assistant: [Launches icloud-auditor agent]
-  </example>
-
-  Explicit command: Users can also invoke this agent directly with `/axiom:audit icloud`
+  Use this agent when the user mentions iCloud sync issues, CloudKit errors, ubiquitous container problems, or asks to audit cloud sync.
 model: sonnet
 background: true
 color: cyan
@@ -330,3 +303,34 @@ For sync troubleshooting: `axiom-data (skills/cloud-sync-diag.md)`
 For SwiftData + CloudKit specifics: `swiftdata-auditor` agent
 For file location and backup exclusion: `storage-auditor` agent
 For sync callback queue safety: `axiom-concurrency`
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "Check my iCloud integration"
+assistant: [Launches icloud-auditor agent]
+</example>
+
+<example>
+user: "Audit my CloudKit code"
+assistant: [Launches icloud-auditor agent]
+</example>
+
+<example>
+user: "My iCloud sync isn't working"
+assistant: [Launches icloud-auditor agent]
+</example>
+
+<example>
+user: "Review my file coordination code"
+assistant: [Launches icloud-auditor agent]
+</example>
+
+<example>
+user: "Check for iCloud Drive issues"
+assistant: [Launches icloud-auditor agent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom:audit icloud`

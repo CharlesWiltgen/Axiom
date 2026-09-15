@@ -1,34 +1,7 @@
 ---
 name: textkit-auditor
 description: |
-  Use this agent when the user mentions TextKit review, text layout issues, Writing Tools integration, or UITextView/NSTextView code review. Automatically scans for TextKit 1 fallback triggers, deprecated glyph APIs, and missing TextKit 2 features - prevents loss of Writing Tools support and ensures modern text handling for complex scripts.
-
-  <example>
-  user: "Can you check my text editor for TextKit issues?"
-  assistant: [Launches textkit-auditor agent]
-  </example>
-
-  <example>
-  user: "Why isn't Writing Tools appearing in my text view?"
-  assistant: [Launches textkit-auditor agent]
-  </example>
-
-  <example>
-  user: "Review my UITextView code"
-  assistant: [Launches textkit-auditor agent]
-  </example>
-
-  <example>
-  user: "Check for TextKit 2 compatibility"
-  assistant: [Launches textkit-auditor agent]
-  </example>
-
-  <example>
-  user: "I need to add a text editor, can you review the implementation?"
-  assistant: [Launches textkit-auditor agent]
-  </example>
-
-  Explicit command: Users can also invoke this agent directly with `/axiom:audit textkit`
+  Use this agent when the user mentions TextKit review, text layout issues, Writing Tools integration, or UITextView/NSTextView code review.
 model: sonnet
 background: true
 color: cyan
@@ -362,3 +335,34 @@ For background attributed-string construction crossing actors: `concurrency-audi
 For main-thread stalls when loading large documents: `swift-performance-analyzer` agent
 For SwiftUI wrappers re-creating text views on every render: `swiftui-performance-analyzer` agent
 For saved-document file location and protection: `storage-auditor` agent
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "Can you check my text editor for TextKit issues?"
+assistant: [Launches textkit-auditor agent]
+</example>
+
+<example>
+user: "Why isn't Writing Tools appearing in my text view?"
+assistant: [Launches textkit-auditor agent]
+</example>
+
+<example>
+user: "Review my UITextView code"
+assistant: [Launches textkit-auditor agent]
+</example>
+
+<example>
+user: "Check for TextKit 2 compatibility"
+assistant: [Launches textkit-auditor agent]
+</example>
+
+<example>
+user: "I need to add a text editor, can you review the implementation?"
+assistant: [Launches textkit-auditor agent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom:audit textkit`

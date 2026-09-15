@@ -1,19 +1,7 @@
 ---
 name: networking-auditor
 description: |
-  Use this agent when the user mentions networking review, deprecated APIs, connection issues, or App Store submission prep. Scans for deprecated networking APIs (SCNetworkReachability, CFSocket, NSStream) and anti-patterns (reachability checks, hardcoded IPs, missing error handling) - prevents App Store rejections.
-
-  <example>
-  user: "Can you check my networking code for deprecated APIs?"
-  assistant: [Launches networking-auditor agent]
-  </example>
-
-  <example>
-  user: "I'm getting App Store review warnings about networking"
-  assistant: [Launches networking-auditor agent]
-  </example>
-
-  Explicit command: Users can also invoke this agent directly with `/axiom:audit networking`
+  Use this agent when the user mentions networking review, deprecated APIs, connection issues, or App Store submission prep.
 model: sonnet
 background: true
 color: blue
@@ -278,3 +266,19 @@ For implementation patterns: `axiom-networking` skill
 For connection troubleshooting: `axiom-networking` (networking-diag reference)
 For API reference: `axiom-networking` (network-framework-ref reference)
 For memory issues from callbacks: `axiom-performance` skill
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "Can you check my networking code for deprecated APIs?"
+assistant: [Launches networking-auditor agent]
+</example>
+
+<example>
+user: "I'm getting App Store review warnings about networking"
+assistant: [Launches networking-auditor agent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom:audit networking`

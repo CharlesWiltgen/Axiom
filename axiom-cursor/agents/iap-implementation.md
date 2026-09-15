@@ -174,3 +174,17 @@ Button("Restore Purchases") {
 For detailed patterns: `axiom-integration` (skills/in-app-purchases.md)
 For API reference: `axiom-integration` (skills/storekit-ref.md)
 For auditing: `iap-auditor` agent
+
+## Invocation Examples
+
+Prompts that should Delegate to the `this` subagent:
+
+<example>
+user: "Implement in-app purchases for my app"
+assistant: [Delegate to the `iap-implementation` subagent]
+</example>
+
+<example>
+user: "Add subscription support with monthly and annual plans"
+assistant: [Delegate to the `iap-implementation` subagent]
+</example>

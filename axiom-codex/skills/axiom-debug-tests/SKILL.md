@@ -327,3 +327,24 @@ When analyzing failures, consider:
 For test execution: `test-runner` agent
 For simulator issues: `simulator-tester` agent
 For build issues: `build-fixer` agent
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "My LoginTests are failing, help me fix them"
+assistant: [Launches test-debugger agent]
+</example>
+
+<example>
+user: "Debug why testCheckout keeps timing out"
+assistant: [Launches test-debugger agent]
+</example>
+
+<example>
+user: "Fix my flaky UI tests"
+assistant: [Launches test-debugger agent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `axiom-run-tests` (for debugging, specify the failing test)

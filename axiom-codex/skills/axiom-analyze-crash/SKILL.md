@@ -180,3 +180,29 @@ Report to user and stop if:
 - `axiom-performance (skills/memory-debugging.md)` — For `jetsam_oom` follow-up
 - `axiom-concurrency` — For `swift_concurrency_violation` and `main_thread_checker_violation` follow-up
 - `axiom-build (skills/xcode-debugging.md)` — For build/environment issues
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "Analyze this crash log" [pastes crash report]
+assistant: [Launches crash-analyzer agent]
+</example>
+
+<example>
+user: "Here's a crash from TestFlight, what's wrong?"
+assistant: [Launches crash-analyzer agent]
+</example>
+
+<example>
+user: "Parse this .ips file: ~/Library/Logs/DiagnosticReports/MyApp.ips"
+assistant: [Launches crash-analyzer agent]
+</example>
+
+<example>
+user: "Why did my app crash? Here's the report..."
+assistant: [Launches crash-analyzer agent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `axiom-analyze-crash`

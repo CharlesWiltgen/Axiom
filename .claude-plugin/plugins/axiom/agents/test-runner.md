@@ -1,29 +1,7 @@
 ---
 name: test-runner
 description: |
-  Use this agent when the user wants to run XCUITests, parse test results, view test failures, or export test attachments. Runs xcodebuild test and parses .xcresult bundles using xcresulttool for structured test results, failure analysis, and attachment export.
-
-  <example>
-  user: "Run my UI tests and show me what failed"
-  assistant: [Launches test-runner agent]
-  </example>
-
-  <example>
-  user: "Run tests for the LoginTests scheme"
-  assistant: [Launches test-runner agent]
-  </example>
-
-  <example>
-  user: "Export the failure screenshots from my last test run"
-  assistant: [Launches test-runner agent]
-  </example>
-
-  <example>
-  user: "What tests failed and why?"
-  assistant: [Launches test-runner agent]
-  </example>
-
-  Explicit command: Users can also invoke this agent directly with `/axiom:run-tests`
+  Use this agent when the user wants to run XCUITests, parse test results, view test failures, or export test attachments.
 model: sonnet
 color: cyan
 tools:
@@ -344,3 +322,29 @@ Tests complete
 **Docs**: /xcode/xcresulttool
 
 **Skills**: axiom-testing
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "Run my UI tests and show me what failed"
+assistant: [Launches test-runner agent]
+</example>
+
+<example>
+user: "Run tests for the LoginTests scheme"
+assistant: [Launches test-runner agent]
+</example>
+
+<example>
+user: "Export the failure screenshots from my last test run"
+assistant: [Launches test-runner agent]
+</example>
+
+<example>
+user: "What tests failed and why?"
+assistant: [Launches test-runner agent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom:run-tests`

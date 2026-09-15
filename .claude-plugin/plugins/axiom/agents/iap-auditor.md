@@ -1,34 +1,7 @@
 ---
 name: iap-auditor
 description: |
-  Use this agent when the user mentions in-app purchase review, IAP audit, StoreKit issues, purchase bugs, transaction problems, or subscription management. Automatically audits existing IAP code to detect missing transaction.finish() calls, weak receipt validation, missing restore functionality, subscription status tracking issues, and StoreKit testing configuration gaps - prevents revenue loss, App Store rejections, and customer support issues.
-
-  <example>
-  user: "Can you review my in-app purchase implementation?"
-  assistant: [Launches iap-auditor agent]
-  </example>
-
-  <example>
-  user: "I'm having issues with subscription renewals"
-  assistant: [Launches iap-auditor agent]
-  </example>
-
-  <example>
-  user: "Audit my StoreKit 2 code"
-  assistant: [Launches iap-auditor agent]
-  </example>
-
-  <example>
-  user: "Check if I'm handling transactions correctly"
-  assistant: [Launches iap-auditor agent]
-  </example>
-
-  <example>
-  user: "My restore purchases isn't working properly"
-  assistant: [Launches iap-auditor agent]
-  </example>
-
-  Explicit command: Users can also invoke this agent directly with `/axiom:audit iap`
+  Use this agent when the user mentions in-app purchase review, IAP audit, StoreKit issues, purchase bugs, transaction problems, or subscription management.
 model: sonnet
 background: true
 color: green
@@ -357,3 +330,34 @@ For implementation patterns: `axiom-integration` skill (skills/in-app-purchases.
 For StoreKit 2 API reference: `axiom-integration` skill (skills/storekit-ref.md)
 For complete IAP implementation: Launch `iap-implementation` agent
 For security of receipt validation: Launch `security-privacy-scanner` agent
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "Can you review my in-app purchase implementation?"
+assistant: [Launches iap-auditor agent]
+</example>
+
+<example>
+user: "I'm having issues with subscription renewals"
+assistant: [Launches iap-auditor agent]
+</example>
+
+<example>
+user: "Audit my StoreKit 2 code"
+assistant: [Launches iap-auditor agent]
+</example>
+
+<example>
+user: "Check if I'm handling transactions correctly"
+assistant: [Launches iap-auditor agent]
+</example>
+
+<example>
+user: "My restore purchases isn't working properly"
+assistant: [Launches iap-auditor agent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom:audit iap`

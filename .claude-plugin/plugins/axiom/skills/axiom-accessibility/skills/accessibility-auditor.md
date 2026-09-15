@@ -250,3 +250,34 @@ This agent scans source statically. To **run** accessibility checks on a booted 
 For comprehensive accessibility debugging: `axiom-accessibility` (accessibility-diag reference)
 For Dynamic Type and typography: `axiom-design (skills/typography-ref.md)` skill
 For UX flow accessibility: `axiom-accessibility` (ux-flow-audit reference)
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "Can you check my app for accessibility issues?"
+assistant: [Launches accessibility-auditor agent]
+</example>
+
+<example>
+user: "I need to submit to the App Store soon, can you review accessibility?"
+assistant: [Launches accessibility-auditor agent]
+</example>
+
+<example>
+user: "Review my code for accessibility compliance"
+assistant: [Launches accessibility-auditor agent]
+</example>
+
+<example>
+user: "Check if my UI follows WCAG guidelines"
+assistant: [Launches accessibility-auditor agent]
+</example>
+
+<example>
+user: "I just added new UI, can you scan for accessibility problems?"
+assistant: [Launches accessibility-auditor agent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom:audit accessibility`

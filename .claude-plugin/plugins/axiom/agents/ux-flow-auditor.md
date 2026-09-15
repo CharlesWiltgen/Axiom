@@ -1,24 +1,7 @@
 ---
 name: ux-flow-auditor
 description: |
-  Use this agent when the user mentions UX flow issues, dead-end views, dismiss traps, missing empty states, broken user journeys, or wants a UX audit of their iOS app. Automatically scans SwiftUI and UIKit code for user journey defects - detects dead ends, dismiss traps, buried CTAs, missing loading/error/empty states, broken data paths, and accessibility dead ends.
-
-  <example>
-  user: "Check my app for UX dead ends"
-  assistant: [Launches ux-flow-auditor agent]
-  </example>
-
-  <example>
-  user: "Are there any dismiss traps in my sheets?"
-  assistant: [Launches ux-flow-auditor agent]
-  </example>
-
-  <example>
-  user: "Audit my app's user flows for issues"
-  assistant: [Launches ux-flow-auditor agent]
-  </example>
-
-  Explicit command: Users can also invoke this agent directly with `/axiom:audit ux-flow`
+  Use this agent when the user mentions UX flow issues, dead-end views, dismiss traps, missing empty states, broken user journeys, or wants a UX audit of their iOS app.
 model: sonnet
 background: true
 color: blue
@@ -292,3 +275,24 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details
 For navigation architecture: `axiom-swiftui` skill (navigation)
 For accessibility compliance: `axiom-accessibility` (accessibility-diag reference)
 For UX principles: `axiom-accessibility` (ux-flow-audit reference)
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "Check my app for UX dead ends"
+assistant: [Launches ux-flow-auditor agent]
+</example>
+
+<example>
+user: "Are there any dismiss traps in my sheets?"
+assistant: [Launches ux-flow-auditor agent]
+</example>
+
+<example>
+user: "Audit my app's user flows for issues"
+assistant: [Launches ux-flow-auditor agent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom:audit ux-flow`

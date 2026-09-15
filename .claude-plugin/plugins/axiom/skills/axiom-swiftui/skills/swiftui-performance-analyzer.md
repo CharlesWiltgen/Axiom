@@ -260,3 +260,19 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details
 
 For SwiftUI Instruments workflows and view update debugging: `axiom-swiftui` skill (performance, debugging)
 For memory lifecycle issues: `axiom-performance (skills/memory-debugging.md)` skill
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "My SwiftUI app has janky scrolling, can you check for performance issues?"
+assistant: [Launches swiftui-performance-analyzer agent]
+</example>
+
+<example>
+user: "My views are updating too often, can you scan for issues?"
+assistant: [Launches swiftui-performance-analyzer agent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom:audit swiftui-performance`

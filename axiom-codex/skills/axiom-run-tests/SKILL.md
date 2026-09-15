@@ -309,3 +309,29 @@ Tests complete
 **Docs**: /xcode/xcresulttool
 
 **Skills**: axiom-testing
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "Run my UI tests and show me what failed"
+assistant: [Launches test-runner agent]
+</example>
+
+<example>
+user: "Run tests for the LoginTests scheme"
+assistant: [Launches test-runner agent]
+</example>
+
+<example>
+user: "Export the failure screenshots from my last test run"
+assistant: [Launches test-runner agent]
+</example>
+
+<example>
+user: "What tests failed and why?"
+assistant: [Launches test-runner agent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `axiom-run-tests`

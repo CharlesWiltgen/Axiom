@@ -302,3 +302,34 @@ For implementation patterns: `axiom-integration` skill (skills/in-app-purchases.
 For StoreKit 2 API reference: `axiom-integration` skill (skills/storekit-ref.md)
 For complete IAP implementation: Launch `iap-implementation` agent
 For security of receipt validation: Launch `security-privacy-scanner` agent
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "Can you review my in-app purchase implementation?"
+assistant: [Launches iap-auditor agent]
+</example>
+
+<example>
+user: "I'm having issues with subscription renewals"
+assistant: [Launches iap-auditor agent]
+</example>
+
+<example>
+user: "Audit my StoreKit 2 code"
+assistant: [Launches iap-auditor agent]
+</example>
+
+<example>
+user: "Check if I'm handling transactions correctly"
+assistant: [Launches iap-auditor agent]
+</example>
+
+<example>
+user: "My restore purchases isn't working properly"
+assistant: [Launches iap-auditor agent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom:audit iap`

@@ -307,3 +307,39 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details
 ## Related
 
 For the migration content behind every fix: `axiom-uikit` skill (skills/uikit-modernization.md, skills/adaptive-layout.md). Rendering surfaces: `axiom-graphics` (skills/resizable-rendering.md). SwiftUI-side adaptivity: `swiftui-layout-auditor`.
+
+## Invocation Examples
+
+Prompts that should Delegate to the `this` subagent:
+
+<example>
+user: "Audit my app for screen resizing support"
+assistant: [Delegate to the `resize-auditor` subagent]
+</example>
+
+<example>
+user: "Is my app ready for resizable windows on iOS 27?"
+assistant: [Delegate to the `resize-auditor` subagent]
+</example>
+
+<example>
+user: "Check whether my app will work in iPhone Mirroring"
+assistant: [Delegate to the `resize-auditor` subagent]
+</example>
+
+<example>
+user: "Scan my UIKit app for UIScreen.main and scene lifecycle problems"
+assistant: [Delegate to the `resize-auditor` subagent]
+</example>
+
+<example>
+user: "My layout breaks when the user resizes the window — audit the whole app"
+assistant: [Delegate to the `resize-auditor` subagent]
+</example>
+
+<example>
+user: "Is my app ready for iPhone Duo?"
+assistant: [Delegate to the `resize-auditor` subagent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom-audit` resize

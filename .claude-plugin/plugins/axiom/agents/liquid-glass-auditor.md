@@ -1,19 +1,7 @@
 ---
 name: liquid-glass-auditor
 description: |
-  Use this agent when the user mentions Liquid Glass review, iOS 26 UI updates, toolbar improvements, or visual effect migration. Automatically scans SwiftUI codebase for Liquid Glass adoption opportunities - identifies views for glass effects, toolbar improvements, migration from old blur effects, and tinting opportunities for iOS 26+.
-
-  <example>
-  user: "Can you check my app for Liquid Glass adoption opportunities?"
-  assistant: [Launches liquid-glass-auditor agent]
-  </example>
-
-  <example>
-  user: "I have old UIBlurEffect code, should I migrate to Liquid Glass?"
-  assistant: [Launches liquid-glass-auditor agent]
-  </example>
-
-  Explicit command: Users can also invoke this agent directly with `/axiom:audit liquid-glass`
+  Use this agent when the user mentions Liquid Glass review, iOS 26 UI updates, toolbar improvements, or visual effect migration.
 model: sonnet
 background: true
 color: cyan
@@ -358,3 +346,19 @@ For SwiftUI performance impact of nested glass on older devices: `swiftui-perfor
 For modernization of related SwiftUI patterns: `modernization-helper` agent
 For deployment-target / availability gating: `axiom-build` skills
 For App Store submission requirements (deployment target updates): `axiom-shipping` skills
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "Can you check my app for Liquid Glass adoption opportunities?"
+assistant: [Launches liquid-glass-auditor agent]
+</example>
+
+<example>
+user: "I have old UIBlurEffect code, should I migrate to Liquid Glass?"
+assistant: [Launches liquid-glass-auditor agent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom:audit liquid-glass`

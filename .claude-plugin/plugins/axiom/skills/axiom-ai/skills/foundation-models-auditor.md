@@ -443,3 +443,34 @@ For @Generable decode-time issues: `codable-auditor` agent
 For battery cost of repeated inference: `energy-auditor` agent
 For user content in prompts and privacy disclosure: `security-privacy-scanner` agent
 For AI features gated by IAP: `iap-auditor` agent
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "Can you check my Foundation Models code for issues?"
+assistant: [Launches foundation-models-auditor agent]
+</example>
+
+<example>
+user: "Review my @Generable structs for correctness"
+assistant: [Launches foundation-models-auditor agent]
+</example>
+
+<example>
+user: "Audit my Apple Intelligence integration"
+assistant: [Launches foundation-models-auditor agent]
+</example>
+
+<example>
+user: "My LanguageModelSession keeps crashing"
+assistant: [Launches foundation-models-auditor agent]
+</example>
+
+<example>
+user: "Check if I'm handling Foundation Models errors properly"
+assistant: [Launches foundation-models-auditor agent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom:audit foundation-models`

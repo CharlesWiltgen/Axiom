@@ -279,3 +279,34 @@ For sync troubleshooting: `axiom-data (skills/cloud-sync-diag.md)`
 For SwiftData + CloudKit specifics: `swiftdata-auditor` agent
 For file location and backup exclusion: `storage-auditor` agent
 For sync callback queue safety: `axiom-concurrency`
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "Check my iCloud integration"
+assistant: [Launches icloud-auditor agent]
+</example>
+
+<example>
+user: "Audit my CloudKit code"
+assistant: [Launches icloud-auditor agent]
+</example>
+
+<example>
+user: "My iCloud sync isn't working"
+assistant: [Launches icloud-auditor agent]
+</example>
+
+<example>
+user: "Review my file coordination code"
+assistant: [Launches icloud-auditor agent]
+</example>
+
+<example>
+user: "Check for iCloud Drive issues"
+assistant: [Launches icloud-auditor agent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `axiom-audit-icloud`

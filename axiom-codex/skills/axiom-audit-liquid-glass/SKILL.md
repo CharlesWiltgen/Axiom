@@ -336,3 +336,19 @@ For SwiftUI performance impact of nested glass on older devices: `swiftui-perfor
 For modernization of related SwiftUI patterns: `modernization-helper` agent
 For deployment-target / availability gating: `axiom-build` skills
 For App Store submission requirements (deployment target updates): `axiom-shipping` skills
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "Can you check my app for Liquid Glass adoption opportunities?"
+assistant: [Launches liquid-glass-auditor agent]
+</example>
+
+<example>
+user: "I have old UIBlurEffect code, should I migrate to Liquid Glass?"
+assistant: [Launches liquid-glass-auditor agent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `axiom-audit-liquid-glass`

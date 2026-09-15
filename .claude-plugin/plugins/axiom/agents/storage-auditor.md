@@ -1,34 +1,7 @@
 ---
 name: storage-auditor
 description: |
-  Use this agent when the user mentions file storage issues, data loss, backup bloat, or asks to audit storage usage. Automatically runs comprehensive storage audit to detect files in wrong locations, missing backup exclusions, missing file protection, and storage anti-patterns - prevents data loss and backup bloat.
-
-  <example>
-  user: "Check my file storage usage"
-  assistant: [Launches storage-auditor agent]
-  </example>
-
-  <example>
-  user: "Audit my app for storage issues"
-  assistant: [Launches storage-auditor agent]
-  </example>
-
-  <example>
-  user: "My app backup is too large"
-  assistant: [Launches storage-auditor agent]
-  </example>
-
-  <example>
-  user: "Users are reporting lost data"
-  assistant: [Launches storage-auditor agent]
-  </example>
-
-  <example>
-  user: "Review my file management code"
-  assistant: [Launches storage-auditor agent]
-  </example>
-
-  Explicit command: Users can also invoke this agent directly with `/axiom:audit storage`
+  Use this agent when the user mentions file storage issues, data loss, backup bloat, or asks to audit storage usage.
 model: sonnet
 background: true
 color: blue
@@ -331,3 +304,34 @@ For storage purging policies: `axiom-data (skills/storage-management-ref.md)`
 For iCloud Drive coordination: `icloud-auditor` agent
 For sensitive-data and credentials in Keychain: `security-privacy-scanner` agent
 For SwiftData external-storage cleanup: `swiftdata-auditor` agent
+
+## Invocation Examples
+
+Prompts that should launch this agent:
+
+<example>
+user: "Check my file storage usage"
+assistant: [Launches storage-auditor agent]
+</example>
+
+<example>
+user: "Audit my app for storage issues"
+assistant: [Launches storage-auditor agent]
+</example>
+
+<example>
+user: "My app backup is too large"
+assistant: [Launches storage-auditor agent]
+</example>
+
+<example>
+user: "Users are reporting lost data"
+assistant: [Launches storage-auditor agent]
+</example>
+
+<example>
+user: "Review my file management code"
+assistant: [Launches storage-auditor agent]
+</example>
+
+Explicit command: Users can also invoke this agent directly with `/axiom:audit storage`
