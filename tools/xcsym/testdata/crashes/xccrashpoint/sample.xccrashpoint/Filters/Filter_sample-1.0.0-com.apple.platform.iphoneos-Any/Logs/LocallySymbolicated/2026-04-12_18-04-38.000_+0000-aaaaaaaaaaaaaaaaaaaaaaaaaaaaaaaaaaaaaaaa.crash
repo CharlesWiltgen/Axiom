@@ -5,7 +5,7 @@ Process:             App [1]
 Path:                /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App
 Identifier:          com.example.redacted
 Version:             1.0.0 (1000000000)
-AppStoreTools:       17E187
+AppStoreTools:       00X000
 AppVariant:          0:RedactedDevice:0
 Beta:                YES
 Code Type:           ARM-64 (Native)
@@ -13,8 +13,8 @@ Role:                Foreground
 Parent Process:      launchd [1]
 Coalition:           com.example.redacted [1]
 
-Date/Time:           2026-04-12 18:04:38.4848 +0300
-Launch Time:         2026-04-12 18:04:16.5436 +0300
+Date/Time:           2026-01-01 00:00:00.0000 +0000
+Launch Time:         2026-01-01 00:00:00.0000 +0000
 OS Version:          iPhone OS 26.4.1 (23E254)
 Release Type:        User
 Baseband Version:    3.50.07

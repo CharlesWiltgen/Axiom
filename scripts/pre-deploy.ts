@@ -13,6 +13,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { execSync } from "node:child_process";
+import { scanRepo } from "./leak-scan.ts";
 import { VERSION_CORE } from "./version-regex.js";
 import {
   MAX_ENTRY_CHARS,
@@ -1719,6 +1720,31 @@ if (!mcpMissingFromList.length && !mcpUnusedInList.length && !mcpMissingBinaries
 }
 
 // ── 12i. Docs Dash Convention ──
+
+// ── 12s. Private Data in Shipped Content ──
+
+heading("12s. Private Data in Shipped Content");
+
+// Axiom-1z8m: this class leaked four separate times — skill examples, the
+// xcsym/xcui fixtures, a Cursor hook fixture carrying a real session path and
+// session UUID, and the bundled binaries embedding the maintainer's source
+// layout. No gate saw any of it, because the pre-commit hooks match file names
+// and directories only. Rules, allowances, and one test per rule live in
+// scripts/leak-scan.ts; "ships" means tracked.
+const leakFindings = scanRepo(root);
+const leakErrors = leakFindings.filter((f) => f.severity === "error");
+const leakWarns = leakFindings.filter((f) => f.severity === "warn");
+for (const f of leakErrors) {
+  error(
+    "private-data",
+    `${f.path}${f.line > 0 ? `:${f.line}` : ""} [${f.rule}] ${f.match} — ${f.hint}`,
+  );
+}
+if (!leakErrors.length) {
+  console.log(
+    `  ✓ shipped content carries no private data (${leakWarns.length} shape warning(s) to eyeball, 0 errors)`,
+  );
+}
 
 heading("12i. Docs Dash Convention");
 
