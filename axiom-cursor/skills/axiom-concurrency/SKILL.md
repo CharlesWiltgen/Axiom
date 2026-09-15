@@ -1,6 +1,6 @@
 ---
 name: axiom-concurrency
-description: "Use when writing ANY async code, actors, threads, or seeing ANY concurrency error. Covers Swift 6 concurrency, @MainActor, Sendable, data races, async/await patterns."
+description: "Use when writing ANY async code, actors, or threads in an Apple-platform app, or seeing ANY concurrency error. Covers Swift 6 concurrency, @MainActor, Sendable, data races, async/await patterns."
 ---
 
 ## Cursor MCP Tool Boundary

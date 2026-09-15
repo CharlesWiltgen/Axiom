@@ -1,6 +1,6 @@
 ---
 name: axiom-networking
-description: Use when implementing or debugging ANY network connection, API call, or socket. Covers URLSession, Network.framework, NetworkConnection, connection diagnostics.
+description: Use when implementing or debugging ANY network connection, API call, or socket in an Apple app. Covers URLSession, Network.framework, NetworkConnection, connection diagnostics.
 license: MIT
 ---
 

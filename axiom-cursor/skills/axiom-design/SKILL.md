@@ -1,6 +1,6 @@
 ---
 name: axiom-design
-description: "Use when making design decisions, implementing HIG patterns, Liquid Glass, SF Symbols, typography, or structuring app entry points and authentication flows."
+description: "Use when making visual or interaction design decisions for an Apple app — HIG patterns, Liquid Glass, SF Symbols, typography, app entry-point structure."
 ---
 
 

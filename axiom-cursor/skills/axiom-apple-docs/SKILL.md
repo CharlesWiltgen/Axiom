@@ -1,6 +1,6 @@
 ---
 name: axiom-apple-docs
-description: "Use when ANY question involves Apple framework APIs, Swift compiler errors, or Xcode-bundled documentation. Covers Liquid Glass, Swift 6.2 concurrency, Foundation Models, SwiftData, StoreKit, 32 Swift compiler diagnostics."
+description: "Use when you need Apple's own documentation or a Swift compiler diagnostic explained rather than recalled — reads the for-LLM guides and diagnostics Xcode bundles."
 ---
 
 

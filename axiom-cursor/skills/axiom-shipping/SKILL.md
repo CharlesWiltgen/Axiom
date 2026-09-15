@@ -1,6 +1,6 @@
 ---
 name: axiom-shipping
-description: "Use when preparing ANY app for submission, handling App Store rejections, writing appeals, or managing App Store Connect. Covers submission checklists, rejection troubleshooting, metadata requirements, privacy manifests, age ratings, export compliance."
+description: "Use when preparing an app for App Store submission, handling rejections or appeals, configuring Xcode Cloud, or triaging TestFlight/Sentry crash corpora. Covers checklists, metadata, privacy manifests, export compliance."
 ---
 
 ## Cursor MCP Tool Boundary

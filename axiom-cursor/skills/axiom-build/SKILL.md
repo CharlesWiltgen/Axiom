@@ -1,6 +1,6 @@
 ---
 name: axiom-build
-description: "Use when ANY iOS build fails, test crashes, Xcode misbehaves, or environment issue occurs before debugging code. Covers build failures, compilation errors, dependency conflicts, simulator problems, environment-first diagnostics."
+description: "Use when ANY iOS or macOS build fails, a crash log or TestFlight crash needs diagnosing, Xcode misbehaves, or an environment issue blocks work before code is the suspect. Covers build failures, dependency conflicts, simulator diagnostics."
 ---
 
 ## Cursor MCP Tool Boundary

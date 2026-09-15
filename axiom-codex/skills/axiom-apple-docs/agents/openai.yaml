@@ -1,3 +1,3 @@
 interface:
   display_name: "Apple Docs"
-  short_description: "ANY question involves Apple framework APIs, Swift compiler errors, or Xcode-bundled documentation"
+  short_description: "You need Apple's own documentation or a Swift compiler diagnostic explained rather than recalled"

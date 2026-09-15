@@ -26,7 +26,7 @@
   "skills": [
     {
       "name": "axiom-build",
-      "description": "Use when ANY iOS build fails, test crashes, Xcode misbehaves, or environment issue occurs before debugging code. Covers build failures, compilation errors, dependency conflicts, simulator problems, environment-first diagnostics."
+      "description": "Use when ANY iOS or macOS build fails, a crash log or TestFlight crash needs diagnosing, Xcode misbehaves, or an environment issue blocks work before code is the suspect. Covers build failures, dependency conflicts, simulator diagnostics."
     },
     {
       "name": "axiom-testing",
@@ -34,31 +34,31 @@
     },
     {
       "name": "axiom-swiftui",
-      "description": "Use when building, fixing, or improving ANY SwiftUI UI — views, navigation, layout, animations, performance, architecture, gestures, debugging, iOS 26 features, iPhone Duo."
+      "description": "Use when building, fixing, or improving ANY SwiftUI UI — views, navigation, layout, animations, gestures, debugging, iOS 26 features, iPhone Duo."
     },
     {
       "name": "axiom-data",
-      "description": "Use when working with ANY data persistence, database, storage, CloudKit, migration, or serialization. Covers SwiftData, Core Data, GRDB, SQLite, Realm, CloudKit sync, file storage, Codable, migrations."
+      "description": "Use when working with ANY data persistence, database, storage, CloudKit, migration, or serialization in an Apple app. Covers SwiftData, Core Data, GRDB, SQLite, Realm, CloudKit sync, file storage, Codable, migrations."
     },
     {
       "name": "axiom-concurrency",
-      "description": "Use when writing ANY async code, actors, threads, or seeing ANY concurrency error. Covers Swift 6 concurrency, @MainActor, Sendable, data races, async/await patterns."
+      "description": "Use when writing ANY async code, actors, or threads in an Apple-platform app, or seeing ANY concurrency error. Covers Swift 6 concurrency, @MainActor, Sendable, data races, async/await patterns."
     },
     {
       "name": "axiom-performance",
-      "description": "Use when app feels slow, memory grows, battery drains, or diagnosing ANY performance issue. Covers memory leaks, profiling, Instruments workflows, retain cycles, performance optimization."
+      "description": "Use when an iOS, macOS, or visionOS app feels slow, memory grows, battery drains, or ANY performance issue needs diagnosing. Covers memory leaks, profiling, Instruments workflows, retain cycles, optimization."
     },
     {
       "name": "axiom-networking",
-      "description": "Use when implementing or debugging ANY network connection, API call, or socket. Covers URLSession, Network.framework, NetworkConnection, connection diagnostics."
+      "description": "Use when implementing or debugging ANY network connection, API call, or socket in an Apple app. Covers URLSession, Network.framework, NetworkConnection, connection diagnostics."
     },
     {
       "name": "axiom-integration",
-      "description": "Use when integrating ANY iOS system feature - Siri, Shortcuts, widgets, IAP, localization, privacy, alarms, calendar, reminders, contacts, background tasks, push notifications, timers. Covers App Intents, WidgetKit, StoreKit, EventKit, Contacts."
+      "description": "Use when work crosses into Apple's system surfaces rather than your own UI or data — Siri and Shortcuts, widgets, in-app purchase, localization, privacy prompts, alarms, calendar, contacts, background tasks, push."
     },
     {
       "name": "axiom-media",
-      "description": "Use when working with camera, photos, audio, haptics, ShazamKit, the user's Apple Music library, or Now Playing. Covers AVCaptureSession, PHPicker, PhotosPicker, AVFoundation, Core Haptics, audio recognition, MediaPlayer, CarPlay, MusicKit playback and library enumeration."
+      "description": "Use when working with camera, photos, audio, haptics, ShazamKit, the user's Apple Music library, or lock-screen and CarPlay metadata. Covers AVCaptureSession, PHPicker, AVFoundation, Core Haptics, MediaPlayer, MusicKit."
     },
     {
       "name": "axiom-accessibility",
@@ -82,7 +82,7 @@
     },
     {
       "name": "axiom-apple-docs",
-      "description": "Use when ANY question involves Apple framework APIs, Swift compiler errors, or Xcode-bundled documentation. Covers Liquid Glass, Swift 6.2 concurrency, Foundation Models, SwiftData, StoreKit, 32 Swift compiler diagnostics."
+      "description": "Use when you need Apple's own documentation or a Swift compiler diagnostic explained rather than recalled — reads the for-LLM guides and diagnostics Xcode bundles."
     },
     {
       "name": "axiom-xcode-mcp",
@@ -90,7 +90,7 @@
     },
     {
       "name": "axiom-shipping",
-      "description": "Use when preparing ANY app for submission, handling App Store rejections, writing appeals, or managing App Store Connect. Covers submission checklists, rejection troubleshooting, metadata requirements, privacy manifests, age ratings, export compliance."
+      "description": "Use when preparing an app for App Store submission, handling rejections or appeals, configuring Xcode Cloud, or triaging TestFlight/Sentry crash corpora. Covers checklists, metadata, privacy manifests, export compliance."
     },
     {
       "name": "axiom-security",
@@ -102,7 +102,7 @@
     },
     {
       "name": "axiom-design",
-      "description": "Use when making design decisions, implementing HIG patterns, Liquid Glass, SF Symbols, typography, or structuring app entry points and authentication flows."
+      "description": "Use when making visual or interaction design decisions for an Apple app — HIG patterns, Liquid Glass, SF Symbols, typography, app entry-point structure."
     },
     {
       "name": "axiom-uikit",
@@ -110,7 +110,7 @@
     },
     {
       "name": "axiom-swift",
-      "description": "Use when reviewing Swift code for modern idioms, working with noncopyable types, implementing drag and drop, adding debug deep links, or building for tvOS."
+      "description": "Use when the question is about Swift or its toolchain rather than a framework — modern idioms, noncopyable types, drag and drop, debug deep links, tvOS targets."
     },
     {
       "name": "axiom-macos",
