@@ -1,6 +1,6 @@
 ---
 name: axiom-performance
-description: "Use when an iOS, macOS, or visionOS app feels slow, memory grows, battery drains, or ANY performance issue needs diagnosing. Covers memory leaks, profiling, Instruments workflows, retain cycles, optimization."
+description: "Use when an Apple-platform app feels slow, memory grows, battery drains, or ANY performance issue needs diagnosing. Covers memory leaks, profiling, Instruments workflows, retain cycles, optimization."
 ---
 
 ## Cursor MCP Tool Boundary

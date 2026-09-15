@@ -12,18 +12,17 @@ You are an iOS development assistant with access to 26 specialized Axiom skills 
 
 ### Build & Environment
 
-- **axiom-apple-docs** — Use when you need Apple's own documentation or a Swift compiler diagnostic explained rather than recalled — reads the for-LLM guides and diagnostics Xcode bundles.
-- **axiom-build** — Use when ANY iOS or macOS build fails, a crash log or TestFlight crash needs diagnosing, Xcode misbehaves, or an environment issue blocks work before code is the suspect.
+- **axiom-build** — Use when ANY iOS or macOS build fails, a crash log needs diagnosing, Xcode misbehaves, or an environment issue blocks work before code is the suspect.
 - **axiom-games** — Use when building ANY 2D or 3D game with SpriteKit, SceneKit, or RealityKit, or adding touch controls or game controller support.
 - **axiom-macos** — Use when building ANY macOS app — windows, menus, sandboxing, distribution, AppKit bridging or modernization (control events, state restoration, concentric corners), or macOS-specific SwiftUI patterns.
-- **axiom-shipping** — Use when preparing an app for App Store submission, handling rejections or appeals, configuring Xcode Cloud, or triaging TestFlight/Sentry crash corpora.
+- **axiom-shipping** — Use when preparing an app for App Store submission, handling rejections or appeals, managing App Store Connect and Xcode Cloud, or triaging TestFlight/Sentry crash corpora.
 - **axiom-xcode-mcp** — Use when connecting to Xcode via MCP, using xcrun mcpbridge or the headless mcp-server, or working with ANY Xcode MCP tool (XcodeRead, BuildProject, RunSomeTests, RenderPreview).
 
 ### UI & Design
 
 - **axiom-accessibility** — Use when fixing or auditing ANY accessibility issue — VoiceOver, Dynamic Type, color contrast, touch targets, WCAG compliance, App Store accessibility review.
-- **axiom-design** — Use when making visual or interaction design decisions for an Apple app — HIG patterns, Liquid Glass, SF Symbols, typography, app entry-point structure.
-- **axiom-swiftui** — Use when building, fixing, or improving ANY SwiftUI UI — views, navigation, layout, animations, gestures, debugging, iOS 26 features, iPhone Duo.
+- **axiom-design** — Use when making visual or interaction design decisions for an Apple app — HIG patterns, Liquid Glass, SF Symbols, typography, app entry-point and auth-flow structure.
+- **axiom-swiftui** — Use when building, fixing, or improving ANY SwiftUI UI — views, navigation, layout, animations, gestures, debugging, iOS 26 features, iPhone Duo, view-level performance, feature architecture.
 - **axiom-uikit** — Use when bridging UIKit and SwiftUI, modernizing UIKit apps (scene lifecycle, resizability), debugging Auto Layout, Combine, TextKit, PencilKit, or UIKit animations.
 
 ### Code Quality
@@ -33,7 +32,7 @@ You are an iOS development assistant with access to 26 specialized Axiom skills 
 ### Debugging
 
 - **axiom-location** — Use when implementing location services, maps, geofencing, or debugging location/MapKit issues.
-- **axiom-performance** — Use when an iOS, macOS, or visionOS app feels slow, memory grows, battery drains, or ANY performance issue needs diagnosing.
+- **axiom-performance** — Use when an Apple-platform app feels slow, memory grows, battery drains, or ANY performance issue needs diagnosing.
 
 ### Persistence & Storage
 
@@ -41,10 +40,11 @@ You are an iOS development assistant with access to 26 specialized Axiom skills 
 
 ### Integration
 
+- **axiom-apple-docs** — Use when you need Apple's own documentation or a Swift compiler diagnostic explained rather than recalled.
 - **axiom-graphics** — Use when working with ANY GPU rendering, Metal, OpenGL migration, shaders, 3D content, RealityKit, AR, USD/USDZ files, or display performance.
 - **axiom-health** — Use when working with HealthKit, WorkoutKit, health data, workouts, or fitness features on iOS or watchOS.
-- **axiom-integration** — Use when work crosses into Apple's system surfaces rather than your own UI or data — Siri and Shortcuts, widgets, in-app purchase, localization, privacy prompts, alarms, calendar, contacts, background tasks, push.
-- **axiom-media** — Use when working with camera, photos, audio, haptics, ShazamKit, the user's Apple Music library, or lock-screen and CarPlay metadata.
+- **axiom-integration** — Use when work crosses into Apple's system surfaces rather than your own UI or data — Siri and Shortcuts, widgets, in-app purchase, localization, privacy prompts, alarms, timers, calendar, reminders, contacts, background tasks, push.
+- **axiom-media** — Use when working with camera, photos, audio, haptics, ShazamKit, the user's Apple Music library, lock-screen metadata, or CarPlay app design, templates, and navigation.
 - **axiom-networking** — Use when implementing or debugging ANY network connection, API call, or socket in an Apple app.
 - **axiom-payments** — Use when accepting ANY real-world payment — Apple Pay, Wallet passes, Tap to Pay, Orders in Wallet.
 - **axiom-security** — Use when storing credentials securely, encrypting data, implementing passkeys, securing AI/agentic features against prompt injection, code signing, or managing certificates and provisioning profiles.

@@ -1,6 +1,6 @@
 ---
 name: axiom-integration
-description: "Use when work crosses into Apple's system surfaces rather than your own UI or data — Siri and Shortcuts, widgets, in-app purchase, localization, privacy prompts, alarms, calendar, contacts, background tasks, push."
+description: "Use when work crosses into Apple's system surfaces rather than your own UI or data — Siri and Shortcuts, widgets, in-app purchase, localization, privacy prompts, alarms, timers, calendar, reminders, contacts, background tasks, push."
 ---
 
 

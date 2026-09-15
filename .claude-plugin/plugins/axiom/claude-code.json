@@ -26,7 +26,7 @@
   "skills": [
     {
       "name": "axiom-build",
-      "description": "Use when ANY iOS or macOS build fails, a crash log or TestFlight crash needs diagnosing, Xcode misbehaves, or an environment issue blocks work before code is the suspect. Covers build failures, dependency conflicts, simulator diagnostics."
+      "description": "Use when ANY iOS or macOS build fails, a crash log needs diagnosing, Xcode misbehaves, or an environment issue blocks work before code is the suspect. Covers build failures, dependency conflicts, simulator diagnostics."
     },
     {
       "name": "axiom-testing",
@@ -34,7 +34,7 @@
     },
     {
       "name": "axiom-swiftui",
-      "description": "Use when building, fixing, or improving ANY SwiftUI UI — views, navigation, layout, animations, gestures, debugging, iOS 26 features, iPhone Duo."
+      "description": "Use when building, fixing, or improving ANY SwiftUI UI — views, navigation, layout, animations, gestures, debugging, iOS 26 features, iPhone Duo, view-level performance, feature architecture."
     },
     {
       "name": "axiom-data",
@@ -46,7 +46,7 @@
     },
     {
       "name": "axiom-performance",
-      "description": "Use when an iOS, macOS, or visionOS app feels slow, memory grows, battery drains, or ANY performance issue needs diagnosing. Covers memory leaks, profiling, Instruments workflows, retain cycles, optimization."
+      "description": "Use when an Apple-platform app feels slow, memory grows, battery drains, or ANY performance issue needs diagnosing. Covers memory leaks, profiling, Instruments workflows, retain cycles, optimization."
     },
     {
       "name": "axiom-networking",
@@ -54,11 +54,11 @@
     },
     {
       "name": "axiom-integration",
-      "description": "Use when work crosses into Apple's system surfaces rather than your own UI or data — Siri and Shortcuts, widgets, in-app purchase, localization, privacy prompts, alarms, calendar, contacts, background tasks, push."
+      "description": "Use when work crosses into Apple's system surfaces rather than your own UI or data — Siri and Shortcuts, widgets, in-app purchase, localization, privacy prompts, alarms, timers, calendar, reminders, contacts, background tasks, push."
     },
     {
       "name": "axiom-media",
-      "description": "Use when working with camera, photos, audio, haptics, ShazamKit, the user's Apple Music library, or lock-screen and CarPlay metadata. Covers AVCaptureSession, PHPicker, AVFoundation, Core Haptics, MediaPlayer, MusicKit."
+      "description": "Use when working with camera, photos, audio, haptics, ShazamKit, the user's Apple Music library, lock-screen metadata, or CarPlay app design, templates, and navigation. Covers AVCaptureSession, AVFoundation, Core Haptics, MediaPlayer, MusicKit."
     },
     {
       "name": "axiom-accessibility",
@@ -82,7 +82,7 @@
     },
     {
       "name": "axiom-apple-docs",
-      "description": "Use when you need Apple's own documentation or a Swift compiler diagnostic explained rather than recalled — reads the for-LLM guides and diagnostics Xcode bundles."
+      "description": "Use when you need Apple's own documentation or a Swift compiler diagnostic explained rather than recalled."
     },
     {
       "name": "axiom-xcode-mcp",
@@ -90,7 +90,7 @@
     },
     {
       "name": "axiom-shipping",
-      "description": "Use when preparing an app for App Store submission, handling rejections or appeals, configuring Xcode Cloud, or triaging TestFlight/Sentry crash corpora. Covers checklists, metadata, privacy manifests, export compliance."
+      "description": "Use when preparing an app for App Store submission, handling rejections or appeals, managing App Store Connect and Xcode Cloud, or triaging TestFlight/Sentry crash corpora. Covers checklists, metadata, privacy manifests, export compliance."
     },
     {
       "name": "axiom-security",
@@ -102,7 +102,7 @@
     },
     {
       "name": "axiom-design",
-      "description": "Use when making visual or interaction design decisions for an Apple app — HIG patterns, Liquid Glass, SF Symbols, typography, app entry-point structure."
+      "description": "Use when making visual or interaction design decisions for an Apple app — HIG patterns, Liquid Glass, SF Symbols, typography, app entry-point and auth-flow structure."
     },
     {
       "name": "axiom-uikit",

@@ -1,6 +1,6 @@
 ---
 name: axiom-apple-docs
-description: "Use when you need Apple's own documentation or a Swift compiler diagnostic explained rather than recalled — reads the for-LLM guides and diagnostics Xcode bundles."
+description: "Use when you need Apple's own documentation or a Swift compiler diagnostic explained rather than recalled."
 ---
 
 
