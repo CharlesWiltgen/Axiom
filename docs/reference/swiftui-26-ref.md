@@ -98,7 +98,7 @@ Questions you can ask Claude that will draw from this reference:
 
 ### Data Detection (iOS 27)
 - `.dataDetection(_:options:)` – makes links, phone numbers, addresses, dates, and money in a view's text tappable (iOS / watchOS / visionOS 27 only — not macOS or tvOS)
-- `DataDetector.MatchType` options; iOS/macOS/watchOS/visionOS 27, not tvOS
+- `DataDetector.MatchType` options (DataDetection, iOS/macOS/watchOS/visionOS/tvOS 26+); the SwiftUI `.dataDetection(_:options:)` modifier itself is iOS/watchOS/visionOS 27 only
 
 ### Rich Text Editing
 - TextEditor with AttributedString
