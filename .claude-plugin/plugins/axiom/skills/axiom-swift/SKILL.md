@@ -1,6 +1,6 @@
 ---
 name: axiom-swift
-description: Use when reviewing Swift code for modern idioms, working with noncopyable types, implementing drag and drop, adding debug deep links, or building for tvOS.
+description: Use when the question is about Swift or its toolchain rather than a framework — modern idioms, noncopyable types, drag and drop, debug deep links, tvOS targets.
 license: MIT
 ---
 

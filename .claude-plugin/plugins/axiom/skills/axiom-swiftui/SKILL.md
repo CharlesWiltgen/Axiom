@@ -1,6 +1,6 @@
 ---
 name: axiom-swiftui
-description: Use when building, fixing, or improving ANY SwiftUI UI — views, navigation, layout, animations, performance, architecture, gestures, debugging, iOS 26 features, iPhone Duo.
+description: Use when building, fixing, or improving ANY SwiftUI UI — views, navigation, layout, animations, gestures, debugging, iOS 26 features, iPhone Duo.
 license: MIT
 ---
 

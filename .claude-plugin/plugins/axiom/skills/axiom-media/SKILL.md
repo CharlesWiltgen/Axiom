@@ -1,6 +1,6 @@
 ---
 name: axiom-media
-description: Use when working with camera, photos, audio, haptics, ShazamKit, the user's Apple Music library, or Now Playing. Covers AVCaptureSession, PHPicker, PhotosPicker, AVFoundation, Core Haptics, audio recognition, MediaPlayer, CarPlay, MusicKit playback and library enumeration.
+description: Use when working with camera, photos, audio, haptics, ShazamKit, the user's Apple Music library, or lock-screen and CarPlay metadata. Covers AVCaptureSession, PHPicker, AVFoundation, Core Haptics, MediaPlayer, MusicKit.
 license: MIT
 ---
 
