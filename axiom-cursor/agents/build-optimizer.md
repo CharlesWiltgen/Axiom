@@ -222,3 +222,7 @@ assistant: [Delegate to the `build-optimizer` subagent]
 </example>
 
 Explicit command: Users can also invoke this agent directly with `/axiom-optimize-build`
+
+## Scope
+
+Automatically scans Xcode projects for build performance optimizations - identifies slow type checking, expensive build phase scripts, suboptimal build settings, and parallelization opportunities to reduce build times by 30-50%.

@@ -195,3 +195,7 @@ assistant: [Launches performance-profiler agent]
 </example>
 
 Explicit command: Users can also invoke this agent directly with `axiom-profile-performance`
+
+## Scope
+
+Records traces with xcprof and turns them into structured, honest performance reports — no Instruments GUI required.

@@ -268,3 +268,7 @@ assistant: [Launches concurrency-auditor agent]
 </example>
 
 Explicit command: Users can also invoke this agent directly with `axiom-audit-concurrency`
+
+## Scope
+
+Automatically scans Swift code for Swift 6 strict concurrency violations - detects unsafe Task captures, missing @MainActor, Sendable violations, and actor isolation problems.

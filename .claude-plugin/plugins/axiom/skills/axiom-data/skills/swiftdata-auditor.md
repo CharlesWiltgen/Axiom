@@ -313,3 +313,7 @@ assistant: [Launches swiftdata-auditor agent]
 </example>
 
 Explicit command: Users can also invoke this agent directly with `/axiom:audit swiftdata`
+
+## Scope
+
+Automatically scans SwiftData code for the 10 most critical violations - struct models, missing VersionedSchema models, relationship defaults, migration timing, background context misuse, and N+1 patterns - prevents crashes, data loss, and silent corruption.

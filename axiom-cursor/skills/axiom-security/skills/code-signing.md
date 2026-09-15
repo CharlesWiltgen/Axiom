@@ -360,8 +360,8 @@ CODE_SIGNING_ALLOWED = NO
 **Wrong**:
 ```
 # CI pipeline uses one developer's personal certificate
-security import ~/charles-personal.p12 ...
-CODE_SIGN_IDENTITY = "Apple Distribution: Charles Personal (ABC123)"
+security import ~/your-identity.p12 ...
+CODE_SIGN_IDENTITY = "Apple Distribution: Your Name (ABC123)"
 ```
 
 **Right**: Use a dedicated team certificate managed via fastlane match or a shared Apple Developer account:

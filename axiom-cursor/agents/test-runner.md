@@ -344,3 +344,7 @@ assistant: [Delegate to the `test-runner` subagent]
 </example>
 
 Explicit command: Users can also invoke this agent directly with `/axiom-run-tests`
+
+## Scope
+
+Runs xcodebuild test and parses .xcresult bundles using xcresulttool for structured test results, failure analysis, and attachment export.

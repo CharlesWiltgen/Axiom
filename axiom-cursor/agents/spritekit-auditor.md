@@ -331,3 +331,7 @@ assistant: [Delegate to the `spritekit-auditor` subagent]
 </example>
 
 Explicit command: Users can also invoke this agent directly with `/axiom-audit` spritekit
+
+## Scope
+
+Automatically scans for physics bitmask problems, draw call waste, node accumulation, action memory leaks, coordinate confusion, touch handling bugs, missing object pooling, and missing debug overlays.

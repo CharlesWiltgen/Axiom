@@ -368,3 +368,7 @@ assistant: [Launches grdb-performance-auditor agent]
 </example>
 
 Explicit command: Users can also invoke this agent directly with `axiom-audit-grdb-performance`
+
+## Scope
+
+Detects raw SQL string interpolation, missing FK indexes (raw SQL), missing PRAGMA optimize for raw-GRDB apps, journal mode mismatch for app-group DBs, missing observesSuspensionNotifications for shared DBs, prefix-redundant indexes (raw SQL), legacy Record subclass usage, INSERT OR REPLACE misused as upsert, observation on WITHOUT ROWID tables, WITHOUT ROWID upsert bugs.

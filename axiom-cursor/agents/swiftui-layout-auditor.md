@@ -311,3 +311,7 @@ assistant: [Delegate to the `swiftui-layout-auditor` subagent]
 </example>
 
 Explicit command: Users can also invoke this agent directly with `/axiom-audit` swiftui-layout
+
+## Scope
+
+Automatically scans SwiftUI layout code for the 12 most critical violations - GeometryReader misuse, deprecated screen APIs, hardcoded breakpoints, identity loss from conditional stacks, missing lazy containers, controls under ignoresSafeArea, and hand-built toolbar rows - prevents layout breaks across device sizes, orientations, and iPhone Duo poses.

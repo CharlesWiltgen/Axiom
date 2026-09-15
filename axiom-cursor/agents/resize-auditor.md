@@ -343,3 +343,7 @@ assistant: [Delegate to the `resize-auditor` subagent]
 </example>
 
 Explicit command: Users can also invoke this agent directly with `/axiom-audit` resize
+
+## Scope
+
+Automatically scans UIKit code, Info.plist, and the scene manifest for resize-readiness violations — missing scene lifecycle, UIScreen.main usage, UIRequiresFullScreen, orientation-derived layout, fixed-canvas rendering surfaces, Mirroring input gaps, symmetric safe-area math, hand-built bars, and unguarded window requests — prevents shipping an app that breaks (or fails to launch) under the 27 resize model or on iPhone Duo.

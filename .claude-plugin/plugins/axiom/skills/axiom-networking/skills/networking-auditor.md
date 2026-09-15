@@ -273,3 +273,7 @@ assistant: [Launches networking-auditor agent]
 </example>
 
 Explicit command: Users can also invoke this agent directly with `/axiom:audit networking`
+
+## Scope
+
+Scans for deprecated networking APIs (SCNetworkReachability, CFSocket, NSStream) and anti-patterns (reachability checks, hardcoded IPs, missing error handling) - prevents App Store rejections.

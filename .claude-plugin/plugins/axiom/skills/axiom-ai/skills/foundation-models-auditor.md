@@ -474,3 +474,7 @@ assistant: [Launches foundation-models-auditor agent]
 </example>
 
 Explicit command: Users can also invoke this agent directly with `/axiom:audit foundation-models`
+
+## Scope
+
+Automatically scans Foundation Models code for the 14 most critical violations - missing availability checks, main thread blocking, manual JSON parsing, missing error handling, session lifecycle issues, deprecated error types, and missing or uncalibrated evaluation suites - prevents crashes, guardrail violations, silent quality regressions, and poor user experience.

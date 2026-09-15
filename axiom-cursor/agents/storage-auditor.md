@@ -319,3 +319,7 @@ assistant: [Delegate to the `storage-auditor` subagent]
 </example>
 
 Explicit command: Users can also invoke this agent directly with `/axiom-audit` storage
+
+## Scope
+
+Automatically runs comprehensive storage audit to detect files in wrong locations, missing backup exclusions, missing file protection, and storage anti-patterns - prevents data loss and backup bloat.

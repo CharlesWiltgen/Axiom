@@ -350,3 +350,7 @@ assistant: [Delegate to the `textkit-auditor` subagent]
 </example>
 
 Explicit command: Users can also invoke this agent directly with `/axiom-audit` textkit
+
+## Scope
+
+Automatically scans for TextKit 1 fallback triggers, deprecated glyph APIs, and missing TextKit 2 features - prevents loss of Writing Tools support and ensures modern text handling for complex scripts.

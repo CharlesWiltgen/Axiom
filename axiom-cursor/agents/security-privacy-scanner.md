@@ -330,3 +330,7 @@ assistant: [Delegate to the `security-privacy-scanner` subagent]
 </example>
 
 Explicit command: Users can also invoke this agent directly with `/axiom-audit` security — which covers privacy too (Privacy Manifests, sensitive-data storage and logging)
+
+## Scope
+
+Scans for API keys in code, insecure @AppStorage usage, missing Privacy Manifests (iOS 17+), ATS violations, and logging sensitive data.

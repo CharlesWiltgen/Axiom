@@ -333,3 +333,7 @@ assistant: [Launches iap-auditor agent]
 </example>
 
 Explicit command: Users can also invoke this agent directly with `/axiom:audit iap`
+
+## Scope
+
+Automatically audits existing IAP code to detect missing transaction.finish() calls, weak receipt validation, missing restore functionality, subscription status tracking issues, and StoreKit testing configuration gaps - prevents revenue loss, App Store rejections, and customer support issues.

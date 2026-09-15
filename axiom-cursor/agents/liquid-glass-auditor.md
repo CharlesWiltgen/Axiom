@@ -360,3 +360,7 @@ assistant: [Delegate to the `liquid-glass-auditor` subagent]
 </example>
 
 Explicit command: Users can also invoke this agent directly with `/axiom-audit` liquid-glass
+
+## Scope
+
+Automatically scans SwiftUI codebase for Liquid Glass adoption opportunities - identifies views for glass effects, toolbar improvements, migration from old blur effects, and tinting opportunities for iOS 26+.

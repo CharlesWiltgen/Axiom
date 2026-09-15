@@ -438,3 +438,7 @@ assistant: [Launches test-failure-analyzer agent]
 </example>
 
 Explicit command: Users can also invoke this agent directly with `/axiom:audit test-failures`
+
+## Scope
+
+Focuses on Swift Testing patterns (confirmation, @MainActor, .serialized trait) and diagnoses root causes of intermittent failures.

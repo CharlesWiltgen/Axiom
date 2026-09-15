@@ -246,3 +246,7 @@ assistant: [Launches swiftui-architecture-auditor agent]
 </example>
 
 Explicit command: Users can also invoke this agent directly with `axiom-audit-swiftui-architecture`
+
+## Scope
+
+Automatically scans SwiftUI code for architectural anti-patterns - logic in view bodies, async boundary violations, property wrapper misuse, and testability gaps. Complements (but is distinct from) performance and navigation audits.

@@ -169,3 +169,7 @@ assistant: [Delegate to the `triage-analyzer` subagent]
 </example>
 
 Explicit command: `/axiom-triage` [sentry|asc]
+
+## Scope
+
+Fetches unresolved issues, normalizes them, runs the `axiom_xcsym_triage` MCP tool to classify + cluster + flag suspension/idle-runloop noise, merges clusters into root-cause families, and produces a ranked report.   For a **single crash file** (.ips, MetricKit, .crash, .xccrashpoint), use the crash-analyzer agent instead.

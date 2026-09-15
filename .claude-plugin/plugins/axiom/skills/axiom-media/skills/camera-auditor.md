@@ -379,3 +379,7 @@ assistant: [Launches camera-auditor agent]
 </example>
 
 Explicit command: Users can also invoke this agent directly with `/axiom:audit camera`
+
+## Scope
+
+Covers AVCaptureSession, photo/video recording, and audio capture.

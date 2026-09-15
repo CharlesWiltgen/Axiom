@@ -26,7 +26,7 @@
   "skills": [
     {
       "name": "axiom-build",
-      "description": "Use when ANY iOS or macOS build fails, a crash log needs diagnosing, Xcode misbehaves, or an environment issue blocks work before code is the suspect. Covers build failures, dependency conflicts, simulator diagnostics."
+      "description": "Use when ANY iOS or macOS build fails, a crash log needs diagnosing, a test run crashes, Xcode misbehaves, or an environment issue blocks work before code is the suspect. Covers build failures, dependency conflicts, simulator diagnostics."
     },
     {
       "name": "axiom-testing",
@@ -90,7 +90,7 @@
     },
     {
       "name": "axiom-shipping",
-      "description": "Use when preparing an app for App Store submission, handling rejections or appeals, managing App Store Connect and Xcode Cloud, or triaging TestFlight/Sentry crash corpora. Covers checklists, metadata, privacy manifests, export compliance."
+      "description": "Use when preparing an app for App Store submission, handling rejections or appeals, managing App Store Connect and Xcode Cloud, or triaging TestFlight/Sentry crash corpora. Covers checklists, metadata, privacy manifests, age ratings, export compliance."
     },
     {
       "name": "axiom-security",

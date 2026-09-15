@@ -292,3 +292,7 @@ assistant: [Delegate to the `energy-auditor` subagent]
 </example>
 
 Explicit command: Users can also invoke this agent directly with `/axiom-audit` energy
+
+## Scope
+
+Automatically scans codebase for the 8 most common energy anti-patterns - timer abuse, polling instead of push, continuous location, animation leaks, background mode misuse, network inefficiency, GPU waste, and disk I/O patterns.

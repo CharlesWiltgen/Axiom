@@ -289,3 +289,7 @@ assistant: [Launches database-schema-auditor agent]
 </example>
 
 Explicit command: Users can also invoke this agent directly with `/axiom:audit database-schema`
+
+## Scope
+
+Automatically scans database migration and schema code for the 10 most critical violations - unsafe ALTER TABLE patterns, DROP operations, missing idempotency, foreign key misuse, and transaction safety - prevents data loss, migration crashes, and silent corruption.

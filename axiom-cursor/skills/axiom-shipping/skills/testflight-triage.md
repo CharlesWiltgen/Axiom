@@ -525,7 +525,7 @@ There is no raw-`.crash`-corpus input to `xcsym triage` (that subcommand takes N
 
 Two Organizer traps make signature-level triage unreliable:
 
-1. **Signature names come from an arbitrary non-crashing thread.** One bug fans out into many unrelated-looking signatures — measured on one release, 16 of 17 signatures were a single bug (identical crashing stacks, all `EXC_BREAKPOINT`), carrying names like `NO_CRASH_STACK`, `crashHandlerSymbol`, `installTap` that implicated subsystems with no involvement at all. Triage by diffing the stack of the thread marked `Thread N Crashed:`, never by the signature name.
+1. **Signature names come from an arbitrary non-crashing thread.** One bug fans out into many unrelated-looking signatures — on one real release, most signatures were a single bug (identical crashing stacks, one exception type), carrying names that implicated subsystems with no involvement at all. Triage by diffing the stack of the thread marked `Thread N Crashed:`, never by the signature name.
 2. **Per-version device counts hide cross-version history.** A signature showing "1 device" for the selected version held 27 logs spanning 12 releases once the bundle was opened. Open the bundle before judging reach.
 
 Also: a crash-looping install re-lands reports across capture sites, so summing per-signature `deviceCount` overstates reach — treat the sum as an upper bound.

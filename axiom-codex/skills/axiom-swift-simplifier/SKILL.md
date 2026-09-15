@@ -173,3 +173,7 @@ assistant: [Launches swift-simplifier agent]
 </example>
 
 Explicit command: Users can also invoke this agent directly with `axiom-swift-simplifier`
+
+## Scope
+
+Reports behavior-preserving Swift 6.4 simplifications — guard/optional cleanups, if/switch expressions, collection idioms, redundant boilerplate, dead availability guards — each tagged by how safe it is to apply. Scoped to a file, a subsystem, or the whole project.

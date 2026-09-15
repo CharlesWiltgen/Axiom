@@ -288,3 +288,7 @@ assistant: [Delegate to the `accessibility-auditor` subagent]
 </example>
 
 Explicit command: Users can also invoke this agent directly with `/axiom-audit` accessibility
+
+## Scope
+
+Automatically runs comprehensive accessibility audit to detect VoiceOver issues, Dynamic Type violations, color contrast failures, and WCAG compliance problems - prevents App Store rejections and ensures usability for users with disabilities.

@@ -348,3 +348,7 @@ assistant: [Launches test-debugger agent]
 </example>
 
 Explicit command: Users can also invoke this agent directly with `axiom-run-tests` (for debugging, specify the failing test)
+
+## Scope
+
+Combines test-runner with intelligent failure analysis using screenshots, logs, and pattern recognition.

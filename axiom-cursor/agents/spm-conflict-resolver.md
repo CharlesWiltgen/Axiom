@@ -480,3 +480,7 @@ assistant: [Delegate to the `spm-conflict-resolver` subagent]
 </example>
 
 Explicit command: Users can also invoke this agent directly with `/axiom-resolve-deps`
+
+## Scope
+
+Analyzes Package.swift and Package.resolved to diagnose and resolve Swift Package Manager dependency conflicts.

@@ -221,3 +221,7 @@ assistant: [Delegate to the `health-check` subagent]
 </example>
 
 Explicit command: Users can also invoke this agent directly with `/axiom-health-check` or `/axiom-audit` all (Claude Code only)
+
+## Scope
+
+Orchestrates multiple specialized auditors in parallel, deduplicates findings, and produces a unified report.

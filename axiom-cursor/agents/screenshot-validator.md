@@ -245,3 +245,7 @@ assistant: [Delegate to the `screenshot-validator` subagent]
 </example>
 
 Explicit command: Users can also invoke this agent directly with `/axiom-audit` screenshots
+
+## Scope
+
+Visually inspects screenshots for placeholder text, wrong dimensions, debug indicators, broken UI, and competitor references.

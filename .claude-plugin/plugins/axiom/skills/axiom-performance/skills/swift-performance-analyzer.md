@@ -285,3 +285,7 @@ assistant: [Launches swift-performance-analyzer agent]
 </example>
 
 Explicit command: Users can also invoke this agent directly with `/axiom:audit swift-performance`
+
+## Scope
+
+Automatically scans Swift code for performance anti-patterns - detects unnecessary copies, ARC overhead, unspecialized generics, collection inefficiencies, actor isolation costs, and memory layout issues that cause slowdowns and excessive allocations.

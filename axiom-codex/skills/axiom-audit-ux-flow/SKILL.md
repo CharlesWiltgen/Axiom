@@ -286,3 +286,7 @@ assistant: [Launches ux-flow-auditor agent]
 </example>
 
 Explicit command: Users can also invoke this agent directly with `axiom-audit-ux-flow`
+
+## Scope
+
+Automatically scans SwiftUI and UIKit code for user journey defects - detects dead ends, dismiss traps, buried CTAs, missing loading/error/empty states, broken data paths, and accessibility dead ends.

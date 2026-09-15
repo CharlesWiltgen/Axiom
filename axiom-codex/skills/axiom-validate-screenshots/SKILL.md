@@ -240,3 +240,7 @@ assistant: [Launches screenshot-validator agent]
 </example>
 
 Explicit command: Users can also invoke this agent directly with `axiom-validate-screenshots`
+
+## Scope
+
+Visually inspects screenshots for placeholder text, wrong dimensions, debug indicators, broken UI, and competitor references.

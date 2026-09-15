@@ -318,3 +318,7 @@ assistant: [Delegate to the `icloud-auditor` subagent]
 </example>
 
 Explicit command: Users can also invoke this agent directly with `/axiom-audit` icloud
+
+## Scope
+
+Automatically runs comprehensive iCloud audit to detect missing entitlement checks, unsafe file coordination, missing error handling, and CloudKit anti-patterns - prevents sync failures and data conflicts.

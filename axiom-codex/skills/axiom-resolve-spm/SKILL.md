@@ -475,3 +475,7 @@ assistant: [Launches spm-conflict-resolver agent]
 </example>
 
 Explicit command: Users can also invoke this agent directly with `axiom-resolve-spm`
+
+## Scope
+
+Analyzes Package.swift and Package.resolved to diagnose and resolve Swift Package Manager dependency conflicts.

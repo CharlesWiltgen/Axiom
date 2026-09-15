@@ -264,3 +264,7 @@ assistant: [Launches swiftui-nav-auditor agent]
 </example>
 
 Explicit command: Users can also invoke this agent directly with `axiom-audit-swiftui-nav`
+
+## Scope
+
+Automatically scans SwiftUI navigation code for architecture issues - detects missing NavigationPath, deep link gaps, state restoration problems, wrong container usage, and navigation correctness issues.

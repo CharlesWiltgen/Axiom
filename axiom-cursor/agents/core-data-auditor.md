@@ -289,3 +289,7 @@ assistant: [Delegate to the `core-data-auditor` subagent]
 </example>
 
 Explicit command: Users can also invoke this agent directly with `/axiom-audit` core-data
+
+## Scope
+
+Automatically scans Core Data code for the 5 most critical safety violations - schema migration risks, thread-confinement errors, N+1 query patterns, production data loss risks, and performance issues - prevents production crashes and permanent data loss.
