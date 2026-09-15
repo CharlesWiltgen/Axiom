@@ -1,6 +1,6 @@
 ---
 name: axiom-build
-description: Use when ANY iOS or macOS build fails, a crash log or TestFlight crash needs diagnosing, Xcode misbehaves, or an environment issue blocks work before code is the suspect. Covers build failures, dependency conflicts, simulator diagnostics.
+description: Use when ANY iOS or macOS build fails, a crash log needs diagnosing, Xcode misbehaves, or an environment issue blocks work before code is the suspect. Covers build failures, dependency conflicts, simulator diagnostics.
 license: MIT
 ---
 
