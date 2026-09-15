@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { execFileSync } from "node:child_process";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
@@ -150,6 +151,40 @@ describe("isAppleProject / resolveContextDecision", () => {
     expect(isAppleProject("/Volumes")).toBe(false);
   });
 
+  it("does not treat a marker in the system temp root as project evidence", () => {
+    // Axiom-3k2i: $TMPDIR is long-lived and collects other programs' scratch
+    // files. One stray `plan-test.swift` at its top level made EVERY cwd beneath
+    // it read as an Apple project — same class as GH #52's ~/.swiftpm.
+    const root = os.tmpdir();
+    const probe = path.join(root, `axiom-detect-probe-${process.pid}.swift`);
+    fs.writeFileSync(probe, "");
+    try {
+      const work = fs.mkdtempSync(path.join(root, "axiom-temp-plain-"));
+      try {
+        expect(isAppleProject(work)).toBe(false);
+      } finally {
+        fs.rmSync(work, { recursive: true, force: true });
+      }
+    } finally {
+      fs.rmSync(probe, { force: true });
+    }
+  });
+
+  it("does not treat the temp root itself as a project", () => {
+    expect(isAppleProject(os.tmpdir())).toBe(false);
+  });
+
+  it("still detects an Apple project inside the temp root", () => {
+    // Over-correction guard: only the temp ROOT is neutralized.
+    const project = fs.mkdtempSync(path.join(os.tmpdir(), "axiom-temp-project-"));
+    try {
+      fs.writeFileSync(path.join(project, "Package.swift"), "");
+      expect(isAppleProject(project)).toBe(true);
+    } finally {
+      fs.rmSync(project, { recursive: true, force: true });
+    }
+  });
+
   // Mirrors TestIsVacuousScanRoot in project_detect_test.py. Tested directly
   // because a genuinely shallow path (/app) cannot be built under a temp dir, so
   // an end-to-end test silently never reaches the depth rule at all.
@@ -287,4 +322,145 @@ describe("isAppleProject / resolveContextDecision", () => {
     expect(resolveContextDecision("/nonexistent", "never")).toBe(false);
     expect(resolveContextDecision("/nonexistent", "always")).toBe(true);
   });
+});
+
+// --- Parity with the canonical Python detector ------------------------------
+// project_detect.py is the source of truth; session.ts is a hand-maintained port,
+// and the two have drifted once already (Axiom-3k2i's temp-root fix first shipped
+// in Python only). This gate runs BOTH implementations over one fixture matrix and
+// fails on any verdict mismatch. It rides the axiom-pi suite (`npm test` in
+// axiom-pi), which step 17 of the full pre-deploy runs.
+
+describe("project detection parity with project_detect.py", () => {
+  const HOOKS_DIR = path.resolve(
+    import.meta.dirname!,
+    "..",
+    "..",
+    ".claude-plugin",
+    "plugins",
+    "axiom",
+    "hooks",
+  );
+
+  type Case = { name: string; cwd: string; home: string | null };
+
+  /** Verdicts from the shipped Python detector — one subprocess for the matrix. */
+  function pythonVerdicts(cases: readonly Case[]): boolean[] {
+    const script = [
+      "import json, os, sys",
+      `sys.path.insert(0, ${JSON.stringify(HOOKS_DIR)})`,
+      "import project_detect",
+      "out = []",
+      "for case in json.load(sys.stdin):",
+      "    if case['home']:",
+      "        os.environ['HOME'] = case['home']",
+      "    else:",
+      "        os.environ.pop('HOME', None)",
+      "    out.append(project_detect.is_apple_project(case['cwd']))",
+      "print(json.dumps(out))",
+    ].join("\n");
+    try {
+      const stdout = execFileSync("python3", ["-c", script], {
+        input: JSON.stringify(cases),
+        encoding: "utf8",
+        cwd: os.tmpdir(),
+      });
+      return JSON.parse(stdout) as boolean[];
+    } catch (error) {
+      throw new Error(
+        `parity gate needs python3 and the canonical detector: ${(error as Error).message}`,
+      );
+    }
+  }
+
+  /** The same verdicts from this module, with each case's HOME applied. */
+  function tsVerdicts(cases: readonly Case[]): boolean[] {
+    const prior = process.env.HOME;
+    try {
+      return cases.map((entry) => {
+        if (entry.home === null) delete process.env.HOME;
+        else process.env.HOME = entry.home;
+        return isAppleProject(entry.cwd);
+      });
+    } finally {
+      if (prior === undefined) delete process.env.HOME;
+      else process.env.HOME = prior;
+    }
+  }
+
+  function expectParity(cases: readonly Case[], expected: boolean[]): void {
+    const mine = tsVerdicts(cases);
+    const label = cases.map((entry) => entry.name).join(" | ");
+    expect(mine, label).toEqual(pythonVerdicts(cases));
+    expect(mine, label).toEqual(expected);
+  }
+
+  it("agrees with the Python detector on every fixture", () => {
+    const scratch = fs.mkdtempSync(path.join(os.tmpdir(), "axiom-parity-"));
+    const dir = (...parts: string[]): string => {
+      const made = path.join(scratch, ...parts);
+      fs.mkdirSync(made, { recursive: true });
+      return made;
+    };
+    const file = (...parts: string[]): void => {
+      const made = path.join(scratch, ...parts);
+      fs.mkdirSync(path.dirname(made), { recursive: true });
+      fs.writeFileSync(made, "");
+    };
+    const tempProject = fs.mkdtempSync(path.join(os.tmpdir(), "axiom-parity-project-"));
+    fs.writeFileSync(path.join(tempProject, "Package.swift"), "");
+    const tempPlain = fs.mkdtempSync(path.join(os.tmpdir(), "axiom-parity-plain-"));
+    const tempProbe = path.join(os.tmpdir(), `axiom-parity-probe-${process.pid}.swift`);
+    fs.writeFileSync(tempProbe, "");
+
+    try {
+      const plain = dir("plain");
+      const atCwd = dir("marker-at-cwd");
+      file("marker-at-cwd", "Package.swift");
+      const ancestor = dir("ancestor", "sub");
+      file("ancestor", "App.xcodeproj", "keep");
+      const gitRepo = dir("git-repo");
+      fs.mkdirSync(path.join(gitRepo, ".git"));
+      const repoInside = dir("above-root", "repo", "inside");
+      fs.mkdirSync(path.join(scratch, "above-root", "repo", ".git"));
+      file("above-root", "Above.swift");
+      const home = dir("home");
+      fs.mkdirSync(path.join(home, ".swiftpm"));
+      const underHome = dir("home", "scratch", "pyproj");
+      const playgrounds = dir("playgrounds");
+      fs.mkdirSync(path.join(playgrounds, "MyApp.swiftpm"));
+
+      expectParity(
+        [
+          { name: "plain dir", cwd: plain, home: null },
+          { name: "marker at cwd", cwd: atCwd, home: null },
+          { name: "marker in ancestor", cwd: ancestor, home: null },
+          { name: "marker-free git repo", cwd: gitRepo, home: null },
+          { name: "marker above the git root", cwd: repoInside, home: null },
+          { name: "non-git dir under a .swiftpm home", cwd: underHome, home },
+          { name: "visible .swiftpm package", cwd: playgrounds, home: null },
+          { name: "project inside the temp root", cwd: tempProject, home: null },
+          { name: "plain temp dir under a polluted temp root", cwd: tempPlain, home: null },
+          { name: "the temp root itself", cwd: os.tmpdir(), home: null },
+          { name: "missing path (fail-open)", cwd: path.join(scratch, "nope"), home: null },
+        ],
+        [false, true, true, false, false, false, true, true, false, false, true],
+      );
+    } finally {
+      fs.rmSync(scratch, { recursive: true, force: true });
+      fs.rmSync(tempProject, { recursive: true, force: true });
+      fs.rmSync(tempPlain, { recursive: true, force: true });
+      fs.rmSync(tempProbe, { force: true });
+    }
+  });
+
+  it("fails open identically on an oversized tree (GH #45)", () => {
+    const big = fs.mkdtempSync(path.join(os.tmpdir(), "axiom-parity-big-"));
+    try {
+      for (let i = 0; i < 10_050; i++) fs.writeFileSync(path.join(big, `f${i}`), "");
+      expectParity([{ name: "oversized tree", cwd: big, home: null }], [true]);
+    } finally {
+      fs.rmSync(big, { recursive: true, force: true });
+    }
+  }, 30_000);
 });

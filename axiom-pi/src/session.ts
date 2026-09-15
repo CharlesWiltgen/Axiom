@@ -7,9 +7,13 @@
  * supply: the iOS-version behavioral ground truth, and which bundled Axiom
  * command-line tools are on PATH. The Apple-project gate keeps it quiet in
  * non-Apple repos (fail-open — doubt injects).
+ *
+ * The Apple-project gate below ports project_detect.py and is held to it by the
+ * parity suite in session.test.ts: change one implementation, run both.
  */
 
 import * as fs from "node:fs";
+import * as os from "node:os";
 import * as path from "node:path";
 
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -116,6 +120,37 @@ const UPWARD_MAX_LEVELS = 6;
 const DOWNWARD_MAX_DEPTH = 4;
 const MAX_ENTRIES = 10_000;
 
+// Marker names at a system temp root carry no signal: the directory is shared,
+// per-user, long-lived, and collects other programs' scratch files. A single
+// stray `plan-test.swift` in macOS's $TMPDIR made every cwd beneath it read as an
+// Apple project — the Cursor adapter injected router guidance in non-Apple
+// workspaces (Axiom-3k2i). Same class as GH #52's ~/.swiftpm. Only the temp root
+// itself is neutralized, so a project inside a temp directory is still found.
+const TEMP_ROOTS: Record<string, true> = {
+  "/tmp": true,
+  "/var/tmp": true,
+  "/private/tmp": true,
+};
+
+/** System temp directories in both resolved and realpath form. */
+function systemTempRoots(): Set<string> {
+  // Record for the static names; the membership set is computed because $TMPDIR
+  // and realpath resolution are environment-dependent.
+  const candidates = new Set<string>(Object.keys(TEMP_ROOTS));
+  candidates.add(os.tmpdir());
+  if (process.env.TMPDIR) candidates.add(process.env.TMPDIR);
+  const forms = new Set<string>();
+  for (const root of candidates) {
+    forms.add(path.resolve(root));
+    try {
+      forms.add(fs.realpathSync(root));
+    } catch {
+      // Missing/unreadable temp dir — the resolved form still covers it.
+    }
+  }
+  return forms;
+}
+
 /**
  * True if `name` identifies an Apple project.
  *
@@ -203,12 +238,13 @@ export function isAppleProject(start: string): boolean {
     let cur = path.resolve(start);
     if (!fs.existsSync(cur) || !fs.statSync(cur).isDirectory()) return true;
     const home = process.env.HOME ? path.resolve(process.env.HOME) : null;
+    const tempRoots = systemTempRoots();
     let scanRoot = cur;
     let foundRepoRoot = false;
     let prev: string | null = null;
     let levels = 0;
     for (;;) {
-      if (levels <= UPWARD_MAX_LEVELS && dirHasMarker(cur)) return true;
+      if (levels <= UPWARD_MAX_LEVELS && !tempRoots.has(cur) && dirHasMarker(cur)) return true;
       if (fs.existsSync(path.join(cur, ".git"))) {
         // A .git at $HOME (dotfiles repo) must NOT widen the scan root: that hands
         // the whole home directory to the vacuous-root check, which refuses —
@@ -232,7 +268,7 @@ export function isAppleProject(start: string): boolean {
       levels++;
       cur = parent;
     }
-    if (isVacuousScanRoot(scanRoot, home, foundRepoRoot)) return false;
+    if (tempRoots.has(scanRoot) || isVacuousScanRoot(scanRoot, home, foundRepoRoot)) return false;
     return downwardHasMarker(scanRoot);
   } catch {
     return true;
