@@ -7,10 +7,10 @@ IDEAS.md
 CONTINUE.md
 
 # Local agent context — private dev state, never distributed
-# CLAUDE.md is canonical; AGENTS.md points non-Claude harnesses (omp, Codex, Cursor) at it
+# CLAUDE.md is canonical; AGENTS.md is a symlink to it (import-blind harnesses read it verbatim)
 .claude/
 CLAUDE*.md
-AGENTS.md
+/AGENTS.md
 .omp/
 
 # Beads issue tracker
