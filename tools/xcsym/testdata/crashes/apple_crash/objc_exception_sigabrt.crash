@@ -5,7 +5,7 @@ Process:             App [1]
 Path:                /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App
 Identifier:          com.example.redacted
 Version:             1.0.0 (1000000000)
-AppStoreTools:       17E187
+AppStoreTools:       00X000
 AppVariant:          0:RedactedDevice:0
 Beta:                YES
 Code Type:           ARM-64 (Native)
@@ -13,8 +13,8 @@ Role:                Foreground
 Parent Process:      launchd [1]
 Coalition:           com.example.redacted [1]
 
-Date/Time:           2026-04-12 18:04:38.4848 +0300
-Launch Time:         2026-04-12 18:04:16.5436 +0300
+Date/Time:           2026-01-01 00:00:00.0000 +0000
+Launch Time:         2026-01-01 00:00:00.0000 +0000
 OS Version:          iPhone OS 26.4.1 (23E254)
 Release Type:        User
 Baseband Version:    3.50.07
@@ -169,17 +169,17 @@ Thread 0 crashed with ARM Thread State (64-bit):
 
 Binary Images:
         0x1040d4000 -         0x105a1ffff App arm64  <a8a78540b3d93b69bba2e8766dbf3194> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App
-        0x1060cc000 -         0x1060ebfff wavpack arm64  <652efd360fb83b58900fb4eebfc9ffe4> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/wavpack
-        0x10616c000 -         0x106177fff ogg arm64  <e56cdb5d9147301b93634930244be44e> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/ogg
-        0x106184000 -         0x1061affff FLAC arm64  <8b5f617122bc3772b218544d800cff44> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/FLAC
-        0x1061cc000 -         0x10622bfff opus arm64  <6686015dfc4f3e358c0a1a62abb3a9b5> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/opus
-        0x106244000 -         0x1062dffff vorbis arm64  <fe34b7a1ac3037439837e613a8a89853> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/vorbis
-        0x106324000 -         0x10635bfff lame arm64  <e74575127b883a1993a9c416878e0f36> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/lame
-        0x1063a4000 -         0x1063c3fff mpc arm64  <1d9dce7f66173e9699ffd586b506b897> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/mpc
-        0x106400000 -         0x106437fff mpg123 arm64  <8df2b29b97f9323db193d14f11fe52e9> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/mpg123
-        0x106450000 -         0x1064abfff sndfile arm64  <c38c6c5afd29398a9d35759b5a919ebb> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/sndfile
-        0x1064cc000 -         0x1064d7fff tta-cpp arm64  <e89c4a4ee13c3c9094e57d7cbf314540> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/tta-cpp
-        0x1064e8000 -         0x10668bfff Lottie arm64  <98ca029a2f4631ec91a939073701c19c> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/Lottie
+        0x1060cc000 -         0x1060ebfff libcodec1 arm64  <00000000000000000000000000000001> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/wavpack
+        0x10616c000 -         0x106177fff libcodec2 arm64  <00000000000000000000000000000002> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/ogg
+        0x106184000 -         0x1061affff libcodec3 arm64  <00000000000000000000000000000003> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/FLAC
+        0x1061cc000 -         0x10622bfff libcodec4 arm64  <00000000000000000000000000000004> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/opus
+        0x106244000 -         0x1062dffff libcodec5 arm64  <00000000000000000000000000000005> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/vorbis
+        0x106324000 -         0x10635bfff libcodec6 arm64  <00000000000000000000000000000006> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/lame
+        0x1063a4000 -         0x1063c3fff libcodec7 arm64  <00000000000000000000000000000007> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/mpc
+        0x106400000 -         0x106437fff libcodec8 arm64  <00000000000000000000000000000008> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/mpg123
+        0x106450000 -         0x1064abfff libcodec9 arm64  <00000000000000000000000000000009> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/sndfile
+        0x1064cc000 -         0x1064d7fff libcodec10 arm64  <00000000000000000000000000000010> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/tta-cpp
+        0x1064e8000 -         0x10668bfff libcodec11 arm64  <00000000000000000000000000000011> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/Lottie
         0x10d204000 -         0x10d20ffff libobjc-trampolines.dylib arm64e  <e51a481b92f532ba9e8bfcecda3b8431> /private/preboot/Cryptexes/OS/usr/lib/libobjc-trampolines.dylib
         0x18baf0000 -         0x18bb4147f libobjc.A.dylib arm64e  <dbe3f13eefc431c5b7623455cee83e7f> /usr/lib/libobjc.A.dylib
         0x18bc1a000 -         0x18bc3459f libc++abi.dylib arm64e  <e7bd32f9ab56392d8e79857cde598da1> /usr/lib/libc++abi.dylib

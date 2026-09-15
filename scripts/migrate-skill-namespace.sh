@@ -4,7 +4,7 @@
 
 set -e
 
-cd /Users/you/Projects/Axiom
+cd "$(dirname "$0")/.."   # repo root, wherever it lives
 
 SKILLS_DIR=".claude-plugin/plugins/axiom/skills"
 AGENTS_DIR=".claude-plugin/plugins/axiom/agents"

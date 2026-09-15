@@ -1,11 +1,15 @@
-BINARY := xcsym
+BINARY := xclog
 OUTDIR := ../../.claude-plugin/plugins/axiom/bin
 BIN := $(OUTDIR)/$(BINARY)
 
-.PHONY: all build install test fuzz fuzz-ips fuzz-metrickit clean
+.PHONY: all build install test clean
 
 all: build
 
+# -trimpath keeps the maintainer's source layout out of the shipped binary's
+# debug info and build-info records. The other three tools carry it; xclog had
+# no Makefile at all, so its binary was hand-built and shipped with the absolute
+# path embedded (Axiom-1z8m).
 build:
 	GOARCH=amd64 GOOS=darwin go build -trimpath -o $(BINARY)-amd64 .
 	GOARCH=arm64 GOOS=darwin go build -trimpath -o $(BINARY)-arm64 .
@@ -19,12 +23,6 @@ install: build
 
 test:
 	go test -v ./...
-
-fuzz-ips:
-	go test -fuzz=FuzzParseIPS -fuzztime=60s
-
-fuzz-metrickit:
-	go test -fuzz=FuzzParseMetricKit -fuzztime=60s
 
 clean:
 	rm -f $(BINARY) $(BINARY)-amd64 $(BINARY)-arm64
