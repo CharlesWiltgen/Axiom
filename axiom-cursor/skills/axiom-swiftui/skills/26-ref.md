@@ -930,9 +930,9 @@ A `WebView` owns an internal scroll view, and a navigation container computes sa
 
 #### Form-submission hook + navigation tweaks OS27
 
-`WebPage.NavigationDeciding` gains `willSubmit(formInfo:) async` (default no-op), observing form submissions: `WebPage.FormInfo` (`@MainActor`, so implicitly `Sendable`) carries `targetFrame` / `sourceFrame` (`FrameInfo`), `submissionURL`, `httpMethod`, and `formValues: [String: String]`. `WebPage.NavigationPreferences` adds `alternateRequest: URLRequest?`, `overrideReferrer: String?`, `isGlobalPrivacyControlEnabled: Bool`, and `allowsJSHandleCreationInPageWorld: Bool`. Confirmed on iOS 27, macOS 27, and visionOS 27 (re-verified on the 27.0 RC); **not watchOS/tvOS**, which are marked `unavailable` explicitly.
+`WebPage.NavigationDeciding` gains `willSubmit(formInfo:) async` (default no-op), observing form submissions: `WebPage.FormInfo` (`@MainActor`, so implicitly `Sendable`) carries `targetFrame` / `sourceFrame` (`FrameInfo`), `submissionURL`, `httpMethod`, and `formValues: [String: String]`. `WebPage.NavigationPreferences` adds `alternateRequest: URLRequest?`, `overrideReferrer: String?`, `isGlobalPrivacyControlEnabled: Bool`, and `allowsJSHandleCreationInPageWorld: Bool`. Confirmed on iOS 27, macOS 27, and visionOS 27 (re-verified on the 27.0 SDK); **not watchOS/tvOS**, which are marked `unavailable` explicitly.
 
-As of beta 5 — still true in the 27.0 RC — the iOS SDK stamps **real versions for all three platforms** — `@available(macOS 27.0, iOS 27.0, visionOS 27.0, *)`. Through beta 4 it wrote `macOS 9999, visionOS 9999` (the cross-SDK "not yet stamped" sentinel), so an availability check written against an early-beta SDK may be narrower than what actually ships.
+As of beta 5 — still true in the 27.0 SDK — the iOS SDK stamps **real versions for all three platforms** — `@available(macOS 27.0, iOS 27.0, visionOS 27.0, *)`. Through beta 4 it wrote `macOS 9999, visionOS 9999` (the cross-SDK "not yet stamped" sentinel), so an availability check written against an early-beta SDK may be narrower than what actually ships.
 
 **tvOS**: WebView and WebPage are **not available on tvOS**. tvOS has no WKWebView at all. For web content parsing on tvOS, use JavaScriptCore. See `axiom-swift (skills/tvos.md)` for alternatives.
 

@@ -113,7 +113,7 @@ Drop the `@MainActor` and Swift 6 rejects every write: *"main actor-isolated pro
 Use the `dataChannel` for the `.application` companion-app model. Note there are two data channels: the route exposes a non-optional `AVSystemRoute.routeDataChannel`, while the started media session exposes the optional `AVSystemRouteMediaSession.dataChannel` used above.
 
 > **Use `AVPlaybackUserInterface*`, not the early-beta `AVInterface*` names.** Apple shipped an `AVInterface*`
-> family in an early 27 beta, then removed it — still gone in the Xcode 27.0 RC.
+> family in an early 27 beta, then removed it — still gone in the Xcode 27.0 SDK.
 > `playbackControl` is typed `(any AVKit.AVPlaybackUserInterfaceControllable)?`. Older code or AI-suggested
 > snippets that still reference `AVInterfaceControllable` (from an outdated SDK or stale training data) fail
 > to compile — replace the whole `AVInterface*` family with its `AVPlaybackUserInterface*` equivalent.

@@ -413,13 +413,13 @@
     },
     {
       "path": "skills/axiom-ai/skills/foundation-models-adapters-ref.md",
-      "sha256": "38efdbb30f60e81de0259e473a86127b298272da1c5a4d435ee477019c302930",
-      "bytes": 32734
+      "sha256": "204053599d9ad637f84144f3341c171d1e26feca5eb6a46ddd05bdae1340ec38",
+      "bytes": 32725
     },
     {
       "path": "skills/axiom-ai/skills/foundation-models-adapters.md",
-      "sha256": "a73cd80bd0a16fac850d9a70a55ecb562ed0d1618c393bcdfe3e1e5b10e13f46",
-      "bytes": 25936
+      "sha256": "2cc9e934a2c26c1ed9260f0835268a28e3a78868eb05bd83d59e02b4703d6dbf",
+      "bytes": 25927
     },
     {
       "path": "skills/axiom-ai/skills/foundation-models-diag.md",
@@ -888,13 +888,13 @@
     },
     {
       "path": "skills/axiom-integration/skills/background-assets-ref.md",
-      "sha256": "0af4f94ab65c480cddaefbaaf687c2a8e3b49078a0e35e45c2122a8b708d54ac",
-      "bytes": 45854
+      "sha256": "fb124c10003bd36be1a61f5f450d6f7841b22b398d03c12ed3837121c2ee7327",
+      "bytes": 45842
     },
     {
       "path": "skills/axiom-integration/skills/background-assets.md",
-      "sha256": "350a98c3a254adf2e8e41f8919c1bd893720dde5123e75b365fae02a4e0b7b4c",
-      "bytes": 26326
+      "sha256": "6ef7d361a6209d44c1fb3930e102ae19d2c5bb81faafc96fbe4799e27871d595",
+      "bytes": 26330
     },
     {
       "path": "skills/axiom-integration/skills/background-processing-diag.md",
@@ -1018,8 +1018,8 @@
     },
     {
       "path": "skills/axiom-integration/skills/storekit-ref.md",
-      "sha256": "ad02dccf184f0842ba918a9c53b03ebc30a1c0360b989dd311dfbbeaeca4692f",
-      "bytes": 51208
+      "sha256": "ea4fa2fe1ce92623fbdf9fcbbe7d4b60a69abcd3e68a6b35983965d8ebddd229",
+      "bytes": 51202
     },
     {
       "path": "skills/axiom-integration/skills/timer-patterns-ref.md",
@@ -1248,8 +1248,8 @@
     },
     {
       "path": "skills/axiom-media/skills/system-media-routing.md",
-      "sha256": "3efa46a9b4b5b9ad18ab4158e3a977266ce907d3667bdf4d5f547fb33890e7e3",
-      "bytes": 20556
+      "sha256": "0afbf21ef3ecf1add32dd893ffabb73d21a92b790eeb0d3d817491548eab9e48",
+      "bytes": 20557
     },
     {
       "path": "skills/axiom-networking/SKILL.md",
@@ -1318,8 +1318,8 @@
     },
     {
       "path": "skills/axiom-payments/skills/tap-to-pay-ref.md",
-      "sha256": "09a1d494892a5d7d91e962e47d982823ed83142c58a568e6eca1994571fec601",
-      "bytes": 14326
+      "sha256": "3a25ca785e8ccd55bd175ed6bc9213421812fa7375edde62c39c8aec19821007",
+      "bytes": 14327
     },
     {
       "path": "skills/axiom-payments/skills/tap-to-pay.md",
@@ -1573,8 +1573,8 @@
     },
     {
       "path": "skills/axiom-swiftui/skills/26-ref.md",
-      "sha256": "fc03ba3fb5cfe653a7ddb99e2a6fbceced28a32eb37202380b1281a814625298",
-      "bytes": 52500
+      "sha256": "d7f0b3721c58c008b2c880b3e30fd10e898ae507d3aebedfbea2f67186e254f9",
+      "bytes": 52502
     },
     {
       "path": "skills/axiom-swiftui/skills/animation-ref.md",
@@ -1863,8 +1863,8 @@
     },
     {
       "path": "skills/axiom-xcode-mcp/skills/xcode-mcp-ref.md",
-      "sha256": "3ef381c1936fe2071def5c6efe9f98491321b4167e737da2a7c80435a90b3b69",
-      "bytes": 32262
+      "sha256": "71e6d54119932d62f5aa50471b0552acf8caef72ed95e4837966dca436d9ba9b",
+      "bytes": 32269
     },
     {
       "path": "skills/axiom-xcode-mcp/skills/xcode-mcp-setup.md",
@@ -1873,13 +1873,13 @@
     },
     {
       "path": "skills/axiom-xcode-mcp/skills/xcode-mcp-tools.md",
-      "sha256": "51658752a0ac6b2a5885345b7d0439b4187c0297c8b4f92f578a1d46dfbf3a11",
-      "bytes": 13931
+      "sha256": "e00e3427bc47f47e3654f7a174d90fb3d7bfdff089b7a2ce1d2bd2fa334a402e",
+      "bytes": 13948
     }
   ],
   "totals": {
     "files": 375,
-    "bytes": 7373779
+    "bytes": 7373775
   },
   "excludedMirrors": 30,
   "classes": {

@@ -163,7 +163,7 @@ New session class (iOS/iPadOS/macCatalyst 27; unavailable on macOS/tvOS/watchOS;
 | `customerConfiguration` | Connected peer details (`PeerClientType`, locale, version) |
 | `Error` | Rich enum: `.notSupported`, `.invalidCredential`, `.userDeclined`, `.paymentRequestFailed`, `.pairingFailed`, `.sessionBusy`, `.wifiDisabled`, … |
 
-No WWDC 2026 session covers this class at beta 1 — the API surface above is SDK- and doc-derived; verify flow details against /proximityreader/customerengagementsession as the docs fill in.
+No WWDC 2026 session covers this class (checked through the 27.0 SDK) — the API surface above is SDK- and doc-derived; verify flow details against /proximityreader/customerengagementsession.
 
 ## ProximityReaderDiscovery
 
