@@ -467,9 +467,11 @@ describe("project detection parity with project_detect.py", () => {
     fs.mkdirSync(path.join(tempRepo, ".git"));
     fs.mkdirSync(path.join(tempRepo, "ios", "App.xcodeproj"), { recursive: true });
     const tempProbe = path.join(os.tmpdir(), `axiom-parity-probe-${process.pid}.swift`);
-    fs.writeFileSync(tempProbe, "");
 
     try {
+      // Created inside the try: a setup failure must not leave the probe behind in
+      // the shared temp root, which is the exact junk class this suite guards.
+      fs.writeFileSync(tempProbe, "");
       const plain = dir("plain");
       const atCwd = dir("marker-at-cwd");
       file("marker-at-cwd", "Package.swift");
