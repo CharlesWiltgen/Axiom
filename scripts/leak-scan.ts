@@ -218,9 +218,13 @@ function gitText(root: string, args: string[]): string | null {
 
 function gitBuffer(root: string, args: string[]): Buffer | null {
   try {
+    // stderr is discarded on purpose: asking git for the staged blob of a file
+    // that ships from disk rather than the index (the published dist/ files) is
+    // an expected miss, not something to print on every gate run.
     return execFileSync("git", ["-c", "core.quotepath=false", ...args], {
       cwd: root,
       maxBuffer: 64 * 1024 * 1024,
+      stdio: ["ignore", "pipe", "ignore"],
     });
   } catch {
     return null;
