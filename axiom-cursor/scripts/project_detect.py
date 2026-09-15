@@ -14,7 +14,9 @@ no match statements, no runtime PEP 604 unions.
 """
 from __future__ import annotations
 
+import glob
 import os
+import sys
 import tempfile
 
 # Presence of any of these in a directory marks it an Apple project. ".swift"
@@ -51,17 +53,44 @@ TEMP_ROOT_NAMES = ("/tmp", "/var/tmp", "/private/tmp")
 
 
 def _system_temp_roots() -> frozenset[str]:
-    """System temp directories in both abspath and realpath form."""
+    """System temp directories in both abspath and realpath form.
+
+    Three sources, because each alone leaves a hole:
+
+    - the fixed names (/tmp and friends) cover launchers that scrub the env;
+    - TMPDIR covers a relocated temp dir, but ONLY when absolute: a relative value
+      resolves against this process's cwd, which for session-start and
+      user-prompt-submit IS the project being judged, and accepting it would
+      silently disable Axiom for a real Apple project;
+    - on macOS the per-user scratch roots come from the filesystem, because
+      Foundation/confstr tools write there whether or not this process inherited
+      TMPDIR. Containers count too — the walk ascends past T/ into the container,
+      which is shared, user-writable scratch in its own right.
+    """
     roots = set(TEMP_ROOT_NAMES)
     try:
         roots.add(tempfile.gettempdir())
     except Exception:
         pass  # gettempdir is documented not to raise, but never fail the gate
     env = os.environ.get("TMPDIR")
-    if env:
+    if env and os.path.isabs(env):
         roots.add(env)
+    if sys.platform == "darwin":
+        for pattern in (
+            "/var/folders/*/*",
+            "/var/folders/*/*/T",
+            "/private/var/folders/*/*",
+            "/private/var/folders/*/*/T",
+        ):
+            try:
+                roots.update(glob.glob(pattern))
+            except Exception:
+                pass
     return frozenset(
-        form for root in roots for form in (os.path.abspath(root), os.path.realpath(root))
+        form
+        for root in roots
+        if os.path.isabs(root)
+        for form in (os.path.abspath(root), os.path.realpath(root))
     )
 
 
@@ -221,7 +250,14 @@ def is_apple_project(start: str) -> bool:
             prev = cur
             levels += 1
             cur = parent
-        if scan_root in temp_roots or _is_vacuous_scan_root(scan_root, home, found_repo_root):
+        # A temp root that is ALSO a repo root keeps the repo-boundary exemption:
+        # a devcontainer/CI exporting TMPDIR to the workspace, or a clone into
+        # /tmp, is a real project, and refusing it here would be the cardinal sin
+        # that exemption exists to prevent. A temp root that is not a repo root is
+        # still refused, so a stray marker at the shared root stays non-evidence.
+        if (scan_root in temp_roots and not found_repo_root) or _is_vacuous_scan_root(
+            scan_root, home, found_repo_root
+        ):
             return False
         return _downward_has_marker(scan_root)
     except Exception:

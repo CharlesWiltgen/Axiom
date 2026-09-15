@@ -50,7 +50,7 @@ For memory debugging including jetsam, see `axiom-performance (skills/memory-deb
 | Per-state metrics (StateReporting framework) | `OS27` (the StateReporting framework itself spans all platforms) |
 | Metal frame rate metric, launch-task tracking | `OS27` |
 | Memory exception diagnostics | `iOS27` |
-| Crash reporter extensions (CrashReportExtension framework) | `OS27` (iOS 27/iPadOS 27/macOS 27 only — not Mac Catalyst, tvOS, watchOS, or visionOS) |
+| Crash reporter extensions (CrashReportExtension framework) | `OS27` (iOS 27/iPadOS 27/macOS 27/visionOS 27 — not Mac Catalyst, tvOS, or watchOS; visionOS inherits, see Part 10) |
 
 ## Part 1: The New Swift API `OS27`
 
@@ -875,7 +875,9 @@ The Xcode 27 Organizer adds a redesigned Overview, Storage and animation-hitches
 
 ## Part 10: CrashReportExtension — Crash Reporter Extensions `OS27`
 
-A NEW framework (iOS 27, iPadOS 27, macOS 27) for shipping a crash reporter as an app extension. Unavailable on Mac Catalyst (and to iOS apps running on Apple silicon Macs), tvOS, watchOS, and visionOS. Where MetricKit delivers crash *diagnostics* on the app's next run (Part 1), a crash reporter extension is invoked by the system when a crash report is ready to be processed, in its own process separate from the crashed app — the extension point for third-party crash reporters. You can persist the report or send it to a server you control.
+A NEW framework (iOS 27, iPadOS 27, macOS 27, visionOS 27) for shipping a crash reporter as an app extension. Unavailable on Mac Catalyst (and to iOS apps running on Apple silicon Macs), tvOS, and watchOS. Where MetricKit delivers crash *diagnostics* on the app's next run (Part 1), a crash reporter extension is invoked by the system when a crash report is ready to be processed, in its own process separate from the crashed app — the extension point for third-party crash reporters. You can persist the report or send it to a server you control.
+
+> **visionOS inherits; it is not excluded.** The framework's `.swiftinterface` carries `@available(iOS 27.0, macOS 27.0, *)` alongside `@available(tvOS, unavailable)` and `@available(watchOS, unavailable)`, with no visionOS clause — and `xcrun --sdk xros swiftc -typecheck -target arm64e-apple-xros27.0` compiles clean while `xros26.0` reports "only available in visionOS 27.0 or newer", a version gate rather than an exclusion. developer.apple.com renders `visionOS: -` on these symbols; the compiler disagrees, and on availability the SDK wins.
 
 ### Extension Setup
 

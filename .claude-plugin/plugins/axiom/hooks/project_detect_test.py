@@ -380,6 +380,41 @@ class TestIsAppleProject(unittest.TestCase):
             touch(os.path.join(work, "Package.swift"))
             self.assertTrue(pd.is_apple_project(work))
 
+    def test_repo_rooted_at_a_temp_root_is_still_detected(self):
+        # A repo whose ROOT is a temp root (devcontainer/CI exporting TMPDIR to the
+        # workspace, or a clone into /tmp) must keep the repo-root exemption: the
+        # guard must not refuse before found_repo_root gets its say.
+        with tempfile.TemporaryDirectory() as d:
+            os.mkdir(os.path.join(d, ".git"))
+            touch(os.path.join(d, "ios", "App.xcodeproj", "x"))
+            with mock.patch.dict(os.environ, {"TMPDIR": d}):
+                self.assertTrue(pd.is_apple_project(d))
+
+    def test_per_user_temp_root_survives_a_missing_TMPDIR(self):
+        # The per-user scratch root is only derivable from TMPDIR when the process
+        # inherited it; with it absent, the roots must still come from the
+        # filesystem, or the original false positive returns for any launcher that
+        # scrubs the environment.
+        live = os.path.realpath(tempfile.gettempdir())
+        if "/var/folders/" not in live:
+            self.skipTest("macOS per-user scratch dirs only")
+        with mock.patch.dict(os.environ):
+            os.environ.pop("TMPDIR", None)
+            tempfile.tempdir = None  # drop the cached resolution
+            try:
+                roots = pd._system_temp_roots()
+            finally:
+                tempfile.tempdir = None
+        self.assertIn(live, roots)
+
+    def test_relative_TMPDIR_is_not_treated_as_a_temp_root(self):
+        # A relative TMPDIR resolves against the detector's cwd, which for
+        # session-start/user-prompt-submit IS the project being judged. Accepting it
+        # would silently disable Axiom for a real Apple project.
+        with mock.patch.dict(os.environ, {"TMPDIR": "."}):
+            roots = pd._system_temp_roots()
+        self.assertNotIn(os.path.abspath("."), roots)
+
 
 class TestResolveContextDecision(unittest.TestCase):
     def test_never_skips_even_in_apple_dir(self):

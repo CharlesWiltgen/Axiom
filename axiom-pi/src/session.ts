@@ -132,15 +132,59 @@ const TEMP_ROOTS: Record<string, true> = {
   "/private/tmp": true,
 };
 
-/** System temp directories in both resolved and realpath form. */
-function systemTempRoots(): Set<string> {
-  // Record for the static names; the membership set is computed because $TMPDIR
-  // and realpath resolution are environment-dependent.
+/**
+ * System temp directories in both resolved and realpath form.
+ *
+ * Three sources, matching `_system_temp_roots` in project_detect.py: the fixed
+ * names, an ABSOLUTE $TMPDIR (a relative one resolves against the project being
+ * judged and would silently disable Axiom), and — on macOS — the per-user
+ * scratch roots read from the filesystem, because Foundation tools write there
+ * whether or not this process inherited TMPDIR. Containers count too: the walk
+ * ascends past T/ into the shared container.
+ */
+export function systemTempRoots(): Set<string> {
   const candidates = new Set<string>(Object.keys(TEMP_ROOTS));
   candidates.add(os.tmpdir());
-  if (process.env.TMPDIR) candidates.add(process.env.TMPDIR);
+  const env = process.env.TMPDIR;
+  if (env && path.isAbsolute(env)) candidates.add(env);
+  if (process.platform === "darwin") {
+    // Same two levels the Python helper globs: the per-user container and its T/
+    // dir. Owners (/var/folders/_s) are NOT roots — matching Python here matters,
+    // because the parity gate compares the two verdict-by-verdict.
+    for (const base of ["/var/folders", "/private/var/folders"]) {
+      let owners: string[];
+      try {
+        owners = fs.readdirSync(base);
+      } catch {
+        continue;
+      }
+      for (const owner of owners) {
+        if (owner.startsWith(".")) continue;
+        const ownerDir = path.join(base, owner);
+        let containers: string[];
+        try {
+          containers = fs.readdirSync(ownerDir);
+        } catch {
+          continue;
+        }
+        for (const name of containers) {
+          if (name.startsWith(".")) continue;
+          const container = path.join(ownerDir, name);
+          candidates.add(container);
+          try {
+            if (fs.readdirSync(container).includes("T")) {
+              candidates.add(path.join(container, "T"));
+            }
+          } catch {
+            // Unreadable container — the container itself is already added.
+          }
+        }
+      }
+    }
+  }
   const forms = new Set<string>();
   for (const root of candidates) {
+    if (!path.isAbsolute(root)) continue;
     forms.add(path.resolve(root));
     try {
       forms.add(fs.realpathSync(root));
@@ -268,7 +312,13 @@ export function isAppleProject(start: string): boolean {
       levels++;
       cur = parent;
     }
-    if (tempRoots.has(scanRoot) || isVacuousScanRoot(scanRoot, home, foundRepoRoot)) return false;
+    // A temp root that is ALSO a repo root keeps the repo-boundary exemption — a
+    // devcontainer/CI exporting TMPDIR to the workspace, or a clone into /tmp, is
+    // a real project. A temp root that is not a repo root is still refused, so a
+    // stray marker at the shared root stays non-evidence.
+    if ((tempRoots.has(scanRoot) && !foundRepoRoot) || isVacuousScanRoot(scanRoot, home, foundRepoRoot)) {
+      return false;
+    }
     return downwardHasMarker(scanRoot);
   } catch {
     return true;

@@ -12,6 +12,7 @@ import {
   isAppleProject,
   isVacuousScanRoot,
   resolveContextDecision,
+  systemTempRoots,
 } from "./session.ts";
 
 describe("formatDate", () => {
@@ -185,6 +186,48 @@ describe("isAppleProject / resolveContextDecision", () => {
     }
   });
 
+  it("still detects a repo rooted at a temp root", () => {
+    // A devcontainer/CI exporting TMPDIR to the workspace, or a clone into /tmp,
+    // keeps the repo-boundary exemption — refusing it would be the cardinal sin.
+    const repo = fs.mkdtempSync(path.join(os.tmpdir(), "axiom-temp-repo-"));
+    const prior = process.env.TMPDIR;
+    try {
+      fs.mkdirSync(path.join(repo, ".git"));
+      fs.mkdirSync(path.join(repo, "ios", "App.xcodeproj"), { recursive: true });
+      process.env.TMPDIR = repo;
+      expect(isAppleProject(repo)).toBe(true);
+    } finally {
+      if (prior === undefined) delete process.env.TMPDIR;
+      else process.env.TMPDIR = prior;
+      fs.rmSync(repo, { recursive: true, force: true });
+    }
+  });
+
+  it("derives the macOS per-user scratch root without TMPDIR", () => {
+    const live = fs.realpathSync(os.tmpdir());
+    if (!live.includes("/var/folders/")) return; // macOS per-user scratch only
+    const prior = process.env.TMPDIR;
+    try {
+      delete process.env.TMPDIR;
+      expect(systemTempRoots().has(live)).toBe(true);
+    } finally {
+      if (prior !== undefined) process.env.TMPDIR = prior;
+    }
+  });
+
+  it("ignores a relative TMPDIR", () => {
+    // A relative TMPDIR resolves against the project being judged; honoring it
+    // would silently disable Axiom for a real Apple project.
+    const prior = process.env.TMPDIR;
+    try {
+      process.env.TMPDIR = ".";
+      expect(systemTempRoots().has(path.resolve("."))).toBe(false);
+    } finally {
+      if (prior === undefined) delete process.env.TMPDIR;
+      else process.env.TMPDIR = prior;
+    }
+  });
+
   // Mirrors TestIsVacuousScanRoot in project_detect_test.py. Tested directly
   // because a genuinely shallow path (/app) cannot be built under a temp dir, so
   // an end-to-end test silently never reaches the depth rule at all.
@@ -342,12 +385,12 @@ describe("project detection parity with project_detect.py", () => {
     "hooks",
   );
 
-  type Case = { name: string; cwd: string; home: string | null };
+  type Case = { name: string; cwd: string; home: string | null; tmpdir: string | null };
 
   /** Verdicts from the shipped Python detector — one subprocess for the matrix. */
   function pythonVerdicts(cases: readonly Case[]): boolean[] {
     const script = [
-      "import json, os, sys",
+      "import json, os, sys, tempfile",
       `sys.path.insert(0, ${JSON.stringify(HOOKS_DIR)})`,
       "import project_detect",
       "out = []",
@@ -356,6 +399,11 @@ describe("project detection parity with project_detect.py", () => {
       "        os.environ['HOME'] = case['home']",
       "    else:",
       "        os.environ.pop('HOME', None)",
+      "    if case['tmpdir']:",
+      "        os.environ['TMPDIR'] = case['tmpdir']",
+      "    else:",
+      "        os.environ.pop('TMPDIR', None)",
+      "    tempfile.tempdir = None  # re-resolve after the env change",
       "    out.append(project_detect.is_apple_project(case['cwd']))",
       "print(json.dumps(out))",
     ].join("\n");
@@ -373,18 +421,23 @@ describe("project detection parity with project_detect.py", () => {
     }
   }
 
-  /** The same verdicts from this module, with each case's HOME applied. */
+  /** The same verdicts from this module, with each case's HOME and TMPDIR applied. */
   function tsVerdicts(cases: readonly Case[]): boolean[] {
-    const prior = process.env.HOME;
+    const priorHome = process.env.HOME;
+    const priorTmpdir = process.env.TMPDIR;
     try {
       return cases.map((entry) => {
         if (entry.home === null) delete process.env.HOME;
         else process.env.HOME = entry.home;
+        if (entry.tmpdir === null) delete process.env.TMPDIR;
+        else process.env.TMPDIR = entry.tmpdir;
         return isAppleProject(entry.cwd);
       });
     } finally {
-      if (prior === undefined) delete process.env.HOME;
-      else process.env.HOME = prior;
+      if (priorHome === undefined) delete process.env.HOME;
+      else process.env.HOME = priorHome;
+      if (priorTmpdir === undefined) delete process.env.TMPDIR;
+      else process.env.TMPDIR = priorTmpdir;
     }
   }
 
@@ -410,6 +463,9 @@ describe("project detection parity with project_detect.py", () => {
     const tempProject = fs.mkdtempSync(path.join(os.tmpdir(), "axiom-parity-project-"));
     fs.writeFileSync(path.join(tempProject, "Package.swift"), "");
     const tempPlain = fs.mkdtempSync(path.join(os.tmpdir(), "axiom-parity-plain-"));
+    const tempRepo = fs.mkdtempSync(path.join(os.tmpdir(), "axiom-parity-repo-"));
+    fs.mkdirSync(path.join(tempRepo, ".git"));
+    fs.mkdirSync(path.join(tempRepo, "ios", "App.xcodeproj"), { recursive: true });
     const tempProbe = path.join(os.tmpdir(), `axiom-parity-probe-${process.pid}.swift`);
     fs.writeFileSync(tempProbe, "");
 
@@ -432,24 +488,26 @@ describe("project detection parity with project_detect.py", () => {
 
       expectParity(
         [
-          { name: "plain dir", cwd: plain, home: null },
-          { name: "marker at cwd", cwd: atCwd, home: null },
-          { name: "marker in ancestor", cwd: ancestor, home: null },
-          { name: "marker-free git repo", cwd: gitRepo, home: null },
-          { name: "marker above the git root", cwd: repoInside, home: null },
-          { name: "non-git dir under a .swiftpm home", cwd: underHome, home },
-          { name: "visible .swiftpm package", cwd: playgrounds, home: null },
-          { name: "project inside the temp root", cwd: tempProject, home: null },
-          { name: "plain temp dir under a polluted temp root", cwd: tempPlain, home: null },
-          { name: "the temp root itself", cwd: os.tmpdir(), home: null },
-          { name: "missing path (fail-open)", cwd: path.join(scratch, "nope"), home: null },
+          { name: "plain dir", cwd: plain, home: null, tmpdir: null },
+          { name: "marker at cwd", cwd: atCwd, home: null, tmpdir: null },
+          { name: "marker in ancestor", cwd: ancestor, home: null, tmpdir: null },
+          { name: "marker-free git repo", cwd: gitRepo, home: null, tmpdir: null },
+          { name: "marker above the git root", cwd: repoInside, home: null, tmpdir: null },
+          { name: "non-git dir under a .swiftpm home", cwd: underHome, home, tmpdir: null },
+          { name: "visible .swiftpm package", cwd: playgrounds, home: null, tmpdir: null },
+          { name: "project inside the temp root", cwd: tempProject, home: null, tmpdir: null },
+          { name: "plain temp dir under a polluted temp root", cwd: tempPlain, home: null, tmpdir: null },
+          { name: "the temp root itself", cwd: os.tmpdir(), home: null, tmpdir: null },
+          { name: "missing path (fail-open)", cwd: path.join(scratch, "nope"), home: null, tmpdir: null },
+          { name: "repo rooted at a temp root", cwd: tempRepo, home: null, tmpdir: tempRepo },
         ],
-        [false, true, true, false, false, false, true, true, false, false, true],
+        [false, true, true, false, false, false, true, true, false, false, true, true],
       );
     } finally {
       fs.rmSync(scratch, { recursive: true, force: true });
       fs.rmSync(tempProject, { recursive: true, force: true });
       fs.rmSync(tempPlain, { recursive: true, force: true });
+      fs.rmSync(tempRepo, { recursive: true, force: true });
       fs.rmSync(tempProbe, { force: true });
     }
   });
@@ -458,7 +516,7 @@ describe("project detection parity with project_detect.py", () => {
     const big = fs.mkdtempSync(path.join(os.tmpdir(), "axiom-parity-big-"));
     try {
       for (let i = 0; i < 10_050; i++) fs.writeFileSync(path.join(big, `f${i}`), "");
-      expectParity([{ name: "oversized tree", cwd: big, home: null }], [true]);
+      expectParity([{ name: "oversized tree", cwd: big, home: null, tmpdir: null }], [true]);
     } finally {
       fs.rmSync(big, { recursive: true, force: true });
     }
