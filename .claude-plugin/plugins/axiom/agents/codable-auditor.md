@@ -312,3 +312,7 @@ assistant: [Launches codable-auditor agent]
 </example>
 
 Explicit command: Users can also invoke this agent directly with `/axiom:audit codable`
+
+## Scope
+
+Automatically scans Swift/Objective-C for Codable safety violations — both known anti-patterns (manual JSON building, try? swallowing errors, JSONSerialization usage) AND missing/incomplete patterns (silent field drops, wrapper-hidden fallbacks, cross-file strategy drift, enum future-case crashes) — prevents silent data loss and production bugs.

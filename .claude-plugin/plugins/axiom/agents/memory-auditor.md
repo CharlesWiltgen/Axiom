@@ -275,3 +275,7 @@ assistant: [Launches memory-auditor agent]
 </example>
 
 Explicit command: Users can also invoke this agent directly with `/axiom:audit memory`
+
+## Scope
+
+Automatically scans codebase for the 6 most common memory leak patterns - timer leaks, observer leaks, closure captures, delegate cycles, view callbacks, and PhotoKit accumulation.

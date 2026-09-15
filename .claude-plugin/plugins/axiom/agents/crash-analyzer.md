@@ -213,3 +213,7 @@ assistant: [Launches crash-analyzer agent]
 </example>
 
 Explicit command: Users can also invoke this agent directly with `/axiom:analyze-crash`
+
+## Scope
+
+Runs xcsym to parse, symbolicate, and categorize the crash, then interprets the structured output with pattern → fix guidance.

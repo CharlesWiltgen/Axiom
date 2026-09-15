@@ -194,3 +194,7 @@ assistant: [Launches iap-implementation agent]
 user: "Add subscription support with monthly and annual plans"
 assistant: [Launches iap-implementation agent]
 </example>
+
+## Scope
+
+Implements complete IAP following testing-first workflow with StoreKit configuration, centralized StoreManager, transaction handling, and restore purchases.      This agent writes code; it has no `/axiom:audit` form. To review existing IAP code instead, use `/axiom:audit iap` (the iap-auditor agent).

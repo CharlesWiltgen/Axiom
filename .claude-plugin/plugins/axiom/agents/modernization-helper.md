@@ -608,3 +608,7 @@ assistant: [Launches modernization-helper agent]
 </example>
 
 Explicit command: Users can also invoke this agent directly with `/axiom:audit modernization` or `/axiom:modernize`
+
+## Scope
+
+Scans for legacy patterns and provides migration paths with code examples.

@@ -507,3 +507,7 @@ assistant: [Launches build-fixer agent]
 </example>
 
 Explicit command: Users can also invoke this agent directly with `/axiom:fix-build`
+
+## Scope
+
+Automatically diagnoses and fixes Xcode build failures using environment-first diagnostics - saves 30+ minutes by checking zombie processes, Derived Data, SPM cache, and simulator state before code investigation.

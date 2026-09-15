@@ -386,3 +386,7 @@ assistant: [Launches testing-auditor agent]
 </example>
 
 Explicit command: Users can also invoke this agent directly with `/axiom:audit testing`
+
+## Scope
+
+Scans for sleep() calls, shared mutable state, missing assertions, XCTest to Swift Testing migration opportunities, and Swift 6 concurrency issues in tests.

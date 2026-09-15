@@ -285,3 +285,7 @@ assistant: [Launches swiftui-performance-analyzer agent]
 </example>
 
 Explicit command: Users can also invoke this agent directly with `/axiom:audit swiftui-performance`
+
+## Scope
+
+Automatically scans SwiftUI code for performance anti-patterns - detects expensive operations in view bodies, unnecessary updates, missing lazy loading, and SwiftUI-specific issues that cause frame drops.

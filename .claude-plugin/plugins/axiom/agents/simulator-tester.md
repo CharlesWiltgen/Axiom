@@ -491,3 +491,7 @@ assistant: [Launches simulator-tester agent]
 </example>
 
 Explicit command: Users can also invoke this agent directly with `/axiom:test-simulator`
+
+## Scope
+
+Sets up test scenarios, captures screenshots, drives the UI and asserts on the accessibility tree via xcui, checks logs for crashes/errors, and iterates on fixes with visual verification.
