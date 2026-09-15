@@ -4,7 +4,7 @@ import "testing"
 
 func TestDecodeNormalizedReport_FullHang(t *testing.T) {
 	line := []byte(`{"provider":"sentry","issue_id":"APP-3V","kind":"hang",
-	  "impact":{"users":68,"events":412},
+	  "impact":{"users":9,"events":12},
 	  "versions":{"affected":["2.1.0","2.1.1"],"min":"2.1.0","max":"2.1.1"},
 	  "os":{"platform":"iOS","versions":["18.4","26.0"]},
 	  "crashed_thread":0,
@@ -14,7 +14,7 @@ func TestDecodeNormalizedReport_FullHang(t *testing.T) {
 	if err != nil {
 		t.Fatalf("decode: %v", err)
 	}
-	if r.IssueID != "APP-3V" || r.Kind != "hang" || r.Impact.Users != 68 {
+	if r.IssueID != "APP-3V" || r.Kind != "hang" || r.Impact.Users != 9 {
 		t.Fatalf("bad decode: %+v", r)
 	}
 	if len(r.Threads) != 1 || !r.Threads[0].Crashed || r.Threads[0].Frames[0].Symbol != "mach_msg2_trap" {

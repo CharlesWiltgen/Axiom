@@ -48,7 +48,7 @@ func TestRunTriage_ClassifiesCrashAndSkipsMalformed(t *testing.T) {
 func TestRunTriage_EndToEnd_SuspensionDemotedRealBugSurfaced(t *testing.T) {
 	jsonl := strings.Join([]string{
 		// idle-runloop hang, huge user count → must be flagged noise, NOT top priority
-		`{"provider":"sentry","issue_id":"APP-3V","kind":"hang","impact":{"users":68,"events":412},"crashed_thread":0,"threads":[{"index":0,"crashed":true,"frames":[{"image":"libsystem_kernel.dylib","symbol":"mach_msg2_trap"},{"image":"CoreFoundation","symbol":"CFRunLoopRun"}]}]}`,
+		`{"provider":"sentry","issue_id":"APP-3V","kind":"hang","impact":{"users":9,"events":12},"crashed_thread":0,"threads":[{"index":0,"crashed":true,"frames":[{"image":"libsystem_kernel.dylib","symbol":"mach_msg2_trap"},{"image":"CoreFoundation","symbol":"CFRunLoopRun"}]}]}`,
 		// real nil-unwrap crash, small user count → must remain a candidate family
 		`{"provider":"sentry","issue_id":"REAL-1","kind":"crash","impact":{"users":4,"events":6},"exception":{"type":"EXC_BREAKPOINT","subtype":"Swift runtime failure: unexpectedly found nil while unwrapping an Optional value"},"crashed_thread":0,"threads":[{"index":0,"crashed":true,"frames":[{"image":"MyApp","symbol":"ContentView.body.getter","in_app":true}]}]}`,
 	}, "\n")
@@ -56,17 +56,17 @@ func TestRunTriage_EndToEnd_SuspensionDemotedRealBugSurfaced(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("exit = %d", code)
 	}
-	var ExampleApp, real *TriageIssue
+	var flagged, real *TriageIssue
 	for i := range res.Issues {
 		switch res.Issues[i].IssueID {
 		case "APP-3V":
-			ExampleApp = &res.Issues[i]
+			flagged = &res.Issues[i]
 		case "REAL-1":
 			real = &res.Issues[i]
 		}
 	}
-	if ExampleApp == nil || len(ExampleApp.NoiseFlags) == 0 || ExampleApp.NoiseFlags[0].Class != "anr_suspension_false_positive" {
-		t.Fatalf("APP-3V should be noise-flagged: %+v", ExampleApp)
+	if flagged == nil || len(flagged.NoiseFlags) == 0 || flagged.NoiseFlags[0].Class != "anr_suspension_false_positive" {
+		t.Fatalf("APP-3V should be noise-flagged: %+v", flagged)
 	}
 	if real == nil || len(real.NoiseFlags) != 0 || real.PatternTag != "swift_forced_unwrap" {
 		t.Fatalf("REAL-1 should be a clean candidate family: %+v", real)

@@ -223,7 +223,7 @@ func TestRunCrash_AppleCrashText_EndToEnd(t *testing.T) {
 	// Drive the committed .crash fixture through the crash subcommand.
 	// The exit code is not asserted here because it varies per host:
 	//   - CI / most dev machines: no dSYMs for the fixture's UUIDs → exit 2
-	//   - A dev machine that happens to have the ExampleApp archive: main
+	//   - A dev machine that happens to have the app's archive: main
 	//     matches but most system-framework dSYMs don't → exit 7
 	//   - A machine with every system dSYM pre-downloaded: exit 0
 	// The test's real job is confirming the pipeline ran end-to-end

@@ -95,7 +95,7 @@ func TestParseAppleCrash_Fixture(t *testing.T) {
 		}
 	}
 
-	// Main image is ExampleApp/App, arm64 slice. After anonymization its name
+	// Main image is SomeApp/App, arm64 slice. After anonymization its name
 	// is "App" (we stripped the app-name token); the first usedImage
 	// should be the main app binary.
 	main := raw.UsedImages[0]
@@ -312,7 +312,7 @@ func TestParseAppleCrashFrame_Variants(t *testing.T) {
 			wantSymf: true,
 		},
 		{
-			in:       `7   ExampleApp                         	0x10412d251 <deduplicated_symbol> + 1`,
+			in:       `7   SomeApp                       	0x10412d251 <deduplicated_symbol> + 1`,
 			wantSym:  "<deduplicated_symbol>",
 			wantOff:  1,
 			wantFile: "",

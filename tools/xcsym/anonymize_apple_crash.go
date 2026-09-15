@@ -10,7 +10,7 @@ import (
 // appleCrashHeaderRewrites maps header keys whose values are always PII to
 // their deterministic replacements. The match is anchored to "Key:" so the
 // rewriter can replay the key + inter-column padding untouched. Values that
-// carry a pid in brackets (e.g. "ExampleApp [14250]") collapse to "[1]" — the
+// carry a pid in brackets (e.g. "SomeApp [14250]") collapse to "[1]" — the
 // exact pid isn't useful for fixtures and leaks a coarse device signal.
 var appleCrashHeaderRewrites = []struct {
 	key, replacement string
@@ -142,7 +142,7 @@ func collectAppleCrashPreservedUUIDs(data []byte) map[string]bool {
 }
 
 // extractAppleCrashAppName returns the process name from the "Process:"
-// header line ("ExampleApp" from "Process: ExampleApp [14250]") or "" when it can't
+// header line ("SomeApp" from "Process: SomeApp [14250]") or "" when it can't
 // be read. The caller uses this to build a word-boundary regex that
 // rewrites standalone occurrences of the app name in frames and Binary
 // Images (where scrubString's bundle-path patterns don't reach).
@@ -155,7 +155,7 @@ func extractAppleCrashAppName(data []byte) string {
 			continue
 		}
 		rest := strings.TrimSpace(strings.TrimPrefix(line, "Process:"))
-		// "ExampleApp [14250]" → "ExampleApp"
+		// "SomeApp [14250]" → "SomeApp"
 		if idx := strings.Index(rest, " "); idx > 0 {
 			return rest[:idx]
 		}

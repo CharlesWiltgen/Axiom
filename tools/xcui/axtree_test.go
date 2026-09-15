@@ -3,7 +3,7 @@ package main
 import "testing"
 
 func TestParseDescribeUIToleratesNonStringAXValue(t *testing.T) {
-	// Reported from ExampleApp 2026-08-15: `xcui assert` died with
+	// Reported 2026-08-15: `xcui assert` died with
 	// "cannot unmarshal number into Go struct field AXElement.AXValue of type
 	// string". A single numeric AXValue anywhere on screen failed the WHOLE
 	// document, so assert/wait/dialog/voiceover all broke together. Measured on a

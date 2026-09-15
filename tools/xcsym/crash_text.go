@@ -344,7 +344,7 @@ func applyAppleCrashHeader(raw *RawCrash, h map[string]string) {
 }
 
 // stripProcessPID removes the " [pid]" tail from the Process header
-// value. "ExampleApp [14250]" → "ExampleApp". Tolerates missing brackets.
+// value. "SomeApp [14250]" → "SomeApp". Tolerates missing brackets.
 func stripProcessPID(v string) string {
 	if idx := strings.Index(v, " ["); idx > 0 {
 		return v[:idx]
@@ -353,7 +353,7 @@ func stripProcessPID(v string) string {
 }
 
 // pathAppName extracts the app name from a bundle path when Process is
-// absent. "/…/ExampleApp.app/ExampleApp" → "ExampleApp". Returns "" for paths that
+// absent. "/…/SomeApp.app/SomeApp" → "SomeApp". Returns "" for paths that
 // don't look like app bundles.
 func pathAppName(v string) string {
 	if idx := strings.LastIndex(v, ".app/"); idx > 0 {
