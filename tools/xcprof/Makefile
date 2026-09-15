@@ -7,8 +7,8 @@ BIN := $(OUTDIR)/$(BINARY)
 all: build
 
 build:
-	GOARCH=amd64 GOOS=darwin go build -trimpath -o $(BINARY)-amd64 .
-	GOARCH=arm64 GOOS=darwin go build -trimpath -o $(BINARY)-arm64 .
+	GOARCH=amd64 GOOS=darwin go build -trimpath -ldflags "-s -w" -o $(BINARY)-amd64 .
+	GOARCH=arm64 GOOS=darwin go build -trimpath -ldflags "-s -w" -o $(BINARY)-arm64 .
 	lipo -create -output $(BINARY) $(BINARY)-amd64 $(BINARY)-arm64
 	@file $(BINARY)
 
