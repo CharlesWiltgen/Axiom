@@ -6,9 +6,11 @@ local/
 IDEAS.md
 CONTINUE.md
 
-# Claude Code files
+# Local agent context — private dev state, never distributed
+# CLAUDE.md is canonical; AGENTS.md points non-Claude harnesses (omp, Codex, Cursor) at it
 .claude/
 CLAUDE*.md
+AGENTS.md
 
 # Beads issue tracker
 .beads/
