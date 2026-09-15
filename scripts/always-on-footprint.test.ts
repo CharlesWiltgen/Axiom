@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import test from "node:test";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -40,6 +41,50 @@ test("reads block-scalar agent descriptions, not just the sigil", () => {
   assert.ok(
     agents.chars > 4_000,
     `agent listing measured ${agents.chars} — block scalars are being missed`,
+  );
+});
+
+// Every skill writes its description inline (`description: Use when …`), which is
+// the opposite shape from the agents. The reader handles both, but only the
+// block-scalar case was guarded — and an inline-blind reader scores 27 skill
+// descriptions at a handful of chars and reports the listing as free. This
+// computes the expectation from the files so the guard cannot drift with the
+// reader. (Axiom-dylr; the same silent-zero class bit run.py's hook path and an
+// ad-hoc crash-triage check on 2026-09-15.)
+test("reads the inline skill descriptions every SKILL.md uses", () => {
+  const cc = measureFootprints(root).find((f) => f.harness === "claude-code");
+  const skills = cc!.parts.find((p) => p.label === "skill listing");
+  assert.ok(skills, "claude-code should measure a skill listing");
+
+  const dir = path.join(root, ".claude-plugin/plugins/axiom/skills");
+  let expected = 0;
+  let inline = 0;
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    const file = path.join(dir, entry.name, "SKILL.md");
+    if (!fs.existsSync(file)) continue;
+    const text = fs.readFileSync(file, "utf8");
+    const inlineMatch = text.match(/^description:[ \t]*(.+)$/m);
+    if (!inlineMatch) continue;
+    // A `description: |` block scalar would need the multi-line handling the
+    // agent listing test already covers; no skill uses one today.
+    assert.doesNotMatch(
+      inlineMatch[1],
+      /^[|>][-+]?$/,
+      `${entry.name}: block-scalar skill descriptions need this test extended`,
+    );
+    expected += inlineMatch[1].trim().length;
+    inline += 1;
+  }
+
+  assert.ok(
+    inline >= 20,
+    `only ${inline} inline skill descriptions found — this guard would be vacuous`,
+  );
+  assert.equal(
+    skills.chars,
+    expected,
+    "skill listing must equal the sum of the inline descriptions",
   );
 });
 
