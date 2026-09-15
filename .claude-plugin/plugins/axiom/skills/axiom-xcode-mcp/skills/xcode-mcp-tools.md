@@ -150,7 +150,7 @@ Query Apple's documentation corpus through MCP.
 2. Cross-reference with axiom-apple-docs for bundled Xcode guides
 ```
 
-**The tool set is dynamic** — the server advertises `capabilities.tools.listChanged: true`. On beta 6 and the 27.0 RC all 54 tools list even with no workspace open (`DocumentationSearch` included), so a short list points at the server, not at a missing workspace. The RC's tool set and schemas are identical to beta 6 (`serverInfo` 25295.11 → 25317). Re-list and check `xcrun mcp-server status`.
+**The tool set is dynamic** — the server advertises `capabilities.tools.listChanged: true`. On beta 6 and the released 27.0 all 54 tools list even with no workspace open (`DocumentationSearch` included), so a short list points at the server, not at a missing workspace. The released 27.0's tool set and schemas are identical to beta 6 (`serverInfo` 25295.11 → 25317). Re-list and check `xcrun mcp-server status`.
 
 `query` is required; `frameworks` is an optional array that scopes the search (all frameworks if omitted). Matching is semantic, not keyword.
 

@@ -399,7 +399,7 @@ if let offer = transaction.offer {
 
 #### From WWDC 2025-241:8:00
 
-Server-signed payloads can additionally carry `offerType: 5` (retention offer, WWDC 2026) — no client `OfferType` case exists for it as of the 27.0 RC SDK (`.winBack` = 4 is still the last); see Retention Messaging API below.
+Server-signed payloads can additionally carry `offerType: 5` (retention offer, WWDC 2026) — no client `OfferType` case exists for it as of the 27.0 SDK (`.winBack` = 4 is still the last); see Retention Messaging API below.
 
 ### Current Entitlements
 
@@ -1257,7 +1257,7 @@ let result = try await AppStore.presentOfferCodeRedeemSheet(
 )
 ```
 
-`RedeemOption` is `Equatable` / `Hashable` / `Sendable`, but **no public option values ship as of the Xcode 27.0 RC SDK** — pass `[]` (the UIKit/AppKit variants default it) and re-check 27.x SDKs for concrete options. Not available on tvOS or watchOS.
+`RedeemOption` is `Equatable` / `Hashable` / `Sendable`, but **no public option values ship as of the Xcode 27.0 SDK** — pass `[]` (the UIKit/AppKit variants default it) and re-check 27.x SDKs for concrete options. Not available on tvOS or watchOS.
 
 ### Payment Mode
 
