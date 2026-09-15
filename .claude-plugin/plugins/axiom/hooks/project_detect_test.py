@@ -354,6 +354,33 @@ class TestIsAppleProject(unittest.TestCase):
                 self.assertTrue(pd.is_apple_project(work))
 
 
+    def test_marker_in_the_system_temp_root_is_not_evidence(self):
+        # Axiom-3k2i: macOS's per-user $TMPDIR is long-lived and collects other
+        # programs' scratch files. One stray `plan-test.swift` at its top level made
+        # EVERY cwd beneath it read as an Apple project, which fired the Cursor
+        # prompt router in non-Apple workspaces and broke two adapter contract tests.
+        root = tempfile.gettempdir()
+        probe = os.path.join(root, "axiom-detect-probe-{}.swift".format(os.getpid()))
+        touch(probe)
+        try:
+            with tempfile.TemporaryDirectory(dir=root) as work:
+                self.assertFalse(pd.is_apple_project(work))
+        finally:
+            os.remove(probe)
+
+    def test_temp_root_itself_is_not_a_project(self):
+        # Shared scratch space: containment there is as meaningless as it is at
+        # $HOME, so the walk must not fall through to a whole-tree scan.
+        self.assertFalse(pd.is_apple_project(tempfile.gettempdir()))
+
+    def test_project_inside_the_temp_root_is_still_detected(self):
+        # Guard against over-correcting: only the temp ROOT is neutralized, so a
+        # project that genuinely lives in a temp directory is still found.
+        with tempfile.TemporaryDirectory(dir=tempfile.gettempdir()) as work:
+            touch(os.path.join(work, "Package.swift"))
+            self.assertTrue(pd.is_apple_project(work))
+
+
 class TestResolveContextDecision(unittest.TestCase):
     def test_never_skips_even_in_apple_dir(self):
         with tempfile.TemporaryDirectory() as d:

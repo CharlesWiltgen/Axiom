@@ -15,6 +15,7 @@ no match statements, no runtime PEP 604 unions.
 from __future__ import annotations
 
 import os
+import tempfile
 
 # Presence of any of these in a directory marks it an Apple project. ".swift"
 # covers Package.swift and Project.swift, so only Podfile needs an exact name.
@@ -37,6 +38,31 @@ PRUNE_DIRS = frozenset({
 UPWARD_MAX_LEVELS = 6   # ancestor cap when there is no .git root
 DOWNWARD_MAX_DEPTH = 4  # downward-scan depth below the scan root
 MAX_ENTRIES = 10000     # downward scan safety cap → fail-open on hit
+
+# Marker names at a system temp root carry no signal: the directory is shared,
+# per-user, long-lived, and collects other programs' scratch files. A single
+# stray `plan-test.swift` in macOS's $TMPDIR made every cwd beneath it read as an
+# Apple project — which fired the Cursor prompt router in non-Apple workspaces and
+# broke two adapter contract tests (Axiom-3k2i). Same class as GH #52's
+# ~/.swiftpm: tool state, not project evidence. Only the temp root itself is
+# neutralized, so a project that genuinely lives inside a temp directory is still
+# detected by its own markers.
+TEMP_ROOT_NAMES = ("/tmp", "/var/tmp", "/private/tmp")
+
+
+def _system_temp_roots() -> frozenset[str]:
+    """System temp directories in both abspath and realpath form."""
+    roots = set(TEMP_ROOT_NAMES)
+    try:
+        roots.add(tempfile.gettempdir())
+    except Exception:
+        pass  # gettempdir is documented not to raise, but never fail the gate
+    env = os.environ.get("TMPDIR")
+    if env:
+        roots.add(env)
+    return frozenset(
+        form for root in roots for form in (os.path.abspath(root), os.path.realpath(root))
+    )
 
 
 def _is_marker(name: str) -> bool:
@@ -158,6 +184,7 @@ def is_apple_project(start: str) -> bool:
             return True  # nonexistent/unreadable start (deleted cwd, etc.) → fail-open
         home = os.environ.get("HOME")
         home = os.path.abspath(home) if home else None
+        temp_roots = _system_temp_roots()
         scan_root = cur
         found_repo_root = False
         prev = None
@@ -168,7 +195,7 @@ def is_apple_project(start: str) -> bool:
             # NOT bounded by that cap — a git root is found however deep we were
             # opened, so a real Apple repo opened many directories deep is never
             # misread as non-Apple (the cap used to short-circuit this — GH #45).
-            if levels <= UPWARD_MAX_LEVELS and _dir_has_marker(cur):
+            if levels <= UPWARD_MAX_LEVELS and cur not in temp_roots and _dir_has_marker(cur):
                 return True
             if os.path.exists(os.path.join(cur, ".git")):  # file (worktree) or dir
                 # A .git at $HOME (dotfiles repo) must NOT widen the scan root:
@@ -194,7 +221,7 @@ def is_apple_project(start: str) -> bool:
             prev = cur
             levels += 1
             cur = parent
-        if _is_vacuous_scan_root(scan_root, home, found_repo_root):
+        if scan_root in temp_roots or _is_vacuous_scan_root(scan_root, home, found_repo_root):
             return False
         return _downward_has_marker(scan_root)
     except Exception:
