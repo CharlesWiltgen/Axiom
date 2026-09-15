@@ -11,6 +11,7 @@ CONTINUE.md
 .claude/
 CLAUDE*.md
 AGENTS.md
+.omp/
 
 # Beads issue tracker
 .beads/
