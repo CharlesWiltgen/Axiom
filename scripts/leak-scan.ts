@@ -232,10 +232,10 @@ export function isObviousPlaceholderUuid(uuid: string): boolean {
   return /^(?:AAAA|0000|1111|2222|3333|4444|5555|6666|7777|8888|9999|ABCD|F1E2|1A2B|A1B2|DEAD|BEEF|1234)/i.test(hex);
 }
 
-export function scanText(rel: string, text: string): LeakFinding[] {
+export function scanText(rel: string, text: string, rules: LeakRule[] = RULES): LeakFinding[] {
   const lines = text.split("\n");
   const findings: LeakFinding[] = [];
-  for (const rule of RULES) {
+  for (const rule of rules) {
     for (const [i, line] of lines.entries()) {
       for (const m of line.matchAll(new RegExp(rule.pattern, rule.pattern.flags.includes("g") ? rule.pattern.flags : rule.pattern.flags + "g"))) {
         const match = m[0];
@@ -256,18 +256,18 @@ export function scanText(rel: string, text: string): LeakFinding[] {
   return findings;
 }
 
-export function scanFile(root: string, rel: string): LeakFinding[] {
+export function scanFile(root: string, rel: string, rules: LeakRule[] = RULES): LeakFinding[] {
   const buf = fs.readFileSync(path.join(root, rel));
   if (isBinary(buf)) {
     // Pack the printable runs into one blob so a rule that spans a run boundary
     // still matches; line numbers are meaningless for a binary, so report 0.
-    return scanText(rel, printableRuns(buf).join("\n")).map((f) => ({ ...f, line: 0 }));
+    return scanText(rel, printableRuns(buf).join("\n"), rules).map((f) => ({ ...f, line: 0 }));
   }
-  return scanText(rel, buf.toString("utf8"));
+  return scanText(rel, buf.toString("utf8"), rules);
 }
 
-export function scanRepo(root: string): LeakFinding[] {
-  return shippedFiles(root).flatMap((rel) => scanFile(root, rel));
+export function scanRepo(root: string, rules: LeakRule[] = RULES): LeakFinding[] {
+  return shippedFiles(root).flatMap((rel) => scanFile(root, rel, rules));
 }
 
 export function report(findings: LeakFinding[], scannedFiles: number): string {
