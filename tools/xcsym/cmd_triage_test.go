@@ -47,8 +47,8 @@ func TestRunTriage_ClassifiesCrashAndSkipsMalformed(t *testing.T) {
 
 func TestRunTriage_EndToEnd_SuspensionDemotedRealBugSurfaced(t *testing.T) {
 	jsonl := strings.Join([]string{
-		// idle-runloop hang, huge user count → must be flagged noise, NOT top priority
-		`{"provider":"sentry","issue_id":"APP-3V","kind":"hang","impact":{"users":9,"events":12},"crashed_thread":0,"threads":[{"index":0,"crashed":true,"frames":[{"image":"libsystem_kernel.dylib","symbol":"mach_msg2_trap"},{"image":"CoreFoundation","symbol":"CFRunLoopRun"}]}]}`,
+		// idle-runloop hang, large user count → must be flagged noise, NOT top priority
+		`{"provider":"sentry","issue_id":"APP-3V","kind":"hang","impact":{"users":1200,"events":4500},"crashed_thread":0,"threads":[{"index":0,"crashed":true,"frames":[{"image":"libsystem_kernel.dylib","symbol":"mach_msg2_trap"},{"image":"CoreFoundation","symbol":"CFRunLoopRun"}]}]}`,
 		// real nil-unwrap crash, small user count → must remain a candidate family
 		`{"provider":"sentry","issue_id":"REAL-1","kind":"crash","impact":{"users":4,"events":6},"exception":{"type":"EXC_BREAKPOINT","subtype":"Swift runtime failure: unexpectedly found nil while unwrapping an Optional value"},"crashed_thread":0,"threads":[{"index":0,"crashed":true,"frames":[{"image":"MyApp","symbol":"ContentView.body.getter","in_app":true}]}]}`,
 	}, "\n")

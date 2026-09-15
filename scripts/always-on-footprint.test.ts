@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import matter from "gray-matter";
 import test from "node:test";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -58,33 +59,34 @@ test("reads the inline skill descriptions every SKILL.md uses", () => {
 
   const dir = path.join(root, ".claude-plugin/plugins/axiom/skills");
   let expected = 0;
-  let inline = 0;
+  let counted = 0;
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     if (!entry.isDirectory()) continue;
     const file = path.join(dir, entry.name, "SKILL.md");
     if (!fs.existsSync(file)) continue;
-    const text = fs.readFileSync(file, "utf8");
-    const inlineMatch = text.match(/^description:[ \t]*(.+)$/m);
-    if (!inlineMatch) continue;
-    // A `description: |` block scalar would need the multi-line handling the
-    // agent listing test already covers; no skill uses one today.
+    // Parse with YAML, not with a copy of the reader's own regex: a second
+    // regex over the same shape agrees with the reader even when both are
+    // wrong (a quoted value keeps its quotes; a continuation line is dropped).
+    const { data } = matter(fs.readFileSync(file, "utf8"));
+    const value = String(data.description ?? "").trim();
+    if (!value) continue;
     assert.doesNotMatch(
-      inlineMatch[1],
+      value,
       /^[|>][-+]?$/,
       `${entry.name}: block-scalar skill descriptions need this test extended`,
     );
-    expected += inlineMatch[1].trim().length;
-    inline += 1;
+    expected += value.length;
+    counted += 1;
   }
 
   assert.ok(
-    inline >= 20,
-    `only ${inline} inline skill descriptions found — this guard would be vacuous`,
+    counted >= 20,
+    `only ${counted} inline skill descriptions found — this guard would be vacuous`,
   );
   assert.equal(
     skills.chars,
     expected,
-    "skill listing must equal the sum of the inline descriptions",
+    "skill listing must equal the parsed sum of the skill descriptions",
   );
 });
 

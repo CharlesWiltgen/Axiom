@@ -312,7 +312,7 @@ func TestParseAppleCrashFrame_Variants(t *testing.T) {
 			wantSymf: true,
 		},
 		{
-			in:       `7   SomeApp                       	0x10412d251 <deduplicated_symbol> + 1`,
+			in:       `7   App                           	0x10412d251 <deduplicated_symbol> + 1`,
 			wantSym:  "<deduplicated_symbol>",
 			wantOff:  1,
 			wantFile: "",
