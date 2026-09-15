@@ -63,7 +63,19 @@ test("every shipped entry carries the frontmatter description verbatim", () => {
   const entries = readShippedListing(pluginDir);
   const shipping = entries.find((e) => e.name === "axiom-shipping");
   assert.ok(shipping, "axiom-shipping should be on disk");
-  assert.match(shipping.description, /^Use when preparing ANY app for submission/);
+  // Compare against the file, not a hardcoded prefix: the claim under test is
+  // that the listing carries the frontmatter text, and a literal expectation
+  // turns every description edit into a failure without testing that claim.
+  const frontmatter = fs
+    .readFileSync(path.join(pluginDir, "skills/axiom-shipping/SKILL.md"), "utf8")
+    .match(/^description:\s*(.+)$/m)?.[1]
+    .trim();
+  assert.ok(frontmatter, "axiom-shipping/SKILL.md carries a description");
+  assert.equal(
+    shipping.description,
+    frontmatter,
+    "the listing must carry the frontmatter text, not the manifest's copy",
+  );
 });
 
 test("auditListing totals the shipped text and reports the real budget", () => {
