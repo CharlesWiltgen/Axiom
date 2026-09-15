@@ -52,22 +52,45 @@ export interface AllowEntry {
   reason: string;
 }
 
-const SURFACES = [
-  ".claude-plugin",
-  "axiom-codex",
-  "axiom-cursor",
-  "axiom-mcp",
-  "docs",
-  "tools",
-  "scripts",
+interface Surface {
+  path: string;
+  /**
+   * `true` = only files git tracks. `false` = whatever is on disk, which is what
+   * npm publishes for the MCP bundle: axiom-mcp/package.json ships `dist/`, and
+   * everything in it except two JSON files is gitignored, so a tracked-only scan
+   * never sees the JavaScript that actually gets published.
+   */
+  trackedOnly: boolean;
+}
+
+const SURFACES: Surface[] = [
+  { path: ".claude-plugin", trackedOnly: true },
+  { path: ".cursor-plugin", trackedOnly: true },
+  { path: ".agents", trackedOnly: true },
+  { path: "axiom-codex", trackedOnly: true },
+  { path: "axiom-cursor", trackedOnly: true },
+  { path: "axiom-pi", trackedOnly: true },
+  { path: "axiom-mcp/dist", trackedOnly: false },
+  { path: "docs", trackedOnly: true },
+  { path: "tools", trackedOnly: true },
+  { path: "scripts", trackedOnly: true },
 ];
 
+/**
+ * Root files are read from disk, not from the index: CHANGELOG.md is gitignored
+ * here yet is rendered into the published site, so "tracked" is the wrong test
+ * for them.
+ */
 const ROOT_FILES = [
   "README.md",
   "CHANGELOG.md",
   "LICENSE",
   "marketplace.json",
   "package.json",
+  "package-lock.json",
+  "MARKETPLACE-SUBMISSION.md",
+  "CURSOR-MARKETPLACE-SUBMISSION.md",
+  "SUBMISSION-STATUS.md",
 ];
 
 const SKIP_DIRS = new Set([
@@ -126,7 +149,7 @@ export const RULES: LeakRule[] = [
   {
     id: "uuid-looks-real",
     severity: "warn",
-    pattern: /\b[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}\b/,
+    pattern: /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/i,
     hint: "UUID or UDID — confirm it is a patterned placeholder",
   },
   {
@@ -136,7 +159,7 @@ export const RULES: LeakRule[] = [
     // tokens (ARM-64, UTF-8) and produced hundreds of warnings nobody would read.
     // This fires where a tracker is actually being quoted, which is how the leaked
     // Sentry id appeared.
-    pattern: /(?:issue_id"?\s*:\s*"?|\bsentry\b[^\n]{0,30}?)(?!ACME|EXAMPLE|TEST|DEMO|FOO|BAR)([A-Z]{2,8}-[0-9]{1,6}[A-Z]?)\b/i,
+    pattern: /(?:issue_id"?\s*:\s*"?|\bsentry\b[^\n]{0,30}?)([A-Z]{2,8}-[0-9]{1,6}[A-Z]?)\b/i,
     hint: "a tracker identifier is quoted here — confirm it is a public one",
   },
 ];
@@ -159,7 +182,7 @@ function isBinary(buf: Buffer): boolean {
 
 /** Printable runs of a binary, each with a synthetic line number. */
 function printableRuns(buf: Buffer): string[] {
-  return (buf.toString("latin1").match(/[\x20-\x7e]{16,}/g) ?? []).map((s) => s);
+  return (buf.toString("latin1").match(/[\x20-\x7e]{8,}/g) ?? []).map((s) => s);
 }
 
 function walk(dir: string, root: string, out: string[]): void {
@@ -181,35 +204,68 @@ function walk(dir: string, root: string, out: string[]): void {
   }
 }
 
+function gitText(root: string, args: string[]): string | null {
+  try {
+    return execFileSync("git", ["-c", "core.quotepath=false", ...args], {
+      cwd: root,
+      encoding: "utf8",
+      maxBuffer: 64 * 1024 * 1024,
+    });
+  } catch {
+    return null;
+  }
+}
+
+function gitBuffer(root: string, args: string[]): Buffer | null {
+  try {
+    return execFileSync("git", ["-c", "core.quotepath=false", ...args], {
+      cwd: root,
+      maxBuffer: 64 * 1024 * 1024,
+    });
+  } catch {
+    return null;
+  }
+}
+
+/** A scan that finds almost nothing is broken, not clean. */
+export const MIN_PLAUSIBLE_FILES = 200;
+
 /**
- * What ships = what git tracks. A build artifact sitting in tools/ (every tool
- * writes arch-specific binaries there) is not shipped, and scanning it produced
- * hundreds of meaningless matches. Falls back to a filesystem walk when git is
- * unavailable, so tests can scan a temp root.
+ * What ships. Tracked files for the source surfaces, disk for the ones npm
+ * publishes out of gitignored build output, and disk for root files (CHANGELOG.md
+ * is gitignored yet rendered into the published site). Falls back to a filesystem
+ * walk when git is unavailable, which is how tests scan a temp root.
  */
 export function shippedFiles(root: string): string[] {
-  let tracked: string[] | null = null;
-  try {
-    tracked = execFileSync("git", ["ls-files"], { cwd: root, encoding: "utf8" })
-      .split("\n")
-      .filter(Boolean);
-  } catch {
-    tracked = null;
-  }
-  const onSurface = (rel: string): boolean =>
-    ROOT_FILES.includes(rel) || SURFACES.some((s) => rel.startsWith(s + "/"));
-  let files: string[];
-  if (tracked) {
-    files = tracked.filter(onSurface);
-  } else {
-    const walked: string[] = [];
-    for (const surface of SURFACES) walk(path.join(root, surface), root, walked);
-    for (const file of ROOT_FILES) {
-      if (fs.existsSync(path.join(root, file))) walked.push(file);
+  const ls = gitText(root, ["ls-files"]);
+  const tracked = ls ? new Set(ls.split("\n").filter(Boolean)) : null;
+  const found: string[] = [];
+  for (const surface of SURFACES) {
+    if (surface.trackedOnly && tracked) {
+      for (const rel of tracked) if (rel.startsWith(surface.path + "/")) found.push(rel);
+    } else {
+      walk(path.join(root, surface.path), root, found);
     }
-    files = walked;
   }
-  return files.filter((rel) => !SELF_EXEMPT.has(rel)).sort();
+  for (const file of ROOT_FILES) {
+    if (fs.existsSync(path.join(root, file))) found.push(file);
+  }
+  return [...new Set(found)].filter((rel) => !SELF_EXEMPT.has(rel)).sort();
+}
+
+/**
+ * The content a commit would ship. The staged blob wins over the working tree:
+ * stage a leaking revision, restore the clean one on disk, and a working-tree
+ * scan reports clean while the commit ships the leak.
+ */
+function readShipped(root: string, rel: string): Buffer | null {
+  const staged = gitBuffer(root, ["show", `:${rel}`]);
+  if (staged && staged.length > 0) return staged;
+  try {
+    return fs.readFileSync(path.join(root, rel));
+  } catch {
+    return null;
+  }
 }
 
 function allowed(rel: string, rule: string, line: string): boolean {
@@ -241,6 +297,7 @@ export function scanText(rel: string, text: string, rules: LeakRule[] = RULES): 
         const match = m[0];
         if (rule.id === "absolute-home-path" && PLACEHOLDER_OK.test(match.split("/").pop() ?? "")) continue;
         if (rule.id === "uuid-looks-real" && isObviousPlaceholderUuid(match)) continue;
+        if (rule.id === "issue-id" && /^(?:ACME|EXAMPLE|TEST|DEMO|FOO|BAR)-/i.test(match)) continue;
         if (allowed(rel, rule.id, line)) continue;
         findings.push({
           path: rel,
@@ -257,7 +314,8 @@ export function scanText(rel: string, text: string, rules: LeakRule[] = RULES): 
 }
 
 export function scanFile(root: string, rel: string, rules: LeakRule[] = RULES): LeakFinding[] {
-  const buf = fs.readFileSync(path.join(root, rel));
+  const buf = readShipped(root, rel);
+  if (!buf) return [];
   if (isBinary(buf)) {
     // Pack the printable runs into one blob so a rule that spans a run boundary
     // still matches; line numbers are meaningless for a binary, so report 0.
@@ -287,7 +345,14 @@ export function report(findings: LeakFinding[], scannedFiles: number): string {
 
 if (process.argv[1]?.endsWith("leak-scan.ts")) {
   const root = path.join(path.dirname(new URL(import.meta.url).pathname), "..");
+  const files = shippedFiles(root);
+  if (files.length < MIN_PLAUSIBLE_FILES) {
+    console.error(
+      `  ✗ only ${files.length} shipped files found — the scan is broken, not clean`,
+    );
+    process.exit(1);
+  }
   const findings = scanRepo(root);
-  console.log(report(findings, shippedFiles(root).length));
+  console.log(report(findings, files.length));
   process.exit(findings.some((f) => f.severity === "error") ? 1 : 0);
 }

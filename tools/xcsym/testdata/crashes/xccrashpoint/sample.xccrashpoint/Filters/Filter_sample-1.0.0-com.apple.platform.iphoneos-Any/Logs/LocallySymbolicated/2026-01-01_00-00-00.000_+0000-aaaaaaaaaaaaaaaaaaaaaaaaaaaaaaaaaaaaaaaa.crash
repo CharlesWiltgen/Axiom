@@ -168,31 +168,31 @@ Thread 0 crashed with ARM Thread State (64-bit):
 
 
 Binary Images:
-        0x1040d4000 -         0x105a1ffff App arm64  <a8a78540b3d93b69bba2e8766dbf3194> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App
-        0x1060cc000 -         0x1060ebfff wavpack arm64  <652efd360fb83b58900fb4eebfc9ffe4> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/wavpack
-        0x10616c000 -         0x106177fff ogg arm64  <e56cdb5d9147301b93634930244be44e> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/ogg
-        0x106184000 -         0x1061affff FLAC arm64  <8b5f617122bc3772b218544d800cff44> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/FLAC
-        0x1061cc000 -         0x10622bfff opus arm64  <6686015dfc4f3e358c0a1a62abb3a9b5> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/opus
-        0x106244000 -         0x1062dffff vorbis arm64  <fe34b7a1ac3037439837e613a8a89853> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/vorbis
-        0x106324000 -         0x10635bfff lame arm64  <e74575127b883a1993a9c416878e0f36> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/lame
-        0x1063a4000 -         0x1063c3fff mpc arm64  <1d9dce7f66173e9699ffd586b506b897> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/mpc
-        0x106400000 -         0x106437fff mpg123 arm64  <8df2b29b97f9323db193d14f11fe52e9> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/mpg123
-        0x106450000 -         0x1064abfff sndfile arm64  <c38c6c5afd29398a9d35759b5a919ebb> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/sndfile
-        0x1064cc000 -         0x1064d7fff tta-cpp arm64  <e89c4a4ee13c3c9094e57d7cbf314540> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/tta-cpp
-        0x1064e8000 -         0x10668bfff Lottie arm64  <98ca029a2f4631ec91a939073701c19c> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/Lottie
-        0x10d204000 -         0x10d20ffff libobjc-trampolines.dylib arm64e  <e51a481b92f532ba9e8bfcecda3b8431> /private/preboot/Cryptexes/OS/usr/lib/libobjc-trampolines.dylib
-        0x18baf0000 -         0x18bb4147f libobjc.A.dylib arm64e  <dbe3f13eefc431c5b7623455cee83e7f> /usr/lib/libobjc.A.dylib
-        0x18bc1a000 -         0x18bc3459f libc++abi.dylib arm64e  <e7bd32f9ab56392d8e79857cde598da1> /usr/lib/libc++abi.dylib
-        0x18c1ce000 -         0x18d05645f Foundation arm64e  <66bf417c1d003457a302196bbaec23d0> /System/Library/Frameworks/Framework.framework/Foundation
-        0x18d057000 -         0x18d0e1925 libswift_Concurrency.dylib arm64e  <619001c3706d3bcdbff2e7a9324c9a53> /usr/lib/swift/libswift_Concurrency.dylib
-        0x18ef37000 -         0x18f4d30ff CoreFoundation arm64e  <11f13078e01b343ba0208d60bae7bbb6> /System/Library/Frameworks/Framework.framework/CoreFoundation
-        0x194b08000 -         0x1970473bf UIKitCore arm64e  <32c1b300a6013e148b533419a2d2f234> /System/Library/PrivateFrameworks/Framework.framework/UIKitCore
-        0x19aa3a000 -         0x19aab930f libsystem_c.dylib arm64e  <08196a2fb3fa3d0bb151ad50a6d0a0b4> /usr/lib/system/libsystem_c.dylib
-        0x19f938000 -         0x19f94e6a0 libswiftDispatch.dylib arm64e  <67b43890c919336a803d718fd340f781> /usr/lib/swift/libswiftDispatch.dylib
-        0x1a4320000 -         0x1a46d063f CFNetwork arm64e  <81defe1108d1377b92d1434c9f74fb3d> /System/Library/Frameworks/Framework.framework/CFNetwork
-        0x1c917f000 -         0x1c91c55ff libdispatch.dylib arm64e  <5fcac52f01e93bf08aac42c442c53560> /usr/lib/system/libdispatch.dylib
-        0x1edd7f000 -         0x1edd8b4ef libsystem_pthread.dylib arm64e  <6c9bcde9819d345d9d71b60ad47e5159> /usr/lib/system/libsystem_pthread.dylib
-        0x23ddd4000 -         0x23de0fac7 libsystem_kernel.dylib arm64e  <5f4e68e1021c3a8fa6f62c4c077d0676> /usr/lib/system/libsystem_kernel.dylib
-        0x248650000 -         0x2486f059f CarPlay arm64e  <3f6a9224a71b3b2695405955f30470c3> /System/Library/Frameworks/Framework.framework/CarPlay
+        0x1040d4000 -         0x105a1ffff App arm64  <00000000000000000000000000000014> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App
+        0x1060cc000 -         0x1060ebfff libcodec1 arm64  <00000000000000000000000000000065> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/wavpack
+        0x10616c000 -         0x106177fff libcodec2 arm64  <00000000000000000000000000000038> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/ogg
+        0x106184000 -         0x1061affff libcodec3 arm64  <00000000000000000000000000000086> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/FLAC
+        0x1061cc000 -         0x10622bfff libcodec4 arm64  <00000000000000000000000000000080> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/opus
+        0x106244000 -         0x1062dffff libcodec5 arm64  <00000000000000000000000000000072> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/vorbis
+        0x106324000 -         0x10635bfff libcodec6 arm64  <00000000000000000000000000000061> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/lame
+        0x1063a4000 -         0x1063c3fff libcodec7 arm64  <00000000000000000000000000000051> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/mpc
+        0x106400000 -         0x106437fff libcodec8 arm64  <00000000000000000000000000000013> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/mpg123
+        0x106450000 -         0x1064abfff libcodec9 arm64  <00000000000000000000000000000077> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/sndfile
+        0x1064cc000 -         0x1064d7fff libcodec10 arm64  <00000000000000000000000000000010> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/tta-cpp
+        0x1064e8000 -         0x10668bfff libcodec11 arm64  <00000000000000000000000000000095> /private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/App/Framework.framework/Lottie
+        0x10d204000 -         0x10d20ffff libobjc-trampolines.dylib arm64e  <00000000000000000000000000000034> /private/preboot/Cryptexes/OS/usr/lib/libobjc-trampolines.dylib
+        0x18baf0000 -         0x18bb4147f libobjc.A.dylib arm64e  <00000000000000000000000000000097> /usr/lib/libobjc.A.dylib
+        0x18bc1a000 -         0x18bc3459f libc++abi.dylib arm64e  <00000000000000000000000000000016> /usr/lib/libc++abi.dylib
+        0x18c1ce000 -         0x18d05645f Foundation arm64e  <00000000000000000000000000000087> /System/Library/Frameworks/Framework.framework/Foundation
+        0x18d057000 -         0x18d0e1925 libswift_Concurrency.dylib arm64e  <00000000000000000000000000000029> /usr/lib/swift/libswift_Concurrency.dylib
+        0x18ef37000 -         0x18f4d30ff CoreFoundation arm64e  <00000000000000000000000000000018> /System/Library/Frameworks/Framework.framework/CoreFoundation
+        0x194b08000 -         0x1970473bf UIKitCore arm64e  <00000000000000000000000000000016> /System/Library/PrivateFrameworks/Framework.framework/UIKitCore
+        0x19aa3a000 -         0x19aab930f libsystem_c.dylib arm64e  <00000000000000000000000000000046> /usr/lib/system/libsystem_c.dylib
+        0x19f938000 -         0x19f94e6a0 libswiftDispatch.dylib arm64e  <00000000000000000000000000000014> /usr/lib/swift/libswiftDispatch.dylib
+        0x1a4320000 -         0x1a46d063f CFNetwork arm64e  <00000000000000000000000000000078> /System/Library/Frameworks/Framework.framework/CFNetwork
+        0x1c917f000 -         0x1c91c55ff libdispatch.dylib arm64e  <00000000000000000000000000000063> /usr/lib/system/libdispatch.dylib
+        0x1edd7f000 -         0x1edd8b4ef libsystem_pthread.dylib arm64e  <00000000000000000000000000000034> /usr/lib/system/libsystem_pthread.dylib
+        0x23ddd4000 -         0x23de0fac7 libsystem_kernel.dylib arm64e  <00000000000000000000000000000039> /usr/lib/system/libsystem_kernel.dylib
+        0x248650000 -         0x2486f059f CarPlay arm64e  <00000000000000000000000000000054> /System/Library/Frameworks/Framework.framework/CarPlay
 
 EOF

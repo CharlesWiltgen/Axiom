@@ -344,3 +344,18 @@ func TestParseAppleCrashFrame_Variants(t *testing.T) {
 		}
 	}
 }
+
+// The dedup-symbol case in the table above asserts only symbol fields, so a
+// frame whose image name matches no UsedImage entry would still pass while
+// silently exercising the unknown-image path instead of the one it documents.
+// Pin the resolution itself (raised in the 2026-09-15 review round).
+func TestParseAppleCrashFrame_DeduplicatedSymbolResolvesImage(t *testing.T) {
+	images := []UsedImage{{Name: "App", UUID: "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE", LoadAddress: 0x104000000, Size: 0x1000000}}
+	f, ok := parseAppleCrashFrame("7   App                           \t0x10412d251 <deduplicated_symbol> + 1", images)
+	if !ok {
+		t.Fatal("parseAppleCrashFrame returned ok=false")
+	}
+	if f.UUID != images[0].UUID {
+		t.Errorf("frame image resolved to %q, want %q", f.UUID, images[0].UUID)
+	}
+}

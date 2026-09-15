@@ -13,7 +13,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { execSync } from "node:child_process";
-import { scanRepo } from "./leak-scan.ts";
+import { MIN_PLAUSIBLE_FILES, scanRepo, shippedFiles } from "./leak-scan.ts";
 import { VERSION_CORE } from "./version-regex.js";
 import {
   MAX_ENTRY_CHARS,
@@ -1731,9 +1731,16 @@ heading("12s. Private Data in Shipped Content");
 // layout. No gate saw any of it, because the pre-commit hooks match file names
 // and directories only. Rules, allowances, and one test per rule live in
 // scripts/leak-scan.ts; "ships" means tracked.
+const leakFiles = shippedFiles(root);
 const leakFindings = scanRepo(root);
 const leakErrors = leakFindings.filter((f) => f.severity === "error");
 const leakWarns = leakFindings.filter((f) => f.severity === "warn");
+if (leakFiles.length < MIN_PLAUSIBLE_FILES) {
+  error(
+    "private-data",
+    `only ${leakFiles.length} shipped files found — the scan is broken, not clean`,
+  );
+}
 for (const f of leakErrors) {
   error(
     "private-data",
@@ -1742,7 +1749,7 @@ for (const f of leakErrors) {
 }
 if (!leakErrors.length) {
   console.log(
-    `  ✓ shipped content carries no private data (${leakWarns.length} shape warning(s) to eyeball, 0 errors)`,
+    `  ✓ ${leakFiles.length} shipped files carry no private data (${leakWarns.length} shape warning(s) to eyeball, 0 errors)`,
   );
 }
 
