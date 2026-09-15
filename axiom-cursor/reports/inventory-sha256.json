@@ -1383,8 +1383,8 @@
     },
     {
       "path": "skills/axiom-performance/skills/metrickit-ref.md",
-      "sha256": "be4511a368b9018d3b99f2455ae61022a6c1ba811f4ed9acacb358b2121882f0",
-      "bytes": 37923
+      "sha256": "01dd7046e0e3b32e48cb3d7af94a0724dcc9ab279265ae0c4018f5498fc1f466",
+      "bytes": 38607
     },
     {
       "path": "skills/axiom-performance/skills/objc-block-retain-cycles.md",
@@ -1879,7 +1879,7 @@
   ],
   "totals": {
     "files": 375,
-    "bytes": 7369663
+    "bytes": 7370347
   },
   "excludedMirrors": 30,
   "classes": {

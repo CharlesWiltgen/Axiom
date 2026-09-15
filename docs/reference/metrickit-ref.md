@@ -39,7 +39,7 @@ Questions you can ask Claude that will draw from this reference:
 
 - The new Swift API (27): MetricManager setup, MetricReport interval entries, the full MetricResult metric inventory (including Metal frame rate and storage metrics, and `HitchTimeMetric` with its `HitchTimeRatio` unit — the Swift API has no scroll-specific hitch metric), launch-task tracking, typed diagnostics with termination categories, and memory exception diagnostics
 - Per-state metrics: StateReporting domains, state transitions, the `@ReportableMetadata` macro, and state-grouped report encoding
-- Crash reporter extensions (27): the CrashReportExtension framework — CrashedProcess, in-extension symbolication, binary image inventory
+- Crash reporter extensions (27, iOS/iPadOS/macOS only): the CrashReportExtension framework — CrashedProcess, in-extension symbolication, binary image inventory, and the extension-point setup
 - Migration map from the soft-deprecated MX* API to the 27 API
 - MXMetricManagerSubscriber setup and registration timing (legacy)
 - MXMetricPayload: CPU, memory, launch time histograms, disk I/O, network, scroll hitches, signpost metrics
