@@ -3,6 +3,7 @@ import test from "node:test";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import matter from "gray-matter";
 import {
   type ListingEntry,
   LISTING_BUDGET,
@@ -63,18 +64,21 @@ test("every shipped entry carries the frontmatter description verbatim", () => {
   const entries = readShippedListing(pluginDir);
   const shipping = entries.find((e) => e.name === "axiom-shipping");
   assert.ok(shipping, "axiom-shipping should be on disk");
-  // Compare against the file, not a hardcoded prefix: the claim under test is
-  // that the listing carries the frontmatter text, and a literal expectation
-  // turns every description edit into a failure without testing that claim.
-  const frontmatter = fs
-    .readFileSync(path.join(pluginDir, "skills/axiom-shipping/SKILL.md"), "utf8")
-    .match(/^description:\s*(.+)$/m)?.[1]
-    .trim();
-  assert.ok(frontmatter, "axiom-shipping/SKILL.md carries a description");
+  // Derived with gray-matter, not with the loader's own parse rule: an expectation
+  // copied from the parser cannot catch the parser mis-reading a shape it accepts
+  // (a quoted scalar keeps its quotes, a plain multi-line scalar loses its
+  // continuation). The manifest-vs-disk guard for this file is the sibling test
+  // above — it fails when the listing comes from claude-code.json, because
+  // axiom-tools ships a SKILL.md and is deliberately absent from that manifest.
+  const frontmatter = String(
+    matter(
+      fs.readFileSync(path.join(pluginDir, "skills/axiom-shipping/SKILL.md"), "utf8"),
+    ).data.description,
+  );
   assert.equal(
     shipping.description,
     frontmatter,
-    "the listing must carry the frontmatter text, not the manifest's copy",
+    "the listing must carry the frontmatter text, not a re-parsed or manifest copy",
   );
 });
 
