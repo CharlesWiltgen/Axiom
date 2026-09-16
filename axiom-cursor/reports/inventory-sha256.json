@@ -1538,8 +1538,8 @@
     },
     {
       "path": "skills/axiom-swift/SKILL.md",
-      "sha256": "6b428cdc77abdc2ac61753c6e6a99ea403c6f49e1de4c4e22046e664a28261b4",
-      "bytes": 9658
+      "sha256": "80b2f79b378afbb5ab79597705cc49fd99d041f70ee1299de8de4765cae23b56",
+      "bytes": 9701
     },
     {
       "path": "skills/axiom-swift/skills/deep-link-debugging.md",
@@ -1879,7 +1879,7 @@
   ],
   "totals": {
     "files": 375,
-    "bytes": 7434987
+    "bytes": 7435030
   },
   "excludedMirrors": 30,
   "classes": {

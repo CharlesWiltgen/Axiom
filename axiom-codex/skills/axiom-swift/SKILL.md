@@ -37,7 +37,7 @@ license: MIT
 | Debug-only deep links for simulator testing | See `skills/deep-link-debugging.md` |
 | Navigate to specific screens for screenshots | See `skills/deep-link-debugging.md` |
 | tvOS Focus Engine, Siri Remote input | See `skills/tvos.md` |
-| tvOS storage constraints (no Documents dir) | See `skills/tvos.md` |
+| tvOS storage constraints (nothing local is persistent) | See `skills/tvos.md` |
 | tvOS text input, AVPlayer tuning | See `skills/tvos.md` |
 | TVUIKit components | See `skills/tvos.md` |
 | Simplify Swift for clarity (behavior-preserving cleanups) | `swift-simplifier` agent — `axiom-swift-simplifier` |
@@ -122,7 +122,7 @@ digraph swift {
 **tvOS Development** (`skills/tvos.md`):
 - Dual focus system (UIKit Focus Engine + SwiftUI @FocusState)
 - Siri Remote input (two generations, three input layers)
-- Storage constraints (no Documents directory, iCloud required)
+- Storage constraints (no guaranteed-persistent local storage; iCloud required)
 - No WebView (JavaScriptCore only, no DOM)
 - AVPlayer tuning, Menu button state machine
 - TVUIKit components
@@ -134,7 +134,7 @@ digraph swift {
 | "Date() is fine, everyone uses it" | `Date.now` has been the modern pattern since Swift 5.6. `skills/swift-modern.md` lists 12+ patterns Claude gets wrong. |
 | "I don't need ownership modifiers" | For most code, correct. But ~Copyable types *require* them, and large value types in hot paths benefit measurably. |
 | "Transferable is just Codable for drag and drop" | Transferable has 4 representation types, ordering rules, and Info.plist requirements. Getting it wrong causes silent cross-app failures. |
-| "I'll just use the same code as iOS for tvOS" | tvOS has no Documents directory, no WebView, a dual focus system, and two generations of remote hardware. It compiles fine and fails at runtime. |
+| "I'll just use the same code as iOS for tvOS" | tvOS has no guaranteed-persistent local storage, no WebView, a dual focus system, and two generations of remote hardware. It compiles fine and fails at runtime. |
 | "Debug deep links are overkill" | Manual navigation costs 2-3 minutes per iteration. Deep links cut it to 45 seconds. Over a debugging session, that's hours saved. |
 | "CGFloat is what SwiftUI uses" | Swift 5.5+ has implicit Double-CGFloat bridging. Use Double everywhere except optionals, inout, and ObjC-bridged APIs. |
 | "I'll add the Info.plist entry later" | Custom UTTypes work in-app without Info.plist but silently fail cross-app. This is the #1 "works in dev, fails in prod" Transferable issue. |
