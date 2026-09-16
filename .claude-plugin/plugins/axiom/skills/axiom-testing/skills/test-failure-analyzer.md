@@ -27,6 +27,7 @@ Skip: `*/Pods/*`, `*/Carthage/*`, `*/.build/*`, `*/DerivedData/*`, `*/scratch/*`
 
 **Issue**: Async work without proper waiting
 **Why flaky**: Test completes before async callback fires
+**Rule**: `confirmation` does not wait — it checks the count when its closure returns, so the operation under test must complete inside the closure. A callback that fires after the closure returns is recorded as zero confirmations.
 **Detection**: Closures/callbacks without `confirmation {}`
 
 ```swift
@@ -39,12 +40,15 @@ Skip: `*/Pods/*`, `*/Carthage/*`, `*/.build/*`, `*/DerivedData/*`, `*/scratch/*`
     #expect(result != nil)  // FAILS intermittently
 }
 
-// ✅ CORRECT - Waits for callback
+// ✅ CORRECT - The callback completes inside the confirmation body
 @Test func fetchData() async {
     await confirmation { confirm in
-        service.fetch { data in
-            #expect(data != nil)
-            confirm()
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            service.fetch { data in
+                #expect(data != nil)
+                confirm()
+                continuation.resume()
+            }
         }
     }
 }
@@ -53,14 +57,14 @@ Skip: `*/Pods/*`, `*/Carthage/*`, `*/.build/*`, `*/DerivedData/*`, `*/scratch/*`
 ### Pattern 2: `@MainActor` Missing on UI Tests (CRITICAL)
 
 **Issue**: Swift 6 requires explicit actor isolation
-**Why flaky**: Data races when accessing @MainActor types
+**Why flaky**: In Swift 6 language mode this is a compile error, not a flake — the compiler refuses the call. Constructing the `@MainActor` type off-actor is fine; calling an isolated member from a non-isolated test is what fails, and it only becomes a runtime data race in a project still on `-swift-version 5`.
 **Detection**: Tests accessing UI types without @MainActor
 
 ```swift
-// ❌ FLAKY - Data race accessing MainActor ViewModel
+// ❌ FLAKY - Main actor-isolated ViewModel used from a non-isolated test
 @Test func viewModelUpdates() async {
-    let vm = ContentViewModel()  // @MainActor type
-    vm.load()  // Data race!
+    let vm = ContentViewModel()  // Constructing a @MainActor type off-actor is fine
+    vm.load()  // ERROR: main actor-isolated instance method 'load()' cannot be called from outside of the actor
 }
 
 // ✅ CORRECT - Proper isolation
@@ -73,11 +77,13 @@ Skip: `*/Pods/*`, `*/Carthage/*`, `*/.build/*`, `*/DerivedData/*`, `*/scratch/*`
 ### Pattern 3: Shared Mutable State in `@Suite` (HIGH)
 
 **Issue**: Static/class vars shared across parallel tests
-**Why flaky**: Tests pass individually, fail together
+**Why flaky**: Tests pass individually, fail together. Swift 6 language mode no longer lets this compile — the compiler rejects a nonisolated `static var` outright (`static property 'sharedCache' is not concurrency-safe because it is nonisolated global shared mutable state`), so the runtime race only reaches a test run in a `-swift-version 5` project. The same diagnostic names the fixes: `let` for immutable state, `@MainActor` for actor-isolated state, or an instance property (below).
 **Detection**: `static var` in test suites
 
 ```swift
 // ❌ FLAKY - Parallel tests mutate shared state
+// Swift 6: compile error — "static property 'sharedCache' is not concurrency-safe
+// because it is nonisolated global shared mutable state"
 @Suite struct CacheTests {
     static var sharedCache: [String: Data] = [:]  // Shared!
 
@@ -90,7 +96,7 @@ Skip: `*/Pods/*`, `*/Carthage/*`, `*/.build/*`, `*/DerivedData/*`, `*/scratch/*`
 @Suite struct CacheTests {
     var cache: [String: Data] = [:]  // Fresh per test
 
-    @Test func storeItem() {
+    @Test mutating func storeItem() {  // mutating: the test writes the suite's own state
         cache["key"] = Data()
     }
 }
@@ -110,14 +116,20 @@ Skip: `*/Pods/*`, `*/Carthage/*`, `*/.build/*`, `*/DerivedData/*`, `*/scratch/*`
     #expect(viewModel.isLoaded)
 }
 
-// ✅ CORRECT - Condition-based waiting
+// ✅ CORRECT - Condition-based waiting; the publisher fires inside the confirmation body
 @Test func loadData() async {
     await confirmation { confirm in
-        viewModel.$isLoaded
-            .filter { $0 }
-            .sink { _ in confirm() }
-            .store(in: &cancellables)
-        viewModel.startLoading()
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            viewModel.$isLoaded
+                .filter { $0 }
+                .first()
+                .sink { _ in
+                    confirm()
+                    continuation.resume()
+                }
+                .store(in: &cancellables)
+            viewModel.startLoading()
+        }
     }
 }
 ```
@@ -168,20 +180,21 @@ Use the returned `pattern_tag` to route the fix:
 | `bad_memory_access` | Dangling reference (often weak-var captured in a Task after deallocation) |
 | `objc_exception` | NSException thrown from framework code — check `crashed_thread` for the origin |
 | `jetsam_oom` | Test accumulated memory (suite-level shared state) — run with `.serialized` |
+| `unclassified` | No rule matched. Common for Swift traps in test binaries: a force-unwrap of nil crashes as `EXC_BREAKPOINT`/SIGTRAP with an **empty** `exception.subtype` and no message anywhere in the `.ips` (the Swift runtime writes `Fatal error: Unexpectedly found nil...` to stderr, not to the report), so subtype-based rules cannot fire. Read `pattern_reason`, then the crashed-thread frames and the test log's `Fatal error:` line |
 
 Skip this pattern only when no `.ips` was produced (tests failed via assertion, not crash).
 
 ### Pattern 7: `#expect` with Date Comparisons (LOW)
 
-**Issue**: Date assertions drift across timezones/DST
-**Why flaky**: Passes in one timezone, fails in CI (UTC)
+**Issue**: Assertions compared against a fresh `Date()` re-evaluate a moving reference instant
+**Why flaky**: A `Date` comparison is absolute and cannot be flipped by a timezone or DST — only `Calendar`, `DateFormatter`, or `TimeZone` arithmetic can drift. What actually moves is the clock: the run that asserts "this expires in the future" is the run that may already be past the deadline, and a slow or loaded CI runner decides it.
 **Detection**: `#expect` with `Date()` or date comparisons
 
 ```swift
-// ❌ FLAKY - Timezone-dependent
+// ❌ FLAKY - Wall-clock-dependent reference
 @Test func expirationDate() {
     let item = CacheItem()
-    #expect(item.expiresAt > Date())  // May fail near midnight
+    #expect(item.expiresAt > Date())  // Re-evaluated against the moving present
 }
 
 // ✅ CORRECT - Use fixed dates or tolerances
@@ -276,9 +289,12 @@ For each match:
   ```swift
   @Test func fetchUser() async {
       await confirmation { confirm in
-          api.fetchUser { user in
-              #expect(user != nil)
-              confirm()
+          await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+              api.fetchUser { user in
+                  #expect(user != nil)
+                  confirm()
+                  continuation.resume()
+              }
           }
       }
   }
@@ -288,10 +304,11 @@ For each match:
 - `Tests/ViewModelTests.swift:23`
   ```swift
   @Test func updateUI() async {
-      let vm = MainActorViewModel()  // Data race
+      let vm = MainActorViewModel()
+      vm.load()  // ERROR: main actor-isolated instance method cannot be called from outside of the actor
   }
   ```
-  - **Root cause**: Accessing @MainActor type without isolation
+  - **Root cause**: Calling a @MainActor type from a non-isolated test — a compile error in Swift 6, a data race under `-swift-version 5`
   - **Fix**: Add `@MainActor` to test function
 
 ## HIGH Issues
@@ -317,7 +334,7 @@ After fixes, verify with:
 swift test --parallel --num-workers 8
 
 # Run specific test repeatedly
-swift test --filter "TestName" --iterations 100
+swift test --filter "TestName" --maximum-repetitions 100
 
 # Xcode: Edit Scheme → Test → Options → "Repeat Until Failure"
 ```
@@ -358,7 +375,7 @@ swift test --filter "TestName" --iterations 100
 - `confirmation` already present
 - Tests marked with `.serialized`
 - `@MainActor` already present
-- One-time setup in `static var` that's read-only
+- One-time setup in `static var` that's read-only (only reachable in a `-swift-version 5` project — Swift 6 rejects any nonisolated `static var`, see Pattern 3)
 
 **Verify before reporting**:
 - Read surrounding context
@@ -403,7 +420,7 @@ No flaky test patterns detected.
 - ✅ No timing-dependent assertions
 
 ## Recommendations
-- Run tests with `--iterations 100` to verify stability
+- Run tests with `--maximum-repetitions 100` (Swift Testing) to verify stability
 - Enable parallel testing to expose hidden races
 - Use Xcode's "Repeat Until Failure" for suspect tests
 ```

@@ -30,7 +30,7 @@ From WWDC 2025-344:
 
 1. Open your UI test file in Xcode
 2. Place cursor inside a test method
-3. **Debug → Record UI Automation** (or use the record button)
+3. **Editor → Start Recording UI Test** (or use the record button)
 4. App launches in Simulator
 5. Perform interactions - Xcode generates code
 6. Stop recording when done
@@ -47,6 +47,7 @@ From WWDC 2025-344:
 
 ```swift
 // Xcode generates this from your interactions
+@MainActor
 func testLoginFlow() {
     let app = XCUIApplication()
     app.launch()
@@ -170,7 +171,8 @@ Test plans allow running the same tests across multiple configurations.
       "options": {
         "targetForVariableExpansion": {
           "containerPath": "container:MyApp.xcodeproj",
-          "identifier": "MyApp"
+          "identifier": "MyApp",
+          "name": "MyApp"
         },
         "language": "en",
         "region": "US"
@@ -184,12 +186,6 @@ Test plans allow running the same tests across multiple configurations.
       }
     },
     {
-      "name": "iPhone - Dark Mode",
-      "options": {
-        "userInterfaceStyle": "dark"
-      }
-    },
-    {
       "name": "iPad - Landscape",
       "options": {
         "defaultTestExecutionTimeAllowance": 120,
@@ -200,7 +196,8 @@ Test plans allow running the same tests across multiple configurations.
   "defaultOptions": {
     "targetForVariableExpansion": {
       "containerPath": "container:MyApp.xcodeproj",
-      "identifier": "MyApp"
+      "identifier": "MyApp",
+      "name": "MyApp"
     }
   },
   "testTargets": [
@@ -222,10 +219,15 @@ Test plans allow running the same tests across multiple configurations.
 |--------|---------|
 | `language` | Test localization |
 | `region` | Test regional formatting |
-| `userInterfaceStyle` | Test dark/light mode |
 | `targetForVariableExpansion` | App target for configuration |
 | `testTimeoutsEnabled` | Enable timeout enforcement |
 | `defaultTestExecutionTimeAllowance` | Timeout in seconds |
+
+Appearance is not a test-plan option - the app follows the simulator's appearance. Set it at the device level before the run:
+
+```bash
+xcrun simctl ui <device-udid> appearance dark
+```
 
 ### Running with Test Plan
 
@@ -234,7 +236,7 @@ Test plans allow running the same tests across multiple configurations.
 xcodebuild test \
   -scheme "MyApp" \
   -testPlan "MyTestPlan" \
-  -destination "platform=iOS Simulator,name=iPhone 16" \
+  -destination "platform=iOS Simulator,name=iPhone 18 Pro" \
   -resultBundlePath /tmp/results.xcresult
 
 # In Xcode
@@ -249,7 +251,7 @@ xcodebuild test \
 After tests complete:
 
 1. **View test results** in Report Navigator
-2. **Watch video recordings** of each test
+2. **Watch video recordings** of each failing run (passing runs keep them only with the retention setting below)
 3. **See screenshots** at failure points
 4. **Analyze timeline** of actions
 
@@ -267,6 +269,7 @@ In test plan or scheme:
 ### Capturing Custom Screenshots
 
 ```swift
+@MainActor
 func testCheckout() {
     // ... actions ...
 
@@ -284,6 +287,7 @@ func testCheckout() {
 ### Login Flow Template
 
 ```swift
+@MainActor
 func testLoginWithValidCredentials() throws {
     let app = XCUIApplication()
     app.launch()
@@ -315,6 +319,7 @@ func testLoginWithValidCredentials() throws {
 ### Navigation Flow Template
 
 ```swift
+@MainActor
 func testNavigateToSettings() throws {
     let app = XCUIApplication()
     app.launch()
@@ -327,7 +332,7 @@ func testNavigateToSettings() throws {
     XCTAssertTrue(settingsTitle.waitForExistence(timeout: 5))
 
     // Navigate deeper
-    app.tables.cells["Account"].tap()
+    app.buttons["Account"].tap()
     XCTAssertTrue(app.navigationBars["Account"].exists)
 }
 ```
@@ -335,6 +340,7 @@ func testNavigateToSettings() throws {
 ### Form Validation Template
 
 ```swift
+@MainActor
 func testFormValidation() throws {
     let app = XCUIApplication()
     app.launch()
@@ -373,9 +379,15 @@ func testFormValidation() throws {
 1. **Increase timeouts** for slower CI machines
 2. **Add explicit waits** for animations
 3. **Check simulator configuration** matches
-4. **Disable animations** in test setup:
+4. **Disable animations** in test setup - the app must read this flag itself:
    ```swift
    app.launchArguments = ["--disable-animations"]
+   ```
+   ```swift
+   // App code
+   if CommandLine.arguments.contains("--disable-animations") {
+       UIView.setAnimationsEnabled(false)
+   }
    ```
 
 ## Anti-Patterns
@@ -417,8 +429,8 @@ XCTAssertTrue(app.staticTexts["Welcome"].waitForExistence(timeout: 10))
 
 ## Resources
 
-**WWDC**: 2025-344, 2024-10206, 2019-413
+**WWDC**: 2025-344, 2023-10175, 2019-413
 
-**Docs**: /xcode/testing/recording-ui-tests, /xctest/xcuiapplication
+**Docs**: /xcuiautomation/recording-ui-automation-for-testing, /xctest/xcuiapplication
 
 **Skills**: See `skills/xctest-automation.md`, `skills/ui-testing.md`

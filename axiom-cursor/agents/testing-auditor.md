@@ -135,8 +135,8 @@ ModelJudgeEvaluator               (judge metrics CANNOT be pinned deterministic)
 // ✅ Swift Testing
 await confirmation { confirm in
     observer.onComplete = { confirm() }
-    triggerAction()
-}
+    await triggerAction()  // await it: confirmation checks the count when this
+}                          // closure returns — it never waits for a late callback
 
 // ✅ XCTest
 let element = app.buttons["Submit"]
@@ -150,7 +150,7 @@ XCTAssertTrue(element.waitForExistence(timeout: 5))
 
 #### 1.3 Order-Dependent Tests
 **Detection**: Tests that reference results from other test methods, or setUp that depends on test order
-**Issue**: Swift Testing and XCTest randomize order
+**Issue**: Swift Testing randomizes test order; XCTest runs tests deterministically (effectively alphabetical) unless the test plan sets `testExecutionOrdering` to random
 **Fix**: Make each test independent
 
 #### 1.4 Ungrounded AI Evaluation Gate (`OS27`)
@@ -162,7 +162,7 @@ Flag a `.evaluates` test when **any** of these hold:
 - The threshold has no recorded noise floor. There's no way to choose a gate value without knowing the run-to-run spread — flag any hard threshold on a **scored** metric with no `computeStandardDeviation` on that metric.
 - The gate is on a **model-judge** metric. `ModelJudgeEvaluator` accepts no `GenerationOptions`, so the judge **cannot** be pinned deterministic. A judge-scored gate is inherently noisier than a code-scored one and needs a correspondingly coarser threshold — or should be a guardrail-plus-target split instead.
 
-**Also flag**: a `.evaluates` test with no availability guard (e.g. `.enabled(if: SystemLanguageModel.default.isAvailable)`). If the model is unavailable on the runner, every sample errors, every metric becomes `.ignore`, and the aggregate is computed over an **empty set** — which passes. A green gate that never ran is the worst outcome in this category.
+**Also flag**: a `.evaluates` test with no availability guard (e.g. `.enabled(if: SystemLanguageModel.default.isAvailable)`). If the model is unavailable on the runner, every sample errors and every metric becomes `.ignore`, so the aggregate is computed over an **empty set** and reads exactly `-1` — the framework's not-found sentinel, not a score. A `>= threshold` gate then fails with a value that reads like a quality problem when the real cause is a run that never executed. Guard on availability so the test **skips** instead of reporting a `-1` failure.
 
 **Fix**: pin the subject to greedy; put hard gates on pass/fail guardrails (which don't drift); size the scored-metric threshold above the measured noise floor. See `axiom-ai (skills/foundation-models-evaluations.md)` for the discipline and `axiom-ai (skills/foundation-models-evaluations-diag.md)` for the failure modes.
 
@@ -187,7 +187,7 @@ Flag a `.evaluates` test when **any** of these hold:
 
 #### 3.1 XCTestCase Migration Candidates
 **Search**: `XCTestCase` with only basic `XCTAssert*` calls
-**Issue**: Missing modern testing features (parallelism, async, parameterization)
+**Issue**: Missing parameterization — XCTest has no `@Test(arguments:)` equivalent (async test methods, by contrast, XCTest already supports)
 **Fix**: Migrate to `@Suite` struct with `@Test` functions
 
 #### 3.2 Parameterized Test Opportunities
@@ -198,7 +198,7 @@ Flag a `.evaluates` test when **any** of these hold:
 ### Category 4: Swift 6 Concurrency Issues (HIGH)
 
 #### 4.1 XCTestCase with MainActor Default
-**Search**: `class.*XCTestCase` in projects using `default-actor-isolation = MainActor`
+**Search**: `class.*XCTestCase` in projects using `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor` (or built with `-default-isolation MainActor`)
 **Issue**: XCTestCase is Objective-C, initializers are nonisolated — compiler error in Swift 6.2+
 **Fix**:
 

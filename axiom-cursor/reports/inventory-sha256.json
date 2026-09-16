@@ -193,8 +193,8 @@
     },
     {
       "path": "agents/test-failure-analyzer.md",
-      "sha256": "7e8153221e0a66cee749dfa469d7dad919639acee7c4e3b4e16d38ab2e639b01",
-      "bytes": 13284
+      "sha256": "90bd7da527022dd8c8a578ae27f670e2c80c6fb79236ad1eb0e2e2336a1b40a2",
+      "bytes": 16289
     },
     {
       "path": "agents/test-runner.md",
@@ -203,8 +203,8 @@
     },
     {
       "path": "agents/testing-auditor.md",
-      "sha256": "46a285cd0c3e7791fff1c34e9732a9ffb66f82da2cb09a06600847d6f9e77f05",
-      "bytes": 15991
+      "sha256": "9a93ca692a1d86f65358e8ed87a1b2a26b0ca9febd1b2048eab7fd10e2d0851d",
+      "bytes": 16572
     },
     {
       "path": "agents/textkit-auditor.md",
@@ -1673,33 +1673,33 @@
     },
     {
       "path": "skills/axiom-testing/SKILL.md",
-      "sha256": "1deb0b989ae3840b5bc5394ea386fe547038fcc8718782ecba6c8e56720f274b",
-      "bytes": 9024
+      "sha256": "204da4ef7e049e4fc860ae426ca359c201fa45fb6d2088ebd6f8319196e64aac",
+      "bytes": 9027
     },
     {
       "path": "skills/axiom-testing/skills/swift-testing.md",
-      "sha256": "0c161d1a4617f389c7865c1c3b3049f09c0ec33fc93eb5fa3ccc89817d724cfd",
-      "bytes": 25104
+      "sha256": "dc2c26764feedbb3ca0840c64b24e6ab9d5913e9ab6a12bab40d73800127274c",
+      "bytes": 25981
     },
     {
       "path": "skills/axiom-testing/skills/testing-async.md",
-      "sha256": "ce25a27a6bc207f4eb6e93622a85a7fc77d79ab2d614e2aa11b24de659e2a7f7",
-      "bytes": 7719
+      "sha256": "b79303776c9b90ea24455f9bb77ff56512de785738b402c45e827890024b6afe",
+      "bytes": 9757
     },
     {
       "path": "skills/axiom-testing/skills/ui-recording.md",
-      "sha256": "42e288fb6163fa9be5d51f34b11a97e7f5472c22d1483bf798d465c911a4f66f",
-      "bytes": 10863
+      "sha256": "04d90b44ab5bea2c7d5b7b088f508b91bc4bffb155e96b5e3732de6139c4e9b1",
+      "bytes": 11265
     },
     {
       "path": "skills/axiom-testing/skills/ui-testing.md",
-      "sha256": "730e8d501a6ef3ef2f81bcbed8852f77abc41e74317fe85b3daf38444fe43713",
-      "bytes": 51684
+      "sha256": "86244e2ac435a1ca6eed9de0eb47041671bdd1e6f9b369c69ce443915c52b76d",
+      "bytes": 51798
     },
     {
       "path": "skills/axiom-testing/skills/xctest-automation.md",
-      "sha256": "60e90add9f69e9f19ceae76096f1722295569855c6ad428e8e68acd10af3cfba",
-      "bytes": 10255
+      "sha256": "99da9697d534863885b22a7c062f77c5189c7e4fac65b5aeae9110154086207d",
+      "bytes": 11653
     },
     {
       "path": "skills/axiom-tools/SKILL.md",
@@ -1879,7 +1879,7 @@
   ],
   "totals": {
     "files": 375,
-    "bytes": 7416777
+    "bytes": 7425195
   },
   "excludedMirrors": 30,
   "classes": {

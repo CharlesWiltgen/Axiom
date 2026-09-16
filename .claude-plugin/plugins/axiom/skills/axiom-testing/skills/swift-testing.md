@@ -550,6 +550,7 @@ class FeatureModel: ObservableObject {
 }
 
 // Test with controlled time
+@MainActor
 @Test func timerIncrements() async {
     let clock = TestClock()
     let model = FeatureModel(clock: clock)
@@ -597,7 +598,7 @@ func sequentialProcessing(value: Int) { }
 ```swift
 // ❌ Bug: Tests depend on execution order
 @Suite struct CookieTests {
-    static var cookie: Cookie?
+    nonisolated(unsafe) static var cookie: Cookie?
 
     @Test func bakeCookie() {
         Self.cookie = Cookie()  // Sets shared state
@@ -639,8 +640,8 @@ Handle expected failures without noise:
 }
 
 // Conditional known issue
-@Test func platformSpecificBug() {
-    withKnownIssue("Fails on iOS 17.0") {
+@Test func platformSpecificBug() throws {
+    try withKnownIssue("Fails on iOS 17.0") {
         try reproduceEdgeCaseBug()
     } when: {
         ProcessInfo().operatingSystemVersion.majorVersion == 17
@@ -739,15 +740,17 @@ swift test --maximum-repetitions 10 --repeat-until pass
 
 ## Common Mistakes
 
-### ❌ Mixing Assertions
+### ❌ Mixing Assertion Styles
 
 ```swift
-// Don't mix XCTest and Swift Testing
+// Don't mix XCTest and Swift Testing in the same test
 @Test func badExample() {
-    XCTAssertEqual(1, 1)  // ❌ Wrong framework
+    XCTAssertEqual(1, 1)  // ⚠️ Compiles under XCTest interop; a *failing* XCTAssert* only warns
     #expect(1 == 1)       // ✅ Use this
 }
 ```
+
+**Why this is still ❌**: cross-framework assertions are a migration bridge, not a destination. A *passing* `XCTAssert*` inside a `@Test` is accepted silently, and a *failing* one is downgraded to a warning by default — so a real regression can pass the run. See Migration Tips 5 for the `strict` escape hatch.
 
 ### ❌ Using Classes for Suites
 
@@ -784,7 +787,7 @@ swift test --maximum-repetitions 10 --repeat-until pass
 
 ### ❌ XCTestCase with Swift 6.2 MainActor Default
 
-Swift 6.2's `default-actor-isolation = MainActor` breaks XCTestCase:
+Swift 6.2's `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor` (compiler flag `-default-isolation MainActor`; SwiftPM `.defaultIsolation(MainActor.self)`) breaks XCTestCase:
 
 ```swift
 // ❌ Error: Main actor-isolated initializer 'init()' has different
@@ -806,12 +809,14 @@ nonisolated final class PlaygroundTests: XCTestCase {
         try await super.setUp()
     }
 
-    @Test @MainActor
+    @MainActor
     func testSomething() async {
         // Individual tests can be @MainActor
     }
 }
 ```
+
+**Don't re-add `@Test` here**: the macro rejects any function inside an `XCTestCase` subclass — `error: Attribute 'Test' cannot be applied to a function within class 'PlaygroundTests' because it is a subclass of 'XCTest', 'XCTestCase', or 'XCTestSuite'`. `testSomething` is an XCTest method; mark it `@MainActor` and leave it undecorated.
 
 **Why**: XCTestCase is Objective-C, not annotated for Swift concurrency. Its initializers are `nonisolated`, causing conflicts with MainActor-isolated subclasses.
 
@@ -889,6 +894,6 @@ Run Script phases without defined inputs/outputs cause full rebuilds. Always spe
 
 **WWDC**: 2024-10179, 2024-10195, 2026-262, 2026-267
 
-**Docs**: /testing, /testing/migratingfromxctest, /testing/testing-asynchronous-code, /testing/parallelization, /testing/issue/severity
+**Docs**: /testing, /testing/migratingfromxctest, /testing/testing-asynchronous-code, /testing/parallelization, /testing/issue/severity-swift.enum
 
 **GitHub**: pointfreeco/swift-concurrency-extras, pointfreeco/swift-clocks

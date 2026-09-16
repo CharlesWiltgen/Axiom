@@ -64,12 +64,16 @@ XCTAssertTrue(submitButton.waitForExistence(timeout: 5))
 ### Wait Patterns
 
 ```swift
+// XCUI types are main-actor isolated, so these helpers are @MainActor too; `app`
+// itself must live in a main-actor context (@MainActor global or test class).
 // Wait for element to appear
+@MainActor
 func waitForElement(_ element: XCUIElement, timeout: TimeInterval = 10) -> Bool {
     element.waitForExistence(timeout: timeout)
 }
 
 // Wait for element to disappear
+@MainActor
 func waitForElementToDisappear(_ element: XCUIElement, timeout: TimeInterval = 10) -> Bool {
     let predicate = NSPredicate(format: "exists == false")
     let expectation = XCTNSPredicateExpectation(predicate: predicate, object: element)
@@ -78,6 +82,7 @@ func waitForElementToDisappear(_ element: XCUIElement, timeout: TimeInterval = 1
 }
 
 // Wait for element to be hittable (visible AND enabled)
+@MainActor
 func waitForElementHittable(_ element: XCUIElement, timeout: TimeInterval = 10) -> Bool {
     let predicate = NSPredicate(format: "isHittable == true")
     let expectation = XCTNSPredicateExpectation(predicate: predicate, object: element)
@@ -86,6 +91,7 @@ func waitForElementHittable(_ element: XCUIElement, timeout: TimeInterval = 10) 
 }
 
 // Wait for text to appear anywhere
+@MainActor
 func waitForText(_ text: String, timeout: TimeInterval = 10) -> Bool {
     app.staticTexts[text].waitForExistence(timeout: timeout)
 }
@@ -116,24 +122,26 @@ class LoginTests: XCTestCase {
 
     override func setUpWithError() throws {
         continueAfterFailure = false
-        app = XCUIApplication()
-
-        // Reset app state for clean test
-        app.launchArguments = ["--uitesting", "--reset-state"]
-        app.launchEnvironment = ["DISABLE_ANIMATIONS": "1"]
-        app.launch()
+        // Launch the app from the @MainActor test method (see "Test Method Pattern"):
+        // XCTestCase's setUp/tearDown overrides are nonisolated, so XCUI work in them
+        // reports main-actor warnings under Swift 6.
     }
 
     override func tearDownWithError() throws {
         // Capture screenshot on failure
         if testRun?.failureCount ?? 0 > 0 {
-            let screenshot = XCUIScreen.main.screenshot()
-            let attachment = XCTAttachment(screenshot: screenshot)
+            // XCUIScreen is main-actor isolated; XCTest runs a synchronous tearDown on
+            // the main thread. Capture the PNG as Sendable Data, then attach it with
+            // nonisolated XCTest APIs.
+            let png: Data = MainActor.assumeIsolated { XCUIScreen.main.screenshot().pngRepresentation }
+            let attachment = XCTAttachment(data: png, uniformTypeIdentifier: "public.png")
             attachment.name = "Failure Screenshot"
             attachment.lifetime = .keepAlways
             add(attachment)
         }
-        app.terminate()
+        if let application = app {
+            MainActor.assumeIsolated { application.terminate() }
+        }
     }
 }
 ```
@@ -141,7 +149,15 @@ class LoginTests: XCTestCase {
 ### Test Method Pattern
 
 ```swift
+@MainActor
 func testLoginWithValidCredentials() throws {
+    app = XCUIApplication()
+
+    // Reset app state for clean test
+    app.launchArguments = ["--uitesting", "--reset-state"]
+    app.launchEnvironment = ["DISABLE_ANIMATIONS": "1"]
+    app.launch()
+
     // ARRANGE - Navigate to login screen
     let loginButton = app.buttons["showLoginButton"]
     XCTAssertTrue(loginButton.waitForExistence(timeout: 5))
@@ -242,8 +258,7 @@ if app.keyboards.count > 0 {
 
 Test plans allow running the same tests with different configurations:
 
-```xml
-<!-- TestPlan.xctestplan -->
+```json
 {
   "configurations" : [
     {
@@ -259,14 +274,11 @@ Test plans allow running the same tests with different configurations:
         "language" : "es",
         "region" : "ES"
       }
-    },
-    {
-      "name" : "Dark Mode",
-      "options" : {
-        "userInterfaceStyle" : "dark"
-      }
     }
   ],
+  "defaultOptions" : {
+
+  },
   "testTargets" : [
     {
       "target" : {
@@ -275,9 +287,16 @@ Test plans allow running the same tests with different configurations:
         "name" : "MyAppUITests"
       }
     }
-  ]
+  ],
+  "version" : 1
 }
 ```
+
+Appearance is not a test-plan configuration option — a plan cannot put the app under test
+into Dark Mode. Set it at the device level before the run, which is deterministic:
+`xcrun simctl ui <device-udid> appearance dark`. `XCUIDevice.shared.appearance = .dark`
+also works from inside a test, but it races the launch — the setting must land before the
+app launches (allow a few seconds first), or the app still launches light.
 
 ### Running with Test Plan
 
@@ -285,7 +304,7 @@ Test plans allow running the same tests with different configurations:
 xcodebuild test \
   -scheme "MyApp" \
   -testPlan "MyTestPlan" \
-  -destination "platform=iOS Simulator,name=iPhone 16" \
+  -destination "platform=iOS Simulator,name=iPhone 18 Pro" \
   -resultBundlePath /tmp/results.xcresult
 ```
 
@@ -296,9 +315,9 @@ xcodebuild test \
 ```bash
 xcodebuild test \
   -scheme "MyAppUITests" \
-  -destination "platform=iOS Simulator,name=iPhone 16" \
+  -destination "platform=iOS Simulator,name=iPhone 18 Pro" \
   -parallel-testing-enabled YES \
-  -maximum-parallel-test-targets 4 \
+  -maximum-parallel-testing-workers 4 \
   -resultBundlePath /tmp/results.xcresult
 ```
 
@@ -307,7 +326,7 @@ xcodebuild test \
 ```bash
 xcodebuild test \
   -scheme "MyAppUITests" \
-  -destination "platform=iOS Simulator,name=iPhone 16" \
+  -destination "platform=iOS Simulator,name=iPhone 18 Pro" \
   -retry-tests-on-failure \
   -test-iterations 3 \
   -resultBundlePath /tmp/results.xcresult
@@ -318,7 +337,7 @@ xcodebuild test \
 ```bash
 xcodebuild test \
   -scheme "MyAppUITests" \
-  -destination "platform=iOS Simulator,name=iPhone 16" \
+  -destination "platform=iOS Simulator,name=iPhone 18 Pro" \
   -enableCodeCoverage YES \
   -resultBundlePath /tmp/results.xcresult
 
@@ -344,10 +363,15 @@ add(attachment)
 ### Capture Videos
 
 Enable in test plan or scheme:
-```xml
+```json
+"preferredScreenCaptureFormat" : "video",
 "systemAttachmentLifetime" : "keepAlways",
 "userAttachmentLifetime" : "keepAlways"
 ```
+
+UI automation records a video of failing runs by default; `preferredScreenCaptureFormat`
+selects video instead of screenshots, and the two attachment-lifetime keys control only
+what is kept.
 
 ### Print Element Hierarchy
 
@@ -413,7 +437,7 @@ XCTAssertTrue(app.staticTexts["10 items"].exists)
 
 From WWDC 2025-344:
 
-1. **Record** — Record interactions in Xcode (Debug → Record UI Automation)
+1. **Record** — Record interactions in Xcode (click the record button at the edge of the editor)
 2. **Replay** — Run across devices/languages/configurations via test plans
 3. **Review** — Watch video recordings in test report
 
@@ -431,7 +455,7 @@ loginButton.tap()
 
 ## Resources
 
-**WWDC**: 2025-344, 2024-10206, 2023-10175, 2019-413
+**WWDC**: 2025-344, 2023-10175, 2019-413
 
 **Docs**: /xctest/xcuiapplication, /xctest/xcuielement, /xctest/xcuielementquery
 

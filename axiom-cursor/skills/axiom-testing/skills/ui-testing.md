@@ -256,7 +256,6 @@ override func setUpWithError() throws {
 
 ```swift
 func testExample() {
-    // Take screenshot on failure
     addUIInterruptionMonitor(withDescription: "Alert") { alert in
         alert.buttons["OK"].tap()
         return true
@@ -535,6 +534,7 @@ XCTAssertTrue(landmark.waitForExistence(timeout: 5), "Landmark should appear in 
 import XCTest
 import CoreLocation  // XCUILocation wraps CLLocation
 
+@MainActor  // XCUIApplication is @MainActor-isolated; a stored default value needs the isolation
 final class DeviceStateUITests: XCTestCase {
     private let app = XCUIApplication()  // instance property, shared across tests
 
@@ -542,8 +542,11 @@ final class DeviceStateUITests: XCTestCase {
         // Device orientation
         XCUIDevice.shared.orientation = .landscapeLeft
 
-        // Force appearance mode (UIKit reads this from launch arguments)
-        app.launchArguments += ["-UIUserInterfaceStyle", "Dark"]
+        // Device appearance is a device setting, not an app launch argument:
+        // "-UIUserInterfaceStyle" lands in the argument domain and UIKit ignores it.
+        // Set it outside the test — `xcrun simctl ui <udid> appearance dark`
+        // (devicectl: `device settings appearance`). XCUIDevice.shared.appearance
+        // works in-test but lands asynchronously, so it races the launch below.
 
         app.launch()
 
@@ -584,10 +587,10 @@ if ProcessInfo.processInfo.arguments.contains("-UI-Testing") {
 ```swift
 // Launch the target app to a specific URL (instance method, iOS 16.4+)
 let app = XCUIApplication()
-app.openURL(URL(string: "myapp://landmark/123")!)
+app.open(URL(string: "myapp://landmark/123")!)
 
 // Open a URL with the system's default app, via XCUISystem on XCUIDevice
-XCUIDevice.shared.system.openURL(URL(string: "https://example.com")!)
+XCUIDevice.shared.system.open(URL(string: "https://example.com")!)
 ```
 
 #### Accessibility Audits in Tests
@@ -606,7 +609,7 @@ func testAccessibility() throws {
 
 **Test Plans** let you:
 - Include/exclude individual tests
-- Set system settings (language, region, appearance)
+- Set system settings (language, region, simulated location)
 - Configure test properties (timeouts, repetitions, parallelization)
 - Associate with schemes for specific build settings
 
@@ -781,7 +784,7 @@ printf 'dummynet-anchor "nlc"\nanchor "nlc"\n' | sudo pfctl -f -
 echo 'dummynet out proto tcp from any to any pipe 1' | sudo pfctl -a nlc -f -
 sudo pfctl -E
 
-xcodebuild test -scheme MyApp -destination 'platform=iOS Simulator,name=iPhone 16 Pro'
+xcodebuild test -scheme MyApp -destination 'platform=iOS Simulator,name=iPhone 18 Pro'
 
 # Teardown
 sudo pfctl -a nlc -F all && sudo pfctl -d && sudo dnctl -q flush
@@ -976,8 +979,8 @@ A test plan *configuration* varies launch arguments, environment variables, loca
 ```bash
 # device names: xcrun simctl list devicetypes
 for dest in \
-  'platform=iOS Simulator,name=iPhone 16 Pro' \
-  'platform=iOS Simulator,name=iPad Pro 13-inch (M4)' ; do
+  'platform=iOS Simulator,name=iPhone 18 Pro' \
+  'platform=iOS Simulator,name=iPad Pro 13-inch (M5)' ; do
   xcodebuild test -scheme MyApp -testPlan UITests -destination "$dest"
 done
 ```
@@ -990,6 +993,7 @@ Pair this with NLC/`dnctl` started beforehand to add a slow-network dimension (�
 import XCTest
 import UIKit
 
+@MainActor  // XCUIApplication is @MainActor-isolated; a stored default value needs the isolation
 final class MultiFactorUITests: XCTestCase {
     private let app = XCUIApplication()
 
@@ -1074,8 +1078,8 @@ A single `xcodebuild test` runs on **one** destination with **whatever network t
     echo 'dummynet out proto tcp from any to any pipe 1' | sudo pfctl -a nlc -f -
     sudo pfctl -E
     for dest in \
-      'platform=iOS Simulator,name=iPhone 16 Pro' \
-      'platform=iOS Simulator,name=iPad Pro 13-inch (M4)' ; do
+      'platform=iOS Simulator,name=iPhone 18 Pro' \
+      'platform=iOS Simulator,name=iPad Pro 13-inch (M5)' ; do
       xcodebuild test -scheme MyApp -testPlan UITests -destination "$dest"
     done
     sudo pfctl -a nlc -F all && sudo pfctl -d && sudo dnctl -q flush
@@ -1245,27 +1249,12 @@ Thread 0 Crashed:
 **Most UI test crashes are concurrency bugs** (not specific to UI testing). Reference related skills:
 
 ```swift
-// Common pattern: Race condition in async image loading
-class PhotoViewController: UIViewController {
-    var photos: [Photo] = []
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-
-        // ❌ WRONG: Accessing photos array from multiple threads
-        Task {
-            let newPhotos = await fetchPhotos()
-            self.photos = newPhotos  // May crash if main thread access
-            reloadPhotos()  // ❌ Crash here
-        }
-    }
-}
-
 // ✅ CORRECT: UIViewController is already @MainActor-isolated, so a Task
 // started in viewDidLoad runs on the main actor and resumes there after the
-// await — no per-property @MainActor and no MainActor.run hop needed. The
-// original bug wasn't the assignment; it was doing UI work without that
-// guarantee.
+// await — no per-property @MainActor and no MainActor.run hop needed. There is
+// no race here. A real violation is a nonisolated entry point that touches the
+// same state — the compiler rejects it ("main actor-isolated instance method
+// 'reloadPhotos()' cannot be called from outside of the actor").
 class PhotoViewController: UIViewController {
     var photos: [Photo] = []
 
@@ -1346,8 +1335,8 @@ func testPhotosLoadUnderStress() {
 
 ## Resources
 
-**WWDC**: 2025-344, 2024-10179, 2023-10269, 2023-10175, 2023-10035, 2022-110371
+**WWDC**: 2025-344, 2024-10179, 2023-10278, 2023-10175, 2023-10035, 2022-110371
 
-**Docs**: /xctest, /xcuiautomation/recording-ui-automation-for-testing, /xctest/xctwaiter, /accessibility/delivering_an_exceptional_accessibility_experience, /accessibility/performing_accessibility_testing_for_your_app
+**Docs**: /xctest, /xcuiautomation/recording-ui-automation-for-testing, /xctest/xctwaiter, /accessibility/delivering_an_exceptional_accessibility_experience, /accessibility/performing-accessibility-testing-for-your-app
 
 **Note**: This skill focuses on reliability patterns and Recording UI Automation. For TDD workflow, see superpowers:test-driven-development.

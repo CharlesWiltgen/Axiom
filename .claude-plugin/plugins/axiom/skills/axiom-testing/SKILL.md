@@ -79,7 +79,7 @@ digraph testing {
 |------|-----|
 | Unit tests (logic, models) | Swift Testing |
 | UI tests (tap, swipe, assert screens) | XCUITest (XCTest) |
-| Tests without simulator | Swift Testing + Package/Framework |
+| Tests without simulator | Package/Framework (either framework) |
 | Parameterized tests | Swift Testing |
 | Performance measurements | XCTest (XCTMetric) |
 | Objective-C tests | XCTest |
