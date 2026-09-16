@@ -67,12 +67,19 @@ test("reads the inline skill descriptions every SKILL.md uses", () => {
     // Parse with YAML, not with a copy of the reader's own regex: a second
     // regex over the same shape agrees with the reader even when both are
     // wrong (a quoted value keeps its quotes; a continuation line is dropped).
-    const { data } = matter(fs.readFileSync(file, "utf8"));
+    const raw = fs.readFileSync(file, "utf8");
+    const { data } = matter(raw);
     const value = String(data.description ?? "").trim();
     if (!value) continue;
+    // Assert the SHAPE against the file text, not against the parsed value.
+    // gray-matter resolves a block scalar to its content — `description: |` with
+    // two indented lines gives "line one\nline two\n" — so a check on the parsed
+    // value can only fire when a description's literal text is "|". A skill that
+    // adopts a block scalar changes the byte count summed below, and the guard
+    // that exists to notice exactly that could never fire.
     assert.doesNotMatch(
-      value,
-      /^[|>][-+]?$/,
+      raw.split(/^---[ \t]*$/m)[1] ?? "",
+      /^description:[ \t]*[|>][-+]?[ \t]*$/m,
       `${entry.name}: block-scalar skill descriptions need this test extended`,
     );
     expected += value.length;
