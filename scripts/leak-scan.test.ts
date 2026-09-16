@@ -69,6 +69,17 @@ function fixture(rel: string, content: string): { root: string; file: string } {
 const SKILL = ".claude-plugin/plugins/axiom/skills/axiom-example/SKILL.md";
 const scan = (root: string) => scanRepo(root, TEST_RULES);
 
+/**
+ * A well-formed UUID the suppressor must NOT recognize, assembled from parts.
+ *
+ * No unpatterned UUID literal belongs in this file: it is shipped content and the
+ * scanner reads it like any other, so a literal here becomes a value the gate has
+ * to carry — and a real one from a fixture becomes a value it has to exempt. The
+ * test only needs the SHAPE to be well-formed; a captured value buys nothing the
+ * shape does not.
+ */
+const unpatternedUuid = (...parts: string[]): string => parts.join("-");
+
 test("flags an owner's project name in shipped content, with its line", () => {
   const { root } = fixture(SKILL, "---\nname: x\n---\nScreenshotted from the ZetaGadget build.\n");
   const findings = scan(root);
@@ -108,7 +119,8 @@ test("flags session temp paths and timestamp-shaped build stamps", () => {
 });
 
 test("warns on UUID shapes without failing the gate", () => {
-  const { root } = fixture(SKILL, "---\nname: x\n---\n--device 6C640744-3686-474B-9643-08FCF719DEC1\n");
+  const uuid = unpatternedUuid("0f3a1c9e", "5b2d", "4e77", "9a10", "c4b8e6d21f03");
+  const { root } = fixture(SKILL, `---\nname: x\n---\n--device ${uuid}\n`);
   const findings = scan(root);
   assert.equal(findings.length, 1);
   assert.equal(findings[0]!.severity, "warn");
@@ -219,10 +231,11 @@ test("placeholder UUID shapes are suppressed and real ones are not", () => {
     "4c4c44ef55553144a1b50562264d518f",     // same value, unpunctuated and lowercased
   ];
   const real = [
-    "CC1CF985-BC65-3725-809F-4C1E36B8F4BA", // v3, a dylib identifier from a real trace
-    "6C640744-3686-474B-9643-08FCF719DEC1", // v4, random — the shape a device UDID has
-    "A0E2EAD5-4E82-3E1C-AC6C-1EDC646A6C4D", // v3, /usr/bin/yes from the same trace
-    "A237EF81-B68B-37BA-A165-92C965529534", // v3, dyld from the same trace
+    // Built from parts — see unpatternedUuid. These must stay unpatterned so the
+    // assertion below keeps testing the suppressor rather than a spelling.
+    unpatternedUuid("0f3a1c9e", "5b2d", "4e77", "9a10", "c4b8e6d21f03"),
+    unpatternedUuid("7d5e2b94", "a1c3", "3f88", "b2d4", "0e6f9a1c3b57"),
+    unpatternedUuid("b91f4d02", "6c58", "3a1e", "8f27", "d5c0e39b7a46"),
   ];
   for (const uuid of placeholder) {
     assert.ok(isObviousPlaceholderUuid(uuid), `${uuid} is a typed-placeholder shape`);

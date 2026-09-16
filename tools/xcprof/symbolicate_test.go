@@ -163,7 +163,7 @@ func TestParseCPUProfileCapturesBinaryIdentity(t *testing.T) {
 				continue
 			}
 			found = true
-			if f.UUID != "CC1CF985-BC65-3725-809F-4C1E36B8F4BA" {
+			if f.UUID != "AAAAAAAA-0000-0000-0000-000000000001" {
 				t.Errorf("UUID = %q, want the fixture's libsystem_kernel UUID", f.UUID)
 			}
 			if f.Arch != "arm64e" {

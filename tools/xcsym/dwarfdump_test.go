@@ -7,14 +7,14 @@ import (
 )
 
 func TestReadUUIDs_ParsesOutput(t *testing.T) {
-	sample := `UUID: 4C4C44EF-5555-3144-A1B5-0562264D518F (arm64) /path/to/MyApp
+	sample := `UUID: AAAAAAAA-0000-0000-0000-000000000005 (arm64) /path/to/MyApp
 UUID: ABCDEF01-2345-6789-ABCD-EF0123456789 (arm64e) /path/to/MyApp
 `
 	got := parseDwarfdumpUUIDs([]byte(sample))
 	if len(got) != 2 {
 		t.Fatalf("expected 2 UUIDs, got %d", len(got))
 	}
-	if got[0].UUID != "4C4C44EF-5555-3144-A1B5-0562264D518F" {
+	if got[0].UUID != "AAAAAAAA-0000-0000-0000-000000000005" {
 		t.Errorf("UUID 0: got %q", got[0].UUID)
 	}
 	if got[0].Arch != "arm64" {
@@ -42,11 +42,11 @@ func TestNormalizeUUID(t *testing.T) {
 	cases := []struct {
 		in, want string
 	}{
-		{"4c4c44ef-5555-3144-a1b5-0562264d518f", "4C4C44EF-5555-3144-A1B5-0562264D518F"},
-		{"4C4C44EF55553144A1B50562264D518F", "4C4C44EF-5555-3144-A1B5-0562264D518F"},
-		{"4c4c44ef55553144a1b50562264d518f", "4C4C44EF-5555-3144-A1B5-0562264D518F"},
+		{"abcdef01-2345-6789-abcd-ef0123456789", "ABCDEF01-2345-6789-ABCD-EF0123456789"},
+		{"ABCDEF0123456789ABCDEF0123456789", "ABCDEF01-2345-6789-ABCD-EF0123456789"},
+		{"abcdef0123456789abcdef0123456789", "ABCDEF01-2345-6789-ABCD-EF0123456789"},
 		// malformed passthrough (upper-cased but otherwise untouched so callers can error on them)
-		{"4c4c44ef555531 44a1b50562264d518f", "4C4C44EF555531 44A1B50562264D518F"},
+		{"abcdef01234567 89abcdef0123456789", "ABCDEF01234567 89ABCDEF0123456789"},
 		{"not-a-uuid", "NOT-A-UUID"},
 	}
 	for _, c := range cases {

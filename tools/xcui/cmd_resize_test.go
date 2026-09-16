@@ -33,9 +33,12 @@ func TestParseSizesRejectsTheWholeListOnOneBadEntry(t *testing.T) {
 }
 
 func TestParseActualSizeReadsTheLabelledField(t *testing.T) {
-	// Verbatim shape of `devicectl device appResize set` output, captured 2026-08-15.
+	// Verbatim shape of `devicectl device appResize set` output. The display
+	// identifier is synthetic: devicectl regenerates display UUIDs on every boot
+	// (measured — a simulator's Resizable display reported a different one on each
+	// of three boots), so the real 2026-08-15 capture carried nothing worth keeping.
 	out := `Adjusted resizable app session geometry.
-  Display: Resizable (6C640744-3686-474B-9643-08FCF719DEC1)
+  Display: Resizable (AAAAAAAA-0000-0000-0000-000000000004)
   Requested size: 1100.0x500.0
   Requested corner radius: 0.0
   Actual size: 1100.0x550.0
