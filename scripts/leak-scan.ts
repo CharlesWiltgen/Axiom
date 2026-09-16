@@ -63,13 +63,22 @@ interface Surface {
   trackedOnly: boolean;
 }
 
-const SURFACES: Surface[] = [
+export const SURFACES: Surface[] = [
   { path: ".claude-plugin", trackedOnly: true },
   { path: ".cursor-plugin", trackedOnly: true },
   { path: ".agents", trackedOnly: true },
   { path: "axiom-codex", trackedOnly: true },
   { path: "axiom-cursor", trackedOnly: true },
   { path: "axiom-pi", trackedOnly: true },
+  // BOTH entries are needed, and they cannot be collapsed into one.
+  // `axiom-mcp` (tracked) covers src/, package.json, README.md and LICENSE — the
+  // last two are published to npm. `axiom-mcp/dist` (disk) covers the build output
+  // that npm actually ships and that git ignores.
+  // An earlier revision replaced the first with the second, because a tracked-only
+  // scan of `axiom-mcp` saw 2 of its 40 files and looked useless. That reasoning was
+  // right about the problem and wrong about the fix: it left 38 tracked files in no
+  // surface at all, and nothing noticed because a shrunken surface reads as clean.
+  { path: "axiom-mcp", trackedOnly: true },
   { path: "axiom-mcp/dist", trackedOnly: false },
   { path: "docs", trackedOnly: true },
   { path: "tools", trackedOnly: true },
@@ -171,6 +180,24 @@ export const ALLOW: AllowEntry[] = [
     contains: "-Users-someone-",
     reason:
       "the fixture must be shaped like a real session path to exercise the hook; the user and UUID segments are placeholders",
+  },
+  {
+    path: "tools/xcsym/normalized_test.go",
+    rule: "issue-id",
+    contains: "APP-3V",
+    reason: "a fixture id the decoder test round-trips; not a tracker reference",
+  },
+  {
+    path: "tools/xcsym/cmd_triage_test.go",
+    rule: "issue-id",
+    contains: "APP-3V",
+    reason: "fixture id for the noise case the triage test asserts is deprioritised",
+  },
+  {
+    path: "tools/xcsym/cmd_triage_test.go",
+    rule: "issue-id",
+    contains: "REAL-1",
+    reason: "fixture id for the genuine-crash case, named to contrast with the noise fixture above",
   },
 ];
 
@@ -287,9 +314,33 @@ function allowed(rel: string, rule: string, line: string): boolean {
  * so only unpatterned values — the shape that actually leaked — reach it.
  */
 export function isObviousPlaceholderUuid(uuid: string): boolean {
-  const hex = uuid.replace(/-/g, "");
-  if (/([0-9A-F])\1{7}/i.test(hex)) return true;
-  return /^(?:AAAA|0000|1111|2222|3333|4444|5555|6666|7777|8888|9999|ABCD|F1E2|1A2B|A1B2|DEAD|BEEF|1234)/i.test(hex);
+  const hex = uuid.replace(/-/g, "").toLowerCase();
+
+  // RFC 4122 §4.4's canonical example. The most recognisable placeholder UUID
+  // there is, and it ships in storekit-ref.md — so it warned on every run.
+  if (hex === "550e8400e29b41d4a716446655440000") return true;
+
+  // Eight of the same character: AAAAAAAA-…, 99999999-…
+  if (/([0-9a-f])\1{7}/.test(hex)) return true;
+
+  // Every character doubled: AABBCCDD-EEFF-0011-2233-445566778899. That is the
+  // shape a person types when writing a fixture, and not one a generator produces
+  // — the genuine UUIDs this repo ships (v3/v4/v5 dylib identifiers in the xcprof
+  // and xcsym fixtures) fail it on their first pair. Verified against all 13
+  // distinct values the tree produces: the three doubled shapes suppress, the
+  // seven real ones do not.
+  if (hex.length % 2 === 0) {
+    let doubled = true;
+    for (let i = 0; i < hex.length; i += 2) {
+      if (hex[i] !== hex[i + 1]) {
+        doubled = false;
+        break;
+      }
+    }
+    if (doubled) return true;
+  }
+
+  return /^(?:aaaa|0000|1111|2222|3333|4444|5555|6666|7777|8888|9999|abcd|f1e2|1a2b|a1b2|dead|beef|1234)/.test(hex);
 }
 
 export function scanText(rel: string, text: string, rules: LeakRule[] = RULES): LeakFinding[] {
@@ -301,7 +352,11 @@ export function scanText(rel: string, text: string, rules: LeakRule[] = RULES): 
         const match = m[0];
         if (rule.id === "absolute-home-path" && PLACEHOLDER_OK.test(match.split("/").pop() ?? "")) continue;
         if (rule.id === "uuid-looks-real" && isObviousPlaceholderUuid(match)) continue;
-        if (rule.id === "issue-id" && /^(?:ACME|EXAMPLE|TEST|DEMO|FOO|BAR)-/i.test(match)) continue;
+        // Test the CAPTURED id, not m[0]. m[0] carries the `issue_id": "` prefix or
+        // the sentry URL, so an anchored id pattern tested against it can never
+        // match — which made this guard dead code, and warned on the ACME-*/ASC-*
+        // placeholders it exists for. Executed proof: m[0] → false, m[1] → true.
+        if (rule.id === "issue-id" && /^(?:ACME|EXAMPLE|TEST|DEMO|FOO|BAR|ASC)-/i.test(m[1] ?? match)) continue;
         if (allowed(rel, rule.id, line)) continue;
         findings.push({
           path: rel,
@@ -348,7 +403,13 @@ export function report(findings: LeakFinding[], scannedFiles: number): string {
 }
 
 if (process.argv[1]?.endsWith("leak-scan.ts")) {
-  const root = path.join(path.dirname(new URL(import.meta.url).pathname), "..");
+  // import.meta.dirname, not new URL(import.meta.url).pathname. The latter keeps
+  // URL percent-encoding, so a checkout under a path containing a space resolved
+  // to a directory that does not exist: every surface walked to nothing, and the
+  // MIN_PLAUSIBLE_FILES guard then blocked EVERY commit with a diagnosis naming
+  // the wrong cause. Every other script here uses import.meta.dirname or
+  // fileURLToPath; this was the only site with the lossy idiom.
+  const root = path.resolve(import.meta.dirname, "..");
   const files = shippedFiles(root);
   if (files.length < MIN_PLAUSIBLE_FILES) {
     console.error(

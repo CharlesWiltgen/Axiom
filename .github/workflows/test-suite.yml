@@ -1,0 +1,64 @@
+name: Test Suite
+
+on:
+  pull_request:
+    paths:
+      - '.claude-plugin/**'
+      - 'scripts/**'
+      - 'axiom-mcp/src/**'
+      - 'axiom-pi/**'
+      - 'tools/**'
+      - 'docs/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/test-suite.yml'
+  push:
+    branches: [main]
+    paths:
+      - '.claude-plugin/**'
+      - 'scripts/**'
+      - 'axiom-mcp/src/**'
+      - 'axiom-pi/**'
+      - 'tools/**'
+      - 'docs/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/test-suite.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: macos-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24'
+
+      - run: npm ci
+
+      # The unit suite. It carries the version-parity gate, the generated-marker
+      # rules, the docs conventions and the leak scanner's own rules — none of
+      # which had ever run off a maintainer's machine.
+      - run: npm run test:unit
+
+      # The content gate on shipped content. It lives in a pre-commit hook and
+      # inside pre-deploy, so it does not run on a fresh clone, in CI, or for
+      # anyone who commits with --no-verify. This is the backstop for that.
+      # Plain node: the script is TypeScript, stripped natively by Node 24.
+      - run: node scripts/leak-scan.ts
+
+      # Deliberately NOT `npm run test` (pre-deploy --static). Its first check
+      # shells out to `claude plugin validate` and treats ANY failure — including
+      # the CLI being absent — as a gate failure, so it cannot run here yet.

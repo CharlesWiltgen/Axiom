@@ -3,14 +3,14 @@
 #
 # Why an installer exists: .git/hooks is not tracked, so a guard that lives only
 # there disappears on a fresh clone and on any machine that never ran it. The
-# block is spliced between markers, so re-running replaces it instead of stacking
+# block is spliced between markers, so re-running moves it rather than stacking
 # copies, and any other content in the hook (the beads integration, for instance)
 # is left alone.
 #
 #   sh scripts/install-git-hooks.sh
 set -e
 
-root=$(cd "$(dirname "$0")/.." && pwd)
+root=${AXIOM_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}
 source_file="$root/scripts/git-hooks/pre-commit-axiom.sh"
 hook="$root/.git/hooks/pre-commit"
 
@@ -32,20 +32,44 @@ awk -v begin="$BEGIN" -v end="$END" '
   $0 == end { inside = 0 }
 ' "$source_file" > "$root/.git/hooks/.axiom-block.tmp"
 
-if grep -qF "$BEGIN" "$hook"; then
-  awk -v begin="$BEGIN" -v end="$END" -v block="$root/.git/hooks/.axiom-block.tmp" '
-    BEGIN { while ((getline line < block) > 0) replacement = replacement line "\n" }
-    $0 == begin { printf "%s", replacement; skip = 1; next }
-    skip && $0 == end { skip = 0; next }
-    !skip { print }
-  ' "$hook" > "$root/.git/hooks/.pre-commit.tmp"
-  mv "$root/.git/hooks/.pre-commit.tmp" "$hook"
-  echo "  replaced the axiom block in .git/hooks/pre-commit"
-else
-  printf '\n' >> "$hook"
-  cat "$root/.git/hooks/.axiom-block.tmp" >> "$hook"
-  echo "  appended the axiom block to .git/hooks/pre-commit"
-fi
+# Strip any block a previous run installed, THEN insert the current one after the
+# shebang. Unconditional, and in that order, because a block that is already there
+# may be in the wrong place: the first revision appended, so an installed block can
+# sit after another tool's `exit` and never run. Replacing it in place would
+# preserve that position; stripping first moves it.
+tmp_stripped="$root/.git/hooks/.pre-commit.stripped"
+tmp_placed="$root/.git/hooks/.pre-commit.placed"
+
+awk -v begin="$BEGIN" -v end="$END" '
+  $0 == begin { skip = 1; next }
+  skip && $0 == end { skip = 0; next }
+  !skip { print }
+' "$hook" > "$tmp_stripped"
+
+# Insert right after the shebang — NOT at the end. An existing hook file may
+# already carry another tool's block, and a block that terminates the script
+# (an `exit`, an `exec`) would leave this one unreachable while the installer
+# still reported success. The sibling installer
+# (.claude/scripts/install-leak-prevention-hooks.sh) prepends for this reason,
+# and this repo's own .git/hooks/pre-commit is exactly that case: the beads
+# block carries `if [ $_bd_exit -ne 0 ]; then exit $_bd_exit; fi`.
+awk -v block="$root/.git/hooks/.axiom-block.tmp" '
+  BEGIN {
+    while ((getline line < block) > 0) body = body line "\n"
+    placed = 0
+  }
+  !placed && NR == 1 && /^#!/ { print; printf "\n%s\n", body; placed = 1; next }
+  !placed { printf "%s\n", body; placed = 1 }
+  { print }
+  END { if (!placed) printf "\n%s\n", body }
+' "$tmp_stripped" > "$tmp_placed"
+
+# Squash the double blank line an insert next to an existing blank produces.
+awk 'BEGIN{prev=0} {if($0=="") {if(prev==0) print; prev=1} else {print; prev=0}}' \
+  "$tmp_placed" > "$hook"
+
+rm -f "$tmp_stripped" "$tmp_placed"
+echo "  installed the axiom block after the shebang in .git/hooks/pre-commit"
 
 rm -f "$root/.git/hooks/.axiom-block.tmp"
 chmod +x "$hook"

@@ -1747,9 +1747,23 @@ for (const f of leakErrors) {
     `${f.path}${f.line > 0 ? `:${f.line}` : ""} [${f.rule}] ${f.match} — ${f.hint}`,
   );
 }
+// The warn tier is advisory, so it does not fail the gate — but it has to be
+// PRINTED or it is not advisory, it is absent. This check used to fold the count
+// into a success line and tell the reader to "eyeball" findings it never showed,
+// while bypassing the warn() channel that every other check uses and the Phase 1
+// block renders. 89 findings went unseen on every release that way.
+for (const f of leakWarns) {
+  warn(
+    "private-data",
+    `${f.path}${f.line > 0 ? `:${f.line}` : ""} [${f.rule}] ${f.match} — ${f.hint}`,
+  );
+}
 if (!leakErrors.length) {
   console.log(
-    `  ✓ ${leakFiles.length} shipped files carry no private data (${leakWarns.length} shape warning(s) to eyeball, 0 errors)`,
+    `  ✓ ${leakFiles.length} shipped files carry no private data` +
+      (leakWarns.length
+        ? ` (${leakWarns.length} shape warning(s), listed below)`
+        : ""),
   );
 }
 

@@ -3,7 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { type LeakRule, RULES, scanRepo, shippedFiles } from "./leak-scan.ts";
+import { type LeakRule, RULES, SURFACES, isObviousPlaceholderUuid, scanRepo, shippedFiles } from "./leak-scan.ts";
 
 /**
  * The engine is tested with its own rules, not the shipped list. Two reasons: a
@@ -45,8 +45,16 @@ const TEST_RULES: LeakRule[] = [
   {
     id: "uuid-looks-real",
     severity: "warn",
-    pattern: /\b[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}\b/,
+    pattern: /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/i,
     hint: "a UUID or UDID",
+  },
+  {
+    // Mirrors the shipped pattern. The suppression logic is keyed on the rule id,
+    // so a rule with a different id would not exercise it.
+    id: "issue-id",
+    severity: "warn",
+    pattern: /(?:issue_id"?\s*:\s*"?|\bsentry\b[^\n]{0,30}?)([A-Z]{2,8}-[0-9]{1,6}[A-Z]?)\b/i,
+    hint: "a tracker identifier is quoted here",
   },
 ];
 
@@ -155,4 +163,113 @@ test("the shipped rule list keeps the coverage the gate depends on", () => {
     assert.ok(rule.pattern instanceof RegExp, `${rule.id}: pattern must be a RegExp`);
     assert.ok(rule.hint.length > 10, `${rule.id}: hint must explain the fix`);
   }
+});
+
+test("every surface resolves to files, and the shipped anchors are scanned", () => {
+  // Structural, against the real checkout — the counterpart to the rules test
+  // above. MIN_PLAUSIBLE_FILES is one global floor, so a surface that shrinks to
+  // nothing is invisible to the scan itself: it walks the path, finds no files,
+  // and the run still reports "no private data". That is exactly how 38 tracked
+  // files under axiom-mcp left every surface without anything noticing.
+  const root = path.resolve(import.meta.dirname, "..");
+  const files = new Set(shippedFiles(root));
+
+  for (const surface of SURFACES) {
+    const hits = [...files].filter(
+      (f) => f === surface.path || f.startsWith(surface.path + "/"),
+    );
+    assert.ok(
+      hits.length > 0,
+      `surface "${surface.path}" (trackedOnly: ${surface.trackedOnly}) resolves to no files — ` +
+        `the scan is blind there and will report clean`,
+    );
+  }
+
+  // Anchors: paths whose disappearance from the scanned set has happened, or
+  // whose contents make them the reason this gate exists. A surface-wide count
+  // cannot notice a single dropped prefix; these can.
+  for (const anchor of [
+    "axiom-mcp/src/index.ts", // the MCP server entry point
+    "axiom-mcp/package.json",
+    "axiom-mcp/README.md", // published to npm
+    "axiom-mcp/LICENSE", // published to npm
+    ".claude-plugin/plugins/axiom/claude-code.json",
+    "docs/index.md",
+    "tools/xcsym/main.go",
+    // Not scripts/leak-scan.ts — that path is deliberately SELF_EXEMPT, since the
+    // scanner's own source contains the patterns it searches for.
+    "scripts/pre-deploy.ts",
+  ]) {
+    assert.ok(files.has(anchor), `${anchor} is not scanned — it is in no surface`);
+  }
+});
+
+// ── The warn tier's suppressions ──────────────────────────────────────────────
+// These existed but were never exercised, which is how two of them silently
+// stopped working: a test that asserts rule PRESENCE cannot tell that a
+// suppression no longer suppresses anything.
+
+test("placeholder UUID shapes are suppressed and real ones are not", () => {
+  const placeholder = [
+    "AABBCCDD-EEFF-0011-2233-445566778899", // every character doubled
+    "11223344-5566-7788-99AA-BBCCDDEEFF00", // every character doubled
+    "11111111-2222-3333-4444-555555555555", // eight of a kind
+    "550e8400-e29b-41d4-a716-446655440000", // RFC 4122 §4.4's canonical example
+  ];
+  const real = [
+    "CC1CF985-BC65-3725-809F-4C1E36B8F4BA", // v3, a dylib identifier from a real trace
+    "6C640744-3686-474B-9643-08FCF719DEC1", // v4, random — the shape a device UDID has
+  ];
+  for (const uuid of placeholder) {
+    assert.ok(isObviousPlaceholderUuid(uuid), `${uuid} is a typed-placeholder shape`);
+  }
+  for (const uuid of real) {
+    assert.ok(!isObviousPlaceholderUuid(uuid), `${uuid} must keep warning`);
+  }
+});
+
+test("a doubled-character UUID in content produces no finding", () => {
+  const { root } = fixture(SKILL, "---\nname: x\n---\n--device AABBCCDD-EEFF-0011-2233-445566778899\n");
+  assert.deepEqual(scan(root), [], "the tier is only useful if its placeholders stay quiet");
+});
+
+test("a placeholder tracker id is suppressed, but a quoted id is not", () => {
+  const { root } = fixture(SKILL, [
+    "---", "name: x", "---",
+    '{"provider":"sentry","issue_id":"ACME-3V","kind":"hang"}',
+    '{"provider":"sentry","issue_id":"AB-1234","kind":"hang"}',
+  ].join("\n") + "\n");
+  const hits = scan(root).filter((f) => f.rule === "issue-id");
+  // The suppression tests the CAPTURED id. Testing m[0] instead — which carries the
+  // `issue_id": "` prefix — can never match an anchored id pattern, and made the
+  // guard dead code.
+  assert.equal(hits.length, 1, "only the unlisted id should warn");
+  assert.ok(hits[0]!.match.includes("AB-1234"));
+});
+
+test("no script derives its root from a percent-encoded URL pathname", () => {
+  // new URL(import.meta.url).pathname keeps URL percent-encoding, so a checkout
+  // under a path containing a space resolves to a directory that does not exist.
+  // In the CLI that meant every surface walked to nothing and the
+  // MIN_PLAUSIBLE_FILES guard blocked every commit, naming the wrong cause.
+  // import.meta.dirname and fileURLToPath both decode correctly; this is a lint
+  // so the lossy idiom cannot come back in a new script.
+  const dir = path.join(path.resolve(import.meta.dirname, ".."), "scripts");
+  const scripts = fs
+    .readdirSync(dir)
+    .filter((f) => f.endsWith(".ts") && !f.endsWith(".test.ts"));
+  const offenders = scripts.filter((f) =>
+    fs
+      .readFileSync(path.join(dir, f), "utf8")
+      .split("\n")
+      // Skip comment lines: the fix's own explanatory comment names the idiom,
+      // and a lint that trips on its own documentation is not a lint.
+      .some(
+        (line) =>
+          line.includes("new URL(import.meta.url).pathname") &&
+          !line.trimStart().startsWith("//") &&
+          !line.trimStart().startsWith("*"),
+      ),
+  );
+  assert.deepEqual(offenders, [], "use import.meta.dirname or fileURLToPath instead");
 });
