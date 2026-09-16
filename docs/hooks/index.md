@@ -17,7 +17,7 @@ A hook returns JSON that either *injects context* (advisory) or *blocks an actio
 
 ## Harness Support
 
-The same intent runs on each harness, but the surface differs — Codex has no `Read` tool (so no crash-file routing) and no per-prompt routing hook in the same form, and Pi's tool hooks are **advisory only** (Pi appends to a tool result; it can't block it).
+The same intent runs on each harness, but the surface differs — Codex has no `Read` tool (so no crash-file routing), and Pi's tool hooks are **advisory only** (Pi appends to a tool result; it can't block it).
 
 | Hook (event) | Claude Code | Codex | Pi |
 |---|:---:|:---:|:---:|
