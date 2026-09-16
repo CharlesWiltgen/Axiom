@@ -30,7 +30,7 @@ Claude frequently generates outdated Swift patterns from its training data. This
 | `if let value = value {` | `if let value {` | 5.7 |
 | Explicit `return` in single-expression | Omit `return`; `if`/`switch` are expressions | 5.9 |
 | `Circle()` in modifiers | `.circle` (static member lookup) | 5.5 |
-| Dropping `import UIKit`/`import AppKit` when using SwiftUI | Keep them — SwiftUI re-exports only CoreGraphics, CoreTransferable, DeveloperToolsSupport, and SwiftUICore, NOT UIKit or AppKit. `import UIKit`/`import AppKit` is still required for `UIViewController`, `UIView`, `UIApplication`, gesture recognizers, etc. A few cross-platform types are surfaced through SwiftUI's own bridges (`Image(uiImage:)`, `Color`/`Font`) | — |
+| `import UIKit`/`import AppKit` in a SwiftUI file to reach `UIViewController`, `UIView`, `UIApplication` or gesture recognizers | **Not needed** — those resolve through `import SwiftUI` alone. SwiftUI's Clang umbrella header imports UIKit (AppKit on macOS, WatchKit on watchOS); the swiftinterface's `@_exported` list — CoreGraphics, CoreTransferable, DeveloperToolsSupport, SwiftUICore — is a separate thing and not the full story. Verified by compiling with only `import SwiftUI` against the iOS 27.2 and macOS 27.2 SDKs. Add the import explicitly only if you prefer it for clarity | — |
 
 ## Foundation Modernization
 
@@ -69,9 +69,13 @@ func showStatus() { ... }
 @available(tvOS, unavailable)              // still exclude specific platforms
 func launch() { ... }
 
-// weak let → Sendable without the escape hatch
+// weak let → Sendable without the escape hatch.
+// `weak var` here fails with "stored property 'dockedAt' of 'Sendable'-conforming
+// class 'Spacecraft' is mutable" — that is what forced @unchecked Sendable before.
+// The referent must itself be Sendable, and the `let` still needs an initializer.
 final class Spacecraft: Sendable {
     weak let dockedAt: SpaceStation?
+    init(dockedAt: SpaceStation?) { self.dockedAt = dockedAt }
 }
 
 // @diagnose — scope a diagnostic group's severity to one declaration.

@@ -1538,33 +1538,33 @@
     },
     {
       "path": "skills/axiom-swift/SKILL.md",
-      "sha256": "4a67073eaefb92030b0f374b09e227c8e13956a0df040369febe0ca283707f34",
-      "bytes": 9657
+      "sha256": "6b428cdc77abdc2ac61753c6e6a99ea403c6f49e1de4c4e22046e664a28261b4",
+      "bytes": 9658
     },
     {
       "path": "skills/axiom-swift/skills/deep-link-debugging.md",
-      "sha256": "b6244848419486a64b6a75ee2e84277d061f944e5ea6fff0c5ab8b72b3c04b7b",
-      "bytes": 15732
+      "sha256": "132fe68012468daaa1282000460f6e2b1c1f7fc375bbc13a51d6cde2a91b6b91",
+      "bytes": 17757
     },
     {
       "path": "skills/axiom-swift/skills/ownership-conventions.md",
-      "sha256": "eb0fe8af26bac487b6e4f5fed3b61b902706bad958a8240165e8f70c104e08db",
-      "bytes": 18383
+      "sha256": "5690650c363d0dac16c0586ad299f1981b3a08cc986b29165f75def944a0b950",
+      "bytes": 22857
     },
     {
       "path": "skills/axiom-swift/skills/swift-modern.md",
-      "sha256": "066e5f796547371e2aa6b0855c230696d5568b213bb50cd47c20f41759f0b8d9",
-      "bytes": 12372
+      "sha256": "0d1ce22872f8ecbf97910b3e0517669bfc6b3c601f5988ca3cace91eefa8eea4",
+      "bytes": 12853
     },
     {
       "path": "skills/axiom-swift/skills/transferable-ref.md",
-      "sha256": "d3740018143dedd742916df2e66b8e5b1eb4d741a3b244d9c60297e10aad0d5d",
-      "bytes": 24317
+      "sha256": "f1e513d2091d38555b855d0be4d7e607f34cdcfd42ac5f592346e3bd5df5bdcd",
+      "bytes": 24639
     },
     {
       "path": "skills/axiom-swift/skills/tvos.md",
-      "sha256": "1ebb58f4f65c579945c1d38d379b2f093577839bb8cf9985872d97be6df052c6",
-      "bytes": 25522
+      "sha256": "5c97b45770edeed1c15100e3b9488f1f9ad04e85caf7741172b6ca188007e772",
+      "bytes": 27471
     },
     {
       "path": "skills/axiom-swiftui/SKILL.md",
@@ -1879,7 +1879,7 @@
   ],
   "totals": {
     "files": 375,
-    "bytes": 7425735
+    "bytes": 7434987
   },
   "excludedMirrors": 30,
   "classes": {

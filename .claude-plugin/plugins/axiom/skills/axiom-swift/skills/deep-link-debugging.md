@@ -18,7 +18,7 @@ Use when:
 ## Example Prompts
 
 #### 1. "Claude Code can't navigate to specific screens for testing"
-→ Add debug-only URL scheme to enable `xcrun simctl openurl` navigation
+→ Add debug-only URL scheme to enable `xcrun simctl openurl` navigation (one-time approval per simulator — see **First Run Approval**)
 
 #### 2. "I want to take screenshots of different screens automatically"
 → Create debug deep links for each screen, callable from simulator
@@ -110,7 +110,10 @@ extension URL {
               let items = components.queryItems else {
             return nil
         }
-        return Dictionary(uniqueKeysWithValues: items.map { ($0.name, $0.value ?? "") })
+        return Dictionary(
+            items.map { ($0.name, $0.value ?? "") },
+            uniquingKeysWith: { _, last in last }
+        )
     }
 }
 #endif
@@ -123,6 +126,8 @@ xcrun simctl openurl booted "debug://settings"
 xcrun simctl openurl booted "debug://profile?id=123"
 xcrun simctl openurl booted "debug://reset"
 ```
+
+**First run**: the first `openurl` for a scheme raises an `Open in "<YourApp>"?` alert and delivers nothing until you accept it — see **First Run Approval**.
 
 ---
 
@@ -228,7 +233,9 @@ Debug links that both navigate AND configure state.
 ```swift
 #if DEBUG
 extension DebugRouter {
-    func handleDebugURL(_ url: URL) {
+    // Extra state-configuring routes. Pattern 2 already declares `handleDebugURL`,
+    // so keep this under its own name and call it from the same onOpenURL handler.
+    func handleStateDebugURL(_ url: URL) {
         guard url.scheme == "debug" else { return }
 
         switch url.host {
@@ -316,10 +323,27 @@ fi
 
 ## Integration with Simulator Testing
 
+### First Run Approval
+
+`simctl openurl` does not deliver the URL until the scheme has been approved once on that simulator. On a fresh simulator — or after reinstalling the app — the first openurl raises a system alert reading `Open in "<YourApp>"?` with **Cancel** and **Open**.
+
+While that alert is up, `xcrun simctl openurl` still exits 0, the app receives nothing, and any screenshot taken in that window captures the alert instead of your screen. Tap **Open** once by hand (approval persists per scheme on that device), or pre-approve the scheme after installing and before launching the app:
+
+```bash
+# Pre-approve the debug scheme (run once per simulator, after installing the app, before launching it)
+UDID=<simulator-udid>
+APPROVALS=~/Library/Developer/CoreSimulator/Devices/$UDID/data/Library/Preferences/com.apple.launchservices.schemeapproval.plist
+/usr/libexec/PlistBuddy \
+  -c "Add com.apple.CoreSimulator.CoreSimulatorBridge-->debug string com.example.YourApp" \
+  "$APPROVALS"
+```
+
+Use your app's bundle identifier. Every `openurl` for that scheme then delivers immediately, with no alert.
+
 ### With `/axiom:screenshot` Command
 
 ```bash
-# 1. Navigate to screen
+# 1. Navigate to screen (first run: approve the scheme once — see First Run Approval)
 xcrun simctl openurl booted "debug://settings"
 
 # 2. Wait for navigation
@@ -336,7 +360,7 @@ Simply tell the agent:
 - "Open the recipe editor and verify the layout"
 - "Go to the error state and show me what it looks like"
 
-The agent will use your debug deep links to navigate.
+The agent will use your debug deep links to navigate. It drives them through `simctl openurl`, so the scheme must already be approved on the simulator it uses — an unapproved scheme makes its navigation silently do nothing (see **First Run Approval**).
 
 ---
 
@@ -370,8 +394,8 @@ Use `#if DEBUG` to ensure code is stripped from release builds.
 ### Step 4: Test Deep Links
 
 ```bash
-# Boot simulator
-xcrun simctl boot "iPhone 16 Pro"
+# Boot simulator (see `xcrun simctl list devices available` for names and UDIDs)
+xcrun simctl boot "iPhone 17"
 
 # Launch app
 xcrun simctl launch booted com.example.YourApp
@@ -446,7 +470,7 @@ case "profile":
 #endif
 ```
 
-**Problem**: Crashes if `id` is missing or invalid.
+**Problem**: `?id=abc` traps — `Int` returns nil and the `!` crashes — while a missing `id` does not crash at all: `?? "0"` supplies `"0"`, so the link silently navigates to profile 0.
 
 **✅ RIGHT — Validate parameters**:
 ```swift

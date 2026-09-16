@@ -5,7 +5,7 @@
 
 tvOS shares UIKit and SwiftUI with iOS but diverges in critical ways that catch every iOS developer. The three most dangerous assumptions: (1) local files persist, (2) WebView exists, (3) focus works like @FocusState.
 
-**Core principle** tvOS is not "iOS on TV." It has a dual focus system, no persistent local storage, no WebView, and a remote with two incompatible generations. Treat it as its own platform.
+**Core principle** tvOS is not "iOS on TV." It has a dual focus system, no guaranteed-persistent local storage, no WebView, and a remote with two incompatible generations. Treat it as its own platform.
 
 **tvOS 26** Adopts Liquid Glass design language with new app icon system. See `axiom-design (skills/liquid-glass.md)` for implementation patterns.
 
@@ -15,7 +15,7 @@ Before shipping a tvOS port, verify these five areas — they account for 90% of
 
 | Area | Check | Section |
 |------|-------|---------|
-| Storage | No persistent local files — iCloud required | §3 |
+| Storage | No guaranteed-persistent local files — everything is purgeable | §3 |
 | Focus | Dual system working, focus guides for gaps | §1 |
 | WebView | Replaced with JavaScriptCore or native rendering | §4 |
 | Text input | Shadow input or fullscreen keyboard handled | §6 |
@@ -38,7 +38,7 @@ These are real questions developers ask that this skill answers:
 -> The skill explains the dual focus system (UIKit Focus Engine vs @FocusState) and common traps
 
 #### 2. "My tvOS app loses all data between launches"
--> The skill explains there is no persistent local storage and shows the iCloud-first pattern
+-> The skill explains there is no guaranteed-persistent local storage and shows the iCloud-first pattern
 
 #### 3. "How do I handle Siri Remote input in SwiftUI on tvOS?"
 -> The skill covers both generations of remote and the three input layers (SwiftUI, UIKit gestures, GameController)
@@ -50,10 +50,10 @@ These are real questions developers ask that this skill answers:
 
 If ANY of these appear, STOP:
 
-- "I'll just use the same storage code as iOS" — tvOS has no Document directory
+- "I'll just use the same storage code as iOS" — tvOS has no guaranteed-persistent local storage; every local file is purgeable
 - "WebView will work for this" — No WebView on tvOS at all (Apple HIG: "Not supported in tvOS")
 - "@FocusState handles focus" — tvOS has a dual focus system; @FocusState alone is incomplete
-- "I'll save to Application Support" — It's Cache-only; the system deletes files when app is not running
+- "I'll save to Application Support" — Purgeable like everything else; the system deletes files when app is not running
 - "Standard UITextField will work" — tvOS text input triggers a fullscreen keyboard; consider the shadow input pattern
 - "I'll just use the same AVPlayer code" — tvOS needs .ambient audio session on launch, custom Menu button handling, and buffer tuning. Default iOS AVPlayer setup causes audio session conflicts and broken back navigation.
 
@@ -223,7 +223,7 @@ swipe.direction = .right
 view.addGestureRecognizer(swipe)
 ```
 
-**Available UIPress.PressType values**: `.menu`, `.playPause`, `.select`, `.upArrow`, `.downArrow`, `.leftArrow`, `.rightArrow`, `.pageUp`, `.pageDown`
+**Available UIPress.PressType values**: `.menu`, `.playPause`, `.select`, `.upArrow`, `.downArrow`, `.leftArrow`, `.rightArrow`, `.pageUp`, `.pageDown`, `.tvRemoteOneTwoThree`, `.tvRemoteFourColors` (the last two are tvOS 18.1+)
 
 ### Low-Level Press Handling
 
@@ -293,8 +293,9 @@ let panGesture = UIPanGestureRecognizer(target: self, action: #selector(handlePa
 
     switch gesture.state {
     case .changed:
-        let seekDelta = velocity.x * dampingFactor
-        player.seek(to: currentTime + seekDelta)
+        // Seek deltas are CMTime, not CGFloat — convert before adding
+        let seekDelta = CMTime(seconds: Double(velocity.x * dampingFactor), preferredTimescale: 600)
+        player.seek(to: player.currentTime() + seekDelta)
     default:
         break
     }
@@ -305,23 +306,23 @@ let panGesture = UIPanGestureRecognizer(target: self, action: #selector(handlePa
 
 ## 3. Storage Constraints
 
-**This is the most dangerous iOS assumption on tvOS.** tvOS has no Document directory. All local storage is Cache that the system can delete at any time. Skipping iCloud integration means 2-3 weeks debugging intermittent "data disappears" bugs that only happen on real devices between app launches.
+**This is the most dangerous iOS assumption on tvOS.** tvOS has no guaranteed-persistent local storage. The directories below all exist — the question the table answers is which of them you can rely on, and the answer is none of them once your app is not running. Skipping iCloud integration means 2-3 weeks debugging intermittent "data disappears" bugs that only happen on real devices between app launches.
 
-From Apple's App Programming Guide for tvOS: "Every app developed for the new Apple TV **must be able to store data in iCloud** and retrieve it in a way that provides a great customer experience."
+From Apple's (now-retired) App Programming Guide for tvOS: "Every app developed for the new Apple TV **must be able to store data in iCloud** and retrieve it in a way that provides a great customer experience." That sentence dates from 2017 and states the consequence of purgeable storage rather than a submission rule — but the design implication is unchanged: the app that works with zero local data is the app that survives tvOS.
 
 ### What tvOS Has
 
 | Directory | Exists? | Persistent? |
 |-----------|---------|-------------|
-| Documents | No | N/A |
-| Application Support | Yes | No — system can delete when app is not running |
+| Documents | Yes | No — purgeable like every other local directory |
+| Application Support | Yes — but you must create it | No — system can delete when app is not running |
 | Caches | Yes | No — system deletes under storage pressure |
 | tmp | Yes | No |
 
 ### Size Limits
 
 - **App bundle**: 4 GB maximum
-- **NSUserDefaults / UserDefaults**: Limited storage (significantly less than iOS). Available but subject to system purge — not guaranteed persistent between sessions
+- **NSUserDefaults / UserDefaults**: Small — the tvOS guide documents a 500 KB allowance here — and not a substitute for iCloud: too little for data you expect to still be there next launch
 - **On-demand resources**: Available for read-only assets the OS manages
 - **Local cache**: No guaranteed size; system can purge while app is not running
 
@@ -480,9 +481,10 @@ digitEntry.isSecureDigitEntry = true
 
 present(digitEntry, animated: true)
 
-digitEntry.entryCompletionHandler = { pin in
-    guard let pin else { return }  // User cancelled
-    authenticate(with: pin)
+// Fires when the number of digits entered reaches numberOfDigits —
+// there is no cancellation callback, and the entry is never nil.
+digitEntry.entryCompletionHandler = { [weak self] pin in
+    self?.authenticate(with: pin)
 }
 
 // Reset entry
@@ -599,31 +601,27 @@ try AVAudioSession.sharedInstance().setCategory(.ambient)
 
 ### Custom Dismiss Logic
 
-The default swipe-down gesture dismisses the player. Override for media apps:
+The system player owns the Menu button: with the controls hidden, a Menu press dismisses the player, and `AVPlayerViewController` already handles that.
+
+Two ways of "taking over" Menu that look right and are not:
+
+❌ **Don't subclass `AVPlayerViewController`.** Apple's reference says it outright: "The framework doesn't support subclassing `AVPlayerViewController`."
+
+❌ **Don't add your own gesture recognizer to the player.** WWDC21-10191 — cited in Resources below — opens its best practices with this: "avoid adding extra gestures to the player. This will interfere with standard playback UI and most certainly might not work in the future."
+
+✅ **Go through the player's own doors.** Present a stock `AVPlayerViewController` and hand AVKit your UI with `customOverlayViewController` (tvOS 13+). The header is explicit that this is the supported route: "Clients should provide a view controller here rather than installing their own swipe gesture recognizer."
 
 ```swift
-class PlayerViewController: AVPlayerViewController {
-    override func viewDidLoad() {
-        super.viewDidLoad()
+let playerViewController = AVPlayerViewController()
+playerViewController.player = player
 
-        // Handle Menu button for custom back navigation
-        let menuPress = UITapGestureRecognizer(
-            target: self, action: #selector(handleMenu)
-        )
-        menuPress.allowedPressTypes = [
-            NSNumber(value: UIPress.PressType.menu.rawValue)
-        ]
-        view.addGestureRecognizer(menuPress)
-    }
-
-    @objc func handleMenu() {
-        if isShowingControls {
-            hideControls()
-        } else {
-            dismiss(animated: true)
-        }
-    }
+// AVKit presents this over the player. Your controller receives Menu itself,
+// which is where the state machine in §8 belongs.
+let overlay = SettingsOverlayController()
+overlay.onDismiss = { [weak playerViewController] in
+    playerViewController?.customOverlayViewController = nil
 }
+playerViewController.customOverlayViewController = overlay
 ```
 
 ---
@@ -653,6 +651,7 @@ enum PlayerState {
     case playing        // Controls hidden
     case controlsShown  // Controls visible
     case submenu        // Settings/subtitles overlay
+    case dismissed      // Player is gone — terminal
 }
 
 func handleMenuPress(in state: PlayerState) -> PlayerState {
@@ -665,11 +664,13 @@ func handleMenuPress(in state: PlayerState) -> PlayerState {
         return .playing
     case .playing:
         dismiss(animated: true)
-        return .playing
+        return .dismissed
     case .loading:
         cancelLoading()
         dismiss(animated: true)
-        return .loading
+        return .dismissed
+    case .dismissed:
+        return .dismissed
     }
 }
 ```
@@ -686,12 +687,12 @@ Apple TV strongly prefers IPv6. All App Store apps must support IPv6-only networ
 
 | Device | Chip | RAM | Notes |
 |--------|------|-----|-------|
-| Apple TV HD (4th gen) | A8 | 2 GB | Still supported; much slower |
-| Apple TV 4K (1st gen) | A10X | 3 GB | Capable |
-| Apple TV 4K (2nd gen) | A12 | 4 GB | Good |
+| Apple TV HD (4th gen) | A8 | 2 GB | tvOS 26 max — does not run tvOS 27 |
+| Apple TV 4K (1st gen) | A10X | 3 GB | tvOS 26 max — does not run tvOS 27 |
+| Apple TV 4K (2nd gen) | A12 | 3 GB | Oldest tvOS 27 device — the one to profile on |
 | Apple TV 4K (3rd gen) | A15 | 4 GB | Excellent |
 
-**Test on older hardware.** The Apple TV HD is still in use and dramatically slower than 4K models.
+**Test on the oldest supported hardware.** Apple TV 4K (2nd gen) is the slowest device that runs tvOS 27; the Apple TV HD and Apple TV 4K (1st gen) are still in use, but tvOS 27 does not support them.
 
 ---
 
@@ -731,7 +732,7 @@ extension View {
 - Simulator does not accurately simulate Focus Engine behavior
 - Always test focus navigation on a real Apple TV device
 - Simulator keyboard input != Siri Remote input
-- Performance profiling must happen on device (especially Apple TV HD)
+- Performance profiling must happen on device (especially Apple TV 4K 2nd gen, the oldest tvOS 27 device)
 
 ---
 
@@ -741,7 +742,7 @@ extension View {
 |---------|---------|
 | "I'll just use the same code as iOS" | tvOS diverges in storage, focus, input, and web views. You will hit walls. |
 | "Focus works like iOS" | tvOS has a dual focus system (UIKit Focus Engine + SwiftUI @FocusState). @FocusState alone is insufficient. |
-| "Local storage is fine for now" | There is no persistent local storage on tvOS. Apple requires iCloud capability. |
+| "Local storage is fine for now" | No local data is guaranteed to persist on tvOS. Anything the user expects to still be there next launch belongs in iCloud. |
 | "WebView will work" | Apple HIG: web views are "Not supported in tvOS." JavaScriptCore only (no DOM). |
 | "I'll handle text input with TextField" | UITextField triggers a fullscreen keyboard. Consider shadow input pattern or UISearchController for better UX. |
 | "I only need to test on Simulator" | Focus Engine and performance require real device testing. |

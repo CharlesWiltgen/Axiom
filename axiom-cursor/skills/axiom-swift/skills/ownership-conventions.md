@@ -6,7 +6,7 @@ Explicit ownership modifiers for performance optimization and noncopyable type s
 ## When to Use
 
 ✅ **Use when:**
-- Large value types being passed read-only (avoid copies)
+- Large value types being passed read-only (make copies inside the callee explicit)
 - Working with noncopyable types (`~Copyable`)
 - Reducing ARC retain/release traffic
 - Factory methods that consume builder objects
@@ -40,18 +40,25 @@ Explicit ownership modifiers for performance optimization and noncopyable type s
 
 ### Pattern 1: Read-Only Large Struct
 
+The default parameter convention is already `borrowing` — the caller keeps the
+buffer and nothing is copied at the call site, so there is no copy to avoid.
+Write the modifier explicitly to document intent and to make the body's copies
+explicit: with `borrowing`, an implicit copy inside the body is an error
+(Pattern 3).
+
 ```swift
 struct LargeBuffer {
     var data: [UInt8]  // Could be megabytes
 }
 
-// ❌ Default may copy
+// ✅ Default convention: already a borrow, no call-site copy
 func process(_ buffer: LargeBuffer) -> Int {
     buffer.data.count
 }
 
-// ✅ Explicit borrow — no copy
-func process(_ buffer: borrowing LargeBuffer) -> Int {
+// ✅ Explicit `borrowing`: same codegen, and copies inside the body must now
+//    be written `copy buffer`
+func inspect(_ buffer: borrowing LargeBuffer) -> Int {
     buffer.data.count
 }
 ```
@@ -59,7 +66,7 @@ func process(_ buffer: borrowing LargeBuffer) -> Int {
 ### Pattern 2: Consuming Factory
 
 ```swift
-struct Builder {
+struct Builder: ~Copyable {
     var config: Configuration
 
     // Consumes self — builder invalid after call
@@ -68,18 +75,27 @@ struct Builder {
     }
 }
 
-let builder = Builder(config: .default)
-let product = builder.build()
-// builder is now invalid — compiler error if used
+func makeProduct() -> Product {
+    let builder = Builder(config: .default)
+    return builder.build()
+    // `builder` has been moved — reuse is `error: 'builder' used after consume`
+}
 ```
+
+The move only compiles inside a function: a top-level `let builder` is a *global*,
+and a global noncopyable value cannot be consumed
+(`error: cannot consume noncopyable stored property 'builder' that is global`).
+Only a `~Copyable` builder is invalidated this way — for a copyable `Builder` the
+call passes a copy and the caller keeps a usable value, so a `consuming` method
+on a copyable type documents intent rather than enforcing use-once.
 
 ### Pattern 3: Explicit Copy in Borrowing
 
 With `borrowing`, copies must be explicit:
 
 ```swift
-func store(_ value: borrowing LargeValue) {
-    // ❌ Error: Cannot implicitly copy borrowing parameter
+mutating func store(_ value: borrowing LargeValue) {
+    // ❌ error: 'value' is borrowed and cannot be consumed
     self.cached = value
 
     // ✅ Explicit copy
@@ -92,14 +108,26 @@ func store(_ value: borrowing LargeValue) {
 Transfer ownership explicitly:
 
 ```swift
-let data = loadLargeData()
-process(consume data)
-// data is now invalid — compiler prevents use
+func consumeOnce() {
+    let data = loadLargeData()      // a ~Copyable value
+    process(consume data)
+    // data has been moved — reuse is `error: 'data' used after consume`
+}
 ```
+
+The move needs a function scope: a top-level `let data` is a *global*, and a
+global noncopyable value cannot be consumed
+(`error: cannot consume noncopyable stored property 'data' that is global`).
+`consume` also only moves a value of `~Copyable` type. Applied to a copyable
+value it changes nothing: the compiler warns `'consume' applied to
+bitwise-copyable type 'LargeValue' has no effect` and the original binding stays
+usable.
 
 ### Pattern 5: Noncopyable Type
 
-For `~Copyable` types, ownership modifiers are **required**:
+For `~Copyable` types, *parameters* of a noncopyable type must state ownership
+(`error: parameter of noncopyable type 'Token' must specify ownership`). Methods
+on a `~Copyable` type default to `borrowing self` and need no modifier.
 
 ```swift
 struct FileHandle: ~Copyable {
@@ -107,7 +135,7 @@ struct FileHandle: ~Copyable {
 
     init(path: String) throws {
         fd = open(path, O_RDONLY)
-        guard fd >= 0 else { throw POSIXError.errno }
+        guard fd >= 0 else { throw POSIXError(.EIO) }
     }
 
     borrowing func read(count: Int) -> Data {
@@ -135,16 +163,21 @@ file.close()  // consuming — file invalidated
 
 ### Pattern 6: Reducing ARC Traffic
 
+Class parameters already use the guaranteed (+0) convention: the callee receives
+a borrow, so `borrowing` changes nothing at the call site and removes no ARC
+traffic. Both functions below compile to the same `@guaranteed ExpensiveObject`
+parameter with no retain/release in either body:
+
 ```swift
 class ExpensiveObject { /* ... */ }
 
-// ❌ Default: May retain/release
+// ✅ Already a borrow — SIL: @guaranteed ExpensiveObject -> @owned String
 func inspect(_ obj: ExpensiveObject) -> String {
     obj.description
 }
 
-// ✅ Borrowing: No ARC traffic
-func inspect(_ obj: borrowing ExpensiveObject) -> String {
+// ✅ Adding `borrowing` documents the intent; codegen is identical
+func inspectBorrowing(_ obj: borrowing ExpensiveObject) -> String {
     obj.description
 }
 ```
@@ -183,8 +216,8 @@ func add(_ a: Int, _ b: Int) -> Int {
 ### Mistake 2: Forgetting Explicit Copy
 
 ```swift
-func cache(_ value: borrowing LargeValue) {
-    // ❌ Compile error
+mutating func cache(_ value: borrowing LargeValue) {
+    // ❌ error: 'value' is borrowed and cannot be consumed
     self.values.append(value)
 
     // ✅ Explicit copy required
@@ -215,31 +248,34 @@ func validate(_ data: borrowing Data) -> Bool {
 | Can't store in `Array`, `Dictionary`, `Set` | Collections require `Copyable` | Use `Optional<T>` wrapper or manage manually |
 | Can't use with most generics | `<T>` implicitly means `<T: Copyable>` | Use `<T: ~Copyable>` (requires library support) |
 | Protocol conformance restricted | Most protocols require `Copyable` | Use `~Copyable` protocol definitions |
-| Can't capture in closures by default | Closures copy captured values | Use `borrowing` closure parameters |
-| No existential support | `any ~Copyable` doesn't work | Use generics instead |
+| Can't capture in closures by default | Capturing the value consumes it into the closure | Use `borrowing` closure parameters |
+| Protocol existentials of noncopyable protocols | `any P` (`P: ~Copyable`) won't hold a `~Copyable` value | Use generics; `any ~Copyable` itself is supported |
 
 **Common compiler errors when adopting ownership modifiers:**
 
 ```swift
-// Error: "Cannot implicitly copy a borrowing parameter"
+// Error: 'value' is borrowed and cannot be consumed
 // Fix: Add explicit `copy` or change to consuming
-func store(_ v: borrowing LargeValue) {
+mutating func store(_ v: borrowing LargeValue) {
     self.cached = copy v  // ✅ Explicit copy
 }
 
-// Error: "Noncopyable type cannot be used with generic"
+// Error: global function 'use' requires that 'Token' conform to 'Copyable'
+//        ('where T: Copyable' is implicit here)
 // Fix: Constrain generic to ~Copyable
 func use<T: ~Copyable>(_ value: borrowing T) { }  // ✅
 
-// Error: "Cannot consume a borrowing parameter"
+// Error: 'v' is borrowed and cannot be consumed
 // Fix: Change to consuming if you need ownership transfer
 func takeOwnership(_ v: consuming FileHandle) { }  // ✅
 
-// Error: "Missing 'consuming' or 'borrowing' modifier"
-// Fix: ~Copyable types require explicit ownership on all methods
+// Error: parameter of noncopyable type 'Token' must specify ownership
+// Fix: Noncopyable *parameters* need an ownership modifier — methods on a
+//      ~Copyable type default to `borrowing self` and need none
 struct Token: ~Copyable {
     borrowing func peek() -> String { ... }   // ✅ Explicit
     consuming func redeem() { ... }           // ✅ Explicit
+    func plain() -> String { ... }            // ✅ Also fine — implies borrowing self
 }
 ```
 
@@ -247,7 +283,7 @@ struct Token: ~Copyable {
 - If you need collection storage (arrays, dictionaries)
 - If you need to work with existing generic APIs
 - If the type needs broad protocol conformance
-- Prefer `consuming func` on regular types as a lighter alternative for "use once" semantics
+- Prefer `consuming func` on regular types to express use-once intent — it takes ownership of a copy, so callers can still reuse the value; only `~Copyable` enforces it
 
 ## Performance Considerations
 
@@ -269,15 +305,17 @@ struct Token: ~Copyable {
 
 Fixed-size, stack-allocated array using value generics. No heap allocation, no reference counting, no copy-on-write.
 
+`InlineArray` and the value-generics feature itself require iOS 26 (`@available(anyAppleOS 26.0, *)`); on an earlier deployment target the compiler reports `'InlineArray' is only available in iOS 26.0 or newer` and `values in generic types are only available in iOS 26.0.0 or newer`.
+
 ### Declaration
 
 ```swift
-@frozen struct InlineArray<let count: Int, Element> where Element: ~Copyable
+@frozen struct InlineArray<let count: Int, Element>: ~Copyable where Element: ~Copyable
 ```
 
-The `let count: Int` is a **value generic** — the size is part of the type, checked at compile time. `InlineArray<3, Int>` and `InlineArray<4, Int>` are different types.
+The `let count: Int` is a **value generic** — the size is part of the type, checked at compile time. `InlineArray<3, Int>` and `InlineArray<4, Int>` are different types. The array is `~Copyable` itself, so it becomes noncopyable when `Element` is (`InlineArray<4, Token>` for a `~Copyable` `Token` cannot be assigned or copied).
 
-On Swift 6.4 (Xcode 27) you can also write the type with the `[count of Element]` shorthand (`OS27`):
+On Swift 6.4 (Xcode 27) you can also write the type with the `[count of Element]` shorthand — it denotes the same iOS 26+ `InlineArray`:
 
 ```swift
 let rgb: [3 of Double] = [0.2, 0.4, 0.8]   // == InlineArray<3, Double>
@@ -342,7 +380,7 @@ var sensors: InlineArray<4, Sensor> = ...  // Valid: ~Copyable elements allowed
 
 ### Accessing Spans
 
-Containers with contiguous storage expose `.span` and `.mutableSpan`:
+Containers with contiguous storage expose `.span` and `.mutableSpan` — both are iOS 26 (`@available(anyAppleOS 26.0, *)`; targeting an older OS gives `'span' is only available in iOS 26.0 or newer`). `Span` and `MutableSpan` themselves back-deploy to iOS 12.2; it is the container accessors that are new:
 
 ```swift
 let array = [1, 2, 3, 4]
@@ -358,24 +396,32 @@ ms[0] = 99
 Spans are **non-escapable** — the compiler guarantees they cannot outlive the container they borrow from:
 
 ```swift
-// ❌ Cannot return span that depends on local variable
+// ❌ Sema rejects the return position itself, whatever the body does:
+//    error: a function cannot return a ~Escapable result
+//    (a lending function needs @lifetime(borrow:), an experimental feature in 6.4)
 func getSpan() -> Span<UInt8> {
     let array: [UInt8] = Array(repeating: 0, count: 128)
-    return array.span  // Compile error
+    return array.span
 }
 
-// ❌ Cannot capture span in closure
+// ❌ A span cannot escape the borrow's scope — binding the closure escapes it:
+//    error: lifetime-dependent variable 'span' escapes its scope
 let span = array.span
-let closure = { span.count }  // Compile error
+let closure = { span.count }
 
-// ❌ Cannot access span after mutating original
+// ❌ Cannot mutate the container while a span borrows it
 var array = [1, 2, 3]
 let span = array.span
-array.append(4)
-// span[0]  // Compile error: container was modified
+array.append(4)  // error: overlapping accesses to 'array', but modification requires
+                 // exclusive access; consider copying to a local variable [#ExclusivityViolation]
 ```
 
 These constraints prevent use-after-free, dangling pointers, and overlapping mutation at **compile time** with zero runtime cost.
+
+Reads are not the problem: `span[0]` on its own compiles, and a non-escaping
+closure may capture the span (`use { span.count }`) — what the compiler rejects
+is the container mutation while the borrow is live, and any use that lets the
+span outlive its scope.
 
 ### Span vs Unsafe Pointers
 
@@ -420,7 +466,7 @@ let b: InlineArray<4, Int> = [1, 2, 3, 4]
 // a = b  // Compile error: different types
 ```
 
-Currently limited to `Int` parameters. Enables stack-allocated, fixed-size abstractions where the compiler verifies size compatibility at compile time.
+Currently limited to `Int` parameters (a `let n: UInt8` parameter is rejected: `'UInt8' is not a supported value type for 'n'`), and gated to iOS 26 like the rest of the feature. Enables stack-allocated, fixed-size abstractions where the compiler verifies size compatibility at compile time.
 
 ## Swift 6.4 Additions (OS27)
 
@@ -432,14 +478,21 @@ Replace `get`/`set` to expose shared storage **without copying** — and to vend
 
 ```swift
 var value: Value {
-    borrow { storage.pointee }     // read-only, no copy
-    mutate { &storage.pointee }    // exclusive in-place access
+    borrow { storage }             // read-only, no copy
+    mutate { &storage }            // exclusive in-place access
 }
 ```
 
+A `borrow` accessor may only yield a stored property, a property that itself has
+`borrow`/`mutate` accessors, or a global `let`. Yielding something else — a
+`get`-based property such as `UnsafeMutablePointer.pointee` — is rejected
+(`error: invalid return value from a borrow accessor`); the stdlib's own
+`UniqueBox.value` adds `@_unsafeSelfDependentResult` to `borrow { pointer.pointee }`
+to opt in.
+
 ### Noncopyable & nonescapable conformances
 
-`Equatable`, `Comparable`, and `Hashable` now work on `~Copyable` types (`Equatable`/`Comparable` also on `~Escapable`), and associated types may be `~Copyable` / `~Escapable`. You no longer have to make a unique-resource type copyable just to compare or hash it:
+`Equatable`, `Comparable`, and `Hashable` now work on `~Copyable` types — all three are declared `: ~Copyable, ~Escapable`, so they work on `~Escapable` types too — and associated types may be `~Copyable` / `~Escapable`. You no longer have to make a unique-resource type copyable just to compare or hash it:
 
 ```swift
 struct FileHandle: ~Copyable, Equatable {
@@ -565,7 +618,7 @@ Need explicit ownership?
 
 ## Resources
 
-**Swift Evolution**: SE-0377, SE-0453 (Span), SE-0451 (InlineArray), SE-0452 (value generics)
+**Swift Evolution**: SE-0377, SE-0447 (Span), SE-0453 (InlineArray), SE-0452 (value generics)
 
 **WWDC**: 2024-10170, 2025-245, 2025-312, 2026-262
 

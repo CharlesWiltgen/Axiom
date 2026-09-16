@@ -75,7 +75,7 @@ Best for: models already conforming to `Codable`. Uses JSON by default.
 import UniformTypeIdentifiers
 
 extension UTType {
-    static var todo: UTType = UTType(exportedAs: "com.example.todo")
+    static var todo: UTType { UTType(exportedAs: "com.example.todo") }
 }
 
 struct Todo: Codable, Transferable {
@@ -167,7 +167,7 @@ struct Video: Transferable {
 - `file: URL` — the received file on disk
 - `isOriginalFile: Bool` — whether this is the sender's original file or a copy
 
-**Content type precision**: `.mpeg4Movie` only matches `.mp4` files. To accept all common video formats (`.mp4`, `.mov`, `.m4v`), use the parent type `.movie` — or declare multiple `FileRepresentation`s for specific subtypes:
+**Content type precision**: `.mpeg4Movie` matches `.mp4` and `.m4v`, but not `.mov`. To accept all common video formats (`.mp4`, `.mov`, `.m4v`), use the parent type `.movie` — or declare multiple `FileRepresentation`s for specific subtypes:
 
 ```swift
 // Broad: accept any video format the system recognizes
@@ -193,9 +193,9 @@ FileRepresentation(importedContentType: .movie) { received in
 Best for: fallback representations that let your type work with receivers expecting simpler types.
 
 ```swift
-struct Profile: Transferable {
+struct Profile: Codable, Transferable {
     var name: String
-    var avatar: Image
+    var avatar: Data?  // SwiftUI.Image isn't Codable — store the encoded bytes
 
     static var transferRepresentation: some TransferRepresentation {
         CodableRepresentation(contentType: .profile)
@@ -427,7 +427,7 @@ PasteButton(payloadType: String.self) { strings in
 
 Platform difference: PasteButton auto-validates pasteboard changes on iOS but not on macOS.
 
-**Availability**: `.copyable`, `.pasteDestination`, and `.cuttable` are **macOS 13+ only** — they do not exist on iOS. On iOS, use `PasteButton` (iOS 16+) for paste, and standard context menus or `UIPasteboard` for programmatic copy/cut. `PasteButton` is cross-platform: macOS 10.15+, iOS 16+, visionOS 1.0+.
+**Availability**: `.copyable`, `.pasteDestination`, and `.cuttable` are **iOS 27+ and macOS 13+** — unavailable on tvOS, watchOS, and visionOS. On iOS 16–26, use `PasteButton` for paste, and standard context menus or `UIPasteboard` for programmatic copy/cut. `PasteButton` is cross-platform: iOS 16+, macOS 13+ (the `payloadType:` initializer — the type itself is annotated macOS 10.15), visionOS 1.0+; unavailable on tvOS and watchOS.
 
 ---
 
@@ -452,7 +452,7 @@ UTType.commaSeparatedText  // public.comma-separated-values-text
 UTType.markdown            // net.daringfireball.markdown (OS27)
 ```
 
-**`UTType.markdown` `OS27`** — system-declared identifier `net.daringfireball.markdown`, conforming to `public.utf8-plain-text` (UTF-8 text, **not** `public.plain-text` — the distinction matters for `Transferable` conformance matching). Before 27, apps hand-rolled their own Markdown `UTExportedTypeDeclarations`, so two apps' Markdown types did not interoperate; it is now system-declared and shared across `Transferable`, `fileImporter`/`fileExporter`, `.draggable`, and `DocumentGroup`. Gate with `if #available` when the deployment target is below 27. All platforms.
+**`UTType.markdown` `OS27`** — system-declared identifier `net.daringfireball.markdown`, declared conforming to `public.utf8-plain-text` — and so, transitively, to `public.plain-text`, which means a receiver matching `.plainText` matches Markdown too. Before 27, apps hand-rolled their own Markdown `UTExportedTypeDeclarations`, so two apps' Markdown types did not interoperate; it is now system-declared and shared across `Transferable`, `fileImporter`/`fileExporter`, `.draggable`, and `DocumentGroup`. Gate with `if #available` when the deployment target is below 27. All platforms.
 
 ### Declaring Custom Types
 
@@ -460,7 +460,7 @@ UTType.markdown            // net.daringfireball.markdown (OS27)
 
 ```swift
 extension UTType {
-    static var recipe: UTType = UTType(exportedAs: "com.myapp.recipe")
+    static var recipe: UTType { UTType(exportedAs: "com.myapp.recipe") }
 }
 ```
 
@@ -584,26 +584,27 @@ return Video(file: dest)
 
 ### Async Work After File Drop
 
-The `FileRepresentation` importing closure is synchronous — you cannot `await` inside it. Copy the file first, return the model, then do async post-processing (thumbnails, transcoding, metadata extraction) on the copied URL:
+The `FileRepresentation` importing closure is `async throws`, so `await` inside it is legal. It doesn't run on the main actor, though — copy the file, return the model, and hop back before touching UI state:
 
 ```swift
-// WRONG — can't await in the importing closure
+// ✅ await is legal — the importing closure is async
 FileRepresentation(importedContentType: .movie) { received in
     let dest = ...
     try FileManager.default.copyItem(at: received.file, to: dest)
-    let thumbnail = await generateThumbnail(for: dest)  // ❌ compile error
+    let thumbnail = await generateThumbnail(for: dest)
     return VideoClip(localURL: dest, thumbnail: thumbnail)
 }
 
-// RIGHT — return immediately, process async afterward
+// ✅ or return immediately and post-process on the stored copy
 // In your view model or drop handler:
 .dropDestination(for: VideoClip.self) { clips, _ in
     for clip in clips {
         timeline.append(clip)
+        let index = timeline.count - 1
+        let source = clip.localURL   // clip.localURL is the COPY — safe to access anytime
         Task {
-            // clip.localURL is the COPY — safe to access anytime
-            let thumbnail = await generateThumbnail(for: clip.localURL)
-            clip.thumbnail = thumbnail
+            let thumbnail = await generateThumbnail(for: source)
+            timeline[index].thumbnail = thumbnail   // mutate the stored element, not a copy
         }
     }
     return true
