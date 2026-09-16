@@ -45,7 +45,7 @@ If no area specified → analyze project and suggest relevant audits
 | grdb-performance | grdb-performance-auditor | Raw SQL string interpolation, missing FK indexes, missing PRAGMA optimize, app-group WAL and suspension defense, INSERT OR REPLACE misused as upsert, observation on WITHOUT ROWID tables |
 | icloud | icloud-auditor | iCloud integration issues, entitlements |
 | storage | storage-auditor | File protection, storage strategies, data management |
-| swiftdata | swiftdata-auditor | @Model struct, missing VersionedSchema models, relationship defaults, migration timing, N+1 |
+| swiftdata | swiftdata-auditor | @Model correctness, missing VersionedSchema models, relationship defaults, migration timing, N+1 |
 | accessibility | accessibility-auditor | VoiceOver labels, Dynamic Type, color contrast, WCAG compliance |
 | spritekit | spritekit-auditor | Physics bitmask issues, draw call waste, node accumulation, action leaks |
 | screenshots | screenshot-validator | Placeholder text, wrong dimensions, debug indicators, broken UI, competitor references |

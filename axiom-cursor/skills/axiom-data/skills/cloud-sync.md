@@ -173,11 +173,14 @@ let container = try ModelContainer(for: Note.self)
 
 ```swift
 // For GRDB, SQLite, or custom databases
-class MySyncManager: CKSyncEngineDelegate {
-    private let engine: CKSyncEngine
+final class MySyncManager: CKSyncEngineDelegate {
     private let database: GRDBDatabase
 
-    func handleEvent(_ event: CKSyncEngine.Event) async {
+    init(database: GRDBDatabase) {
+        self.database = database
+    }
+
+    func handleEvent(_ event: CKSyncEngine.Event, syncEngine: CKSyncEngine) async {
         switch event {
         case .stateUpdate(let update):
             // Persist sync state
@@ -185,8 +188,8 @@ class MySyncManager: CKSyncEngineDelegate {
 
         case .fetchedDatabaseChanges(let changes):
             // Apply changes to local DB
-            for zone in changes.modifications {
-                await handleZoneChanges(zone)
+            for modification in changes.modifications {
+                await handleZoneChanges(modification.zoneID)
             }
 
         case .sentRecordZoneChanges(let sent):
@@ -194,6 +197,25 @@ class MySyncManager: CKSyncEngineDelegate {
             for saved in sent.savedRecords {
                 await markSynced(saved.recordID)
             }
+
+        case .accountChange, .fetchedRecordZoneChanges, .sentDatabaseChanges,
+             .willFetchChanges, .willFetchRecordZoneChanges, .didFetchRecordZoneChanges,
+             .didFetchChanges, .willSendChanges, .didSendChanges:
+            break
+
+        @unknown default:
+            break
+        }
+    }
+
+    func nextRecordZoneChangeBatch(
+        _ context: CKSyncEngine.SendChangesContext,
+        syncEngine: CKSyncEngine
+    ) async -> CKSyncEngine.RecordZoneChangeBatch? {
+        let changes = syncEngine.state.pendingRecordZoneChanges
+            .filter { context.options.scope.contains($0) }
+        return await CKSyncEngine.RecordZoneChangeBatch(pendingChanges: changes) { recordID in
+            await self.record(for: recordID)   // CKRecord to save, or nil to skip
         }
     }
 }
@@ -260,18 +282,24 @@ func viewDidLoad() {
     tableView.reloadData()
 
     Task {
-        await syncEngine.fetchChanges()  // Background update
+        try? await syncEngine.fetchChanges()  // Background update
     }
 }
 ```
 
 ### 3. CloudKit Schema Not Deployed to Production
 
-CloudKit has **separate schemas for Development and Production**. Your app in the App Store can only access the Production environment. If you add record types, fields, or indexes in Development but never deploy them, queries in Production return empty results with no error.
+CloudKit has **separate schemas for Development and Production**, and the production schema is never created for you. Your app in the App Store can only access the Production environment, so anything you added in Development but never deployed fails there:
+
+- An undeployed **record type** → `CKError.unknownItem`
+- An undeployed or non-queryable **field** → `CKError.invalidArguments` ("Field X is not marked queryable")
+- A **subscription** created directly in Production → error at creation
+
+The SDK documents the rejection but not the code that carries it, so treat these as the codes seen in practice rather than a guarantee.
 
 ```
-❌ Works in Xcode/TestFlight (Development) → empty results in App Store (Production)
-   Queries silently return zero results — no CKError, no crash, no clue.
+❌ Works in Xcode/TestFlight (Development) → hard errors in App Store (Production)
+   Queries and saves fail against a schema the server does not have.
 
 ✅ Before every App Store submission:
    1. CloudKit Console → Select container
@@ -289,12 +317,19 @@ try await cloudKit.save(record)
 
 // ✅ CORRECT: Exponential backoff
 func saveWithRetry(_ record: CKRecord, attempts: Int = 3) async throws {
+    // Only these are worth retrying — a conflict or a schema error never is
+    let retryable: Set<CKError.Code> = [
+        .networkUnavailable, .networkFailure, .serviceUnavailable,
+        .requestRateLimited, .zoneBusy, .accountTemporarilyUnavailable
+    ]
+
     for attempt in 0..<attempts {
         do {
             try await cloudKit.save(record)
             return
-        } catch let error as CKError where error.isRetryable {
-            let delay = pow(2.0, Double(attempt))
+        } catch let error as CKError where retryable.contains(error.code) {
+            // Server-supplied wait when it sent one, exponential backoff otherwise
+            let delay = error.retryAfterSeconds ?? pow(2.0, Double(attempt))
             try await Task.sleep(for: .seconds(delay))
         }
     }
@@ -357,19 +392,20 @@ syncEngine.state.add(pendingRecordZoneChanges: allRecords.map { .saveRecord($0.r
 
 // ✅ CORRECT: Batch initial sync
 func performInitialSync(batchSize: Int = 200) async throws {
-    var cursor: CKQueryOperation.Cursor? = nil
+    var page = try await database.records(
+        matching: query, desiredKeys: nil, resultsLimit: batchSize
+    )
 
-    repeat {
-        let (results, nextCursor) = try await database.records(
-            matching: query,
-            resultsLimit: batchSize,
-            desiredKeys: nil,
-            continuationCursor: cursor
-        )
+    while true {
         // Process batch
-        try await localStore.saveBatch(results.compactMap { try? $0.1.get() })
-        cursor = nextCursor
-    } while cursor != nil
+        try await localStore.saveBatch(page.matchResults.compactMap { try? $0.1.get() })
+
+        // records(continuingMatchFrom:) is the cursor form — there is no continuationCursor: label
+        guard let cursor = page.queryCursor else { break }
+        page = try await database.records(
+            continuingMatchFrom: cursor, desiredKeys: nil, resultsLimit: batchSize
+        )
+    }
 }
 ```
 

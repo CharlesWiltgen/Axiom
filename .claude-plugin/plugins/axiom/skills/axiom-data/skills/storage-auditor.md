@@ -81,9 +81,11 @@ Present this map in the output before proceeding.
 
 Run all 5 detection patterns. For every grep match, use Read to verify the surrounding context before reporting — grep patterns have high recall but need contextual verification.
 
+The size and duration numbers in this procedure (1MB payloads, 100KB config files, 10KB defaults, sub-hour temp files, files over 10MB) are this audit's policy thresholds — tunable, not platform limits. Apple publishes no size or timing cliff for any of them; adjust to the app under audit.
+
 ### Pattern 1: Files in tmp/ That Aren't Truly Temporary (CRITICAL/HIGH)
 
-**Issue**: `tmp/` is purged aggressively by iOS — at low-storage events, app updates, sometimes between sessions. Anything that needs to survive past a few minutes is at data-loss risk.
+**Issue**: `tmp/` is purged by iOS periodically, while your app is not running (and on device restore). Anything that needs to survive past a few minutes is at data-loss risk.
 **Search**:
 - `NSTemporaryDirectory`
 - `tmp/` in URL strings or path components
@@ -96,12 +98,12 @@ Run all 5 detection patterns. For every grep match, use Read to verify the surro
 
 ### Pattern 2: Large Files in Documents/ or App Support Without isExcludedFromBackup (HIGH/MEDIUM)
 
-**Issue**: Files >1MB in backed-up locations consume the user's iCloud quota unnecessarily. Re-downloadable or regenerable content should be excluded.
+**Issue**: Files above the size threshold (>1MB) in backed-up locations consume the user's iCloud quota unnecessarily. Re-downloadable or regenerable content should be excluded.
 **Search**:
 - `\.documentDirectory.*write`, `\.applicationSupportDirectory.*write`
 - `URLResourceValues.*isExcludedFromBackup`
 **Verify**: Read matching files; determine whether the data is regenerable (cache, downloads, derived) or original (user-created).
-**Fix**: Set `var values = URLResourceValues(); values.isExcludedFromBackup = true; try url.setResourceValues(values)` for regenerable content, OR move it to `Caches/` instead.
+**Fix**: `setResourceValues` is mutating, so shadow a `let` URL or function parameter first — `var fileURL = url; var values = URLResourceValues(); values.isExcludedFromBackup = true; try fileURL.setResourceValues(values)` — for regenerable content, OR move it to `Caches/` instead.
 
 ### Pattern 3: Missing FileProtectionType (MEDIUM/MEDIUM)
 
@@ -123,13 +125,13 @@ Run all 5 detection patterns. For every grep match, use Read to verify the surro
 
 ### Pattern 5: Large Data in UserDefaults (MEDIUM/MEDIUM)
 
-**Issue**: UserDefaults loads the entire plist on access. Storing >1MB causes launch-time slowdown and memory pressure.
+**Issue**: Every UserDefaults write updates the in-memory domain at once and is flushed to disk asynchronously and coalesced — the whole domain is re-serialized, so frequent large writes cost I/O and memory, and each read decodes the payload. There is no synchronous per-change plist rewrite to look for.
 **Search**:
 - `UserDefaults.*set\(.*Data` — Data writes to UserDefaults
 - `UserDefaults.*set\(.*\[` — collection writes (could be large)
 - `UserDefaults.*set\(.*encoded` — Codable-encoded payloads
 **Verify**: Read matching files; estimate payload size from surrounding code (collection growth, image data, etc.).
-**Fix**: For >1MB: persist as a file in Application Support or use SwiftData / GRDB. UserDefaults should hold only small scalar settings.
+**Fix**: For payloads over the threshold: persist as a file in Application Support or use SwiftData / GRDB. UserDefaults should hold only small scalar settings.
 
 ## Phase 3: Reason About Storage Completeness
 
@@ -143,7 +145,7 @@ Using the Storage Map from Phase 1 and your domain knowledge, check for what's *
 | Are temp files actually cleaned up (every NSTemporaryDirectory write has a corresponding removal)? | Temp accumulation between purges | Short-term `tmp/` can still accumulate gigabytes between OS-level purge events |
 | When a model/entity is deleted, are its associated files (images, attachments, external-storage blobs) also removed? | Orphan files | App container grows indefinitely; backup size compounds |
 | If both iCloud Drive AND a local Documents/ path exist, is there a clear policy on which one to use? | Confusion between containers | Both directories may be named `Documents/` but live in different containers; users see split state |
-| Is there a "low storage" handler that gracefully degrades (stops downloads, evicts cache)? | Hard failure on full disk | Write failures with `NSPOSIXErrorDomain` 28 surface as crashes or silent data loss |
+| Is there a "low storage" handler that gracefully degrades (stops downloads, evicts cache)? | Hard failure on full disk | Write failures surface as `CocoaError.fileWriteOutOfSpace` (640) with `NSPOSIXErrorDomain` 28 underneath, or as a crash or silent data loss if unhandled |
 | Do file-protection levels match data sensitivity (tokens=`.complete`, app data=`.completeUntilFirstUserAuthentication`, public cache=`.none`)? | Misaligned protection | Either over-protected (write fails on locked device for a non-secret) or under-protected (sensitive data readable from backups) |
 | Is there a migration path when storage layout changes between versions (renamed dirs, moved files)? | Data orphaned by version upgrade | Users on the old version have files at old path; new version doesn't find them |
 | For files in iCloud Drive, is there a fallback path when the user is signed out of iCloud? | Hard dependency on iCloud | Sign-out makes the data invisible; app may crash or lose features |
@@ -159,10 +161,10 @@ Bump severity for these combinations:
 | Files in tmp/ (Pattern 1) | Critical user data (created docs, in-progress edits) | Guaranteed data loss on next OS purge | CRITICAL |
 | Missing isExcludedFromBackup (Pattern 2) | Auto-grow cache (downloads, generated thumbnails) | User's iCloud quota silently filled, possibly to the point of failed device backups | HIGH |
 | Sensitive data in files (Pattern 3) | Missing FileProtection or `.none` | Token / credential readable from device backup or jailbroken inspection | HIGH |
-| Tokens written to disk (any location) | No Keychain alternative | Even with `.complete` protection, the file is in backup; Keychain items are not | HIGH |
+| Tokens written to disk (any location) | No Keychain alternative | Even with `.complete` protection the file rides in the backup; a Keychain item is encrypted with the backup key, and only `…ThisDeviceOnly` accessibility keeps it off a restored device | HIGH |
 | Wrong location (Pattern 4) | Extension or widget needs to read it | Silent feature failure — extension shows nothing because it can't see the file | HIGH |
-| Large UserDefaults (Pattern 5) | Frequent updates (per-keystroke, per-scroll) | Compounding launch slowdown — UserDefaults flushed on every change, full plist rewritten | MEDIUM |
-| Caches/ unbounded growth | Low-storage device | Eviction happens at OS-determined time, app loses pending state mid-operation | MEDIUM |
+| Large UserDefaults (Pattern 5) | Frequent updates (per-keystroke, per-scroll) | Compounding I/O — every write re-serializes the defaults domain and every read decodes the payload | MEDIUM |
+| Caches/ unbounded growth | Low-storage device | Eviction happens only while the app is not running — the next launch starts with an empty cache and must rebuild it, and anything cached that was not regenerable is gone | MEDIUM |
 | iCloud Drive Documents/ | Same name as local Documents/ in code | Code path confusion — write to local, read from iCloud, data appears missing | MEDIUM |
 | Orphan blob files (no cleanup on delete) | Many delete operations over time | App container grows indefinitely, eventually causing low-storage symptoms | MEDIUM |
 

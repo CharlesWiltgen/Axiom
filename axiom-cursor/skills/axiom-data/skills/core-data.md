@@ -38,10 +38,10 @@ If ANY of these appear, STOP:
 ```swift
 import CoreData
 
-class CoreDataStack {
+final class CoreDataStack: Sendable {
     static let shared = CoreDataStack()
 
-    lazy var persistentContainer: NSPersistentContainer = {
+    let persistentContainer: NSPersistentContainer = {
         let container = NSPersistentContainer(name: "Model")
 
         // Configure for CloudKit if needed
@@ -119,13 +119,14 @@ class CloudKitStack {
 
 ```swift
 // ❌ WRONG: Passing object across threads
-let user = viewContext.fetch(...)  // Main thread
+let user = try viewContext.fetch(User.fetchRequest()).first!  // Main thread
+let userID = user.objectID
+
 Task.detached {
-    print(user.name)  // CRASH: Wrong thread
+    print(user.name)  // Silent by default — a race, not a crash
 }
 
 // ✅ CORRECT: Pass objectID, fetch on target context
-let userID = user.objectID
 // `Task.detached` here illustrates a real off-main hop; in production code
 // `newBackgroundContext().perform { ... }` is the canonical Core Data form
 // (it implicitly runs the closure on the context's private queue).
@@ -135,6 +136,8 @@ Task.detached {
     print(user.name)  // Safe
 }
 ```
+
+Off-queue access is not self-policing: it compiles, and it usually returns the right value. Launch with `-com.apple.CoreData.ConcurrencyDebug 1` to turn it into an immediate trap in `_PFAssertSafeMultiThreadedAccess_` instead of a silent race.
 
 ### Background Processing
 
@@ -306,7 +309,7 @@ description.shouldInferMappingModelAutomatically = true
 
 **MANDATORY before shipping**:
 
-1. ✓ Test on REAL DEVICE (simulator deletes DB on rebuild)
+1. ✓ Test on REAL DEVICE with a copy of production data (a reset simulator starts from an empty store, so the upgrade path never runs)
 2. ✓ Install old version, create data
 3. ✓ Install new version over it
 4. ✓ Verify all data accessible
@@ -322,7 +325,7 @@ class DataManager {
     let context = CoreDataStack.shared.viewContext
 
     func importInBackground() {
-        // Using main context on background = crash
+        // Main context used off the main queue — not a crash, a silent race
         for item in largeDataset {
             let entity = Entity(context: context)
         }
@@ -359,11 +362,12 @@ var body: some View {
 ### 3. Ignoring Merge Policy
 
 ```swift
-// ❌ WRONG: No merge policy (conflicts crash)
+// ❌ WRONG: Leaving the default NSErrorMergePolicy — a conflict fails the save
+// and hands you back the object IDs to reconcile yourself
 let context = container.viewContext
 
-// ✅ CORRECT: Define merge behavior
-context.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+// ✅ CORRECT: Choose a resolution instead of surfacing the error
+context.mergePolicy = NSMergePolicy.mergeByPropertyObjectTrump
 context.automaticallyMergesChangesFromParent = true
 ```
 
@@ -390,13 +394,13 @@ context.automaticallyMergesChangesFromParent = true
 
 **Situation**: Schema change tested only in simulator.
 
-**Risk**: Simulator deletes database on rebuild. Real devices keep persistent data and crash.
+**Risk**: A reset simulator starts from an empty store, so the old→new migration never runs. Real devices keep the existing store and crash on the mismatch.
 
 **Response**: "MANDATORY: Test on real device with real data. 15 minutes now prevents production crash."
 
 ## tvOS
 
-**CoreData + CloudKit is dangerous on tvOS.** CloudKit metadata causes significant space inflation in the local store, and tvOS has no persistent local storage — the system deletes Caches (including Application Support) at any time. The inflated store plus random deletion is a worst-case combination.
+**CoreData + CloudKit is dangerous on tvOS.** CloudKit metadata causes significant space inflation in the local store, and no tvOS directory is dependable once your app is not running — the system can delete Application Support, Caches and tmp alike. The inflated store plus purgeable storage is a worst-case combination.
 
 **Recommendation**: Use SQLiteData with CloudKit SyncEngine instead for tvOS data persistence. See axiom-swift (skills/tvos.md) for full tvOS storage constraints.
 

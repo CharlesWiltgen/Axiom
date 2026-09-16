@@ -9,7 +9,6 @@ Type-safe SQLite persistence using SQLiteData (pointfreeco/sqlite-data) by Point
 
 **For advanced patterns** (CTEs, views, custom aggregates, schema composition), see the `skills/sqlitedata-ref.md` reference skill.
 
-**Requires:** iOS 17+, Swift 6 strict concurrency
 **License:** MIT
 
 ## When to Use SQLiteData
@@ -38,10 +37,10 @@ Type-safe SQLite persistence using SQLiteData (pointfreeco/sqlite-data) by Point
 ```swift
 // MODEL
 @Table nonisolated struct Item: Identifiable {
-    let id: UUID                    // First let = auto primary key
+    let id: UUID                    // Property named `id` = auto primary key
     var title = ""                  // Default = non-nullable
     var notes: String?              // Optional = nullable
-    @Column(as: Color.Hex.self)
+    @Column(as: Color.HexRepresentation.self)
     var color: Color = .blue        // Custom representation
     @Ephemeral var isSelected = false  // Not persisted
 }
@@ -94,7 +93,7 @@ Item.limit(10).offset(20)                  // Pagination
 
 // CLOUDKIT (v1.2-1.4+)
 prepareDependencies {
-    $0.defaultSyncEngine = try SyncEngine(
+    $0.defaultSyncEngine = try! SyncEngine(
         for: $0.defaultDatabase,
         tables: Item.self
     )
@@ -125,26 +124,18 @@ syncEngine.isSynchronizing     // either sending or fetching
 .where { $0.status.eq(#bind(.completed)) }
 ```
 
-### ❌ Missing `#bind` in update assignments (StructuredQueries 0.31+)
+### ❌ Missing `#bind` on optional and enum columns (StructuredQueries 0.31+)
 ```swift
-// WRONG — compiler error in StructuredQueries 0.31+
-Item.find(id).update { $0.title = "New" }.execute(db)
+// WRONG — compiler error in StructuredQueries 0.31+ (`notes` is `String?`)
+try Item.find(id).update { $0.notes = "New" }.execute(db)
 
-// CORRECT — wrap literal values with #bind
-Item.find(id).update { $0.title = #bind("New") }.execute(db)
+// CORRECT — wrap those values with #bind
+try Item.find(id).update { $0.notes = #bind("New") }.execute(db)
 
-// NOTE: Compound operators (+=, -=) don't need #bind — they auto-bind
-Item.find(id).update { $0.title += "!" }.execute(db)  // OK
-```
-
-### ❌ Wrong update order
-```swift
-// WRONG — .update before .where
-Item.update { $0.title = #bind("X") }.where { $0.id.eq(#bind(id)) }
-
-// CORRECT — .find() for single, .where() before .update() for bulk
-Item.find(id).update { $0.title = #bind("X") }.execute(db)
-Item.where(\.isOld).update { $0.archived = #bind(true) }.execute(db)
+// NOTE: a non-optional String/Int/Bool column still promotes a bare literal,
+// and compound operators (+=, -=) auto-bind either way
+try Item.find(id).update { $0.title = "New" }.execute(db)  // OK
+try Item.find(id).update { $0.title += "!" }.execute(db)   // OK
 ```
 
 ### ❌ Instance methods for insert
@@ -157,23 +148,17 @@ try item.insert(db)
 try Item.insert { Item.Draft(title: "Test") }.execute(db)
 ```
 
-### ❌ Missing `nonisolated`
-```swift
-// WRONG — Swift 6 concurrency warning
-@Table struct Item { ... }
-
-// CORRECT
-@Table nonisolated struct Item { ... }
-```
-
 ### ❌ Awaiting inside write block
 ```swift
-// WRONG — write block is synchronous
-try await database.write { db in ... }
+// WRONG — an await inside the closure makes the closure async,
+// which `write` will not accept
+try await database.write { db in
+    try await Item.insert { Item.Draft(title: "X") }.execute(db)
+}
 
-// CORRECT — no await inside the block
-try database.write { db in
-    try Item.insert { ... }.execute(db)
+// CORRECT — await the write itself; the closure stays synchronous
+try await database.write { db in
+    try Item.insert { Item.Draft(title: "X") }.execute(db)
 }
 ```
 
@@ -201,7 +186,7 @@ import SQLiteData
 
 @Table
 nonisolated struct Item: Identifiable {
-    let id: UUID           // First `let` = auto primary key
+    let id: UUID           // Property named `id` = auto primary key
     var title = ""
     var isInStock = true
     var notes = ""
@@ -210,8 +195,8 @@ nonisolated struct Item: Identifiable {
 
 **Key patterns:**
 - Use `struct`, not `class` (value types)
-- Add `nonisolated` for Swift 6 concurrency
-- First `let` property is automatically the primary key
+- `nonisolated` on the type is conventional (upstream's demo models spell it) but not required — the macro marks its generated members `nonisolated` itself
+- The property named `id` is automatically the primary key; a key on any other column needs `@Column(primaryKey: true)`
 - Use defaults (`= ""`, `= true`) for non-nullable columns
 - Optional properties (`String?`) map to nullable SQL columns
 
@@ -267,29 +252,28 @@ nonisolated struct Attendee: Hashable, Identifiable {
 
 ```swift
 // ❌ Anti-pattern: Fetch all, filter in Swift
-let allReminders = try database.read { try Reminder.all.fetch($0) }
+let allReminders = try database.read { try Reminder.all.fetchAll($0) }
 let filtered = allReminders.filter { $0.remindersListID == listID }
 
 // ✅ Filter at database level
-let filtered = try database.read {
-    try Reminder.all
-        .filter { $0.remindersListID.eq(#bind(listID)) }
-        .fetch($0)
+let dbFiltered = try database.read {
+    try Reminder.where { $0.remindersListID.eq(#bind(listID)) }
+        .fetchAll($0)
 }
 
 // ✅ Join across tables with filtering
 let remindersWithList = try database.read {
-    try Reminder.all
+    try Reminder
         .join(RemindersList.all) { $0.remindersListID.eq($1.id) }
-        .filter { $1.name.eq(#bind("Shopping")) }
-        .fetch($0)
+        .where { $1.title.eq(#bind("Shopping")) }
+        .fetchAll($0)
 }
 
 // ✅ Left join (include reminders even if no list)
 let allWithOptionalList = try database.read {
-    try Reminder.all
+    try Reminder
         .leftJoin(RemindersList.all) { $0.remindersListID.eq($1.id) }
-        .fetch($0)
+        .fetchAll($0)
 }
 ```
 
@@ -304,7 +288,7 @@ Mark properties that exist in Swift but not in the database:
 nonisolated struct Item: Identifiable {
     let id: UUID
     var title = ""
-    var price: Decimal = 0
+    var price: Double = 0
 
     @Ephemeral
     var isSelected = false  // Not stored in database
@@ -322,7 +306,7 @@ nonisolated struct Item: Identifiable {
 - Transient flags for business logic
 - Default values for properties not yet in schema
 
-**Important:** `@Ephemeral` properties must have default values since they won't be populated from the database.
+**Important:** `@Ephemeral` properties are never read from the database, so give them a default (or set them in the memberwise init) — nothing else will populate them.
 
 ---
 
@@ -351,7 +335,7 @@ func appDatabase() throws -> any DatabaseWriter {
         try #sql(
             """
             CREATE TABLE "items" (
-                "id" TEXT PRIMARY KEY NOT NULL DEFAULT (uuid()),
+                "id" TEXT PRIMARY KEY NOT NULL ON CONFLICT REPLACE DEFAULT (uuid()),
                 "title" TEXT NOT NULL DEFAULT '',
                 "isInStock" INTEGER NOT NULL DEFAULT 1,
                 "notes" TEXT NOT NULL DEFAULT ''
@@ -366,22 +350,13 @@ func appDatabase() throws -> any DatabaseWriter {
 }
 ```
 
+`ON CONFLICT REPLACE` on `id` is what lets an insert leave it out: a `Draft` with no id binds `NULL`, and SQLite substitutes the column's `DEFAULT (uuid())` instead of failing the `NOT NULL` check. Drop the clause and every id-less insert throws `NOT NULL constraint failed`.
+
 ### Register in Dependencies
 
+`\.defaultDatabase` is the library's own dependency, and its query machinery (`@FetchAll`, `@FetchOne`, `@Fetch`) reads it. Do **not** redeclare it with your own `DependencyKey`: the shadowing key is the one `prepareDependencies` writes, while every property wrapper keeps reading the library's — whose `testValue` is a blank in-memory queue — so the app observes an empty database.
+
 ```swift
-extension DependencyValues {
-    var defaultDatabase: any DatabaseWriter {
-        get { self[DefaultDatabaseKey.self] }
-        set { self[DefaultDatabaseKey.self] = newValue }
-    }
-}
-
-private enum DefaultDatabaseKey: DependencyKey {
-    static let liveValue: any DatabaseWriter = {
-        try! appDatabase()
-    }()
-}
-
 // In app init or @main
 prepareDependencies {
     $0.defaultDatabase = try! appDatabase()
@@ -445,16 +420,16 @@ init(id: Item.ID) { _item = FetchOne(Item.find(id)) }
 
 Three separate causes produce the identical symptom, and upgrading fixes only the first.
 
-**Initial row (fixed in 1.10.0).** Before 1.10.0 the seeded form ignored the value's identity and observed the *first row of the table*. A pair of `PrimaryKeyedTable`-constrained inits now build `.find(Value.PrimaryKey(queryOutput: wrappedValue.primaryKey))`, so the first row rendered is correct.
+**Initial row (1.10.0+, non-optional value types only).** Before 1.10.0 the seeded form ignored the value's identity and observed the *first row of the table*. `FetchOne.swift` now has four `init(wrappedValue:database:)` overloads, and exactly one of them — the `PrimaryKeyedTable & QueryRepresentable` one added in 1.10.0 — builds `.find(Value.PrimaryKey(queryOutput: wrappedValue.primaryKey))`, so a non-optional `FetchOne(wrappedValue:)` on a keyed table renders the seeded row.
 
-**Not primary-keyed at all (any version).** The seeded form has two overloads. The `PrimaryKeyedTable` one builds `.find(...)`; the plain `Table` one builds `Value.all.selectStar().asSelect().limit(1)` — **no `WHERE`**, so it renders whatever row SQLite yields first. Overload resolution picks silently. `@Table` conforms `PrimaryKeyedTable` only when it found a key: `isPrimaryKey = primaryKey == nil && identifier.text == "id"`. A table whose key is `reminderID` or `uuid` gets `Table` only and falls to the `LIMIT 1` overload on **every** version. Check it with a one-line probe:
+**Everything else is `LIMIT 1` (any version).** The other three inits — including the sibling constrained to `PrimaryKeyedTable & _OptionalProtocol` that `@FetchOne var item: Item?` selects — build `Value.all.selectStar().asSelect().limit(1)` with **no `WHERE`**, so they render whatever row SQLite yields first. Overload resolution picks silently. `@Table` conforms `PrimaryKeyedTable` only when it found a key: `isPrimaryKey = primaryKey == nil && identifier.text == "id"`. A table whose key is `reminderID` or `uuid` gets `Table` only and lands on a `LIMIT 1` overload on **every** version — and so does an optional value type, whatever its key. Check it with a one-line probe:
 
 ```swift
 func _requiresPrimaryKey<T: PrimaryKeyedTable>(_: T.Type) {}
 _requiresPrimaryKey(Reminder.self)      // compile error = not primary-keyed
 ```
 
-Fix the model — rename the key to `id` or mark it `@Column(primaryKey: true)` — since without the conformance you also lose `find`, sync metadata, and CloudKit eligibility (`SyncEngine` requires `each T: PrimaryKeyedTable`).
+Fix the model — rename the key to `id` or mark it `@Column(primaryKey: true)` — since without the conformance you also lose `find`, sync metadata, and CloudKit eligibility (`SyncEngine` requires `each T: PrimaryKeyedTable`). Renaming the key does not rescue the optional case: that overload has no `.find` to fall back to, so a seeded `@FetchOne var item: Item?` stays a placeholder at every version. Seed it with the statement instead.
 
 **Re-pointing (still broken at 1.12.0).** Those two inits assign `sharedReader` directly and never call `setFetchKeyID`, which every statement-taking init does. `FetchBox.update(from:)` opens with `guard let otherFetchKeyID = other.fetchKeyID else { return }`, so with a nil key it bails before adopting the new query. When SwiftUI *reuses* the view's storage rather than creating fresh identity, `init` runs again and builds a new box, but the persisted box keeps observing the original row — live, correct data, wrong record.
 
@@ -504,7 +479,7 @@ Use `.task` to automatically cancel observation when view disappears:
 
 ```swift
 struct ItemsList: View {
-    @Fetch(Item.all, animation: .default)
+    @FetchAll(Item.all, animation: .default)
     private var items = [Item]()
 
     @State var searchQuery = ""
@@ -733,10 +708,12 @@ doUpdate: { row, excluded in
 
 ```swift
 doUpdate: { row, excluded in
-    row.name = excluded.name.ifnull(row.name)
-    row.notes = excluded.notes.ifnull(row.notes)
+    row.notes = excluded.notes.ifnull(row.notes)   // `notes` is nullable
+    row.updatedAt = excluded.updatedAt
 }
 ```
+
+`ifnull(_:)` is declared on optional expressions only, so the guard applies to nullable columns. On a `NOT NULL` column `excluded.x` is not an optional expression, the call fails overload resolution, and the guard would be a no-op anyway — neither side can be NULL.
 
 ##### Last-Write-Wins (Raw SQL)
 
@@ -782,7 +759,7 @@ try database.write { db in
     try Item.insert {
         ($0.title, $0.isInStock)
     } values: {
-        items.map { ($0.title, $0.isInStock) }
+        for item in items { (item.title, item.isInStock) }
     }
     .execute(db)
 }
@@ -946,10 +923,17 @@ import CloudKit
 // Get sync metadata for a record
 let metadata = try SyncMetadata.find(item.syncMetadataID).fetchOne(db)
 
-// Join items with their sync metadata
+// Join items with their sync metadata — a tuple is not a QueryExpression,
+// so declare a @Selection row for the pair
+@Selection
+struct ItemWithMetadata {
+    let item: Item
+    let metadata: SyncMetadata?   // leftJoin — the right side can be NULL
+}
+
 let itemsWithSync = try Item.all
     .leftJoin(SyncMetadata.all) { $0.syncMetadataID.eq($1.id) }
-    .select { (item: $0, metadata: $1) }
+    .select { ItemWithMetadata.Columns(item: $0, metadata: $1) }
     .fetchAll(db)
 
 // Check if record is shared
@@ -963,17 +947,16 @@ let sharedItems = try Item.all
 
 `CloudSharingView` presents the system share sheet for a record. Since 1.5.0 it is a plain SwiftUI `View` rather than a `UIViewControllerRepresentable`, branching on `@Dependency(\.context)`: live contexts get the real controller, **previews and tests get a SwiftUI mock** showing the thumbnail, title, and participants. Sharing UI is therefore previewable — it no longer blanks out or crashes the canvas.
 
-Since 1.11.1, share operations resolve the CloudKit database **per record** (`container.database(for: recordID)`) instead of assuming `privateCloudDatabase`. That is what makes a record someone else shared with you editable; before, writes against a shared record were aimed at the wrong database. If sync metadata is missing, the error now tells you to call `syncEngine.sendChanges()`.
+Since 1.11.1, share operations resolve the CloudKit database **per record** (`container.database(for: recordID)`) instead of assuming `privateCloudDatabase`. That is what makes a record someone else shared with you editable; before, writes against a shared record were aimed at the wrong database. If sync metadata is missing, the error tells you to call `syncEngine.sendChanges()`.
 
 ### Migration Helpers
 
-Migrate primary keys when switching sync strategies:
+Migrate primary keys when switching sync strategies. It is a **static** method taking the `Database` — call it from a migration; there is no instance or async form:
 
 ```swift
-try await syncEngine.migratePrimaryKeys(
-    from: OldItem.self,
-    to: NewItem.self
-)
+migrator.registerMigration("Migrate primary keys") { db in
+    try SyncEngine.migratePrimaryKeys(db, tables: NewItem.self)
+}
 ```
 
 ---
@@ -986,7 +969,7 @@ try await syncEngine.migratePrimaryKeys(
 prepareDependencies { $0.defaultDatabase = try! defaultDatabase() }
 ```
 
-(The library's own docstring says previews get an in-memory database; the code has said `temporaryDatabasePool` for both `.preview` and `.test` since 1.11.1. Nothing depends on it being in-memory, but don't assume the file is absent.)
+(The library's own docstring says previews get an in-memory database; the code has provisioned an on-disk temporary pool for both `.preview` and `.test` since 1.5.0 — the `temporaryDatabasePool` helper itself dates from 1.11.1. Nothing depends on it being in-memory, but don't assume the file is absent.)
 
 **The sync engine does not auto-start under test (since 1.5.1).** Any test that exercises synchronization must start it explicitly:
 
@@ -1037,7 +1020,7 @@ See `skills/grdb.md` for raw SQL patterns, ValueObservation, and DatabaseMigrato
 
 ## tvOS
 
-SQLiteData with CloudKit SyncEngine is the **recommended tvOS data solution**. tvOS has no persistent local storage — the system deletes Caches (including Application Support) under storage pressure. With SyncEngine, iCloud is your persistent store and the local database is just a cache that rebuilds automatically after deletion. See axiom-swift (skills/tvos.md) for full tvOS storage constraints.
+SQLiteData with CloudKit SyncEngine is the **recommended tvOS data solution**. tvOS has no guaranteed-persistent local storage — `Documents`, `Caches`, and `Application Support` are separate directories that all exist, and none of them is reliable once the app is not running. With SyncEngine, iCloud is your persistent store and the local database is just a cache that rebuilds automatically after deletion. See axiom-swift (skills/tvos.md) for full tvOS storage constraints.
 
 ---
 
@@ -1049,5 +1032,5 @@ SQLiteData with CloudKit SyncEngine is the **recommended tvOS data solution**. t
 
 ---
 
-**Targets:** iOS 17+, Swift 6
-**Framework:** SQLiteData 1.12+ (StructuredQueries 0.39+, GRDB 7.11+)
+**Targets:** Axiom floor — iOS 18+/macOS 15+
+**Framework:** SQLiteData 1.12+ (StructuredQueries 0.39.1+, GRDB 7.6+)

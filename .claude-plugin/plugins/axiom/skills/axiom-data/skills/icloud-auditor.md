@@ -35,7 +35,7 @@ Grep for:
   - `NSFileCoordinator` — coordinated I/O on ubiquitous files
   - `NSUbiquitousKeyValueStore` — small-data KV sync
   - `cloudKitDatabase:` — SwiftData + CloudKit binding
-  - `iCloud.*entitlement`, `com.apple.developer.icloud-services` — entitlement strings
+  - `com\.apple\.developer\.icloud-`, `com\.apple\.developer\.ubiquity-` — entitlement keys
 ```
 
 ### Step 2: Identify Account & Availability Surface
@@ -145,18 +145,18 @@ Run all 8 detection patterns. For every grep match, use Read to verify the surro
 **Issue**: Each request the engine sends is capped at **250 records (saves + deletes combined)**. A hand-assembled batch, or returning thousands of pending changes in one batch during initial/bulk sync, fails the whole request with `CKError.limitExceeded`.
 **Search**:
 - `nextRecordZoneChangeBatch`
-- `RecordZoneChangeBatch(`
+- `RecordZoneChangeBatch\(`
 - `pendingRecordZoneChanges`
 **Verify**: Read the `nextRecordZoneChangeBatch(_:syncEngine:)` implementation. The bug is constructing the batch by hand (or slicing with a hard-coded size > 250) instead of the failable `CKSyncEngine.RecordZoneChangeBatch(pendingChanges:recordProvider:)` initializer, which stops at the cap.
 **Fix**: `return await CKSyncEngine.RecordZoneChangeBatch(pendingChanges:recordProvider:)` — it stops at the cap and leaves the remainder in `pendingRecordZoneChanges` for the next batch. Treat `.limitExceeded` as retry-with-smaller-batch. (Server-side limit; applies on every CKSyncEngine version, iOS 17+.)
 
 ### Pattern 8: Persisted or Shipped ExportedAssetID (HIGH/LOW) `OS27`
 
-**Issue**: `CKAsset.ExportedAssetID` (the Photos → CloudKit server-copy path) is `Codable` but **device-bound and expires in days**. Encoding it to disk, a network payload, or another device breaks silently — the later `CKAsset(importing:)` fails with `CKError.assetNotAvailable`.
+**Issue**: `CKAsset.ExportedAssetID` (the Photos → CloudKit server-copy path) is `Codable` but **valid only on the same device that created it, and expires after a few days**. Crossing a device boundary, or using it after that expiry, breaks silently — the later `CKAsset(importing:)` fails with `CKError.assetNotAvailable`. Persisting it is fragile for exactly that reason.
 **Search**:
-- `CKAsset(importing:`
+- `CKAsset\(importing:`
 - `ExportedAssetID`
-- `exportedAssetID(`
+- `exportedAssetID\(`
 **Verify**: Read the surrounding code. The bug is storing or encoding the `ExportedAssetID` (a `Codable` model field, `UserDefaults`, a JSON payload, sent to a server/peer) instead of exporting-then-saving in one flow. Also flag any read of `fileURL` on an imported asset — it is always `nil`.
 **Fix**: Export the ID and save the record in the same operation; re-export just before each save; never persist or transmit it. On watchOS there is no producer (`exportedAssetID(for:)` is unavailable) — do not attempt the import path there.
 

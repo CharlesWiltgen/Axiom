@@ -27,9 +27,9 @@ If you see ANY of these:
 
 **NEVER set `isExcludedFromBackup = true` on anything the user created or can't get back.** Exclusion means it is NOT in iCloud/iTunes backups. If there is also no cloud sync, the data is gone forever on device replacement, restore, or "Erase All Content". Exclusion is correct ONLY for re-downloadable/regenerable content (caches, downloaded media). The reflex of "exclude it to shrink the backup" is how apps silently destroy user data.
 
-### Red Flag — Caches are purged at ANY time, even while your app isn't running
+### Red Flag — Caches are purged while your app is not running
 
-The system can evict `Caches/` mid-session or between launches — there is no "safe" window. A `Caches/` read that assumes the file is present is a latent crash/blank-screen bug. Every `Caches/` (and `tmp/`) read MUST have a cache-miss path that regenerates or re-downloads. If you can't tolerate a miss, the data does not belong in `Caches/`.
+The system deletes `Caches/` contents when the device runs low on space and your app is not running — it never happens while your app is running, so you never observe it, the file is simply gone at the next launch. A `Caches/` read that assumes the file is present is a latent crash/blank-screen bug. Every `Caches/` (and `tmp/`) read MUST have a cache-miss path that regenerates or re-downloads. If you can't tolerate a miss, the data does not belong in `Caches/`.
 
 ## Mandatory First Steps
 
@@ -144,7 +144,7 @@ App backup > 500 MB?
 
 ├─ Check Documents directory size
 │   └─ Large files (>10 MB each)?
-│       ├─ Can they be re-downloaded? → Move to Caches + isExcludedFromBackup
+│       ├─ Can they be re-downloaded? → Move to Caches/ (auto-excluded from backup)
 │       └─ User-created? → Keep in Documents (warn user if >1 GB)
 │
 ├─ Check Application Support size
@@ -170,9 +170,9 @@ App backup > 500 MB?
 
 ### Pattern 1: Files in tmp/ Disappear
 
-**Symptom**: Temp files missing after restart or even during app lifecycle
+**Symptom**: Temp files missing after restart or between launches
 
-**Cause**: tmp/ is purged aggressively by system
+**Cause**: the system purges tmp/ while the app is not running
 
 **Fix**:
 ```swift
@@ -251,9 +251,16 @@ func downloadPodcast(url: URL) async throws {
         in: .userDomainMask
     )[0]
 
-    let podcastURL = appSupportURL
+    var podcastURL = appSupportURL
         .appendingPathComponent("Podcasts")
         .appendingPathComponent(url.lastPathComponent)
+
+    // Application Support and the Podcasts directory do not exist until you create them —
+    // without this the write below throws NSFileNoSuchFileError
+    try FileManager.default.createDirectory(
+        at: podcastURL.deletingLastPathComponent(),
+        withIntermediateDirectories: true
+    )
 
     // Download
     let (data, _) = try await URLSession.shared.data(from: url)
@@ -270,20 +277,20 @@ func downloadPodcast(url: URL) async throws {
 
 **Symptom**: A file marked `isExcludedFromBackup` reappears in backups after the next save, and the backup grows again.
 
-**Cause**: `isExcludedFromBackup` is a property of the file's inode, not its path. An atomic write (`.atomic` writes to a temp file, then renames over the original) or any `replaceItemAt` produces a NEW inode — the flag does not carry over. You must re-apply it every time you replace the file.
+**Cause**: `isExcludedFromBackup` belongs to the file itself (the system stores it as an extended attribute on the file), not to the path. An atomic write (`.atomic` writes a temp file, then renames it over the original) installs a brand-new file, and the new file starts with no exclusion flag — so you must re-apply it. `FileManager.replaceItemAt` is the exception: it copies the original item's metadata, including the exclusion flag, onto the replacement, unless you pass `.usingNewMetadataOnly`. A plain `write(to:)` truncates in place and also keeps the flag.
 
 **Fix**:
 ```swift
-// Re-apply AFTER every atomic write / replacement
-try data.write(to: cacheURL, options: .atomic)  // new inode → flag dropped
+// Re-apply AFTER the write — .atomic installs a new file, which carries no flags
+try data.write(to: cacheURL, options: .atomic)
+var url = cacheURL                                   // setResourceValues is mutating
 var values = URLResourceValues()
 values.isExcludedFromBackup = true
-try cacheURL.setResourceValues(values)           // re-apply on the new file
+try url.setResourceValues(values)
 
-// ❌ WRONG: setting the flag on a stale path-string URL or before the write
-// URL(fileURLWithPath:) on a path string still resolves to a URL, but if you
-// captured it before the rename you are tagging the OLD inode that no longer exists.
-// Always re-resolve and re-apply on the live file URL after the write completes.
+// ✅ replaceItemAt needs no re-apply: it carries the original's metadata, including
+// the exclusion flag, onto the replacement. Only .usingNewMetadataOnly drops it.
+// ❌ WRONG: setting the flag once when the file is created, then rewriting it atomically.
 ```
 
 ### Pattern 6: Zero-Byte File From a Failed Write
@@ -306,8 +313,10 @@ try data.write(to: fileURL, options: .atomic)
 
 **Fix**: Check `volumeAvailableCapacityForImportantUsage` (purgeable-aware → the realistic number iOS will actually give you), AND still handle the out-of-space error, because capacity can change between check and write.
 ```swift
-func canStore(bytes needed: Int64, at url: URL) throws -> Bool {
-    let values = try url.resourceValues(
+func canStore(bytes needed: Int64, at directory: URL) throws -> Bool {
+    // Query the destination directory, not the file you have not written yet —
+    // a file URL that does not exist throws NSFileReadNoSuchFileError (Cocoa 260)
+    let values = try directory.resourceValues(
         forKeys: [.volumeAvailableCapacityForImportantUsageKey]
     )
     guard let available = values.volumeAvailableCapacityForImportantUsage

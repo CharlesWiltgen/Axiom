@@ -9,7 +9,6 @@ Advanced query patterns and schema composition techniques for [SQLiteData](https
 
 **This reference covers** advanced querying, schema composition, views, and custom aggregates.
 
-**Requires** iOS 17+, Swift 6 strict concurrency
 **Framework** SQLiteData 1.12+
 
 ---
@@ -51,7 +50,7 @@ nonisolated struct Reminder: Identifiable {
 
 ```sql
 CREATE TABLE "remindersLists" (
-    "id" TEXT PRIMARY KEY NOT NULL DEFAULT (uuid()),
+    "id" TEXT PRIMARY KEY NOT NULL ON CONFLICT REPLACE DEFAULT (uuid()),
     "title" TEXT NOT NULL DEFAULT '',
     "createdAt" TEXT NOT NULL,
     "updatedAt" TEXT
@@ -103,6 +102,18 @@ let results = try Reminder
 
 Model polymorphic data using `@CasePathable @Selection` enums — a value-type alternative to class inheritance:
 
+**Prerequisite: the `CasePaths` package trait.** Without it, `@Selection` on an enum does not compile (`'@Selection' can only be applied to enum types when the 'CasePaths' package trait is enabled`) and the enum is not representable as a column:
+
+```diff
+ .package(
+   url: "https://github.com/pointfreeco/sqlite-data",
+   from: "1.12.0",
++  traits: ["CasePaths"]
+ ),
+```
+
+On toolchains earlier than Swift 6.3 the trait also needs `swift-case-paths` declared explicitly in your `Package.swift` — a SwiftPM bug that drops dependencies introduced by a trait.
+
 ```swift
 import CasePaths
 
@@ -120,7 +131,7 @@ nonisolated struct Attachment: Identifiable {
 }
 ```
 
-**Note:** `@CasePathable` is required and comes from Point-Free's [CasePaths](https://github.com/pointfreeco/swift-case-paths) library.
+**Note:** `@CasePathable` comes from Point-Free's [CasePaths](https://github.com/pointfreeco/swift-case-paths) library and is optional — the package trait is what is required, and upstream's own enum example carries no attribute. Add it when you also want case paths (`\.link`, `\.note`) for the cases.
 
 #### SQL Schema for Enum Tables
 
@@ -128,7 +139,7 @@ Flatten all cases into nullable columns:
 
 ```sql
 CREATE TABLE "attachments" (
-    "id" TEXT PRIMARY KEY NOT NULL DEFAULT (uuid()),
+    "id" TEXT PRIMARY KEY NOT NULL ON CONFLICT REPLACE DEFAULT (uuid()),
     "link" TEXT,
     "note" TEXT,
     "image" TEXT
@@ -161,7 +172,7 @@ try Attachment.insert {
 
 ```swift
 try Attachment.find(id).update {
-    $0.kind = #bind(.link(URL(string: "https://example.com")!))
+    $0.kind = .link(URL(string: "https://example.com")!)
 }
 .execute(db)
 // Sets link column, NULLs note and image columns
@@ -196,7 +207,7 @@ SQL schema flattens all nested fields:
 
 ```sql
 CREATE TABLE "attachments" (
-    "id" TEXT PRIMARY KEY NOT NULL DEFAULT (uuid()),
+    "id" TEXT PRIMARY KEY NOT NULL ON CONFLICT REPLACE DEFAULT (uuid()),
     "link" TEXT,
     "note" TEXT,
     "caption" TEXT,
@@ -232,12 +243,25 @@ let pastDue = try Reminder
 
 **SwiftData equivalent (more verbose):**
 ```swift
-@Model class Attachment { var isActive: Bool }
-@Model class Link: Attachment { var url: URL }
-@Model class Note: Attachment { var note: String }
-@Model class Image: Attachment { var url: URL }
-// Each needs explicit init calling super.init
+@available(iOS 26, *)
+@Model class Attachment {
+    var isActive: Bool
+    init(isActive: Bool = false) { self.isActive = isActive }
+}
+
+@available(iOS 26, *)
+@Model class Link: Attachment {
+    var url: URL
+    init(url: URL, isActive: Bool = false) {
+        self.url = url
+        super.init(isActive: isActive)
+    }
+}
+
+// And `Note` and `Image`, each repeating that shape
 ```
+
+`@Model` requires an explicit initialiser, and a subclass additionally needs its own platform-availability annotation — it does not inherit the parent's. Each subclass init must accept and forward every parent property to `super.init`.
 
 ---
 
@@ -282,21 +306,22 @@ Use `@Fetch` when you need multiple pieces of data in a single read transaction 
 ```swift
 struct DashboardRequest: FetchKeyRequest {
     struct Value: Sendable {
-        let totalItems: Int
-        let activeItems: [Item]
-        let categories: [Category]
+        var totalItems = 0
+        var activeItems: [Item] = []
+        var categories: [Category] = []
     }
 
     func fetch(_ db: Database) throws -> Value {
         try Value(
             totalItems: Item.count().fetchOne(db) ?? 0,
-            activeItems: Item.where { !$0.isArchived }.order(by: \.updatedAt.desc()).limit(10).fetchAll(db),
+            activeItems: Item.where { !$0.isArchived }.order { $0.updatedAt.desc() }.limit(10).fetchAll(db),
             categories: Category.order(by: \.name).fetchAll(db)
         )
     }
 }
 
-@Fetch(DashboardRequest()) var dashboard
+// `@Fetch` has no `wrappedValue` default, so the property needs one
+@Fetch(DashboardRequest()) var dashboard = DashboardRequest.Value()
 ```
 
 Dynamic loading with `.load()`:
@@ -332,7 +357,8 @@ Key benefits: atomic reads, automatic observation, type-safe results.
 ### Null Handling
 
 ```swift
-// Coalesce — first non-null value
+// Coalesce — first non-null value. The columns must all be optional: `??` will not
+// mix a `String?` column with a non-optional one, so `firstName` is `String?` too
 let name = try User.select { $0.nickname ?? $0.firstName ?? "Anonymous" }.fetchAll(db)
 
 // Null checks
@@ -361,6 +387,8 @@ Reminder.select { $0.dueDate(.startOfMonth) }
 `DateTimeModifier` chains: `years(_:)`, `months(_:)`, `days(_:)`, `hours(_:)`, `minutes(_:)`, `seconds(_:)`, `milliseconds(_:)`, `weekday(_:)`, `startOfDay`, `startOfMonth`, `startOfYear`. The current date is a *separate* expression, `.now`, which takes the same modifiers — `.now(.days(-7))` — and is what you compare a column against. The `years(_:_:)` / `months(_:_:)` overloads taking an `Overflow` are gated `@available(iOS 26, macOS 26, tvOS 26, watchOS 26, *)`; the rest are ungated.
 
 Extract components without a round trip through `Date`:
+
+**A non-optional `Date` column is required for both forms.** `callAsFunction` and the component accessors (`year`, `month`, `weekday`, …) are declared on non-optional date columns; for a nullable `Date?` column, `$0.dueDate(.startOfMonth)` and `$0.dueDate.year` do not resolve.
 
 ```swift
 Reminder.where { $0.dueDate.year.eq(2026) && $0.dueDate.month.eq(1) }
@@ -423,7 +451,7 @@ let updates = try Item.find(id).update { $0.count += 1 }
 
 // Capture deleted records before removal
 let deleted = try Item.where { $0.isArchived }.delete()
-    .returning(Item.self).fetchAll(db)
+    .returning(\.self).fetchAll(db)
 ```
 
 Use RETURNING to avoid a second query for auto-generated IDs, audit deletions, or verify updates.
@@ -459,13 +487,15 @@ extension Reminder {
 ### Self-Joins with TableAlias
 
 ```swift
-struct ManagerAlias: TableAlias { typealias Table = Employee }
+enum ManagerAlias: AliasName {}
 
 let employeesWithManagers = try Employee
     .leftJoin(Employee.all.as(ManagerAlias.self)) { $0.managerID.eq($1.id) }
-    .select { (employeeName: $0.name, managerName: $1.name) }
+    .select { ($0.name, $1.name) }   // (employee, manager)
     .fetchAll(db)
 ```
+
+`TableAlias` is the generic struct the alias *name* is handed to; the name itself is an `AliasName` enum. A labelled tuple is not a `QueryExpression` — for named columns declare a `@Selection` result type and select into it with `Row.Columns(…)`.
 
 ---
 
@@ -530,20 +560,42 @@ It lives in `StructuredQueriesSQLiteCore`. Note the name changed meaning: before
 ### Non-Recursive CTEs
 
 ```swift
-// Single CTE
+// A CTE is a @Selection type — a "virtual table" you select into, then query by name
+@Selection
+struct ExpensiveItem {
+    let id: Item.ID
+}
+
 let expensiveItems = try With {
     Item.where { $0.price > 1000 }
-} query: { expensive in
-    expensive.order(by: \.price).limit(10)
+        .select { ExpensiveItem.Columns(id: $0.id) }
+} query: {
+    ExpensiveItem.order(by: \.id).limit(10)
 }.fetchAll(db)
 
-// Multiple CTEs
+// Multiple CTEs — the builder closure takes them all; `query:` takes none
+@Selection
+struct HighValueCustomer {
+    let id: Customer.ID
+    let name: String
+}
+
+@Selection
+struct RecentOrder {
+    let id: Order.ID
+    let customerID: Customer.ID
+    let total: Double
+}
+
 let report = try With {
     Customer.where { $0.totalSpent > 10000 }
-} with: {
+        .select { HighValueCustomer.Columns(id: $0.id, name: $0.name) }
+
     Order.where { $0.createdAt > lastMonth }
-} query: { highValue, recentOrders in
-    highValue.join(recentOrders) { $0.id.eq($1.customerID) }
+        .select { RecentOrder.Columns(id: $0.id, customerID: $0.customerID, total: $0.total) }
+} query: {
+    HighValueCustomer
+        .join(RecentOrder.all) { $0.id.eq($1.customerID) }
         .select { ($0.name, $1.total) }
 }.fetchAll(db)
 ```
@@ -562,13 +614,31 @@ nonisolated struct Category: Identifiable {
     var parentID: UUID?  // Self-referential
 }
 
+@Selection
+struct CategoryTree {
+    let id: Category.ID
+    let name: String
+    let parentID: Category.ID?
+}
+
 // Get all descendants of a root category
 let allDescendants = try With {
-    Category.where { $0.id.eq(#bind(rootCategoryId)) }  // Base case
-} recursiveUnion: { cte in
-    Category.all.join(cte) { $0.parentID.eq($1.id) }.select { $0 }  // Recursive case
-} query: { cte in
-    cte.order(by: \.name)
+    Category.where { $0.id.eq(#bind(rootCategoryId)) }   // Base case
+        .select { CategoryTree.Columns(id: $0.id, name: $0.name, parentID: $0.parentID) }
+        .union(
+            all: true,
+            Category.all                                 // Recursive case: join back into the CTE by name
+                .join(CategoryTree.all) { $0.parentID.eq($1.id) }
+                .select { category, _ in
+                    CategoryTree.Columns(
+                        id: category.id,
+                        name: category.name,
+                        parentID: category.parentID
+                    )
+                }
+        )
+} query: {
+    CategoryTree.order(by: \.name)
 }.fetchAll(db)
 ```
 
@@ -616,7 +686,7 @@ try #sql(
 let results = try ItemText.where { $0.match(query) }
     .select { ($0.rowid, $0.title.highlight("<b>", "</b>")) }.fetchAll(db)
 
-// Snippets with context (max_tokens must be < 64; 32 is a reasonable default)
+// Snippets with context (1...64 tokens — larger clamps to 64, 0/negative = no limit; 32 is a good default)
 let snippets = try ItemText.where { $0.match(query) }
     .select { $0.description.snippet("<b>", "</b>", "...", 32) }.fetchAll(db)
 
@@ -638,7 +708,7 @@ let ranked = try ItemText.where { $0.match(query) }
 let itemsWithTags = try Item.group(by: \.id)
     .leftJoin(ItemTag.all) { $0.id.eq($1.itemID) }
     .leftJoin(Tag.all) { $1.tagID.eq($2.id) }
-    .select { ($0.title, $2.name.groupConcat(separator: ", ")) }
+    .select { ($0.title, $2.name.groupConcat(", ")) }
     .fetchAll(db)
 // ("iPhone", "electronics, mobile, apple")
 
@@ -649,7 +719,7 @@ let itemsJson = try Store.group(by: \.id)
     .fetchAll(db)
 ```
 
-Options: `.groupConcat(distinct: true)`, `.groupConcat(order: { $0.asc() })`, `.jsonGroupArray(filter: $1.isActive)`, `jsonObject("key", $0.value)`.
+Options: `.groupConcat(distinct: true)`, `.groupConcat(order: $0.title.asc())` (iOS 26+/macOS 26+ — the `SuppressPlatformSQLiteAvailability` trait removes the gate), `.jsonGroupArray(filter: $1.isActive)`, and `$0.jsonObject()` on a `@Selection`/`@Table` value, which builds a JSON object from its columns (`jsonObject()` takes no arguments).
 
 For storing a Codable value in a JSON column (`@Column(as: [T].JSONRepresentation.self)`), extracting fields, and indexing them, see `sql-json-ref.md`.
 
@@ -692,7 +762,7 @@ The `#sql` macro enables type-safe raw SQL for schema creation and migrations.
 migrator.registerMigration("Create initial tables") { db in
     try #sql("""
         CREATE TABLE "items" (
-            "id" TEXT PRIMARY KEY NOT NULL DEFAULT (uuid()),
+            "id" TEXT PRIMARY KEY NOT NULL ON CONFLICT REPLACE DEFAULT (uuid()),
             "title" TEXT NOT NULL DEFAULT '',
             "isInStock" INTEGER NOT NULL DEFAULT 1,
             "price" REAL NOT NULL DEFAULT 0.0,
@@ -702,9 +772,11 @@ migrator.registerMigration("Create initial tables") { db in
 }
 ```
 
+`ON CONFLICT REPLACE` on `id` is what lets an insert omit it — a `Draft` with no id binds `NULL`, which SQLite replaces with the column's `DEFAULT (uuid())`.
+
 ### Parameter Interpolation
 
-- `\(value)` → Automatically escaped (safe for user input)
+- `\(bind: value)` → Automatically escaped (safe for user input). String values interpolated bare still bind, but warn — `appendInterpolation(_:)` is deprecated in favour of this spelling
 - `\(raw: value)` → Inserted literally (only for identifiers you control)
 - **Never** use `\(raw: userInput)` — SQL injection vulnerability
 
@@ -712,7 +784,9 @@ migrator.registerMigration("Create initial tables") { db in
 
 ```swift
 // CREATE INDEX (with optional WHERE for partial indexes)
-try #sql("""CREATE INDEX "idx_items_search" ON "items" ("title") WHERE "isArchived" = 0""").execute(db)
+try #sql("""
+    CREATE INDEX "idx_items_search" ON "items" ("title") WHERE "isArchived" = 0
+    """).execute(db)
 
 // CREATE TRIGGER
 try #sql("""
@@ -721,7 +795,9 @@ try #sql("""
     """).execute(db)
 
 // ALTER TABLE
-try #sql("""ALTER TABLE "items" ADD COLUMN "notes" TEXT NOT NULL DEFAULT ''""").execute(db)
+try #sql("""
+    ALTER TABLE "items" ADD COLUMN "notes" TEXT NOT NULL DEFAULT ''
+    """).execute(db)
 ```
 
 Use `#sql` for DDL (CREATE, ALTER, indexes, triggers). Use the query builder for regular CRUD.
@@ -740,16 +816,14 @@ migrator.registerMigration("Create tables with foreign keys") { db in
 }
 ```
 
-**Critical**: Enable foreign key enforcement — SQLite disables it by default:
+**Foreign keys are already on.** GRDB enables them for every connection — `Configuration.foreignKeysEnabled` defaults to `true` — so SQLiteData enforces `REFERENCES` and `ON DELETE CASCADE` with no setup. SQLite's own default is *off*, which matters only where GRDB is not the one opening the connection: a hand-built configuration that set `foreignKeysEnabled = false`, or the `sqlite3` CLI, where the pragma is per-connection.
 
 ```swift
 var configuration = Configuration()
 configuration.prepareDatabase { db in
-    try db.execute(sql: "PRAGMA foreign_keys = ON")
+    try db.execute(sql: "PRAGMA foreign_keys = ON")   // no-op with GRDB's default
 }
 ```
-
-Without `PRAGMA foreign_keys = ON`, `REFERENCES` and `ON DELETE CASCADE` are silently ignored.
 
 ### Transaction Context for Batch Operations
 
@@ -794,10 +868,10 @@ Also works for aggregate queries — see the Conditional Aggregation section abo
 
 ### Temporary Views
 
-For reusable complex queries, combine `@Table @Selection` and `createTemporaryView`:
+For reusable complex queries, combine `@Table` with `createTemporaryView`:
 
 ```swift
-@Table @Selection
+@Table
 private struct ReminderWithList {
     let reminderTitle: String
     let remindersListTitle: String
@@ -907,7 +981,7 @@ func batchUpsert(_ items: [Item], in db: Database) throws {
 }
 ```
 
-For even higher throughput, build multi-row VALUES clauses. Query the variable limit at runtime: `sqlite3_limit(db.sqliteConnection, SQLITE_LIMIT_VARIABLE_NUMBER, -1)` (32,766 on iOS 14+, 999 on iOS 13).
+For even higher throughput, build multi-row VALUES clauses. Query the variable limit at runtime: `sqlite3_limit(db.sqliteConnection, SQLITE_LIMIT_VARIABLE_NUMBER, -1)`.
 
 | Pattern | Throughput | Trade-off |
 |---------|------------|-----------|
@@ -1024,5 +1098,5 @@ let shared = try Customer.select(\.email).intersect(Supplier.select(\.email)).fe
 
 ---
 
-**Targets:** iOS 17+, Swift 6
-**Framework:** SQLiteData 1.12+ (StructuredQueries 0.39+, GRDB 7.11+)
+**Targets:** Axiom floor — iOS 18+/macOS 15+
+**Framework:** SQLiteData 1.12+ (StructuredQueries 0.39.1+, GRDB 7.6+)

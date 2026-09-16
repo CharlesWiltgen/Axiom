@@ -6,7 +6,7 @@ Point-Free's [swift-sharing](https://github.com/pointfreeco/swift-sharing) gives
 
 **Core principle** A shared value is a *reference* with a persistence strategy attached. Reads observe; writes go through `withLock`; loading and failure are first-class state you can render, not exceptions you swallow.
 
-**Requires** Sharing ships manifests back to Swift 5.9; package traits need 6.1+. Sharing 2.8.0+ matters on Swift 6.3 toolchains — see the first anti-pattern.
+**Requires** Sharing 2.10's manifest is `swift-tools-version: 6.4` (2.9: 6.1, 2.8: 6.0, 2.7.4 and earlier: 5.9), and package traits need 6.1+. SwiftPM refuses a manifest whose tools-version exceeds the installed toolchain, so a Swift 5.9 toolchain cannot consume Sharing 2.10 at all. Sharing 2.8.0+ matters on Swift 6.3 toolchains — see the first anti-pattern.
 
 ## When to Use
 
@@ -26,10 +26,10 @@ For SQL-backed data use `skills/sqlitedata.md` — `@FetchAll` is a Sharing read
 @SharedReader(.appStorage("isPro")) var isPro = false   // read-only
 
 $launchCount.withLock { $0 += 1 }        // mutate
-Binding($isEnabled)                       // SwiftUI two-way binding
+Binding($launchCount)                     // SwiftUI two-way binding
 try await $user.load()                    // force a reload
 try await $user.save()                    // force a write
-$user.isLoading, $user.loadError, $user.saveError
+_ = ($user.isLoading, $user.loadError, $user.saveError)
 ```
 
 ## Anti-Patterns (Common Mistakes)
@@ -180,7 +180,7 @@ var body: some View {
 }
 ```
 
-Every **non-optional** `@Shared` / `@SharedReader` needs a default — the bare-key initializer is `@available(*, unavailable)` with the message "Assign a default value". Optional-valued state needs none, since `nil` already is the default. `Shared(require:)` / `SharedReader(require:)` are the `async throws` alternatives for when there is no sensible placeholder and you would rather fail than render one, and a key with a registered `.Default` supplies the value for you.
+Every **non-optional** `@Shared` / `@SharedReader` needs a default — the bare-key form without one does not compile. On Swift 6.4 the failure is a bare compiler error with no explanation of the rule: `no exact matches in call to initializer` for `@SharedReader`, `failed to produce diagnostic for expression` for `@Shared`. Sharing gates the explanatory `@available(*, unavailable, message: "Assign a default value")` initializer behind `#if compiler(<6.4)`, so that message appears only below Swift 6.4 or with Sharing 2.8.0 and earlier. Optional-valued state needs none, since `nil` already is the default. `Shared(require:)` / `SharedReader(require:)` are the `async throws` alternatives for when there is no sensible placeholder and you would rather fail than render one, and a key with a registered `.Default` supplies the value for you.
 
 ## Dynamic Keys
 
@@ -252,13 +252,13 @@ prepareDependencies {
 | `IdentifiedCollections` | On | Derive `Shared` elements from shared collections |
 | `CasePaths` | Off | Case-path dynamic member lookup on shared enums |
 
-Traits require the Swift 6.1+ manifest; on a Swift 6.0 toolchain none are available.
+Traits first appear in the 2.9.0 manifest, which declares `swift-tools-version: 6.1`; a Swift 6.0 toolchain cannot load that manifest at all and resolves 2.8.x instead, where no traits exist.
 
 ## Relationship to SQLiteData
 
 `@FetchAll` and `@FetchOne` wrap a `SharedReader` — `FetchAll` exposes it as `public var sharedReader: SharedReader<[Element]>`, and SQLiteData's internal `FetchKey` is a `SharedReaderKey` whose load runs a SQL query through GRDB. Everything on this page applies to them: `$items.isLoading` and `$items.loadError` forward straight to the `SharedReader`, while `try await $items.load(newQuery)` is SQLiteData's own statement-taking overload layered on Sharing's key-taking `load`.
 
-Consequence worth knowing: SQLiteData depends on swift-sharing 2.3.0+, so a project that pins Sharing below 2.8.0 inherits the Swift 6.3 build failure above even if it only ever writes `@FetchAll`.
+Consequence worth knowing: SQLiteData depends on swift-sharing 2.3.0+, so a project that pins Sharing below 2.8.0 inherits the Swift 6.3 build failure above only where it (or its dependencies) chains a binding into shared state — a project that only ever writes `@FetchAll` builds clean.
 
 ## Resources
 
@@ -269,4 +269,4 @@ Consequence worth knowing: SQLiteData depends on swift-sharing 2.3.0+, so a proj
 ---
 
 **Targets:** iOS 26+/18, macOS 26+/15
-**Framework:** Sharing 2.10+ (manifests back to Swift 5.9; traits need 6.1+)
+**Framework:** Sharing 2.10+ (manifest swift-tools-version 6.4; 2.9: 6.1; 2.8: 6.0; ≤2.7.4: 5.9; traits need 6.1+)

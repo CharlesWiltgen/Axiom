@@ -52,7 +52,7 @@ These are real questions developers ask that this skill is designed to answer:
 → The skill explains migration registration, data transforms, and safe rollback patterns
 
 #### 4. "My query is slow (takes 10+ seconds). How do I profile and optimize it?"
-→ The skill covers EXPLAIN QUERY PLAN, database.trace for profiling, and index creation
+→ The skill covers EXPLAIN QUERY PLAN, `db.trace` for SQL profiling, and index creation
 
 #### 5. "I need to fetch tasks grouped by due date with completion counts, ordered by priority. Raw SQL seems easier than type-safe queries."
 → The skill demonstrates when GRDB's raw SQL is clearer than type-safe wrappers
@@ -73,8 +73,8 @@ import GRDB
 let dbPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]
 let dbQueue = try DatabaseQueue(path: "\(dbPath)/db.sqlite")
 
-// In-memory database (tests)
-let dbQueue = try DatabaseQueue()
+// In-memory database, for tests
+let testQueue = try DatabaseQueue()
 ```
 
 ### DatabasePool (Connection Pool)
@@ -93,8 +93,10 @@ let dbPool = try DatabasePool(path: dbPath)
 
 ### Using Codable
 
+**`Codable` alone is not a record.** The conformance supplies the column mapping; the `fetchAll`/`insert` methods come from declaring `FetchableRecord` and `PersistableRecord`.
+
 ```swift
-struct Track: Codable {
+struct Track: Codable, FetchableRecord, PersistableRecord {
     var id: String
     var title: String
     var artist: String
@@ -108,7 +110,7 @@ let tracks = try dbQueue.read { db in
 
 // Insert
 try dbQueue.write { db in
-    try track.insert(db)  // Codable conformance provides insert
+    try track.insert(db)  // PersistableRecord provides insert
 }
 ```
 
@@ -214,6 +216,8 @@ Use `upsert`. Choose `.replace` only when delete-then-insert is genuinely the se
 
 Two constraints, both covered in `skills/grdb-performance.md` §7. Upsert against a `WITHOUT ROWID` table needs **GRDB 7.11+**, and still fails on 7.11.1 when that table's primary key is `INTEGER`. Such tables are also **never observed** — a `ValueObservation` on one goes silent after its initial value. Settings and key-value stores are the common case for all three of "`WITHOUT ROWID`", "upsert target", and "observed", so check before combining them.
 
+The `INTEGER` failure is GRDB misclassifying the primary key, not a SQLite limit: `Database+Schema.swift` returns a rowid primary key for *any* single-column `INTEGER` primary key, so the generated `RETURNING rowid` names a column the table does not have. [PR #1879](https://github.com/groue/GRDB.swift/pull/1879) is open to fix it. The observation silence is SQLite's own: the update hook is not invoked for `WITHOUT ROWID` tables. Until those land, a write that calls `try db.notifyChanges(in: Track.all())` revives the observation.
+
 ## Raw SQL Queries
 
 ### Reading Data
@@ -303,6 +307,11 @@ let request = Track
 struct TrackWithAlbum: FetchableRecord {
     var trackTitle: String
     var albumTitle: String
+
+    init(row: Row) {
+        trackTitle = row["trackTitle"]
+        albumTitle = row["albumTitle"]
+    }
 }
 
 let request = Track
@@ -378,6 +387,7 @@ let cancellable = observation.publisher(in: dbQueue)
 ### SwiftUI Integration
 
 ```swift
+import Combine
 import GRDB
 import GRDBQuery  // https://github.com/groue/GRDBQuery
 
@@ -387,16 +397,16 @@ var tracks: [Track]
 struct Tracks: Queryable {
     static var defaultValue: [Track] { [] }
 
-    func publisher(in dbQueue: DatabaseQueue) -> AnyPublisher<[Track], Error> {
+    @MainActor func publisher(in context: DatabaseContext) throws -> AnyPublisher<[Track], Error> {
         ValueObservation
             .tracking { db in try Track.fetchAll(db) }
-            .publisher(in: dbQueue)
+            .publisher(in: try context.reader)
             .eraseToAnyPublisher()
     }
 }
 ```
 
-**See** [GRDBQuery documentation](https://github.com/groue/GRDBQuery) for SwiftUI reactive bindings.
+**Requires GRDBQuery 0.9+** — `Queryable` is generic over its `Context` (default `DatabaseContext`), and `publisher(in:)` is `@MainActor` and throws. See the [GRDBQuery documentation](https://github.com/groue/GRDBQuery) for SwiftUI reactive bindings.
 
 ### DatabaseRegionObservation
 
@@ -421,7 +431,8 @@ See `skills/grdb-performance.md` §10 for design tradeoffs.
 ### Filtered Observation
 
 ```swift
-func observeGenre(_ genre: String) -> ValueObservation<[Track]> {
+// ValueObservation is generic over its reducer, not its value
+func observeGenre(_ genre: String) -> ValueObservation<ValueReducers.Fetch<[Track]>> {
     ValueObservation.tracking { db in
         try Track
             .filter(Column("genre") == genre)
@@ -431,9 +442,9 @@ func observeGenre(_ genre: String) -> ValueObservation<[Track]> {
 
 let cancellable = observeGenre("Rock")
     .publisher(in: dbQueue)
-    .sink { tracks in
+    .sink(receiveCompletion: { _ in }, receiveValue: { tracks in
         print("Rock tracks: \(tracks.count)")
-    }
+    })
 ```
 
 ## Migrations
@@ -513,7 +524,8 @@ migrator.registerMigration("v4_normalize_artists") { db in
 
 ```swift
 try dbQueue.write { db in
-    for batch in tracks.chunked(into: 500) {
+    for start in stride(from: 0, to: tracks.count, by: 500) {
+        let batch = tracks[start..<min(start + 500, tracks.count)]
         for track in batch {
             try track.insert(db)
         }
@@ -564,10 +576,10 @@ When using SQLiteData but need GRDB for specific operations:
 import SQLiteData
 import GRDB
 
-@Dependency(\.database) var database  // SQLiteData Database
+@Dependency(\.defaultDatabase) var database  // SQLiteData's DatabaseWriter
 
-// Access underlying GRDB DatabaseQueue
-try await database.database.write { db in
+// Access the underlying GRDB writer
+try await database.write { db in
     // Full GRDB power here
     try db.execute(sql: "CREATE INDEX idx_genre ON tracks(genre)")
 }
@@ -585,7 +597,7 @@ try await database.database.write { db in
 
 ```swift
 // Read single value
-let count = try db.fetchOne(Int.self, sql: "SELECT COUNT(*) FROM tracks")
+let count = try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM tracks")
 
 // Read all rows
 let rows = try Row.fetchAll(db, sql: "SELECT * FROM tracks WHERE genre = ?", arguments: ["Rock"])
@@ -641,7 +653,7 @@ If you see ANY of these symptoms:
 3. Over-engineer migrations (distrust the system)
 
 #### DO
-1. Profile with `database.trace`
+1. Profile with SQL tracing (`db.trace`, configured on the queue)
 2. Use `EXPLAIN QUERY PLAN` to understand execution
 3. Trust GRDB's migration versioning system
 4. **Apply `PRAGMA optimize` on connection setup and periodically** — single biggest cheap perf win. See `skills/grdb-performance.md` §4 for the exact pattern.
@@ -651,10 +663,13 @@ If you see ANY of these symptoms:
 #### When query is slow (10+ seconds)
 
 ```swift
-var database = try DatabaseQueue(path: dbPath)
+var config = Configuration()
 
 // Enable tracing to see SQL execution
-database.trace { print($0) }
+config.prepareDatabase { db in
+    db.trace { print($0) }
+}
+let database = try DatabaseQueue(path: dbPath, configuration: config)
 
 // Run the slow query
 try database.read { db in
@@ -663,8 +678,8 @@ try database.read { db in
 
 // Use EXPLAIN QUERY PLAN to understand execution:
 try database.read { db in
-    let plan = try String(fetching: db, sql: "EXPLAIN QUERY PLAN SELECT ...")
-    print(plan)
+    let plan = try String.fetchOne(db, sql: "EXPLAIN QUERY PLAN SELECT ...")
+    print(plan as Any)
     // Look for SCAN (slow, full table) vs SEARCH (fast, indexed)
 }
 ```
@@ -689,10 +704,10 @@ try database.write { db in
 #### When using reactive queries, know the costs
 
 ```swift
-// Re-evaluates query on ANY write to database
+// Re-evaluates the query on any write that touches the observed table
 ValueObservation.tracking { db in
     try Track.fetchAll(db)
-}.start(in: database, onError: { }, onChange: { tracks in
+}.start(in: database, onError: { _ in }, onChange: { tracks in
     // Called for every change — CPU spike!
 })
 ```
@@ -700,17 +715,23 @@ ValueObservation.tracking { db in
 #### Optimization patterns
 
 ```swift
+import Combine
+
 // Coalesce rapid updates (recommended)
 ValueObservation.tracking { db in
     try Track.fetchAll(db)
-}.removeDuplicates()  // Skip duplicate results
- .debounce(for: 0.5, scheduler: DispatchQueue.main)  // Batch updates
- .start(in: database, ...)
+}
+.publisher(in: database)  // Combine operators live on the publisher, not the observation
+.removeDuplicates()  // Skip duplicate results (Track: Equatable)
+.debounce(for: 0.5, scheduler: DispatchQueue.main)  // Batch updates
+.sink(receiveCompletion: { _ in }, receiveValue: { tracks in
+    print(tracks.count)
+})
 ```
 
 #### Decision framework
 - Small datasets (<1000 records): Use plain `.tracking`
-- Medium datasets (1-10k records): Add `.removeDuplicates()` + `.debounce()`
+- Medium datasets (1-10k records): add `.removeDuplicates()` and `.debounce()` on the publisher
 - Large datasets (10k+ records): Use explicit table dependencies or predicates
 
 ### Migration Versioning Guarantees
@@ -748,7 +769,8 @@ try migrator.migrate(dbQueue)
 
 ### ❌ Not using transactions for batch writes
 ```swift
-for track in 50000Tracks {
+// manyTracks holds 50,000 records
+for track in manyTracks {
     try dbQueue.write { db in try track.insert(db) }  // 50k transactions!
 }
 ```
@@ -781,9 +803,9 @@ The write case *is* a mistake, and it's the first entry above: N inserts outside
 
 ## tvOS
 
-**Local GRDB databases are not persistent on tvOS.** The system deletes Caches (including Application Support) under storage pressure. A local-only GRDB database will lose all data between app launches.
+**No local directory on tvOS is guaranteed to survive between launches.** `Documents`, `Caches`, and `Application Support` are separate directories, and the system may purge them under storage pressure — so treat a local-only GRDB database as a cache, not the source of truth.
 
-**If targeting tvOS**, pair GRDB with CloudKit sync (via CKSyncEngine or SQLiteData's SyncEngine) so iCloud is the persistent store and the local database is a rebuildable cache. See axiom-swift (skills/tvos.md) for full tvOS storage constraints.
+**If targeting tvOS**, pair GRDB with CloudKit sync (via CKSyncEngine or SQLiteData's SyncEngine) so iCloud is the persistent store and the local database rebuilds automatically. See axiom-swift (skills/tvos.md) for full tvOS storage constraints.
 
 ---
 

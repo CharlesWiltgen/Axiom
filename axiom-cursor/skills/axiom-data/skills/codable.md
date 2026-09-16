@@ -131,6 +131,10 @@ class Base: Codable {
 class Sub: Base {
     var b = 2
 
+    override init() {
+        super.init()
+    }
+
     enum CodingKeys: String, CodingKey { case b }
 
     required init(from decoder: Decoder) throws {
@@ -726,7 +730,7 @@ do {
 
 **What Actually Happens**:
 - Server sends offset-less dates: `"2024-12-14T10:00:00"`
-- The `DateFormatter` has a `dateFormat` but no explicit `timeZone`, so it inherits the device's
+- The `DateFormatter` has a `dateFormat` but no explicit `timeZone`, so it inherits the device's timezone
 - PST device: Dec 14, 10:00 PST → 18:00 UTC
 - CET device: Dec 14, 10:00 CET → 09:00 UTC
 - Two instants nine hours apart from one payload, and nothing throws

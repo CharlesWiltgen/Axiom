@@ -48,7 +48,7 @@ WidgetCenter.shared.reloadTimelines(ofKind: "TopItems")
 For widgets, the only thing that matters is the timeline. The app can compute the next N entries on its own connection and hand them to WidgetKit. The widget extension doesn't need the database at all.
 
 #### `UserDefaults(suiteName:)` or `NSUbiquitousKeyValueStore`
-For small datasets (a few dozen items, total under ~1 MB), shared `UserDefaults` keyed by the App Group identifier is dramatically simpler. No PRAGMAs, no Data Protection, no suspension defense.
+For small datasets (a few dozen items), shared `UserDefaults` keyed by the App Group identifier is dramatically simpler. No PRAGMAs, no Data Protection, no suspension defense. Keep it small on principle — Apple documents a 1 MB total for `NSUbiquitousKeyValueStore`, and while app-group `UserDefaults` has no such published cap, a store of that shape is not what either API is for.
 
 #### Darwin notifications + re-fetch on app side
 If the widget needs to *cause* a refresh in the app, post a Darwin notification from the widget and let the app respond when it's next active. The widget itself never opens the database.
@@ -96,13 +96,13 @@ let dbURL = dbDirectory.appending(path: "shared.sqlite")
 
 This also makes it easier to apply Data Protection to all three files in one place (see §4).
 
-**If your shared DB contains an FTS5 index:** sync triggers (`sqlite-fts-ref.md` §5) only fire for writes from the connection that has them registered. A widget that writes directly to the source table will not fire the app's triggers — the FTS index will drift. Either keep writes in the app process only, or register triggers in every writing process.
+**If your shared DB contains an FTS5 index:** sync triggers (`sqlite-fts-ref.md` §5) are schema objects, so they fire for every SQL writer in every process — there is no per-connection registration to worry about. The hazard is ordering: a process that writes the source table before the app's migration has created the FTS table and its triggers mirrors nothing into the index, and it drifts from that point on. Run the same versioned migration in every process before it writes (see `database-migration.md`).
 
 ## 3 — Mandatory PRAGMAs and configuration
 
 #### Use `DatabasePool`, not `DatabaseQueue`
 
-`DatabasePool` is the only correct choice for multi-process sharing. It enables WAL automatically and supports concurrent reads while a writer holds the write transaction. A `DatabaseQueue` with explicit `journal_mode = WAL` is technically functional but serializes every operation in the current process — and the `grdb-performance-auditor` agent flags it as Critical for app-group databases because it bottlenecks every reader behind the writer. Use `DatabasePool`.
+`DatabasePool` is the only correct choice for multi-process sharing. It enables WAL automatically and supports concurrent reads while a writer holds the write transaction. A `DatabaseQueue` with explicit `journal_mode = WAL` is functional but serializes every operation in the current process, and the `grdb-performance-auditor` agent flags a `DatabaseQueue` used for an app-group container **without** explicit `journal_mode = WAL` in `prepareDatabase` as CRITICAL/HIGH. Use `DatabasePool`.
 
 #### Persistent WAL is non-negotiable
 
@@ -135,7 +135,7 @@ config.prepareDatabase { db in
 
 #### `locking_mode = NORMAL` (never `EXCLUSIVE`)
 
-`EXCLUSIVE` is a performance optimization for single-process apps that hold the database open for their entire lifetime. It claims the lock and never releases it. The second process trying to open the database gets `SQLITE_BUSY` forever. For shared databases this PRAGMA is forbidden.
+`EXCLUSIVE` is a performance optimization for single-process apps that hold the database open for their entire lifetime. It claims the lock and never releases it. A second process can still *open* the database, but its statements fail with `SQLITE_BUSY` — indefinitely, not on a timeout. For shared databases this PRAGMA is forbidden.
 
 #### `busyMode = .timeout(5)`
 
@@ -151,7 +151,7 @@ This is the GRDB hook that integrates with the suspension-defense pattern in §5
 
 #### Apply `PRAGMA optimize` from `grdb-performance.md` §4
 
-Shared DBs especially benefit from `PRAGMA optimize` discipline: widget and extension readers can't refresh the planner's statistics (they have no write opportunity to trigger auto-analyze). The writer process must maintain stats on behalf of all readers. Apply the on-open `PRAGMA optimize=0x10002` per `grdb-performance.md` §4 in your writer process, and run periodic `PRAGMA optimize` on background transitions.
+Shared DBs especially benefit from `PRAGMA optimize` discipline: widget and extension readers can't refresh the planner's statistics (they have no write opportunity to trigger auto-analyze). The writer process must maintain stats on behalf of all readers. Apply the on-open `PRAGMA optimize` hookup from `grdb-performance.md` §4 in your writer process, and run periodic `PRAGMA optimize` on background transitions.
 
 ## 4 — Data Protection
 
@@ -199,7 +199,7 @@ If your data classification genuinely requires `.complete` (health records, fina
 
 #### What is `0xDEAD10CC`?
 
-When iOS suspends an app, the OS waits a few seconds for in-flight work to wind down. If the app is still holding a SQLite file lock when the suspension watchdog fires, iOS terminates the process; the crash log reports it as `Termination Reason: Namespace SPRINGBOARD, Code 0xDEAD10CC` ("dead lock"), with exception type `EXC_CRASH (SIGKILL)`. `0xDEAD10CC` is not an exception type — look for it under `Termination Reason`.
+When iOS suspends an app, the OS waits a few seconds for in-flight work to wind down. If the app is still holding a SQLite file lock when the suspension watchdog fires, iOS terminates the process. The crash log records `Termination Reason: Namespace SPRINGBOARD, Code 0xDEAD10CC` ("dead lock") — the code lives in that field, not in `Exception Type`, which reads `EXC_CRASH (SIGKILL)`.
 
 This is invisible in development because the debugger prevents suspension. It manifests in TestFlight, App Review, and production — exactly when you can't debug it.
 
@@ -218,7 +218,7 @@ config.observesSuspensionNotifications = true
 
 GRDB doesn't know when your app is about to be suspended — UIKit does. Forward the lifecycle events to the notifications GRDB listens for.
 
-**Critical**: post `suspendNotification` from the **background** transition, not from `resignActive`. `resignActive` fires for transient interruptions (Control Center pull-down, app switcher peek, incoming call) when the app is NOT actually being suspended. Posting `suspendNotification` there interrupts in-flight queries every time the user pulls down Notification Center, producing spurious `SQLITE_INTERRUPT` errors.
+**Critical**: post `suspendNotification` from the **background** transition, not from `resignActive`. `resignActive` fires for transient interruptions (Control Center pull-down, app switcher peek, incoming call) when the app is NOT actually being suspended. Posting `suspendNotification` there aborts in-flight writes every time the user pulls down Notification Center, producing spurious `SQLITE_INTERRUPT` errors.
 
 ```swift
 // SceneDelegate
@@ -256,26 +256,27 @@ var body: some Scene {
 }
 ```
 
-When GRDB receives `suspendNotification`, it interrupts in-flight queries and releases SQLite locks so the OS can suspend the process cleanly. When it receives `resumeNotification`, it un-suspends and lets new queries proceed.
+When GRDB receives `suspendNotification`, it aborts in-flight write transactions and refuses new ones, so the process is not sitting on a write lock when the OS suspends it. When it receives `resumeNotification`, it un-suspends and lets writes proceed again.
 
 ##### Part 3: Catch the interrupt at call sites
 
-While suspended, GRDB throws `DatabaseError` with `resultCode == .SQLITE_INTERRUPT` (9) or `.SQLITE_ABORT` (4) instead of running the query. These are not failures — they are "try again when the app is active." Treat them accordingly.
+While suspended, GRDB refuses new write transactions: `DatabaseError` with `resultCode == .SQLITE_ABORT` (4) and the message "Database is suspended", or `.SQLITE_INTERRUPT` (9) when a statement that was already running gets aborted. Reads keep being served in WAL mode (which §3 mandates); in delete-journal mode suspension blocks them too. Neither error is a failure — they mean "try again when the app is active."
 
 ```swift
 do {
-    let items = try await dbPool.read { db in
-        try Item.fetchAll(db)
+    try await dbPool.write { db in
+        try item.save(db)
     }
-    return items
 } catch let error as DatabaseError
     where error.resultCode == .SQLITE_INTERRUPT
         || error.resultCode == .SQLITE_ABORT
 {
-    // App was being suspended. Defer the read until resume.
-    return []
+    // App was being suspended. Defer the write until resume.
+    pendingSave = item
 }
 ```
+
+The catch belongs on the write path first: a read issued while suspended in WAL mode succeeds rather than throwing, so a retry around it never fires.
 
 For `ValueObservation`, the publisher automatically resumes when the resume notification fires — but you must still handle the interim period in your view.
 
@@ -382,11 +383,11 @@ CFNotificationCenterAddObserver(
     Unmanaged.passUnretained(self).toOpaque(),
     { _, _, _, _, _ in
         // Triggered on cross-process notification. Re-fetch and update UI.
-        Task { await WidgetCenter.shared.reloadAllTimelines() }
+        Task { WidgetCenter.shared.reloadAllTimelines() }
     },
     name,
     nil,
-    CFNotificationSuspensionBehavior(rawValue: 0)   // ignored on Darwin center; pass 0 per Apple's header
+    CFNotificationSuspensionBehavior.deliverImmediately   // ignored on the Darwin center; the argument takes an enum, not 0
 )
 ```
 
@@ -404,13 +405,15 @@ Even with `busy_timeout = 5000` from §3, under contention you'll still see `SQL
 
 #### Exponential backoff retry
 
+The `Sendable` constraints are load-bearing, not decoration: without them the compiler picks GRDB's *synchronous* `write`, the `await` performs no suspension (`#UnnecessaryEffectMarker`), and GRDB's asynchronous write path is never entered — the retry loop simply occupies its thread from start to finish.
+
 ```swift
 import GRDB
 
-func writeWithRetry<T>(
+func writeWithRetry<T: Sendable>(
     in dbPool: DatabasePool,
     maxAttempts: Int = 3,
-    work: @escaping (Database) throws -> T
+    work: @escaping @Sendable (Database) throws -> T
 ) async throws -> T {
     let delays: [UInt64] = [50_000_000, 200_000_000, 500_000_000]  // ns: 50, 200, 500 ms
 
@@ -443,7 +446,7 @@ Retrying inside a `dbPool.write { }` closure deadlocks — you'd be holding the 
 | `FileProtectionType.complete` on shared DB | Widget reads return `SQLITE_IOERR` (10) after device auto-locks | Use `.completeUntilFirstUserAuthentication` | §4 |
 | Missing `observesSuspensionNotifications` | App killed in TestFlight/production with `0xDEAD10CC` in crash logs | Configure GRDB + wire scene lifecycle notifications | §5 |
 | `ValueObservation` for cross-process updates | Widget shows stale data forever; never refreshes when app writes | Add `DatabaseRegionObservation` + Darwin notifications | §7 |
-| `PRAGMA locking_mode = EXCLUSIVE` | Second process gets `SQLITE_BUSY` permanently | Use `locking_mode = NORMAL` | §3 |
+| `PRAGMA locking_mode = EXCLUSIVE` | Second process opens fine, then every statement fails `SQLITE_BUSY` | Use `locking_mode = NORMAL` | §3 |
 | Skipping `NSFileCoordinator` on open | Migration races on first multi-process launch; possible corruption | Wrap opens in coordinator | §6 |
 | `DatabaseQueue` instead of `DatabasePool` | All operations serialize across the whole process — widget reads block during app writes | Use `DatabasePool` | §3 |
 | App Group entitlement on app only, not widget | Widget reads its own empty sandbox database | Add entitlement to every target | §2 |
@@ -452,7 +455,7 @@ Retrying inside a `dbPool.write { }` closure deadlocks — you'd be holding the 
 | Treating `SQLITE_INTERRUPT` as failure | Spurious errors during app suspension | Recognize interrupt as "retry on resume" | §5 |
 | "It works in dev, ship it" | Production crashes invisible in development | Test on a real device with the debugger detached | §5 |
 | Snapshot pattern dismissed without consideration | Months spent fighting suspension and Data Protection bugs | Re-read §1 — most widget use cases don't need a live shared DB | §1 |
-| FTS5 index in shared DB with writes from multiple processes | Widget search returns drift-stale results | Sync triggers only fire for writes from the registering connection — restrict writes to one process or register triggers in every writer | §2, see `sqlite-fts-ref.md` §5 |
+| FTS5 index in shared DB, a process writes before the triggers exist | Widget search returns drift-stale results from that point on | Sync triggers fire for every SQL writer — run the same migrator in every process before it writes | §2, see `sqlite-fts-ref.md` §5 |
 
 ## Resources
 

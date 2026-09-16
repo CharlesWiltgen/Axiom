@@ -36,11 +36,11 @@
 | SwiftData | SQLiteData |
 |-----------|------------|
 | `@Model class Item` | `@Table nonisolated struct Item` |
-| `@Attribute(.unique)` | `@Column(primaryKey: true)` or SQL UNIQUE |
+| `@Attribute(.unique)` | SQL UNIQUE in the schema (`@Column(primaryKey: true)` marks the Swift-side key and adds no constraint) |
 | `@Relationship var tags: [Tag]` | `var tagIDs: [Tag.ID]` + join query |
 | `@Query var items: [Item]` | `@FetchAll var items: [Item]` |
-| `@Query(sort: \.title)` | `@FetchAll(Item.order(by: \.title))` |
-| `@Query(filter: #Predicate { $0.isActive })` | `@FetchAll(Item.where(\.isActive))` |
+| `@Query(sort: \Item.title)` | `@FetchAll(Item.order(by: \.title))` |
+| `@Query(filter: #Predicate<Item> { $0.isActive })` | `@FetchAll(Item.where(\.isActive))` |
 | `@Environment(\.modelContext)` | `@Dependency(\.defaultDatabase)` |
 | `context.insert(item)` | `Item.insert { Item.Draft(...) }.execute(db)` |
 | `context.delete(item)` | `Item.find(id).delete().execute(db)` |
@@ -72,7 +72,7 @@ class Task {
 
 struct TaskListView: View {
     @Environment(\.modelContext) private var context
-    @Query(sort: \.title) private var tasks: [Task]
+    @Query(sort: \Task.title) private var tasks: [Task]
 
     var body: some View {
         List(tasks) { task in
@@ -114,7 +114,7 @@ struct TaskListView: View {
         }
     }
 
-    func addTask(_ title: String) {
+    func addTask(_ title: String) throws {
         try database.write { db in
             try Task.insert {
                 Task.Draft(title: title)
@@ -123,13 +123,15 @@ struct TaskListView: View {
         }
     }
 
-    func deleteTask(_ task: Task) {
+    func deleteTask(_ task: Task) throws {
         try database.write { db in
             try Task.find(task.id).delete().execute(db)
         }
     }
 }
 ```
+
+`Task.Draft(title:)` leaves `id` to the database, and the insert sends an explicit `NULL` for it — so the `id` column's DDL has to substitute the default. SQLiteData's own shape, `"id" TEXT PRIMARY KEY NOT NULL ON CONFLICT REPLACE DEFAULT (uuid())`, works because `REPLACE` fills the `NULL` from the column default; against a plain `TEXT PRIMARY KEY NOT NULL` the same insert fails with a NOT NULL constraint failure on `id`. Pass the id yourself — `Task.Draft(id: UUID(), title: title)` — if your schema has no such default.
 
 **Key differences:**
 - `class` → `struct` with `nonisolated`
@@ -144,11 +146,11 @@ struct TaskListView: View {
 
 ## CloudKit Sharing (SwiftData Can't Do This)
 
-SwiftData supports CloudKit **sync** but NOT **sharing**. SQLiteData is the only Apple-native option for record sharing.
+SwiftData supports CloudKit **sync** but NOT **sharing**. SQLiteData is the only persistence framework with a sharing API — Apple's own route is CloudKit's `CKSyncEngine` and `CKShare` by hand.
 
 ```swift
 // 1. Setup SyncEngine with sharing
-prepareDependencies {
+try! prepareDependencies {
     $0.defaultDatabase = try! appDatabase()
     $0.defaultSyncEngine = try SyncEngine(
         for: $0.defaultDatabase,
@@ -199,6 +201,7 @@ func migrateExistingData(from modelContext: ModelContext, to database: any Datab
     // Fetch all SwiftData records
     let descriptor = FetchDescriptor<SwiftDataTask>()
     let existingTasks = try modelContext.fetch(descriptor)
+    let priorCount = try database.read { db in try SQLiteTask.fetchCount(db) }
 
     // 2. Bulk insert into SQLiteData
     try database.write { db in
@@ -215,18 +218,20 @@ func migrateExistingData(from modelContext: ModelContext, to database: any Datab
         }
     }
 
-    // 3. Verify migration
+    // 3. Verify migration. Compare a delta: a re-run, or rows written by
+    // anything else, make an absolute count fail on a successful migration.
+    // `precondition` is not stripped in Release, where a bad migration ships.
     let count = try database.read { db in
         try SQLiteTask.fetchCount(db)
     }
-    assert(count == existingTasks.count, "Migration count mismatch!")
+    precondition(count == priorCount + existingTasks.count, "Migration count mismatch!")
 }
 ```
 
 **Migration checklist:**
 - [ ] Export all models before deleting SwiftData container
 - [ ] Migrate relationships (fetch parent IDs for foreign keys)
-- [ ] Verify record counts match after migration
+- [ ] Verify the exported count matches the imported count (compare a delta, not the whole table)
 - [ ] Keep SwiftData container as backup until confirmed working
 - [ ] Run migration on first launch with a version flag in UserDefaults
 

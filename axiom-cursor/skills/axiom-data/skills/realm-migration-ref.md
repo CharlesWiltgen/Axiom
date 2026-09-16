@@ -4,18 +4,18 @@
 **Purpose**: Complete migration path from Realm to SwiftData
 **Swift Version**: Swift 5.9+ (Swift 6 with strict concurrency recommended)
 **iOS Version**: iOS 17+ (iOS 26+ recommended)
-**Context**: Realm Device Sync sunset Sept 30, 2025. This guide is essential for Realm users migrating before deadline.
+**Context**: Realm Device Sync shut down on September 30, 2025. This guide is for apps still holding a Realm database that have to move to SwiftData.
 
 ---
 
 ## Critical Timeline
 
-**Realm Device Sync** DEPRECATION DEADLINE = September 30, 2025
+**Realm Device Sync shut down on September 30, 2025.**
 
-If your app uses Realm Sync:
-- ⚠️ You MUST migrate by September 30, 2025
-- ✅ SwiftData is the recommended replacement
-- ⏰ Time remaining: Depends on current date, but migrations take 2-8 weeks for production apps
+If your app still uses Realm Sync:
+- ⚠️ Sync is gone — it cannot run alongside a replacement, because there is no service left to sync with
+- ✅ SwiftData with CloudKit is the recommended replacement
+- ⏰ Migrations take 2-8 weeks for production apps, so the schedule is yours to set
 
 **This guide** provides everything needed for successful migration.
 
@@ -98,7 +98,7 @@ final class Track {
 class RealmAlbum: Object {
     @Persisted(primaryKey: true) var id: String
     @Persisted var title: String
-    @Persisted var tracks: RealmSwiftCollection<RealmTrack>
+    @Persisted var tracks: List<RealmTrack>
 }
 
 // SWIFTDATA: One-to-Many
@@ -109,6 +109,11 @@ final class Album {
 
     @Relationship(deleteRule: .cascade, inverse: \Track.album)
     var tracks: [Track] = []
+
+    init(id: String, title: String) {
+        self.id = id
+        self.title = title
+    }
 }
 
 @Model
@@ -116,11 +121,17 @@ final class Track {
     @Attribute(.unique) var id: String
     var title: String
     var album: Album?  // Inverse automatically maintained
+
+    init(id: String, title: String, album: Album? = nil) {
+        self.id = id
+        self.title = title
+        self.album = album
+    }
 }
 ```
 
 **Key differences**:
-- Realm: Explicit `RealmSwiftCollection` type → SwiftData: Native `[Track]` array
+- Realm: Explicit `List` type → SwiftData: Native `[Track]` array
 - Realm: Manual relationship management → SwiftData: Inverse relationships automatic
 - Realm: No delete rules → SwiftData: `deleteRule: .cascade / .nullify / .deny`
 
@@ -140,6 +151,12 @@ final class Track {
     @Attribute(.unique) var id: String
     var genre: String = ""
     var releaseDate: Date = Date()
+
+    init(id: String, genre: String = "", releaseDate: Date = Date()) {
+        self.id = id
+        self.genre = genre
+        self.releaseDate = releaseDate
+    }
 
     // Indexes are declared with the freestanding #Index macro, NOT @Attribute.
     // There is no .indexed attribute option. Each array is one index;
@@ -247,9 +264,11 @@ actor SchemaImporter {
     let modelContainer: ModelContainer
 
     func migrateFromRealm() async throws {
-        // 1. Open Realm database
+        // 1. Open Realm database. `actor: self` isolates it to this actor; the
+        //    bare `Realm(configuration:)` overload is @MainActor and opens the
+        //    Realm on the main queue instead.
         let realmConfig = Realm.Configuration(fileURL: URL(fileURLWithPath: realmPath))
-        let realm = try await Realm(configuration: realmConfig)
+        let realm = try await Realm(configuration: realmConfig, actor: self)
 
         // 2. Create SwiftData context
         let context = ModelContext(modelContainer)
@@ -359,13 +378,13 @@ actor ComplexMigrator {
 
 ### Realm Sync → SwiftData CloudKit
 
-Realm Sync (now deprecated) provided automatic sync. SwiftData uses CloudKit directly:
+Realm Sync once provided automatic sync; the service shut down on September 30, 2025, and Realm 20 removed the API. SwiftData uses CloudKit directly:
 
 ```swift
-// REALM SYNC: Automatic but deprecated
-let config = Realm.Configuration(
-    syncConfiguration: SyncConfiguration(user: app.currentUser!)
-)
+// REALM SYNC (Realm 10.x): the signed-in user vends the configuration.
+// Realm 20 deleted this surface — `Realm.Configuration` has no
+// `syncConfiguration` member and `SyncConfiguration` no longer exists.
+let realmConfig = app.currentUser!.configuration(partitionValue: "my-partition")
 
 // SWIFTDATA: CloudKit (recommended replacement)
 let schema = Schema([Track.self, Album.self])
@@ -388,15 +407,34 @@ class CloudKitSyncMonitor: ObservableObject {
 
     let modelContainer: ModelContainer
 
+    init(modelContainer: ModelContainer) {
+        self.modelContainer = modelContainer
+    }
+
     func startMonitoring() {
-        // Monitor CloudKit sync notifications
+        // SwiftData publishes no "CloudKit sync completed" notification of its
+        // own. Its CloudKit mirroring is Core Data's, so observe that event
+        // stream — it fires when an import or export starts and again when it ends.
         NotificationCenter.default.addObserver(
-            forName: NSNotification.Name("CloudKitSyncDidComplete"),
+            forName: NSPersistentCloudKitContainer.eventChangedNotification,
             object: nil,
             queue: .main
-        ) { [weak self] _ in
-            self?.isSyncing = false
-            self?.lastSyncDate = Date()
+        ) { [weak self] notification in
+            guard let event = notification.userInfo?[
+                NSPersistentCloudKitContainer.eventNotificationUserInfoKey
+            ] as? NSPersistentCloudKitContainer.Event else { return }
+
+            // `Notification` is not Sendable, so read what we need off it here,
+            // then hop onto the main actor that `queue: .main` already promises.
+            let isSyncing = event.endDate == nil
+            let endDate = event.endDate
+            let error = event.error
+
+            MainActor.assumeIsolated {
+                self?.isSyncing = isSyncing
+                if let endDate { self?.lastSyncDate = endDate }
+                if let error { self?.syncError = error }
+            }
         }
     }
 
@@ -435,10 +473,9 @@ Week 3: CloudKit Sync Testing
 
 Week 4+: Production Rollout
 ├─ Deploy app with SwiftData + CloudKit
-├─ Initially run parallel (Realm Sync + SwiftData CloudKit)
-├─ Monitor both sync mechanisms
-├─ Gradually deprecate Realm Sync
-└─ Final cutoff before Sept 30, 2025
+├─ Monitor CloudKit sync health
+├─ Remove the Realm Sync code path
+└─ Confirm no client still depends on the old service
 ```
 
 ---
@@ -460,7 +497,7 @@ actor SmallAppMigration {
 
     func migrateSmallApp() async throws {
         let realmConfig = Realm.Configuration(fileURL: realmPath)
-        let realm = try await Realm(configuration: realmConfig)
+        let realm = try await Realm(configuration: realmConfig, actor: self)
 
         let context = ModelContext(modelContainer)
 
@@ -497,7 +534,7 @@ actor MediumAppMigration {
 
     func migrateMediumApp(onProgress: @MainActor ProgressCallback) async throws {
         let realmConfig = Realm.Configuration(fileURL: URL(fileURLWithPath: realmPath))
-        let realm = try await Realm(configuration: realmConfig)
+        let realm = try await Realm(configuration: realmConfig, actor: self)
 
         let context = ModelContext(modelContainer)
         let allTracks = realm.objects(RealmTrack.self)
@@ -763,8 +800,12 @@ grep -r "RealmTrack\|RealmAlbum" . --include="*.swift"
 let realm = try! Realm()
 let count = realm.objects(RealmTrack.self).count
 
-# 3. Export Realm database
-cp ~/Library/Developer/Realm/my_realm.realm ~/Downloads/backup.realm
+# 3. Export Realm database (default store is per-platform)
+#    iOS:   <app container>/Documents/default.realm
+#    macOS: ~/Library/Application Support/<bundle-id>/default.realm
+#    tvOS:  <app container>/Library/Caches/default.realm
+#    Realm.Configuration.defaultConfiguration.fileURL prints the exact path
+cp "<app container>/Documents/default.realm" ~/Downloads/backup.realm
 
 # 4. Test SwiftData models
 // Create in-memory test container
@@ -787,5 +828,5 @@ Settings → [Your Name] → iCloud → Check CloudKit status
 
 ---
 
-**Urgency**: Realm Device Sync sunset September 30, 2025
+**Status**: Realm Device Sync shut down September 30, 2025
 **Estimated Migration Time**: 2-8 weeks depending on app complexity

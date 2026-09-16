@@ -2,7 +2,6 @@
 # iOS Storage Management Reference
 
 **Purpose**: Comprehensive reference for storage pressure, purging policies, disk space, and URL resource values
-**Availability**: iOS 5.0+ (basic), iOS 11.0+ (modern capacity APIs)
 **Context**: Answer to "Does iOS provide any way to mark files as 'purge as last resort'?"
 
 ## When to Use This Skill
@@ -13,7 +12,6 @@ Use this skill when you need to:
 - Set purge priorities for cached files
 - Exclude files from backup
 - Monitor storage pressure
-- Mark files as purgeable
 - Understand volume capacity APIs
 - Handle "low storage" scenarios
 
@@ -24,14 +22,14 @@ Use this skill when you need to:
 **Answer**: Not directly, but iOS provides two approaches:
 
 1. **Location-based purging** (implicit priority):
-   - `tmp/` → Purged aggressively (anytime)
-   - `Library/Caches/` → Purged under storage pressure
-   - `Documents/`, `Application Support/` → Never purged
+   - `tmp/` → Purged when your app is not running
+   - `Library/Caches/` → Purged under storage pressure, never while the app is running
+   - `Documents/`, `Application Support/` → Not purged while the app is installed (iOS; on tvOS every directory is purgeable)
 
 2. **Capacity checking** (explicit strategy):
-   - `volumeAvailableCapacityForImportantUsage` — For must-save data
-   - `volumeAvailableCapacityForOpportunisticUsage` — For nice-to-have data
-   - Check before saving, choose location based on available space
+   - `volumeAvailableCapacityForImportantUsage` — Space for content the user asked to keep locally (still replaceable)
+   - `volumeAvailableCapacityForOpportunisticUsage` — Space for content nobody asked for
+   - Check before writing replaceable content; never gate an irreplaceable write on either key
 
 ---
 
@@ -41,21 +39,20 @@ Use this skill when you need to:
 
 | Resource Key | Type | Purpose | Availability |
 |--------------|------|---------|--------------|
-| `volumeAvailableCapacityKey` | Int64 | Total available space | iOS 5.0+ |
-| `volumeAvailableCapacityForImportantUsageKey` | Int64 | Space for essential files | iOS 11.0+ |
-| `volumeAvailableCapacityForOpportunisticUsageKey` | Int64 | Space for optional files | iOS 11.0+ |
-| `volumeTotalCapacityKey` | Int64 | Total volume capacity | iOS 5.0+ |
+| `volumeAvailableCapacityKey` | Int? | Total available space | iOS 4.0+ |
+| `volumeAvailableCapacityForImportantUsageKey` | Int64 | Space for content the user expects locally (replaceable) | iOS 11.0+; unavailable on tvOS/watchOS |
+| `volumeAvailableCapacityForOpportunisticUsageKey` | Int64 | Space for content nobody requested | iOS 11.0+; unavailable on tvOS/watchOS |
+| `volumeTotalCapacityKey` | Int? | Total volume capacity | iOS 4.0+ |
 | `isExcludedFromBackupKey` | Bool | Exclude from iCloud/iTunes backup | iOS 5.1+ |
-| `isPurgeableKey` | Bool | System can delete under pressure | iOS 9.0+ |
-| `fileAllocatedSizeKey` | Int64 | Actual disk space used | iOS 5.0+ |
-| `totalFileAllocatedSizeKey` | Int64 | Total allocated (including metadata) | iOS 5.0+ |
+| `fileAllocatedSizeKey` | Int? | Actual disk space used | iOS 4.0+ |
+| `totalFileAllocatedSizeKey` | Int? | Total allocated (including metadata) | iOS 5.0+ |
 
 ### Checking Available Space (Modern Approach)
 
 ```swift
-// ✅ CORRECT: Check appropriate capacity before saving
-func checkSpaceBeforeSaving(fileSize: Int64, isEssential: Bool) -> Bool {
-    let homeURL = FileManager.default.homeDirectoryForCurrentUser
+// ✅ CORRECT: Check capacity before writing replaceable content
+func canSaveReplaceableContent(fileSize: Int64, userRequested: Bool) -> Bool {
+    let homeURL = URL(fileURLWithPath: NSHomeDirectory())
 
     do {
         let values = try homeURL.resourceValues(forKeys: [
@@ -63,12 +60,12 @@ func checkSpaceBeforeSaving(fileSize: Int64, isEssential: Bool) -> Bool {
             .volumeAvailableCapacityForOpportunisticUsageKey
         ])
 
-        if isEssential {
-            // For must-save data (user-created content, critical app data)
+        if userRequested {
+            // The user asked to keep this here, but it can be re-fetched
             let importantCapacity = values.volumeAvailableCapacityForImportantUsage ?? 0
             return fileSize < importantCapacity
         } else {
-            // For nice-to-have data (caches, thumbnails)
+            // Nothing the user asked for (caches, thumbnails)
             let opportunisticCapacity = values.volumeAvailableCapacityForOpportunisticUsage ?? 0
             return fileSize < opportunisticCapacity
         }
@@ -78,45 +75,64 @@ func checkSpaceBeforeSaving(fileSize: Int64, isEssential: Bool) -> Bool {
     }
 }
 
-// Usage
-if checkSpaceBeforeSaving(fileSize: imageData.count, isEssential: true) {
-    try imageData.write(to: documentsURL.appendingPathComponent("photo.jpg"))
-} else {
-    showLowStorageAlert()
+// ✅ CORRECT: Never gate an irreplaceable write on a capacity check — attempt it
+func saveUserDocument(_ data: Data, to url: URL) throws {
+    do {
+        try data.write(to: url, options: .atomic)
+    } catch let error as NSError where isOutOfSpace(error) {
+        showLowStorageAlert()
+        throw error
+    }
 }
+
+// Foundation file writes report a full disk as Cocoa 640 (.fileWriteOutOfSpace)
+// with NSPOSIXErrorDomain 28 (ENOSPC) underneath; raw POSIX writes report 28 directly
+func isOutOfSpace(_ error: NSError) -> Bool {
+    if error.domain == NSCocoaErrorDomain && error.code == CocoaError.fileWriteOutOfSpace.rawValue { return true }
+    if error.domain == NSPOSIXErrorDomain && error.code == Int(ENOSPC) { return true }
+    guard let underlying = error.userInfo[NSUnderlyingErrorKey] as? NSError else { return false }
+    return isOutOfSpace(underlying)
+}
+
+// Usage
+if canSaveReplaceableContent(fileSize: Int64(imageData.count), userRequested: false) {
+    try imageData.write(to: cachesURL.appendingPathComponent("photo.jpg"))
+}
+
+try saveUserDocument(imageData, to: documentsURL.appendingPathComponent("photo.jpg"))
 ```
 
 ### Important vs Opportunistic Capacity
 
 **volumeAvailableCapacityForImportantUsage**:
-- Space reserved for **essential** operations
-- Use for: User-created content, must-save data
-- System reserves this space more aggressively
-- Higher threshold
+- Space for content the user or app **clearly expects to be present locally** — but which is ultimately replaceable
+- Use for: Content the user explicitly asked to keep, that can be re-fetched
+- Includes space the system expects to reclaim by purging non-essential and cached resources
 
 **volumeAvailableCapacityForOpportunisticUsage**:
-- Space available for **optional** operations
+- Space for content **no one explicitly asked for**
 - Use for: Caches, thumbnails, pre-fetching
-- Lower threshold (system may already be under pressure)
-- Indicates "go ahead if you want, but system is getting full"
+- Same purgeable-space accounting — the difference is only whether a request was made
+
+Neither key is a reservation. From Apple's documentation for the important-usage key: *"This value should not be used in determining if there is room for an irreplaceable resource. In the case of irreplaceable resources, always attempt to save the resource regardless of available capacity and handle failure as gracefully as possible."*
 
 ```swift
 // ✅ CORRECT: Different thresholds for different data types
 func shouldDownloadThumbnail(size: Int64) -> Bool {
-    let capacity = try? FileManager.default.homeDirectoryForCurrentUser
+    let capacity = (try? URL(fileURLWithPath: NSHomeDirectory())
         .resourceValues(forKeys: [.volumeAvailableCapacityForOpportunisticUsageKey])
-        .volumeAvailableCapacityForOpportunisticUsage ?? 0
+        .volumeAvailableCapacityForOpportunisticUsage) ?? 0
 
     // Only download optional content if there's plenty of space
     return size < capacity
 }
 
-func canSaveUserDocument(size: Int64) -> Bool {
-    let capacity = try? FileManager.default.homeDirectoryForCurrentUser
+func shouldReDownloadUserContent(size: Int64) -> Bool {
+    let capacity = (try? URL(fileURLWithPath: NSHomeDirectory())
         .resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey])
-        .volumeAvailableCapacityForImportantUsage ?? 0
+        .volumeAvailableCapacityForImportantUsage) ?? 0
 
-    // User documents are essential
+    // The user asked for this, but it can be re-fetched — check before pulling it down again
     return size < capacity
 }
 ```
@@ -132,6 +148,7 @@ Files in `Caches/` are automatically excluded from backup, but you should **expl
 ```swift
 // ✅ CORRECT: Exclude large re-downloadable files from backup
 func markExcludedFromBackup(url: URL) throws {
+    var url = url  // setResourceValues is mutating
     var resourceValues = URLResourceValues()
     resourceValues.isExcludedFromBackup = true
     try url.setResourceValues(resourceValues)
@@ -177,46 +194,6 @@ func isExcludedFromBackup(url: URL) -> Bool {
 
 ---
 
-## Purgeable Files
-
-### isPurgeable
-
-Mark files as candidates for automatic purging by the system.
-
-```swift
-// ✅ CORRECT: Mark cache files as purgeable
-func markAsPurgeable(url: URL) throws {
-    var resourceValues = URLResourceValues()
-    resourceValues.isPurgeable = true
-    try url.setResourceValues(resourceValues)
-}
-
-// Example: Thumbnail cache
-func cacheThumbnail(image: UIImage, for url: URL) throws {
-    let cacheURL = FileManager.default.urls(
-        for: .cachesDirectory,
-        in: .userDomainMask
-    )[0]
-
-    let thumbnailURL = cacheURL.appendingPathComponent(url.lastPathComponent)
-
-    // Save thumbnail
-    try image.pngData()?.write(to: thumbnailURL)
-
-    // Mark as purgeable
-    try markAsPurgeable(url: thumbnailURL)
-
-    // Also exclude from backup
-    var resourceValues = URLResourceValues()
-    resourceValues.isExcludedFromBackup = true
-    try thumbnailURL.setResourceValues(resourceValues)
-}
-```
-
-**Note**: Files in `Caches/` are already purgeable by location. Setting `isPurgeable` is advisory for files in other locations.
-
----
-
 ## Implicit Purge Priority (Location-Based)
 
 iOS purges files based on **location**, not explicit priority flags.
@@ -224,16 +201,14 @@ iOS purges files based on **location**, not explicit priority flags.
 ### Purge Priority Hierarchy
 
 ```
-PURGED FIRST (Aggressive):
+PURGED FIRST (Between Launches):
 └── tmp/
-    - Purged: Anytime (even while app running)
-    - Lifetime: Hours to days
+    - Purged: When your app is not running (periodically, and on device restore)
     - Use for: Truly temporary intermediates
 
 PURGED SECOND (Storage Pressure):
 └── Library/Caches/
-    - Purged: When system needs space
-    - Lifetime: Weeks to months (if space available)
+    - Purged: When the system needs space; never while the app is running
     - Use for: Re-downloadable, regenerable content
 
 NEVER PURGED (Permanent):
@@ -248,12 +223,14 @@ NEVER PURGED (Permanent):
     - Use for: Essential app data
 ```
 
+This hierarchy is iOS. On tvOS the directories exist but none of them survive reliably once the app is not running — see axiom-swift (skills/tvos.md).
+
 ### Implementation Strategy
 
 ```swift
 // ✅ CORRECT: Choose location based on purge priority needs
 func saveFile(data: Data, priority: FilePriority) throws {
-    let url: URL
+    var url: URL  // setResourceValues is mutating
 
     switch priority {
     case .essential:
@@ -271,7 +248,7 @@ func saveFile(data: Data, priority: FilePriority) throws {
         )[0].appendingPathComponent("cache.dat")
 
     case .temporary:
-        // Purged aggressively - for temp files
+        // Purged when the app is not running - for temp files
         url = FileManager.default.temporaryDirectory
             .appendingPathComponent("temp.dat")
     }
@@ -289,7 +266,7 @@ func saveFile(data: Data, priority: FilePriority) throws {
 enum FilePriority {
     case essential    // Never purge
     case cacheable    // Purge under pressure
-    case temporary    // Purge aggressively
+    case temporary    // Purge between launches
 }
 ```
 
@@ -303,7 +280,7 @@ enum FilePriority {
 // ✅ CORRECT: Monitor for low storage and clean up proactively
 class StorageMonitor {
     func checkStorageAndCleanup() {
-        let homeURL = FileManager.default.homeDirectoryForCurrentUser
+        let homeURL = URL(fileURLWithPath: NSHomeDirectory())
 
         guard let values = try? homeURL.resourceValues(forKeys: [
             .volumeAvailableCapacityForOpportunisticUsageKey,
@@ -316,7 +293,7 @@ class StorageMonitor {
         // Calculate percentage
         let percentAvailable = Double(availableSpace) / Double(totalSpace)
 
-        if percentAvailable < 0.10 {  // Less than 10% free
+        if percentAvailable < 0.10 {  // Tunable: clean up below 10% free
             print("⚠️ Low storage detected, cleaning up...")
             cleanupCaches()
         }
@@ -354,14 +331,38 @@ class StorageMonitor {
 
 ```swift
 // ✅ CORRECT: Register background task to clean up storage
+// Requires Info.plist BGTaskSchedulerPermittedIdentifiers = ["com.example.app.cleanup"]
+// and UIBackgroundModes = ["processing"] for a BGProcessingTask.
 import BackgroundTasks
 
+// Call from application(_:didFinishLaunchingWithOptions:) — every launch handler
+// must be registered before it returns
 func registerBackgroundCleanup() {
-    BGTaskScheduler.shared.register(
+    let registered = BGTaskScheduler.shared.register(
         forTaskWithIdentifier: "com.example.app.cleanup",
         using: nil
     ) { task in
         self.handleStorageCleanup(task: task as! BGProcessingTask)
+    }
+
+    // register returns false when the identifier is missing from
+    // BGTaskSchedulerPermittedIdentifiers — report it instead of ignoring it
+    guard registered else {
+        print("Cleanup task not registered: add com.example.app.cleanup to BGTaskSchedulerPermittedIdentifiers")
+        return
+    }
+}
+
+// Registering alone never delivers a task — submit a request to schedule it
+func scheduleStorageCleanup() {
+    let request = BGProcessingTaskRequest(identifier: "com.example.app.cleanup")
+    request.requiresNetworkConnectivity = false
+    request.requiresExternalPower = false
+
+    do {
+        try BGTaskScheduler.shared.submit(request)
+    } catch {
+        print("Could not schedule storage cleanup: \(error)")
     }
 }
 
@@ -428,7 +429,7 @@ print("Cache using \(cacheSize / 1_000_000) MB")
 // ✅ CORRECT: Only download optional content if space available
 func downloadOptionalContent(url: URL, size: Int64) async throws {
     // Check opportunistic capacity
-    let homeURL = FileManager.default.homeDirectoryForCurrentUser
+    let homeURL = URL(fileURLWithPath: NSHomeDirectory())
     let values = try homeURL.resourceValues(forKeys: [
         .volumeAvailableCapacityForOpportunisticUsageKey
     ])
@@ -455,21 +456,21 @@ class CacheManager {
 
         // Check if we should clean up first
         if shouldCleanupCache(addingSize: Int64(data.count)) {
-            cleanupOldestFiles(targetSize: 100 * 1_000_000) // 100 MB
+            cleanupOldestFiles(targetSize: 100 * 1_000_000) // Tunable target: 100 MB
         }
 
         try data.write(to: cacheURL)
     }
 
     func shouldCleanupCache(addingSize: Int64) -> Bool {
-        let homeURL = FileManager.default.homeDirectoryForCurrentUser
+        let homeURL = URL(fileURLWithPath: NSHomeDirectory())
         guard let values = try? homeURL.resourceValues(forKeys: [
             .volumeAvailableCapacityForOpportunisticUsageKey
         ]) else { return false }
 
         let available = values.volumeAvailableCapacityForOpportunisticUsage ?? 0
 
-        // Clean up if less than 200 MB free
+        // Tunable: keep 200 MB of headroom free
         return available < 200 * 1_000_000
     }
 
@@ -489,7 +490,7 @@ class MediaDownloader {
         let data = try await URLSession.shared.data(from: url).0
 
         // Store in Application Support (not Caches, so it persists)
-        let mediaURL = applicationSupportDirectory
+        var mediaURL = applicationSupportDirectory  // setResourceValues is mutating
             .appendingPathComponent("Downloads")
             .appendingPathComponent(url.lastPathComponent)
 
@@ -521,7 +522,7 @@ func auditBackupSize() {
     print("Documents (backed up): \(size / 1_000_000) MB")
 
     // Check for large files that should be excluded
-    if size > 100 * 1_000_000 {  // > 100 MB
+    if size > 100 * 1_000_000 {  // Tunable threshold: 100 MB
         print("⚠️ Large backup size - check for re-downloadable files")
         findLargeFiles(in: documentsURL)
     }
@@ -535,7 +536,7 @@ func findLargeFiles(in directory: URL) {
 
     for case let fileURL as URL in enumerator {
         if let size = getFileSize(url: fileURL),
-           size > 10 * 1_000_000 {  // > 10 MB
+           size > 10 * 1_000_000 {  // Tunable threshold: 10 MB
             print("Large file: \(fileURL.lastPathComponent) (\(size / 1_000_000) MB)")
 
             // Check if excluded from backup
@@ -553,10 +554,10 @@ func findLargeFiles(in directory: URL) {
 
 | Task | API | Code |
 |------|-----|------|
-| Check space for essential file | `volumeAvailableCapacityForImportantUsageKey` | `values.volumeAvailableCapacityForImportantUsage` |
+| Check space before a replaceable write | `volumeAvailableCapacityForImportantUsageKey` | `values.volumeAvailableCapacityForImportantUsage` |
 | Check space for cache | `volumeAvailableCapacityForOpportunisticUsageKey` | `values.volumeAvailableCapacityForOpportunisticUsage` |
+| Save irreplaceable content | Attempt the write | Handle `CocoaError.fileWriteOutOfSpace` (640) or `NSPOSIXErrorDomain` 28 |
 | Exclude from backup | `isExcludedFromBackupKey` | `resourceValues.isExcludedFromBackup = true` |
-| Mark purgeable | `isPurgeableKey` | `resourceValues.isPurgeable = true` |
 | Get file size | `totalFileAllocatedSizeKey` | `values.totalFileAllocatedSize` |
 | Purge priority | Location-based | Use `tmp/` or `Caches/` directory |
 
@@ -596,7 +597,3 @@ print("Protection: \(values.fileProtection ?? .none)")
 - `skills/storage.md` — Decide where to store files
 - axiom-security (skills/file-protection-ref.md) — File encryption and security
 - `skills/storage-diag.md` — Debug storage-related issues
-
----
-
-**Minimum iOS**: 5.0 (basic), 11.0 (modern capacity APIs)

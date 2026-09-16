@@ -44,7 +44,7 @@ Grep for:
   - `registerMigration` — migration registrations
   - `eraseDatabaseOnSchemaChange` — destructive flag
   - `ALTER TABLE`, `CREATE TABLE`, `CREATE INDEX`, `DROP TABLE`, `DROP COLUMN` — raw schema DDL
-  - `addColumn`, `dropTable`, `renameColumn`, `addForeignKey` — GRDB DSL
+  - `alter(table:)` with `add(column:)`, `rename(column:to:)`, `drop(column:)`, `drop(table:)` — GRDB alteration DSL
   - `try db.execute(sql:` — raw SQL execution
 ```
 
@@ -54,7 +54,7 @@ Read 2-3 key files (the migration file, the database setup file, one model file)
 - How many migrations are registered, in what order
 - Which tables exist and their primary keys
 - Which tables have FOREIGN KEY references between them
-- Whether `PRAGMA foreign_keys = ON` is set in `prepareDatabase`
+- Whether FK enforcement is left on (`Configuration.foreignKeysEnabled`, default `true`) or explicitly disabled
 - Whether writes go through `db.write { }` (implicit transaction) or raw `execute`
 
 ### Output
@@ -88,16 +88,16 @@ Run all 10 detection patterns. For every grep match, use Read to verify the surr
 
 ### Pattern 3: DROP COLUMN (CRITICAL/HIGH)
 
-**Issue**: SQLite supports DROP COLUMN since 3.35.0 (iOS 16+). On older OS, crashes. Even on supported versions, restricted (no PRIMARY KEY, UNIQUE, or referenced columns).
-**Search**: `DROP\s+COLUMN`, `dropColumn`
+**Issue**: SQLite supports DROP COLUMN from 3.35.0 (iOS 15+). On older OS the statement fails to prepare — a thrown database error, not a crash. Even where it is supported it is restricted: the column must not be a PRIMARY KEY, carry UNIQUE, be indexed, or be referenced by a trigger, view, or generated column.
+**Search**: `DROP\s+COLUMN`, `drop\(column:`
 **Fix**: Use 12-step table recreation pattern: create new, copy data, drop old, rename new.
 
 ### Pattern 4: ALTER TABLE Without Idempotency Check (CRITICAL/HIGH)
 
-**Issue**: `ADD COLUMN` on an existing column crashes with "duplicate column name". Beta testers re-running the migration crash.
+**Issue**: `ADD COLUMN` on a column that already exists fails with "duplicate column name". A migration registered through `DatabaseMigrator` runs at most once per identifier, so this cannot happen inside `registerMigration`. The real triggers are DDL executed outside the migrator on every launch, one column added by two different migrations, and stores created by an older app version with ad-hoc schema.
 **Search**: `ADD\s+COLUMN`, `addColumn`
-**Verify**: Read matching files; check for `PRAGMA table_info`, `ifNotExists:`, or do-catch.
-**Fix**: GRDB's `addColumn(ifNotExists:)`, or check `PRAGMA table_info` first, or wrap in do-catch.
+**Verify**: Read matching files; check for an existence guard (`db.columns(in:)`, `PRAGMA table_info`) or a do-catch. DDL inside `registerMigration` needs no guard.
+**Fix**: Guard on introspection — `let exists = try db.columns(in: "users").contains { $0.name == "email" }`, then alter only when `exists` is false. `PRAGMA table_info` or a do-catch around the ALTER also works. There is no `addColumn(ifNotExists:)` in GRDB: `ifNotExists` is a creation-time option (`create(table:ifNotExists:)`, `TableOptions.ifNotExists`), and SQLite's ADD COLUMN has no such clause.
 
 ### Pattern 5: INSERT OR REPLACE Breaks Foreign Keys (HIGH/HIGH)
 
@@ -106,31 +106,33 @@ Run all 10 detection patterns. For every grep match, use Read to verify the surr
 **Verify**: Read matching files; check if target table is referenced by FK constraints.
 **Fix**: `INSERT ... ON CONFLICT(id) DO UPDATE SET ...` (UPSERT).
 
-### Pattern 6: Foreign Key Addition Without Data Validation (HIGH/MEDIUM)
+### Pattern 6: Foreign Key Added to an Existing Table Without an Orphan Check (HIGH/MEDIUM)
 
-**Issue**: Adding FK when orphaned rows exist fails the migration or leaves the DB inconsistent.
-**Search**: `FOREIGN\s+KEY`, `REFERENCES`, `addForeignKey`
-**Verify**: Read matching files; check for orphan-cleanup or `PRAGMA foreign_key_check` before constraint addition.
-**Fix**: Clean up orphans first, or run `PRAGMA foreign_key_check` to validate.
+**Issue**: Foreign keys are creation-time in both SQLite and GRDB — `foreignKey(_:references:columns:onDelete:onUpdate:deferred:)` on the table definition; a `TableAlteration` can only add, rename, or drop columns. Adding one to an existing table means recreating it, and orphaned child rows make that recreation fail: GRDB's default deferred checks run `checkForeignKeys()` before the migration commits.
+**Search**: `FOREIGN\s+KEY`, `REFERENCES` — declared inside `CREATE TABLE`, never added by an ALTER
+**Verify**: Read matching files; where the constraint is new on an existing table, check for orphan cleanup or a `PRAGMA foreign_key_check` before the recreation. There is no `addForeignKey` API.
+**Fix**: Clean up orphans first, or run `PRAGMA foreign_key_check` to validate before recreating the table.
 
-### Pattern 7: PRAGMA foreign_keys Not Enabled (HIGH/HIGH)
+### Pattern 7: Foreign Key Enforcement Disabled (HIGH/HIGH)
 
-**Issue**: SQLite ships with foreign keys OFF. Without enabling them, all FK constraints are silently ignored — data integrity is not enforced.
+**Issue**: SQLite ships with foreign keys OFF, and an app that never turns them on gets no enforcement. GRDB is not such an app — `Configuration.foreignKeysEnabled` defaults to `true` and `Database.setUp()` issues `PRAGMA foreign_keys = ON` on every connection before any `prepareDatabase` closure runs. A GRDB app that declares FKs and never writes the pragma is correct; only an explicit opt-out is a finding.
 **Search**: `PRAGMA\s+foreign_keys`, `foreignKeysEnabled`
-**Verify**: If FK constraints exist (Pattern 6 found `FOREIGN KEY`) but no PRAGMA setting present, flag it.
-**Fix**: GRDB: `configuration.prepareDatabase { db in try db.execute(sql: "PRAGMA foreign_keys = ON") }`
+**Verify**: Flag `PRAGMA foreign_keys = OFF` or `foreignKeysEnabled = false`. For a raw-SQLite / SQLite.swift stack whose DDL declares `FOREIGN KEY`, flag the absence of `PRAGMA foreign_keys = ON` on the connection. Never flag a GRDB app for not writing the pragma — the pragma is already on there.
+**Fix**: GRDB: delete the override, or leave `Configuration.foreignKeysEnabled` at its default `true`. Raw SQLite: issue `PRAGMA foreign_keys = ON` on every connection open.
 
 ### Pattern 8: RENAME COLUMN Without Migration Strategy (MEDIUM/MEDIUM)
 
-**Issue**: RENAME COLUMN (SQLite 3.25.0+, iOS 12+) works but doesn't update Swift code. Raw SQL using the old name silently breaks.
-**Search**: `RENAME\s+COLUMN`, `renameColumn`
+**Issue**: RENAME COLUMN (SQLite 3.25.0+, iOS 13+) works but doesn't update Swift code. Raw SQL using the old name silently breaks.
+**Search**: `RENAME\s+COLUMN`, `rename\(column:`
 **Verify**: Read matching files; grep the codebase for the old column name in raw SQL strings.
 **Fix**: Update all raw SQL references to the new name.
 
 ### Pattern 9: Batch Insert Outside Transaction (MEDIUM/MEDIUM)
 
 **Issue**: Each INSERT outside a transaction triggers a disk sync. 1000 inserts = 1000 syncs = 30 seconds instead of < 1 second.
-**Search**: `for.*insert\(db\)`, `for.*execute.*INSERT`
+**Search**:
+- `for\s+\w+\s+in\s+\w+\s*\{` — loop headers
+- `\.insert\(db\)`, `execute\(sql:` — insert sites; Read whether the enclosing loop sits inside `db.write { }` or `db.inTransaction { }`
 **Verify**: Read matching files; check whether the loop is inside `db.write { }` or `db.inTransaction { }`.
 **Fix**: Wrap in a single transaction: `try db.write { db in for item in items { try item.insert(db) } }`
 
@@ -147,7 +149,7 @@ Using the Schema Map from Phase 1 and your domain knowledge, check for what's *m
 
 | Question | What it detects | Why it matters |
 |----------|----------------|----------------|
-| Is `PRAGMA foreign_keys = ON` set in `prepareDatabase`, given that FK constraints exist? | Silent FK enforcement bypass | Constraints declared but ignored — orphaned rows accumulate without error |
+| Given that FK constraints exist, is enforcement left on (`foreignKeysEnabled` at its default) — and turned on explicitly for a raw-SQLite stack? | Silent FK enforcement bypass | Constraints declared but ignored — orphaned rows accumulate without error |
 | Does every schema-changing migration handle existing rows (DEFAULT, NULL, backfill)? | Production-data crashes | Migration that works on empty DB crashes on a populated one |
 | Is there an upgrade path from the oldest supported app version to current? | Unreachable schema state | Users on old versions skip intermediate migrations or crash |
 | Are migrations append-only, or do later migrations modify earlier ones? | Migration corruption | Modifying past migrations changes the schema for users who already ran them |
@@ -167,11 +169,11 @@ Bump severity for these combinations:
 | Finding A | + Finding B | = Compound | Severity |
 |-----------|------------|-----------|----------|
 | ADD COLUMN NOT NULL without DEFAULT | Production app shipping with existing users | Guaranteed crash on update | CRITICAL |
-| FOREIGN KEY constraints declared | PRAGMA foreign_keys not enabled | Silent integrity failure across whole schema | CRITICAL |
+| FOREIGN KEY constraints declared | FK enforcement disabled | Silent integrity failure across whole schema | CRITICAL |
 | INSERT OR REPLACE | FK constraints with ON DELETE CASCADE | Silent destruction of child records on every replace | CRITICAL |
 | DROP TABLE | No data-preserving migration before it | Permanent data loss on update | CRITICAL |
-| ALTER TABLE without idempotency | Beta or TestFlight distribution | Crash on re-run for testers who already migrated | HIGH |
-| Add FK constraint | No `PRAGMA foreign_key_check` validation | Migration succeeds but inconsistent data passed through | HIGH |
+| ALTER TABLE without idempotency | DDL that runs outside the migrator | Fails on every launch after the first, not just for testers | HIGH |
+| FK added by table recreation | No `PRAGMA foreign_key_check` beforehand | Either the migration fails at commit or orphans land in a constrained table | HIGH |
 | RENAME COLUMN | Raw SQL strings elsewhere in codebase | Runtime SQL errors at the renamed call site | HIGH |
 | Batch insert outside transaction | Loop > 100 items | UI hang on slow disk + non-atomic on crash | MEDIUM |
 | CREATE without IF NOT EXISTS | Migration replayability scenario (test fixtures, recovery) | Crash on re-run of an already-applied migration | MEDIUM |
@@ -187,17 +189,16 @@ Cross-auditor overlap notes:
 | Metric | Value |
 |--------|-------|
 | Migration count | N registered |
-| Idempotency coverage | M of N migrations safe to re-run (Z%) |
+| Ad-hoc DDL guards | M of N statements outside `registerMigration` guarded (Z%) |
 | FK enforcement | ON / OFF / not configured |
-| FK validation | M of N FK additions validated (Z%) |
 | Transaction coverage | M of N batch writes inside `db.write` (Z%) |
 | Destructive operations | N DROP TABLE, M DROP COLUMN, K RENAME found |
 | **Health** | **SAFE / FRAGILE / DANGEROUS** |
 
 Scoring:
-- **SAFE**: No CRITICAL issues, all migrations idempotent, FK enforcement on (or no FKs declared), all batch writes transactional, zero unguarded destructive ops.
+- **SAFE**: No CRITICAL issues, no unguarded ad-hoc DDL, FK enforcement on (or no FKs declared), all batch writes transactional, zero unguarded destructive ops.
 - **FRAGILE**: No CRITICAL issues, but some MEDIUM patterns present (missing IF NOT EXISTS, RENAME without code update, batch inserts outside transactions).
-- **DANGEROUS**: Any CRITICAL issue (ADD COLUMN NOT NULL without DEFAULT, DROP on user data, FK constraint declared but PRAGMA off, INSERT OR REPLACE on FK-referenced tables).
+- **DANGEROUS**: Any CRITICAL issue (ADD COLUMN NOT NULL without DEFAULT, DROP on user data, FK constraints declared with enforcement disabled, INSERT OR REPLACE on FK-referenced tables).
 
 ## Output Format
 

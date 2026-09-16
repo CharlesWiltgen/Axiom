@@ -36,11 +36,11 @@ If the question is "how do I make my type Codable for an API payload," start in 
 
 ## 1 — Version floor
 
-JSON1 functions and the `->`/`->>` operators arrived in SQLite 3.38.0 and are built in by default (no compile flag). JSONB arrived in SQLite 3.45.0. The system SQLite that GRDB and SQLiteData link against is the one Apple ships with the OS, so feature availability tracks the OS version.
+JSON1 functions arrived in SQLite 3.9.0 (2015) and have been compiled into Apple's SQLite since at least iOS 10.2. The `->`/`->>` operators arrived in 3.38.0, and that is also the version that made the JSON functions built in by default (no compile flag). JSONB arrived in SQLite 3.45.0. The system SQLite that GRDB and SQLiteData link against is the one Apple ships with the OS, so feature availability tracks the OS version.
 
 | Feature | SQLite | OS floor |
 |---|---|---|
-| `json_extract`, `json_set`, `json_each`, all JSON1 functions | 3.38 | iOS 16 / macOS 13 |
+| `json_extract`, `json_set`, `json_each`, all JSON1 functions | 3.9 | iOS 10.2 or earlier |
 | `->` and `->>` path operators | 3.38 | iOS 16 / macOS 13 |
 | JSONB binary format, `jsonb()` / `jsonb_extract()` family | 3.45 | **iOS 26 / macOS 26** |
 
@@ -54,7 +54,7 @@ JSON1 functions and the `->`/`->>` operators arrived in SQLite 3.38.0 and are bu
 
 So on Axiom's iOS 18+ / macOS 15+ floor, the JSON1 surface (§2) is available everywhere with no runtime checks — but **JSONB (§3) is not**. Gate it with `@available(iOS 26, macOS 26, *)` and keep the TEXT-JSON path as the fallback, or accept an iOS 26 floor for that feature.
 
-**The library layer enforces this for you.** StructuredQueries annotates its JSONB API `@available(iOS 26, macOS 26, tvOS 26, watchOS 26, *)`, with a few members at 27 (see §6) — so the query builder refuses to compile a call the deployed SQLite could not answer. Raw SQL through GRDB has no such guard: GRDB gates its JSON1 API at iOS 16 but leaves all 14 `jsonb*` functions ungated, so a `jsonb_extract` in a `#sql` string or a `db.execute(sql:)` compiles fine and fails at runtime on iOS 18 with `no such function: jsonb_extract`. The `SuppressPlatformSQLiteAvailability` trait removes the compile-time gate and is **only** correct when you link your own SQLite (SQLCipher, a vendored static build).
+**The library layer enforces this for you.** StructuredQueries annotates its JSONB API `@available(iOS 26, macOS 26, tvOS 26, watchOS 26, *)`, with a few members at 27 (see §6) — so the query builder refuses to compile a call the deployed SQLite could not answer. GRDB is stricter still, in a way that is easy to misread: its `Database.jsonb*` helpers (added in GRDB 7) are compiled only when GRDB is built against a vendored SQLite (`GRDBCUSTOMSQLITE`, SQLCipher, a static build), so against the system SQLite they do not exist and the call does not compile. That leaves raw SQL as the only ungated path — a `jsonb_extract` in a `#sql` string or `db.execute(sql:)` compiles fine and fails at runtime on iOS 18 with `no such function: jsonb_extract`. The `SuppressPlatformSQLiteAvailability` trait removes the compile-time gate and is **only** correct when you link your own SQLite (SQLCipher, a vendored static build).
 
 > The floor is the *system* SQLite. A wrapper built against a vendored SQLite (e.g. GRDB-SQLCipher, or a custom static build) ships its own version — check that build's SQLite, not the OS table above.
 
@@ -77,7 +77,7 @@ SELECT data ->> '$.name' FROM t;   -- Ada     (SQL text)
 SELECT data ->> 'name'   FROM t;   -- a bare key is shorthand for '$.name'
 ```
 
-Use `->>` for `WHERE` / `ORDER BY` / joins (you want the SQL scalar). Use `->` only when you want a JSON fragment back.
+Use `->>` for `WHERE` / `ORDER BY` / joins (you want the SQL scalar). Use `->` when the fragment feeds another JSON function instead: a *value* argument is inserted as JSON only when it comes from a JSON function or from `->`, never from `->>`, so `json_set(data, '$.new', data ->> '$.old')` stores a nested object as a quoted string and turns `true` into `1`, while `->` preserves both.
 
 #### Inspect
 
@@ -152,15 +152,15 @@ A `json_extract` in a `WHERE` clause is a full table scan — the planner cannot
 
 ```sql
 ALTER TABLE event ADD COLUMN status TEXT
-    AS (data ->> '$.status') STORED;     -- or VIRTUAL
+    AS (data ->> '$.status') VIRTUAL;    -- ADD COLUMN takes VIRTUAL only
 CREATE INDEX event_status ON event(status);
 
 -- Now this uses the index instead of scanning + parsing every row:
 SELECT * FROM event WHERE status = 'active';
 ```
 
-- **STORED** writes the value to disk (more space, no recompute on read) — prefer it for a column you index and read often.
-- **VIRTUAL** recomputes on read (no extra space) — fine for an indexed column, since the *index* is materialized regardless.
+- **STORED** writes the value to disk (more space, no recompute on read) — prefer it for a column you index and read often, and declare it in `CREATE TABLE`.
+- **VIRTUAL** recomputes on read (no extra space) — fine for an indexed column, since the *index* is materialized regardless, and it is the only form you can add to an existing table: `ALTER TABLE ADD COLUMN` with a STORED column fails with `cannot add a STORED column` as soon as the table has rows. Migrating an existing table to STORED takes `CREATE TABLE`-and-copy surgery (see `database-migration.md`).
 - You can also index the expression directly — `CREATE INDEX e_status ON event(data ->> '$.status')` — but only a query using the *identical* expression hits it. A generated column is more discoverable and reusable. Prefer it.
 
 If you index more than one or two fields of a JSON column, that is the signal they should be real columns (§5), not JSON.
@@ -199,7 +199,7 @@ SQLiteData stores a Swift value as JSON via the `JSONRepresentation` column type
 }
 ```
 
-Query into the column with the structured builders, which emit `json_extract` / `->>`:
+Query into the column with the structured builders, which emit `json_extract` with typed key paths:
 
 ```swift
 // Aggregate child rows into a JSON array (json_group_array under the hood)
@@ -264,17 +264,7 @@ struct Player: Codable, FetchableRecord, PersistableRecord {
 }
 ```
 
-Customize the JSON coder per record. **Set `sortedKeys`** — GRDB's change tracking and `ValueObservation` compare encoded bytes, so unstable key order makes them miss or over-report changes:
-
-```swift
-extension Player {
-    static func databaseJSONEncoder(for column: String) -> JSONEncoder {
-        let e = JSONEncoder()
-        e.outputFormatting = .sortedKeys      // required for stable observation
-        return e
-    }
-}
-```
+GRDB's default `databaseJSONEncoder(for:)` already sorts keys — its comment is "guarantee some stability in order to ease record comparison" — and it also sets `.base64` for `Data`, `.millisecondsSince1970` for `Date`, `.throw` for non-conforming floats, and the `databaseEncodingUserInfo` dictionary; the default decoder mirrors all four. Override it only to change one of those, and keep the rest. A bare `JSONEncoder` writes a `Date` as its reference-date offset (`-978307200` for the epoch, where GRDB writes `0`), which GRDB's default decoder then reads back as 1969 — an on-disk format change for every existing row, to fix a key-order problem that was never there.
 
 Query JSON with `JSONColumn` and the `Database.json*` functions (the `->`/`->>` operators are available on `SQLJSONExpressible` conformers):
 
@@ -289,7 +279,7 @@ let players = try Player
 // .jsonGroupArray(_:filter:), .jsonGroupObject(key:value:filter:), .jsonIsValid(_:)
 ```
 
-**JSONB** SQL support (the `jsonb_*` functions through GRDB's query interface) landed in **GRDB 7**; on an older GRDB you can still call them via raw SQL. The GRDB version is not the binding constraint, though — the *system SQLite* is, and it does not carry JSONB before iOS 26 / macOS 26 (§1). GRDB adds no availability annotations here, so this is the path that compiles and then fails at runtime. As elsewhere, index a hot field with a generated column (§4) rather than filtering on an extract.
+**JSONB** support through GRDB's query interface (`Database.jsonb*`, added in **GRDB 7**) is compiled away unless GRDB is built against a vendored SQLite (`GRDBCUSTOMSQLITE`, SQLCipher, a static build) — against the system SQLite the helpers do not exist and the call does not compile, so they are not an availability question at all. Raw SQL has no such guard: the *system SQLite* is the binding constraint, and it carries no JSONB before iOS 26 / macOS 26 (§1), so a `jsonb_extract` in a `#sql` string compiles and then fails at runtime on iOS 18. As elsewhere, index a hot field with a generated column (§4) rather than filtering on an extract.
 
 ```swift
 // Raw SQL escape hatch — always bind, never interpolate user input
@@ -303,8 +293,9 @@ let rows = try Row.fetchAll(db, sql: """
 JSON migrations run inside the normal migrator (`DatabaseMigrator` for GRDB, the SQLiteData migration step) — see `database-migration.md` for the safety rules. The mutating functions return new values, so reshaping is a plain `UPDATE`.
 
 ```sql
--- Rename a key across every row
-UPDATE event SET data = json_remove(json_set(data, '$.newName', data ->> '$.oldName'), '$.oldName');
+-- Rename a key across every row. `->` (not `->>`) in value position: `->>` yields
+-- TEXT, which json_set would store as a quoted string and `true` as 1.
+UPDATE event SET data = json_remove(json_set(data, '$.newName', data -> '$.oldName'), '$.oldName');
 
 -- Merge defaults into existing rows (RFC 7396; null would delete a key)
 UPDATE settings SET data = json_patch('{"theme":"system","haptics":1}', data);
@@ -313,8 +304,8 @@ UPDATE settings SET data = json_patch('{"theme":"system","haptics":1}', data);
 ALTER TABLE event ADD COLUMN status TEXT;
 UPDATE event SET status = data ->> '$.status';      -- backfill existing rows
 CREATE INDEX event_status ON event(status);
--- (a STORED generated column does the backfill for you — §4 — but a plain
---  column lets you stop writing the field into JSON going forward)
+-- (a generated column declared at CREATE TABLE time backfills itself — §4 — but
+--  a plain column lets you stop writing the field into JSON going forward)
 ```
 
 Backfill in one `UPDATE` for small tables; batch by rowid range for large ones to bound the transaction (see `grdb-performance.md`). Guard a JSON column you rely on with `CHECK (json_valid(data))` so a bad write fails loudly instead of corrupting reads.
@@ -330,7 +321,7 @@ Backfill in one `UPDATE` for small tables; batch by rowid range for large ones t
 | JSONB to "save space" by default | unreadable, ties data to SQLite version, gain is tiny, and it needs iOS 26 | TEXT until profiling says otherwise |
 | Foreign key "into" a JSON field | not enforceable | a real column with a real FK |
 | Interpolating a user value into a JSON SQL string | injection | bind parameters (`?` / `#bind`) |
-| Encoding JSON without `sortedKeys` (GRDB) | ValueObservation misses changes | set `.sortedKeys` (§7) |
+| `json_set(data, '$.new', data ->> '$.old')` | `->>` yields TEXT, so a nested object is stored as a quoted string and `true` as `1` | use `->` in value position (§2) |
 
 ## Resources
 

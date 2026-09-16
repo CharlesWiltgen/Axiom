@@ -12,14 +12,14 @@ These are real questions developers ask that this skill is designed to answer:
 #### 1. "I need to add a new column to store user preferences, but the app is already live with user data. How do I do this safely?"
 → The skill covers safe additive patterns for adding columns without losing existing data, including idempotency checks
 
-#### 2. "I'm getting 'cannot add NOT NULL column' errors when I try to migrate. What does this mean and how do I fix it?"
-→ The skill explains why NOT NULL columns fail with existing rows, and shows the safe pattern (nullable first, backfill later)
+#### 2. "I'm getting 'Cannot add a NOT NULL column with default value NULL' when I try to migrate. What does this mean and how do I fix it?"
+→ The skill explains why a NOT NULL column needs a DEFAULT once the table has rows, and shows both fixes (non-NULL DEFAULT, or nullable plus backfill)
 
 #### 3. "I need to change a column from text to integer. Can I just ALTER the column type?"
 → The skill demonstrates the safe pattern: add new column → migrate data → deprecate old (NEVER delete)
 
 #### 4. "I'm adding a foreign key relationship between tables. How do I add the relationship without breaking existing data?"
-→ The skill covers safe foreign key patterns: add column → populate data → add index (SQLite limitations explained)
+→ The skill covers both routes: an application-level indexed column, and the table rebuild that gets a declared constraint SQLite will actually enforce
 
 #### 5. "Users are reporting crashes after the last update. I changed a migration but the app is already in production. What do I do?"
 → The skill explains migrations are immutable after shipping; shows how to create a new migration to fix the issue rather than modifying the old one
@@ -32,9 +32,9 @@ These are real questions developers ask that this skill is designed to answer:
 
 ❌ **NEVER use DROP TABLE** with user data
 ❌ **NEVER modify shipped migrations** (create new one instead)
-❌ **NEVER recreate tables** to change schema (loses data)
+❌ **NEVER drop a table before copying its rows** into the replacement — the rebuild order is create new → copy → drop old → rename, and it is the supported way to add NOT NULL, CHECK and FOREIGN KEY constraints
 ❌ **NEVER add NOT NULL column** without DEFAULT value
-❌ **NEVER delete columns** (SQLite doesn't support DROP COLUMN safely)
+❌ **NEVER delete columns** without retiring them in code first — `DROP COLUMN` has existed since SQLite 3.35.0, but it refuses PRIMARY KEY, UNIQUE, indexed, CHECK, generated-column and trigger-referenced columns, and the data is gone for that release either way
 
 #### If you're tempted to do any of these, STOP and use the safe patterns below.
 
@@ -44,7 +44,7 @@ These are real questions developers ask that this skill is designed to answer:
 
 1. **Additive only** Add new columns/tables, never delete
 2. **Idempotent** Check existence before creating (safe to run twice)
-3. **Transactional** Wrap entire migration in single transaction
+3. **Transactional** Wrap entire migration in single transaction (GRDB's migrator does). Connection PRAGMAs — `foreign_keys`, `journal_mode` — are set before it opens; inside a transaction `PRAGMA foreign_keys` is silently ignored
 4. **Test both paths** Fresh install AND migration from previous version
 5. **Nullable first** Add columns as NULL, backfill later if needed
 6. **Immutable** Once shipped to users, migrations cannot be changed
@@ -126,6 +126,10 @@ func migration00X_ChangeColumnType() throws {
 
 ### Adding Foreign Key Constraint
 
+SQLite's `ALTER TABLE` has no `ADD CONSTRAINT`, so there are two routes: an indexed column whose relationship the app enforces, or a table rebuild that produces a declared constraint.
+
+#### Route 1 — indexed column, application-level relationship
+
 ```swift
 // ✅ Safe pattern for foreign keys
 func migration00X_AddForeignKey() throws {
@@ -150,12 +154,33 @@ func migration00X_AddForeignKey() throws {
             CREATE INDEX IF NOT EXISTS idx_tracks_album_id
             ON tracks(album_id)
         """)
-
-        // Note: SQLite doesn't allow adding FK constraints to existing tables
-        // The foreign key relationship is enforced at the application level
     }
 }
 ```
+
+The index is the whole mechanism here, and that is the catch: nothing stops an `album_id` that points at no album. Delete an album and its tracks stay behind as orphans, and `PRAGMA foreign_key_check` prints nothing — there is no constraint for it to check. Referential damage the standard integrity check cannot see is the reason to declare the constraint when the relationship matters.
+
+#### Route 2 — declared constraint, table rebuild
+
+A declared FK — the kind `database-schema-auditor` reports as CRITICAL when it is not enforced — needs SQLite's documented rebuild, in the documented order. Copy before you drop.
+
+```sql
+PRAGMA foreign_keys = OFF;   -- outside the transaction: inside one it is a no-op
+BEGIN;
+CREATE TABLE new_tracks (
+    id       TEXT NOT NULL PRIMARY KEY,
+    album_id TEXT REFERENCES albums(id)
+);
+INSERT INTO new_tracks (id, album_id)
+    SELECT t.id, a.id FROM tracks t JOIN albums a ON a.title = t.album_name;
+DROP TABLE tracks;
+ALTER TABLE new_tracks RENAME TO tracks;
+PRAGMA foreign_key_check;   -- one row per violation; abort before COMMIT if any
+COMMIT;
+PRAGMA foreign_keys = ON;
+```
+
+Enforcement is a connection setting, not a schema property: `PRAGMA foreign_keys = ON`, which GRDB sets by default — `Configuration.foreignKeysEnabled` defaults to `true`. Declared but unenforced is the one outcome worth avoiding.
 
 ### Complex Schema Refactoring
 
@@ -167,7 +192,7 @@ func migration010_AddNewTable() throws {
     try database.write { db in
         try db.execute(sql: """
             CREATE TABLE IF NOT EXISTS new_structure (
-                id TEXT PRIMARY KEY,
+                id TEXT NOT NULL PRIMARY KEY,
                 data TEXT
             )
         """)
@@ -178,7 +203,7 @@ func migration010_AddNewTable() throws {
 func migration011_MigrateData() throws {
     try database.write { db in
         try db.execute(sql: """
-            INSERT INTO new_structure (id, data)
+            INSERT OR IGNORE INTO new_structure (id, data)
             SELECT id, data FROM old_structure
         """)
     }
@@ -221,7 +246,7 @@ CREATE TABLE track (
 
 **Combinable** `CREATE TABLE x (...) STRICT, WITHOUT ROWID;`
 
-**Backwards compatibility** Databases with STRICT tables won't open on SQLite < 3.37.0 (iOS < 15.4). On Axiom's target floor this is safe. If you publish a library with broader support, check your minimum-OS window.
+**Backwards compatibility** Databases with STRICT tables won't open on SQLite < 3.37.0.
 
 **`ANY` is a gotcha** In a STRICT table, `ANY` columns store values without coercion — `'000123'` stays TEXT instead of being coerced to INTEGER `123` (which is what would happen in a non-STRICT table). If you need polymorphic storage, this is what you want; if you assumed legacy coercion, surprise.
 
@@ -233,22 +258,40 @@ CREATE TABLE track (
 
 #### BEFORE deploying any migration
 
-```swift
-// Test 1: Migration path (CRITICAL - tests data preservation)
-@Test func migrationFromV1ToV2Succeeds() async throws {
-    let db = try Database(inMemory: true)
+These run against the migrator your app ships — the registrations themselves, not a copy.
 
-    // Simulate v1 schema
-    try db.write { db in
-        try db.execute(sql: "CREATE TABLE tableName (id TEXT PRIMARY KEY)")
+```swift
+// The migrator under test
+func makeMigrator() -> DatabaseMigrator {
+    var migrator = DatabaseMigrator()
+    migrator.registerMigration("v1") { db in
+        try db.execute(sql: "CREATE TABLE tableName (id TEXT NOT NULL PRIMARY KEY)")
+    }
+    migrator.registerMigration("v2") { db in
+        try db.execute(sql: "ALTER TABLE tableName ADD COLUMN newColumn TEXT")
+    }
+    return migrator
+}
+```
+
+#### Test 1 — Migration path (CRITICAL, tests data preservation)
+
+```swift
+@Test func migrationFromV1ToV2Succeeds() async throws {
+    let dbQueue = try DatabaseQueue()
+    let migrator = makeMigrator()
+
+    // Simulate a v1 install with real user data
+    try migrator.migrate(dbQueue, upTo: "v1")
+    try await dbQueue.write { db in
         try db.execute(sql: "INSERT INTO tableName (id) VALUES ('test1')")
     }
 
-    // Run v2 migration
-    try db.runMigrations()
+    // Run the v2 migration
+    try migrator.migrate(dbQueue)
 
     // Verify data survived + new column exists
-    try db.read { db in
+    try await dbQueue.read { db in
         let count = try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM tableName")
         #expect(count == 1)  // Data preserved
 
@@ -261,15 +304,16 @@ CREATE TABLE track (
 #### Test 2 — Fresh install (run all migrations, verify final schema)
 ```swift
 @Test func freshInstallCreatesCorrectSchema() async throws {
-    let db = try Database(inMemory: true)
+    let dbQueue = try DatabaseQueue()
+    let migrator = makeMigrator()
 
-    // Run all migrations
-    try db.runMigrations()
+    // Run all migrations from empty
+    try migrator.migrate(dbQueue)
 
     // Verify final schema
-    try db.read { db in
-        let tables = try db.tables()
-        #expect(tables.contains("tableName"))
+    try await dbQueue.read { db in
+        let hasTable = try db.tableExists("tableName")
+        #expect(hasTable)
 
         let columns = try db.columns(in: "tableName").map { $0.name }
         #expect(columns.contains("id"))
@@ -281,14 +325,15 @@ CREATE TABLE track (
 #### Test 3 — Idempotency (run migrations twice, should not throw)
 ```swift
 @Test func migrationsAreIdempotent() async throws {
-    let db = try Database(inMemory: true)
+    let dbQueue = try DatabaseQueue()
+    let migrator = makeMigrator()
 
     // Run migrations twice
-    try db.runMigrations()
-    try db.runMigrations()  // Should not throw
+    try migrator.migrate(dbQueue)
+    try migrator.migrate(dbQueue)  // Should not throw
 
     // Verify still correct
-    try db.read { db in
+    try await dbQueue.read { db in
         let count = try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM tableName")
         #expect(count == 0)  // No duplicate data
     }
@@ -311,11 +356,12 @@ What are you trying to do?
 ├─ Change column type?
 │  └─ Add new column → Migrate data → Deprecate old → Done
 ├─ Delete column?
-│  └─ Mark as deprecated in code → Never delete from schema → Done
+│  └─ Retire in code first → DROP COLUMN once nothing else references it → Done
 ├─ Rename column?
 │  └─ Add new column → Migrate data → Deprecate old → Done
 ├─ Add foreign key?
-│  └─ Add column → Populate data → Add index → Done
+│  ├─ App-level relationship? → Add column → Populate data → Add index → Done
+│  └─ Declared constraint? → Rebuild the table (create new → copy → drop old → rename) → Done
 └─ Complex refactor?
    └─ Break into multiple migrations → Test each step → Done
 ```
@@ -324,28 +370,30 @@ What are you trying to do?
 
 | Error | Fix |
 |-------|-----|
-| `FOREIGN KEY constraint failed` | Check parent row exists, or disable FK temporarily |
+| `FOREIGN KEY constraint failed` | Parent row is missing, or a declared FK is now being enforced. `PRAGMA foreign_keys` is a no-op inside a transaction — use `PRAGMA defer_foreign_keys = ON` (scoped to the current transaction) or GRDB's `registerMigration(_:foreignKeyChecks:)`, and set `PRAGMA foreign_keys` before `BEGIN` |
 | `no such column: columnName` | Add migration to create column |
-| `cannot add NOT NULL column` | Use nullable column first, backfill in separate migration |
+| `Cannot add a NOT NULL column with default value NULL` | Give the column a non-NULL `DEFAULT`, or add it nullable and backfill in a second migration |
 | `table tableName already exists` | Add `IF NOT EXISTS` clause |
 | `duplicate column name` | Check if column exists before adding (idempotency) |
 
 ## Common Mistakes
 
 ❌ **Adding NOT NULL without DEFAULT**
-```swift
-// ❌ Fails on existing data
-ALTER TABLE albums ADD COLUMN rating INTEGER NOT NULL
+```sql
+-- ❌ Fails the moment the table has rows
+ALTER TABLE albums ADD COLUMN rating INTEGER NOT NULL;
 ```
 
-✅ **Correct: Add as nullable first**
-```swift
-ALTER TABLE albums ADD COLUMN rating INTEGER  // NULL allowed
-// Backfill in separate migration if needed
-UPDATE albums SET rating = 0 WHERE rating IS NULL
+✅ **Correct: nullable first**
+```sql
+-- ✅ Existing rows stay NULL until a later migration backfills
+ALTER TABLE albums ADD COLUMN rating INTEGER;
+UPDATE albums SET rating = 0 WHERE rating IS NULL;
 ```
 
-❌ **Forgetting to check for existence** — Always add `IF NOT EXISTS` or manual check
+A `DEFAULT` also satisfies the constraint in one step — `ADD COLUMN rating INTEGER NOT NULL DEFAULT 0` — but every existing row gets `0`, so nullable plus an explicit backfill is what you want whenever "never set" differs from "set to the default".
+
+❌ **Forgetting to check for existence** — `IF NOT EXISTS` exists for `CREATE TABLE` and `CREATE INDEX`; `ALTER TABLE ADD COLUMN` has no such clause, so guard it with the `db.columns(in:)` check
 
 ❌ **Modifying shipped migrations** — Create new migration instead
 
@@ -362,7 +410,7 @@ var migrator = DatabaseMigrator()
 migrator.registerMigration("v1") { db in
     try db.execute(sql: """
         CREATE TABLE IF NOT EXISTS users (
-            id TEXT PRIMARY KEY,
+            id TEXT NOT NULL PRIMARY KEY,
             name TEXT NOT NULL
         )
     """)
@@ -394,9 +442,9 @@ let appliedMigrations = try dbQueue.read { db in
 }
 print("Applied migrations: \(appliedMigrations)")
 
-// Check if migrations are needed
-let hasBeenMigrated = try dbQueue.read { db in
-    try migrator.hasBeenMigrated(db)
+// Check whether every registered migration has run
+let hasCompletedMigrations = try dbQueue.read { db in
+    try migrator.hasCompletedMigrations(db)
 }
 ```
 
@@ -407,14 +455,14 @@ For SwiftData (iOS 17+), use `VersionedSchema` and `SchemaMigrationPlan`:
 ```swift
 // Define schema versions
 enum MyAppSchemaV1: VersionedSchema {
-    static var versionIdentifier = Schema.Version(1, 0, 0)
+    static let versionIdentifier = Schema.Version(1, 0, 0)
     static var models: [any PersistentModel.Type] {
         [Track.self, Album.self]
     }
 }
 
 enum MyAppSchemaV2: VersionedSchema {
-    static var versionIdentifier = Schema.Version(2, 0, 0)
+    static let versionIdentifier = Schema.Version(2, 0, 0)
     static var models: [any PersistentModel.Type] {
         [Track.self, Album.self, Playlist.self]  // Added Playlist
     }
@@ -451,7 +499,7 @@ enum MyAppMigrationPlan: SchemaMigrationPlan {
 
 ## tvOS
 
-**tvOS migrations may run against a fresh database.** The system deletes local storage under pressure, so your app may launch with no database at all. Migrations must handle this gracefully — they effectively become both "create" and "upgrade" operations.
+**tvOS migrations may run against a fresh database.** Every local directory is purgeable between launches, so your app may launch with no database at all. Migrations must handle this gracefully — they effectively become both "create" and "upgrade" operations.
 
 **Key implications**:
 - Migrations must be idempotent (already a best practice, but critical here)

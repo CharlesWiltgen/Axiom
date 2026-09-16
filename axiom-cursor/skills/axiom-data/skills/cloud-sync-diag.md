@@ -11,7 +11,7 @@ iCloud (both CloudKit and iCloud Drive) handles billions of sync operations dail
 
 If you see ANY of these:
 - **Nothing EVER syncs, no errors, console silent** → check `cloudKitContainerOptions` FIRST on any store description you construct yourself (custom URL, named configuration, extra store). Without it that description silently behaves like a plain `NSPersistentContainer` and mirrors nothing. The container's own default description needs nothing — it is matched to the first CloudKit container in your entitlements automatically. This is the #1 "sync was never wired up" cause — diagnose it before anything else.
-- **Works in dev, fails in TestFlight/App Store** (often surfacing as `quotaExceeded`) → CloudKit schema not deployed to Production. Named signature — recognize it instantly, do not chase it as a storage or network bug.
+- **Works in dev, fails in TestFlight/App Store** → CloudKit schema not deployed to Production. Production rejects record types and fields the deployed schema doesn't have — in practice `CKError.unknownItem` for an unknown record type and `CKError.invalidArguments` for a query on a field that isn't marked queryable (the codes seen in practice; the SDK documents the rejection, not the code). Not a storage problem. Named signature — recognize it instantly, do not chase it as a quota or network bug.
 - Files/data not appearing on other devices
 - "iCloud account not available" errors
 - Persistent sync conflicts
@@ -144,13 +144,15 @@ CloudKit data not syncing?
 │   └─ .temporarilyUnavailable → Network issue or iCloud outage
 │
 ├─ CKError.quotaExceeded?
-│   └─ This is an UMBRELLA error — two distinct meanings:
-│       1. User iCloud storage full (rare; payload usually small)
-│           → Prompt user to purchase more storage / delete old data
-│       2. Schema not deployed to Production environment
-│           → Dev builds work, TestFlight/App Store fail with quotaExceeded
-│           → Fix: CloudKit Console → Deploy Schema to Production
-│       → DIAGNOSE FIRST: which one? See "CKError.quotaExceeded" below.
+│   └─ CloudKit storage quota — the user's (private database) or the container's
+│      (public database). One meaning, not an umbrella.
+│       → Prompt user to purchase more storage / delete old data
+│
+├─ Dev/TestFlight worked, then the release fails?
+│   └─ NOT quotaExceeded — Production schema was never deployed
+│       1. Unknown record type → CKError.unknownItem
+│       2. Query on a field that isn't marked queryable → CKError.invalidArguments
+│       → Fix: CloudKit Console → Deploy Schema to Production
 │
 ├─ CKError.networkUnavailable?
 │   └─ No internet connection
@@ -213,9 +215,9 @@ if error.code == .accountTemporarilyUnavailable {
 
 ### CKError.quotaExceeded
 
-**Cause**: UMBRELLA error — CloudKit returns `quotaExceeded` for two distinct conditions. Always disambiguate before alerting the user.
+**Cause**: The user (private database) or your container (public database) is out of CloudKit storage. One meaning, not an umbrella — Apple documents this code as a storage error only.
 
-**Diagnosis — pick the right meaning** (a small per-user payload + dev/TestFlight divergence is almost never the literal storage cause):
+**Diagnosis** — check the underlying error before alerting, and rule out the undeployed-schema failure first (it is a different error, see below):
 
 ```swift
 // The real reason usually rides along in the underlying error:
@@ -223,17 +225,7 @@ if let info = error.userInfo[NSUnderlyingErrorKey] as? NSError {
     print("Underlying reason:", info.localizedDescription)
 }
 
-// Symptom matrix:
-// • Works on dev, fails on TestFlight/App Store?
-//      → MEANING 2: Production schema not deployed.
-//      → Fix: CloudKit Console → switch to Development → click
-//        "Deploy Schema to Production". One-way, permanent.
-//
-// • User has actually exhausted iCloud storage (verify in Settings)?
-//      → MEANING 1: Literal storage quota. Prompt to manage iCloud.
-
 if error.code == .quotaExceeded {
-    // For meaning 1 only — after ruling out 2:
     showAlert(
         title: "iCloud Storage Full",
         message: "Please free up space in Settings → [Name] → iCloud → Manage Storage"
@@ -241,7 +233,7 @@ if error.code == .quotaExceeded {
 }
 ```
 
-**Why one code, two causes**: Apple documents `quotaExceeded` only as an iCloud storage quota; the missing-production-schema rejection arrives as the same code and is indistinguishable client-side, so disambiguate before alerting the user. The Production Crisis Scenario below covers the dev-vs-prod path.
+**Do not confuse this with an undeployed schema.** When a released build fails against a Production schema that was never deployed, the server rejects the record type or the field — `CKError.unknownItem` for an unknown record type, `CKError.invalidArguments` when querying a field that isn't marked queryable. Apple documents that Production "returns an error if you try to specify an unknown record type or try to save a record that contains unknown keys" but names no code, and never reports the rejection as `quotaExceeded`; treat those two as the codes seen in practice rather than a guarantee. The Production Crisis Scenario below covers the dev-vs-prod path.
 
 ### CKError.serverRecordChanged
 
@@ -436,15 +428,27 @@ let config = ModelConfiguration(
 class Task {
     @Attribute(.unique) var id: UUID  // ← Remove this
     var title: String
-}
-// Removing .unique means duplicates CAN appear. Replace enforcement with
-// convergent dedup-on-import — see Pattern 3.
 
+    init(id: UUID, title: String) {
+        self.id = id
+        self.title = title
+    }
+}
+```
+
+Removing `.unique` means duplicates CAN appear. Replace enforcement with convergent dedup-on-import — see Pattern 3.
+
+```swift
 // 3. Check all properties have defaults or are optional
 @Model
 class Task {
     var title: String = ""  // ✅ Has default
     var dueDate: Date?      // ✅ Optional
+
+    init(title: String = "", dueDate: Date? = nil) {
+        self.title = title
+        self.dueDate = dueDate
+    }
 }
 ```
 
@@ -481,16 +485,22 @@ try context.save()  // Deletions propagate; every device converged on the same w
 
 **Diagnosis**:
 ```swift
-// ❌ WRONG: Nested coordination can deadlock
+// ❌ WRONG: Nested coordination with a second coordinator — hangs
 coordinator.coordinate(writingItemAt: url, options: [], error: nil) { newURL in
-    // Don't create another coordinator here!
-    anotherCoordinator.coordinate(...)  // ← Deadlock risk
+    // A different coordinator instance has a different purpose identifier, so it
+    // waits for this outer write to finish — which cannot happen until this block
+    // returns. (The *same* instance never blocks itself.)
+    let anotherCoordinator = NSFileCoordinator()
+    var innerError: NSError?
+    anotherCoordinator.coordinate(writingItemAt: newURL, options: [], error: &innerError) { innerURL in
+        try? data.write(to: innerURL)  // ← never reached
+    }
 }
 
-// ✅ CORRECT: Single coordinator per operation
+// ✅ CORRECT: One coordinator per operation
 coordinator.coordinate(writingItemAt: url, options: [], error: nil) { newURL in
     // Direct file operations only
-    try data.write(to: newURL)
+    try? data.write(to: newURL)
 }
 ```
 

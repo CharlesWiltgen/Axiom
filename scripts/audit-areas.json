@@ -233,7 +233,7 @@
       "area": "swiftdata",
       "agent": "swiftdata-auditor",
       "group": "Storage",
-      "detects": "@Model struct, missing VersionedSchema models, relationship defaults, migration timing, N+1",
+      "detects": "@Model correctness, missing VersionedSchema models, relationship defaults, migration timing, N+1",
       "docsDetects": "@Model correctness, VersionedSchema, relationship defaults",
       "docPath": "/commands/storage/audit-swiftdata"
     },

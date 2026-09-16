@@ -2,7 +2,6 @@
 # iCloud Drive Reference
 
 **Purpose**: Comprehensive reference for file-based iCloud sync using ubiquitous containers
-**Availability**: iOS 5.0+ (basic), iOS 8.0+ (iCloud Drive), iOS 11.0+ (modern APIs)
 **Context**: File-based cloud storage, not database (use CloudKit for structured data)
 
 ## When to Use This Skill
@@ -41,6 +40,8 @@ Use this skill when:
 
 ```swift
 // ✅ CORRECT: Get iCloud container
+// ⚠️ NEVER call this on the main thread — it can take a nontrivial amount of time
+// to set up iCloud. Call it from a background context.
 func getICloudContainerURL() -> URL? {
     // nil = use first container in entitlements
     return FileManager.default.url(
@@ -48,11 +49,13 @@ func getICloudContainerURL() -> URL? {
     )
 }
 
-// ✅ Check if iCloud is available
-if let iCloudURL = getICloudContainerURL() {
-    print("iCloud available: \(iCloudURL)")
-} else {
+// ✅ Check if iCloud is available — cheap, main-thread safe
+if FileManager.default.ubiquityIdentityToken == nil {
     print("iCloud not available (not signed in or no entitlement)")
+} else {
+    // ✅ Resolve the container off the main thread
+    let iCloudURL = await Task.detached { getICloudContainerURL() }.value
+    print("iCloud available: \(iCloudURL?.path() ?? "container unavailable")")
 }
 ```
 
@@ -71,6 +74,7 @@ iCloud Container/
 
 ```swift
 // ✅ CORRECT: Save document to iCloud
+// ⚠️ Resolving the container can block — call this off the main thread.
 func saveToICloud(data: Data, filename: String) throws {
     guard let iCloudURL = FileManager.default.url(
         forUbiquityContainerIdentifier: nil
@@ -223,7 +227,7 @@ func getDownloadStatus(url: URL) -> String {
             return "Not downloaded (iCloud only)"
         case .downloaded:
             return "Downloaded"
-        @unknown default:
+        default:
             return "Unknown"
         }
     }
@@ -258,7 +262,10 @@ func downloadFromICloud(url: URL) throws {
 let query = NSMetadataQuery()
 query.predicate = NSPredicate(format: "%K == %@",
     NSMetadataItemURLKey, url as NSURL)
-query.searchScopes = [NSMetadataQueryUbiquitousDataScope]
+// ⚠️ The Data scope EXCLUDES <container>/Documents/ — the directory saveToICloud
+// writes into. Use the Documents scope for those files, or both scopes to cover
+// the whole container.
+query.searchScopes = [NSMetadataQueryUbiquitousDocumentsScope]
 
 NotificationCenter.default.addObserver(
     forName: .NSMetadataQueryDidUpdate,
@@ -299,8 +306,6 @@ func resolveConflicts(at url: URL, keepingVersion: ConflictResolution) throws {
         return  // No conflicts
     }
 
-    let current = try NSFileVersion.currentVersionOfItem(at: url)
-
     switch keepingVersion {
     case .current:
         // Keep current version, discard others
@@ -320,6 +325,7 @@ func resolveConflicts(at url: URL, keepingVersion: ConflictResolution) throws {
 
     case .manual:
         // App merges manually, then marks resolved
+        guard let current = NSFileVersion.currentVersionOfItem(at: url) else { break }
         let mergedData = mergeConflicts(current: current, conflicts: conflicts)
         try mergedData.write(to: url)
 
@@ -415,9 +421,9 @@ let picker = UIDocumentPickerViewController(
 )
 picker.delegate = self
 picker.allowsMultipleSelection = false
-
-// Enable iCloud
-picker.directoryURL = getICloudContainerURL()
+// iCloud availability comes from the entitlement, not from `directoryURL` —
+// that property only selects the initial directory. Left nil, the picker opens
+// in "Recents"; resolving the container can block, so do not do it here.
 
 present(picker, animated: true)
 ```
@@ -433,7 +439,9 @@ class ICloudMonitor {
         query.predicate = NSPredicate(format: "%K BEGINSWITH %@",
             NSMetadataItemPathKey, directory.path)
 
-        query.searchScopes = [NSMetadataQueryUbiquitousDataScope]
+        // ⚠️ Data scope EXCLUDES <container>/Documents/ — use the Documents scope
+        // for files there (add the Data scope too for the rest of the container).
+        query.searchScopes = [NSMetadataQueryUbiquitousDocumentsScope]
 
         NotificationCenter.default.addObserver(
             forName: .NSMetadataQueryDidUpdate,
@@ -463,7 +471,7 @@ class ICloudMonitor {
 
 | Task | API | Notes |
 |------|-----|-------|
-| Get iCloud URL | `FileManager.default.url(forUbiquityContainerIdentifier:)` | Returns nil if unavailable |
+| Get iCloud URL | `FileManager.default.url(forUbiquityContainerIdentifier:)` | Nil if unavailable; NEVER call on the main thread |
 | Check if in iCloud | `.isUbiquitousItemKey` resource value | Bool |
 | Download file | `startDownloadingUbiquitousItem(at:)` | Async, monitor with NSMetadataQuery |
 | Check download status | `.ubiquitousItemDownloadingStatusKey` | current/notDownloaded/downloaded |
@@ -479,7 +487,3 @@ class ICloudMonitor {
 - `skills/storage.md` — Choose iCloud Drive vs CloudKit
 - `skills/cloudkit-ref.md` — For structured data sync
 - `skills/cloud-sync-diag.md` — Debug iCloud sync issues
-
----
-
-**Minimum iOS**: 5.0 (basic), 8.0 (iCloud Drive), 11.0 (modern APIs)

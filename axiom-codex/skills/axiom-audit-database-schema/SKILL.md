@@ -129,7 +129,9 @@ Run all 10 detection patterns. For every grep match, use Read to verify the surr
 ### Pattern 9: Batch Insert Outside Transaction (MEDIUM/MEDIUM)
 
 **Issue**: Each INSERT outside a transaction triggers a disk sync. 1000 inserts = 1000 syncs = 30 seconds instead of < 1 second.
-**Search**: `for.*insert\(db\)`, `for.*execute.*INSERT`
+**Search**:
+- `for\s+\w+\s+in\s+\w+\s*\{` — loop headers
+- `\.insert\(db\)`, `execute\(sql:` — insert sites; Read whether the enclosing loop sits inside `db.write { }` or `db.inTransaction { }`
 **Verify**: Read matching files; check whether the loop is inside `db.write { }` or `db.inTransaction { }`.
 **Fix**: Wrap in a single transaction: `try db.write { db in for item in items { try item.insert(db) } }`
 
@@ -146,7 +148,7 @@ Using the Schema Map from Phase 1 and your domain knowledge, check for what's *m
 
 | Question | What it detects | Why it matters |
 |----------|----------------|----------------|
-| Is `PRAGMA foreign_keys = ON` set in `prepareDatabase`, given that FK constraints exist? | Silent FK enforcement bypass | Constraints declared but ignored — orphaned rows accumulate without error |
+| Given that FK constraints exist, is enforcement left on (`foreignKeysEnabled` at its default) — and turned on explicitly for a raw-SQLite stack? | Silent FK enforcement bypass | Constraints declared but ignored — orphaned rows accumulate without error |
 | Does every schema-changing migration handle existing rows (DEFAULT, NULL, backfill)? | Production-data crashes | Migration that works on empty DB crashes on a populated one |
 | Is there an upgrade path from the oldest supported app version to current? | Unreachable schema state | Users on old versions skip intermediate migrations or crash |
 | Are migrations append-only, or do later migrations modify earlier ones? | Migration corruption | Modifying past migrations changes the schema for users who already ran them |
@@ -166,11 +168,11 @@ Bump severity for these combinations:
 | Finding A | + Finding B | = Compound | Severity |
 |-----------|------------|-----------|----------|
 | ADD COLUMN NOT NULL without DEFAULT | Production app shipping with existing users | Guaranteed crash on update | CRITICAL |
-| FOREIGN KEY constraints declared | PRAGMA foreign_keys not enabled | Silent integrity failure across whole schema | CRITICAL |
+| FOREIGN KEY constraints declared | FK enforcement disabled | Silent integrity failure across whole schema | CRITICAL |
 | INSERT OR REPLACE | FK constraints with ON DELETE CASCADE | Silent destruction of child records on every replace | CRITICAL |
 | DROP TABLE | No data-preserving migration before it | Permanent data loss on update | CRITICAL |
-| ALTER TABLE without idempotency | Beta or TestFlight distribution | Crash on re-run for testers who already migrated | HIGH |
-| Add FK constraint | No `PRAGMA foreign_key_check` validation | Migration succeeds but inconsistent data passed through | HIGH |
+| ALTER TABLE without idempotency | DDL that runs outside the migrator | Fails on every launch after the first, not just for testers | HIGH |
+| FK added by table recreation | No `PRAGMA foreign_key_check` beforehand | Either the migration fails at commit or orphans land in a constrained table | HIGH |
 | RENAME COLUMN | Raw SQL strings elsewhere in codebase | Runtime SQL errors at the renamed call site | HIGH |
 | Batch insert outside transaction | Loop > 100 items | UI hang on slow disk + non-atomic on crash | MEDIUM |
 | CREATE without IF NOT EXISTS | Migration replayability scenario (test fixtures, recovery) | Crash on re-run of an already-applied migration | MEDIUM |
@@ -186,17 +188,16 @@ Cross-auditor overlap notes:
 | Metric | Value |
 |--------|-------|
 | Migration count | N registered |
-| Idempotency coverage | M of N migrations safe to re-run (Z%) |
+| Ad-hoc DDL guards | M of N statements outside `registerMigration` guarded (Z%) |
 | FK enforcement | ON / OFF / not configured |
-| FK validation | M of N FK additions validated (Z%) |
 | Transaction coverage | M of N batch writes inside `db.write` (Z%) |
 | Destructive operations | N DROP TABLE, M DROP COLUMN, K RENAME found |
 | **Health** | **SAFE / FRAGILE / DANGEROUS** |
 
 Scoring:
-- **SAFE**: No CRITICAL issues, all migrations idempotent, FK enforcement on (or no FKs declared), all batch writes transactional, zero unguarded destructive ops.
+- **SAFE**: No CRITICAL issues, no unguarded ad-hoc DDL, FK enforcement on (or no FKs declared), all batch writes transactional, zero unguarded destructive ops.
 - **FRAGILE**: No CRITICAL issues, but some MEDIUM patterns present (missing IF NOT EXISTS, RENAME without code update, batch inserts outside transactions).
-- **DANGEROUS**: Any CRITICAL issue (ADD COLUMN NOT NULL without DEFAULT, DROP on user data, FK constraint declared but PRAGMA off, INSERT OR REPLACE on FK-referenced tables).
+- **DANGEROUS**: Any CRITICAL issue (ADD COLUMN NOT NULL without DEFAULT, DROP on user data, FK constraints declared with enforcement disabled, INSERT OR REPLACE on FK-referenced tables).
 
 ## Output Format
 

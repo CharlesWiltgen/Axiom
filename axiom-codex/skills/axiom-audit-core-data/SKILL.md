@@ -88,11 +88,11 @@ try coordinator.addPersistentStore(ofType: NSSQLiteStoreType, configurationName:
 **Search**:
   - `DispatchQueue` with `NSManagedObject`, `NSManagedObjectContext` access
   - `Task {` or `Task.detached` with managed object access (not objectID)
-  - `context.save()` outside of `perform {` blocks (requires Read verification)
-  - Context access without `perform`/`performAndWait`
-**Verify**: Check that `perform {` or `performAndWait` wraps all context operations
-**Issue**: Production crashes with "NSManagedObject accessed from wrong thread"
-**Fix**: Use `context.perform { }` for all operations, pass objectID across threads
+  - `context.save()` outside of `perform {` blocks on a private-queue context (requires Read verification)
+  - `newBackgroundContext`, `NSManagedObjectContext(concurrencyType:` — the private-queue contexts, whose every operation needs `perform`/`performAndWait`
+**Verify**: `perform {` / `performAndWait` is required for a private-queue context, and for any access from a thread other than the context's own. `viewContext` work on the main thread needs no wrapper — it is documented as "the main queue's managed object context".
+**Issue**: Cross-thread object and context use corrupts state and crashes unpredictably; with `-com.apple.CoreData.ConcurrencyDebug 1` it traps on the offending access rather than reporting a named object.
+**Fix**: Use `context.perform { }` for private-queue contexts and for any access from another thread; pass objectID across threads
 ```swift
 // Pass objectID, not the object
 let userID = user.objectID
@@ -141,7 +141,7 @@ Using the Core Data Architecture Map from Phase 1 and your domain knowledge, che
 
 | Question | What it detects | Why it matters |
 |----------|----------------|----------------|
-| Is merge policy configured on all contexts? | Missing conflict resolution | Without merge policy, conflicting saves crash instead of resolving gracefully |
+| Is merge policy configured on all contexts? | Missing conflict resolution | Without a merge policy, conflicting saves fail with an NSMergeConflict error instead of resolving gracefully |
 | Is `automaticallyMergesChangesFromParent` enabled on viewContext? | Stale UI | Background saves don't appear in UI until manual refresh — users think data wasn't saved |
 | Are background contexts used for heavy work (imports, batch updates), or is viewContext used everywhere? | Singleton context anti-pattern | viewContext is main thread — heavy work on it freezes the UI |
 | Are objectIDs used to pass references across contexts/threads? | Unsafe object passing | Passing NSManagedObject across threads causes crashes; objectID is the safe transfer mechanism |
@@ -180,7 +180,7 @@ Cross-auditor overlap notes:
 | Metric | Value |
 |--------|-------|
 | Migration safety | Configured / Unconfigured / Legacy coordinator |
-| Thread safety | N context operations, M wrapped in perform (Z%) |
+| Thread safety | N private-queue context operations, M wrapped in perform/performAndWait (Z%) |
 | Query efficiency | N fetch requests, M with batch size (Z%), K with prefetching |
 | Error handling | N save/load operations, M with proper try/catch (Z%) |
 | Context isolation | viewContext-only / viewContext + background / per-operation |
@@ -189,7 +189,7 @@ Cross-auditor overlap notes:
 ```
 
 Scoring:
-- **PRODUCTION READY**: Migration configured, >90% operations in perform blocks, no try!, no store deletion, merge policy set
+- **PRODUCTION READY**: Migration configured, >90% of private-queue context operations wrapped in perform/performAndWait, no try!, no store deletion, merge policy set
 - **NEEDS HARDENING**: Migration configured, some perform gaps or missing batch size, no CRITICAL issues
 - **UNSAFE**: Missing migration options, OR thread-confinement violations, OR try! on persistence operations, OR unguarded store deletion
 

@@ -2,7 +2,7 @@
 # iOS Storage Guide
 
 **Purpose**: Navigation hub for ALL storage decisions — database vs files, local vs cloud, specific locations
-**iOS Version**: iOS 17+ (iOS 26+ for latest features)
+**iOS Version**: iOS 18+ (iOS 26+ for latest features)
 **Context**: Complete storage decision framework integrating SwiftData (WWDC 2023), CKSyncEngine (WWDC 2023), and file management best practices
 
 ## When to Use This Skill
@@ -100,9 +100,12 @@ class Task {
 ```swift
 // ✅ CORRECT: SQLiteData or GRDB for advanced features
 import SQLiteData
+import GRDB
 
 // Full-text search, custom indices, raw SQL when needed
-let results = try db.prepare("SELECT * FROM users WHERE name MATCH ?", "John")
+let statement = try db.makeStatement(sql: "SELECT * FROM users WHERE name MATCH ?")
+statement.arguments = ["John"]
+let results = try Row.fetchAll(statement)
 ```
 
 **Use SQLiteData when**:
@@ -129,7 +132,6 @@ import CoreData
 
 **Only use Core Data if**:
 - Maintaining existing Core Data app
-- Can't upgrade to iOS 17 minimum deployment
 
 ---
 
@@ -144,7 +146,7 @@ What kind of file is it?
 │   Where: Documents/ directory
 │   Backed up: ✅ Yes (iCloud/iTunes)
 │   Purged: ❌ Never
-│   Visible in Files app: ✅ Yes
+│   Visible in Files app: ✅ Only if UIFileSharingEnabled is set in Info.plist (default No)
 │   Example: User's edited photos, documents, exported data
 │   → See "Documents Directory" section below
 │
@@ -158,7 +160,7 @@ What kind of file is it?
 │
 ├─ RE-DOWNLOADABLE / REGENERABLE CONTENT
 │   Where: Library/Caches/
-│   Backed up: ❌ No (set isExcludedFromBackup)
+│   Backed up: ❌ No (purgeable directories are excluded by default)
 │   Purged: ✅ Yes (under storage pressure)
 │   Example: Thumbnails, API responses, downloaded images
 │   → See "Caches Directory" section below
@@ -166,7 +168,7 @@ What kind of file is it?
 └─ TEMPORARY FILES (can be deleted anytime)
     Where: tmp/
     Backed up: ❌ No
-    Purged: ✅ Yes (aggressive, even while app running)
+    Purged: ✅ Yes (while the app is not running)
     Example: Image processing intermediates, export staging
     → See "Temporary Directory" section below
 ```
@@ -236,7 +238,7 @@ func cacheDownloadedImage(data: Data, for url: URL) throws {
     )[0]
 
     let filename = url.lastPathComponent
-    let fileURL = cacheURL.appendingPathComponent(filename)
+    var fileURL = cacheURL.appendingPathComponent(filename)
 
     try data.write(to: fileURL)
 
@@ -274,7 +276,7 @@ func processImageWithTempFile(image: UIImage) throws {
 ```
 
 **Key rules**:
-- System can delete files here AT ANY TIME (even while app is running)
+- The system purges files here while your app is not running; you never see it happen, the file is simply gone at the next launch
 - Always clean up after yourself
 - Don't rely on files persisting between app launches
 
@@ -398,6 +400,12 @@ class Note {
     var title: String
     var content: String
     var tags: [Tag]  // Relationships
+
+    init(title: String, content: String, tags: [Tag] = []) {
+        self.title = title
+        self.content = content
+        self.tags = tags
+    }
 }
 
 // ✅ CORRECT: Files → FileManager + proper directory
@@ -420,8 +428,7 @@ try jsonData.write(to: appSupportURL.appendingPathComponent("tasks.json"))
 // - Entire file loaded into memory
 // - Concurrent access issues
 
-// ✅ CORRECT: Use SwiftData instead
-@Model class Task { ... }
+// ✅ CORRECT: Use SwiftData instead — the Task @Model declared under "Modern Apps (iOS 17+)"
 ```
 
 ### ❌ DON'T: Store Re-downloadable Content in Documents
@@ -438,16 +445,16 @@ func downloadProfileImage(url: URL) throws {
 }
 
 // ✅ CORRECT: Use Caches instead
-func downloadProfileImage(url: URL) throws {
+func cacheProfileImage(url: URL) throws {
     let data = try Data(contentsOf: url)
     let cacheURL = FileManager.default.urls(
         for: .cachesDirectory,
         in: .userDomainMask
     )[0]
-    let fileURL = cacheURL.appendingPathComponent("profile.jpg")
+    var fileURL = cacheURL.appendingPathComponent("profile.jpg")
     try data.write(to: fileURL)
 
-    // Mark excluded from backup
+    // Mark excluded from backup (explicit, though Caches is auto-excluded)
     var resourceValues = URLResourceValues()
     resourceValues.isExcludedFromBackup = true
     try fileURL.setResourceValues(resourceValues)
@@ -486,17 +493,19 @@ try data.write(to: iCloudDocumentsURL.appendingPathComponent("doc.pdf"))
 
 ## tvOS Storage
 
-**tvOS has no persistent local storage.** This catches every iOS developer.
+**tvOS expects almost no persistent local storage.** This catches every iOS developer.
+
+The container directories all exist — `Documents/`, `Library/Application Support/`, `Library/Caches/` and `tmp/` — but Apple's tvOS guidance caps *persistent* local storage at the NSUserDefaults allowance and requires everything else to be purgeable. Nothing beyond that allowance is contractual.
 
 | Directory | tvOS Behavior |
 |-----------|--------------|
-| Documents | Does not exist |
-| Application Support | System can delete when app is not running |
-| Caches | System deletes at any time |
-| tmp | System deletes at any time |
-| UserDefaults | 500 KB limit (vs ~4 MB on iOS) |
+| Documents | Exists, but is not a persistence guarantee — treat as purgeable |
+| Application Support | Exists, but you must create it and it is not a persistence guarantee |
+| Caches | May be deleted when space is low and the app is not running |
+| tmp | May be deleted when the app is not running |
+| UserDefaults | 500 KB allowance in Apple's tvOS App Programming Guide (vs 4 MB on iOS) |
 
-**Every local file can vanish between app launches.** Your tvOS app must survive starting from zero.
+**Design iCloud-first.** Your tvOS app must survive starting from zero: keep working when every local file is gone, and expect local data to be evicted between launches. The 500 KB figure is the allowance Apple's tvOS guide documents, not a limit the runtime enforces.
 
 **Recommended**: Use iCloud (CloudKit, NSUbiquitousKeyValueStore, or iCloud Drive) as primary storage. Treat local files as cache only. See axiom-swift (skills/tvos.md) for full tvOS storage patterns.
 

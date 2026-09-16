@@ -63,7 +63,7 @@ Use this skill when working with:
 | Encryption / signing / key management | See axiom-security (skills/cryptokit.md) |
 | CryptoKit API reference | See axiom-security (skills/cryptokit-ref.md) |
 | File protection, NSFileProtection | See axiom-security (skills/file-protection-ref.md) |
-| tvOS data persistence (no local storage) | See axiom-swift (skills/tvos.md) |
+| tvOS data persistence (no guaranteed-persistent local storage) | See axiom-swift (skills/tvos.md) |
 | tvOS + CloudKit SyncEngine | See `skills/sqlitedata.md` |
 
 ### Automated Scanning
@@ -107,7 +107,7 @@ Use this skill when working with:
 23. Want database schema/migration safety scan? → database-schema-auditor (Agent)
 23a. Want GRDB performance/app-group scan? → grdb-performance-auditor (Agent)
 24. Want SwiftData code audit? → swiftdata-auditor (Agent)
-25. tvOS data persistence? → See axiom-swift (skills/tvos.md) (CRITICAL: no persistent local storage) + `skills/sqlitedata.md` (CloudKit SyncEngine)
+25. tvOS data persistence? → See axiom-swift (skills/tvos.md) (CRITICAL: every local directory is purgeable between launches, so iCloud is the source of truth) + `skills/sqlitedata.md` (CloudKit SyncEngine)
 26. SwiftData @MainActor / background context threading? → `/skill axiom-concurrency`
 27. Structured data generation with Foundation Models? → `/skill axiom-ai`
 
@@ -119,12 +119,12 @@ Use this skill when working with:
 | Thought | Reality |
 |---------|---------|
 | "Just adding a column, no migration needed" | Schema changes without migration crash users. database-migration prevents data loss. |
-| "I'll handle the migration manually" | Manual migrations miss edge cases. database-migration covers rollback and testing. |
+| "I'll handle the migration manually" | Manual migrations miss edge cases. database-migration has the safe additive patterns and both migration paths to test. |
 | "Simple query, I don't need the skill" | Query patterns prevent N+1 and thread-safety issues. The skill has copy-paste solutions. |
 | "CloudKit sync is straightforward" | CloudKit has 15+ failure modes. cloud-sync-diag diagnoses them systematically. |
 | "I know Codable well enough" | Codable has silent data loss traps (try? swallows errors). codable skill prevents production bugs. |
-| "@Shared is just @AppStorage with extra steps" | Mutation goes through `$shared.withLock`; the plain setter is deprecated, and a compile error below Sharing 2.8 on Swift 6.3. swift-sharing has the migration. |
-| "I'll use local storage on tvOS" | tvOS has NO persistent local storage. System deletes Caches at any time. See axiom-swift (skills/tvos.md) for the iCloud-first pattern. |
+| "@Shared is just @AppStorage with extra steps" | Mutation goes through `$shared.withLock`; the plain setter is deprecated, and below Sharing 2.8 on Swift 6.3 it is a compile error wherever a SwiftUI binding is chained into shared state. swift-sharing has the migration. |
+| "I'll use local storage on tvOS" | No local directory on tvOS is guaranteed to survive between launches — the system purges them, Caches first. See axiom-swift (skills/tvos.md) for the iCloud-first pattern. |
 | "UserDefaults is fine for this token" | UserDefaults is unencrypted, backed up to iCloud, and visible to MDM profiles. One audit catches it. keychain stores tokens securely. |
 | "I'll encrypt it myself with CommonCrypto" | CryptoKit replaced CommonCrypto's buffer-management nightmares with one-line APIs. cryptokit prevents misuse. |
 

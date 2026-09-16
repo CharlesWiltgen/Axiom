@@ -2,7 +2,6 @@
 # CloudKit Reference
 
 **Purpose**: Comprehensive CloudKit reference for database-based iCloud storage and sync
-**Availability**: iOS 10.0+ (basic), iOS 17.0+ (CKSyncEngine), iOS 17.0+ (SwiftData integration)
 **Context**: Modern CloudKit sync via CKSyncEngine (WWDC 2023) or SwiftData integration
 
 ## When to Use This Skill
@@ -80,7 +79,7 @@ let container = try ModelContainer(
 
 **Advantages over raw CloudKit**:
 - Manages fetch/upload cycles automatically
-- Handles conflicts
+- Retries transient failures (network, auth, rate-limit) automatically; conflicts are yours to merge
 - Manages account changes
 - Recommended over manual CKDatabase operations
 
@@ -88,17 +87,19 @@ let container = try ModelContainer(
 // ✅ CORRECT: CKSyncEngine setup
 import CloudKit
 
-class SyncManager {
-    let syncEngine: CKSyncEngine
+final class SyncManager {
+    // The engine takes its delegate at construction, so it can only be built
+    // once `self` exists — written once in init, read-only afterwards
+    nonisolated(unsafe) private(set) var syncEngine: CKSyncEngine!
 
-    init() throws {
+    init() {
         let config = CKSyncEngine.Configuration(
             database: CKContainer.default().privateCloudDatabase,
             stateSerialization: loadSyncState(),
             delegate: self
         )
 
-        syncEngine = try CKSyncEngine(config)
+        syncEngine = CKSyncEngine(config)
     }
 
     // Implement delegate methods
@@ -120,12 +121,17 @@ extension SyncManager: CKSyncEngineDelegate {
         case .fetchedRecordZoneChanges(let changes):
             applyRecordChanges(changes)
 
+        case .sentDatabaseChanges(let changes):
+            // Zone-level send failures — failedZoneSaves / failedZoneDeletes
+            handleSentDatabaseChanges(changes)
+
         case .sentRecordZoneChanges(let changes):
             handleSentChanges(changes)
 
-        case .willFetchChanges, .didFetchChanges,
+        case .willFetchRecordZoneChanges, .didFetchRecordZoneChanges,
+             .willFetchChanges, .didFetchChanges,
              .willSendChanges, .didSendChanges:
-            // Optional lifecycle events
+            // Lifecycle notifications — nothing to apply
             break
 
         @unknown default:
@@ -138,12 +144,13 @@ extension SyncManager: CKSyncEngineDelegate {
         _ context: CKSyncEngine.SendChangesContext,
         syncEngine: CKSyncEngine
     ) async -> CKSyncEngine.RecordZoneChangeBatch? {
-        // Return pending local changes
-        let pendingChanges = getPendingLocalChanges()
-        return CKSyncEngine.RecordZoneChangeBatch(
-            pendingSaves: pendingChanges,
-            recordIDsToDelete: []
-        )
+        // Only the changes in this context's scope — the failable init walks them
+        // in order and stops at the server's 250-record-per-batch limit
+        let changes = syncEngine.state.pendingRecordZoneChanges
+            .filter { context.options.scope.contains($0) }
+        return await CKSyncEngine.RecordZoneChangeBatch(pendingChanges: changes) { recordID in
+            await self.record(for: recordID)  // Local record to upload, or nil to skip
+        }
     }
 }
 ```
@@ -152,7 +159,7 @@ extension SyncManager: CKSyncEngineDelegate {
 - **State serialization**: Persist sync state between app launches
 - **Events**: Delegate receives events for changes
 - **Batches**: You provide pending changes, engine uploads them
-- **Automatic conflict resolution**: Engine handles basic conflicts
+- **Transient-error retries**: Engine retries network/auth/rate-limit failures; `serverRecordChanged` is yours to merge
 
 ---
 
@@ -213,17 +220,20 @@ record["isCompleted"] = true
 try await privateDatabase.save(record)
 
 // ✅ Batch modify (save + delete in one operation)
-let operation = CKModifyRecordsOperation(
-    recordsToSave: [updatedRecord1, updatedRecord2],
-    recordIDsToDelete: [deletedID]
+let (saveResults, deleteResults) = try await privateDatabase.modifyRecords(
+    saving: [updatedRecord1, updatedRecord2],
+    deleting: [deletedID]
 )
-operation.perRecordSaveBlock = { recordID, result in
-    switch result {
-    case .success: print("Saved: \(recordID)")
-    case .failure(let error): print("Failed: \(recordID) — \(error)")
+for (recordID, result) in saveResults {
+    if case .failure(let error) = result {
+        print("Failed to save \(recordID): \(error)")
     }
 }
-try await privateDatabase.add(operation)
+for (recordID, result) in deleteResults {
+    if case .failure(let error) = result {
+        print("Failed to delete \(recordID): \(error)")
+    }
+}
 ```
 
 ### Conflict Resolution
@@ -238,8 +248,9 @@ let operation = CKModifyRecordsOperation(
 // Save only if server version unchanged
 operation.savePolicy = .ifServerRecordUnchanged
 
-// OR: Always overwrite server
-operation.savePolicy = .changedKeys  // Only changed fields
+// Alternatives — pick one instead of the line above:
+// operation.savePolicy = .allKeys      // Overwrite the server's values for every key
+// operation.savePolicy = .changedKeys  // Save only the fields you changed; no change-tag comparison
 
 operation.modifyRecordsResultBlock = { result in
     switch result {
@@ -253,6 +264,8 @@ operation.modifyRecordsResultBlock = { result in
             let merged = mergeRecords(server: serverRecord, client: clientRecord)
             // Retry with merged record
         }
+    case .failure(let error):
+        print("Save failed: \(error)")
     }
 }
 
@@ -444,7 +457,13 @@ func fetchChanges(since token: CKServerChangeToken?) async throws {
         }
     }
 
-    try await privateDatabase.add(operation)
+    // add(_:) only enqueues the operation — await its result before returning
+    try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+        operation.fetchRecordZoneChangesResultBlock = { result in
+            continuation.resume(with: result)
+        }
+        privateDatabase.add(operation)
+    }
 }
 ```
 
@@ -534,7 +553,9 @@ try await privateDatabase.save(subscription)
 // In AppDelegate
 func application(_ application: UIApplication,
                  didReceiveRemoteNotification userInfo: [AnyHashable: Any]) async -> UIBackgroundFetchResult {
-    let notification = CKNotification(fromRemoteNotificationDictionary: userInfo)
+    guard let notification = CKNotification(fromRemoteNotificationDictionary: userInfo) else {
+        return .noData
+    }
 
     if notification.subscriptionID == "all-changes" {
         try? await fetchChanges(since: savedChangeToken)
@@ -658,7 +679,7 @@ func userDidAcceptCloudKitShareWith(_ cloudKitShareMetadata: CKShare.Metadata) {
 |------|----------------------|------------|
 | Structured data sync | SwiftData + CloudKit | CKSyncEngine or CKDatabase |
 | Custom persistence sync | CKSyncEngine | CKDatabase |
-| Conflict resolution | Automatic (SwiftData/CKSyncEngine) | Manual (savePolicy) |
+| Conflict resolution | Manual for CKSyncEngine (merge `error.serverRecord`); automatic for SwiftData | Manual (savePolicy) |
 | Account changes | Handled automatically | Manual detection |
 | Monitoring | CloudKit Console telemetry | Manual logging |
 
@@ -673,5 +694,4 @@ func userDidAcceptCloudKitShareWith(_ cloudKitShareMetadata: CKShare.Metadata) {
 
 ---
 
-**Minimum iOS**: 10.0 (basic), 17.0 (CKSyncEngine, SwiftData integration)
 **WWDC Sessions**: 2023-10188 (CKSyncEngine), 2024-10122 (CloudKit Console)

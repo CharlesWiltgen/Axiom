@@ -100,6 +100,7 @@ class Task {
 ```swift
 // ✅ CORRECT: SQLiteData or GRDB for advanced features
 import SQLiteData
+import GRDB
 
 // Full-text search, custom indices, raw SQL when needed
 let statement = try db.makeStatement(sql: "SELECT * FROM users WHERE name MATCH ?")
@@ -399,6 +400,12 @@ class Note {
     var title: String
     var content: String
     var tags: [Tag]  // Relationships
+
+    init(title: String, content: String, tags: [Tag] = []) {
+        self.title = title
+        self.content = content
+        self.tags = tags
+    }
 }
 
 // ✅ CORRECT: Files → FileManager + proper directory
@@ -421,8 +428,7 @@ try jsonData.write(to: appSupportURL.appendingPathComponent("tasks.json"))
 // - Entire file loaded into memory
 // - Concurrent access issues
 
-// ✅ CORRECT: Use SwiftData instead
-@Model class Task { ... }
+// ✅ CORRECT: Use SwiftData instead — the Task @Model declared under "Modern Apps (iOS 17+)"
 ```
 
 ### ❌ DON'T: Store Re-downloadable Content in Documents
@@ -487,17 +493,19 @@ try data.write(to: iCloudDocumentsURL.appendingPathComponent("doc.pdf"))
 
 ## tvOS Storage
 
-**tvOS has no persistent local storage.** This catches every iOS developer.
+**tvOS expects almost no persistent local storage.** This catches every iOS developer.
+
+The container directories all exist — `Documents/`, `Library/Application Support/`, `Library/Caches/` and `tmp/` — but Apple's tvOS guidance caps *persistent* local storage at the NSUserDefaults allowance and requires everything else to be purgeable. Nothing beyond that allowance is contractual.
 
 | Directory | tvOS Behavior |
 |-----------|--------------|
-| Documents | Does not exist |
-| Application Support | System can delete when app is not running |
-| Caches | System deletes at any time |
-| tmp | System deletes at any time |
-| UserDefaults | 500 KB limit (vs ~4 MB on iOS) |
+| Documents | Exists, but is not a persistence guarantee — treat as purgeable |
+| Application Support | Exists, but you must create it and it is not a persistence guarantee |
+| Caches | May be deleted when space is low and the app is not running |
+| tmp | May be deleted when the app is not running |
+| UserDefaults | 500 KB allowance in Apple's tvOS App Programming Guide (vs 4 MB on iOS) |
 
-**Every local file can vanish between app launches.** Your tvOS app must survive starting from zero.
+**Design iCloud-first.** Your tvOS app must survive starting from zero: keep working when every local file is gone, and expect local data to be evicted between launches. The 500 KB figure is the allowance Apple's tvOS guide documents, not a limit the runtime enforces.
 
 **Recommended**: Use iCloud (CloudKit, NSUbiquitousKeyValueStore, or iCloud Drive) as primary storage. Treat local files as cache only. See axiom-swift (skills/tvos.md) for full tvOS storage patterns.
 

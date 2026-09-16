@@ -42,9 +42,9 @@ If the question is purely about GRDB record types or SQLiteData query builder sy
 
 ## 1 — Pick FTS5
 
-Pick FTS5 for all new code. SQLite calls it "the newest version of the SQLite [full-text search] module" and it supersedes FTS3 and FTS4 on every axis that matters for an app: better ranking (bm25 by default, no need to load a custom ranking function), the trigram tokenizer for substring search, richer auxiliary functions (`highlight`, `snippet`), tighter on-disk format, and the external-content table pattern that lets you index without duplicating storage.
+Pick FTS5 for all new code. SQLite calls it "the newest version of the SQLite [full-text search] module" and it supersedes FTS3 and FTS4 on every axis that matters for an app: better ranking (bm25 by default, no need to load a custom ranking function), the trigram tokenizer for substring search, richer auxiliary functions (`highlight`, `snippet`), instance lists loaded incrementally rather than all at once, and the external-content table pattern that lets you index without duplicating storage.
 
-FTS4's one feature absent from FTS5 is content compression — almost never worth picking FTS4 for. FTS3 is legacy; do not pick it for new code. FTS5 has been the default in iOS-bundled SQLite for years.
+The FTS4 features FTS5 drops — content compression (`compress=`/`uncompress=`), `languageid`, the ICU tokenizer, and the `matchinfo()`/`offsets()` functions — are almost never worth picking FTS4 for. FTS3 is legacy; do not pick it for new code. FTS5 has been the default in iOS-bundled SQLite for years.
 
 GRDB and SQLiteData both target FTS5 as the default. Anywhere this reference says "FTS table" assume FTS5.
 
@@ -97,11 +97,11 @@ The tokenizer decides how text is split into terms and how those terms are folde
 | Tokenizer | Behavior | Use when |
 |---|---|---|
 | `unicode61` | Default. Splits on Unicode word boundaries, lowercases, strips diacritics. "café" tokenizes the same as "cafe". | General multilingual text. The right default for almost every app. |
-| `porter` | Wraps another tokenizer (unicode61 by default), then applies the Porter stemmer. "running" matches "runs", "ran". | English-only content. SQLite is explicit: the Porter stemmer is "designed for use with English language terms only" — do not use on mixed-language data. |
+| `porter` | Wraps another tokenizer (unicode61 by default), then applies the Porter stemmer. "running" matches "runs" — both stem to "run"; the irregular "ran" does not. | English-only content. SQLite is explicit: the Porter stemmer is "designed for use with English language terms only" — do not use on mixed-language data. |
 | `trigram` | Indexes every 3-character substring. Supports `LIKE '%foo%'`-style substring search and case-insensitive `MATCH` against arbitrary substrings. Optional `case_sensitive 1`. | Substring search, identifiers, codes, names. Larger index. |
 | `ascii` | Like unicode61 but ASCII-only. No Unicode folding. | English-only, ASCII-only content where you want predictable behavior and the smallest tokenizer cost. |
 
-The default unicode61 already strips diacritics, so "café" matching "cafe" is built in. What unicode61 does **not** do is canonicalize Unicode equivalents (NFC vs NFD), normalize compatibility forms (ligatures), or transliterate between scripts. That's §4.
+The default unicode61 already strips diacritics, so "café" matching "cafe" is built in. What unicode61 does **not** do is normalize compatibility forms (ligatures), transliterate between scripts, or fold anything outside its diacritic table. That's §4.
 
 #### Tokenizer options
 
@@ -113,17 +113,24 @@ unicode61 accepts options at table-creation time. The two worth knowing:
 
 trigram accepts `case_sensitive`: `0` (default, case-insensitive) or `1` (case-sensitive). Pick `1` only when you genuinely need case-sensitive substring search — almost never the right answer for user-facing search.
 
-GRDB's `t.tokenizer = .unicode61(...)` and `.trigram(...)` factories accept these options as Swift parameters; see the FTS5 source comments in GRDB for the parameter names.
+GRDB's `t.tokenizer = .unicode61(...)`, `.porter(...)` and `.ascii(...)` factories accept these options as Swift parameters; see the FTS5 source comments in GRDB for the parameter names. There is no `.trigram` factory — reach for the components initializer instead: `t.tokenizer = FTS5TokenizerDescriptor(components: ["trigram"])`, or `["trigram", "case_sensitive", "1"]`.
 
 ## 4 — Unicode discipline [load-bearing]
 
 This is the load-bearing section. Three traps cause silent FTS5 match misses on Apple platforms, and none are fixed by switching tokenizers. The fix is normalization, applied identically on both indexing and querying.
 
-#### Trap 1: NFC vs NFD
+#### Trap 1: Canonical equivalence (NFC vs NFD)
 
-`String` literals in Swift source and most user input from iOS keyboards arrive in NFC (precomposed). But filenames from HFS+ historically used NFD (decomposed), and JSON or other text coming over the network can be either. "é" can be one code point (U+00E9, NFC) or two (U+0065 U+0301, NFD). The two look identical, render identically, compare equal under Swift's `==` — and FTS5 sees two different byte sequences.
+`String` literals in Swift source and most user input from iOS keyboards arrive in NFC (precomposed). But filenames from HFS+ historically used NFD (decomposed), and JSON or other text coming over the network can be either. "é" can be one code point (U+00E9, NFC) or two (U+0065 U+0301, NFD). The two look identical, render identically, and compare equal under Swift's `==`.
 
-Result: you index NFC text, the user pastes an NFD string, and `MATCH` returns no rows. There is no error.
+For Latin text the default unicode61 hides the difference: a combining mark is a separator, and the precomposed letter is diacritic-folded, so both spellings index and query as `cafe`. Index NFC and query NFD, or the reverse, and you still get a hit.
+
+The trap bites where that fold does not apply:
+
+- `remove_diacritics 0` — the index term keeps its mark (`café`), the NFD query tokenizes to `cafe`, and `MATCH` returns no rows.
+- Scripts whose decomposition adds letters rather than combining marks — an NFC Hangul syllable (U+D55C) and an NFD jamo query do not meet.
+
+Result: no error, no log, just no rows.
 
 Fix: normalize to NFC before indexing AND before every query.
 
@@ -196,7 +203,7 @@ guard let pattern = FTS5Pattern(matchingAnyTokenIn: userInput.fts5Normalized) el
 
 "I added Unicode search but `café` matches and `Müller` doesn't. Should I switch to trigram?"
 
-No. Trigram solves substring matching, not Unicode equivalence — it indexes byte trigrams, so "Müller" still does not match "Mueller". porter is English-only and makes the problem worse. ascii drops Unicode entirely. Switching tokenizer is the wrong axis.
+No. Trigram solves substring matching, not Unicode equivalence — it indexes 3-character sequences, a substring index rather than an equivalence transform, so "Müller" still does not match "Mueller". porter is English-only and makes the problem worse. ascii drops Unicode entirely. Switching tokenizer is the wrong axis.
 
 The fix is always: pick the right normalization (NFKC + diacritic strip + language-specific replacements), apply it on both sides. Don't skip Unicode normalization — silent match misses are unrecoverable from logs alone, because there are no logs.
 
@@ -237,7 +244,7 @@ Apply your normalization (§4) inside the trigger if your source columns hold th
 
 After a batch import or migration, drop the index contents and rebuild from the source table.
 
-**Cross-process gotcha:** sync triggers only fire for writes from the connection that has them registered. If two processes both write to the source table (rare but real with App Groups), only the process whose connection registered the triggers will sync the FTS index. See `grdb-app-groups.md` §2 for the multi-process implication.
+The sync triggers are schema objects, so they fire for every SQL writer in every process — there is no per-connection registration to worry about. The hazard is ordering: a process that writes the source table before the migration has created the FTS table and its triggers mirrors nothing into the index, and it drifts from that point on. Run the same versioned migration in every process before it writes. See `grdb-app-groups.md` §2.
 
 ```sql
 INSERT INTO book_ft(book_ft) VALUES('rebuild');
@@ -258,7 +265,7 @@ try db.create(virtualTable: "book_ft", using: FTS5()) { t in
 }
 ```
 
-`synchronize(withTable:)` generates the AFTER INSERT / DELETE / UPDATE triggers shown above and runs `INSERT INTO ft(ft) VALUES('rebuild')` once to populate the index. The SQL in Strategy 1 is what GRDB writes when you call this — show that to a colleague auditing the schema, or write it by hand if you're using raw SQLite or SQLiteData. Re-running migrations replaces the triggers safely; the `rebuild` only runs on first creation.
+`synchronize(withTable:)` generates the AFTER INSERT / DELETE / UPDATE triggers shown above and runs `INSERT INTO ft(ft) VALUES('rebuild')` to populate the index. The SQL in Strategy 1 is what GRDB writes when you call this — show that to a colleague auditing the schema, or write it by hand if you're using raw SQLite or SQLiteData. `create(virtualTable:)` is not idempotent: a second call fails with `table "book_ft" already exists` unless you pass `.ifNotExists`, and with that option the triggers are created only if absent while the initial `rebuild` runs again on every call.
 
 ## 6 — Ranking and relevance
 
@@ -340,7 +347,7 @@ Column index is 0-based and refers to columns of the FTS table in declaration or
 
 #### `snippet(table, col, open, close, ellipsis, max_tokens)`
 
-Returns a short excerpt centered on the matched terms, with markup around each match and the supplied `ellipsis` separating non-adjacent fragments. `max_tokens` must satisfy `0 < max_tokens < 64` per SQLite — the practical max is 63.
+Returns a short excerpt centered on the matched terms, with markup around each match and the supplied `ellipsis` separating non-adjacent fragments. `max_tokens` is 1 through 64 per SQLite; a larger value clamps to 64.
 
 ```sql
 SELECT snippet(book_ft, 2, '<b>', '</b>', ' … ', 32) AS preview
@@ -385,7 +392,14 @@ INSERT INTO book_ft(book_ft, rank) VALUES('merge', 100);
 
 -- Verify the index is internally consistent. Returns an error on corruption.
 INSERT INTO book_ft(book_ft) VALUES('integrity-check');
+
+-- Remove one row's entries from a contentless or external-content index.
+-- The column values must be the ones that were indexed -- here the text
+-- stored for rowid 42: FTS5 re-tokenizes them to find the terms to remove.
+INSERT INTO log_ft(log_ft, rowid, message) VALUES('delete', 42, 'hello world');
 ```
+
+`delete` is the only way to remove a single row's entries from a contentless table's index (§2). It is also the quietest way to fail: a rowid-only `delete` is accepted, and the terms stay in the index.
 
 A typical maintenance schedule for an app:
 - `merge` on a small budget after every batch of writes (cheap, keeps the index from fragmenting)
@@ -437,11 +451,11 @@ guard let anyPattern = FTS5Pattern(matchingAnyTokenIn: userInput.fts5Normalized)
 // All tokens: AND together (the typical "search" semantics)
 guard let allPattern = FTS5Pattern(matchingAllTokensIn: userInput.fts5Normalized) else { return [] }
 
-// Prefix: AND together with the last token as a prefix (autocomplete)
+// Prefix: every token ANDed as a prefix ("foo bar" -> foo* bar*)
 guard let prefixPattern = FTS5Pattern(matchingAllPrefixesIn: userInput.fts5Normalized) else { return [] }
 ```
 
-Treat `nil` as "no results" rather than an error. The one *throwing* initializer is `init(rawPattern:allowedColumns:)` — use it only when you're constructing the raw FTS5 query language directly.
+Treat `nil` as "no results" rather than an error. The one *throwing* initializer is `init(rawPattern:allowedColumns:)` — use it only when you're constructing the raw FTS5 query language directly. `matchingPhrase:` matches consecutive tokens anywhere in the document; `matchingPrefixPhrase:` is the same, anchored to the start of the document (`^"foo bar"`).
 
 #### Query
 
@@ -471,7 +485,7 @@ The maintenance commands of §9 are written as raw SQL even from SQLiteData (`db
 
 #### CloudKit interaction
 
-SQLiteData's CloudKit sync replicates the source table, not the FTS index. The FTS table is a derived structure and lives only on each device. After a CloudKit pull adds or updates rows in the source table, your sync triggers (§5) fire normally and keep the local FTS index consistent. On first sync into a fresh install, run `INSERT INTO ft(ft) VALUES('rebuild')` after the initial bulk import to populate the index without relying on triggers — bulk inserts during a sync can bypass them depending on how SQLiteData applies the changes. Schedule the rebuild from your sync engine completion callback.
+SQLiteData's CloudKit sync replicates the source table, not the FTS index. The FTS table is a derived structure and lives only on each device. The sync engine applies remote changes as SQL through GRDB, so your sync triggers (§5) fire for them like any other write and keep the local FTS index consistent. The one case that needs help is a fresh install whose first sync runs before the migration has created the FTS table and triggers — order the migration first, or run `INSERT INTO ft(ft) VALUES('rebuild')` from your sync engine completion callback to index whatever arrived without them.
 
 ## 12 — Worked example: multilingual book search
 
@@ -484,18 +498,20 @@ try db.create(table: "book") { t in
     t.autoIncrementedPrimaryKey("id")
     t.column("title", .text).notNull()
     t.column("body", .text).notNull()
+    t.column("title_normalized", .text).notNull()
+    t.column("body_normalized", .text).notNull()
 }
 
 try db.create(virtualTable: "book_ft", using: FTS5()) { t in
     t.tokenizer = .unicode61()
     t.synchronize(withTable: "book")   // generates triggers + initial rebuild
     t.prefixes = [2, 3]   // for autocomplete
-    t.column("title")
-    t.column("body")
+    t.column("title_normalized")
+    t.column("body_normalized")
 }
 ```
 
-`synchronize(withTable:)` writes the AFTER INSERT/DELETE/UPDATE triggers shown in §5 — but those triggers mirror the *raw* source columns. To index the *normalized* form instead, store the normalized form in a shadow column on `book` and let `synchronize` pick it up, or skip `synchronize(withTable:)` and write hand-rolled triggers that normalize inline.
+`synchronize(withTable:)` writes the AFTER INSERT/DELETE/UPDATE triggers shown in §5, and those triggers mirror the columns named on the FTS table. The schema above therefore indexes the two `_normalized` shadow columns, which the write path fills — `book` keeps the display original, the triggers carry the normalized copy into the index, and no writer touches `book_ft` by hand. The alternative is to skip `synchronize(withTable:)` and write hand-rolled triggers that normalize inline. Pick one and stay on it: indexing twice for the same rowid corrupts the index.
 
 #### Normalization helper
 
@@ -515,15 +531,15 @@ extension String {
 
 ```swift
 try db.write { db in
-    try db.execute(sql: "INSERT INTO book (title, body) VALUES (?, ?)",
-                   arguments: [title, body])
-    let id = db.lastInsertedRowID
-    try db.execute(sql: "INSERT INTO book_ft (rowid, title, body) VALUES (?, ?, ?)",
-                   arguments: [id, title.fts5Normalized, body.fts5Normalized])
+    try db.execute(sql: """
+        INSERT INTO book (title, body, title_normalized, body_normalized)
+        VALUES (?, ?, ?, ?)
+        """,
+        arguments: [title, body, title.fts5Normalized, body.fts5Normalized])
 }
 ```
 
-If you use triggers (recommended), normalize in the trigger body too — or store the normalized form in shadow columns on `book` and have the trigger copy them across. Picking one or the other consistently matters more than which.
+The triggers do the indexing, so this writes `book` only. Normalize wherever the writer is: if you would rather not carry shadow columns, delete them from the schema, index `title`/`body`, and normalize inside hand-rolled triggers instead. Picking one or the other consistently matters more than which.
 
 #### Query path
 
@@ -545,13 +561,13 @@ func search(_ userInput: String) throws -> [Book] {
 }
 ```
 
-`matchingAllPrefixesIn:` is the right pattern for autocomplete: every token in the input must match, and the last token is treated as a prefix. The combination with `prefixes = [2, 3]` makes "harr" find "Harry" without a full term scan.
+`matchingAllPrefixesIn:` is the right pattern for autocomplete: every token in the input must match, and every token is treated as a prefix (`harr` becomes `harr*`). The combination with `prefixes = [2, 3]` makes "harr" find "Harry" without a full term scan.
 
 #### What this prevents
 
 - "café" matches "cafe" — handled by unicode61's default diacritic strip
 - "ﬁsh" matches "fish" — handled by NFKC in `.fts5Normalized`
-- NFD paste of "café" matches NFC stored "café" — handled by NFKC normalizing both to the same form
+- NFD paste of "café" matches NFC stored "café" — default unicode61 folds both to `cafe`; the NFKC pass is what covers `remove_diacritics 0`, Hangul-style decompositions, and the ligature case above
 - Stray `"` or `*` in user input crashes or corrupts the query — handled by `FTS5Pattern`
 - Autocomplete typing "harr" returns no results — handled by `prefixes = [2, 3]` plus `matchingAllPrefixesIn:`
 
@@ -566,7 +582,7 @@ What it still does not handle without language-specific work: "Mueller" matching
 | Passing raw user input to `MATCH` without escaping | Crashes on `"` or `*` in the query; query injection; quoted phrases ignored | GRDB: always use `FTS5Pattern`. SQLiteData: parameter binding alone does NOT escape FTS5 syntax — sanitize operators or build an FTS5 pattern string before calling `.match(_:)`. | §10, §11 |
 | External-content table with no triggers and no scheduled rebuild | Index drifts from source; results return rows that don't match, or miss rows that do | Use `t.synchronize(withTable:)`; or install triggers for INSERT/UPDATE/DELETE AND keep a `rebuild` command available for recovery. | §5 |
 | Switching tokenizer to "fix" Unicode match misses | Already tried unicode61; switched to trigram; problem persists or shifts | The fix is normalization, not tokenizer. Apply NFKC + diacritic strip + transliteration on both sides. | §4 |
-| Contentless FTS table, then surprise that UPDATE fails | "Cannot UPDATE a contentless fts5 table" errors at runtime | Pick the schema shape at design time. If you need UPDATE, use contentful or external-content. | §2 |
+| Contentless FTS table, then surprise that UPDATE fails | `cannot UPDATE contentless fts5 table: <name>` at runtime | Pick the schema shape at design time. If you need UPDATE, use contentful or external-content. | §2 |
 | `prefix='2 3 4 5'` on a small table | Index storage balloons with no measurable benefit | Pick the smallest set of prefix lengths your UX actually uses. Don't add prefix lengths "just in case". | §7 |
 | `ORDER BY bm25(t) DESC` | Worst matches show first; users see junk results at top | Lower bm25 is better. Use `ORDER BY rank` (ascending is implicit) or `ORDER BY bm25(t)` ascending. | §6 |
 | Skipping `optimize` on a long-lived index | Search gets slower over months; users notice; nobody knows why | Schedule `merge` after batch writes and `optimize` periodically. | §9 |

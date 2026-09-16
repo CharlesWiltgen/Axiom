@@ -79,10 +79,19 @@ func canSaveReplaceableContent(fileSize: Int64, userRequested: Bool) -> Bool {
 func saveUserDocument(_ data: Data, to url: URL) throws {
     do {
         try data.write(to: url, options: .atomic)
-    } catch let error as NSError where error.domain == NSPOSIXErrorDomain && error.code == Int(ENOSPC) {
+    } catch let error as NSError where isOutOfSpace(error) {
         showLowStorageAlert()
         throw error
     }
+}
+
+// Foundation file writes report a full disk as Cocoa 640 (.fileWriteOutOfSpace)
+// with NSPOSIXErrorDomain 28 (ENOSPC) underneath; raw POSIX writes report 28 directly
+func isOutOfSpace(_ error: NSError) -> Bool {
+    if error.domain == NSCocoaErrorDomain && error.code == CocoaError.fileWriteOutOfSpace.rawValue { return true }
+    if error.domain == NSPOSIXErrorDomain && error.code == Int(ENOSPC) { return true }
+    guard let underlying = error.userInfo[NSUnderlyingErrorKey] as? NSError else { return false }
+    return isOutOfSpace(underlying)
 }
 
 // Usage
@@ -336,8 +345,12 @@ func registerBackgroundCleanup() {
         self.handleStorageCleanup(task: task as! BGProcessingTask)
     }
 
-    // false means the identifier is missing from BGTaskSchedulerPermittedIdentifiers
-    assert(registered, "com.example.app.cleanup is not a permitted background task identifier")
+    // register returns false when the identifier is missing from
+    // BGTaskSchedulerPermittedIdentifiers — report it instead of ignoring it
+    guard registered else {
+        print("Cleanup task not registered: add com.example.app.cleanup to BGTaskSchedulerPermittedIdentifiers")
+        return
+    }
 }
 
 // Registering alone never delivers a task — submit a request to schedule it
@@ -543,7 +556,7 @@ func findLargeFiles(in directory: URL) {
 |------|-----|------|
 | Check space before a replaceable write | `volumeAvailableCapacityForImportantUsageKey` | `values.volumeAvailableCapacityForImportantUsage` |
 | Check space for cache | `volumeAvailableCapacityForOpportunisticUsageKey` | `values.volumeAvailableCapacityForOpportunisticUsage` |
-| Save irreplaceable content | Attempt the write | Handle `NSPOSIXErrorDomain` 28 (ENOSPC) |
+| Save irreplaceable content | Attempt the write | Handle `CocoaError.fileWriteOutOfSpace` (640) or `NSPOSIXErrorDomain` 28 |
 | Exclude from backup | `isExcludedFromBackupKey` | `resourceValues.isExcludedFromBackup = true` |
 | Get file size | `totalFileAllocatedSizeKey` | `values.totalFileAllocatedSize` |
 | Purge priority | Location-based | Use `tmp/` or `Caches/` directory |

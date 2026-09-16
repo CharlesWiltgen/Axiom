@@ -8,10 +8,10 @@ Core Data issues manifest as production crashes from schema mismatches, mysterio
 ## Red Flags — Suspect Core Data Issue
 
 If you see ANY of these, suspect a Core Data misunderstanding, not framework breakage:
-- 🚩 **#1 root cause** Edited the existing `.xcdatamodel` in place instead of adding a new model version. Any field added/renamed/retyped this way silently rewrites v1 of the model — the on-disk store now mismatches it, and existing devices crash with "model is incompatible with the one used to create the store". Check first: is there more than one `.xcdatamodel` inside the `.xcdatamodeld` bundle?
-- Crash on production launch: "Unresolvable fault" after schema change
-- Crash: "The model used to open the store is incompatible with the one used to create the store"
-- Thread-confinement error: "Accessing NSManagedObject on a different thread"
+- 🚩 **#1 root cause** Edited the existing `.xcdatamodel` in place instead of adding a new model version. Any field added/renamed/retyped this way silently rewrites v1 of the model — the on-disk store now mismatches it, and existing devices fail with `NSCocoaErrorDomain 134100`, "The managed object model version used to open the persistent store is incompatible with the one that was used to create the store." Check first: is there more than one `.xcdatamodel` inside the `.xcdatamodeld` bundle?
+- Crash on production launch: `NSCocoaErrorDomain 134100` after a schema change
+- Crash message: `localizedDescription` reads "The managed object model version used to open the persistent store is incompatible with the one that was used to create the store", while the `CoreData: error:` log line for the same failure ends with "The model used to open the store is incompatible with the one used to create the store"
+- Thread-confinement violation: off-queue object access — silent unless the process is launched with `-com.apple.CoreData.ConcurrencyDebug 1`, which traps in `_PFAssertSafeMultiThreadedAccess_`
 - App suddenly slow after adding a User→Posts relationship
 - SwiftData app needs complex features; considering mixing Core Data alongside
 - Schema migration works in simulator but crashes on production
@@ -20,7 +20,7 @@ If you see ANY of these, suspect a Core Data misunderstanding, not framework bre
   - Schema mismatches and thread errors are always developer code, not framework
   - Do not rationalize away the issue—diagnose it
 
-**Critical distinction** Simulator deletes the database on each rebuild, hiding schema mismatch issues. Real devices keep persistent databases and crash immediately on schema mismatch. **MANDATORY: Test migrations on real device with real data before shipping.**
+**Critical distinction** A simulator you reset (app deleted, device erased) starts from an empty store, so the old→new migration never runs. Real devices keep the existing store and crash immediately on schema mismatch. **MANDATORY: Test migrations on real device with real data before shipping.**
 
 #### First fix to try — enable automatic lightweight migration
 
@@ -51,8 +51,9 @@ This only works when the change is inferable (add optional, add required-with-de
 ```swift
 // 1. Identify the crash/issue type
 // Screenshot the crash message and note:
-//   - "Unresolvable fault" = schema mismatch
-//   - "different thread" = thread-confinement
+//   - NSCocoaErrorDomain 134100 = schema mismatch
+//   - off-queue object access = thread-confinement (traps only under
+//     -com.apple.CoreData.ConcurrencyDebug 1)
 //   - Slow performance = N+1 queries or fetch size issues
 //   - Data corruption = unsafe migration
 // Record: "Crash type: [exact message]"
@@ -90,19 +91,17 @@ print("Accessing from: \(Thread.current)")
 
 // 4. Profile relationship access for N+1 problems
 // In Xcode, run with arguments:
-// -com.apple.CoreData.SQLDebug 1
-// Check Console for SQL queries:
-//   SELECT * FROM USERS;  (1 query)
-//   SELECT * FROM POSTS WHERE user_id = 1;  (1 query per user = N+1!)
+// -com.apple.CoreData.SQLDebug 1 -com.apple.CoreData.ConcurrencyDebug 1
+// Check Console for SQL queries (tables are Z-prefixed, columns named explicitly):
+//   CoreData: sql: SELECT 0, t0.Z_PK, t0.Z_OPT, t0.ZNAME FROM ZUSER t0  (1 query)
+//   CoreData: sql: SELECT 0, t0.Z_PK FROM ZPOST t0 WHERE t0.ZAUTHOR = ?  (1 per user = N+1!)
 // Record: "N+1 found? Yes/no, how many extra queries"
 
 // 5. Check SwiftData vs. Core Data confusion
-if #available(iOS 17.0, *) {
-    // If using SwiftData @Model + Core Data simultaneously:
-    // Error: "Store is locked" or "EXC_BAD_ACCESS"
-    // = trying to access same database from both layers
-    print("Using both SwiftData and Core Data on same store?")
-}
+// If using SwiftData @Model + Core Data simultaneously:
+// Error: "Store is locked" or "EXC_BAD_ACCESS"
+// = trying to access same database from both layers
+print("Using both SwiftData and Core Data on same store?")
 // Record: "Mixing SwiftData + Core Data? Yes/no"
 ```
 
@@ -117,8 +116,8 @@ if #available(iOS 17.0, *) {
 
 Before changing ANY code, identify ONE of these:
 
-1. If crash is "Unresolvable fault" AND store/model versions differ → Schema mismatch (not user error)
-2. If crash mentions "different thread" AND you're using DispatchQueue → Thread-confinement (not thread-safe design)
+1. If the error is `NSCocoaErrorDomain 134100` AND store/model versions differ → Schema mismatch (not user error)
+2. If objects are touched off their context's queue (trap it with `-com.apple.CoreData.ConcurrencyDebug 1`) → Thread-confinement (not thread-safe design)
 3. If performance degrades with relationship access → N+1 queries (check SQL log)
 4. If SwiftData and Core Data code exist together → Conflicting data layers (architectural issue)
 5. If migration test passes but production fails → Edge case in real data (testing gap)
@@ -126,43 +125,41 @@ Before changing ANY code, identify ONE of these:
 #### If diagnostics are contradictory or unclear
 - STOP. Do NOT proceed to patterns yet
 - Add print statements to every NSManagedObject access (thread check)
-- Add `-com.apple.CoreData.SQLDebug 1` and count SQL queries
+- Add `-com.apple.CoreData.SQLDebug 1` and count SQL queries; add `-com.apple.CoreData.ConcurrencyDebug 1` to trap off-queue object access
 - Establish baseline: what's actually happening vs. what you assumed
 
 ## Decision Tree
 
 ```
 Core Data problem suspected?
-├─ Crash: "Unresolvable fault" / "incompatible store"?
+├─ Crash: NSCocoaErrorDomain 134100 / "incompatible store"?
 │  └─ YES → Schema mismatch (store ≠ app model)
 │     ├─ Edited the .xcdatamodel in place? → Add a NEW model version first
 │     ├─ Add new required field / remove / rename? → Pattern 1a (lightweight migration)
 │     ├─ Change an attribute type? → Pattern 1b (rename → add → backfill recipe)
-│     └─ Don't know how to fix? → Pattern 1c (testing safety)
+│     └─ Don't know how to fix? → See "When You're Stuck After 30 Minutes"
 │
-├─ Crash: "different thread"?
+├─ Crash: object accessed off its context's queue?
 │  └─ YES → Thread-confinement violated
 │     ├─ Using DispatchQueue for background work? → Pattern 2a (async context)
-│     ├─ Mixing Core Data with async/await? → Pattern 2b (structured concurrency)
-│     └─ SwiftUI @FetchRequest causing issues? → Pattern 2c (@FetchRequest safety)
+│     └─ Mixing Core Data with async/await? → Pattern 2b (structured concurrency)
 │
 ├─ Performance: App became slow?
 │  └─ YES → Likely N+1 queries
 │     ├─ Accessing user.posts in loop? → Pattern 3a (prefetching)
-│     ├─ Large result set? → Pattern 3b (batch sizing)
-│     └─ Just added relationships? → Pattern 3c (relationship tuning)
+│     └─ Large result set? → Pattern 3b (batch sizing)
 │
 ├─ Using both SwiftData and Core Data?
 │  └─ YES → Data layer conflict
 │     ├─ Need Core Data features SwiftData lacks? → Pattern 4a (drop to Core Data)
 │     ├─ Already committed to SwiftData? → Pattern 4b (stay in SwiftData)
-│     └─ Unsure which to use? → Pattern 4c (decision framework)
+│     └─ Unsure which to use? → Pattern 4b (decision framework)
 │
 └─ Migration works locally but crashes in production?
    └─ YES → Testing gap
       ├─ Didn't test with real data? → Pattern 5a (production testing)
       ├─ Schema change affects large dataset? → Pattern 5b (migration safety)
-      └─ Need verification before shipping? → Pattern 5c (pre-deployment checklist)
+      └─ Need verification before shipping? → Pattern 5b (pre-deployment checklist)
 ```
 
 ## Common Patterns
@@ -193,7 +190,7 @@ Core Data problem suspected?
 #### ✅ SAFE Lightweight Migrations
 - Adding new optional field: `@NSManaged var nickname: String?`
 - Adding new required field WITH default: Create attribute with default value
-- Renaming entity or attribute: Use mapping model with automatic mapping
+- Renaming entity or attribute: set the renaming identifier in the new model version (still lightweight)
 - Removing unused field: Just delete from model (data stays on disk, ignored)
 
 #### ❌ WRONG (Crashes production)
@@ -202,7 +199,7 @@ Core Data problem suspected?
 @NSManaged var userID: String  // Required, no default
 
 // BAD: Assuming simulator = production
-// Works in simulator (deletes DB), crashes on real device
+// Works in simulator (fresh store, nothing to migrate), fails on real device
 
 // BAD: Modifying field type
 @NSManaged var createdAt: Date  // Was String, now Date
@@ -214,8 +211,9 @@ Core Data problem suspected?
 // 1. In Xcode: Editor → Add Model Version
 // Creates new .xcdatamodel version file
 
-// 2. In new version, add required field WITH default:
-@NSManaged var userID: String = UUID().uuidString
+// 2. In the new version, add the required attribute and set its Default Value
+//    in the data-model inspector (the model supplies it, not Swift):
+@NSManaged var userID: String
 
 // 3. Mark as current model version:
 // File Inspector → Versioned Core Data Model
@@ -228,11 +226,13 @@ Core Data problem suspected?
 // 5. Deploy when confident
 ```
 
+An `@NSManaged` property cannot carry an initial value — the model backs it, not Swift storage. What makes an added required attribute inferable is its Default Value in the data-model inspector, and that has to be a single constant, so a per-instance `UUID()` cannot be one; generate per-row values in a backfill instead (Pattern 1b). With no model default the migration fails with `NSCocoaErrorDomain 134110`, "Validation error missing attribute values on mandatory destination attribute".
+
 #### When this works
 - Adding optional fields (always safe)
 - Adding required fields WITH default values
 - Removing fields
-- Renaming entities/attributes with mapping model
+- Renaming entities/attributes with a renaming identifier
 
 #### When this FAILS (don't try lightweight)
 - Changing field type (String → Int)
@@ -246,7 +246,7 @@ Core Data problem suspected?
 
 ### Pattern 1b: Custom Migration (Complex Schema Changes)
 
-**PRINCIPLE** When lightweight migration can't infer the change, use staged migration (iOS 17+) for custom transformation logic. Reach for hand-authored mapping models + `NSEntityMigrationPolicy` only on iOS 16 and earlier.
+**PRINCIPLE** When lightweight migration can't infer the change, use staged migration (iOS 17+) for custom transformation logic.
 
 #### Use when
 - Changing field types (String → Date) — NEVER inferable, always custom
@@ -259,11 +259,21 @@ Core Data problem suspected?
 `NSStagedMigrationManager` replaces hand-authored mapping models. Express each hop between model versions as a stage: `NSLightweightMigrationStage` for inferable changes, `NSCustomMigrationStage` for code-driven transforms. Stages chain across multiple versions automatically and run inside a single transaction.
 
 ```swift
+// Take each checksum from a compiled, non-editable model — reading
+// `versionChecksum` on a model that is still editable logs "unstable version
+// checksum" and the value is not guaranteed
+let momd = Bundle.main.url(forResource: "Model", withExtension: "momd")!
+let modelV1 = NSManagedObjectModel(contentsOf: momd.appendingPathComponent("Model.mom"))!
+let modelV2 = NSManagedObjectModel(contentsOf: momd.appendingPathComponent("Model 2.mom"))!
+
 let v1 = NSManagedObjectModelReference(model: modelV1, versionChecksum: modelV1.versionChecksum)
 let v2 = NSManagedObjectModelReference(model: modelV2, versionChecksum: modelV2.versionChecksum)
 
 let stage = NSCustomMigrationStage(migratingFrom: v1, to: v2)
-stage.didMigrateHandler = { context, _ in
+stage.didMigrateHandler = { migrationManager, _ in
+    // The handler receives the migration manager, not a context — the migrating
+    // store is reached through its container
+    guard let context = migrationManager.container?.viewContext else { return }
     // Backfill the new typed attribute from the renamed legacy one (see recipe below)
     let users = try context.fetch(NSFetchRequest<NSManagedObject>(entityName: "User"))
     let parser = ISO8601DateFormatter()
@@ -305,10 +315,6 @@ func backfillCreatedAtOnce(_ context: NSManagedObjectContext) throws {
 
 The `UserDefaults` guard makes the backfill idempotent — without it, a relaunch re-runs the loop over already-migrated rows. Drop `createdAt_str` only in a LATER release, once every user has run the backfill.
 
-#### Legacy path (iOS 16 and earlier) — mapping model + policy
-
-Create a mapping model (File → New → Mapping Model), subclass `NSEntityMigrationPolicy`, and set it as the Custom Policy Class in the mapping inspector. Use only when you must support iOS 16 — `NSStagedMigrationManager` is unavailable there.
-
 #### Critical safety rules
 - ALWAYS backup database before testing migration
 - Test migration on COPY of production data
@@ -323,17 +329,19 @@ Create a mapping model (File → New → Mapping Model), subclass `NSEntityMigra
 
 **PRINCIPLE** Core Data objects are thread-confined. Fetch on background thread, convert to lightweight representations for main thread.
 
-#### ❌ WRONG (Thread-confinement crash)
+#### ❌ WRONG (Thread-confinement violation)
 ```swift
 DispatchQueue.global().async {
     let context = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
     let results = try! context.fetch(request)
 
     DispatchQueue.main.async {
-        self.objects = results  // ❌ CRASH: objects faulted on background thread
+        self.objects = results  // ❌ Off-queue access: no exception, no log
     }
 }
 ```
+
+This is silent by default — it compiles under Swift 5 and usually returns a row rather than crashing. Swift 6 rejects only the object-send part, because `DispatchQueue.main.async` closures are main-actor inferred; the off-queue context access itself stays unguarded. Add `-com.apple.CoreData.ConcurrencyDebug 1` to the scheme's launch arguments and that access traps immediately in `_PFAssertSafeMultiThreadedAccess_`.
 
 #### ✅ CORRECT (Use private queue context for background work)
 ```swift
@@ -374,16 +382,17 @@ backgroundContext.perform {
 
 **PRINCIPLE** Use NSPersistentContainer or NSManagedObjectContext async methods for Swift Concurrency compatibility.
 
-#### ✅ CORRECT (iOS 13+ async APIs)
+#### ✅ CORRECT (async APIs, iOS 15+)
 ```swift
-// iOS 13+: Use async perform
+// iOS 15+: the value-returning overload of `perform` is the async one
 let users = try await viewContext.perform {
     try viewContext.fetch(userRequest)
 }
 // Executes fetch on correct thread, returns to caller
 
-// iOS 17+: Use Swift Concurrency async/await directly
-let users = try await container.mainContext.fetch(userRequest)
+// On the main actor you are already on the view context's queue, so the
+// synchronous fetch is safe here — there is no async `fetch` to await
+let directUsers = try container.viewContext.fetch(userRequest)
 
 // For background work:
 let backgroundUsers = try await backgroundContext.perform {
@@ -440,12 +449,9 @@ for user in users {
 // Batch size: fetch in chunks for large result sets
 request.fetchBatchSize = 100
 
-// Faulting behavior: convert faults to lightweight snapshots
-request.returnsObjectsAsFaults = false  // Keep objects in memory
-// Use carefully—can cause memory pressure with large results
-
-// Distinct: remove duplicates from relationship fetches
-request.returnsDistinctResults = true
+// Faulting: default true returns faults (cheapest); false pre-populates every
+// property up front — only worth it when the loop touches every field
+request.returnsObjectsAsFaults = false
 ```
 
 **Time cost** 2-5 minutes to add prefetching
@@ -486,7 +492,6 @@ for user in results {
 #### SwiftData lacks
 - Complex migrations (auto-migration only)
 - Custom validation (before save)
-- Relationship delete rules (cascade, deny, nullify)
 - Direct SQL queries
 - Advanced prefetching
 - Faulting control
@@ -504,6 +509,11 @@ for user in results {
 @Model final class Note {
     var id: String
     var title: String
+
+    init(id: String, title: String) {
+        self.id = id
+        self.title = title
+    }
 }
 
 // Drop to Core Data for complex operations
@@ -511,7 +521,8 @@ let backgroundContext = NSManagedObjectContext(concurrencyType: .privateQueueCon
 backgroundContext.parent = container.viewContext
 
 // Fetch with Core Data, convert to SwiftData models
-let results = try backgroundContext.perform {
+// `performAndWait` is the value-returning synchronous call; `perform` returns Void
+let results = try backgroundContext.performAndWait {
     try backgroundContext.fetch(coreDataRequest)
 }
 ```
@@ -537,18 +548,15 @@ let results = try backgroundContext.perform {
 - Simple schemas (users, notes, todos)
 - Minimal relationship complexity
 - CloudKit sync needed
-- iOS 17+ requirement acceptable
 - No legacy Core Data code to maintain
 
 #### Decision: Stay in SwiftData if you can answer YES to 3+ of these
-- ✅ iOS 17+ only (no iOS 16 support needed)
 - ✅ Simple relationships (1-to-many, not many-to-many)
 - ✅ Standard migrations (add fields, remove fields)
 - ✅ CloudKit sync beneficial
 - ✅ Type safety important
 
 #### Decision: Drop to Core Data if
-- ❌ Need iOS 16 support (SwiftData iOS 17+ only)
 - ❌ Complex relationship rules (cascade rules, constraints)
 - ❌ Custom migrations required
 - ❌ Raw SQL needed for performance
@@ -571,14 +579,14 @@ let results = try backgroundContext.perform {
 // Copy entire [AppName].sqlite database
 
 // Step 2: Create migration test
-@Test func testProductionDataMigration() throws {
+@MainActor @Test func testProductionDataMigration() throws {
     // Copy production database to test location
     let testDB = tempDirectory.appendingPathComponent("test.sqlite")
-    try FileManager.default.copyItem(from: prodDatabase, to: testDB)
+    try FileManager.default.copyItem(at: prodDatabase, to: testDB)
 
     // Attempt migration
-    var config = ModelConfiguration(url: testDB, isStoredInMemory: false)
-    let container = try ModelContainer(for: User.self, configurations: [config])
+    let config = ModelConfiguration(url: testDB)
+    let container = try ModelContainer(for: User.self, configurations: config)
 
     // Verify data integrity
     let context = container.mainContext
@@ -602,7 +610,7 @@ let results = try backgroundContext.perform {
 ```
 
 #### Safety rules
-- ❌ NEVER test migrations with simulator (simulator deletes DB)
+- ❌ NEVER test migrations with a simulator that starts from an empty store (the upgrade path never runs)
 - ✅ ALWAYS test with copy of real production data
 - ✅ ALWAYS verify spot checks (specific records)
 - ✅ ALWAYS check relationships loaded correctly
@@ -612,7 +620,7 @@ let results = try backgroundContext.perform {
 
 ---
 
-### Pattern 5c: Pre-Deployment Verification Checklist
+### Pattern 5b: Pre-Deployment Verification Checklist
 
 #### MANDATORY before shipping ANY Core Data change
 
@@ -640,13 +648,12 @@ let results = try backgroundContext.perform {
 | Issue | Check | Fix |
 |-------|-------|-----|
 | "Incompatible store" crash | Is there >1 `.xcdatamodel` in the bundle? | Add a NEW model version; never edit the existing one in place |
-| "Unresolvable fault" crash | Do store/model versions match? | Enable shouldInfer/MigrateStoreAutomatically; add a model version |
+| `NSCocoaErrorDomain 134100` | Do store/model versions match? | Enable shouldInfer/MigrateStoreAutomatically; add a model version |
 | Changed an attribute's type | Can it be inferred? (No — never) | Rename old → add new typed attribute → in-code backfill |
-| "Different thread" crash | Is fetch happening on main thread? | Use private queue context for background work |
+| Off-queue object access (silent unless `-com.apple.CoreData.ConcurrencyDebug 1`) | Is the fetch happening on the context's queue? | Use private queue context for background work |
 | App became slow | Are relationships being prefetched? | Add relationshipKeyPathsForPrefetching |
 | N+1 query performance | Check `-com.apple.CoreData.SQLDebug 1` logs | Add prefetching or convert to lightweight representation |
-| Custom migration needed | Targeting iOS 17+? | Use NSStagedMigrationManager (mapping model only for iOS 16) |
-| Not sure about SwiftData vs. Core Data | Do you need iOS 16 support? | Use Core Data for iOS 16, SwiftData for iOS 17+ |
+| Custom migration needed | Can the change be inferred? | Use NSStagedMigrationManager with an NSCustomMigrationStage |
 | Migration test works, production fails | Did you test with real data? | Create migration test with production database copy |
 
 ---
@@ -660,13 +667,13 @@ If you've spent >30 minutes and the Core Data issue persists:
 2. Misidentified the actual problem
 3. Applied wrong pattern for your symptom
 4. Haven't tested on real device/real data
-5. Have edge case requiring custom NSEntityMigrationPolicy
+5. Have edge case requiring a custom migration stage
 
 #### MANDATORY checklist before claiming "skill didn't work"
 
 - [ ] I ran all Mandatory First Steps diagnostics
 - [ ] I identified the problem type (schema, concurrency, performance, bridging, testing)
-- [ ] I checked Core Data SQL debug logs (`-com.apple.CoreData.SQLDebug 1`)
+- [ ] I checked Core Data SQL debug logs (`-com.apple.CoreData.SQLDebug 1`), and enabled `-com.apple.CoreData.ConcurrencyDebug 1` before blaming threads
 - [ ] I tested on real device with real data (not simulator)
 - [ ] I applied the FIRST matching pattern from Decision Tree
 - [ ] I created a migration test if schema changed
@@ -674,9 +681,9 @@ If you've spent >30 minutes and the Core Data issue persists:
 - [ ] I have a rollback plan documented
 
 #### If ALL boxes are checked and still broken
-- You need custom NSEntityMigrationPolicy (not covered by basic patterns)
+- You need a custom migration stage (`NSCustomMigrationStage`), not covered by basic patterns
 - Time cost: 60-90 minutes for complex migration
-- Ask: "What data transformation is actually needed?" and implement custom policy
+- Ask: "What data transformation is actually needed?" and implement it in the stage's handlers
 
 #### Time cost transparency
 - Pattern 1 (lightweight migration): 5-10 minutes
@@ -691,7 +698,7 @@ If you've spent >30 minutes and the Core Data issue persists:
 ## Common Mistakes
 
 ❌ **Testing migration in simulator only**
-- Simulator deletes database on rebuild, hiding schema mismatches
+- A reset simulator starts from an empty store, hiding schema mismatches
 - Fix: ALWAYS test on real device or with production database copy
 
 ❌ **Assuming default values protect against data loss**
@@ -742,7 +749,7 @@ If you hear ANY of these during a production crisis, **STOP and reference this s
 - ❌ **"Skip migration and create new store"** – Abandons existing user data
 - ❌ **"We'll fix data issues after launch"** – Impossible to recover lost/corrupted data
 - ❌ **"Just ship it, we can handle support tickets"** – Data loss creates permanent user churn
-- ❌ **"Test on simulator is enough"** – Simulator deletes database on rebuild, hides schema mismatches
+- ❌ **"Test on simulator is enough"** – A simulator that was never given the old store starts empty, so the migration never runs
 
 ### How to Push Back Professionally
 
@@ -841,7 +848,7 @@ I'm flagging this decision proactively so we can:
 
 #### Scenario
 - Production app crashing for 100% of users after update
-- Error: "The model used to open the store is incompatible with the one used to create the store"
+- Error: `NSCocoaErrorDomain 134100` ("The managed object model version used to open the persistent store is incompatible with the one that was used to create the store")
 - CTO says: "Delete the database and ship hotfix in 2 hours"
 - 500,000 active users with average 6 months of data each
 
@@ -850,8 +857,10 @@ I'm flagging this decision proactively so we can:
 ```swift
 // ❌ WRONG - Deletes all user data (CTO's request)
 let coordinator = NSPersistentStoreCoordinator(managedObjectModel: model)
-let storeURL = /* persistent store URL */
-try? FileManager.default.removeItem(at: storeURL) // 500K users lose data
+let storeURL = URL(fileURLWithPath: "/path/to/App.sqlite")  // your store URL
+// destroyPersistentStore leaves a usable empty store; deleting just the .sqlite
+// file leaves the -wal/-shm behind and the next add fails (I/O error 522)
+try? coordinator.destroyPersistentStore(at: storeURL, type: .sqlite, options: nil)
 try! coordinator.addPersistentStore(ofType: NSSQLiteStoreType,
                                     configurationName: nil,
                                     at: storeURL,
