@@ -277,7 +277,6 @@ Test plans allow running the same tests with different configurations:
     }
   ],
   "defaultOptions" : {
-
   },
   "testTargets" : [
     {

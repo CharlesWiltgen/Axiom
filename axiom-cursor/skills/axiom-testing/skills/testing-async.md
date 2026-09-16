@@ -278,9 +278,15 @@ struct DatabaseTests {
 // ✅ The callback must complete inside the closure
 @Test func callback() async {
     await confirmation { confirm in
-        await api.fetch { result in   // Must suspend until the callback has run
-            #expect(result.isSuccess)
-            confirm()
+        // Awaiting a callback-taking call does NOT wait for the callback —
+        // `await api.fetch { ... }` compiles with an #UnnecessaryEffectMarker
+        // warning and returns immediately. Bridge it with a continuation.
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            api.fetch { result in
+                #expect(result.isSuccess)
+                confirm()
+                continuation.resume()
+            }
         }
     }
 }
@@ -326,9 +332,12 @@ func testFetch() {
 // Swift Testing
 @Test func fetch() async {
     await confirmation { confirm in
-        await api.fetch { result in   // Must suspend until the callback has run
-            #expect(result != nil)
-            confirm()
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            api.fetch { result in
+                #expect(result != nil)
+                confirm()
+                continuation.resume()
+            }
         }
     }
 }

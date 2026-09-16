@@ -1683,13 +1683,13 @@
     },
     {
       "path": "skills/axiom-testing/skills/testing-async.md",
-      "sha256": "b79303776c9b90ea24455f9bb77ff56512de785738b402c45e827890024b6afe",
-      "bytes": 9757
+      "sha256": "0d61f9520333be3d3385e54d7b0fe96d83b5cac7136db415e416161112be425e",
+      "bytes": 10199
     },
     {
       "path": "skills/axiom-testing/skills/ui-recording.md",
-      "sha256": "04d90b44ab5bea2c7d5b7b088f508b91bc4bffb155e96b5e3732de6139c4e9b1",
-      "bytes": 11265
+      "sha256": "278bbd26241edc645653b12a0e6399ad4ae01757c39f95dca308e6060b37155f",
+      "bytes": 11364
     },
     {
       "path": "skills/axiom-testing/skills/ui-testing.md",
@@ -1698,8 +1698,8 @@
     },
     {
       "path": "skills/axiom-testing/skills/xctest-automation.md",
-      "sha256": "99da9697d534863885b22a7c062f77c5189c7e4fac65b5aeae9110154086207d",
-      "bytes": 11653
+      "sha256": "42c89fceab32c5cefb25329c1bdc557e60836f92c025087f227a6637990a5ad9",
+      "bytes": 11652
     },
     {
       "path": "skills/axiom-tools/SKILL.md",
@@ -1879,7 +1879,7 @@
   ],
   "totals": {
     "files": 375,
-    "bytes": 7425195
+    "bytes": 7425735
   },
   "excludedMirrors": 30,
   "classes": {

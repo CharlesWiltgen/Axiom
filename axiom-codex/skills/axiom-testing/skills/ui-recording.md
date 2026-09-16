@@ -46,7 +46,8 @@ From WWDC 2025-344:
 ### Generated Code Example
 
 ```swift
-// Xcode generates this from your interactions
+// Xcode generates the interactions below. `@MainActor` is what makes them build
+// cleanly under Swift 6 — XCUI types are main-actor isolated.
 @MainActor
 func testLoginFlow() {
     let app = XCUIApplication()
