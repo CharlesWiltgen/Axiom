@@ -37,7 +37,7 @@
 - `nonisolated` → no ownership, caller decides
 - `@concurrent` → force background execution
 
-**Async does not mean background.** An `async` function suspends without blocking, but resumes on the *same actor* it was called from — for a `nonisolated async` function that holds with the `NonisolatedNonsendingByDefault` upcoming feature (Swift 6.2+, on by default in new Xcode 26 projects; without it they hop to the concurrent pool). A `@MainActor` async function runs entirely on the main actor — `await` just yields control, it does not switch threads. Use `@concurrent` (Swift 6.2+) when you need to force work off the calling actor.
+**Async does not mean background.** An `async` function suspends without blocking, but resumes on the *same actor* it was called from — for a `nonisolated async` function that holds with the `NonisolatedNonsendingByDefault` upcoming feature (Swift 6.2+; new Xcode projects set `SWIFT_APPROACHABLE_CONCURRENCY = YES`, but the setting's own default is NO and SwiftPM does not enable it — without it they hop to the concurrent pool). A `@MainActor` async function runs entirely on the main actor — `await` just yields control, it does not switch threads. Use `@concurrent` (Swift 6.2+) when you need to force work off the calling actor.
 
 **MainActor is the main thread on Apple platforms.** On iOS, iPadOS, macOS, watchOS, tvOS, and visionOS, `@MainActor` and the main thread are the same. Treat them as synonymous in app code. Two edge cases to be aware of:
 - Non-app Swift environments (server-side, library tests) may technically map MainActor elsewhere — not a concern for Apple platform apps.
@@ -322,7 +322,7 @@ digraph decide {
 
 ### `nonisolated(nonsending)` and the default-behavior flip
 
-In Swift 6.2 (with `NonisolatedNonsendingByDefault` upcoming feature, on by default in new Xcode 26 projects), `nonisolated async` functions no longer auto-hop to the concurrent thread pool. They now stay on the **caller's actor**.
+In Swift 6.2 (with the `NonisolatedNonsendingByDefault` upcoming feature — new Xcode projects set `SWIFT_APPROACHABLE_CONCURRENCY = YES`, the setting's own default is NO, and SwiftPM does not enable it), `nonisolated async` functions no longer auto-hop to the concurrent thread pool. They now stay on the **caller's actor**.
 
 - `nonisolated(nonsending)` — explicit spelling for the new default (stay on caller's actor). Rarely needed since it's the default; useful when you've disabled the upcoming feature but want the new behavior on one function.
 - `@concurrent` — explicit spelling for the old default (always switch to the global concurrent executor).
@@ -1221,7 +1221,7 @@ Without the `cancel()` call in `deinit`, the task continues running indefinitely
 | "I'll use `Task.detached` to make it background" | `Task.detached` is overkill if you only need background isolation — it also discards priority and task-local values. | Use `Task { @concurrent in }` to override only isolation. Reserve `Task.detached` for work that should run independently of the caller's priority/task-locals. |
 | "I'll add `@unchecked Sendable` to silence this" | You're hiding a data race from the compiler. It will crash in production. | Make the type genuinely Sendable (struct/enum), use an actor, or use `sending` parameter. |
 | "I'll use `nonisolated(unsafe)` to fix this" | Zero runtime protection. The compiler stops checking — data races go undetected. | Use proper isolation (`@MainActor`, actor, Mutex). Reserve for global constants only. |
-| "This async function runs on a background thread" | `async` suspends without blocking but resumes on the **same actor** for a `nonisolated async` function only with `NonisolatedNonsendingByDefault` (Swift 6.2+, the default in new Xcode 26 projects). A `@MainActor` async function runs on the main thread. | Use `@concurrent` to force background. Don't assume async = background. |
+| "This async function runs on a background thread" | `async` suspends without blocking but resumes on the **same actor** for a `nonisolated async` function only with `NonisolatedNonsendingByDefault` (Swift 6.2+; new Xcode projects set `SWIFT_APPROACHABLE_CONCURRENCY = YES`, the setting's own default is NO, and SwiftPM does not enable it). A `@MainActor` async function runs on the main thread. | Use `@concurrent` to force background. Don't assume async = background. |
 | "I'll wrap this in `DispatchQueue.global().async`" | GCD queue-hopping inside structured concurrency breaks isolation guarantees and risks thread explosion. | Use `@concurrent` or extract to an actor. Keep GCD in bridge layers only. |
 | "Every class needs to be an actor" | Actors add serialization overhead. UI code on a custom actor can't update views. | Use `@MainActor` for UI/ViewModel code. Actors are for non-UI shared mutable state only. |
 | "I'll use `@preconcurrency` to ship faster" | You're assuming thread-safety the compiler can't verify. Crashes appear in production. | Migrate to proper concurrency. Use `@preconcurrency` only as a temporary bridge with a removal ticket. |

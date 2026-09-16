@@ -370,7 +370,6 @@ These crashes only surface with **real SDK callbacks and background-thread publi
 
 **Add to your test plan**
 
-- Drive Core Data through `context.perform` from background-spawned tasks
 - Push notifications from `DispatchQueue.global().async { NotificationCenter.default.post(...) }`
 - Exercise location/audio/network delegates on real devices, not just mocks
 - Validate Combine pipelines by sending values on non-main schedulers

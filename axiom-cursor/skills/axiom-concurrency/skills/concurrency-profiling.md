@@ -79,6 +79,7 @@ class ViewModel: ObservableObject {
 @concurrent
 func heavyComputation() async -> Int {
     // heavy work, off the main actor
+    return 0
 }
 
 @MainActor
