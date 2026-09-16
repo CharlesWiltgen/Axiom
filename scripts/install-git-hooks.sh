@@ -32,18 +32,30 @@ awk -v begin="$BEGIN" -v end="$END" '
   $0 == end { inside = 0 }
 ' "$source_file" > "$root/.git/hooks/.axiom-block.tmp"
 
-# Strip any block a previous run installed, THEN insert the current one after the
-# shebang. Unconditional, and in that order, because a block that is already there
-# may be in the wrong place: the first revision appended, so an installed block can
-# sit after another tool's `exit` and never run. Replacing it in place would
-# preserve that position; stripping first moves it.
+# Strip any block a previous run installed — the markers AND the one blank line
+# that follows them — then insert the current one after the shebang. Unconditional,
+# and in that order, because a block that is already there may be in the wrong
+# place: the first revision appended, so an installed block can sit after another
+# tool's `exit` and never run. Replacing it in place would preserve that position.
+#
+# Consuming the trailing blank is what makes a re-install byte-identical. Without
+# it the block's own separator survives the strip and joins the separator the
+# insert adds, so the file grows by a line on every run.
 tmp_stripped="$root/.git/hooks/.pre-commit.stripped"
-tmp_placed="$root/.git/hooks/.pre-commit.placed"
 
 awk -v begin="$BEGIN" -v end="$END" '
-  $0 == begin { skip = 1; next }
-  skip && $0 == end { skip = 0; next }
-  !skip { print }
+  # Compare with any trailing CR removed. A hook written with CRLF endings would
+  # otherwise never match its own markers: the strip would find nothing, the insert
+  # would add a SECOND block, and every commit would then run the content scan
+  # twice while the installer reported success.
+  { line = $0; sub(/\r$/, "", line) }
+  line == begin { skip = 1; next }
+  skip && line == end { skip = 0; drop_blank = 1; next }
+  skip { next }
+  {
+    if (drop_blank) { drop_blank = 0; if (line == "") next }
+    print
+  }
 ' "$hook" > "$tmp_stripped"
 
 # Insert right after the shebang — NOT at the end. An existing hook file may
@@ -53,22 +65,21 @@ awk -v begin="$BEGIN" -v end="$END" '
 # (.claude/scripts/install-leak-prevention-hooks.sh) prepends for this reason,
 # and this repo's own .git/hooks/pre-commit is exactly that case: the beads
 # block carries `if [ $_bd_exit -ne 0 ]; then exit $_bd_exit; fi`.
+#
+# No blank BEFORE the block; one after it. The strip above removes that same
+# blank, so the pair is a fixed point.
 awk -v block="$root/.git/hooks/.axiom-block.tmp" '
   BEGIN {
     while ((getline line < block) > 0) body = body line "\n"
     placed = 0
   }
-  !placed && NR == 1 && /^#!/ { print; printf "\n%s\n", body; placed = 1; next }
+  !placed && NR == 1 && /^#!/ { print; printf "%s\n", body; placed = 1; next }
   !placed { printf "%s\n", body; placed = 1 }
   { print }
-  END { if (!placed) printf "\n%s\n", body }
-' "$tmp_stripped" > "$tmp_placed"
+  END { if (!placed) printf "%s", body }
+' "$tmp_stripped" > "$hook"
 
-# Squash the double blank line an insert next to an existing blank produces.
-awk 'BEGIN{prev=0} {if($0=="") {if(prev==0) print; prev=1} else {print; prev=0}}' \
-  "$tmp_placed" > "$hook"
-
-rm -f "$tmp_stripped" "$tmp_placed"
+rm -f "$tmp_stripped"
 echo "  installed the axiom block after the shebang in .git/hooks/pre-commit"
 
 rm -f "$root/.git/hooks/.axiom-block.tmp"

@@ -1,28 +1,61 @@
 name: Test Suite
 
+# The paths filters below mirror what the two steps actually READ. That is wider
+# than it looks: `node scripts/leak-scan.ts` walks the scanner's SURFACES plus
+# ROOT_FILES in scripts/leak-scan.ts, and the unit suite covers scripts/,
+# axiom-pi/ and axiom-mcp/. A filter listing only the plugin would start no CI for
+# a PR that adds a home path to README.md or a UUID to axiom-codex/ — which is
+# exactly the case this job exists to catch. A test in scripts/leak-scan.test.ts
+# fails if the filter and the scanner's surfaces drift apart.
+#
+# Written out per event rather than shared with a YAML anchor: a workflow that
+# fails to parse runs nothing, silently, which is the failure mode this job is for.
+
 on:
   pull_request:
     paths:
       - '.claude-plugin/**'
-      - 'scripts/**'
-      - 'axiom-mcp/src/**'
+      - '.cursor-plugin/**'
+      - '.agents/**'
+      - 'axiom-codex/**'
+      - 'axiom-cursor/**'
       - 'axiom-pi/**'
-      - 'tools/**'
+      - 'axiom-mcp/**'
       - 'docs/**'
+      - 'tools/**'
+      - 'scripts/**'
+      - 'README.md'
+      - 'CHANGELOG.md'
+      - 'LICENSE'
+      - 'marketplace.json'
       - 'package.json'
       - 'package-lock.json'
+      - 'MARKETPLACE-SUBMISSION.md'
+      - 'CURSOR-MARKETPLACE-SUBMISSION.md'
+      - 'SUBMISSION-STATUS.md'
       - '.github/workflows/test-suite.yml'
   push:
     branches: [main]
     paths:
       - '.claude-plugin/**'
-      - 'scripts/**'
-      - 'axiom-mcp/src/**'
+      - '.cursor-plugin/**'
+      - '.agents/**'
+      - 'axiom-codex/**'
+      - 'axiom-cursor/**'
       - 'axiom-pi/**'
-      - 'tools/**'
+      - 'axiom-mcp/**'
       - 'docs/**'
+      - 'tools/**'
+      - 'scripts/**'
+      - 'README.md'
+      - 'CHANGELOG.md'
+      - 'LICENSE'
+      - 'marketplace.json'
       - 'package.json'
       - 'package-lock.json'
+      - 'MARKETPLACE-SUBMISSION.md'
+      - 'CURSOR-MARKETPLACE-SUBMISSION.md'
+      - 'SUBMISSION-STATUS.md'
       - '.github/workflows/test-suite.yml'
 
 permissions:

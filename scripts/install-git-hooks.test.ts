@@ -3,7 +3,7 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import test from "node:test";
+import test, { after } from "node:test";
 
 /**
  * The installer's only job that can silently fail is PLACEMENT. It splices a
@@ -182,6 +182,45 @@ test("a block left in the wrong place by an older revision is moved, not kept", 
   assert.match(runHook(root), /AXIOM_BLOCK_RAN/);
 });
 
+test("a hook with CRLF endings does not end up with two blocks", () => {
+  // Byte-for-byte marker comparison would never match a block whose lines end in
+  // CR: the strip would find nothing and the insert would stack a second block,
+  // so every commit would run the content scan twice.
+  const crlf = (s: string): string => s.replace(/\n/g, "\r\n");
+  const existing = crlf(
+    ["#!/bin/sh", "echo foreign", BEGIN, "echo AXIOM_BLOCK_RAN", END, "exit 0"].join("\n") + "\n",
+  );
+  const root = fixture(existing, STUB_BLOCK);
+  install(root);
+  const hook = readHook(root);
+  assert.equal(hook.split(BEGIN).length - 1, 1, "the CRLF block must be stripped, not stacked");
+  assert.equal(hook.split(END).length - 1, 1);
+  // And the foreign content keeps its own line endings.
+  assert.ok(hook.includes("echo foreign\r\n"), "foreign lines are not rewritten");
+});
+
+test("consecutive blank lines in foreign content survive the install", () => {
+  // The installer's contract is that other tools' content is left alone. A blanket
+  // pass that collapses runs of blank lines anywhere in the file breaks it inside
+  // any heredoc or quoted string, silently — `sh -n` still passes.
+  const existing = [
+    "#!/bin/sh",
+    "cat <<'EOF'",
+    "subject line",
+    "",
+    "",
+    "body paragraph",
+    "EOF",
+    "exit 0",
+  ].join("\n") + "\n";
+  const root = fixture(existing, STUB_BLOCK);
+  install(root);
+  assert.ok(
+    readHook(root).includes("subject line\n\n\nbody paragraph"),
+    "blank lines inside foreign content must be preserved verbatim",
+  );
+});
+
 // ── The block itself ──────────────────────────────────────────────────────────
 
 test("the tracked block source carries both markers", () => {
@@ -198,15 +237,30 @@ test("the installed hook is valid shell", () => {
   execFileSync("sh", ["-n", hookPath(root)], { stdio: ["ignore", "pipe", "pipe"] });
 });
 
+// ── Idempotency ───────────────────────────────────────────────────────────────
+
+test("re-installing is byte-identical", () => {
+  // The strip removes the block AND the blank line that follows it; the insert
+  // adds the block and that same blank back. Without the pairing the file grows by
+  // a line on every run, which is how the live hook went 77 -> 78 -> 79.
+  const root = fixture("#!/bin/sh\necho foreign\nexit 0\n", STUB_BLOCK);
+  install(root);
+  const first = readHook(root);
+  install(root);
+  assert.equal(readHook(root), first, "a second install must not change a single byte");
+  install(root);
+  assert.equal(readHook(root), first, "nor a third");
+});
+
 // ── Guard ─────────────────────────────────────────────────────────────────────
 
-test("this suite did not touch the real .git/hooks/pre-commit", () => {
-  // Runs last by declaration order. The installer targets a path derived from
-  // AXIOM_ROOT; if that ever stops working, every test above would be exercising
-  // the developer's real hooks and this is the assertion that says so.
-  const after = fs.existsSync(REAL_HOOK) ? fs.readFileSync(REAL_HOOK, "utf8") : null;
+// Registered as a hook, not as a test that claims to run last by declaration
+// order: node:test does not guarantee that ordering, and a `--test-name-pattern`
+// run would silently skip it.
+after(() => {
+  const current = fs.existsSync(REAL_HOOK) ? fs.readFileSync(REAL_HOOK, "utf8") : null;
   assert.equal(
-    after,
+    current,
     REAL_HOOK_BEFORE,
     ".git/hooks/pre-commit changed during the test run — the AXIOM_ROOT override is broken",
   );

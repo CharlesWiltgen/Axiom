@@ -90,7 +90,7 @@ export const SURFACES: Surface[] = [
  * here yet is rendered into the published site, so "tracked" is the wrong test
  * for them.
  */
-const ROOT_FILES = [
+export const ROOT_FILES = [
   "README.md",
   "CHANGELOG.md",
   "LICENSE",
