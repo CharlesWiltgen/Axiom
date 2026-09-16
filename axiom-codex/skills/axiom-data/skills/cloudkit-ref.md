@@ -80,7 +80,7 @@ let container = try ModelContainer(
 
 **Advantages over raw CloudKit**:
 - Manages fetch/upload cycles automatically
-- Handles conflicts
+- Retries transient failures (network, auth, rate-limit) automatically; conflicts are yours to merge
 - Manages account changes
 - Recommended over manual CKDatabase operations
 

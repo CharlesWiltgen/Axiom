@@ -7,22 +7,17 @@
 
 **When to use Core Data vs SwiftData**:
 - **SwiftData** (iOS 17+) — New apps, simpler API, Swift-native
-- **Core Data** — iOS 16 and earlier, advanced features, existing codebases
+- **Core Data** — Features SwiftData lacks (public CloudKit database, custom migration logic), existing codebases
 
 ## Quick Decision Tree
 
 ```
 Which persistence framework?
 
-├─ Targeting iOS 17+ only?
-│  ├─ Simple data model? → SwiftData (recommended)
-│  ├─ Need public CloudKit database? → Core Data (SwiftData is private-only)
-│  ├─ Need custom migration logic? → Core Data (more control)
-│  └─ Existing Core Data app? → Keep Core Data or migrate gradually
-│
-├─ Targeting iOS 16 or earlier?
-│  └─ Core Data (SwiftData unavailable)
-│
+├─ Simple data model? → SwiftData (recommended)
+├─ Need public CloudKit database? → Core Data (SwiftData is private-only)
+├─ Need custom migration logic? → Core Data (more control)
+├─ Existing Core Data app? → Keep Core Data or migrate gradually
 └─ Need both? → Use Core Data with SwiftData wrapper (advanced)
 ```
 
@@ -62,7 +57,7 @@ class CoreDataStack {
 
         // Enable automatic merging
         container.viewContext.automaticallyMergesChangesFromParent = true
-        container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+        container.viewContext.mergePolicy = NSMergePolicy.mergeByPropertyObjectTrump
 
         return container
     }()
@@ -116,7 +111,7 @@ class CloudKitStack {
 
 ## Concurrency Patterns
 
-> **Threading errors are isolation bugs.** If you're seeing `Illegal attempt to establish a relationship between objects in different contexts`, `_PFCallContextRequiresMainThread`, or `_PFAssertSafeMultiThreadedAccess_`, this is fundamentally a Swift 6 isolation problem expressed through Core Data's threading rules. Read this section AND axiom-concurrency (skills/isolation-inheritance-diag.md) for the runtime-crash catalog (Pattern 1 — `context.perform` closures inheriting `@MainActor`).
+> **Threading errors are isolation bugs.** If you're seeing `Illegal attempt to establish a relationship between objects in different contexts`, or a trap in `_PFAssertSafeMultiThreadedAccess_`, this is a Swift 6 isolation problem expressed through Core Data's threading rules. Read this section AND axiom-concurrency (skills/isolation-inheritance-diag.md) for the runtime-crash catalog. Core Data's own trap: `perform` closures are `@Sendable`, so they never inherit `@MainActor` — touching main-actor state inside one is diagnosed (`#ActorIsolatedCall`) and runs off the main actor. Hop with `Task { @MainActor in }`, or use the context's own queue.
 
 ### The Golden Rule
 

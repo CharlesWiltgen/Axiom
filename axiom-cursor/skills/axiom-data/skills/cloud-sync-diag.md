@@ -10,7 +10,7 @@ iCloud (both CloudKit and iCloud Drive) handles billions of sync operations dail
 ## Red Flags — Suspect Cloud Sync Issue
 
 If you see ANY of these:
-- **Nothing EVER syncs, no errors, console silent** → check `cloudKitContainerOptions` FIRST. A `NSPersistentCloudKitContainer` with no `description.cloudKitContainerOptions` set on its store description silently behaves like a plain `NSPersistentContainer` and mirrors nothing. This is the #1 "sync was never wired up" cause — diagnose it before anything else.
+- **Nothing EVER syncs, no errors, console silent** → check `cloudKitContainerOptions` FIRST on any store description you construct yourself (custom URL, named configuration, extra store). Without it that description silently behaves like a plain `NSPersistentContainer` and mirrors nothing. The container's own default description needs nothing — it is matched to the first CloudKit container in your entitlements automatically. This is the #1 "sync was never wired up" cause — diagnose it before anything else.
 - **Works in dev, fails in TestFlight/App Store** (often surfacing as `quotaExceeded`) → CloudKit schema not deployed to Production. Named signature — recognize it instantly, do not chase it as a storage or network bug.
 - Files/data not appearing on other devices
 - "iCloud account not available" errors
@@ -33,22 +33,26 @@ If you see ANY of these:
 
 #### 0. Confirm the container is actually CloudKit-backed (Core Data)
 
-For `NSPersistentCloudKitContainer`, mirroring is OFF unless EVERY store description has `cloudKitContainerOptions` set. Omit it and the container loads fine, saves locally, raises no error, and syncs nothing. This is the first thing to verify when "it never synced once."
+For `NSPersistentCloudKitContainer`, mirroring is OFF on every store description you build yourself until it carries `cloudKitContainerOptions`. Omit it and that store loads fine, saves locally, raises no error, and syncs nothing. The container's own default description is matched to the first CloudKit container in your entitlements for you. This is the first thing to verify when "it never synced once."
 
 ```swift
 let container = NSPersistentCloudKitContainer(name: "Model")
 let description = container.persistentStoreDescriptions.first!
 
-// ❌ MISSING THIS LINE = silent no-op. Looks like a plain NSPersistentContainer.
+// ❌ MISSING THIS LINE on a description you constructed = silent no-op. It looks
+// like a plain NSPersistentContainer. (Redundant but harmless on the default one.)
 description.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(
     containerIdentifier: "iCloud.com.example.app"
 )
 
-// Required for sync to function at all:
+// Required for mirroring:
 description.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
+
+// Required only if you consume remote changes in the UI:
 description.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
 
-// Verify at runtime — nil means this store mirrors nothing:
+// Verify after loadPersistentStores — nil on a description you constructed
+// yourself means this store mirrors nothing:
 assert(description.cloudKitContainerOptions != nil, "Store is not CloudKit-backed")
 ```
 
@@ -110,7 +114,7 @@ func checkConnectivity() {
 
 // 4. Check device storage
 func checkStorage() {
-    let homeURL = FileManager.default.homeDirectoryForCurrentUser
+    let homeURL = URL(fileURLWithPath: NSHomeDirectory())
     if let values = try? homeURL.resourceValues(forKeys: [
         .volumeAvailableCapacityKey
     ]) {
@@ -140,15 +144,12 @@ CloudKit data not syncing?
 │   └─ .temporarilyUnavailable → Network issue or iCloud outage
 │
 ├─ CKError.quotaExceeded?
-│   └─ This is an UMBRELLA error — three distinct meanings:
+│   └─ This is an UMBRELLA error — two distinct meanings:
 │       1. User iCloud storage full (rare; payload usually small)
 │           → Prompt user to purchase more storage / delete old data
 │       2. Schema not deployed to Production environment
 │           → Dev builds work, TestFlight/App Store fail with quotaExceeded
 │           → Fix: CloudKit Console → Deploy Schema to Production
-│       3. Per-app subscription quota exceeded (100 CKSubscription/db cap)
-│           → App creates subscriptions on every launch without dedup
-│           → Fix: deterministic subscription IDs + fetch-before-save
 │       → DIAGNOSE FIRST: which one? See "CKError.quotaExceeded" below.
 │
 ├─ CKError.networkUnavailable?
@@ -212,14 +213,13 @@ if error.code == .accountTemporarilyUnavailable {
 
 ### CKError.quotaExceeded
 
-**Cause**: UMBRELLA error — CloudKit returns `quotaExceeded` for three distinct conditions. Always disambiguate before alerting the user.
+**Cause**: UMBRELLA error — CloudKit returns `quotaExceeded` for two distinct conditions. Always disambiguate before alerting the user.
 
 **Diagnosis — pick the right meaning** (a small per-user payload + dev/TestFlight divergence is almost never the literal storage cause):
 
 ```swift
-// Smoking gun: error.userInfo["CKErrorUserDidResetEncryptedDataKey"] or
-// "ServerErrorDescription" often contains the real reason.
-if let info = error.userInfo["NSUnderlyingError"] as? NSError {
+// The real reason usually rides along in the underlying error:
+if let info = error.userInfo[NSUnderlyingErrorKey] as? NSError {
     print("Underlying reason:", info.localizedDescription)
 }
 
@@ -229,16 +229,11 @@ if let info = error.userInfo["NSUnderlyingError"] as? NSError {
 //      → Fix: CloudKit Console → switch to Development → click
 //        "Deploy Schema to Production". One-way, permanent.
 //
-// • Fails on every launch after a subscription burst, payload small?
-//      → MEANING 3: Per-app subscription quota (100 / database / app / user).
-//      → Fix: use deterministic CKSubscription IDs and fetch existing
-//        before saving; treat "already exists" as success.
-//
 // • User has actually exhausted iCloud storage (verify in Settings)?
 //      → MEANING 1: Literal storage quota. Prompt to manage iCloud.
 
 if error.code == .quotaExceeded {
-    // For meaning 1 only — after ruling out 2 and 3:
+    // For meaning 1 only — after ruling out 2:
     showAlert(
         title: "iCloud Storage Full",
         message: "Please free up space in Settings → [Name] → iCloud → Manage Storage"
@@ -246,7 +241,7 @@ if error.code == .quotaExceeded {
 }
 ```
 
-**Why CloudKit reuses this error code**: server-side rejection paths for schema-missing and subscription-cap surface as `quotaExceeded` to clients, even though neither involves user storage. The Production Crisis Scenario below covers the dev-vs-prod path; the subscription cap is documented at https://developer.apple.com/documentation/cloudkit/cksubscription.
+**Why one code, two causes**: Apple documents `quotaExceeded` only as an iCloud storage quota; the missing-production-schema rejection arrives as the same code and is indistinguishable client-side, so disambiguate before alerting the user. The Production Crisis Scenario below covers the dev-vs-prod path.
 
 ### CKError.serverRecordChanged
 
@@ -258,12 +253,12 @@ if error.code == .quotaExceeded {
 // This causes serverRecordChanged on EVERY concurrent edit
 let record = CKRecord(recordType: "Note", recordID: existingID)
 record["title"] = "Updated"
-try await database.save(record)  // Overwrites server version → conflict
+_ = try await database.save(record)  // Overwrites server version → conflict
 
 // ✅ FIX: Fetch-then-modify-then-save (fixes 80% of cases)
-let record = try await database.record(for: existingID)  // Get latest
-record["title"] = "Updated"  // Modify the fetched record
-try await database.save(record)  // Save with correct changeTag
+let latest = try await database.record(for: existingID)  // Get latest
+latest["title"] = "Updated"  // Modify the fetched record
+_ = try await database.save(latest)  // Save with correct changeTag
 ```
 
 **If fetch-then-save doesn't fix it** (true concurrent edits from multiple devices):
@@ -273,7 +268,7 @@ if error.code == .serverRecordChanged,
    let clientRecord = error.clientRecord {
     // Merge records — only needed for real multi-device conflicts
     let merged = mergeRecords(server: serverRecord, client: clientRecord)
-    try await database.save(merged)
+    _ = try await database.save(merged)
 }
 ```
 
@@ -588,7 +583,7 @@ extension CKDatabase {
         let start = Date()
 
         do {
-            try await self.save(record)
+            _ = try await self.save(record)
             let duration = Date().timeIntervalSince(start)
             print("✅ Saved in \(duration)s")
         } catch let error as CKError {

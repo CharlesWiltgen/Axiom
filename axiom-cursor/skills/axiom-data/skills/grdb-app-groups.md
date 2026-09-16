@@ -163,12 +163,12 @@ iOS encrypts files in the App Group container according to a per-file Data Prote
 |--------|----------|
 | `.complete` | Device is unlocked |
 | `.completeUnlessOpen` | After unlock; open files stay open through lock |
-| `.completeUntilFirstUserAuthentication` | After first unlock since boot |
-| `.none` | Always (default) |
+| `.completeUntilFirstUserAuthentication` | After first unlock since boot (the platform default) |
+| `.none` | Always |
 
-#### The default `.complete` breaks widgets
+#### An explicit `.complete` breaks widgets
 
-If you accept the default, your widget will work fine until the user auto-locks the device. Then the widget extension can't read the database — every query returns `SQLITE_IOERR`. The widget shows a blank state, and the user thinks the app is broken.
+The platform default is `.completeUntilFirstUserAuthentication`, so a widget reads the shared database while the device is locked, and works out of the box. `.complete` is an opt-in — per-file attributes or the Data Protection entitlement — and then the widget works only until the user auto-locks the device. From then on every query returns `SQLITE_IOERR`, the widget shows a blank state, and the user thinks the app is broken.
 
 #### Use `.completeUntilFirstUserAuthentication` for shared databases
 
@@ -187,9 +187,9 @@ for suffix in ["", "-wal", "-shm"] {
 }
 ```
 
-iOS 17 added a fifth class, `.completeWhenUserInactive` — encrypted after a short user-inactive period. Useful for sensitive data that should be readable while the user is actively interacting but encrypted shortly after they stop. For app-group sharing with widgets, `.completeUntilFirstUserAuthentication` remains the right default; `.completeWhenUserInactive` would block widget reads during idle periods, which is exactly when widgets refresh.
+iOS 17 added a fifth class, `.completeWhenUserInactive` — encrypted after a short user-inactive period. Useful for sensitive data that should be readable while the user is actively interacting but encrypted shortly after they stop. For app-group sharing with widgets, `.completeUntilFirstUserAuthentication` remains the right choice; `.completeWhenUserInactive` would block widget reads during idle periods, which is exactly when widgets refresh.
 
-Apply this **at first open, and again after any migration that recreates files** (e.g., a `VACUUM INTO` migration). Migrations that drop and recreate the WAL file lose the protection attribute and silently fall back to `.complete`.
+Apply this **at first open, and again after any migration that recreates files** (e.g., a `VACUUM INTO` migration). Migrations that drop and recreate the WAL file lose the protection attribute and silently fall back to the platform default (`.completeUntilFirstUserAuthentication`), so re-apply whatever class the app requires.
 
 #### `.complete` is correct for sensitive data — but then no widget access
 
@@ -199,7 +199,7 @@ If your data classification genuinely requires `.complete` (health records, fina
 
 #### What is `0xDEAD10CC`?
 
-When iOS suspends an app, the OS waits a few seconds for in-flight work to wind down. If the app is still holding a SQLite file lock when the suspension watchdog fires, iOS *kills the app* with exception code `0xDEAD10CC` ("dead lock"). The crash log lists this code under the exception type, often `EXC_RESOURCE` or `EXC_CRASH`.
+When iOS suspends an app, the OS waits a few seconds for in-flight work to wind down. If the app is still holding a SQLite file lock when the suspension watchdog fires, iOS terminates the process; the crash log reports it as `Termination Reason: Namespace SPRINGBOARD, Code 0xDEAD10CC` ("dead lock"), with exception type `EXC_CRASH (SIGKILL)`. `0xDEAD10CC` is not an exception type — look for it under `Termination Reason`.
 
 This is invisible in development because the debugger prevents suspension. It manifests in TestFlight, App Review, and production — exactly when you can't debug it.
 

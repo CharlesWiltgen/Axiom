@@ -22,7 +22,7 @@ Has your type...
 
 | Error | Solution |
 |-------|----------|
-| "Type 'X' does not conform to protocol 'Decodable'" | Ensure all stored properties are Codable |
+| "type 'X' does not conform to protocol 'Decodable'" | Ensure all stored properties are Codable |
 | "No value associated with key X" | Check CodingKeys match JSON keys |
 | "Expected to decode X but found Y instead" | Type mismatch; check JSON structure or use bridge type |
 | "keyNotFound" | JSON missing expected key; make property optional or provide default |
@@ -117,8 +117,37 @@ enum Command: Codable {
 Automatic synthesis fails when:
 1. **Computed properties** - Only stored properties are encoded
 2. **Non-Codable properties** - Custom types without Codable conformance
-3. **Property wrappers** - `@Published`, `@State` (except `@AppStorage` with Codable types)
-4. **Class inheritance** - Subclasses must implement `init(from:)` manually
+3. **Property wrappers whose storage type is not Codable** - `@Published`, `@State`, and `@AppStorage` each wrap the value in a type that is not Codable, so synthesis fails even when the wrapped value is Codable
+
+A wrapper whose own type conforms to Codable does synthesize — but the synthesized form encodes the wrapper object, so `@Clamped var retries: Int` comes out as `{"retries":{"wrappedValue":3}}`. Flat keys need manual `init(from:)`/`encode(to:)`.
+
+**Class inheritance** is the opposite failure: nothing errors and no synthesis happens. A subclass inherits the superclass's conformance, so its own properties are silently dropped in both directions — encoding writes only the superclass's keys, and decoding never restores the rest. Override both directions and call `super`:
+
+```swift
+class Base: Codable {
+    var a = 1
+}
+
+class Sub: Base {
+    var b = 2
+
+    enum CodingKeys: String, CodingKey { case b }
+
+    required init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        b = try container.decode(Int.self, forKey: .b)
+        try super.init(from: decoder)
+    }
+
+    override func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(b, forKey: .b)
+        try super.encode(to: encoder)
+    }
+}
+
+// Without the overrides, Sub() with a=7, b=99 encodes as {"a":7} and b is lost
+```
 
 ---
 
@@ -353,16 +382,18 @@ decoder.dateDecodingStrategy = .custom { decoder in
 
 ### ISO 8601 Nuances
 
-**Default**: `2024-02-15T17:00:00+01:00`
-**Timezone required**: Without timezone offset, decoding may fail across regions
+**ISO 8601 default form** (what `.iso8601` accepts): `2024-02-15T17:00:00+01:00`
+**Offset required**: Without one, `.iso8601` throws on every device, not just in some regions
 
 ```swift
-// ❌ No timezone - parsing depends on device locale
+// ❌ No offset - `.iso8601` rejects this everywhere
 "2024-02-15T17:00:00"
 
-// ✅ With timezone - unambiguous
+// ✅ With an offset - unambiguous
 "2024-02-15T17:00:00+01:00"
 ```
+
+An offset-less payload is only recoverable by parsing it with an explicit `timeZone` — see Scenario 2.
 
 ### Performance Consideration
 
@@ -403,6 +434,10 @@ extension Double: StringRepresentable {}
 struct StringBacked<Value: StringRepresentable>: Codable {
     var value: Value
 
+    init(value: Value) {
+        self.value = value
+    }
+
     init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         let string = try container.decode(String.self)
@@ -426,11 +461,16 @@ struct StringBacked<Value: StringRepresentable>: Codable {
 // Usage
 struct Product: Codable {
     let name: String
-    private let _price: StringBacked<Double>
+    private var _price: StringBacked<Double>
 
     var price: Double {
         get { _price.value }
         set { _price = StringBacked(value: newValue) }
+    }
+
+    init(name: String, price: Double) {
+        self.name = name
+        self._price = StringBacked(value: price)
     }
 
     enum CodingKeys: String, CodingKey {
@@ -526,7 +566,7 @@ extension JSONDecoder {
         configuration: T.DecodingConfiguration
     ) throws -> T {
         let decoder = JSONDecoder()
-        decoder.userInfo[Self.configurationUserInfoKey] = configuration
+        decoder.userInfo[configurationUserInfoKey] = configuration
         let wrapper = try decoder.decode(ConfigurationDecodingWrapper<T>.self, from: data)
         return wrapper.wrapped
     }
@@ -675,7 +715,7 @@ do {
 
 ### Scenario 2: "Dates Are Intermittent, Must Be Server Bug"
 
-**Context**: Date parsing works in your timezone but fails for European QA team.
+**Context**: Date parsing works in your timezone but produces different times for the European QA team.
 
 **Pressure**: "It works for me, QA must be doing something wrong."
 
@@ -685,48 +725,34 @@ do {
 - "It's their device settings"
 
 **What Actually Happens**:
-- Server sends dates without timezone: `"2024-12-14T10:00:00"`
-- Your device (PST) interprets as 10:00 PST
-- QA device (CET) interprets as 10:00 CET
-- Different absolute times, intermittent bugs
+- Server sends offset-less dates: `"2024-12-14T10:00:00"`
+- The `DateFormatter` has a `dateFormat` but no explicit `timeZone`, so it inherits the device's
+- PST device: Dec 14, 10:00 PST → 18:00 UTC
+- CET device: Dec 14, 10:00 CET → 09:00 UTC
+- Two instants nine hours apart from one payload, and nothing throws
 
 **Discipline Response**:
 
-> "Intermittent date failures are almost always timezone issues. Let me check if we're using ISO8601 with timezone offsets."
+> "Intermittent date failures are almost always timezone issues. Let me check whether the formatter pins a timezone."
 
 **Check**:
 
 ```swift
-// ❌ Current (fails across timezones)
-decoder.dateDecodingStrategy = .iso8601
+// ❌ Format set, timezone left to the device - the same string means different instants
+let bareFormatter = DateFormatter()
+bareFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+print(bareFormatter.date(from: "2024-12-14T10:00:00")!)  // 18:00 UTC on a PST device
 
-// Server sends: "2024-12-14T10:00:00" (no timezone)
-// PST device: Dec 14, 10:00 PST
-// CET device: Dec 14, 10:00 CET
-// Bug: Different times!
-
-// ✅ Fix: Require server to send timezone
-// "2024-12-14T10:00:00+00:00"
-// OR: Explicitly parse as UTC
-decoder.dateDecodingStrategy = .custom { decoder in
-    let container = try decoder.singleValueContainer()
-    let dateString = try container.decode(String.self)
-
-    let formatter = ISO8601DateFormatter()
-    formatter.timeZone = TimeZone(secondsFromGMT: 0)  // Force UTC
-
-    guard let date = formatter.date(from: dateString) else {
-        throw DecodingError.dataCorruptedError(
-            in: container,
-            debugDescription: "Invalid ISO8601 date: \(dateString)"
-        )
-    }
-
-    return date
-}
+// ✅ Fix: pin locale and timezone, or require an offset from the server
+// Server sends: "2024-12-14T10:00:00+00:00"
+let utcFormatter = DateFormatter()
+utcFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+utcFormatter.locale = Locale(identifier: "en_US_POSIX")  // ✅ Always set
+utcFormatter.timeZone = TimeZone(secondsFromGMT: 0)      // ✅ Force UTC
+print(utcFormatter.date(from: "2024-12-14T10:00:00")!)   // 10:00 UTC everywhere
 ```
 
-**Result**: Bug fixed, server adds timezone to API (or you parse explicitly as UTC). No more intermittent failures.
+**Result**: Bug fixed — the server adds an offset to the API, or you pin `timeZone = UTC` on the formatter. Same payload, same instant, on every device.
 
 ---
 
@@ -807,9 +833,9 @@ struct User: Decodable {
 ## Related Skills
 
 - **axiom-concurrency** — Codable types crossing actor boundaries must be `Sendable`
-- **`skills/swiftdata.md`** — `@Model` types use Codable for CloudKit sync
+- **`skills/swiftdata.md`** — `@Attribute(.codable)` (OS27) persists unowned Codable types in encoded form
 - **axiom-networking** — `Coder` protocol wraps Codable for Network.framework
-- **axiom-integration** — `AppEnum` parameters use Codable serialization
+- **axiom-integration** — `AppEnum` parameters serialize through their `RawValue` (`LosslessStringConvertible`), not Codable
 
 ---
 

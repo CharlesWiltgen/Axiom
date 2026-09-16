@@ -33,8 +33,8 @@
     },
     {
       "path": "agents/codable-auditor.md",
-      "sha256": "a53aed9ccebe51e114359ed16cae03da2e43b1a0018b742ece5e4a20a0b34908",
-      "bytes": 20293
+      "sha256": "e6af346a04d9c08e5f6c95c5208a3a827774482773f10d4df80b55ae9923c8cb",
+      "bytes": 20256
     },
     {
       "path": "agents/concurrency-auditor.md",
@@ -53,8 +53,8 @@
     },
     {
       "path": "agents/database-schema-auditor.md",
-      "sha256": "8d43527e74ffef05ae276ec9257b6c2c5f7e246e19154174c57d58819b83e71d",
-      "bytes": 15041
+      "sha256": "f36be4a87234e8d46a20fff20d62c69d3a48cd4c6f773c819f1f84b90a5a3529",
+      "bytes": 16946
     },
     {
       "path": "agents/energy-auditor.md",
@@ -148,8 +148,8 @@
     },
     {
       "path": "agents/storage-auditor.md",
-      "sha256": "6b294c9f72eccf316b1fa8aa030e9834d493f4feff9dd816eb7ec71d3b67ce5c",
-      "bytes": 17781
+      "sha256": "3cfd44d11d222fe40ce7b3d147950ead74e7faea2a4ed170279f2947097873e0",
+      "bytes": 18621
     },
     {
       "path": "agents/swift-performance-analyzer.md",
@@ -163,8 +163,8 @@
     },
     {
       "path": "agents/swiftdata-auditor.md",
-      "sha256": "ed3ca8ef8199d03680bc60d1782d95c22a7cd60112813d4b3848a441ca4c8b80",
-      "bytes": 16265
+      "sha256": "e99d7798c7197bbce3fa874c6477e54dac55bc1bd49cbfd2409abfd4f8f4177a",
+      "bytes": 16407
     },
     {
       "path": "agents/swiftui-architecture-auditor.md",
@@ -553,8 +553,8 @@
     },
     {
       "path": "skills/axiom-data/skills/cloud-sync-diag.md",
-      "sha256": "441de1405c5b3b86a79ec3810892a489a6b3c74a78f2107edcc365d32fe29cec",
-      "bytes": 22060
+      "sha256": "47aef337bd7181913d96571114ba787f6368d1c73919d9d962558321b5df6ab1",
+      "bytes": 21897
     },
     {
       "path": "skills/axiom-data/skills/cloud-sync.md",
@@ -563,13 +563,13 @@
     },
     {
       "path": "skills/axiom-data/skills/cloudkit-ref.md",
-      "sha256": "7599b3b8e8c10018f8cdad61e973f956ce43e538ca79b2fde29bd1df99b290c6",
-      "bytes": 21091
+      "sha256": "7a20c0dbef64cbafc7f7bc247a7b10483b3a1d441f489557b9426237274d886f",
+      "bytes": 21172
     },
     {
       "path": "skills/axiom-data/skills/codable.md",
-      "sha256": "5befd91e2cce9f3114559cbcb091df6b2fa408c614e626ff5c04aed8810a32dc",
-      "bytes": 23069
+      "sha256": "99affcb9c7402afa2543ed454c257228b576210507dfb341b99c7d5e6816c332",
+      "bytes": 24792
     },
     {
       "path": "skills/axiom-data/skills/core-data-diag.md",
@@ -578,8 +578,8 @@
     },
     {
       "path": "skills/axiom-data/skills/core-data.md",
-      "sha256": "d90892f516bbae8b8754e5a662fea7cee6abf7f2fb774368cdc0eae30e85ff57",
-      "bytes": 12133
+      "sha256": "96654c6a0ad446964d3f5c21588c9f25b5ee8c769333f83d34b9f1fbd245c584",
+      "bytes": 12190
     },
     {
       "path": "skills/axiom-data/skills/database-migration.md",
@@ -588,8 +588,8 @@
     },
     {
       "path": "skills/axiom-data/skills/grdb-app-groups.md",
-      "sha256": "bcec0267731bba24b58bd50d42719e784c221e85177cb7c42299542800ab7841",
-      "bytes": 24050
+      "sha256": "70538bfe428e2786af995f242b4ea9f7648ea0121c18b44b9bf5636a225f09bf",
+      "bytes": 24435
     },
     {
       "path": "skills/axiom-data/skills/grdb-performance.md",
@@ -643,13 +643,13 @@
     },
     {
       "path": "skills/axiom-data/skills/storage-management-ref.md",
-      "sha256": "73146cc1ab24f02f18cb6a42a6785dcaee6da2bee06c1d4a7ad9ce73d5beba69",
-      "bytes": 18622
+      "sha256": "57eace73f13d1af50e1485b46694d14b07f86620194810faac8031e0ae121a38",
+      "bytes": 19812
     },
     {
       "path": "skills/axiom-data/skills/storage.md",
-      "sha256": "b860aedff37d2518f6d56fbbced9069875aededfc02579ca1c05188a9e11fac7",
-      "bytes": 16907
+      "sha256": "44bb7315b75611f69f4052e65ea6aed08164fb41fb1101a036bf68d1510cd2de",
+      "bytes": 17113
     },
     {
       "path": "skills/axiom-data/skills/swift-sharing.md",
@@ -1538,8 +1538,8 @@
     },
     {
       "path": "skills/axiom-swift/SKILL.md",
-      "sha256": "80b2f79b378afbb5ab79597705cc49fd99d041f70ee1299de8de4765cae23b56",
-      "bytes": 9701
+      "sha256": "94adfacbadf3b7da4924220457d00543557681f3de5126fc3dac4838a8c0c1f1",
+      "bytes": 9712
     },
     {
       "path": "skills/axiom-swift/skills/deep-link-debugging.md",
@@ -1879,7 +1879,7 @@
   ],
   "totals": {
     "files": 375,
-    "bytes": 7435030
+    "bytes": 7441370
   },
   "excludedMirrors": 30,
   "classes": {

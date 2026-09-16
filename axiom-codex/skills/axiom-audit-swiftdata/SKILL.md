@@ -27,7 +27,6 @@ Skip: `*Tests.swift`, `*Previews.swift`, `*/Pods/*`, `*/Carthage/*`, `*/.build/*
 Glob: **/*.swift (excluding test/vendor paths)
 Grep for:
   - `@Model\s+(final\s+)?class\s+\w+` — every @Model class declaration
-  - `@Model\s+struct` — illegal struct models (Pattern 1)
   - `@Attribute(` — attribute customization
   - `@Relationship(` — relationship declarations and inverses
   - `@Transient` — properties excluded from persistence
@@ -51,7 +50,7 @@ Grep for:
 ```
 Grep for:
   - `VersionedSchema` — schema versions
-  - `static var versionIdentifier` — version markers
+  - `static (var|let) versionIdentifier` — version markers
   - `static var models` — model arrays per version
   - `SchemaMigrationPlan` — migration plan
   - `MigrationStage.lightweight`, `MigrationStage.custom` — stage types
@@ -64,7 +63,7 @@ Grep for:
 Grep for:
   - `cloudKitDatabase:` — CloudKit configuration on ModelConfiguration
   - `.externalStorage` — large-blob attribute storage
-  - `appGroupID` / `applicationGroup` — shared container access
+  - `groupContainer`, `.identifier("group.` — shared App Group container access
   - `isStoredInMemoryOnly` — in-memory storage (test or transient)
 ```
 
@@ -82,15 +81,9 @@ Present this map in the output before proceeding.
 
 ## Phase 2: Detect Known Anti-Patterns
 
-Run all 10 detection patterns. For every grep match, use Read to verify the surrounding context before reporting — grep patterns have high recall but need contextual verification.
+Run all 9 detection patterns. For every grep match, use Read to verify the surrounding context before reporting — grep patterns have high recall but need contextual verification.
 
-### Pattern 1: @Model on struct Instead of final class (CRITICAL/HIGH)
-
-**Issue**: SwiftData requires reference semantics. `@Model struct` compiles but crashes at runtime or silently corrupts data.
-**Search**: `@Model\s+struct`
-**Fix**: `@Model final class`
-
-### Pattern 2: Missing Models in VersionedSchema (CRITICAL/HIGH)
+### Pattern 1: Missing Models in VersionedSchema (CRITICAL/HIGH)
 
 **Issue**: Models omitted from `static var models` are silently dropped during migration → permanent data loss.
 **Search**:
@@ -99,62 +92,66 @@ Run all 10 detection patterns. For every grep match, use Read to verify the surr
 **Verify**: Every @Model class must appear in at least one VersionedSchema's `models` array. Read the schema files to confirm each class is registered.
 **Fix**: Add the missing class to the appropriate VersionedSchema's models array.
 
-### Pattern 3: Many-to-Many Relationship Without Default (CRITICAL/HIGH)
+### Pattern 2: Many-to-Many Relationship Without Default (CRITICAL/HIGH)
 
 **Issue**: Missing `= []` on array relationship properties causes decode crashes when SwiftData reads nil.
 **Search**: `@Relationship.*\[.*\]`
 **Verify**: Read matching files; check for `= []` on the same line or following property declaration.
 **Fix**: `@Relationship var tags: [Tag] = []`
 
-### Pattern 4: Fetch in didMigrate Instead of willMigrate (CRITICAL/HIGH)
+### Pattern 3: Fetch in didMigrate Instead of willMigrate (CRITICAL/HIGH)
 
 **Issue**: `didMigrate` runs after schema changes — fetching the *old* shape there fails. Data access for migration must happen in `willMigrate`.
 **Search**:
-- `didMigrate.*FetchDescriptor`
-- `didMigrate[^}]*context\.fetch`
+- `didMigrate`, `willMigrate` — locate the custom-migration hooks
+- `context\.fetch\(`, `FetchDescriptor<` — locate the fetches, then Read which hook each sits in
 **Fix**: Move data access into `willMigrate`; reserve `didMigrate` for new-schema operations.
 
-### Pattern 5: Background Operations on @Environment ModelContext (HIGH/HIGH)
+### Pattern 4: Detached Task Capturing @Environment ModelContext (HIGH/HIGH)
 
-**Issue**: The `@Environment(\.modelContext)` context is MainActor-bound. Using it in a background `Task` causes data races and potential crashes.
-**Search**: `Task\s*\{[^}]*modelContext\.(insert|delete|save)`
-**Verify**: Read matching files; confirm `modelContext` is the @Environment-injected one.
+**Issue**: `@Environment(\.modelContext)` resolves to the MainActor-bound `mainContext`. A `Task.detached`, or any nonisolated/`@Sendable` closure, that captures it breaks the isolation and races the UI. A plain `Task { }` inside a `@MainActor` view inherits the actor and is correct.
+**Search**:
+- `Task\.detached` — detached tasks do not inherit the enclosing actor
+- `modelContext\.(insert|delete|save)` — the mutation sites; Read whether one sits in a detached task or a nonisolated closure
+**Verify**: Read matching files; confirm `modelContext` is the @Environment-injected context and that its enclosing closure is detached or nonisolated.
 **Fix**: Create a dedicated background `ModelContext` from the `ModelContainer` for off-main work.
 
-### Pattern 6: Missing save() After Mutations (HIGH/MEDIUM)
+### Pattern 5: Missing save() After Mutations (HIGH/MEDIUM)
 
 **Issue**: Implicit autosave is best-effort — relying on it loses data on crashes or backgrounding.
 **Search**:
 - `context\.(insert|delete)\(` — count mutations
 - `context\.save\(\)` — count saves
-**Verify**: Read files where mutation count significantly exceeds save count; check for explicit `autosave: true` configuration.
+**Verify**: Read files where mutation count significantly exceeds save count; check whether autosave is really on — `.modelContainer(...)` with `isAutosaveEnabled: true` (the default) or `context.autosaveEnabled`.
 **Fix**: Call `try context.save()` after mutations, especially in background contexts.
 
-### Pattern 7: Updating Both Sides of Bidirectional Relationship (HIGH/MEDIUM)
+### Pattern 6: Updating Both Sides of Bidirectional Relationship (HIGH/MEDIUM)
 
 **Issue**: SwiftData manages inverse relationships automatically. Manual updates on both sides cause duplicates or inconsistent state.
 **Search**: `@Relationship\(.*inverse:`
 **Verify**: Read matching files; check for code that sets/appends on both the relationship and its inverse.
 **Fix**: Set only one side; SwiftData maintains the inverse.
 
-### Pattern 8: N+1 in Relationship Loops (MEDIUM/MEDIUM)
+### Pattern 7: N+1 in Relationship Loops (MEDIUM/MEDIUM)
 
 **Issue**: Accessing relationship properties inside loops triggers a fetch per iteration. 1000 items × 1 access = 1000 extra queries.
 **Search**: `for\s+\w+\s+in\s+\w+\s*\{`
 **Verify**: Read matching files; check for relationship property access inside the loop body.
 **Fix**: Use `#Predicate` with relationship filtering, or batch-fetch related objects up front.
 
-### Pattern 9: Over-Indexing (MEDIUM/LOW)
+### Pattern 8: Over-Indexing (MEDIUM/LOW)
 
-**Issue**: Each `@Attribute(.indexed)` slows writes and grows storage. 5+ indexes on one model degrades insert-heavy workloads.
-**Search**: `@Attribute\(\.indexed\)`
-**Verify**: Count per file. Flag files with 5+ indexed attributes.
-**Fix**: Index only properties used in predicates and sort descriptors. 2-3 per model is typical.
+**Issue**: Each `#Index` declaration slows writes and grows storage. 5+ indexes on one model degrades insert-heavy workloads.
+**Search**: `#Index<` — freestanding index macro declarations
+**Verify**: Count `#Index` declarations per model. Flag models with 5+.
+**Fix**: Index only properties used in predicates and sort descriptors. 2-3 per model is typical. Each array argument is one index — `#Index<Track>([\.genre], [\.releaseDate])` declares two, `#Index<Track>([\.genre, \.releaseDate])` declares one compound index.
 
-### Pattern 10: Batch Insert Without Chunking (MEDIUM/MEDIUM)
+### Pattern 9: Batch Insert Without Chunking (MEDIUM/MEDIUM)
 
 **Issue**: Inserting thousands of objects without chunking causes memory spikes and UI freezes.
-**Search**: `for\s+.*\{[^}]*\.insert\(`
+**Search**:
+- `\.insert\(` — insert sites
+- `\.save\(\)` — saves; Read whether an insert loop is chunked and saved between chunks
 **Verify**: Read matching files; check loop size and whether saves are interleaved.
 **Fix**: Chunk inserts into batches of 100-500, save after each chunk.
 
@@ -170,7 +167,7 @@ Using the SwiftData Map from Phase 1 and your domain knowledge, check for what's
 | If CloudKit sync is configured, do all @Model classes meet CloudKit requirements (no required relationships, all attributes have defaults)? | Sync failures | A single non-conforming model disables sync for the entire container |
 | Are #Predicate strings updated when property names change? | Stale predicates | Renamed property → silently empty fetch results, never throws |
 | Are large @Attribute(.externalStorage) blobs cleaned up when their owning model is deleted? | Storage leaks | External files persist after deletion, growing app container indefinitely |
-| Is `eraseDatabaseOnSchemaChange` gated behind `#if DEBUG` (or absent in production)? | Accidental data wipe | Convenience flag wipes user data on any schema mismatch in production |
+| Is `ModelContainer.erase()` (or a store-file delete) reachable from a production path? | Accidental data wipe | Erasing the container removes every user record — it must be a debug-only affordance |
 | Are FetchDescriptor calls in views paired with sortBy when ordering matters? | Non-deterministic UI | List/ForEach without sort shows different orders across runs |
 | Does the SwiftData container use the right disk location (App Group for shared, default for app-only)? | Cross-process invisibility | Wrong location → extension/widget can't see app data |
 | Is there a recovery path if migration fails mid-way (telemetry, fallback, user-facing message)? | Silent corruption | Crashed migration leaves DB in inconsistent state with no detection |
@@ -183,16 +180,14 @@ Bump severity for these combinations:
 
 | Finding A | + Finding B | = Compound | Severity |
 |-----------|------------|-----------|----------|
-| @Model struct (Pattern 1) | @Relationship array on same model | Decode crash on every fetch — guaranteed runtime failure | CRITICAL |
-| Missing models in VersionedSchema (Pattern 2) | Production app with active users | Silent data loss across versions, no error surfaced | CRITICAL |
-| Background ops on @Environment context (Pattern 5) | Missing save() (Pattern 6) | Data races AND lost work — both correctness and durability fail | CRITICAL |
-| Array relationship without default (Pattern 3) | CloudKit sync configured | Sync conflicts on empty arrays cascade through dependent records | HIGH |
-| Over-indexing (Pattern 9) | Insert-heavy model (loop with .insert) | Each insert pays N index updates → batch import becomes orders of magnitude slower | HIGH |
-| N+1 in loop (Pattern 8) | List/ForEach view binding | UI freeze AND high CPU — user sees both jank and battery drain | HIGH |
-| Updating both sides (Pattern 7) | @Relationship array | Duplicate entries grow the array on every set | HIGH |
-| Fetch in didMigrate (Pattern 4) | Multi-stage migration plan | Failure compounds — migration partially succeeds before crashing | HIGH |
-| @Model struct (Pattern 1) | Test fixture or sample code | Bug spreads as developers copy the broken pattern | MEDIUM |
-| Batch insert without chunking (Pattern 10) | Background context with @Environment leak (Pattern 5) | Memory spike on a thread that may also race with UI | MEDIUM |
+| Missing models in VersionedSchema (Pattern 1) | Production app with active users | Silent data loss across versions, no error surfaced | CRITICAL |
+| Detached task on @Environment context (Pattern 4) | Missing save() (Pattern 5) | Data races AND lost work — both correctness and durability fail | CRITICAL |
+| Array relationship without default (Pattern 2) | CloudKit sync configured | Sync conflicts on empty arrays cascade through dependent records | HIGH |
+| Over-indexing (Pattern 8) | Insert-heavy model (loop with .insert) | Each insert pays N index updates → batch import becomes orders of magnitude slower | HIGH |
+| N+1 in loop (Pattern 7) | List/ForEach view binding | UI freeze AND high CPU — user sees both jank and battery drain | HIGH |
+| Updating both sides (Pattern 6) | @Relationship array | Duplicate entries grow the array on every set | HIGH |
+| Fetch in didMigrate (Pattern 3) | Multi-stage migration plan | Failure compounds — migration partially succeeds before crashing | HIGH |
+| Batch insert without chunking (Pattern 9) | Background context with @Environment leak (Pattern 4) | Memory spike on a thread that may also race with UI | MEDIUM |
 
 Cross-auditor overlap notes:
 - Mixed Core Data + SwiftData → compound with `core-data-auditor`
@@ -211,13 +206,13 @@ Cross-auditor overlap notes:
 | Context isolation | Background work uses dedicated ModelContext (yes/no) |
 | Mutation/save ratio | M saves per N mutations (Z%) |
 | CloudKit conformance | All models meet CloudKit requirements (yes/no/N/A) |
-| Index discipline | Models with ≤4 indexes / total models |
+| Indexes per model | M #Index declarations across N models |
 | **Health** | **SAFE / FRAGILE / DANGEROUS** |
 
 Scoring:
 - **SAFE**: No CRITICAL issues, every @Model registered in a VersionedSchema, background work uses dedicated contexts, migration plan covers all supported versions, mutation/save ratio ~1:1.
 - **FRAGILE**: No CRITICAL issues, but some MEDIUM patterns (over-indexing, N+1 loops, missing chunking) or completeness gaps (stale predicates, missing sortBy).
-- **DANGEROUS**: Any CRITICAL issue (struct models, missing schema models, decode-crashing relationships, fetch in didMigrate, race + data-loss compounds).
+- **DANGEROUS**: Any CRITICAL issue (missing schema models, decode-crashing relationships, fetch in didMigrate, race + data-loss compounds).
 
 ## Output Format
 
@@ -263,13 +258,11 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details.
 
 ## False Positives (Not Issues)
 
-- `@Model struct` in comments or documentation strings
 - Array properties that aren't `@Relationship` (plain `[String]`, `[Int]`)
 - `context.insert` in `*Tests.swift` test fixtures
 - Single-item inserts (no chunking needed)
-- Explicit `autosave: true` configuration paired with no save() (autosave handles it)
-- `@Attribute(.indexed)` count over 5 on a read-heavy, never-inserted reference table
-- `eraseDatabaseOnSchemaChange = true` inside `#if DEBUG`
+- `.modelContainer(...)` with `isAutosaveEnabled: true` (the default) and no explicit `save()`
+- 5+ `#Index` declarations on a read-heavy, never-inserted reference table
 - In-memory containers (`isStoredInMemoryOnly: true`) where migration concerns don't apply
 
 ## Related
@@ -315,4 +308,4 @@ Explicit command: Users can also invoke this agent directly with `axiom-audit-sw
 
 ## Scope
 
-Automatically scans SwiftData code for the 10 most critical violations - struct models, missing VersionedSchema models, relationship defaults, migration timing, background context misuse, and N+1 patterns - prevents crashes, data loss, and silent corruption.
+Automatically scans SwiftData code for the 9 most critical violations - missing VersionedSchema models, relationship defaults, migration timing, detached-task context misuse, and N+1 patterns - prevents crashes, data loss, and silent corruption.

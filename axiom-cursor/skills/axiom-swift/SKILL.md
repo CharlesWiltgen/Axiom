@@ -32,7 +32,7 @@ Delegate to the appropriate Cursor subagent when this router calls for a special
 | Debug-only deep links for simulator testing | See `skills/deep-link-debugging.md` |
 | Navigate to specific screens for screenshots | See `skills/deep-link-debugging.md` |
 | tvOS Focus Engine, Siri Remote input | See `skills/tvos.md` |
-| tvOS storage constraints (nothing local is persistent) | See `skills/tvos.md` |
+| tvOS storage constraints (no guaranteed-persistent local storage) | See `skills/tvos.md` |
 | tvOS text input, AVPlayer tuning | See `skills/tvos.md` |
 | TVUIKit components | See `skills/tvos.md` |
 | Simplify Swift for clarity (behavior-preserving cleanups) | `swift-simplifier` agent — `/axiom-audit` swift-simplify |

@@ -51,7 +51,7 @@ Grep for:
   - `registerMigration` — migration registrations
   - `eraseDatabaseOnSchemaChange` — destructive flag
   - `ALTER TABLE`, `CREATE TABLE`, `CREATE INDEX`, `DROP TABLE`, `DROP COLUMN` — raw schema DDL
-  - `addColumn`, `dropTable`, `renameColumn`, `addForeignKey` — GRDB DSL
+  - `alter(table:)` with `add(column:)`, `rename(column:to:)`, `drop(column:)`, `drop(table:)` — GRDB alteration DSL
   - `try db.execute(sql:` — raw SQL execution
 ```
 
@@ -61,7 +61,7 @@ Read 2-3 key files (the migration file, the database setup file, one model file)
 - How many migrations are registered, in what order
 - Which tables exist and their primary keys
 - Which tables have FOREIGN KEY references between them
-- Whether `PRAGMA foreign_keys = ON` is set in `prepareDatabase`
+- Whether FK enforcement is left on (`Configuration.foreignKeysEnabled`, default `true`) or explicitly disabled
 - Whether writes go through `db.write { }` (implicit transaction) or raw `execute`
 
 ### Output
@@ -95,16 +95,16 @@ Run all 10 detection patterns. For every grep match, use Read to verify the surr
 
 ### Pattern 3: DROP COLUMN (CRITICAL/HIGH)
 
-**Issue**: SQLite supports DROP COLUMN since 3.35.0 (iOS 16+). On older OS, crashes. Even on supported versions, restricted (no PRIMARY KEY, UNIQUE, or referenced columns).
-**Search**: `DROP\s+COLUMN`, `dropColumn`
+**Issue**: SQLite supports DROP COLUMN from 3.35.0 (iOS 15+). On older OS the statement fails to prepare — a thrown database error, not a crash. Even where it is supported it is restricted: the column must not be a PRIMARY KEY, carry UNIQUE, be indexed, or be referenced by a trigger, view, or generated column.
+**Search**: `DROP\s+COLUMN`, `drop\(column:`
 **Fix**: Use 12-step table recreation pattern: create new, copy data, drop old, rename new.
 
 ### Pattern 4: ALTER TABLE Without Idempotency Check (CRITICAL/HIGH)
 
-**Issue**: `ADD COLUMN` on an existing column crashes with "duplicate column name". Beta testers re-running the migration crash.
+**Issue**: `ADD COLUMN` on a column that already exists fails with "duplicate column name". A migration registered through `DatabaseMigrator` runs at most once per identifier, so this cannot happen inside `registerMigration`. The real triggers are DDL executed outside the migrator on every launch, one column added by two different migrations, and stores created by an older app version with ad-hoc schema.
 **Search**: `ADD\s+COLUMN`, `addColumn`
-**Verify**: Read matching files; check for `PRAGMA table_info`, `ifNotExists:`, or do-catch.
-**Fix**: GRDB's `addColumn(ifNotExists:)`, or check `PRAGMA table_info` first, or wrap in do-catch.
+**Verify**: Read matching files; check for an existence guard (`db.columns(in:)`, `PRAGMA table_info`) or a do-catch. DDL inside `registerMigration` needs no guard.
+**Fix**: Guard on introspection — `let exists = try db.columns(in: "users").contains { $0.name == "email" }`, then alter only when `exists` is false. `PRAGMA table_info` or a do-catch around the ALTER also works. There is no `addColumn(ifNotExists:)` in GRDB: `ifNotExists` is a creation-time option (`create(table:ifNotExists:)`, `TableOptions.ifNotExists`), and SQLite's ADD COLUMN has no such clause.
 
 ### Pattern 5: INSERT OR REPLACE Breaks Foreign Keys (HIGH/HIGH)
 
@@ -113,24 +113,24 @@ Run all 10 detection patterns. For every grep match, use Read to verify the surr
 **Verify**: Read matching files; check if target table is referenced by FK constraints.
 **Fix**: `INSERT ... ON CONFLICT(id) DO UPDATE SET ...` (UPSERT).
 
-### Pattern 6: Foreign Key Addition Without Data Validation (HIGH/MEDIUM)
+### Pattern 6: Foreign Key Added to an Existing Table Without an Orphan Check (HIGH/MEDIUM)
 
-**Issue**: Adding FK when orphaned rows exist fails the migration or leaves the DB inconsistent.
-**Search**: `FOREIGN\s+KEY`, `REFERENCES`, `addForeignKey`
-**Verify**: Read matching files; check for orphan-cleanup or `PRAGMA foreign_key_check` before constraint addition.
-**Fix**: Clean up orphans first, or run `PRAGMA foreign_key_check` to validate.
+**Issue**: Foreign keys are creation-time in both SQLite and GRDB — `foreignKey(_:references:columns:onDelete:onUpdate:deferred:)` on the table definition; a `TableAlteration` can only add, rename, or drop columns. Adding one to an existing table means recreating it, and orphaned child rows make that recreation fail: GRDB's default deferred checks run `checkForeignKeys()` before the migration commits.
+**Search**: `FOREIGN\s+KEY`, `REFERENCES` — declared inside `CREATE TABLE`, never added by an ALTER
+**Verify**: Read matching files; where the constraint is new on an existing table, check for orphan cleanup or a `PRAGMA foreign_key_check` before the recreation. There is no `addForeignKey` API.
+**Fix**: Clean up orphans first, or run `PRAGMA foreign_key_check` to validate before recreating the table.
 
-### Pattern 7: PRAGMA foreign_keys Not Enabled (HIGH/HIGH)
+### Pattern 7: Foreign Key Enforcement Disabled (HIGH/HIGH)
 
-**Issue**: SQLite ships with foreign keys OFF. Without enabling them, all FK constraints are silently ignored — data integrity is not enforced.
+**Issue**: SQLite ships with foreign keys OFF, and an app that never turns them on gets no enforcement. GRDB is not such an app — `Configuration.foreignKeysEnabled` defaults to `true` and `Database.setUp()` issues `PRAGMA foreign_keys = ON` on every connection before any `prepareDatabase` closure runs. A GRDB app that declares FKs and never writes the pragma is correct; only an explicit opt-out is a finding.
 **Search**: `PRAGMA\s+foreign_keys`, `foreignKeysEnabled`
-**Verify**: If FK constraints exist (Pattern 6 found `FOREIGN KEY`) but no PRAGMA setting present, flag it.
-**Fix**: GRDB: `configuration.prepareDatabase { db in try db.execute(sql: "PRAGMA foreign_keys = ON") }`
+**Verify**: Flag `PRAGMA foreign_keys = OFF` or `foreignKeysEnabled = false`. For a raw-SQLite / SQLite.swift stack whose DDL declares `FOREIGN KEY`, flag the absence of `PRAGMA foreign_keys = ON` on the connection. Never flag a GRDB app for not writing the pragma — the pragma is already on there.
+**Fix**: GRDB: delete the override, or leave `Configuration.foreignKeysEnabled` at its default `true`. Raw SQLite: issue `PRAGMA foreign_keys = ON` on every connection open.
 
 ### Pattern 8: RENAME COLUMN Without Migration Strategy (MEDIUM/MEDIUM)
 
-**Issue**: RENAME COLUMN (SQLite 3.25.0+, iOS 12+) works but doesn't update Swift code. Raw SQL using the old name silently breaks.
-**Search**: `RENAME\s+COLUMN`, `renameColumn`
+**Issue**: RENAME COLUMN (SQLite 3.25.0+, iOS 13+) works but doesn't update Swift code. Raw SQL using the old name silently breaks.
+**Search**: `RENAME\s+COLUMN`, `rename\(column:`
 **Verify**: Read matching files; grep the codebase for the old column name in raw SQL strings.
 **Fix**: Update all raw SQL references to the new name.
 

@@ -2,7 +2,7 @@
 # iOS Storage Guide
 
 **Purpose**: Navigation hub for ALL storage decisions — database vs files, local vs cloud, specific locations
-**iOS Version**: iOS 17+ (iOS 26+ for latest features)
+**iOS Version**: iOS 18+ (iOS 26+ for latest features)
 **Context**: Complete storage decision framework integrating SwiftData (WWDC 2023), CKSyncEngine (WWDC 2023), and file management best practices
 
 ## When to Use This Skill
@@ -102,7 +102,9 @@ class Task {
 import SQLiteData
 
 // Full-text search, custom indices, raw SQL when needed
-let results = try db.prepare("SELECT * FROM users WHERE name MATCH ?", "John")
+let statement = try db.makeStatement(sql: "SELECT * FROM users WHERE name MATCH ?")
+statement.arguments = ["John"]
+let results = try Row.fetchAll(statement)
 ```
 
 **Use SQLiteData when**:
@@ -129,7 +131,6 @@ import CoreData
 
 **Only use Core Data if**:
 - Maintaining existing Core Data app
-- Can't upgrade to iOS 17 minimum deployment
 
 ---
 
@@ -144,7 +145,7 @@ What kind of file is it?
 │   Where: Documents/ directory
 │   Backed up: ✅ Yes (iCloud/iTunes)
 │   Purged: ❌ Never
-│   Visible in Files app: ✅ Yes
+│   Visible in Files app: ✅ Only if UIFileSharingEnabled is set in Info.plist (default No)
 │   Example: User's edited photos, documents, exported data
 │   → See "Documents Directory" section below
 │
@@ -158,7 +159,7 @@ What kind of file is it?
 │
 ├─ RE-DOWNLOADABLE / REGENERABLE CONTENT
 │   Where: Library/Caches/
-│   Backed up: ❌ No (set isExcludedFromBackup)
+│   Backed up: ❌ No (purgeable directories are excluded by default)
 │   Purged: ✅ Yes (under storage pressure)
 │   Example: Thumbnails, API responses, downloaded images
 │   → See "Caches Directory" section below
@@ -166,7 +167,7 @@ What kind of file is it?
 └─ TEMPORARY FILES (can be deleted anytime)
     Where: tmp/
     Backed up: ❌ No
-    Purged: ✅ Yes (aggressive, even while app running)
+    Purged: ✅ Yes (while the app is not running)
     Example: Image processing intermediates, export staging
     → See "Temporary Directory" section below
 ```
@@ -236,7 +237,7 @@ func cacheDownloadedImage(data: Data, for url: URL) throws {
     )[0]
 
     let filename = url.lastPathComponent
-    let fileURL = cacheURL.appendingPathComponent(filename)
+    var fileURL = cacheURL.appendingPathComponent(filename)
 
     try data.write(to: fileURL)
 
@@ -274,7 +275,7 @@ func processImageWithTempFile(image: UIImage) throws {
 ```
 
 **Key rules**:
-- System can delete files here AT ANY TIME (even while app is running)
+- The system purges files here while your app is not running; you never see it happen, the file is simply gone at the next launch
 - Always clean up after yourself
 - Don't rely on files persisting between app launches
 
@@ -438,16 +439,16 @@ func downloadProfileImage(url: URL) throws {
 }
 
 // ✅ CORRECT: Use Caches instead
-func downloadProfileImage(url: URL) throws {
+func cacheProfileImage(url: URL) throws {
     let data = try Data(contentsOf: url)
     let cacheURL = FileManager.default.urls(
         for: .cachesDirectory,
         in: .userDomainMask
     )[0]
-    let fileURL = cacheURL.appendingPathComponent("profile.jpg")
+    var fileURL = cacheURL.appendingPathComponent("profile.jpg")
     try data.write(to: fileURL)
 
-    // Mark excluded from backup
+    // Mark excluded from backup (explicit, though Caches is auto-excluded)
     var resourceValues = URLResourceValues()
     resourceValues.isExcludedFromBackup = true
     try fileURL.setResourceValues(resourceValues)
