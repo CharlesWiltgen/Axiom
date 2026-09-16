@@ -340,6 +340,13 @@ export function isObviousPlaceholderUuid(uuid: string): boolean {
     if (doubled) return true;
   }
 
+  // The 4C4C44 marker — ASCII "LLD" read as bytes. A real UUID beginning with
+  // those three bytes has probability ~1/16.7M, and the value this tree actually
+  // ships (4C4C44EF-5555-3144-A1B5-0562264D518F) is a hand-written parser sample
+  // in tools/xcsym/dwarfdump_test.go, sitting beside an overtly synthetic sibling
+  // (ABCDEF01-2345-6789-ABCD-EF0123456789) in the same sample string.
+  if (hex.startsWith("4c4c44")) return true;
+
   return /^(?:aaaa|0000|1111|2222|3333|4444|5555|6666|7777|8888|9999|abcd|f1e2|1a2b|a1b2|dead|beef|1234)/.test(hex);
 }
 

@@ -4,7 +4,7 @@
     <run number="1">
         <info>
             <target>
-                <device platform="macOS" model="Mac Studio" name="Mac Studio" os-version="26.5 (25F71)" uuid="CF383450-E70D-57EA-9E23-76E6791524B1"/>
+                <device platform="macOS" model="Mac Studio" name="Mac Studio" os-version="26.5 (25F71)" uuid="550E8400-E29B-41D4-A716-446655440000"/>
                 <process type="attached" return-exit-status="0" name="yes" pid="37476" termination-reason="exit(0)"/>
             </target>
             <summary>

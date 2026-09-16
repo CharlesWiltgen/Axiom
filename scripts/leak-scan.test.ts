@@ -215,10 +215,14 @@ test("placeholder UUID shapes are suppressed and real ones are not", () => {
     "11223344-5566-7788-99AA-BBCCDDEEFF00", // every character doubled
     "11111111-2222-3333-4444-555555555555", // eight of a kind
     "550e8400-e29b-41d4-a716-446655440000", // RFC 4122 §4.4's canonical example
+    "4C4C44EF-5555-3144-A1B5-0562264D518F", // the 4C4C44 toolchain marker
+    "4c4c44ef55553144a1b50562264d518f",     // same value, unpunctuated and lowercased
   ];
   const real = [
     "CC1CF985-BC65-3725-809F-4C1E36B8F4BA", // v3, a dylib identifier from a real trace
     "6C640744-3686-474B-9643-08FCF719DEC1", // v4, random — the shape a device UDID has
+    "A0E2EAD5-4E82-3E1C-AC6C-1EDC646A6C4D", // v3, /usr/bin/yes from the same trace
+    "A237EF81-B68B-37BA-A165-92C965529534", // v3, dyld from the same trace
   ];
   for (const uuid of placeholder) {
     assert.ok(isObviousPlaceholderUuid(uuid), `${uuid} is a typed-placeholder shape`);
