@@ -83,12 +83,22 @@ export const SURFACES: Surface[] = [
   { path: "docs", trackedOnly: true },
   { path: "tools", trackedOnly: true },
   { path: "scripts", trackedOnly: true },
+  // Repo configuration ships publicly and can carry a local path (a tool config, a
+  // runner path in a workflow) as easily as source can. It was in no surface until a
+  // tracked-but-unscanned check found it; scripts/leak-scan.test.ts now fails when any
+  // tracked file is in neither a surface nor ROOT_FILES nor SELF_EXEMPT, so the next
+  // omission is caught rather than discovered.
+  { path: ".github", trackedOnly: true },
 ];
 
 /**
  * Root files are read from disk, not from the index: CHANGELOG.md is gitignored
  * here yet is rendered into the published site, so "tracked" is the wrong test
  * for them.
+ *
+ * The three dotfiles were added by the tracked-but-unscanned check. `.mise.toml`
+ * and `.gitignore` both name local paths in normal use, which is exactly what the
+ * absolute-home-path rule exists to catch.
  */
 export const ROOT_FILES = [
   "README.md",
@@ -100,6 +110,9 @@ export const ROOT_FILES = [
   "MARKETPLACE-SUBMISSION.md",
   "CURSOR-MARKETPLACE-SUBMISSION.md",
   "SUBMISSION-STATUS.md",
+  ".gitattributes",
+  ".gitignore",
+  ".mise.toml",
 ];
 
 const SKIP_DIRS = new Set([
@@ -120,7 +133,7 @@ const SKIP_DIRS = new Set([
  * legitimate place for the strings to appear. Exempting them by name is narrower
  * than weakening a pattern to avoid matching its own source.
  */
-const SELF_EXEMPT = new Set(["scripts/leak-scan.ts", "scripts/leak-scan.test.ts"]);
+export const SELF_EXEMPT = new Set(["scripts/leak-scan.ts", "scripts/leak-scan.test.ts"]);
 
 export const RULES: LeakRule[] = [
   {

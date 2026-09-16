@@ -33,7 +33,10 @@ on:
       - 'MARKETPLACE-SUBMISSION.md'
       - 'CURSOR-MARKETPLACE-SUBMISSION.md'
       - 'SUBMISSION-STATUS.md'
-      - '.github/workflows/test-suite.yml'
+      - '.github/**'
+      - '.gitattributes'
+      - '.gitignore'
+      - '.mise.toml'
   push:
     branches: [main]
     paths:
@@ -56,7 +59,10 @@ on:
       - 'MARKETPLACE-SUBMISSION.md'
       - 'CURSOR-MARKETPLACE-SUBMISSION.md'
       - 'SUBMISSION-STATUS.md'
-      - '.github/workflows/test-suite.yml'
+      - '.github/**'
+      - '.gitattributes'
+      - '.gitignore'
+      - '.mise.toml'
 
 permissions:
   contents: read

@@ -3,7 +3,8 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { type LeakRule, ROOT_FILES, RULES, SURFACES, isObviousPlaceholderUuid, scanRepo, shippedFiles } from "./leak-scan.ts";
+import { execFileSync } from "node:child_process";
+import { type LeakRule, ROOT_FILES, RULES, SELF_EXEMPT, SURFACES, isObviousPlaceholderUuid, scanRepo, shippedFiles } from "./leak-scan.ts";
 
 /**
  * The engine is tested with its own rules, not the shipped list. Two reasons: a
@@ -321,4 +322,29 @@ test("the CI paths filter covers every surface the scan reads", () => {
   for (const file of ROOT_FILES) {
     assert.ok(entries.includes(file), `root file "${file}" is not in the CI paths filter`);
   }
+});
+
+test("every tracked file is scanned, or exempt with a reason", () => {
+  // The surface model enumerates what to read, so anything outside the enumeration is
+  // invisible — and an unread file reads as a clean one. That has shipped twice: 38
+  // axiom-mcp files (Axiom-77q9) and later .gitignore, .gitattributes, .mise.toml and
+  // .github/**. Both were found by hand. This asserts the property instead, so the
+  // third omission fails here rather than waiting for someone to notice a gap.
+  const root = path.resolve(import.meta.dirname, "..");
+  const tracked = execFileSync("git", ["-c", "core.quotepath=false", "ls-files"], {
+    cwd: root,
+    encoding: "utf8",
+  })
+    .split("\n")
+    .filter(Boolean);
+  const scanned = new Set(shippedFiles(root));
+
+  const unread = tracked.filter((rel) => !scanned.has(rel) && !SELF_EXEMPT.has(rel));
+  assert.deepEqual(
+    unread,
+    [],
+    `tracked file(s) in no scanned surface: ${unread.join(", ")}. Add the directory to ` +
+      `SURFACES or the file to ROOT_FILES in scripts/leak-scan.ts, and add it to the ` +
+      `workflow's paths filter — an unscanned file reads as a clean one.`,
+  );
 });
