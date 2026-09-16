@@ -2,8 +2,8 @@
 # Swift 6 Concurrency Guide
 
 **Purpose**: Progressive journey from single-threaded to concurrent Swift code
-**Swift Version**: Swift 6.4 (ships with Xcode 27; strict concurrency by default). `@concurrent` requires the Swift 6.2+ toolchain (compile-time only) — it imposes NO deployment-target floor and back-deploys via the concurrency runtime (iOS 13+).
-**iOS Version**: iOS 17+
+**Swift Version**: Swift 6.4 (ships with Xcode 27; strict concurrency by default). `@concurrent` requires the Swift 6.2+ toolchain (compile-time only).
+**iOS Version**: iOS 18+
 **Xcode**: Xcode 16+ (Xcode 26+ for `@concurrent`)
 
 ## When to Use This Skill
@@ -37,7 +37,7 @@
 - `nonisolated` → no ownership, caller decides
 - `@concurrent` → force background execution
 
-**Async does not mean background.** An `async` function suspends without blocking, but resumes on the *same actor* it was called from. A `@MainActor` async function runs entirely on the main actor — `await` just yields control, it does not switch threads. Use `@concurrent` (Swift 6.2+) when you need to force work off the calling actor.
+**Async does not mean background.** An `async` function suspends without blocking, but resumes on the *same actor* it was called from — for a `nonisolated async` function that holds with the `NonisolatedNonsendingByDefault` upcoming feature (Swift 6.2+, on by default in new Xcode 26 projects; without it they hop to the concurrent pool). A `@MainActor` async function runs entirely on the main actor — `await` just yields control, it does not switch threads. Use `@concurrent` (Swift 6.2+) when you need to force work off the calling actor.
 
 **MainActor is the main thread on Apple platforms.** On iOS, iPadOS, macOS, watchOS, tvOS, and visionOS, `@MainActor` and the main thread are the same. Treat them as synonymous in app code. Two edge cases to be aware of:
 - Non-app Swift environments (server-side, library tests) may technically map MainActor elsewhere — not a concern for Apple platform apps.
@@ -148,6 +148,7 @@ func fetchAndDisplayImage(url: URL) async throws {
 Create tasks in response to user events:
 
 ```swift
+@MainActor
 class ImageModel {
     var url: URL = URL(string: "https://swift.org")!
 
@@ -261,7 +262,7 @@ func decodeImage(_ data: Data) async -> Image {
 - Compiler highlights main actor data access (shows what you need to fix)
 - Cannot access `@MainActor` properties without `await`
 
-**Requirements**: Swift 6.2+ toolchain, Xcode 26+ (compile-time only). No deployment-target floor beyond the concurrency runtime — `globalConcurrentExecutor` (what `@concurrent` selects) is iOS 18.0+, and the runtime itself back-deploys to iOS 13. Usable on apps targeting iOS 13/17/18.
+**Requirements**: Swift 6.2+ toolchain, Xcode 26+ (compile-time only). `globalConcurrentExecutor` (what `@concurrent` selects) is iOS 18.0+.
 
 ### Solution 2: `nonisolated` (Library APIs)
 
@@ -293,7 +294,7 @@ The two attributes are the most-confused pair in Swift 6 concurrency. They sound
 
 | Question | `@concurrent` | `nonisolated` |
 |----------|---------------|---------------|
-| Where does the work run? | **Always** on the cooperative pool (background) | **Wherever the caller is** (inherits caller's actor) |
+| Where does the work run? | **Always** on the cooperative pool (background) | **Wherever the caller is** (inherits caller's actor — sync always; async with `NonisolatedNonsendingByDefault`) |
 | Who decides isolation? | The callee (this function) | The caller |
 | Can it access `@MainActor` state? | Only via `await` — compiler highlights every access | Yes if caller is on `@MainActor`, no if caller is elsewhere |
 | Swift version | 6.2+ toolchain (no OS floor) | All Swift versions |
@@ -741,6 +742,7 @@ nonisolated func delegate(_ param: SomeType) {
 **When**: Task is stored as property OR runs for long time
 
 ```swift
+@MainActor
 class MusicPlayer {
     private var progressTask: Task<Void, Never>?
 
@@ -780,7 +782,7 @@ func decodeImage(_ data: Data) async -> Image {
 let image = await decodeImage(data)  // Automatically offloads
 ```
 
-**Requirements**: Swift 6.2+ toolchain, Xcode 26+ (compile-time only). No deployment-target floor beyond the concurrency runtime — back-deploys to iOS 13.
+**Requirements**: Swift 6.2+ toolchain, Xcode 26+ (compile-time only).
 
 ---
 
@@ -890,23 +892,32 @@ class PlayerViewModel: ObservableObject {
 ### Pattern 9: Background SwiftData Access
 
 ```swift
+// ✅ Sendable snapshot — a PersistentModel is not Sendable, so it is never
+// the thing that crosses the actor boundary
+struct TrackSnapshot: Sendable {
+    let persistentID: PersistentIdentifier
+    let title: String
+}
+
 actor DataFetcher {
     let modelContainer: ModelContainer
 
-    func fetchAllTracks() async throws -> [Track] {
+    func fetchAllTracks() async throws -> [TrackSnapshot] {
         let context = ModelContext(modelContainer)
         let descriptor = FetchDescriptor<Track>(
             sortBy: [SortDescriptor(\.title)]
         )
-        return try context.fetch(descriptor)
+        return try context.fetch(descriptor).map {
+            TrackSnapshot(persistentID: $0.persistentModelID, title: $0.title)
+        }
     }
 }
 
 @MainActor
 class TrackViewModel: ObservableObject {
-    @Published var tracks: [Track] = []
+    @Published var tracks: [TrackSnapshot] = []
 
-    func loadTracks() async {
+    func loadTracks() async throws {
         let fetchedTracks = try await fetcher.fetchAllTracks()
         self.tracks = fetchedTracks  // Back on MainActor
     }
@@ -1183,6 +1194,7 @@ Three facts that surprise developers new to Swift concurrency:
 3. **Memory is not released the moment `cancel()` is called.** The task and everything it captures (including `self` if captured strongly) live until the task body actually returns. If the body is busy in synchronous code or won't see the cancellation until its next suspension, the captured state persists during that window.
 
 ```swift
+@MainActor
 class Player {
     private var monitorTask: Task<Void, Never>?
 
@@ -1209,7 +1221,7 @@ Without the `cancel()` call in `deinit`, the task continues running indefinitely
 | "I'll use `Task.detached` to make it background" | `Task.detached` is overkill if you only need background isolation — it also discards priority and task-local values. | Use `Task { @concurrent in }` to override only isolation. Reserve `Task.detached` for work that should run independently of the caller's priority/task-locals. |
 | "I'll add `@unchecked Sendable` to silence this" | You're hiding a data race from the compiler. It will crash in production. | Make the type genuinely Sendable (struct/enum), use an actor, or use `sending` parameter. |
 | "I'll use `nonisolated(unsafe)` to fix this" | Zero runtime protection. The compiler stops checking — data races go undetected. | Use proper isolation (`@MainActor`, actor, Mutex). Reserve for global constants only. |
-| "This async function runs on a background thread" | `async` suspends without blocking but resumes on the **same actor**. A `@MainActor` async function runs on the main thread. | Use `@concurrent` to force background. Don't assume async = background. |
+| "This async function runs on a background thread" | `async` suspends without blocking but resumes on the **same actor** for a `nonisolated async` function only with `NonisolatedNonsendingByDefault` (Swift 6.2+, the default in new Xcode 26 projects). A `@MainActor` async function runs on the main thread. | Use `@concurrent` to force background. Don't assume async = background. |
 | "I'll wrap this in `DispatchQueue.global().async`" | GCD queue-hopping inside structured concurrency breaks isolation guarantees and risks thread explosion. | Use `@concurrent` or extract to an actor. Keep GCD in bridge layers only. |
 | "Every class needs to be an actor" | Actors add serialization overhead. UI code on a custom actor can't update views. | Use `@MainActor` for UI/ViewModel code. Actors are for non-UI shared mutable state only. |
 | "I'll use `@preconcurrency` to ship faster" | You're assuming thread-safety the compiler can't verify. Crashes appear in production. | Migrate to proper concurrency. Use `@preconcurrency` only as a temporary bridge with a removal ticket. |
@@ -1235,17 +1247,24 @@ func addNumbers(_ a: Int, _ b: Int) -> Int {
 ### ❌ Strong Self in Stored Tasks
 
 ```swift
-// ❌ Memory leak — task retains self, self retains task
-progressTask = Task {
-    while true {
-        await self.update()  // ❌ Strong capture in infinite loop
-    }
-}
+@MainActor
+class MusicPlayer {
+    private var progressTask: Task<Void, Never>?
 
-// ✅ Weak capture breaks the cycle
-progressTask = Task { [weak self] in
-    while let self, !Task.isCancelled {
-        await self.updateProgress()
+    func start() {
+        // ❌ Memory leak — task retains self, self retains task
+        progressTask = Task {
+            while true {
+                await self.update()  // ❌ Strong capture in infinite loop
+            }
+        }
+
+        // ✅ Weak capture breaks the cycle
+        progressTask = Task { [weak self] in
+            while let self, !Task.isCancelled {
+                await self.updateProgress()
+            }
+        }
     }
 }
 ```

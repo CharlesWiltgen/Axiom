@@ -51,8 +51,8 @@ digraph diag {
     "Crash symbol?" -> "Closure passed to SDK?" [label="_dispatch_assert_queue_fail"];
     "Crash symbol?" -> "Delegate method on @MainActor class?" [label="_swift_task_checkIsolatedSwift"];
 
-    "Closure passed to SDK?" -> "Pattern 1: Closure isolation inheritance" [label="context.perform, .map, .sink"];
-    "Closure passed to SDK?" -> "Combine pipeline?" [label="not Core Data"];
+    "Closure passed to SDK?" -> "Pattern 1: Closure isolation inheritance" [label=".map, .sink"];
+    "Closure passed to SDK?" -> "Combine pipeline?" [label="not a Combine operator"];
     "Combine pipeline?" -> "Pattern 1: Closure isolation inheritance" [label="yes — receive(on:) placement matters"];
 
     "Delegate method on @MainActor class?" -> "Pattern 2: Delegate isolation inheritance" [label="yes"];
@@ -66,40 +66,9 @@ digraph diag {
 
 A closure defined inside an `@MainActor`-isolated context inherits that isolation. The compiler marks it main-actor-isolated and inserts a runtime assertion. If the framework calls it on a background thread, the assertion fires.
 
-### Core Data `context.perform`
-
-```swift
-// ❌ CRASHES with _dispatch_assert_queue_fail
-@MainActor
-class ContactsViewModel {
-    func deleteAll(context: NSManagedObjectContext) {
-        context.perform {
-            // Inherits @MainActor from enclosing method.
-            // Core Data runs it on its private background queue. Trap.
-            let request = NSFetchRequest<Contact>(entityName: "Contact")
-            let contacts = try? context.fetch(request)
-            contacts?.forEach { context.delete($0) }
-        }
-    }
-}
-```
-
-**Fix — mark the closure `@Sendable`.** A `@Sendable` closure has no implied actor context, so no runtime assertion is injected.
-
-```swift
-// ✅ Works — @Sendable opts out of isolation inheritance
-context.perform { @Sendable in
-    let request = NSFetchRequest<Contact>(entityName: "Contact")
-    let contacts = try? context.fetch(request)
-    contacts?.forEach { context.delete($0) }
-}
-```
-
-See axiom-data (skills/core-data.md) for the broader Core Data threading patterns.
-
 ### PhotoKit `performChanges`
 
-Same shape as `context.perform`. `performChanges` takes `dispatch_block_t`, which imports as a **non-`Sendable`** closure, so the block inherits `@MainActor` from the enclosing method. PhotoKit runs it on its own serial queue (header: "handlers are invoked on an arbitrary serial queue"). Warning-free build, runtime trap.
+`performChanges` takes `dispatch_block_t`, which imports as a **non-`Sendable`** closure, so the block inherits `@MainActor` from the enclosing method. PhotoKit runs it on its own serial queue (header: "handlers are invoked on an arbitrary serial queue"). Warning-free build, runtime trap.
 
 ```swift
 // ❌ CRASHES — compiles with zero diagnostics
@@ -115,7 +84,7 @@ final class Deleter {
 }
 ```
 
-**Fix — `@Sendable` on the block, then mutate isolated state after the `await`.** `@Sendable` makes `self.log.append` inside the block a compile error, which is the point: that mutation never belonged on PhotoKit's queue.
+**Fix — `@Sendable` on the block, then mutate isolated state after the `await`.** `@Sendable` turns `self.log.append` inside the block into `warning: main actor-isolated property 'log' can not be mutated from a Sendable closure` — a hard error against a Swift-native API, only a warning against an ObjC-imported one like `performChanges`. That mutation never belonged on PhotoKit's queue, and a warning will not stop the build.
 
 ```swift
 // ✅ Works
@@ -192,37 +161,22 @@ NotificationCenter.default.publisher(for: .didRefresh)
 
 When an entire class is `@MainActor`-isolated, **every method inherits that isolation, including delegate overrides**. If an SDK calls a delegate method from its own internal queue, the runtime check fires.
 
-### NSDocument
-
-```swift
-// ❌ CRASHES — AppKit calls autosavesInPlace from a background queue
-@MainActor
-class MyDocument: NSDocument {
-    override class var autosavesInPlace: Bool { true }
-}
-```
-
-**Fix — mark the specific method `nonisolated`.** Leave the rest of the class on the main actor.
-
-```swift
-// ✅ Works
-override nonisolated class var autosavesInPlace: Bool { true }
-```
-
 ### CLLocationManagerDelegate
 
 ```swift
-// ❌ CRASHES — CLLocationManager delivers updates on its own queue
+// ❌ Does not compile — CLLocationManagerDelegate is nonisolated, so a `@MainActor` witness is rejected
 @MainActor
 class LocationManager: NSObject, CLLocationManagerDelegate {
     func locationManager(
         _ manager: CLLocationManager,
         didUpdateLocations locations: [CLLocation]
     ) {
-        updateMap(with: locations)   // inherits @MainActor, crashes
+        updateMap(with: locations)   // main actor-isolated witness cannot satisfy the nonisolated requirement
     }
 }
 ```
+
+Unlike a silent runtime trap, this never reaches a device: the compiler rejects the conformance outright (`#ConformanceIsolation`), so there is nothing to diagnose at runtime. The fix-it menu is the same one analyzed under `PHPhotoLibraryChangeObserver` below — see the fix-it table there; only `nonisolated` on the witness is correct.
 
 **Fix — `nonisolated` on the delegate method, then `Task { @MainActor in }` for UI work.**
 
@@ -337,7 +291,7 @@ See `skills/assume-isolated.md` for the full assumeIsolated decision matrix.
 
 | Situation | Compiler-checked tool | What it does |
 |-----------|----------------------|--------------|
-| Protocol witness can't satisfy a nonisolated requirement from a `@MainActor` type — **Swift-native protocol only** | Isolated conformance: `extension T: @MainActor P` (SE-0470) | Pins the conformance to the main actor. The compiler sees the call site and rejects nonisolated use (`#IsolatedConformances`), so misuse is a build error, not a trap |
+| Protocol witness can't satisfy a nonisolated requirement from a `@MainActor` type — **Swift-native protocol only** | Isolated conformance: `extension T: @MainActor P` (SE-0470) | Pins the conformance to the main actor. The compiler sees the call site and rejects nonisolated use (`#ActorIsolatedCall`; `#IsolatedConformances` once the conformance itself crosses into nonisolated context), so misuse is a build error, not a trap |
 | Conforming to an old, un-annotated protocol whose callbacks are **documented main-thread** | `@preconcurrency` on the conformance | Suppresses the diagnostic without `unsafe`. Apple's own note is blunt: "turn data races into runtime errors" — it defers the failure, it does not prevent it |
 | `@Sendable` closure / API can't capture non-Sendable `self` once | `sending` parameter (SE-0430) | Transfers the value across the boundary one time; compiler proves the caller stops using it |
 | Async helper needs a non-Sendable delegate to stay on the caller's actor | `isolated (any Actor)? = #isolation` (SE-0420) | Inherits the caller's isolation so the value never crosses a boundary |
@@ -416,7 +370,6 @@ These crashes only surface with **real SDK callbacks and background-thread publi
 - Push notifications from `DispatchQueue.global().async { NotificationCenter.default.post(...) }`
 - Exercise location/audio/network delegates on real devices, not just mocks
 - Validate Combine pipelines by sending values on non-main schedulers
-- Run integration tests on iOS 17.4+ where Swift 6 runtime assertions are strictest
 
 See axiom-testing (skills/swift-testing.md) for testing async code that exercises real SDK callbacks.
 
@@ -431,7 +384,7 @@ See axiom-testing (skills/swift-testing.md) for testing async code that exercise
 | "I'll wrap it in `MainActor.assumeIsolated` to silence the warning" | `assumeIsolated` is a runtime trap, not a silencer. It crashes when the assumption is wrong. |
 | "The compiler suggested `@preconcurrency`, so it's the fix" | Fix-its resolve the *diagnostic*, not the isolation. For a nonisolated protocol requirement, `@preconcurrency` and isolated conformance both build clean and trap at runtime. Only `nonisolated` on the method is correct. |
 | "Adding `@Sendable` is the same as `@unchecked Sendable`" | `@Sendable` on a closure breaks isolation inheritance. `@unchecked Sendable` on a type hides data races. |
-| "PhotoKit types aren't `Sendable`, so I'll box them in `@unchecked Sendable`" | They are, as of the iOS 26 SDK. The compiler won't stop you — a redundant `extension` conformance is a *warning*, and a wrapper struct compiles silently — so this lands as house style and suppresses real diagnostics later. Check the SDK header before assuming an SDK type lacks the annotation; these landed after most training data. |
+| "PhotoKit types aren't `Sendable`, so I'll box them in `@unchecked Sendable`" | They are, as of the iOS 26 SDK. The compiler mostly won't stop you — a redundant `extension` conformance is a *warning* for types that declare the annotation (`PHPhotoLibrary`, `PHChange`, `NSManagedObjectContext`) and **silent** for subclasses that inherit it (`PHAsset` inherits from `PHObject`), and a wrapper struct compiles silently — so this lands as house style and suppresses real diagnostics later. Check the SDK header before assuming an SDK type lacks the annotation; these landed after most training data. |
 | "I'll just remove `@MainActor` from the class" | Now you have data races on UI state. The class-level isolation is correct — fix the specific method/closure. |
 | "I'll use `DispatchQueue.main.async` inside the delegate method" | Works, but `nonisolated` + `Task { @MainActor in }` is the Swift 6 idiom and integrates with structured concurrency. |
 | "`.receive(on:)` position doesn't matter — it's still in the pipeline" | Operators run in order. Any isolated closure before `.receive(on:)` runs on the upstream thread. |

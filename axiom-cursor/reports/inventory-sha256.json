@@ -38,8 +38,8 @@
     },
     {
       "path": "agents/concurrency-auditor.md",
-      "sha256": "cc8b7a6b7ecbb2cfeba866d758500496bc8b445aa483e573e792770270c1938e",
-      "bytes": 14725
+      "sha256": "68c7248e0dcaf697948d520115dff8c2b6a75cc8755998cc66ecadf2d219fb88",
+      "bytes": 15173
     },
     {
       "path": "agents/core-data-auditor.md",
@@ -513,38 +513,38 @@
     },
     {
       "path": "skills/axiom-concurrency/SKILL.md",
-      "sha256": "bfbb388b3165f3b27cbac4445b54969e5bf09565140512a08d283436f7a06372",
-      "bytes": 11225
+      "sha256": "af44162e0985c40e38f72f31f3a8a1f56e9dd9e3b2d3daf2e95d39ee780e9f49",
+      "bytes": 11544
     },
     {
       "path": "skills/axiom-concurrency/skills/assume-isolated.md",
-      "sha256": "e884ffc341fb6809abeea74b78810d61f5ee7a0ef8b81d308f0f96d48aa01537",
-      "bytes": 5711
+      "sha256": "306347c6dc3edd2db34ce8c6025a2512dff3808d5a047d70062679efe681c847",
+      "bytes": 5903
     },
     {
       "path": "skills/axiom-concurrency/skills/concurrency-profiling.md",
-      "sha256": "d2cf5a1fea0d0bb3c8548b27501337ba198e97d0e5c63e61cc923932322eddb3",
-      "bytes": 6415
+      "sha256": "4a98a24c8baa69f038d4d87c1425dcc2ab84d8412110c8dd84330f5941e42e16",
+      "bytes": 8073
     },
     {
       "path": "skills/axiom-concurrency/skills/isolation-inheritance-diag.md",
-      "sha256": "23081e4c93e61f11c68f86b29f03ca9396f324648b4b22f04f8deecc400b0ccc",
-      "bytes": 23804
+      "sha256": "1f16f4b8d5975bc3d70ea241784f278235a4432304cf4485fcdf3866928541dd",
+      "bytes": 23159
     },
     {
       "path": "skills/axiom-concurrency/skills/swift-concurrency-ref.md",
-      "sha256": "dfc4e482ae4c78543097ebb36248e5a57dbda1fa0f0111a09b276ab323df1da7",
-      "bytes": 56449
+      "sha256": "31bfd5aa7b7805b646360d9b4c28bc5ab43ad698dbbb131d5dc5f9e0108735e8",
+      "bytes": 56183
     },
     {
       "path": "skills/axiom-concurrency/skills/swift-concurrency.md",
-      "sha256": "c9104c9443db91921c523c97967593760f8c242fe1e8ef7500ce40daf577d541",
-      "bytes": 54465
+      "sha256": "2786f4f075329044d09ff0e0960b0ca70c9770926eefad761edd7ca59c6aa0e7",
+      "bytes": 55110
     },
     {
       "path": "skills/axiom-concurrency/skills/synchronization.md",
-      "sha256": "9798d87466431a334455dd2857e4510769fe32226a9d879f2f42214d0b3def20",
-      "bytes": 9595
+      "sha256": "86bd7a655203027e03b4e62a3277605c17ed33a41432e5f247f19eb5602818e5",
+      "bytes": 10134
     },
     {
       "path": "skills/axiom-data/SKILL.md",
@@ -1879,7 +1879,7 @@
   ],
   "totals": {
     "files": 375,
-    "bytes": 7413547
+    "bytes": 7416437
   },
   "excludedMirrors": 30,
   "classes": {

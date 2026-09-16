@@ -156,7 +156,7 @@ Using the Isolation Architecture Map from Phase 1 and your domain knowledge, che
 | Question | What it detects | Why it matters |
 |----------|----------------|----------------|
 | Are there unstructured `Task {}` in loops where TaskGroup would be better? | Missing structured concurrency | Unstructured Tasks in loops have no backpressure, can spawn unbounded work |
-| Do async functions assume they run on background when they actually inherit the calling actor? | async ≠ background misconception | Common cause of UI freezes — async functions stay on MainActor unless explicitly moved off |
+| Do async functions assume they run on background when they actually stay on the caller's actor? | async ≠ background misconception | Common cause of UI freezes — a `@MainActor` async function stays on the main actor, and `nonisolated async` stays on the caller's actor under `NonisolatedNonsendingByDefault` (Swift 6.2+; off by default, enabled by `SWIFT_APPROACHABLE_CONCURRENCY = YES`). Without that setting a plain `nonisolated async` function hops to the global executor, so it is not a main-thread risk. `@concurrent` forces off-actor work either way. |
 | Is there GCD usage (`DispatchQueue`, `DispatchGroup`) alongside modern async/await? | Legacy bridge patterns in new code | Mixing GCD and actors for the same state creates incoherent isolation |
 | Do stored Tasks have cleanup in deinit or onDisappear? | Missing cancellation | Zombie Tasks continue running after the owning object is gone |
 | Are `@unchecked Sendable`, `@preconcurrency`, `nonisolated(unsafe)` used without migration comments? | Permanent escape hatches | These should be temporary bridges, not permanent fixtures |
@@ -177,7 +177,7 @@ Bump severity for these combinations:
 | Stored Tasks without deinit cleanup | No cancellation on view disappear | Resource leak + zombie work | HIGH |
 | @unchecked Sendable | Mutable state without lock | Hidden data race | CRITICAL |
 | GCD usage | Also using actors for same state | Incoherent isolation | HIGH |
-| async ≠ background misconception | Heavy computation in async func | Main thread stall | CRITICAL |
+| async ≠ background misconception (work stays on the main actor — `@MainActor`-isolated, or `nonisolated` under `NonisolatedNonsendingByDefault`) | Heavy computation in async func | Main thread stall | CRITICAL |
 | nonisolated(unsafe) | Accessed from multiple Tasks | Unprotected shared state | CRITICAL |
 
 Also note overlaps with other auditors:

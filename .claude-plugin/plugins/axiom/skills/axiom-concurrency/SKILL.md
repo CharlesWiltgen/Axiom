@@ -143,7 +143,7 @@ digraph concurrency {
 | "I'll wrap the crash in `MainActor.assumeIsolated`" | `assumeIsolated` is a runtime trap, not a silencer. Wrong assumption = crash. |
 | "Combine is dead, just use async/await" | Combine has no deprecation notice. Rewriting working pipelines wastes time. See See axiom-uikit (skills/combine-patterns.md). |
 | "I'll use @unchecked Sendable to silence this" | You're hiding a data race from the compiler. It will crash in production. |
-| "This async function runs on a background thread" | `async` suspends without blocking but resumes on the *same actor*. Use `@concurrent` to force background. |
+| "This async function runs on a background thread" | Check its isolation, don't assume. A `@MainActor` async function runs entirely on the main actor, and `nonisolated async` runs on the caller's actor under `NonisolatedNonsendingByDefault` (Swift 6.2+; off by default, enabled by `SWIFT_APPROACHABLE_CONCURRENCY = YES`) — those are the main-thread freezes. Without that setting `nonisolated async` hops to the global executor. `@concurrent` forces off-actor work either way. |
 
 ## Example Invocations
 

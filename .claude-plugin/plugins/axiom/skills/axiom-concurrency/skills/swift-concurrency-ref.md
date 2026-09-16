@@ -40,6 +40,10 @@ actor Counter {
     var count = 0              // Isolated — external access requires await
     let name: String           // let constants are implicitly nonisolated
 
+    init(name: String) {       // Actors get no memberwise init — declare one
+        self.name = name
+    }
+
     func increment() {         // Isolated — await required from outside
         count += 1
     }
@@ -269,15 +273,6 @@ enum LoadState: Sendable {
     case idle
     case loading
     case loaded(String)        // String is Sendable
-    case failed(Error)         // ERROR: Error is not Sendable
-}
-
-// Fix: use a Sendable error type
-enum LoadState: Sendable {
-    case idle
-    case loading
-    case loaded(String)
-    case failed(any Error & Sendable)
 }
 ```
 
@@ -286,7 +281,7 @@ enum LoadState: Sendable {
 Closures passed across isolation boundaries must be `@Sendable`. A `@Sendable` closure cannot capture mutable local state.
 
 ```swift
-func runInBackground(_ work: @Sendable () -> Void) {
+func runInBackground(_ work: @Sendable @escaping () -> Void) {
     Task.detached { work() }
 }
 
@@ -418,7 +413,6 @@ This pattern lets you keep legacy non-Sendable types encapsulated within their i
 | Protocol can't require Sendable | Generic constraints complex | Use `where T: Sendable` |
 | @unchecked Sendable hides bugs | Data races at runtime | Only use when lock/queue guarantees safety |
 | Array/Dictionary conditional | Collection is Sendable only if Element is | Ensure element types are Sendable |
-| Error not Sendable | "Type does not conform to Sendable" | Use `any Error & Sendable` or typed errors |
 
 ---
 
@@ -569,7 +563,7 @@ for i in 0..<1_000_000 {
 | `.high` | Same as .userInitiated |
 | `.medium` | Default when not specified |
 | `.low` | Prefetching, non-urgent work |
-| `.utility` | Long computation, progress shown |
+| `.utility` | Same as .low — long computation, progress shown |
 | `.background` | Maintenance, cleanup, not time-sensitive |
 
 ```swift
@@ -859,11 +853,11 @@ Match `concurrency` to the work's profile: 2–4 for CPU-bound work, 8–16 for 
 
 | Gotcha | Symptom | Fix |
 |---|---|---|
-| async let unused | Work still executes but result is discarded silently | Assign all async let results or use withDiscardingTaskGroup |
+| async let unused | Work still executes; the only signal is a #NoUsage warning | Assign all async let results or use withDiscardingTaskGroup |
 | TaskGroup accumulating memory | Memory grows with 10K+ tasks | Process results as they arrive, don't collect all |
 | Capturing mutable state in addTask | "Mutation of captured var" | Use let binding or actor |
 | Not handling partial failure | Some tasks succeed, some fail | Use group.next() and handle errors individually |
-| async let in loop | Compiler error — async let must be in fixed positions | Use TaskGroup instead |
+| async let never awaited | "initialization of immutable value was never used" (#NoUsage) | Await the binding, or use withDiscardingTaskGroup |
 | Returning from group early | Remaining tasks still run | Call group.cancelAll() before returning |
 
 ---
@@ -1138,13 +1132,6 @@ Compiler escape hatch. Tells the compiler to treat a property as if it's not iso
 ```swift
 // Use only when you have external guarantees of thread safety
 nonisolated(unsafe) var legacyState: Int = 0
-
-// Common for global constants that the compiler can't verify
-nonisolated(unsafe) let formatter: DateFormatter = {
-    let f = DateFormatter()
-    f.dateStyle = .medium
-    return f
-}()
 ```
 
 **Warning**: `nonisolated(unsafe)` provides zero runtime protection. Data races will not be caught. Use only as a last resort for bridging legacy code.
@@ -1216,7 +1203,7 @@ func process(
 | MainActor.run from MainActor | Unnecessary hop, potential deadlock risk | Check context or use assumeIsolated |
 | nonisolated(unsafe) data race | Crash at runtime, corrupted state | Use proper isolation or Mutex |
 | @preconcurrency hiding real issues | Runtime crashes in production | Migrate to proper concurrency before shipping |
-| #isolation not available pre-5.9 | Compiler error | Use traditional @MainActor annotation |
+| #isolation not available pre-6.0 | Compiler error | Use traditional @MainActor annotation |
 | #isolation not captured in Task | Non-Sendable capture error | Add `_ = isolation` inside Task closure (SE-0420) |
 | nonisolated on actor method | Can't access any isolated state | Only use for computed properties from non-isolated state |
 | Thread.current in async context | Compiler error in Swift 6 mode | Don't rely on thread identity — reason about isolation domains |
@@ -1628,25 +1615,25 @@ await withTaskGroup(of: Void.self) { group in
 
 ---
 
-## Coming in Swift 6.4
+## Swift 6.4 Changes
 
-Three concurrency features accepted for Swift 6.4 that are not yet shipping. Track the [Swift Evolution dashboard](https://www.swift.org/swift-evolution/) for status; update this section when 6.4 lands.
+Two concurrency changes shipped in Swift 6.4 (Xcode 27) and apply to code written today; one further proposal is still pending. Track the [Swift Evolution dashboard](https://www.swift.org/swift-evolution/) for status.
 
 ### Async defer
 
-Swift 6.4 lifts the restriction that prevents `await` inside `defer` blocks. No new syntax — `defer { await cleanup() }` will just work, matching the cooperative-cancellation timing of structured concurrency.
-
-### `Task.withDeadline` (proposal name TBD)
-
-A standard library task API that mirrors the homemade `withTimeout` pattern earlier in this file: kick off async work, cancel automatically if a duration is exceeded. The proposal is under review; naming is still being debated. When it ships, prefer it over the manual `withThrowingTaskGroup` race pattern.
+Swift 6.4 lifts the restriction that prevents `await` inside `defer` blocks. No new syntax — `defer { await cleanup() }` compiles, matching the cooperative-cancellation timing of structured concurrency.
 
 ### Task error-swallowing diagnostic
 
-Currently, `Task { try ... }` lets thrown errors disappear silently — no warning, no crash, just a dropped failure. Swift 6.4 adds a diagnostic for unstructured Tasks whose body can throw but where the caller never reads `task.value` or `task.result`. The two valid responses:
+`Task { try ... }` let thrown errors disappear silently — no warning, no crash, just a dropped failure. Swift 6.4 diagnoses unstructured Tasks whose body can throw but where the caller never reads `task.value` or `task.result` (`#NoUseUnstructuredThrowingTask`). The two valid responses:
 - Handle errors inside the Task body (`do { try ... } catch { ... }`).
 - Store the Task handle and `await task.value` (which throws if the body threw).
 
-Once 6.4 ships, expect a wave of warnings on code that follows the "fire and forget" Task pattern with throwing functions.
+The diagnostic fires on code that follows the "fire and forget" Task pattern with throwing functions.
+
+### Still pending: `Task.withDeadline` (proposal name TBD)
+
+A standard library task API that mirrors the homemade `withTimeout` pattern earlier in this file: kick off async work, cancel automatically if a duration is exceeded. The proposal is under review and naming is still being debated; Swift 6.4 ships no `Task.withDeadline` member. When it ships, prefer it over the manual `withThrowingTaskGroup` race pattern.
 
 ---
 

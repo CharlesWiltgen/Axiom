@@ -51,11 +51,20 @@ let lock = OSAllocatedUnfairLock(initialState: 0)
 lock.withLock { state in
     state += 1
 }
+```
 
-// Traditional (same-thread only)
-lock.lock()
-defer { lock.unlock() }
-// access protected state
+**Traditional lock/unlock — no-state form only.** `lock()` and `unlock()` are declared in
+`extension OSAllocatedUnfairLock where State == ()`, so they exist only on a lock that
+carries no state. Calling them on `OSAllocatedUnfairLock(initialState: 0)` is a compile
+error: *referencing instance method 'lock()' on 'OSAllocatedUnfairLock' requires the types
+'Int' and '()' be equivalent*. Reach for them on a bare gate:
+
+```swift
+let gate = OSAllocatedUnfairLock()
+
+gate.lock()
+// guarded work
+gate.unlock()
 ```
 
 **Properties**:
@@ -140,26 +149,15 @@ final class FastCounter: Sendable {
 }
 ```
 
-### Pattern 5: iOS 16 Fallback
-
-```swift
-#if compiler(>=6.0)
-import Synchronization
-typealias Lock<T> = Mutex<T>
-#else
-import os
-// Use OSAllocatedUnfairLock for iOS 16-17
-#endif
-```
-
 ## Danger: Mixing with Swift Concurrency
 
 ### Never Hold Locks Across Await
 
 ```swift
-// ❌ DEADLOCK RISK
+// ❌ Won't compile: withLock takes a synchronous closure, so it cannot suspend.
+// This is not a deadlock you can hit and debug — the compiler rejects it outright.
 mutex.withLock {
-    await someAsyncWork()  // Task suspends while holding lock!
+    await someAsyncWork()
 }
 
 // ✅ SAFE: Release before await
@@ -250,9 +248,9 @@ Need synchronization?
 ├─ Lock-free operation needed?
 │  └─ Simple counter/flag? → Atomic
 │  └─ Complex state? → Mutex
-├─ iOS 18+ available?
-│  └─ Yes → Mutex
-│  └─ No, iOS 16+? → OSAllocatedUnfairLock
+├─ Need lock/unlock rather than a closure?
+│  └─ Yes → OSAllocatedUnfairLock (no-state form)
+│  └─ No → Mutex
 ├─ Need suspension points?
 │  └─ Yes → Actor (not lock)
 ├─ Cross-await access?
@@ -296,13 +294,17 @@ doWork(with: data)
 ### Mistake 3: Mixing Lock Styles
 
 ```swift
-// ❌ Don't mix lock/unlock with withLock
-lock.lock()
-lock.withLock { /* ... */ }  // Deadlock!
-lock.unlock()
+// Both styles only exist on the no-state form: lock()/unlock() are declared
+// `where State == ()`, and a state-carrying lock is reached through withLock.
+let gate = OSAllocatedUnfairLock()
+
+// ❌ Don't mix them
+gate.lock()
+gate.withLock { /* ... */ }  // Deadlock!
+gate.unlock()
 
 // ✅ Pick one style
-lock.withLock { /* all work here */ }
+gate.withLock { /* all work here */ }
 ```
 
 ## Memory Ordering Quick Reference

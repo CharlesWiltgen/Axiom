@@ -6,7 +6,7 @@ Synchronously access actor-isolated state when you **know** you're already on th
 ## When to Use
 
 ✅ **Use when:**
-- Testing MainActor code synchronously (avoiding Task overhead)
+- Testing MainActor code synchronously with a `@MainActor` test (avoiding Task overhead)
 - Legacy delegate callbacks documented to run on main thread
 - Performance-critical code avoiding async hop overhead
 - Protocol conformances where callbacks are guaranteed on specific actor
@@ -34,7 +34,7 @@ static func assumeIsolated<T>(
 ### Custom Actor assumeIsolated
 
 ```swift
-func assumeIsolated<T>(
+nonisolated func assumeIsolated<T>(
     _ operation: (isolated Self) throws -> T,
     file: StaticString = #fileID,
     line: UInt = #line
@@ -56,12 +56,13 @@ func assumeIsolated<T>(
 ### Pattern 1: Testing MainActor Code
 
 ```swift
-@Test func viewModelUpdates() {
-    MainActor.assumeIsolated {
-        let vm = ViewModel()
-        vm.update()
-        #expect(vm.state == .updated)
-    }
+// @MainActor on the test gives synchronous main-actor access, no Task hop.
+// A nonisolated @Test body does NOT run on the main actor, so calling
+// MainActor.assumeIsolated there would trap.
+@MainActor @Test func viewModelUpdates() {
+    let vm = ViewModel()
+    vm.update()
+    #expect(vm.state == .updated)
 }
 ```
 

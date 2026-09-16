@@ -64,13 +64,27 @@ class ViewModel: ObservableObject {
 @MainActor
 class ViewModel: ObservableObject {
     func process() async {
-        // `Task.detached` is correct here — `Task {}` would inherit @MainActor
-        // and run `heavyComputation()` ON the main thread. In Swift 6.2+,
-        // prefer marking `heavyComputation()` `@concurrent` and calling it directly.
+        // `Task.detached` is correct for the synchronous `heavyComputation()` above —
+        // `Task {}` would inherit @MainActor and run it ON the main thread.
         let result = await Task.detached {
             heavyComputation()
         }.value
         self.data = result
+    }
+}
+
+// ✅ Preferred in Swift 6.2+ when the work can become `async`: `@concurrent` runs it
+// off the caller's actor, so the detached task isn't needed. Both halves matter —
+// `@concurrent` is only valid on an `async` function, so mark it *and* make it async.
+@concurrent
+func heavyComputation() async -> Int {
+    // heavy work, off the main actor
+}
+
+@MainActor
+class BackgroundViewModel: ObservableObject {
+    func process() async {
+        self.data = await heavyComputation()
     }
 }
 ```
@@ -125,8 +139,15 @@ actor DataProcessor {
 
 ```swift
 // ❌ Blocks cooperative thread
+// `wait()` inside a `Task` is unavailable from async contexts — it doesn't compile
+// in Swift 6 mode. The reachable hazard is a *synchronous* helper that blocks, which
+// the compiler allows and which occupies a cooperative thread for the whole wait.
+func waitForSignal(_ semaphore: DispatchSemaphore) {
+    semaphore.wait()
+}
+
 Task {
-    semaphore.wait()  // NEVER do this
+    waitForSignal(semaphore)  // NEVER do this
     // ...
     semaphore.signal()
 }
@@ -144,9 +165,13 @@ Task {
 
 **Debug flag**:
 ```
-SWIFT_CONCURRENCY_COOPERATIVE_THREAD_BOUNDS=1
+LIBDISPATCH_COOPERATIVE_POOL_STRICT=1
 ```
-Detects unsafe blocking in async context.
+Forces the cooperative pool to a single thread, so with only one worker a blocked task
+stalls everything instead of merely occupying one of several threads. Measured on
+macOS 27 / Swift 6.4: 8 concurrent CPU-bound tasks ran on 8 threads without the flag,
+on 1 thread with it. The identifier is present in the libdispatch shipped with the
+iOS 27 simulator runtime.
 
 ## Workflow 4: Priority Inversion
 
@@ -189,9 +214,15 @@ Run these checks first:
 
 2. **Holding locks across await?**
    ```swift
-   // ❌ Deadlock risk
-   mutex.withLock {
-       await something()  // Never!
+   // ❌ Holding a lock across `await` — not expressible with `Mutex`: `withLock` takes
+   // a synchronous body, so `await` inside it is a compile error. The primitives that
+   // could hold a lock across a suspension (`NSLock.lock()`, `os_unfair_lock_lock()`,
+   // `DispatchSemaphore.wait()`) are all unavailable from async contexts, so the
+   // compiler prevents this rather than deadlocking on it.
+
+   // ✅ Keep lock scope synchronous and short
+   mutex.withLock { state in
+       state += 1
    }
    ```
 
@@ -211,7 +242,9 @@ Run these checks first:
    ```
 
 4. **DispatchSemaphore in async context?**
-   - Always unsafe — use `withCheckedContinuation` instead
+   - `wait()` is unavailable from async contexts — in Swift 6 mode the compiler rejects
+     it outright, so the hazard is a synchronous helper that blocks a cooperative thread
+   - Bridge with `withCheckedContinuation` instead
 
 ## Common Issues Summary
 
