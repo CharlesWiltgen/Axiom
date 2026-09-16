@@ -29,6 +29,21 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const LEAKING_FILE = ".claude/rules/skill-development.md";
 const CANONICAL_FILE = ".claude/skills/preflight/skills/behavioral-testing.md";
 
+/**
+ * Both subjects live under `.claude/`, which is gitignored local dev state. In a fresh
+ * checkout — CI, or anyone else's clone — neither file exists, so there is nothing to
+ * guard and these tests skip instead of failing on ENOENT. They run wherever the dev
+ * state is present, which is the only place a behavioral test could be exposed to the
+ * leak they exist to catch.
+ *
+ * Skipped per test, not as a group: deleting the canonical file while the rules file
+ * remains is exactly the "fixed it by deleting the content" regression the second test
+ * is here to catch, and it must still fail in that case.
+ */
+const has = (rel: string) => fs.existsSync(path.join(root, rel));
+const absent = (rel: string) =>
+  has(rel) ? false : `${rel} is not present in this checkout (gitignored dev state)`;
+
 /** Payload that lets a subject recognise the manipulation being applied to it. */
 const FORBIDDEN_IN_LEAKING_FILE: ReadonlyArray<readonly [label: string, pattern: RegExp]> = [
   ["pressure-scenario type names", /\b(sunk cost|scope creep|existential threat)\b/i],
@@ -38,7 +53,7 @@ const FORBIDDEN_IN_LEAKING_FILE: ReadonlyArray<readonly [label: string, pattern:
   ["scenario template scaffold", /\*\*Pressure\*\*:|\*\*Expected with skill\*\*:|Anti-pattern without skill/i],
 ];
 
-test("the auto-surfaced rules file carries no behavioral-test methodology", () => {
+test("the auto-surfaced rules file carries no behavioral-test methodology", { skip: absent(LEAKING_FILE) }, () => {
   const text = fs.readFileSync(path.join(root, LEAKING_FILE), "utf8");
   for (const [label, pattern] of FORBIDDEN_IN_LEAKING_FILE) {
     assert.equal(
@@ -51,7 +66,7 @@ test("the auto-surfaced rules file carries no behavioral-test methodology", () =
   }
 });
 
-test("the canonical protocol file still holds that methodology", () => {
+test("the canonical protocol file still holds that methodology", { skip: absent(LEAKING_FILE) }, () => {
   // The other half of the invariant: relocation, not deletion. If someone "fixes"
   // the test above by deleting the content outright, this fails.
   const text = fs.readFileSync(path.join(root, CANONICAL_FILE), "utf8");
@@ -64,7 +79,7 @@ test("the canonical protocol file still holds that methodology", () => {
   }
 });
 
-test("pointers in the rules file stay bare", () => {
+test("pointers in the rules file stay bare", { skip: absent(LEAKING_FILE) }, () => {
   // Explaining the fix in the leaking file re-creates the leak: a subject that reads
   // why the protocol moved learns that arms exist and how they differ. Verified —
   // the first attempt at this fix did exactly that and was caught by re-measurement.
