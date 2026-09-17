@@ -8,7 +8,7 @@ import { isCursorGeneratedPath } from './cursor-output.js';
 import { isCodexGeneratedPath } from './codex-output.js';
 import { DOC_STAT_FILES, docStatValues, applyDocStats, checkMarkerSpec } from './doc-stats.js';
 import { isGeneratedSubSkill } from './inline-auditors.ts';
-import { manifestSkillsFromDisk } from './skill-listing.ts';
+import { manifestUpdates } from './manifest.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -28,198 +28,6 @@ if (!version?.match(VERSION_RE)) {
 
 const root = path.join(__dirname, '..');
 const pluginDir = path.join(root, '.claude-plugin/plugins/axiom');
-
-// Category mapping patterns for skills
-// Ordered from most specific to least specific to prevent greedy matching
-const CATEGORY_PATTERNS = {
-  'Utility': ['getting-started'],
-  'Testing': ['testing', 'ui-testing', 'simulator'],
-  'Persistence & Storage': ['swiftdata', 'grdb', 'sqlite', 'cloudkit', 'icloud', 'storage', 'realm', 'core-data', 'database', 'cloud-sync'],
-  'Integration': ['networking', 'app-intent', 'storekit', 'in-app', 'foundation-model', 'extension', 'widget', 'avfoundation', 'now-playing', 'app-shortcut', 'core-spotlight', 'app-discovera', 'network-framework'],
-  'Build & Environment': ['build', 'xcode'],
-  'Code Quality': ['concurrency', 'codable'],
-  'UI & Design': ['swiftui', 'hig', 'liquid-glass', 'layout', 'nav', 'gesture', 'textkit', 'typography', 'animation', 'auto-layout', 'accessibility'],
-  'Debugging': ['debugging', 'profiling', 'memory', 'objc-block']
-};
-
-// Categorize a skill based on its name and description
-function categorizeSkill(skillName, description) {
-  const lowerName = skillName.toLowerCase();
-  const lowerDesc = description.toLowerCase();
-
-  // First pass: match by NAME only (more reliable)
-  for (const [category, patterns] of Object.entries(CATEGORY_PATTERNS)) {
-    for (const pattern of patterns) {
-      if (lowerName.includes(pattern)) {
-        return category;
-      }
-    }
-  }
-
-  // Second pass: match by description (fallback)
-  for (const [category, patterns] of Object.entries(CATEGORY_PATTERNS)) {
-    for (const pattern of patterns) {
-      if (lowerDesc.includes(pattern)) {
-        return category;
-      }
-    }
-  }
-
-  // Default to Debugging for diagnostic skills
-  if (skillName.endsWith('-diag')) {
-    return 'Debugging';
-  }
-
-  // Default category for unmatched skills
-  return 'Integration';
-}
-
-// Group skills by category
-function categorizeSkills(skills) {
-  const categories = {};
-
-  for (const skill of skills) {
-    const category = categorizeSkill(skill.name, skill.description);
-
-    if (!categories[category]) {
-      categories[category] = [];
-    }
-
-    categories[category].push(skill);
-  }
-
-  // Sort skills within each category by name
-  for (const category of Object.keys(categories)) {
-    categories[category].sort((a, b) => a.name.localeCompare(b.name));
-  }
-
-  return categories;
-}
-
-// Generate skills section markdown
-function generateSkillsSection(categories) {
-  let markdown = '## Skills Reference\n\n';
-
-  // Define category order (matching our docs structure)
-  const categoryOrder = [
-    'Utility',
-    'Build & Environment',
-    'UI & Design',
-    'Code Quality',
-    'Debugging',
-    'Persistence & Storage',
-    'Integration',
-    'Testing'
-  ];
-
-  for (const category of categoryOrder) {
-    const skills = categories[category];
-    if (!skills || skills.length === 0) continue;
-
-    markdown += `### ${category}\n\n`;
-
-    for (const skill of skills) {
-      // Truncate description to first sentence or 120 chars
-      let desc = skill.description;
-      const firstSentence = desc.match(/^[^.!?]+[.!?]/);
-      if (firstSentence) {
-        desc = firstSentence[0];
-      } else if (desc.length > 120) {
-        desc = desc.substring(0, 120) + '...';
-      }
-
-      markdown += `- **${skill.name}** — ${desc}\n`;
-    }
-
-    markdown += '\n';
-  }
-
-  return markdown;
-}
-
-// Generate agents section markdown
-function generateAgentsSection(agents) {
-  let markdown = '## Agents Reference\n\n';
-  markdown += 'When user asks to "audit", "review", "scan", or "check" code, launch the appropriate agent:\n\n';
-
-  // Sort agents by name
-  const sortedAgents = [...agents].sort((a, b) => a.name.localeCompare(b.name));
-
-  for (const agent of sortedAgents) {
-    // Extract key phrase from description (first clause before dash or comma)
-    let desc = agent.description;
-    const match = desc.match(/^[^—,]+/);
-    if (match) {
-      desc = match[0].trim();
-      // Remove "Use this agent when" prefix if present
-      desc = desc.replace(/^Use this agent when (the user mentions )?/i, '');
-      desc = desc.replace(/^Automatically (runs|scans)/i, 'Scans for');
-    }
-
-    markdown += `- **${agent.name}** — ${desc}\n`;
-  }
-
-  markdown += '\n';
-
-  return markdown;
-}
-
-// Read agents from disk — name + description from each agent's frontmatter.
-//
-// Agents are deliberately NOT listed in claude-code.json (see
-// .claude/rules/skill-descriptions.md: only router skills go in the
-// manifest, to stay under the description budget). Reading
-// `claudeCode.agents` therefore always yielded [], so /axiom:ask shipped
-// claiming "0 autonomous agents" with an empty Agents Reference — the
-// natural-language entry point could not route to any of them.
-function readAgentsFromDisk(agentsDir) {
-  if (!fs.existsSync(agentsDir)) return [];
-  return fs.readdirSync(agentsDir)
-    .filter((f) => f.endsWith('.md'))
-    .map((f) => {
-      const content = fs.readFileSync(path.join(agentsDir, f), 'utf8');
-      const fm = content.match(/^---\n([\s\S]*?)\n---/);
-      const name = f.replace(/\.md$/, '');
-      if (!fm) return { name, description: '' };
-      // description is a `|` block scalar in every agent; take its first
-      // non-empty line, which is the trigger sentence.
-      const lines = fm[1].split('\n');
-      let description = '';
-      for (let i = 0; i < lines.length; i++) {
-        if (!/^description:\s*[|>][-+]?\s*$/.test(lines[i])) continue;
-        for (let j = i + 1; j < lines.length; j++) {
-          if (/^[a-zA-Z][\w-]*:/.test(lines[j])) break;
-          const text = lines[j].trim();
-          if (text) { description = text; break; }
-        }
-        break;
-      }
-      return { name, description };
-    });
-}
-
-// Generate complete ask.md from template
-function generateAskMd(claudeCode, agentsDir) {
-  const skills = claudeCode.skills || [];
-  const agents = readAgentsFromDisk(agentsDir);
-
-  // Group skills by category
-  const categories = categorizeSkills(skills);
-
-  // Generate sections
-  const skillsSection = generateSkillsSection(categories);
-  const agentsSection = generateAgentsSection(agents);
-
-  // Read template and replace placeholders
-  const templatePath = path.join(__dirname, 'templates/ask.md.template');
-  const template = fs.readFileSync(templatePath, 'utf8');
-
-  return template
-    .replace('{{skillCount}}', skills.length)
-    .replace('{{agentCount}}', agents.length)
-    .replace('{{skillsSection}}', skillsSection)
-    .replace('{{agentsSection}}', agentsSection);
-}
 
 try {
   // Auto-count components
@@ -337,28 +145,10 @@ try {
     throw new Error(`Failed to parse claude-code.json: ${err.message}`);
   }
   claudeCode.version = version;
-  // Regenerate the skills array from SKILL.md frontmatter. Claude Code builds
-  // its listing from the frontmatter and never reads this file, so a
-  // hand-edited array silently drifts — seven descriptions had, and /axiom:ask
-  // (generated below from this array) shipped the stale text to users.
-  claudeCode.skills = manifestSkillsFromDisk(
-    pluginDir,
-    (claudeCode.skills ?? []).map((s) => s.name),
-  );
-  updates.push({
-    path: claudeCodePath,
-    content: JSON.stringify(claudeCode, null, 2) + '\n',
-    label: '.claude-plugin/plugins/axiom/claude-code.json'
-  });
-
-  // Generate ask.md from template + manifest skills + on-disk agents
-  const askMdPath = path.join(pluginDir, 'commands/ask.md');
-  const askMdContent = generateAskMd(claudeCode, agentsDir);
-  updates.push({
-    path: askMdPath,
-    content: askMdContent,
-    label: '.claude-plugin/plugins/axiom/commands/ask.md'
-  });
+  // Regenerate the frontmatter-derived artifacts — the skills array and the
+  // /axiom:ask built from it. Same code path as `npm run build:manifest`, so a
+  // content-only regeneration and a release cannot diverge.
+  updates.push(...manifestUpdates(claudeCode, pluginDir));
 
   // 1b. Prepare .claude-plugin/plugin.json — the manifest Claude Code actually
   // reads. Without it the plugin name falls back to the install directory (a

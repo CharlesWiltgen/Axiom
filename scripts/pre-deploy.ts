@@ -376,7 +376,7 @@ if (claudeCode) {
   if (drifted.length > 0) {
     error(
       "manifest-drift",
-      `${drifted.length} manifest description(s) drifted from SKILL.md frontmatter, starting with "${drifted[0].name}" — regenerate with scripts/set-version.js`,
+      `${drifted.length} manifest description(s) drifted from SKILL.md frontmatter, starting with "${drifted[0].name}" — regenerate with \`npm run build:manifest\``,
     );
   } else {
     console.log(

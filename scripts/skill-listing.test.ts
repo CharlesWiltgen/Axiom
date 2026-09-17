@@ -145,7 +145,7 @@ test("the committed manifest matches what disk generates", () => {
       entry.description,
       byName.get(entry.name),
       `${entry.name}: claude-code.json has drifted from SKILL.md frontmatter — ` +
-        `regenerate with scripts/set-version.js`,
+        `regenerate with \`npm run build:manifest\``,
     );
   }
   assert.deepEqual(
