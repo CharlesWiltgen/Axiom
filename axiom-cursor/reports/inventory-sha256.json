@@ -233,8 +233,8 @@
     },
     {
       "path": "commands/axiom-ask.md",
-      "sha256": "f3a01f84ec3e4f60cdbef0f9a8df679c546fd570b771f2be0772b7a641a2e595",
-      "bytes": 8089
+      "sha256": "d892db73b8641b05dddc86df3ea3773c770e432c1a65757c01d865d01db451e4",
+      "bytes": 8220
     },
     {
       "path": "commands/axiom-audit.md",
@@ -1879,7 +1879,7 @@
   ],
   "totals": {
     "files": 375,
-    "bytes": 7514284
+    "bytes": 7514415
   },
   "excludedMirrors": 30,
   "classes": {
