@@ -39,7 +39,7 @@ Skip: `*Tests.swift`, `*Previews.swift`, `*/Pods/*`, `*/Carthage/*`, `*/.build/*
 Glob: **/*.swift (excluding test/vendor paths)
 Grep for:
   - `struct.*:.*View` — SwiftUI views
-  - `@Observable class` — modern observable models
+  - `@Observable` — modern observable models (the `class` or `final class` is often on the line after the attribute; read before counting)
   - `ObservableObject` — legacy observable models
   - `@State`, `@Binding`, `@Bindable` — state ownership
   - `@Environment` — environment injection
@@ -50,8 +50,7 @@ Grep for:
 
 ```
 Grep for:
-  - `Task {` in files with `var body` — async work in views
-  - `withAnimation.*await` — async boundary violations
+  - `Task {`, `.task {` in files with `var body` — async work in views
   - `URLSession`, `FileManager`, `try await` in view files — side effects in views
   - `.filter(`, `.sorted(`, `.map(` in view files — data transforms in views
 ```
@@ -89,22 +88,22 @@ Run all 5 existing detection categories. For every grep match, use Read to verif
 
 ### 2. Async Boundary Violations (CRITICAL)
 
-**Pattern**: `Task { }` performing multi-step business logic in views; `withAnimation` wrapping `await` calls
-**Search**: `Task {` in view files — read context, check for `URLSession`, `FileManager`, `try await`, multi-step logic; `withAnimation` followed by `await` within 5 lines
+**Pattern**: `Task { }` or a `.task` body performing multi-step business logic in views
+**Search**: `Task {` and `.task` in view files — read context, check for `URLSession`, `FileManager`, `try await`, multi-step logic
 **Issue**: State-as-Bridge violation, unpredictable animation timing, untestable side effects
-**Fix**: Synchronous state mutation in view, async work in model
+**Fix**: Synchronous state mutation in view, async work in model. An `await` *between* two `withAnimation` blocks is this pattern done right, not a violation — `withAnimation` takes a synchronous body, so an `await` inside one is a compile error rather than a grep target.
 
 ### 3. Property Wrapper Misuse (HIGH)
 
 **Pattern**: `@State var item: Item` (non-private)
 **Search**: `@State var` without `private`/`fileprivate` — read context to see whether the value comes from the parent
-**Issue**: If it comes from the parent, this creates a local copy that loses updates from the source of truth. If the view genuinely owns it, the declaration is still `internal`, which forfeits the Xcode 27 `@State` macro's deferred initial value — the initializer then runs on **every** view init instead of at most once per view identity. `private(set)` does not help; its getter is internal.
+**Issue**: If it comes from the parent, this creates a local copy that loses updates from the source of truth. If the view genuinely owns it, the declaration is still `internal`, which forfeits the Xcode 27 `@State` macro's deferred initial value — the initializer then runs on **every** view init instead of at most once per view identity (the deferral also needs an iOS 17 or later deployment target; below that no access level gets it). `private(set)` does not help; its getter is internal.
 **Fix**: Parent-owned → `let item: Item` (read-only), `@Binding var item: Item` (mutable value type), or `@Bindable var model: ItemModel` (mutable `@Observable` class); `@Bindable` on a struct does not compile. View-owned → add `private`.
 
 ### 4. God ViewModel (MEDIUM)
 
-**Pattern**: `@Observable class` or `ObservableObject` class with >20 stored properties or mixing unrelated domains
-**Search**: `@Observable class`, `ObservableObject` — read the class, count stored properties, check domain coherence
+**Pattern**: `@Observable` or `ObservableObject` class with >20 stored properties or mixing unrelated domains
+**Search**: `@Observable`, `ObservableObject` — read the class (the `class` keyword may be on the next line), count stored properties, check domain coherence
 **Issue**: SRP violation, hard to test, unnecessary view updates when unrelated state changes
 **Fix**: Split into smaller, focused models
 

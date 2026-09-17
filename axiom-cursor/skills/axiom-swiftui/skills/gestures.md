@@ -452,7 +452,7 @@ var body: some View {
     .gesture(
       DragGesture()
         .onEnded { value in
-          // value.velocity (iOS 17+) gives velocity as CGSize
+          // value.velocity gives velocity as CGSize (derived from predictedEndLocation)
           velocity = value.velocity
 
           // Animate with momentum
@@ -464,7 +464,7 @@ var body: some View {
 }
 ```
 
-### Predicted End Location (iOS 16+)
+### Predicted End Location
 
 ```swift
 DragGesture()
@@ -573,22 +573,26 @@ Rectangle()
 ### Platform-Specific Gestures
 
 ```swift
+#if os(iOS)
+private let minimumDragDistance: CGFloat = 10  // Smaller threshold for touch
+#elseif os(macOS)
+private let minimumDragDistance: CGFloat = 1   // Precise mouse control
+#else
+private let minimumDragDistance: CGFloat = 20  // Larger for spatial gestures
+#endif
+
 var body: some View {
   Image("photo")
     .gesture(
-      #if os(iOS)
-      DragGesture(minimumDistance: 10) // Smaller threshold for touch
-      #elseif os(macOS)
-      DragGesture(minimumDistance: 1) // Precise mouse control
-      #else
-      DragGesture(minimumDistance: 20) // Larger for spatial gestures
-      #endif
+      DragGesture(minimumDistance: minimumDragDistance)
         .onChanged { value in
           updatePosition(value.translation)
         }
     )
 }
 ```
+
+`#if` is a compilation directive, not an expression — it cannot stand in argument position inside a modifier chain. Vary the value, not the gesture.
 
 ---
 
@@ -624,12 +628,12 @@ Image(systemName: "trash")
 
 `hoverEffect` applies the system's iPad pointer treatment (shape morphing/lift) with no manual state. Prefer it over hand-rolled `onHover` styling for standard controls — it matches what users see everywhere else.
 
-`pointerStyle` (custom cursor shapes) is macOS-only — gate it with `#if os(macOS)`; there is no iOS equivalent.
+`pointerStyle` (custom cursor shapes) is macOS 15+ / visionOS 2+ — gate it with `#if os(macOS) || os(visionOS)`; there is no iOS, tvOS, or watchOS equivalent.
 
 ### Keyboard Affordances That Pair With Pointer
 
 - `.keyboardShortcut(.defaultAction)` (Return) and `.keyboardShortcut(.cancelAction)` (Escape) on a presentation's primary/cancel buttons make sheets and dialogs keyboard-complete — pointer users are usually keyboard users.
-- `onModifierKeysChanged(mask:initial:_:)` observes ⌘/⇧/⌥ state — the hook for modifier-extended selection and drag variants on iPad and Mac.
+- `onModifierKeysChanged(mask:initial:_:)` observes ⌘/⇧/⌥ state — the hook for modifier-extended selection and drag variants on Mac (macOS 15+). It is unavailable on iOS, so modifier handling on iPad goes through the UIKit path below.
 - UIKit-side pointer and hardware-keyboard APIs (`UIPointerInteraction`, `UIKeyCommand`) live in axiom-uikit (skills/uikit-modernization.md); mouse/keyboard as *game* input (`GCMouse`, `GCKeyboard`) lives in axiom-games (skills/game-input.md).
 
 ---

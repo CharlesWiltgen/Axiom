@@ -56,17 +56,17 @@ Debugging is miserable if you conflate these:
 
 ## Setup — Device Flow (the part that differs from simulator)
 
-Injecting into a **physical device** needs three things the simulator does not:
+Injecting into a **physical device** needs two things the simulator does not:
 
-1. InjectionNext menu → **"Enable Devices"**.
-2. → **"Enable testing on device"** when prompted.
-3. It copies a command for the required libraries to your clipboard → paste it into your target as a **Run Script build phase**.
-4. In the popup, select your project's **"expanded codesigning identity"** (read it from the build logs).
-5. Run the app → the icon turns **orange**.
+1. InjectionNext menu → **"Enable Devices"** (the same switch lives in the app's settings as **Device Support → Enable Device Injection**).
+2. In the window that pops up, select your project's **"expanded codesigning identity"** (read it from the codesigning phase of your build logs).
+3. Run the app → the icon turns **orange**.
+
+**Don't confuse this with on-device *test* injection.** **On-Device Test Injection → Enable Device Testing** is a separate toggle for injecting XCTest bundles: turning it on puts a `copy_bundle.sh` snippet on your clipboard to paste into your target as a **Run Script build phase**. Leave it off unless you add that phase — with the toggle on and `copy_bundle.sh` not shipping the frameworks, an app that doesn't itself link XCTest crashes at `dlopen` (`Library not loaded: @rpath/XCTest.framework/XCTest`).
 
 **Why the codesigning step matters**: the dylibs InjectionNext injects must be signed to match the running app, so the Debug build needs a **valid development identity** (the same one the project uses). If the signing doesn't match, the injection bundle silently fails to load and the icon stays purple (never reaches orange). This is the most common device setup trap.
 
-**Quirk to expect** (verbatim from the docs): *"Device will not connect to the app first time after unlocking it. If at first it doesn't succeed, try again."*
+**Quirk to expect** (from the docs): *"Sometimes a device will not connect to the app first time after unlocking it. If at first it doesn't succeed, try again."*
 
 ## Setup — Ergonomics (Inject, for SwiftUI)
 
@@ -89,9 +89,9 @@ Injecting into a **physical device** needs three things the simulator does not:
 
 Setup fails *silently*: a flag on the wrong config, a missing run-script, or wrong signing leaves the app running normally with **no error** — it just never injects. Verify with InjectionNext's own signals; the agent does not need to ask "is the icon orange?":
 
-- The injected bundle prints **`💉`-prefixed** messages to the *running app's console* — e.g. `💉 Compiling …/File.swift`, `💉 Loading …` — and compile failures as plain text. That console stream is exactly what **`xclog` captures**.
-- **Verify loop**: start `xclog` on the running app → edit a view body → save → watch for the `💉` confirmation line. No `💉` after a save = injection isn't wired (check the gotchas below). Compile-failure text = the edit is bad, not the setup.
-- **Key on the `💉` prefix**, not exact strings — markers can shift between versions; the prefix is the stable convention, and the icon (orange/green/yellow) is the human fallback.
+- The injected code prints **`🔥`-prefixed** messages to the *running app's console* — `🔥 Platform connected: iPhoneSimulator` (or `iPhoneOS` on a device) when the app connects, `🔥 Recompiling: /path/to/File.swift` on each save — and compile failures as **`🔥 ⚠️ …`**. That console stream is exactly what **`xclog` captures**.
+- **Verify loop**: start `xclog` on the running app → edit a view body → save → watch for the `🔥 Recompiling:` line. No `🔥` after a save = injection isn't wired (check the gotchas below). A `🔥 ⚠️` line = the edit is bad, not the setup.
+- **Key on the `🔥` prefix**, not exact strings — markers can shift between versions; the prefix is the stable convention, and the icon (orange/green/yellow) is the human fallback. The `💉` marker in older InjectionIII writeups belongs to that engine, not this one.
 
 ## What Injects vs What Forces a Rebuild
 
@@ -108,9 +108,9 @@ When an edit doesn't take and the console shows no compile error, assume you cha
 
 | Gotcha | Symptom | Fix |
 |---|---|---|
-| Flag on Release (or all configs) | Injection never connects; no `💉` | `-Xlinker -interposable` on **Debug only** |
+| Flag on Release (or all configs) | Release build keeps interposable symbols and skips those optimizations | `-Xlinker -interposable` on **Debug only** |
 | Flag missing from SPM target | Views in that package never inject | Add `unsafeFlags` to the package target (Setup step 4) |
-| Wrong/absent codesigning identity (device) | Bundle won't load; icon stays purple | Select the project's expanded dev identity (Device step 4) |
+| Wrong/absent codesigning identity (device) | Bundle won't load; icon stays purple | Select the project's expanded dev identity (Device step 2) |
 | `@ObserveInjection` without `.enableInjection()` | Code injects but view doesn't refresh | Add `.enableInjection()` as the last modifier |
 | Expecting a stored-property/signature change to inject | Save does nothing, no error | Rebuild once (see table above) |
 | Xcode 16.3+ without `EMIT_FRONTEND_COMMAND_LINES` | Saves stop triggering recompiles | Add the user-defined build setting (Engine step 6) |

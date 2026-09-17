@@ -43,15 +43,15 @@ If you're doing ANY of these, STOP and use the patterns in this skill:
 
 ### ❌ CRITICAL — Never Do These
 
-#### 1. Using deprecated NavigationView on iOS 16+
+#### 1. Using NavigationView on iOS 16+
 ```swift
-// ❌ WRONG — Deprecated, different behavior on iOS 16+
+// ❌ WRONG — No NavigationPath support; behavior differs across iOS versions
 NavigationView {
     List { ... }
 }
 .navigationViewStyle(.stack)
 ```
-**Why this fails** NavigationView is deprecated since iOS 16. It lacks NavigationPath support, making programmatic navigation and deep linking unreliable. Different behavior across iOS versions causes bugs.
+**Why this fails** NavigationView lacks NavigationPath support, making programmatic navigation and deep linking unreliable. Different behavior across iOS versions causes bugs. The SDK marks it `deprecated: 100000.0` — a soft, undated deprecation that carries no compiler warning, so nothing will tell you to migrate.
 
 #### 2. Using view-based NavigationLink for programmatic navigation
 ```swift
@@ -60,7 +60,7 @@ NavigationLink("Recipe") {
     RecipeDetail(recipe: recipe)  // View destination, no value
 }
 ```
-**Why this fails** View-based links cannot be controlled programmatically. No way to deep link or pop to this destination. Deprecated since iOS 16.
+**Why this fails** View-based links cannot be controlled programmatically. No way to deep link or pop to this destination. The form itself is not deprecated — the deprecated ones are `NavigationLink(destination:isActive:label:)` and the `tag:`/`selection:` initializers (iOS 16).
 
 #### 3. Putting navigationDestination inside lazy containers
 ```swift
@@ -101,16 +101,18 @@ class Router: ObservableObject {
     @Published var path = NavigationPath()  // No @MainActor
 }
 ```
-**Why this fails** In Swift 6 strict concurrency, @Published properties accessed from SwiftUI views require MainActor isolation. Causes data race warnings and potential crashes.
+**Why this fails** Navigation state is mutated wherever navigation is triggered, so without isolation a background mutation races with the view update. This shape compiles clean, though — no warning will tell you, so treat main-actor isolation as a design rule rather than something the compiler enforces here.
 
 #### 7. Not handling navigation state in multi-tab apps
 ```swift
-// ❌ WRONG — Shared NavigationPath across tabs
-TabView {
-    Tab("Home") { HomeView() }
-    Tab("Settings") { SettingsView() }
+// ❌ WRONG — One stack wraps the whole TabView
+NavigationStack(path: $path) {
+    TabView {
+        Tab("Home", systemImage: "house") { HomeView() }
+        Tab("Settings", systemImage: "gear") { SettingsView() }
+    }
 }
-// All tabs share same NavigationStack — wrong!
+// Every tab shares this one NavigationStack — wrong!
 ```
 **Why this fails** Each tab should have its own NavigationStack to preserve navigation state when switching tabs. Shared state causes confusing UX.
 
@@ -258,7 +260,11 @@ struct ContentView: View {
         path.removeLast(path.count)  // Pop to root first
 
         guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else { return }
-        let segments = components.path.split(separator: "/").map(String.init)
+        // The first element of a custom-scheme URL is the authority, not a path component
+        var segments = components.path.split(separator: "/").map(String.init)
+        if let host = components.host {
+            segments.insert(host, at: 0)
+        }
 
         var index = 0
         while index < segments.count - 1 {
@@ -464,7 +470,7 @@ struct AdaptableApp: View {
 
 ```swift
 @MainActor @Observable
-class NavigationModel: Codable {
+class NavigationModel: @MainActor Codable {
     var selectedCategory: Category?
     var recipePath: [Recipe.ID] = []  // Store IDs, not objects
 
@@ -518,7 +524,7 @@ struct ContentView: View {
 
 #### Key points
 - Store IDs, resolve to current objects
-- `@MainActor` for Swift 6 concurrency safety
+- `@MainActor` keeps the model on the main actor, so the `Codable` conformance must be isolated with it (`: @MainActor Codable`) — a bare `: Codable` cannot satisfy the nonisolated requirements from isolated properties
 - SceneStorage for automatic scene-scoped persistence
 - Use `compactMap` when resolving IDs to handle deleted items
 
@@ -600,38 +606,20 @@ struct ContentView: View {
 
 ## Anti-Patterns (DO NOT DO THIS)
 
-### ❌ Nesting NavigationStack inside NavigationStack
+### ❌ Navigating the presenting stack from inside a sheet
 
 ```swift
-// ❌ WRONG — Nested stacks
-NavigationStack {
+// ❌ WRONG — The sheet writes to the stack that presented it
+NavigationStack(path: $path) {
     SomeView()
         .sheet(isPresented: $showSheet) {
-            NavigationStack {  // Creates separate stack — confusing
-                SheetContent()
-            }
+            Button("See details") { path.append(recipe) }
         }
 }
 ```
 
-**Issue** Two navigation stacks create confusing UX. Back button behavior unclear.
-**Fix** Use single NavigationStack, present sheets without nested navigation when possible.
-
-### ❌ Using NavigationLink inside Button
-
-```swift
-// ❌ WRONG — Double navigation triggers
-Button("Go") {
-    // Some action
-} label: {
-    NavigationLink(value: item) {  // Fires on button AND link
-        Text("Item")
-    }
-}
-```
-
-**Issue** Both Button and NavigationLink respond to taps.
-**Fix** Use only NavigationLink, put action in `.simultaneousGesture` if needed.
+**Issue** A sheet is its own presentation, so the append lands on the stack behind it — the pushed screen stays hidden until the sheet dismisses.
+**Fix** Push from the sheet's own NavigationStack, or dismiss the sheet before pushing. A sheet with its own NavigationStack is normal and needs no change.
 
 ### ❌ Creating NavigationPath in view body
 
@@ -742,7 +730,7 @@ Team lead says: "Let's use NavigationView so we support iOS 15"
 
 ### Red Flags
 
-- 🚩 NavigationView deprecated since iOS 16 (2022)
+- 🚩 NavigationView is soft-deprecated — no deprecation version, no compiler diagnostic, so nothing flags it at build time
 - 🚩 Different behavior across iOS versions causes bugs
 - 🚩 No NavigationPath support — can't deep link properly
 
@@ -762,7 +750,8 @@ NavigationView limitations:
 ### Push-Back Script
 
 ```
-"NavigationView was deprecated in iOS 16 (2022). Here's the impact:
+"NavigationView is soft-deprecated — the SDK gives it no deprecation version
+and the compiler stays silent. Here's the impact:
 
 1. We lose NavigationPath — can't implement deep linking reliably
 2. Behavior differs between iOS 15 and 16 — more bugs to maintain

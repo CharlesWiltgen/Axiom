@@ -10,12 +10,12 @@ SwiftUI search is **environment-based and navigation-consumed**. You attach `.se
 | iOS | Key Additions |
 |-----|---------------|
 | 15 | `.searchable(text:)`, `isSearching`, `dismissSearch`, suggestions, `.searchCompletion()`, `onSubmit(of: .search)` |
-| 16 | Search scopes (`.searchScopes`), search tokens (`.searchable(text:tokens:)`), `SearchScopeActivation` |
-| 16.4 | Search scope `activation` parameter (`.onTextEntry`, `.onSearchPresentation`) |
-| 17 | `isPresented` parameter, `suggestedTokens` parameter |
+| 16 | Search scopes (`.searchScopes`), search tokens (`.searchable(text:tokens:)`), `suggestedTokens`, `.searchSuggestions(_:)` |
+| 16.4 | Search scope `activation` parameter (`.onTextEntry`, `.onSearchPresentation`), `SearchScopeActivation` |
+| 17 | `isPresented` parameter |
 | 17.1 | `.searchPresentationToolbarBehavior(.avoidHidingContent)` |
-| 18 | `.searchFocused($isFocused)` for programmatic focus control |
-| 26 | Bottom-aligned search, `.searchToolbarBehavior(.minimize)`, `Tab(role: .search)`, `DefaultToolbarItem(kind: .search)` — see `skills/26-ref.md` |
+| 18 | `.searchFocused($isFocused)` for programmatic focus control, `Tab(role: .search)` search tabs |
+| 26 | Bottom-aligned search, `.searchToolbarBehavior(.minimize)`, `DefaultToolbarItem(kind: .search)` — see `skills/26-ref.md` |
 
 ## When to Use This Skill
 
@@ -132,7 +132,7 @@ NavigationSplitView {
 
 Becomes `true` when the user activates search (taps the field), `false` when they cancel or you call `dismissSearch`.
 
-**Critical rule**: `isSearching` must be read from a **child** of the view that has `.searchable`. SwiftUI sets the value in the searchable view's environment and does not propagate it upward.
+**Critical rule**: `isSearching` must be read **inside the view that has `.searchable`** — that view's own body, or any descendant. SwiftUI sets the value in the environment of the view you apply the modifier to and does not propagate it upward, so an ancestor of the modified view always reads `false`.
 
 ```swift
 // Pattern: Overlay search results when searching
@@ -211,7 +211,19 @@ Pass a `suggestions` closure to `.searchable`:
 }
 ```
 
-**Availability**: iOS 15+
+**Availability**: iOS 15+. The 27.2 SDK marks this overload deprecated with the message "Use the searchable modifier with the searchSuggestions modifier" — the diagnostic is still gated, so the compiler stays silent and existing code needs no change.
+
+The current spelling splits the suggestions into their own modifier (iOS 16+):
+
+```swift
+.searchable(text: $searchText)
+.searchSuggestions {
+    ForEach(suggestedResults) { suggestion in
+        Text(suggestion.name)
+            .searchCompletion(suggestion.name)
+    }
+}
+```
 
 Suggestions appear in a list below the search field when the user is typing.
 
@@ -443,7 +455,7 @@ struct TokenSearchView: View {
 
 **Token model requirements**: Each token element must conform to `Identifiable`.
 
-### Suggested Tokens (iOS 17+)
+### Suggested Tokens (iOS 16+)
 
 ```swift
 .searchable(
@@ -456,7 +468,7 @@ struct TokenSearchView: View {
 }
 ```
 
-**Availability**: iOS 17+ adds `suggestedTokens` and `isPresented` parameters.
+**Availability**: iOS 16+ for `suggestedTokens`; iOS 17+ adds the `isPresented` parameter.
 
 ### Combined Tokens + Text Filtering
 
@@ -538,7 +550,7 @@ SwiftUI search adapts automatically per platform:
 
 | Platform | Default Behavior |
 |----------|-----------------|
-| **iOS** | Search bar in navigation bar. Scrolls out of view by default; pull down to reveal. |
+| **iOS** | iOS 26 and later: bottom-aligned by default, just above the home indicator. Through iOS 18: in the navigation bar, hidden on scroll — pull down to reveal. |
 | **iPadOS** | Same as iOS in compact; may appear in toolbar in regular width. |
 | **macOS** | Trailing toolbar search field. Always visible. |
 | **watchOS** | Dictation-first input. Search bar at top of list. |
@@ -547,12 +559,14 @@ SwiftUI search adapts automatically per platform:
 ### iOS-Specific Behavior
 
 ```swift
-// Always-visible search field (doesn't scroll away)
-.searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
-
-// Default: search field scrolls out, pull down to reveal
+// iOS 26 and later: bottom-aligned above the home indicator by default
 .searchable(text: $searchText)
+
+// Opt into the navigation-bar drawer instead: under the title, always visible
+.searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
 ```
+
+`skills/26-ref.md` covers the iOS 26 compact form, `.searchToolbarBehavior(.minimize)`.
 
 ### macOS-Specific Behavior
 
@@ -596,13 +610,13 @@ struct ParentView: View {
 
     var body: some View {
         NavigationStack {
-            ChildView(isSearching: isSearching)
+            ChildView()
                 .searchable(text: $query)
         }
     }
 }
 
-// CORRECT: Reading from child view
+// CORRECT: Reading inside the view that has .searchable
 struct ChildView: View {
     @Environment(\.isSearching) var isSearching  // Works
 
@@ -679,7 +693,7 @@ List { ... }
 
 ### 6. iOS 26 Refinements
 
-For bottom-aligned search, `.searchToolbarBehavior(.minimize)`, `Tab(role: .search)`, and `DefaultToolbarItem(kind: .search)`, see `skills/26-ref.md`. These build on the foundational APIs documented here.
+For bottom-aligned search, `.searchToolbarBehavior(.minimize)`, and `DefaultToolbarItem(kind: .search)`, see `skills/26-ref.md`. These build on the foundational APIs documented here. The search tab role, `Tab(role: .search)`, is iOS 18 rather than 26.
 
 ---
 
@@ -718,7 +732,7 @@ For bottom-aligned search, `.searchToolbarBehavior(.minimize)`, `Tab(role: .sear
 
 ## Resources
 
-**WWDC**: 2021-10176, 2022-10023
+**WWDC**: 2021-10176, 2022-10052
 
 **Docs**: /swiftui/view/searchable(text:placement:prompt:), /swiftui/environmentvalues/issearching, /swiftui/view/searchscopes(_:activation:_:), /swiftui/view/searchfocused(_:), /swiftui/searchfieldplacement
 

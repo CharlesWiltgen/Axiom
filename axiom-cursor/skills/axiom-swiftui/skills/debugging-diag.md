@@ -63,9 +63,11 @@ SwiftUI view issue after basic troubleshooting?
 │
 ├─ View not updating?
 │  ├─ Basic check: Add Self._printChanges() temporarily
-│  │  ├─ Shows "@self changed" → View value changed
+│  │  ├─ Shows "@identity" → Persistent state was recycled for a new instance
+│  │  │  └─ Pattern D3: View Identity Investigation
+│  │  ├─ Shows "@self" → The view value itself changed
 │  │  │  └─ Pattern D1: Analyze what caused view recreation
-│  │  ├─ Shows specific state property → That state triggered update
+│  │  ├─ Shows a property name ("_count changed") → That dynamic property triggered update
 │  │  │  └─ Verify: Should that state trigger update?
 │  │  └─ Nothing logged → Body not being called at all
 │  │     └─ Pattern D3: View Identity Investigation
@@ -125,25 +127,34 @@ struct MyView: View {
 }
 ```
 
-**Output interpretation**:
+**Output interpretation** (measured on iOS 27.2):
 
 ```
-# Scenario 1: View parameter changed
+# One line per body call: the causes are comma-joined on it, and the line ends with a period
+
+# Scenario 1: view value changed
 MyView: @self changed
 → Parent passed new MyView instance
 → Check parent code - what triggered recreation?
 
-# Scenario 2: State property changed
-MyView: count changed
-→ Local @State triggered update
+# Scenario 2: state property changed
+MyView: _count changed
+→ A dynamic property of this body changed, reported by its physical name:
+→ `@State var count` prints `_count`, `@State private var count` prints `__count`
 → Expected if you modified count
 
-# Scenario 3: Environment property changed
-MyView: @self changed  # Environment is part of @self
-→ Environment value changed (color scheme, locale, custom value)
+# Scenario 3: environment value changed
+MyView: _scheme changed
+→ The @Environment property that changed, by its own physical name
+→ An @Observable object read from the environment reports \Model.property
 → Pattern D4: Check environment dependencies
 
-# Scenario 4: Nothing logged
+# Scenario 4: identity changed
+MyView: @self, @identity, __count changed.
+→ @identity means the view's persistent state was recycled for a new instance of the same type
+→ Pattern D3: View identity investigation
+
+# Scenario 5: nothing logged
 → Body not being called
 → Pattern D3: View identity investigation
 ```
@@ -478,10 +489,11 @@ ls -lt ~/Library/Logs/DiagnosticReports/ | grep -i preview | head -5
 
 | Error | Cause | Fix |
 |-------|-------|-----|
-| "Cannot find in scope" | Missing dependency | Add to preview (see example below) |
-| "Fatal error: Unexpectedly found nil" | Optional unwrap failed | Provide non-nil value in preview |
-| "No such module" | Import missing | Add import statement |
-| Silent crash (no error) | State init with invalid value | Use safe defaults |
+| "cannot find 'X' in scope" | Name not visible in this file or target | Add the import, or add the file to the preview target |
+| "no such module 'X'" | Module not imported or not linked | Add the import statement / link the package |
+| "No ObservableObject of type X found" | Missing @EnvironmentObject / @Environment value | Provide it with `.environmentObject(_:)` or `.environment(_:)` |
+| "Fatal error: Index out of range" | Index past the end of a collection | Use safe defaults and bounds checks |
+| "Fatal error: Unexpectedly found nil" | Optional unwrap failed | Provide a non-nil value in preview |
 
 **Fix patterns**:
 
@@ -492,7 +504,7 @@ ls -lt ~/Library/Logs/DiagnosticReports/ | grep -i preview | head -5
         .environment(AppModel())  // Provide dependency
 }
 
-// Missing @EnvironmentObject (pre-iOS 17)
+// Missing @EnvironmentObject
 #Preview {
     ContentView()
         .environmentObject(AppModel())
@@ -701,7 +713,7 @@ If pressured to skip diagnostics:
 | Preview crashes | Missing deps / Bad init | Diagnostics button | D5 | 10 min |
 | Intermittent issues | Identity or timing | Reproduce 30+ times | D3 | 30 min |
 | Long updates (performance) | Expensive body operation | Instruments (SwiftUI + Time Profiler) | D2 | 30 min |
-| iOS 26 integration works on second activation but not first | Initialization-time side-effect (`@State` write from `.onGeometryChange`, `.task`, lazy modifier evaluation) disrupts a system reconciliation that runs once at TabView/NavigationStack setup | Strip parent view's modifier chain to bare minimum, re-add one at a time | swiftui-nav-diag Pattern 4e (concrete case) | 30-45 min |
+| iOS 26 integration works on second activation but not first | A `@State` write from `.onGeometryChange` during initial layout disrupts a system reconciliation that runs once at TabView/NavigationStack setup | Strip parent view's modifier chain to bare minimum, re-add one at a time | skills/nav-diag.md Pattern 4e (concrete case) | 30-45 min |
 
 ---
 

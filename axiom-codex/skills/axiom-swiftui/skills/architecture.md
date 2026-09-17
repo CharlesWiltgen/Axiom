@@ -133,7 +133,7 @@ struct ColorExtractorView: View {
 - Async code lives in the model (testable without SwiftUI)
 - Clear boundary between time-sensitive UI and long-running work
 
-The `@MainActor` is required, not decoration. Without it the model has no isolation, `extract(from:)` becomes `@concurrent`, and passing the model in fails under Swift 6 — `error: sending 'self.extractor' risks causing data races`. Annotate the model, not the method.
+The `@MainActor` is required, not decoration. Without it the model has no isolation, `extract(from:)` becomes `@concurrent`, and passing the model in fails under Swift 6 — `error: sending 'self.extractor' risks causing data races`. Annotate the model, not the method. The same applies to what the model holds: a service it calls across an `await` must be `Sendable` (or an actor), or the call is `error: sending 'self.service' risks causing data races`.
 
 To flip this default for a whole target instead of annotating every model, use `.defaultIsolation(MainActor.self)` — see swift-concurrency.
 
@@ -199,9 +199,9 @@ struct MenuView: View {
     }
 }
 
-// ✅ @Bindable — Need bindings to parent-owned model
+// ✅ @Bindable — Need bindings to a parent-owned @Observable class
 struct DonutRow: View {
-    @Bindable var donut: Donut  // Parent owns it
+    @Bindable var donut: DonutModel  // Parent owns it
 
     var body: some View {
         TextField("Name", text: $donut.name)  // Need binding
@@ -220,13 +220,13 @@ struct DonutLabel: View {
 
 ### `@State` is a macro now (Xcode 27) — lazy initial value, three source-compat breaks
 
-Xcode 27 reimplements `@State` as a Swift **macro**. A declaration-site initial value is now evaluated at most once for the lifetime of the view's identity instead of on every re-instantiation. Apple's stated motivation is reference types: a `@State` object used to heap-allocate on every view init. The `private` is load-bearing.
+Xcode 27 reimplements `@State` as a Swift **macro**. A declaration-site initial value is now evaluated at most once for the lifetime of the view's identity instead of on every re-instantiation — provided the declaration takes the deferred path, which needs `private` (or `fileprivate`) **and** a deployment target of iOS 17 or later (see "The access-level gate"). Apple's stated motivation is reference types: a `@State` object used to heap-allocate on every view init. The `private` is load-bearing.
 
-The cost is that `@State` "now participates in initialization the same way any stored property does" (TN3211), so the compiler diagnoses patterns it used to accept. Those breaks are build-time behavior of the Xcode 27 toolchain — they bite the moment you build with the 27 SDK, at any deployment target.
+The cost is that `@State` "now participates in initialization the same way any stored property does" (TN3211), so the compiler diagnoses patterns it used to accept. Those breaks are build-time behavior of the Xcode 27 toolchain — they bite the moment you build with the 27 SDK, at any deployment target. The deferral is the one piece of the change with an availability floor.
 
 #### The access-level gate
 
-Only a `private` or `fileprivate` declaration gets the deferral. Anything wider keeps the old eager behavior, with no diagnostic either way.
+Two conditions, not one: `private` or `fileprivate`, **and** a deployment target of iOS 17 or later. Anything wider keeps the old eager behavior, with no diagnostic either way — and below iOS 17, so does `private`.
 
 | Declaration | Initial value | Memberwise init parameter |
 |---|---|---|
@@ -235,7 +235,11 @@ Only a `private` or `fileprivate` declaration gets the deferral. Anything wider 
 | `@State var m = M()` (internal, package, public) | eager, every init | `m: M` |
 | `@State private(set) var m = M()` | eager, every init — its getter is internal | `m: M` |
 
-Both columns are one mechanism: the deferred form expands to `State._makeStorage({ M() })`, a closure; the eager form to `State(initialValue: M())`, an ordinary stored-property default. Dropping `private` so a parent can pass a value in through the memberwise init therefore forfeits the deferral, on top of the ownership bug it already is — use `@Binding` or `@Bindable` (Anti-Pattern 3).
+Both columns are one mechanism: the deferred form expands to `State._makeStorage({ M() })`, a closure; the eager form to `State(initialValue: M())`, an ordinary stored-property default.
+
+The deployment target gates the lazy half of that mechanism. The overload that keeps the closure — the one returning `LazyState<Value>` — is `@available(iOS 17.0, …)`; the `@_disfavoredOverload` directly beneath it in the SDK has the same signature, an iOS 13 floor, and a body that calls the closure on the spot. Below iOS 17 the lazy overload is not a candidate, the disfavored one wins, and `@State private var m = M()` silently falls back to the eager row — the initial value runs on every init, with no diagnostic. Only the initial-value column is gated: `_m: State<M>` in the memberwise init appears at every deployment target.
+
+Dropping `private` so a parent can pass a value in through the memberwise init therefore forfeits the deferral, on top of the ownership bug it already is — use `@Binding` or `@Bindable` (Anti-Pattern 3).
 
 #### Break 1 — assign `@State` last in a custom `init`
 
@@ -246,26 +250,26 @@ struct ReportView: View {
     @State private var model: Model
     let id: String
     let title: String
-}
 
-// ❌ @State assigned first
-//    error: variable 'self.id' used before being initialized
-//    error: 'self' used in property access '_model' before 'super.init' call
-init(id: String, title: String) {
-    self.model = Model(id: id)
-    self.id = id
-    self.title = title
-}
+    // ❌ @State assigned first
+    // init(id: String, title: String) {
+    //     self.model = Model(id: id)
+    //     self.id = id
+    //     self.title = title
+    // }
 
-// ✅ every non-@State stored property first, @State last
-init(id: String, title: String) {
-    self.id = id
-    self.title = title
-    self.model = Model(id: id)
+    // ✅ every non-@State stored property first, @State last
+    init(id: String, title: String) {
+        self.id = id
+        self.title = title
+        self.model = Model(id: id)
+    }
+
+    var body: some View { Text(title) }
 }
 ```
 
-TN3211 documents the ❌ form as an error, but Xcode 27.0 (27A266a) compiles it with no diagnostic. The compiler is not a reliable gate here; order it correctly regardless.
+TN3211 documents the ❌ form as an error, but Xcode 27.0 (27A266a) and 27.2 compile it with no diagnostic. The compiler is not a reliable gate here; order it correctly regardless.
 
 #### The silent one — never pair an inline initial value with an `init` assignment
 
@@ -707,7 +711,7 @@ struct DetailView: View {
 A SwiftUI `View` is a value-typed description of state — it already fills much of the view-model role, and Apple's guidance prescribes observable *models* read directly by views without a ViewModel layer. Two concrete costs before you add one:
 
 - **`DynamicProperty` wrappers don't work in an `@Observable` class.** `@Environment`, `@FocusState`, `@AppStorage`, `@SceneStorage`, `@ScaledMetric`, and `@Namespace` all fail to compile there — `@Observable` rewrites stored properties to computed ones, and property wrappers can't apply to those. State you move into a ViewModel is state you can no longer wire to SwiftUI.
-- **The "view structs are recreated constantly, so objects can't live there" argument is obsolete.** In Xcode 27 `@State` is a macro whose declaration-site initial value is evaluated at most once — provided the property is `private` or `fileprivate` (see "`@State` is a macro now").
+- **The "view structs are recreated constantly, so objects can't live there" argument is obsolete.** In Xcode 27 `@State` is a macro whose declaration-site initial value is evaluated at most once — provided the property is `private` or `fileprivate` and the deployment target is iOS 17 or later (see "`@State` is a macro now").
 
 ## When to Use MVVM
 
@@ -1344,14 +1348,24 @@ struct ModelDetailView: View {
 ```
 
 ```swift
+@Observable class FormData { var name = "" }  // @Environment(Type.self) needs an @Observable class
+
 // ❌ Don't use @Environment for view-local state
 struct EnvironmentFormView: View {
     @Environment(FormData.self) var formData  // ❌ Overkill for local form
+
+    var body: some View {
+        Text(formData.name)  // no $formData — @Environment has no projection
+    }
 }
 
 // ✅ Correct: @State for view-local
 struct FormView: View {
     @State private var formData = FormData()  // ✅ View owns it
+
+    var body: some View {
+        TextField("Name", text: $formData.name)
+    }
 }
 ```
 
@@ -1472,7 +1486,7 @@ Before merging SwiftUI code, verify:
 ### Animations & Async
 - State changes for animations are synchronous
 - Async boundaries use State-as-Bridge pattern
-- No `await` **inside** a `withAnimation { }` closure (an `await` *between* two `withAnimation` blocks is the State-as-Bridge pattern, not a violation)
+- An `await` *between* two `withAnimation` blocks is the State-as-Bridge pattern, not a violation — an `await` *inside* one cannot compile (`withAnimation` takes a synchronous body)
 
 ### Testability
 - Can test business logic without importing SwiftUI
@@ -1699,6 +1713,12 @@ struct OrderListView: View {
 ## After: Proper Architecture
 
 ```swift
+// Service — must be Sendable: the @MainActor ViewModel awaits it
+protocol OrderService: Sendable {
+    func fetchOrders() async throws -> [Order]
+    func complete(_ id: UUID) async throws
+}
+
 // Model — 30 lines
 struct Order: Identifiable {
     let id: UUID

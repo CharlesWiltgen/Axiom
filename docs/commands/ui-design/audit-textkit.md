@@ -1,6 +1,6 @@
 ---
 name: audit-textkit
-description: Scan for TextKit 1 fallback triggers, deprecated glyph APIs, and missing Writing Tools integration
+description: Scan for TextKit 1 fallback triggers, glyph-counted APIs, and missing Writing Tools integration
 ---
 
 # audit-textkit

@@ -83,14 +83,14 @@ Run all 10 existing detection patterns. For every grep match, use Read to verify
 ### 1. Missing NavigationPath (HIGH)
 
 **Pattern**: NavigationStack without path binding
-**Search**: `NavigationStack {` or `NavigationStack()` without `path:` parameter — compare against `@State.*NavigationPath` count
+**Search**: `NavigationStack\s*(\(\s*\))?\s*\{` (stacks opened without a `path:` argument) — compare against `@State.*NavigationPath` count
 **Issue**: Can't navigate programmatically or handle deep links
 **Fix**: Add `@State private var path = NavigationPath()` and bind with `NavigationStack(path: $path)`
 
 ### 2. Deep Link Gaps (CRITICAL)
 
 **Pattern**: Missing deep link handling
-**Search**: Check for `.onOpenURL` handler; check Info.plist for URL scheme registration
+**Search**: `Glob: **/Info.plist` and `Glob: **/*.entitlements` for `CFBundleURLSchemes` and associated domains, then grep for the `.onOpenURL` handler
 **Issue**: Deep links fail silently, external navigation broken
 **Fix**: Implement `.onOpenURL` handler that routes to correct NavigationPath destination
 
@@ -115,12 +115,12 @@ Run all 10 existing detection patterns. For every grep match, use Read to verify
 **Issue**: Undefined behavior — wrong view shown, navigation breaks
 **Fix**: Use unique types or wrapper enum with associated values
 
-### 6. Tab/Nav Integration (MEDIUM)
+### 6. Tab/Nav Integration (LOW)
 
-**Pattern**: Missing sidebar adaptable style (iOS 18+)
-**Search**: `TabView` with `NavigationStack` but no `.tabViewStyle(.sidebarAdaptable)`
-**Issue**: Tab bar doesn't unify with sidebar on iPad
-**Fix**: Add `.tabViewStyle(.sidebarAdaptable)`
+**Pattern**: TabView nesting NavigationStack without an iPad sidebar intent
+**Search**: `TabView` containing `NavigationStack` and no `.tabViewStyle(.sidebarAdaptable)`
+**Issue**: Only a gap if the app intends a sidebar on iPad — a plain tab bar is a valid design
+**Fix**: If a sidebar is intended, add `.tabViewStyle(.sidebarAdaptable)`
 
 ### 7. Missing State Preservation (HIGH)
 
@@ -132,7 +132,7 @@ Run all 10 existing detection patterns. For every grep match, use Read to verify
 ### 8. Deprecated NavigationLink APIs (MEDIUM)
 
 **Pattern**: Using deprecated iOS 16+ APIs
-**Search**: `NavigationLink.*isActive:` or `NavigationLink.*tag:.*selection:`
+**Search**: `isActive:` or `tag:` — the deprecated initializer labels; Read each match and keep only the ones whose enclosing call is a `NavigationLink`. A line-oriented `NavigationLink.*` pattern misses calls that swift-format wraps across lines.
 **Issue**: Deprecated, will be removed in future iOS versions
 **Fix**: Migrate to NavigationStack + NavigationPath pattern
 

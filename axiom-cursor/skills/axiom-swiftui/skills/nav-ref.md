@@ -43,14 +43,14 @@ Use this skill when:
 
 | Year | iOS Version | Key Features |
 |------|-------------|--------------|
-| 2020 | iOS 14 | NavigationView (deprecated iOS 16) |
+| 2020 | iOS 14 | NavigationView (soft-deprecated, no version) |
 | 2022 | iOS 16 | NavigationStack, NavigationSplitView, NavigationPath, value-based NavigationLink |
 | 2024 | iOS 18 | Tab/Sidebar unification, sidebarAdaptable, TabSection, zoom transitions |
 | 2025 | iOS 26 | Liquid Glass navigation, backgroundExtensionEffect, tabBarMinimizeBehavior |
 
 ### NavigationView (Deprecated)
 
-NavigationView is deprecated as of iOS 16. Use NavigationStack (single-column push/pop) or NavigationSplitView (multi-column) exclusively in new code. Key improvements: single NavigationPath replaces per-link `isActive` bindings, value-based type safety, built-in Codable state restoration. See "Migrating to new navigation types" documentation.
+NavigationView is soft-deprecated — the SDK carries `deprecated: 100000.0`, so there is no deprecation version and no compiler diagnostic. Use NavigationStack (single-column push/pop) or NavigationSplitView (multi-column) exclusively in new code. Key improvements: single NavigationPath replaces per-link `isActive` bindings, value-based type safety, built-in Codable state restoration. See "Migrating to new navigation types" documentation.
 
 ---
 
@@ -115,7 +115,7 @@ NavigationLink(value: recipe) {
     RecipeTile(recipe: recipe)
 }
 
-// Deprecated: View-based (iOS 13-15)
+// Not deprecated — but no path value, so it can't be driven programmatically
 NavigationLink(recipe.name) {
     RecipeDetail(recipe: recipe)  // Don't use in new code
 }
@@ -158,7 +158,7 @@ NavigationStack(path: $path) {
 #### Navigation Anti-Patterns
 
 - **Never mix `navigationDestination(for:)` and `NavigationLink(destination:)`** in the same NavigationStack hierarchy — causes undefined behavior
-- **Register `navigationDestination(for:)` once per data type** — duplicates cause the wrong view to appear
+- **Register `navigationDestination(for:)` once per data type** — duplicates cause the wrong view to appear. SwiftUI logs `A navigationDestination for "Type" was declared earlier on the stack. Only the destination declared closest to the root view of the stack will be used.`
 
 #### Placement rules
 - Place `navigationDestination` outside lazy containers (not inside ForEach)
@@ -367,7 +367,7 @@ Use `.onOpenURL` to receive URLs, parse with `URLComponents`, then manipulate `N
 }
 ```
 
-For multi-step deep links (`myapp://category/desserts/recipe/apple-pie`), iterate URL path components and append each resolved value to build the full navigation stack.
+For multi-step deep links (`myapp://category/desserts/recipe/apple-pie`), walk the host and then the path components — the first element of a custom-scheme URL is its authority, not a path component — and append each resolved value to build the full navigation stack.
 
 For comprehensive deep linking examples, error diagnosis, and testing workflows, see `skills/nav-diag.md` (Pattern 3).
 
@@ -379,7 +379,7 @@ For comprehensive deep linking examples, error diagnosis, and testing workflows,
 
 ```swift
 struct UseSceneStorage: View {
-    @StateObject private var navModel = NavigationModel()
+    @State private var navModel = NavigationModel()
     @SceneStorage("navigation") private var data: Data?
     @StateObject private var dataModel = DataModel()
 
@@ -412,7 +412,7 @@ struct UseSceneStorage: View {
 
 ```swift
 @MainActor @Observable
-class NavigationModel: Codable {
+class NavigationModel: @MainActor Codable {
     var selectedCategory: Category?
     var recipePath: [Recipe] = []
 
@@ -450,6 +450,8 @@ class NavigationModel: Codable {
 ```
 
 Store IDs (not full model objects) and use `compactMap` to handle deleted items gracefully. The `jsonData` computed property bridges to `SceneStorage` as shown in 4.1.
+
+A `@MainActor` type cannot satisfy `Codable`'s nonisolated requirements while its properties stay isolated — isolate the conformance (`: @MainActor Codable`) or move encoding into a nonisolated DTO struct. Marking the requirements `nonisolated` alone does not work, because their bodies then cannot reach the isolated properties.
 
 ---
 

@@ -32,7 +32,7 @@ Grep for:
   - `.onOpenURL` — deep link entry points
   - `widgetURL` — widget entry points
   - `UNUserNotificationCenter` — notification entry points
-  - `application(_:open:`, `application(_:continue:` — URL/activity entry points
+  - `func application\(` — URL/activity entry points (grep `open url` / `continue userActivity` to pick out the two delegate methods)
 ```
 
 ### Step 2: Map Navigation Structure
@@ -91,7 +91,7 @@ Run all 11 existing detection categories. For every grep match, use Read to veri
 ### 4. Promise-Scope Mismatch (HIGH)
 
 **Pattern**: Labels/titles that don't match content
-**Search**: `.navigationTitle()` text vs view content; `NavigationLink` label vs destination content; `TabView` tab labels vs tab content
+**Search**: `.navigationTitle(` text vs view content; `NavigationLink` label vs destination content; `TabView` tab labels vs tab content
 **Issue**: Users expect one thing, get another
 **Fix**: Align title/label with actual content
 
@@ -127,15 +127,15 @@ Run all 11 existing detection categories. For every grep match, use Read to veri
 ### 9. Onboarding Gaps (MEDIUM)
 
 **Pattern**: First-launch experience issues
-**Search**: `@AppStorage` for first-launch flag — check the gated view for completeness; onboarding flows with more than 5 screens; onboarding requiring sign-up before showing app value
+**Search**: `@AppStorage` for first-launch flag — check the gated view for completeness; onboarding flows with more than 5 screens (house rule of thumb, not a platform fact); onboarding requiring sign-up before showing app value
 **Issue**: Users abandon onboarding before seeing value
-**Fix**: Show value early, keep onboarding under 5 screens
+**Fix**: Show value early; keep onboarding under 5 screens as a rule of thumb
 
 ### 10. Broken Data Paths (MEDIUM)
 
 **Pattern**: State/binding wiring issues
-**Search**: `@Binding` parameters initialized with `.constant()` in non-preview production code; `@Environment` keys used but not provided in view hierarchy; `@Observable` objects created with `@State` when they should be passed via environment
-**Note**: Read 3-5 lines above and below. If there's a comment explaining intent (e.g., `// Staged refactor`, `// Intentional`), downgrade to LOW or skip.
+**Search**: `@Binding` parameters initialized with `.constant()` in non-preview production code; `@Environment` keys used but not provided in view hierarchy; `@State` holding an `@Observable` model — read the view to establish ownership before flagging
+**Note**: Read 3-5 lines above and below. If there's a comment explaining intent (e.g., `// Staged refactor`, `// Intentional`), downgrade to LOW or skip. `@State` + `@Observable` is correct when the view genuinely owns the model — flag only a child that declares `@State` for a model a parent already owns, or an `@Observable` the hierarchy expects from `@Environment`.
 **Issue**: User actions don't propagate, UI is disconnected
 **Fix**: Wire bindings correctly, inject environment objects
 
@@ -200,7 +200,7 @@ Also note overlaps with other auditors:
 | **Health** | **SMOOTH / ROUGH EDGES / BROKEN JOURNEYS** |
 ```
 
-Scoring:
+Scoring (the percentage cut-offs are house thresholds, not measured or platform-derived):
 - **SMOOTH**: No CRITICAL issues, all critical flows complete, >80% state handling coverage, all modals have dismiss paths
 - **ROUGH EDGES**: No CRITICAL issues, most critical flows complete, some missing states or entry point validation gaps
 - **BROKEN JOURNEYS**: Any CRITICAL issues (dead ends, dismiss traps), or critical flows incomplete, or <50% state handling

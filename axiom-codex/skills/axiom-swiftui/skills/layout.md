@@ -52,7 +52,7 @@ Discipline-enforcing skill for building layouts that respond to available space 
     │   → Geometry + custom threshold
     │
     ├─ "Auto show/hide columns"
-    │   → NavigationSplitView (automatic in iOS 26)
+    │   → NavigationSplitView (adapts automatically)
     │
     └─ "Window lifecycle"
         → @Environment(\.scenePhase)
@@ -212,12 +212,13 @@ VStack {
     Button("Next") { }
 }
 
-// ❌ WRONG: Unconstrained (greedy)
+// ❌ WRONG: Unconstrained
 VStack {
     GeometryReader { geo in
         Text("Width: \(geo.size.width)")
     }
-    // Takes all available space, crushes siblings
+    // No intrinsic size: it takes the space the stack has left. Against a
+    // sibling that is also flexible, the two split the space evenly.
     Button("Next") { }
 }
 ```
@@ -235,7 +236,7 @@ ViewThatFits(in: .vertical) {
 }
 ```
 
-The `ScrollView` variant must come **last** — a ScrollView compresses to any proposed size, so as the first child it would always "fit" and win. When the fixed variant fits, you keep non-scrolling behavior (Spacer-based centering, no bounce).
+The `ScrollView` variant must come **last** — when nothing fits, `ViewThatFits` displays the *last* child, so a ScrollView in first place leaves the user with the clipped, unscrollable form. Measured with `ViewThatFits(in: .vertical)`, 300-point content in a 200×100 frame: ScrollView-first displayed the fixed branch, ScrollView-last displayed the ScrollView. The ScrollView does not always "fit" — in a 200×400 frame, where the fixed form fits, ScrollView-first displayed the ScrollView, the first child that fits, as documented. When the fixed variant fits, you keep non-scrolling behavior (Spacer-based centering, no bounce).
 
 If the content should simply always scroll, skip `ViewThatFits`:
 
@@ -244,7 +245,7 @@ ScrollView { CheckoutForm() }
     .scrollBounceBehavior(.basedOnSize)   // no bounce while everything fits
 ```
 
-**Watch view identity:** the two `ViewThatFits` branches are different subtrees, so `@State` inside `CheckoutForm` dies when the fit flips mid-resize — keep drafts and focus in the model (see State Survives the Transition below).
+**View identity survives the flip:** `ViewThatFits` keeps every branch in the tree and only changes which one it displays, so `@State` inside `CheckoutForm` is preserved when the fit flips — measured across a fit flip, the branch came back with the same state, while the same child behind an `if`/`else` was rebuilt with fresh state. Drafts and focus still belong in the model (see State Survives the Transition below).
 
 ---
 
@@ -320,7 +321,7 @@ Opening the device moves the app to the inner display mid-session: horizontal be
 ### NavigationSplitView Auto-Adaptation
 
 ```swift
-// iOS 26: Columns automatically show/hide
+// Columns automatically show/hide with the available width
 NavigationSplitView {
     Sidebar()
 } content: {
@@ -428,16 +429,16 @@ if UIDevice.current.userInterfaceIdiom == .pad {
 ### ❌ Unconstrained GeometryReader
 
 ```swift
-// ❌ WRONG: GeometryReader is greedy
+// ❌ WRONG: no intrinsic size, so it takes the stack's leftover space
 VStack {
     GeometryReader { geo in
         Text("Size: \(geo.size)")
     }
-    Button("Next") { }  // Crushed
+    Button("Next") { }
 }
 ```
 
-**Fix:** Constrain with `.frame()` or use `onGeometryChange`.
+**Fix:** Constrain with `.frame()` or use `onGeometryChange`. The reader starves a sibling only when the sibling is flexible too — measured in a 300-point stack, a 40-point sibling kept its 40 points beside a reader at 260, while a flexible sibling beside a reader split 150/150.
 
 ### ❌ Size Class as Orientation Proxy
 
@@ -464,12 +465,19 @@ content
 
 ```swift
 // ✅ The system picks tab bar or sidebar from the real size class and available space
-TabView {
-    Tab("Summary", systemImage: "heart") { SummaryView() }
-    Tab("Browse", systemImage: "square.grid.2x2") { BrowseView() }
+var body: some View {
+    let tabs = TabView {
+        Tab("Summary", systemImage: "heart") { SummaryView() }
+        Tab("Browse", systemImage: "square.grid.2x2") { BrowseView() }
+    }
+    .tabViewStyle(.sidebarAdaptable)
+
+    if #available(iOS 27, *) {            // defaultTabBarPlacement is iOS 27
+        tabs.defaultTabBarPlacement(.sidebar)
+    } else {
+        tabs
+    }
 }
-.tabViewStyle(.sidebarAdaptable)
-.defaultTabBarPlacement(.sidebar)   // iOS 27; gate with #available below 27
 ```
 
 Regular width doesn't guarantee a visible sidebar. Measured: a tab bar at 402 points and a sidebar at 1000 in the simulator's iPhone resize session; for an iPhone-only app on a physical iPad, a tab bar at 375 points and, at 683 points and `.regular`, the sidebar collapsed behind a toggle. When UI depends on the sidebar, read `@Environment(\.isTabViewSidebarAvailable)` (iOS 27) inside the tab content instead of the size class; Apple's doc comment says it reports a sidebar that "is (or can become) visible". For iPad apps the modifier has no effect; use `defaultAdaptableTabBarPlacement(_:)` (skills/iphone-duo.md).

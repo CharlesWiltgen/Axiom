@@ -9,7 +9,7 @@ The hard problem with SwiftUI previews is not the API — it's **discipline**. A
 
 **Core principle**: *If a view is hard to preview, the view is wrong, not previews.* A view that needs a `NetworkClient`, an authenticated session, an analytics SDK, a feature-flag service, and three environment objects before it renders a button has revealed a design problem the simulator was hiding from you. Previews force the question of what a view actually needs. Answer honestly.
 
-**Requires**: Xcode 15+ / iOS 17+ for `#Preview`. Xcode 16+ / iOS 17+ for `@Previewable`. Xcode 16+ / iOS 18+ for `PreviewModifier`.
+**Requires**: Xcode 15+ for `#Preview` (the `traits:` overload needs iOS 17+). Xcode 16+ / iOS 17+ for `@Previewable`. Xcode 16+ / iOS 18+ for `PreviewModifier`.
 **Related skills**: `skills/debugging.md` (preview *crashes* — different problem), `skills/swiftui-performance.md` (runtime perf, not preview perf), `axiom-accessibility` (Variant Mode for Dynamic Type / RTL audits)
 
 ## Example Prompts
@@ -375,7 +375,7 @@ Previews are not always the right tool. Recognize the boundary:
 | View is mostly a `NavigationStack` root with deep coordinator state | Simulator + debug deep links (see `axiom-swift/skills/deep-link-debugging.md`) |
 | View depends on a *real* network response (not mockable) | Simulator with a staging endpoint |
 | View renders a CALayer / Metal / camera feed | Simulator — preview process doesn't render most non-SwiftUI layers reliably |
-| View needs real permissions (camera, location, push) | Simulator — preview can't grant entitlements |
+| View needs real permissions (camera, location, push) | A small preview-only app target that declares the entitlement, or the simulator — the preview agent carries none of your app's entitlements |
 | You're testing real animation timing, not layout | Simulator — preview animation is approximate |
 | View is the App's root scene | There's nothing to preview — preview the immediate child instead |
 

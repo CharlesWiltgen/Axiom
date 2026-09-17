@@ -79,10 +79,10 @@ NavigationStack {
 | onChange never fires on tap | NavigationLink not in NavigationStack hierarchy | Pattern 1a |
 | onChange fires but view doesn't push | navigationDestination not found/loaded | Pattern 1b |
 | onChange fires, view pushes, then immediate pop | View identity issue or path modification | Pattern 2a |
-| Path changes unexpectedly (not from tap) | External code modifying path | Pattern 2b |
-| Deep link path.append() doesn't navigate | Timing issue or wrong thread | Pattern 3b |
+| Path changes unexpectedly (not from tap) | External code modifying path | Pattern 2a |
+| Deep link path.append() doesn't navigate | Timing issue or wrong thread | Pattern 3a |
 | State lost on tab switch | NavigationStack shared across tabs | Pattern 4a |
-| Works first time, fails on return | View recreation issue | Pattern 5a |
+| Works first time, fails on return | View recreation issue | Pattern 2a |
 
 #### MANDATORY INTERPRETATION
 
@@ -114,24 +114,21 @@ Navigation problem?
 │  ├─ navigationDestination registered?
 │  │  ├─ Inside lazy container? → Pattern 1b (Lazy Loading)
 │  │  ├─ Type mismatch? → Pattern 1c (Type Registration)
-│  │  └─ Blocked by sheet/popover? → Pattern 1d (Modal Blocking)
+│  │  └─ Blocked by sheet/popover? → Pattern 1a (Link in a different stack)
 │  │
 │  └─ Using view-based link?
-│     └─ → Pattern 1e (Deprecated API)
+│     └─ → Pushes, but adds no path value (nav-ref 1.2)
 │
 ├─ Unexpected pop back?
 │  ├─ Immediate pop after push?
 │  │  ├─ View body recreating path? → Pattern 2a (Path Recreation)
 │  │  ├─ @State in wrong view? → Pattern 2a (State Location)
-│  │  └─ ForEach id changing? → Pattern 2c (Identity Change)
+│  │  └─ ForEach id changing? → Pattern 2a (Identity Change)
 │  │
-│  ├─ Pop when shouldn't?
-│  │  ├─ External code calling removeLast? → Pattern 2b (Unexpected Modification)
-│  │  ├─ Task cancelled? → Pattern 2b (Async Cancellation)
-│  │  └─ MainActor issue? → Pattern 2d (Threading)
-│  │
-│  └─ Back button behavior wrong?
-│     └─ → Pattern 2e (Stack Corruption)
+│  └─ Pop when shouldn't?
+│     ├─ External code calling removeLast? → Pattern 2a (Unexpected Modification)
+│     ├─ Task cancelled? → See swift-concurrency skill (Task cancellation)
+│     └─ MainActor issue? → Pattern 2d (Threading)
 │
 ├─ Deep link not working?
 │  ├─ URL not received?
@@ -140,13 +137,13 @@ Navigation problem?
 │  │
 │  ├─ URL received, path not updated?
 │  │  ├─ path.append not on MainActor? → Pattern 3a (Threading)
-│  │  ├─ Timing issue (app not ready)? → Pattern 3b (Initialization)
-│  │  └─ NavigationStack not created yet? → Pattern 3b (Lifecycle)
+│  │  ├─ Timing issue (app not ready)? → Pattern 3a (Initialization)
+│  │  └─ NavigationStack not created yet? → Pattern 3a (Lifecycle)
 │  │
 │  └─ Path updated, wrong screen shown?
 │     ├─ Wrong path order? → Pattern 3c (Path Construction)
 │     ├─ Wrong type appended? → Pattern 3c (Type Mismatch)
-│     └─ Item not found? → Pattern 3d (Data Resolution)
+│     └─ Item not found? → Resolve IDs against current data; skip missing items
 │
 ├─ State lost?
 │  ├─ Lost on tab switch?
@@ -155,10 +152,10 @@ Navigation problem?
 │  │
 │  ├─ Lost on background/foreground?
 │  │  ├─ No SceneStorage? → Pattern 4b (No Persistence)
-│  │  └─ Decode failure? → Pattern 4c (Decode Error)
+│  │  └─ Decode failure? → Pattern 5c (Decode Error)
 │  │
 │  └─ Lost on rotation/size change?
-│     └─ → Pattern 4d (Layout Recreation)
+│     └─ → Pattern 6a (Layout Recreation)
 │
 ├─ Search tab morph not animating on first selection (iOS 26)?
 │  └─ → Pattern 4e (Tab(role: .search) morph broken by layout observer in subtree)
@@ -177,7 +174,7 @@ Navigation problem?
 │
 └─ Crash?
    ├─ EXC_BAD_ACCESS in navigation code?
-   │  └─ → Pattern 5a (Memory Issue)
+   │  └─ → Pattern 2d (Off-main path mutation)
    │
    ├─ Fatal error: type not registered?
    │  └─ → Pattern 5b (Missing Destination)
@@ -275,7 +272,7 @@ struct ContentView: View {
 #### Symptom
 - NavigationLink tap does nothing OR works intermittently
 - onChange fires (path updated) but view doesn't push
-- Console may show: "A navigationDestination for [Type] was not found"
+- No console output — the failure is silent
 
 #### Diagnosis
 ```swift
@@ -567,15 +564,15 @@ func handleDeepLink(_ url: URL) {
     path.append(recipe)    // Second: Recipe (shows this screen)
 }
 
-// For complex paths, build array first
-var newPath: [any Hashable] = []
+// For complex paths, build the path directly
+var newPath = NavigationPath()
 // Parse URL segments...
 newPath.append(category)
 newPath.append(subcategory)
 newPath.append(item)
 
 // Then apply
-path = NavigationPath(newPath)
+path = newPath
 ```
 
 #### Verification
@@ -598,8 +595,8 @@ path = NavigationPath(newPath)
 // ❌ WRONG — Single NavigationStack wrapping TabView
 NavigationStack(path: $path) {
     TabView {
-        Tab("Home") { HomeView() }
-        Tab("Settings") { SettingsView() }
+        Tab("Home", systemImage: "house") { HomeView() }
+        Tab("Settings", systemImage: "gear") { SettingsView() }
     }
 }
 // All tabs share same navigation — state mixed/lost
@@ -607,10 +604,10 @@ NavigationStack(path: $path) {
 // ❌ WRONG — Same @State used across tabs
 @State var path = NavigationPath()  // Shared
 TabView {
-    Tab("Home") {
+    Tab("Home", systemImage: "house") {
         NavigationStack(path: $path) { ... }  // Uses shared path
     }
-    Tab("Settings") {
+    Tab("Settings", systemImage: "gear") {
         NavigationStack(path: $path) { ... }  // Same path!
     }
 }
@@ -861,7 +858,7 @@ Avoid these inside a `Tab(role: .search)` TabView's subtree until Apple confirms
 **Time cost** 10-15 minutes
 
 #### Symptom
-- Crash: "No destination found for [Type]"
+- Pushes a blank screen — no crash, no console message
 - Or navigation silently fails
 - Happens when pushing certain types
 
@@ -1224,17 +1221,25 @@ NavigationSplitView uses different navigation models per size class:
 - **Compact** (iPhone, iPad slide-over): Collapses to NavigationStack, selection pushes
 
 ```swift
-// Common mistake: using NavigationLink inside NavigationSplitView sidebar
-// This creates DOUBLE navigation on iPad (link push + selection)
-// Fix: Use List(selection:) binding, not NavigationLink
+// ✅ CORRECT — value-presenting link in the sidebar, destination in the detail stack
 NavigationSplitView {
-    List(items, selection: $selectedID) { item in  // ✅ selection binding
-        Text(item.name)
+    List(items, selection: $selectedID) { item in
+        NavigationLink(item.name, value: item)
     }
 } detail: {
-    // driven by selectedID
+    NavigationStack {
+        DetailView(id: selectedID)
+            .navigationDestination(for: Item.self) { item in
+                ItemDetail(item: item)
+            }
+    }
 }
+
+// ❌ WRONG — link value type has no navigationDestination(for:)
+// reachable from that column: the tap does nothing
 ```
+
+A link in an earlier column sets the view the detail stack displays over its root; a link in the same column pushes. Value-presenting links and `List(selection:)` are the supported pairing — the mistake is an unregistered value type, not the link itself.
 
 **Test on both iPhone AND iPad before shipping.** Most NavigationSplitView bugs are platform-specific.
 
@@ -1248,15 +1253,15 @@ NavigationSplitView {
 | Intermittent navigation failure | Destination in lazy container | Destination placement | 1b | 10-15 min |
 | Works for some types, not others | Type mismatch | Print type(of:) | 1c | 10 min |
 | Push then immediate pop | Path recreated | @State location | 2a | 15-20 min |
-| Random unexpected pops | External path modification | Add logging | 2b | 15-20 min |
+| Random unexpected pops | External path modification | Add logging | 2a | 15-20 min |
 | Works on MainActor, fails in Task | Threading issue | Check @MainActor | 2d | 10-15 min |
 | Deep link doesn't navigate | Not on MainActor | Thread check | 3a | 15-20 min |
-| Deep link from cold start fails | Timing/lifecycle | Add pendingDeepLink | 3b | 15-20 min |
+| Deep link from cold start fails | Timing/lifecycle | Add pendingDeepLink | 3a | 15-20 min |
 | Deep link shows wrong screen | Path order wrong | Print path contents | 3c | 10-15 min |
 | State lost on tab switch | Shared NavigationStack | Check Tab structure | 4a | 15-20 min |
 | State lost on background | No persistence | Add SceneStorage | 4b | 20-25 min |
 | Crash on launch (decode) | Force unwrap decode | Error handling | 5c | 15-20 min |
-| "No destination found" crash | Missing registration | List all types | 5b | 10-15 min |
+| Blank pushed screen (no crash) | Missing registration | List all types | 5b | 10-15 min |
 | Sidebar missing on iPad | columnVisibility | Check binding | 6a | 10-15 min |
 | Blank detail on iPad | No default detail | Add ContentUnavailableView | 6b | 10 min |
 | Works iPhone, broken iPad | Platform adaptation | Test both size classes | 6c | 15-20 min |
@@ -1286,7 +1291,7 @@ List {
 
 ### Mistake 2: Using NavigationView on iOS 16+
 
-**Problem** NavigationView deprecated, different behavior across versions.
+**Problem** NavigationView is soft-deprecated — no deprecation version, no compiler diagnostic — and behaves differently across iOS versions.
 
 **Why it fails** No NavigationPath support, can't programmatically navigate or deep link reliably.
 

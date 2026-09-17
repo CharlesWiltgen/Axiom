@@ -6,12 +6,12 @@
 SwiftUI debugging falls into three categories, each with a different diagnostic approach:
 
 1. **View Not Updating** – You changed something but the view didn't redraw. Decision tree to identify whether it's struct mutation, lost binding identity, accidental view recreation, or missing observer pattern.
-2. **Preview Crashes** – Your preview won't compile or crashes immediately. Decision tree to distinguish between missing dependencies, state initialization failures, and Xcode cache corruption.
+2. **Preview Crashes** – Your preview won't compile or crashes immediately. Decision tree to distinguish between names that don't resolve (a build error), missing dependencies, state initialization failures, and Xcode cache corruption.
 3. **Layout Issues** – Views appearing in wrong positions, wrong sizes, overlapping unexpectedly. Quick reference patterns for common scenarios.
 
 **Core principle**: Start with observable symptoms, test systematically, eliminate causes one by one. Don't guess.
 
-**Requires**: Xcode 26+, iOS 17+ (iOS 14-16 patterns still valid, see notes)
+**Requires**: Xcode 26+, iOS 18+
 **Related skills**: `axiom-build (skills/xcode-debugging.md)` (cache corruption diagnosis), `axiom-concurrency` (observer patterns), `skills/swiftui-performance.md` (profiling with Instruments), `skills/layout.md` (adaptive layout patterns)
 
 ## Example Prompts
@@ -21,7 +21,7 @@ These are real questions developers ask that this skill is designed to answer:
 #### 1. "My list item doesn't update when I tap the favorite button, even though the data changed"
 → The skill walks through the decision tree to identify struct mutation vs lost binding vs missing observer
 
-#### 2. "Preview crashes with 'Cannot find AppModel in scope' but it compiles fine"
+#### 2. "Preview crashes with 'No ObservableObject of type AppModel found' but the app runs fine"
 → The skill shows how to provide missing dependencies with `.environment()` or `.environmentObject()`
 
 #### 3. "My counter resets to 0 every time I toggle a boolean, why?"
@@ -57,7 +57,7 @@ These are real questions developers ask that this skill is designed to answer:
 
 ### Self._printChanges()
 
-SwiftUI provides a debug-only method to understand why a view's body was called.
+SwiftUI provides an underscored method to understand why a view's body was called. It is public API, but the underscore warns that it can change or disappear — and it still prints in Release builds, so a leftover call is a shipping hazard rather than a debug-only convenience.
 
 **Usage in LLDB**:
 ```swift
@@ -75,13 +75,26 @@ var body: some View {
 }
 ```
 
-**Output interpretation**:
+**Output interpretation** (measured on iOS 27.2):
 ```
-MyView: @self changed
-  - Means the view value itself changed (parameters passed to view)
+MyView: @self, @identity, __count changed.
+  - One line per body call, every cause of that call comma-joined on it, and a period at the end
 
-MyView: count changed
-  - Means @State property "count" triggered the update
+@self
+  - The view value itself changed (the parent passed a new instance)
+
+@identity
+  - The view's identity changed — its persistent state was recycled for a new instance of the same type
+  - This is the marker for the state-reset symptom in Root Cause 3, not "@self"
+
+_count  /  __count
+  - A @State property changed. The name printed is the property's physical name, so an internal `@State var count` reports `_count` and `@State private var count` reports `__count`
+
+_ext  /  _scheme  /  _model  /  _oo
+  - A @Binding, @Environment, @EnvironmentObject or @StateObject property changed; each reports its own physical name
+
+\Model.value
+  - This body read an @Observable object's property that changed
 
 MyView: (no output)
   - Body not being called; view not updating at all
@@ -89,7 +102,7 @@ MyView: (no output)
 
 **⚠️ Important**:
 - Prefixed with underscore → May be removed in future releases
-- **NEVER submit to App Store** with _printChanges calls
+- Still prints in Release builds → delete the call before shipping
 - Performance impact → Use only during debugging
 
 **When to use**:
@@ -155,21 +168,13 @@ func updateNestedValue(_ s: inout AppSettings) {
 
 **Symptom**: You pass a binding to a child view, but changes in the child don't update the parent.
 
-**Why it happens**: You're passing `.constant()` or creating a new binding each time, breaking the two-way connection.
+**Why it happens**: You're passing a read-only binding — `.constant()` discards every write, so the child's edits never reach the `@State` that owns the value. (A custom `Binding(get:set:)` built in `body` does reach its `@State`; it is not the cause.)
 
 ```swift
 // ❌ WRONG: Constant binding is read-only
 @State var isOn = false
 
 ToggleChild(value: .constant(isOn))  // Changes ignored
-
-// ❌ WRONG: New binding created each render
-@State var name = ""
-
-TextField("Name", text: Binding(
-    get: { name },
-    set: { name = $0 }
-))  // New binding object each time parent renders
 
 // ✅ RIGHT: Pass the actual binding
 @State var isOn = false
@@ -205,7 +210,7 @@ struct ListView: View {
 
 ```
 
-**Fix it**: Prefer `$state` directly. For @Observable objects (iOS 17+), use `@Bindable`. Pre-iOS 17 custom `Binding` construction inside `body` is the anti-pattern — the binding's `get`/`set` closures re-bind every render, so children see a new binding identity each cycle. If you must build a custom `Binding`, keep it out of `body`: pass `$state` to children directly instead, or use the projectedValue pattern from an @Observable model (iOS 17+).
+**Fix it**: Pass the state down as a binding — `$state` for local state, `@Bindable` for an @Observable object (including `@Bindable var book = book` as a local inside a `ForEach` closure). Reserve `.constant()` for previews and for values the child must not edit.
 
 ---
 
@@ -244,24 +249,9 @@ var body: some View {
         }
     }
 }
-
-// ✅ ALSO RIGHT: Use id() if you must conditionally show
-@State var count = 0
-
-var body: some View {
-    VStack {
-        if showCounter {
-            Counter()
-                .id("counter")  // Stable identity
-        }
-        Button("Toggle") {
-            showCounter.toggle()
-        }
-    }
-}
 ```
 
-**Fix it**: Preserve view identity by using `.opacity()` instead of conditionals, or apply `.id()` with a stable identifier.
+**Fix it**: Keep the view in the hierarchy — `.opacity()` or `.hidden()` — instead of removing and re-adding it with a conditional. `.id()` does not help here: it labels a view's identity while the view is present, and a view removed from the hierarchy loses its `@State` regardless of the id it carried.
 
 ---
 
@@ -337,36 +327,9 @@ struct ContentView: View {
         Text("\(model.count)")
     }
 }
-
-// ✅ RIGHT (pre-iOS 17): Use @StateObject/ObservableObject
-class Model: ObservableObject {
-    @Published var count = 0
-}
-
-struct ContentView: View {
-    @StateObject var model = Model()  // For owned instances
-
-    var body: some View {
-        Text("\(model.count)")
-        Button("Increment") {
-            model.count += 1  // View updates
-        }
-    }
-}
-
-// ✅ RIGHT (pre-iOS 17): Use @ObservedObject for injected instances
-struct ContentView: View {
-    @ObservedObject var model: Model  // Passed in from parent
-
-    var body: some View {
-        Text("\(model.count)")
-    }
-}
 ```
 
-**Fix it (iOS 17+)**: Use `@Observable` macro on your class, then `@State` to store it. Views automatically track dependencies on properties they read.
-
-**Fix it (pre-iOS 17)**: Use `@StateObject` if you own the object, `@ObservedObject` if it's injected, or `@EnvironmentObject` if it's shared across the tree.
+**Fix it**: Use the `@Observable` macro on your class, then `@State` to store it. Views automatically track dependencies on properties they read.
 
 **Why @Observable is better** (iOS 17+):
 - Automatic dependency tracking (only reads trigger updates)
@@ -446,7 +409,7 @@ digraph view_not_updating {
     reproduce -> cause [label="yes: bug in code"];
     reproduce -> "Cache/Xcode state → Preview Crashes" [label="no"];
 
-    cause -> "Struct Mutation" [label="modified struct directly"];
+    cause -> "Struct Mutation" [label="mutated a copy"];
     cause -> "Lost Binding Identity" [label="passed binding to child"];
     cause -> "Accidental Recreation" [label="view inside conditional"];
     cause -> "Missing Observer" [label="object changed, view didn't"];
@@ -462,9 +425,32 @@ When your preview won't load or crashes immediately, the three root causes are d
 
 ### Step 1: What's the Error?
 
-#### Error Type 1: "Cannot find in scope" or "No such module"
+#### Error Type 1: "cannot find 'X' in scope" or "no such module 'X'"
 
-**Root cause**: Preview missing a required dependency (@EnvironmentObject, @Environment, imported module).
+**Root cause**: A name this code uses isn't visible where the preview is compiled — a missing import, or a type that lives in another target. This is a build error: the preview never runs.
+
+```swift
+// ❌ WRONG: Recipe lives in a module this file never imports
+#Preview {
+    Text(Recipe(title: "Sample").title)  // error: cannot find 'Recipe' in scope
+}
+```
+
+**Fix it**: Import the module that declares the name, or add its file to the target the preview builds. The compiler quotes the name exactly (`cannot find 'Recipe' in scope`, `no such module 'RecipeKit'`), so read the error instead of guessing.
+
+---
+
+#### Error Type 2: "No ObservableObject of type X found" (missing dependency)
+
+**Root cause**: The view compiles and the preview runs, then dies at first render because nothing supplied a value it reads from the environment. The fatal error names the type and the modifier that would have provided it:
+
+```
+SwiftUICore/EnvironmentObject.swift:93: Fatal error: No ObservableObject of type AppModel found. A View.environmentObject(_:) for AppModel may be missing as an ancestor of this view.
+
+SwiftUICore/Environment+Objects.swift:34: Fatal error: No Observable object of type ObsModel found. A View.environmentObject(_:) for ObsModel may be missing as an ancestor of this view.
+```
+
+The second line is the `@Environment(Model.self)` form — that message reads "Observable object", singular.
 
 ```swift
 // ❌ WRONG: ContentView needs a model, preview doesn't provide it
@@ -477,30 +463,28 @@ struct ContentView: View {
 }
 
 #Preview {
-    ContentView()  // Crashes: model not found
+    ContentView()  // Fatal error: No ObservableObject of type AppModel found
 }
 
-// ✅ RIGHT: Provide the dependency
+// ✅ RIGHT: Provide the dependency the view reads
 #Preview {
     ContentView()
         .environmentObject(AppModel())
 }
-
-// ✅ ALSO RIGHT: Check for missing imports
-// If using custom types, make sure they're imported in preview file
-
-#Preview {
-    MyCustomView()  // Make sure MyCustomView is defined or imported
-}
 ```
 
-**Fix it**: Trace the error, find what's missing, provide it to the preview.
+**Fix it**: Provide every environment value the view and its children read — `.environmentObject(_:)` for an `ObservableObject`, `.environment(_:)` for an `@Observable` type, `.modelContainer(_:)` for SwiftData.
 
 ---
 
-#### Error Type 2: Fatal error or Silent crash (no error message)
+#### Error Type 3: Fatal error at first render
 
-**Root cause**: State initialization failed at runtime. The view tried to access data that doesn't exist.
+**Root cause**: State initialization or a data access failed at runtime — an index past the end of an array, a force-unwrapped nil. The console names the file and the reason:
+
+```
+Swift/ContiguousArrayBuffer.swift:695: Fatal error: Index out of range
+main.swift:21: Fatal error: Unexpectedly found nil while unwrapping an Optional value
+```
 
 ```swift
 // ❌ WRONG: Index out of bounds at runtime
@@ -515,7 +499,7 @@ struct ListView: View {
 
 // ❌ WRONG: Optional forced unwrap fails
 struct DetailView: View {
-    @State var data: Data?
+    @State var data: Recipe?
 
     var body: some View {
         Text(data!.title)  // Crashes if data is nil
@@ -536,7 +520,7 @@ struct ListView: View {
 
 // ✅ RIGHT: Handle optionals
 struct DetailView: View {
-    @State var data: Data?
+    @State var data: Recipe?
 
     var body: some View {
         if let data = data {
@@ -552,7 +536,7 @@ struct DetailView: View {
 
 ---
 
-#### Error Type 3: Works fine locally but preview won't load
+#### Error Type 4: Works fine locally but preview won't load
 
 **Root cause**: Xcode cache corruption. The preview process has stale information about your code.
 
@@ -563,12 +547,12 @@ struct DetailView: View {
 - Multiple unrelated previews fail at once → Cache
 
 **Fix it** (in order):
-1. Restart Preview Canvas: `Cmd+Option+P`
+1. Refresh Canvas: `Cmd+Option+P`
 2. Restart Xcode completely (File → Close Window, then reopen project)
 3. Nuke derived data: `rm -rf ~/Library/Developer/Xcode/DerivedData`
 4. Rebuild: `Cmd+B`
 
-If still broken after all four steps: It's not cache, see Error Types 1 or 2.
+If still broken after all four steps: It's not cache, see Error Types 1 to 3.
 
 ---
 
@@ -580,10 +564,11 @@ digraph preview_crashes {
     error [label="Error message visible?" shape=diamond];
 
     start -> error;
-    error -> "Missing Dependency" [label="'Cannot find in scope'"];
-    error -> "State Init Failure" [label="'Fatal error' or silent crash"];
+    error -> "Name Resolution" [label="'cannot find X in scope'"];
+    error -> "Missing Dependency" [label="'No ObservableObject of type X found'"];
+    error -> "State Init Failure" [label="'Fatal error: Index out of range'"];
     error -> "Cache Corruption" [label="no error"];
-    "Cache Corruption" -> "Restart Preview → Restart Xcode → Nuke DerivedData";
+    "Cache Corruption" -> "Refresh Canvas → Restart Xcode → Nuke DerivedData";
 }
 ```
 
@@ -686,18 +671,23 @@ ZStack {
 
 **Symptom**: Text truncated, buttons larger than text, sizing behavior unpredictable.
 
-**Root cause**: Mixing `frame()` (constrains) with `fixedSize()` (expands to content).
+**Root cause**: `frame()` constrains the view inside it; `fixedSize()` removes the proposal for the view inside it. Order decides which one wins, and a `fixedSize()` written after a `frame()` has nothing left to loosen.
 
 ```swift
-// ❌ WRONG: fixedSize() overrides frame()
+// ❌ WRONG: changes nothing — the frame is inside, so the text still wraps in it
 Text("Long text here")
     .frame(width: 100)
-    .fixedSize()  // Overrides the frame constraint
+    .fixedSize()  // Still two wrapped lines inside the 100pt frame
 
 // ✅ RIGHT: Use frame() to constrain
 Text("Long text here")
     .frame(width: 100, alignment: .leading)
     .lineLimit(1)
+
+// ✅ RIGHT: fixedSize() inside the frame drops the proposed width
+Text("Long text here")
+    .fixedSize()
+    .frame(width: 100)  // One line at this width instead of two
 
 // ✅ RIGHT: Use fixedSize() only for natural sizing
 VStack(spacing: 0) {
@@ -812,19 +802,6 @@ var body: some View {
         }
     }
 }
-
-// ✅ ALSO FIX: Explicit stable ID
-var body: some View {
-    VStack {
-        if showDetails {
-            CounterView(count: $count)
-                .id("counter")  // Stable ID
-        }
-        Button("Toggle") {
-            showDetails.toggle()
-        }
-    }
-}
 ```
 
 #### Issue 2: Animations Don't Work
@@ -902,7 +879,8 @@ DetailView(item: item)
 ```swift
 var body: some View {
     let _ = Self._printChanges()
-    // Check if "@self changed" appears when you don't expect
+    // "@identity changed" in this line means the view came back as a new instance
+    // with recycled state — see Root Cause 3
 }
 ```
 
@@ -912,7 +890,7 @@ Search codebase for `.id()` - are IDs changing unexpectedly?
 #### 3. Check conditionals
 Views in `if/else` change position → different identity.
 
-**Fix**: Use `.opacity()` or stable `.id()` instead.
+**Fix**: Use `.opacity()` (or `.hidden()`) so the view stays in the hierarchy. An explicit `.id()` does not preserve `@State` through removal — inside `if`, a view with `.id("stable")` still comes back at 0.
 
 ### Identity Quick Reference
 
@@ -921,7 +899,7 @@ Views in `if/else` change position → different identity.
 | State resets | Identity change | Use `.opacity()` instead of `if` |
 | No animation | Identity change | Remove `.id()` or use stable ID |
 | ForEach jumps | Non-unique ID | Use unique, stable IDs |
-| Unexpected recreation | Conditional position | Add explicit `.id()` |
+| Unexpected recreation | Conditional position | Keep it in the hierarchy with `.opacity()`/`.hidden()` |
 
 **See also** [WWDC21: Demystify SwiftUI](https://developer.apple.com/videos/play/wwdc2021/10022/)
 
@@ -942,7 +920,7 @@ When you're under deadline pressure, you'll be tempted to shortcuts that hide pr
 **The danger**: You skip diagnosis, cache issue recurs after 2 weeks in production, you're debugging while users hit crashes.
 
 **What to do instead** (5-minute protocol, total):
-1. Restart Preview Canvas: `Cmd+Option+P` (30 seconds)
+1. Refresh Canvas: `Cmd+Option+P` (30 seconds)
 2. Restart Xcode (2 minutes)
 3. Nuke derived data: `rm -rf ~/Library/Developer/Xcode/DerivedData` (30 seconds)
 4. Rebuild: `Cmd+B` (2 minutes)
@@ -967,7 +945,7 @@ When you're under deadline pressure, you'll be tempted to shortcuts that hide pr
 **What to do instead** (2-minute diagnosis):
 1. Can you reproduce in a minimal preview? If NO → cache corruption (see Scenario 1)
 2. If YES: Test each root cause in order:
-   - Does the view have @State that you're modifying directly? → Struct Mutation
+   - Does the view mutate a *copy* of an @State value (a local variable or an inout parameter)? → Struct Mutation
    - Did the view move into a conditional recently? → View Recreation
    - Are you passing bindings to children that have changed? → Lost Binding Identity
    - Does a sheet/popover callback update the same parent state it receives? → Closure Re-Init
@@ -1010,7 +988,7 @@ Intermittent bugs are the MOST important to diagnose correctly. One wrong guess 
 
 **Step 3: Apply the specific fix** (30 min)
 - Once you've identified view recreation: Use `.opacity()` instead of conditionals
-- Once you've identified struct mutation: Use full reassignment
+- Once you've traced it to a mutated copy: mutate through the `@State` property itself
 - Once you've verified it's cache: Nuke DerivedData properly
 
 **Step 4: Verify 100% reliability** (until submission)
@@ -1058,11 +1036,12 @@ Intermittent bugs are the MOST important to diagnose correctly. One wrong guess 
 ### Common View Update Fixes
 
 ```swift
-// Fix 1: Reassign the full struct
+// Fix 1: Mutate the @State value in place — the setter sees it, no reassignment needed
 @State var items: [String] = []
-var newItems = items
-newItems.append("new")
-self.items = newItems
+
+func add() {
+    items.append("new")  // View updates
+}
 
 // Fix 2: Pass binding correctly
 @State var value = ""
@@ -1122,13 +1101,14 @@ struct TaskListView: View {
     var body: some View {
         List {
             ForEach(tasks, id: \.id) { task in
+                // ❌ WRONG: a copy of the element, not the element
+                var displayed = task
                 HStack {
-                    Image(systemName: task.isComplete ? "checkmark.circle.fill" : "circle")
-                    Text(task.title)
+                    Image(systemName: displayed.isComplete ? "checkmark.circle.fill" : "circle")
+                    Text(displayed.title)
                     Spacer()
                     Button("Done") {
-                        // ❌ WRONG: Direct mutation
-                        task.isComplete.toggle()
+                        displayed.isComplete.toggle()  // Toggles the copy
                     }
                 }
             }
@@ -1139,61 +1119,59 @@ struct TaskListView: View {
 
 **Diagnosis using the skill**:
 1. Can you reproduce in preview? YES
-2. Are you modifying the struct directly? YES → **Struct Mutation** (Root Cause 1)
+2. Are you mutating a copy of the row instead of the array element? YES → **Struct Mutation** (Root Cause 1)
 
 **Fix**:
 ```swift
 Button("Done") {
-    // ✅ RIGHT: Full reassignment
+    // ✅ RIGHT: Mutate the element through @State
     if let index = tasks.firstIndex(where: { $0.id == task.id }) {
         tasks[index].isComplete.toggle()
     }
 }
 ```
 
-**Why this works**: SwiftUI detects the array reassignment, triggering a redraw. The task in the List updates.
+**Why this works**: `tasks[index].isComplete.toggle()` goes through the `@State` array's setter, so the List row is invalidated, while the copy in the ❌ never reaches it. The direct `task.isComplete.toggle()` that most people reach for first does not compile either — the `ForEach` closure parameter is a `let`, so the compiler rejects it with `cannot use mutating member on immutable value: 'task' is a 'let' constant`.
 
 ---
 
-### Example 2: Preview Crashes with "No Such Module"
+### Example 2: Preview Fails to Build — "cannot find 'Recipe' in scope"
 
-**Scenario**: You created a custom data model. It works fine in the app, but the preview crashes with "Cannot find 'CustomModel' in scope".
+**Scenario**: You created a data model in a local package. The app builds, but the preview fails with `cannot find 'Recipe' in scope`.
 
 **Code**:
 ```swift
 import SwiftUI
 
-// ❌ WRONG: Preview missing the dependency
+// ❌ WRONG: the module that declares Recipe is never imported here
 #Preview {
-    TaskDetailView(task: Task(...))
+    RecipeDetailView(recipe: Recipe(title: "Sample"))
 }
 
-struct TaskDetailView: View {
-    @Environment(\.modelContext) var modelContext
-    let task: Task  // Custom model
+struct RecipeDetailView: View {
+    let recipe: Recipe
 
     var body: some View {
-        Text(task.title)
+        Text(recipe.title)
     }
 }
 ```
 
 **Diagnosis using the skill**:
-1. What's the error? "Cannot find in scope" → **Missing Dependency** (Error Type 1)
-2. What does TaskDetailView need? The Task model and modelContext
+1. What's the error? `cannot find 'Recipe' in scope` → **Name resolution** (Error Type 1)
+2. Where is `Recipe` declared? In the model package, which this file never imports
 
 **Fix**:
 ```swift
-#Preview {
-    let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(for: Task.self, configurations: config)
+import SwiftUI
+import RecipeKit  // ✅ RIGHT: the module that declares Recipe
 
-    return TaskDetailView(task: Task(title: "Sample"))
-        .modelContainer(container)
+#Preview {
+    RecipeDetailView(recipe: Recipe(title: "Sample"))
 }
 ```
 
-**Why this works**: Providing the environment object and model container satisfies the view's dependencies. Preview loads successfully.
+**Why this works**: The preview is compiled from this file, so every name it uses has to be visible here — a type from another module needs its import. If `Recipe` is instead in this target's own sources, the missing piece is the file itself: add it to the target the preview builds.
 
 ---
 
@@ -1258,21 +1236,39 @@ SwiftUI previews don't always match simulator behavior:
 - Animation and gesture issues
 - Before/after visual comparison
 
-### Quick Verification Workflow
+### Name the Device Explicitly
+
+`xcrun simctl` accepts the literal `booted` for "whichever device happens to be booted", which stops meaning the device you want the moment a second one is running. The two commands in this section fail differently when that happens:
+
+- `simctl io … screenshot` **fails silently** — exit 0, no error, and you get a PNG of another device (a booted Apple TV's TVOut display) that reads as a plausible before/after image
+- `simctl openurl` **fails loudly** — `An error was encountered processing the command (domain=LSApplicationWorkspaceErrorDomain, code=115): Simulator device failed to open debug://problem-screen.`
+
+Resolve the UDID once and pass it to every command:
 
 ```bash
-# 1. Take "before" screenshot
-/axiom:screenshot
+xcrun simctl list devices booted    # read your device's UDID from this list
+UDID=<UDID>                         # set it once, then pass $UDID to every command below
+```
+
+### Quick Verification Workflow
+
+An explicit UDID settles which device, not what is on it: a screenshot captures whatever is frontmost, so a sibling's app or the Home Screen appears — still exit 0. Prefer the app's own output, and treat the screenshot as a second opinion.
+
+```bash
+# 1. Capture the "before" behaviour from the app's own output
+xcrun simctl launch --console-pty $UDID com.example.yourapp   # app-printed markers land here
 
 # 2. Apply your fix
 
 # 3. Rebuild and relaunch
 xcodebuild build -scheme YourScheme
+xcrun simctl install $UDID <path/to/YourApp.app>
+xcrun simctl launch --console-pty $UDID com.example.yourapp
 
-# 4. Take "after" screenshot
-/axiom:screenshot
+# 4. Compare the marker lines, not the pixels
 
-# 5. Compare screenshots to verify fix
+# 5. If an image is genuinely the evidence you need, shoot the device you named, with your app foreground
+xcrun simctl io $UDID screenshot /tmp/after-fix.png
 ```
 
 ### Navigating to Problem Screens
@@ -1284,9 +1280,9 @@ If the bug is deep in your app, use debug deep links to navigate directly:
 # Example: debug://settings, debug://recipe-detail?id=123
 
 # 2. Navigate and capture
-xcrun simctl openurl booted "debug://problem-screen"
+xcrun simctl openurl $UDID "debug://problem-screen"
 sleep 1
-/axiom:screenshot
+xcrun simctl io $UDID screenshot /tmp/problem-screen.png
 ```
 
 ### Full Simulator Testing
@@ -1302,23 +1298,26 @@ Then describe what you want to test:
 - "Test the profile screen with empty state"
 - "Verify the animation doesn't stutter anymore"
 
+Name the device you mean — its UDID if you have more than one booted — so the run targets the screen you are looking at.
+
 ### Before/After Example
 
 **Before fix** (view not updating):
 ```bash
-# 1. Reproduce bug
-xcrun simctl openurl booted "debug://recipe-list"
+# 1. Reproduce bug — $UDID, not `booted`: openurl reports 115 on the wrong device, screenshot would not
+xcrun simctl openurl $UDID "debug://recipe-list"
 sleep 1
-xcrun simctl io booted screenshot /tmp/before-fix.png
+xcrun simctl io $UDID screenshot /tmp/before-fix.png
+# Your app must be foreground — a screenshot of someone else's app also exits 0
 # Screenshot shows: Tapping star doesn't update UI
 ```
 
 **After fix** (added @State binding):
 ```bash
 # 2. Test fix
-xcrun simctl openurl booted "debug://recipe-list"
+xcrun simctl openurl $UDID "debug://recipe-list"
 sleep 1
-xcrun simctl io booted screenshot /tmp/after-fix.png
+xcrun simctl io $UDID screenshot /tmp/after-fix.png
 # Screenshot shows: Star updates immediately when tapped
 ```
 

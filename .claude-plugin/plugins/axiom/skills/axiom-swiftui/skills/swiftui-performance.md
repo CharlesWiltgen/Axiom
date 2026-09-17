@@ -23,10 +23,10 @@ These are real questions developers ask that this skill is designed to answer:
 → The skill covers the Cause & Effect Graph patterns that show data flow through your app and which state changes trigger expensive updates
 
 #### 3. "Some views are updating way too often even though their data hasn't changed. How do I find which views are the problem?"
-→ The skill demonstrates unnecessary update detection and Identity troubleshooting with the visual timeline
+→ The skill demonstrates unnecessary update detection with the visual timeline, and shows how view identity decides which views rebuild
 
 #### 4. "I have large data structures and complex view hierarchies. How do I optimize them for SwiftUI performance?"
-→ The skill covers performance patterns: breaking down view hierarchies, minimizing body complexity, and using the @Sendable optimization checklist
+→ The skill covers performance patterns: breaking down view hierarchies, minimizing body complexity, and the before/during/after profiling checklist
 
 #### 5. "We have a performance deadline and I need to understand what's slow in SwiftUI. What are the critical metrics?"
 → The skill provides the decision tree for prioritizing optimizations and understands pressure scenarios with professional guidance for trade-offs
@@ -38,7 +38,7 @@ These are real questions developers ask that this skill is designed to answer:
 **Core Principle**: Ensure your view bodies update quickly and only when needed to achieve great SwiftUI performance.
 
 **NEW in WWDC 2025**: Next-generation SwiftUI instrument in Instruments 26 provides comprehensive performance analysis with:
-- Visual timeline of long updates (color-coded orange/red by severity)
+- Visual timeline of long updates (orange past 500 µs, red past 1000 µs)
 - Cause & Effect Graph showing data flow through your app
 - Integration with Time Profiler for CPU analysis
 - Hangs and Hitches tracking
@@ -52,6 +52,8 @@ These are real questions developers ask that this skill is designed to answer:
 ## iOS 26 Framework Performance Improvements
 
 SwiftUI in iOS 26 includes major performance wins that benefit all apps automatically. These improvements work alongside the new profiling tools to make SwiftUI faster out of the box.
+
+**Source**: WWDC25 256 — What's new in SwiftUI.
 
 ### List Performance (macOS Focus)
 
@@ -208,13 +210,11 @@ The SwiftUI template includes three instruments:
 
 ### Color-Coding System
 
-Updates shown in **orange** and **red** based on likelihood to cause hitches:
+Bar color encodes **how long an update ran**, not a probability of trouble. Apple's thresholds for the Long View Body Updates lane: orange lines for view body calculations longer than 500 microseconds, red for calculations longer than 1000 microseconds (`/xcode/understanding-and-improving-swiftui-performance`). Updates under both thresholds are drawn in gray.
 
-- **Red** — Very likely to contribute to hitch/hang (investigate first)
-- **Orange** — Moderately likely to cause issues
-- **Gray** — Normal updates, not concerning
+Duration is still the priority order. One millisecond is roughly a sixteenth of a 60 Hz frame (16.7 ms) and an eighth of a 120 Hz frame, spent on a single view, and the longer an update runs the more likely it is to miss the commit deadline. Start at the longest red bars.
 
-**Note**: Whether updates actually result in hitches depends on device conditions, but red updates are the highest priority.
+**Note**: A long update does not always become a hitch — that depends on the device and on what else ran in the same frame. The color tells you how long the update took, and duration is what puts a hitch in reach.
 
 ---
 
@@ -314,7 +314,7 @@ Frame 1:
 
 ### Common Expensive Operations
 
-#### Formatter Creation (Very Expensive)
+#### Formatter Work in View Body (Very Expensive)
 
 **❌ WRONG - Creating formatters in view body**:
 ```swift
@@ -345,10 +345,10 @@ struct LandmarkListItemView: View {
 ```
 
 **Why it's slow**:
-- Formatters are expensive to create (milliseconds each)
-- Created every time view body runs
-- Runs on main thread → app waits before continuing UI updates
-- Multiple views → time adds up quickly
+- Both formatters are built, configured, and used on every pass, on the main thread
+- Allocating a bare formatter is cheap (sub-microsecond); configuring a fresh one and formatting with it is not — the body above measures ~135 µs per call (macOS 27, `-O`), and the `string(from:)` call is the largest single share
+- Rows multiply it: 100 rows × ~0.14 ms ≈ 14 ms per update, most of a 60 Hz frame
+- Caching the formatted strings takes the call out of the body entirely
 
 **✅ CORRECT - Cache formatters centrally**:
 ```swift
@@ -367,8 +367,6 @@ class LocationFinder {
 
         self.formatter = MeasurementFormatter()
         self.formatter.numberFormatter = numberFormatter
-
-        updateDistances()
     }
 
     func didUpdateLocations(_ locations: [CLLocation]) {
@@ -376,9 +374,7 @@ class LocationFinder {
         updateDistances(from: location)
     }
 
-    private func updateDistances(from location: CLLocation? = nil) {
-        guard let location else { return }
-
+    private func updateDistances(from location: CLLocation) {
         for landmark in landmarks {
             let meters = location.distance(from: landmark.location)
             let measurement = Measurement(value: meters, unit: UnitLength.meters)
@@ -454,8 +450,8 @@ var body: some View {
 ```swift
 // ❌ Don't process images in view body
 var body: some View {
-    let thumbnail = image.resized(to: CGSize(width: 100, height: 100))
-    Image(uiImage: thumbnail)
+    let thumbnail = image.preparingThumbnail(of: CGSize(width: 100, height: 100))
+    Image(uiImage: thumbnail ?? image)
 }
 
 // ✅ Process images in background, cache
@@ -545,8 +541,8 @@ struct OnOffView: View {
 ```
 
 **Node types**:
-- **Blue nodes** — Your code or actions (gestures, state changes, view bodies)
-- **System nodes** — SwiftUI/system work
+- **Blue nodes** — Objects defined by code in your app (gestures, state changes, view bodies)
+- **Gray nodes** — Objects defined by the system
 - **Arrows labeled "update"** — Caused update
 - **Arrows labeled "creation"** — Caused view to appear
 
@@ -655,6 +651,20 @@ struct LandmarkListItemView: View {
 ```
 [Gesture] → [Single LandmarkViewModel change] → [Single LandmarkListItemView update]
 ```
+
+### View Identity
+
+Identity is what SwiftUI uses to decide whether a view is the *same* view between two updates. State, `onAppear`, and diffing all hang off it, so identity is not a knob you sprinkle on a hot view.
+
+**Keep it stable**:
+- Give `ForEach` one identity per element: an `Identifiable` element type, or a stable key path such as `id: \.id`. The `Range` (`.init(0..<10)`) and `Identifiable` overloads need no `id:` at all.
+- Identities that change whenever the data changes destroy and recreate the views that were meant to update — `ForEach(items.indices, id: \.self)` over a list that reorders, `id: \.self` over a value type built fresh in `body`, or a `UUID()` computed in `body` and passed to `.id()`.
+
+**What `.id()` does**:
+- A constant `.id("stable-key")` changes nothing. The view re-runs its body exactly as often as the same view with no `.id()` at all.
+- A changing `.id()` destroys the old view and creates a new one: `@State` is re-initialized, `onAppear` runs again, in-flight work restarts. That is what you want for a deliberate reset (a new document, a different player), and it is the cause of the "my view keeps losing its state" symptom class — not a cure for unnecessary updates.
+
+When the Cause & Effect Graph shows one state change fanning out to many view bodies, the fix is a narrower dependency (Pattern 1, Pattern 2), not an `.id()`.
 
 ---
 
@@ -797,7 +807,7 @@ When performance issues appear in production, you face competing pressures:
 - **Deployment window**: 6 hours before next App Store review window
 - **Temptation**: Quick fix (add `.compositingGroup()`, disable animation, simplify view)
 
-**The issue**: Quick fixes based on guesses fail 80% of the time and waste your deployment window.
+**The issue**: A quick fix based on a guess burns your deployment window. You ship something you cannot verify, and App Store review means you cannot take it back quickly.
 
 ### Red Flags — Resist These Pressure Tactics
 
@@ -809,7 +819,7 @@ If you hear ANY of these under deadline pressure, **STOP and use SwiftUI Instrum
 - ❌ **"Users will accept degradation for now"** – Once shipped, you're committed for 24 hours
 - ❌ **"We don't have time to profile"** – You have less time if you guess wrong
 
-### One SwiftUI Instrument Recording (30-Minute Protocol)
+### One SwiftUI Instrument Recording (25-Minute Protocol)
 
 Under production pressure, one good diagnostic recording beats random fixes:
 
@@ -828,7 +838,7 @@ Under production pressure, one good diagnostic recording beats random fixes:
 - Test in Instruments again (5 min)
 - Ship with confidence
 
-**Total time**: 1 hour 15 minutes for diagnosis + fix, leaving 4+ hours for edge case testing.
+**Total time**: 45-60 minutes for diagnosis + fix (25 min diagnostic, 15-30 min fix, 5 min re-verify), leaving the rest of the deployment window for edge case testing.
 
 ### Comparing Time Costs
 
@@ -844,12 +854,12 @@ Under production pressure, one good diagnostic recording beats random fixes:
 - Time to apply targeted fix: 20 min
 - Time to verify: 5 min
 - Time to deploy: 20 min
-- Total time: 1.5 hours
+- Total time: 70 minutes
 - User suffering: Stopped after 2 hours instead of 26+ hours
 
 **Time cost of being wrong**:
 - A: 24-hour delay + reputational damage + users suffering
-- B: 1.5 hours + you know the actual problem + confidence in the fix
+- B: 70 minutes + you know the actual problem + confidence in the fix
 
 ### Real-World Example: Tab Transition Sluggishness
 
@@ -875,9 +885,9 @@ VP update: "Users still complaining"
 [25 minutes later]
 "SwiftUI Instrument shows Long View Body Updates in ProductGridView during transition.
 Cause & Effect Graph shows ProductList rebuilding entire grid unnecessarily.
-Applying view identity fix (`.id()`) to prevent unnecessary updates"
-[30 minutes to implement and test]
-"Deployed at 1.5 hours. Verified with Instruments. Tab transitions now smooth."
+Applying the dependency fix - per-item view models instead of one shared collection"
+[25 minutes to implement and test]
+"Deployed at 70 minutes. Verified with Instruments. Tab transitions now smooth."
 ```
 
 ### When to Accept the Pressure (And Still be Right)
@@ -896,7 +906,8 @@ Slack to VP + team:
 
 "Completed diagnostic: ProductGridView rebuilding unnecessarily during
 tab transitions (confirmed in SwiftUI Instrument, Long View Body Updates).
-Applied view identity fix. Verified in Instruments - transitions now 16.67ms.
+Applied the dependency fix. Verified in Instruments - the grid no longer
+rebuilds on tab transitions.
 Deploying now."
 ```
 
@@ -911,7 +922,7 @@ This shows:
 **Honest admission**:
 ```
 "SwiftUI Instrument showed ProductGridView was the bottleneck.
-Applied view identity fix, but performance didn't improve as expected.
+Applied the dependency fix, but performance didn't improve as expected.
 Root cause is deeper than expected. Requiring architectural change.
 Shipping animation disable (.animation(nil) on TabView) as mitigation.
 Proper fix queued for next release cycle."
@@ -1089,7 +1100,7 @@ Problem likely elsewhere:
 - Database queries
 - Third-party frameworks
 
-**Docs**: /xcode/analyzing-hangs-in-your-app, /xcode/optimizing-your-app-s-performance
+**Docs**: /xcode/understanding-hangs-in-your-app, /xcode/improving-your-app-s-performance
 
 ---
 
@@ -1103,22 +1114,21 @@ Problem likely elsewhere:
 - Scrolling felt janky
 
 **After optimization**:
-- Only tapped view updates (granular view models)
-- Formatters created once, strings cached
-- Smooth 60fps scrolling
+- Only the tapped view updates, because each row depends on its own view model
+- Formatters are created once, and distance strings are computed once per location change, then read from the cache
+- The same interaction no longer shows long view body updates in the trace
 
 **Improvements**:
-- 100+ unnecessary view updates → 1 update per action
-- Milliseconds saved per view × dozens of views = significant improvement
-- Eliminated long view body updates entirely
+- Two favorite taps now produce two view body updates, instead of updating every visible row
+- The formatter work leaves the view body: the ~135 µs per-row create-and-format call is replaced by a dictionary lookup
 
 ---
 
 ## Resources
 
-**WWDC**: 2025-306
+**WWDC**: 2025-256 (lists and scrolling), 2025-306 (SwiftUI instrument)
 
-**Docs**: /xcode/understanding-hitches-in-your-app, /xcode/analyzing-hangs-in-your-app, /xcode/optimizing-your-app-s-performance
+**Docs**: /xcode/understanding-hitches-in-your-app, /xcode/understanding-hangs-in-your-app, /xcode/improving-your-app-s-performance, /xcode/understanding-and-improving-swiftui-performance
 
 **Skills**: skills/debugging-diag.md, skills/debugging.md, axiom-performance (skills/memory-debugging.md), axiom-build (skills/xcode-debugging.md)
 

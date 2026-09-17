@@ -116,7 +116,7 @@ NavigationSplitView {
 ```
 
 - `searchToolbarBehavior(.minimize)` — Compact search that expands on tap
-- `Tab(role: .search)` — Dedicated search tab; search field replaces tab bar. See swiftui-nav-ref Section 5.7
+- `Tab(role: .search)` — Dedicated search tab; search field replaces tab bar. The role itself is iOS 18+, not new in 26. See swiftui-nav-ref Section 5.7
 
 #### Known Issue: `.onGeometryChange` breaks `Tab(role: .search)` morph on first activation
 
@@ -487,7 +487,7 @@ NavigationSplitView {
 ### Synchronized Window Resize Animations
 
 ```swift
-.windowResizeAnchor(.topLeading) // Tailor where animation originates
+.windowResizeAnchor(.topLeading) // macOS 26+ only — a View modifier, not a Scene one
 
 // SwiftUI now synchronizes animation between content view size changes
 // and window resizing - great for preserving continuity when switching tabs
@@ -644,9 +644,8 @@ struct SunPositionView: View {
 
     var body: some View {
         HikingRouteView()
-            .overlay(alignment: sunAlignment) {
+            .spatialOverlay(alignment: sunAlignment) {
                 SunView()
-                    .spatialOverlay(alignment: sunAlignment)
             }
     }
 
@@ -660,6 +659,8 @@ struct SunPositionView: View {
     }
 }
 ```
+
+`Alignment3D` is not an `Alignment`, so it cannot be passed to `.overlay(alignment:)`. Depth-aware placement goes through `.spatialOverlay(alignment:content:)`, which takes an `Alignment3D` and is visionOS 26+.
 
 ### Manipulable Modifier
 
@@ -898,7 +899,7 @@ struct InAppBrowser: View {
 
 ### WebView view modifiers
 
-Nine modifiers, all `iOS 26.0` / `macOS 26.0`, none iOS-unavailable. Verified against the iPhoneOS 27.0 SDK.
+Ten modifiers ship in this family. Nine of them are `iOS 26.0` / `macOS 26.0`; the tenth, `webViewContextMenu(_:)`, is macOS-only.
 
 | Modifier | Argument |
 |---|---|
@@ -911,6 +912,7 @@ Nine modifiers, all `iOS 26.0` / `macOS 26.0`, none iOS-unavailable. Verified ag
 | `webViewLinkPreviews(_:)` | `.automatic` / `.enabled` / `.disabled` |
 | `webViewElementFullscreenBehavior(_:)` | `.automatic` / `.enabled` / `.disabled` |
 | `webViewTextSelection(_:)` | any `TextSelectability` |
+| `webViewContextMenu(_:)` | `ViewBuilder` closure over the activated element info — macOS only |
 
 **These modifiers carry no doc comments in the SDK.** Signatures and availability are verifiable; Apple's stated semantics are not. Treat behavioral claims below as ranked suspects to test, not as guarantees.
 
@@ -988,7 +990,9 @@ struct CommentView: View {
 
 ---
 
-## Drag and Drop Enhancements
+## Drag and Drop Enhancements OS27
+
+Container-based dragging is `iOS 27.0` / `visionOS 27.0` / `macOS 26.0` — unavailable on tvOS and watchOS.
 
 ### Multiple Item Dragging
 
@@ -1020,7 +1024,7 @@ struct PhotoGrid: View {
 - `.dragContainer(for:in:)` provides the typed items lazily when a drop occurs; the payload closure receives the dragged item IDs
 - `.dragContainerSelection(_:containerNamespace:)` supplies the current selection — it is a separate modifier, not a `dragContainer` argument
 
-### DragConfiguration
+### DragConfiguration (macOS)
 
 #### Customize supported operations
 
@@ -1028,19 +1032,23 @@ struct PhotoGrid: View {
 .dragConfiguration(DragConfiguration(allowMove: false, allowDelete: true))
 ```
 
+`DragConfiguration(allowMove:allowDelete:)` is macOS-only — iOS and visionOS mark it `unavailable`, and the only initializer there is `DragConfiguration(allowMove:)`. `allowDelete` is what makes the `.delete` drop operation reachable, and `.delete` is macOS-only for the same reason.
+
 ### Observing Drag Events
 
 ```swift
 .onDragSessionUpdated { session in
     let ids = session.draggedItemIDs(for: Photo.ID.self)
-    if session.phase == .ended(.delete) {
+    if session.phase == .ended(.delete) {   // macOS only
         trash(ids)
         deletePhotos(ids)
     }
 }
 ```
 
-### Drag Preview Formations
+The other operations `.ended(_:)` can carry — `.cancel`, `.forbidden`, `.copy`, `.move` — are available everywhere the modifier is, so the same closure works on iOS against those.
+
+### Drag Preview Formations (macOS)
 
 ```swift
 .dragPreviewsFormation(.stack) // Items stack nicely on top of one another
@@ -1049,7 +1057,9 @@ struct PhotoGrid: View {
 // (there is no .grid formation)
 ```
 
-Combine all modifiers (`.dragContainer`, `.dragConfiguration`, `.dragPreviewsFormation`, `.onDragSessionUpdated`) on the same scroll view for a complete multi-item drag experience.
+Neither `dragPreviewsFormation(_:)` nor `DragDropPreviewsFormation` exists on iOS.
+
+Combine `.dragContainer`, `.dragConfiguration` and `.onDragSessionUpdated` on the same scroll view for a complete multi-item drag experience; `.dragPreviewsFormation` adds the macOS-only preview arrangement.
 
 ---
 
@@ -1057,23 +1067,7 @@ Combine all modifiers (`.dragContainer`, `.dragConfiguration`, `.dragPreviewsFor
 
 ### Overview
 
-Swift Charts supports three-dimensional plotting with `Chart3D`. Key components: `Chart3D` (container), `SurfacePlot` (continuous surfaces), `Chart3DPose` (camera control), `Chart3DSurfaceStyle` (surface appearance).
-
-#### Gotcha: conditional `ChartContent` crashes below a 27.0 deployment target
-
-This applies to **all** Swift Charts, not just `Chart3D`. With a minimum deployment target below 27.0, an `if`/`else` inside a `Chart { … }` closure triggers the warning "Conformance of `_ConditionalContent<TrueContent, FalseContent>` to `ChartContent` is only available in 27.0 or newer," and the app **can crash at runtime** when that content loads. Extract the conditional into a function or computed property annotated with `@ChartContentBuilder`:
-
-```swift
-@ChartContentBuilder
-func marks(for dp: DataPoint) -> some ChartContent {
-    if selectedMetric == "Rate" {
-        LineMark(x: .value("X", dp.index), y: .value("Y", dp.rate)).foregroundStyle(.blue)
-    } else {
-        LineMark(x: .value("X", dp.index), y: .value("Y", dp.signal))
-    }
-}
-// Chart(dataPoints, id: \.index) { marks(for: $0) }
-```
+Swift Charts supports three-dimensional plotting with `Chart3D`. Key components: `Chart3D` (container), `SurfacePlot` (continuous surfaces), `Chart3DPose` (camera control), and the `Chart3DSurfaceStyle` protocol (surface appearance, implemented by `BasicChart3DSurfaceStyle`).
 
 ### Chart3D Container
 
@@ -1081,8 +1075,8 @@ func marks(for dp: DataPoint) -> some ChartContent {
 import Charts
 
 Chart3D {
-    SurfacePlot(x: "x", y: "y", z: "z") { x, y in
-        sin(x) * cos(y)
+    SurfacePlot(x: "x", y: "y", z: "z") { x, z in
+        sin(x) * cos(z)
     }
     .foregroundStyle(Gradient(colors: [.orange, .pink]))
 }
@@ -1101,39 +1095,39 @@ Chart3D(dataPoints) { point in
 
 ### SurfacePlot
 
-Renders continuous surfaces from a mathematical function mapping (x, y) to z values.
+Renders continuous surfaces from a mathematical function of x and z — `y = f(x, z)`. The closure receives the two inputs and returns the plotted y value.
 
 ```swift
-SurfacePlot(x: "X Axis", y: "Y Axis", z: "Z Axis") { x, y in
-    sin(sqrt(x * x + y * y))
+SurfacePlot(x: "X Axis", y: "Y Axis", z: "Z Axis") { x, z in
+    sin(sqrt(x * x + z * z))
 }
 ```
 
 #### Surface Styling
 
 ```swift
-SurfacePlot(x: "X", y: "Y", z: "Z") { x, y in sin(x) * cos(y) }
+SurfacePlot(x: "X", y: "Y", z: "Z") { x, z in sin(x) * cos(z) }
     .foregroundStyle(.blue)                        // Solid color
     .roughness(0.3)                                // 0 = smooth, 1 = rough
 
-// Height-based coloring (color maps to z-value)
-    .foregroundStyle(Chart3DSurfaceStyle.heightBased(yRange: -1.0...1.0))
+// Height-based coloring (color maps to the returned y value)
+    .foregroundStyle(.heightBased(yRange: -1.0...1.0))
 
 // Custom gradient mapped to height
-    .foregroundStyle(Chart3DSurfaceStyle.heightBased(
+    .foregroundStyle(.heightBased(
         Gradient(colors: [.blue, .green, .yellow, .red]),
         yRange: -1.0...1.0
     ))
 ```
 
-Available surface styles: `.heightBased` (color by z-value), `.normalBased` (color by surface normal direction).
+Available surface styles: `.heightBased` (color by the returned y value), `.normalBased` (color by surface normal direction).
 
 #### Multiple Surfaces
 
 ```swift
 Chart3D {
-    SurfacePlot(x: "X", y: "Y", z: "Z") { x, y in sin(x) * cos(y) }
-    SurfacePlot(x: "X", y: "Y", z: "Z") { x, y in cos(x) * sin(y) + 2 }
+    SurfacePlot(x: "X", y: "Y", z: "Z") { x, z in sin(x) * cos(z) }
+    SurfacePlot(x: "X", y: "Y", z: "Z") { x, z in cos(x) * sin(z) + 2 }
 }
 ```
 
@@ -1178,7 +1172,7 @@ Chart3D { /* ... */ }
 
 All existing chart axis modifiers have z-axis equivalents:
 - `.chartZScale(domain:)` — Set z-axis range
-- `.chartZAxis()` — Configure z-axis labels and grid lines
+- `.chartZAxis(.visible)` — Z-axis visibility; `.chartZAxis { }` supplies custom labels and grid lines
 
 ---
 
@@ -1289,16 +1283,14 @@ Apps must support resizable windows on iPad.
 🔧 `GlassEffectContainer` for multiple nearby glass elements
 🔧 `sharedBackgroundVisibility(.hidden)` to remove toolbar item from group background
 🔧 Sheet morphing from buttons (`.navigationTransition(.zoom(sourceID:in:))`)
-🔧 Search tab role (`Tab(role: .search)`)
 🔧 Compact search toolbar (`.searchToolbarBehavior(.minimize)`)
 🔧 Extra large control size (`.controlSize(.extraLarge)`, available since iOS 17)
 🔧 Concentric rectangle shape (`ConcentricRectangle`)
 🔧 iPad menu bar (`.commands`)
-🔧 Window resize anchor (`.windowResizeAnchor()`)
+🔧 Window resize anchor (`.windowResizeAnchor()`, macOS 26+ View modifier)
 🔧 @Animatable macro for custom shapes/modifiers
 🔧 WebView for web content
 🔧 TextEditor with AttributedString binding
-🔧 Enhanced drag and drop with `.dragContainer`
 🔧 Slider ticks (`SliderTick`, `SliderTickContentForEach`)
 🔧 Slider thumb visibility (`.sliderThumbVisibility()`)
 🔧 Safe area bars with blur (`.safeAreaBar()` + `.scrollEdgeEffectStyle()`)
@@ -1320,7 +1312,7 @@ Apps must support resizable windows on iPad.
 
 - **Performance**: Profile with new SwiftUI Instrument; use lazy stacks in nested ScrollViews; trust automatic list performance improvements
 - **Liquid Glass**: Recompile and test first; use toolbar spacers; attach `.toolbar {}` to individual views (not NavigationStack); remove `presentationBackground` from sheets; use `GlassEffectContainer` for nearby glass elements
-- **Layout**: Use `.safeAreaPadding()` for edge-to-edge (not `.padding()`). See `skills/layout-ref.md` for full guide
+- **Layout**: `.padding()` and `.safeAreaPadding()` add the same spacing on a safe-area device — use `.ignoresSafeArea()` when you actually want content at the edge. See `skills/layout-ref.md` for the measured comparison
 - **Rich Text**: Bind `AttributedString` to `TextEditor`; constrain attributes for your UX
 - **Spatial (visionOS)**: Use `Alignment3D` for depth; `.manipulable()` only where it makes sense
 
@@ -1332,9 +1324,9 @@ Apps must support resizable windows on iPad.
 |---------|-----|
 | Old design after updating to iOS 26 SDK | Clean build (Shift-Cmd-K), rebuild targeting iOS 26 SDK, check deployment target |
 | Search remains at top on iPhone | Place `.searchable` on `NavigationSplitView`, not on `List` directly |
-| @Animatable "does not conform" | All properties must be `VectorArithmetic` or marked `@AnimatableIgnored` |
+| @Animatable "Cannot automatically synthesize 'animatableData'" | Each property must conform to `Animatable` or `VectorArithmetic`, or be marked `@AnimatableIgnored`. `CGPoint`/`CGSize`/`CGRect`/`Angle` are `Animatable`, not `VectorArithmetic` — marking them ignored is not the fix |
 | Rich text formatting lost in TextEditor | Bind `AttributedString`, not `String` |
-| Drag delete not working | Enable `.dragConfiguration(allowDelete: true)` AND observe `.onDragSessionUpdated` |
+| Drag delete not working | Enable `.dragConfiguration(allowDelete: true)` AND observe `.onDragSessionUpdated` — macOS only; iOS has no `.delete` drop operation |
 | SliderTickContentForEach won't compile | Iterate over numeric values (`chapters.map(\.time)`), not custom structs — see Slider section |
 | Toolbar not morphing during navigation | Move `.toolbar {}` from NavigationStack to each view inside it — see Liquid Glass section |
 | `.toolbarBackground` on TabView ignored | Known buggy/no-op at the TabView level on iOS 26. Apply `toolbarBackground`/`toolbarBackgroundVisibility`/`toolbarColorScheme` for `.tabBar` on each Tab's content instead. (Separate from the wrong-glass-variant cold-start bug, which no modifier fixes — see `axiom-design (skills/liquid-glass.md)` Known iOS 26 Limitations.) |

@@ -9,8 +9,8 @@ This reference covers:
 
 - **`#Preview` macro** — Basic form, named previews, traits, widget previews, Live Activity previews
 - **`@Previewable` macro** — Inline dynamic properties (Xcode 16+)
-- **`PreviewModifier` protocol** — Shared expensive context across previews (Xcode 15.4+)
-- **`PreviewTrait`** — `.landscapeLeft`, `.sizeThatFitsLayout`, `.fixed`, `.modifier(_:)`
+- **`PreviewModifier` protocol** — Shared expensive context across previews (Xcode 16+, iOS 18+)
+- **`PreviewTrait`** — `.landscapeLeft`, `.sizeThatFitsLayout`, `.fixedLayout(width:height:)`, `.modifier(_:)`
 - **Canvas modes** — Live, Selectable, Variants
 - **Variant Mode** — What it auto-varies and when to use
 - **Development Assets** — Preview-only resources without bundle bloat
@@ -20,10 +20,11 @@ This reference covers:
 
 | API | Xcode | iOS |
 |---|---|---|
-| `#Preview` | 15.0+ | 17.0+ |
+| `#Preview` (no traits) | 15.0+ | 13.0+ |
+| `#Preview(_:traits:_:body:)` | 15.0+ | 17.0+ |
 | `PreviewTrait.landscapeLeft` | 15.0+ | 17.0+ |
 | `PreviewTrait.sizeThatFitsLayout` | 15.0+ | 17.0+ |
-| `PreviewTrait.fixed(width:height:)` | 15.0+ | 17.0+ |
+| `PreviewTrait.fixedLayout(width:height:)` | 15.0+ | 17.0+ |
 | `#Preview(as: WidgetFamily) { } timelineProvider: { }` | 15.0+ | 17.0+ |
 | `PreviewModifier` protocol | 16.0+ | 18.0+ (macOS 15+) |
 | `PreviewTrait.modifier(_:)` | 16.0+ | 18.0+ |
@@ -99,7 +100,7 @@ After the name, the macro takes a variadic list of `PreviewTrait<Preview.ViewTra
     Badge(text: "NEW")
 }
 
-#Preview("Fixed canvas", traits: .fixed(width: 320, height: 200)) {
+#Preview("Fixed canvas", traits: .fixedLayout(width: 320, height: 200)) {
     InspectorPanel()
 }
 
@@ -128,19 +129,20 @@ For reference — the macros declared in `DeveloperToolsSupport` and `SwiftUI`:
          timelineProvider: @escaping () -> some TimelineProvider)
 
 // Widget specific entries (result builder over TimelineEntry)
-#Preview(_ name: String? = nil,
+#Preview<Widget>(_ name: String? = nil,
          as family: WidgetFamily,
-         widget: @escaping () -> some Widget,
-         @TimelineEntryBuilder timeline: () -> [some TimelineEntry])
+         widget: @escaping () -> Widget,
+         @PreviewTimelineBuilder timeline: () -> [some TimelineEntry])
 
 // Live Activity widget (result builder over ContentState)
-#Preview(_ name: String? = nil,
-         as attributes: some ActivityAttributes,
-         widget: @escaping () -> some Widget,
-         @ContentStateBuilder contentStates: () -> [some ActivityAttributes.ContentState])
+#Preview<Widget, Attributes>(_ name: String? = nil,
+         as viewKind: ActivityPreviewViewKind,
+         using attributes: Attributes,
+         widget: @escaping () -> Widget,
+         @PreviewActivityBuilder<Attributes> contentStates: () -> [Attributes.ContentState])
 ```
 
-Signatures are simplified — the actual macro definitions use platform conditionals and result-builder attributes. `timeline:` and `contentStates:` are result builders, so you list entries / states as statements without `return` or array literal.
+Signatures are simplified — the actual macro definitions use platform conditionals and result-builder attributes, and the builder forms constrain their generic parameters (`Widget: Widget`, `Attributes: ActivityAttributes`). `timeline:` and `contentStates:` are result builders, so you list entries / states as statements without `return` or array literal. The Live Activity form is the odd one: it takes the attributes *type* as a generic parameter (to parameterize the builder) and an *instance* in `using attributes:`.
 
 #### About `Preview.ViewTraits`
 
@@ -181,7 +183,7 @@ The `timeline:` closure uses a result-builder syntax — list entries as stateme
 ### Live Activity Preview
 
 ```swift
-#Preview(as: PizzaAttributes(pizzaName: "Margherita")) {
+#Preview(as: .content, using: PizzaAttributes(pizzaName: "Margherita")) {
     PizzaActivityWidget()
 } contentStates: {
     PizzaAttributes.ContentState(status: .baking,     minutesRemaining: 8)
@@ -190,7 +192,7 @@ The `timeline:` closure uses a result-builder syntax — list entries as stateme
 }
 ```
 
-`contentStates:` is a result-builder closure; list `ContentState` values as statements. The canvas lets you scrub through them.
+`as:` takes an `ActivityPreviewViewKind`, not the attributes — `.content` for the Lock Screen / banner presentation, or `.dynamicIsland(.compact)` / `.minimal` / `.expanded` for the island. The attributes instance goes in `using attributes:`. `contentStates:` is a result-builder closure; list `ContentState` values as statements. The canvas lets you scrub through them.
 
 ---
 
@@ -369,7 +371,7 @@ static func makeSharedContext() async throws -> Catalog {
 }
 ```
 
-The modifier is a `PreviewTrait`, so it composes with `.landscapeLeft`, `.sizeThatFitsLayout`, `.fixed(width:height:)`, etc.
+The modifier is a `PreviewTrait`, so it composes with `.landscapeLeft`, `.sizeThatFitsLayout`, `.fixedLayout(width:height:)`, etc.
 
 ---
 
@@ -384,7 +386,7 @@ The modifier is a `PreviewTrait`, so it composes with `.landscapeLeft`, `.sizeTh
 | `.portrait` | Force portrait |
 | `.portraitUpsideDown` | Upside-down portrait |
 | `.sizeThatFitsLayout` | Canvas sizes to the view's ideal size (no device frame) |
-| `.fixed(width:height:)` | Canvas sized to fixed dimensions |
+| `.fixedLayout(width:height:)` | Canvas sized to fixed dimensions |
 | `.modifier(_:)` | Apply a `PreviewModifier` to the preview |
 
 For *device-level* options that aren't in the trait list (specific device model, dark mode, Dynamic Type size), use the canvas Device Settings popover instead — those aren't expressed as code traits.
@@ -500,11 +502,11 @@ Apple addressed similar previews-failed-to-launch issues across Xcode 26.x point
 
 ### Cache corruption
 
-If a preview was working and now refuses to load with no clear error: cache corruption is the most likely cause. The fix sequence — Restart Preview Canvas (⌥⌘P) → Restart Xcode → `rm -rf ~/Library/Developer/Xcode/DerivedData` → rebuild — is the same as for any preview crash. Full diagnostic decision tree lives in `skills/debugging.md` Preview Crashes section.
+If a preview was working and now refuses to load with no clear error: cache corruption is the most likely cause. The fix sequence — Refresh Canvas (⌥⌘P) → Restart Xcode → `rm -rf ~/Library/Developer/Xcode/DerivedData` → rebuild — is the same as for any preview crash. Full diagnostic decision tree lives in `skills/debugging.md` Preview Crashes section.
 
 ### `@Previewable` outside `#Preview` is a compile error
 
-If you see "`@Previewable` may only be used inside a `#Preview` macro", you've put a `@Previewable` declaration in a regular view body or function. Move it to `#Preview` root scope.
+If you see "`@Previewable` can only be used in a SwiftUI #Preview body closure", you've tagged a declaration that is not at the root of a `#Preview` body — usually a stored property of a view or model type. Move it to `#Preview` root scope. A `@Previewable` local inside an ordinary function body is worse than an error: the compiler doesn't expand the macro there at all, so the tag compiles silently and does nothing.
 
 ### `ENABLE_PREVIEWS` is gone in Xcode 16+
 
@@ -522,7 +524,7 @@ if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
 
 ## Migration: `PreviewProvider` → `#Preview`
 
-Pre-Xcode-15 codebases use the `PreviewProvider` protocol. Apple has not deprecated it (it remains available iOS 13+), but the official documentation directs new code to `#Preview`: "You can use this protocol to define a preview manually, but you typically use a preview macro like `Preview(_:body:)` instead."
+Pre-Xcode-15 codebases use the `PreviewProvider` protocol. It still works, but as of the 27.0 SDK it is deprecated — `@available(anyAppleOS, deprecated: 27.0, message: "Use #Preview instead.")` — along with the whole `preview*` view-modifier family (`previewLayout`, `previewDevice`, `previewDisplayName`, `previewContext`, `previewInterfaceOrientation`). The warnings appear once your deployment target is iOS 27; the official documentation already directs new code to `#Preview`: "You can use this protocol to define a preview manually, but you typically use a preview macro like `Preview(_:body:)` instead."
 
 ### Mapping
 
@@ -531,7 +533,7 @@ Pre-Xcode-15 codebases use the `PreviewProvider` protocol. Apple has not depreca
 | `struct ContentView_Previews: PreviewProvider { static var previews: some View { ... } }` | `#Preview { ContentView() }` |
 | `.previewDisplayName("Light")` | `#Preview("Light") { ... }` |
 | `.previewLayout(.sizeThatFits)` | `#Preview(traits: .sizeThatFitsLayout) { ... }` |
-| `.previewLayout(.fixed(width: 320, height: 200))` | `#Preview(traits: .fixed(width: 320, height: 200)) { ... }` |
+| `.previewLayout(.fixed(width: 320, height: 200))` | `#Preview(traits: .fixedLayout(width: 320, height: 200)) { ... }` |
 | `.previewDevice("iPhone 14")` | Canvas → Preview Device dropdown (no code equivalent) |
 | `Group { Preview1; Preview2 }` for multi-variant | Multiple `#Preview("Name") { ... }` blocks |
 
@@ -565,7 +567,7 @@ struct ProductCard_Previews: PreviewProvider {
 }
 ```
 
-Migration is safe in either direction during the same Xcode session — `PreviewProvider` and `#Preview` co-exist. There is no upgrade pressure beyond Apple's recommendation; existing `PreviewProvider` code continues to work indefinitely.
+Migration is safe in either direction during the same Xcode session — `PreviewProvider` and `#Preview` co-exist. Existing `PreviewProvider` code keeps working, but on the 27.0 SDK it warns as soon as your deployment target is iOS 27, so migration is now the path of least resistance.
 
 ---
 

@@ -39,7 +39,7 @@ Grep for:
   - `var body: some View` — all view body definitions
   - `DateFormatter()`, `NumberFormatter()` — formatter creation
   - `Data(contentsOf:`, `String(contentsOf:` — file I/O
-  - `UIImage(`, `CIFilter`, `UIGraphicsBeginImageContext` — image processing
+  - `UIImage(`, `CIFilter`, `UIGraphicsBeginImageContext`, `preparingThumbnail` — image processing
   - `.contains(`, `.filter(`, `.first(where:` — collection operations
 ```
 
@@ -62,36 +62,36 @@ Present this map in the output before proceeding.
 
 ## Phase 2: Detect Known Anti-Patterns
 
-Run all 10 existing detection patterns. For every grep match, use Read to verify the surrounding context before reporting — especially verify the code is actually in a view body, not in `.task` or a background context.
+Run all 11 existing detection patterns. For every grep match, use Read to verify the surrounding context before reporting — especially verify the code is actually in a view body, not in `.task` or a background context.
 
 ### 1. File I/O in View Body (CRITICAL)
 
 **Pattern**: Synchronous file reads in view body
 **Search**: `Data(contentsOf:` or `String(contentsOf:` — verify near `var body`
-**Issue**: Blocks main thread, guaranteed frame drops, potential ANR
+**Issue**: Blocks the main thread for the duration of the read — can miss the commit deadline (a commit hitch) or, if it runs long enough, register as a hang. Not guaranteed: measure it
 **Fix**: Use `.task` with async loading, store in @State
 
 ### 2. Expensive Formatters in View Body (CRITICAL)
 
 **Pattern**: DateFormatter(), NumberFormatter() created in view body
 **Search**: `DateFormatter()` or `NumberFormatter()` in files with `var body` — verify not `static let`
-**Issue**: ~1-2ms each, 100 rows = 100-200ms wasted per update
-**Fix**: Move to `static let` or @Observable model
+**Issue**: Recomputed on every body pass — measured ~135 µs per call for the create-and-format shape (macOS 27, `-O`), so 100 rows ≈ 14 ms per update. Creating a bare formatter is sub-microsecond; the formatting call dominates
+**Fix**: Move the formatter to the model and cache the formatted strings there — reuse alone still pays the `string(from:)` call on every pass. `static let` is concurrency-safe for `DateFormatter`/`NumberFormatter`; `MeasurementFormatter` is non-Sendable under Swift 6 and belongs on the model
 
 ### 3. Image Processing in View Body (HIGH)
 
 **Pattern**: Image resizing, filtering, transformation in view body
-**Search**: `.resized`, `.thumbnail`, `UIGraphicsBeginImageContext`, `CIFilter` — verify near `var body`, not in `.task`
+**Search**: `preparingThumbnail`, `byPreparingThumbnail`, `UIGraphicsBeginImageContext`, `CIFilter` — verify near `var body`, not in `.task`. Neither SwiftUI nor UIKit has a `.resized` or `.thumbnail` member: a helper with those names is the app's own code, so grep for its definition too. `.resizable()` is not a signal — it is how every correctly written image view scales its bitmap
 **Issue**: CPU-intensive work causes stuttering during scrolling
-**Fix**: Process in background with `.task`, cache thumbnails
+**Fix**: `preparingThumbnail(of:)` (sync) or `byPreparingThumbnail(ofSize:)` (async) in `.task`, then cache the result
 
 ### 4. Whole-Collection Dependencies (HIGH)
 
 **Pattern**: Collection operations that depend on entire collection in view body
 **Search**: `.contains(`, `.first(where:`, `.filter(` — verify near `var body`
 **Issue**: View updates when ANY item changes, not just relevant items
-**Fix**: Use Set for O(1) lookups (breaks collection dependency)
-**Note**: Sets are OK (O(1)), small collections OK (<10 items)
+**Fix**: Narrow the dependency — per-item view models or a finer-grained source (rule 1). A `Set` changes the lookup cost only: the read still registers a dependency on the whole property
+**Note**: Small collections (<10 items) are cheap to scan; a `Set` lowers the scan cost, not the dependency
 
 ### 5. Missing Lazy Loading (MEDIUM)
 
@@ -105,15 +105,15 @@ Run all 10 existing detection patterns. For every grep match, use Read to verify
 
 **Pattern**: Environment values that change every frame passed to deep hierarchies
 **Search**: `.environment(` with scroll offset, gesture state, or timer-driven values
-**Issue**: All child views update on every change
+**Issue**: Every view that reads the environment is notified and re-checks its value; only the views whose own value changed run their body again. The cost is that check, multiplied by the number of readers
 **Fix**: Pass values directly to views that need them, not via environment
 
-### 7. Missing View Identity (MEDIUM)
+### 7. Identity Churn (MEDIUM)
 
-**Pattern**: ForEach without explicit id on non-Identifiable types
-**Search**: `ForEach` without `id:` parameter — verify type isn't Identifiable
-**Issue**: SwiftUI can't track views efficiently, recreates all on change
-**Fix**: Use `ForEach(items, id: \.id)` or conform to Identifiable
+**Pattern**: Identity churn — an identity that changes whenever the data changes
+**Search**: `ForEach(` with `id: \.self` or `id: \.indices`, `.enumerated()` inside `ForEach`, or a freshly built value passed to `.id(` within a body — verify the identity does not change on every update
+**Issue**: A changed identity destroys the old view and creates a new one: `@State` is re-initialized, `onAppear` runs again, and the row that should have updated is rebuilt instead
+**Fix**: One stable identity per element — an `Identifiable` element type, or a stable key path such as `ForEach(items, id: \.id)`. The `Range` (`ForEach(0..<n)`) and `Identifiable` overloads need no `id:` at all, so a missing `id:` is not the defect — a changing one is
 
 ### 8. Navigation Performance (HIGH)
 
@@ -149,8 +149,8 @@ Using the Performance Context Map from Phase 1 and your domain knowledge, check 
 
 | Question | What it detects | Why it matters |
 |----------|----------------|----------------|
-| Are any of the Phase 2 patterns inside scrolling cell views (List row, LazyVStack item)? | Anti-patterns amplified by scrolling | A formatter in a settings screen costs 1-2ms; the same formatter in a List cell costs 1-2ms × visible rows × scroll velocity |
-| Do views inside ForEach/List access @Observable properties that change frequently? | Unnecessary cell rebuilds | One property change on the model rebuilds every cell that reads any property on that model |
+| Are any of the Phase 2 patterns inside scrolling cell views (List row, LazyVStack item)? | Anti-patterns amplified by scrolling | A formatter in a settings screen pays that cost once; the same formatter in a List cell pays it again for every visible row on every pass |
+| Do views inside ForEach/List access @Observable properties that change frequently? | Unnecessary cell rebuilds | @Observable tracks the properties a view reads, so the defect is a frequently-changing property that cells do read. With ObservableObject/@Published invalidation is whole-object: any change rebuilds every cell that reads any property (rule 10) |
 | Are there views that create child views conditionally based on data that changes often? | Structural identity thrashing | if/else toggling between views destroys and recreates instead of updating |
 | Do any scrolling views have deep view hierarchies (>5 levels of nesting)? | Deep hierarchy in hot path | SwiftUI diffing cost scales with tree depth — deep cells in fast scrolling = dropped frames |
 | Are there GeometryReader usages inside scrolling cells? | GeometryReader in hot path | GeometryReader forces two layout passes — acceptable in static views, expensive in scrolling |
@@ -172,7 +172,7 @@ Bump severity for these combinations:
 | Image processing in body | No caching + scrolling context | Re-processed on every scroll-into-view | CRITICAL |
 | Missing lazy loading | >100 items in ForEach | All 100+ views created at once | HIGH |
 | GeometryReader in cell | Deep view hierarchy | Double layout pass on deep tree per cell | HIGH |
-| Frequent environment change | Many child views | Entire subtree invalidated per frame | HIGH |
+| Frequent environment change | Many child views | Every reader re-checks its value per frame | HIGH |
 | NavigationPath recreation | In view body | Navigation hierarchy rebuilt every update | HIGH |
 
 Also note overlaps with other auditors:
@@ -190,7 +190,7 @@ Also note overlaps with other auditors:
 | View body purity | N view files scanned, M with expensive operations in body (Z%) |
 | Scrolling cell safety | N scrolling contexts, M with clean cells (Z%) |
 | Lazy container usage | N long-list contexts, M using lazy containers (Z%) |
-| Collection efficiency | N collection operations in bodies, M using Set/efficient lookups (Z%) |
+| Collection efficiency | N collection operations in bodies, M with narrowed dependencies (Z%) |
 | Observable efficiency | N @Observable, M ObservableObject (migration %) |
 | **Health** | **SMOOTH / JANKY / BROKEN** |
 ```
@@ -247,13 +247,13 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details
 
 - Formatters in @Observable classes or `static let`
 - Small collections (<10 items) with .contains()
-- Sets with .contains() (O(1) lookup)
+- Sets with .contains() — cheaper lookup, but still a dependency on the whole property
 - VStack with few items (<20)
 - Image processing in `.task` or background queue
 - File I/O in `.task` or async contexts
 - ForEach on Identifiable types (automatic identity)
+- ForEach over a `Range` (`ForEach(0..<n)`) — no `id:` needed
 - GeometryReader in non-scrolling, single-instance views
-- ObservableObject in iOS 16-only targets
 
 ## Related
 

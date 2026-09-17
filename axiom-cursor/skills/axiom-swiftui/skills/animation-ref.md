@@ -3,7 +3,7 @@
 
 ## Overview
 
-Comprehensive guide to SwiftUI's animation system, from foundational concepts to advanced techniques. This skill covers the Animatable protocol, the iOS 26 @Animatable macro, animation types, and the Transaction system.
+Comprehensive guide to SwiftUI's animation system, from foundational concepts to advanced techniques. This skill covers the Animatable protocol, the Xcode 26 `@Animatable` macro, animation types, and the Transaction system.
 
 **Core principle** Animation in SwiftUI is mathematical interpolation over time, powered by the VectorArithmetic protocol. Understanding this foundation unlocks the full power of SwiftUI's declarative animation system.
 
@@ -12,7 +12,7 @@ Comprehensive guide to SwiftUI's animation system, from foundational concepts to
 - iOS 13+: Animatable protocol, timing/spring animations
 - iOS 17+: Default spring animations, scoped animations, PhaseAnimator, KeyframeAnimator
 - iOS 18+: Zoom transitions, UIKit/AppKit animation bridging
-- iOS 26+: @Animatable macro
+- Xcode 26 SDK+: @Animatable macro (generates `AnimatablePair` data below iOS 26, `AnimatableValues` on iOS 26+)
 
 ---
 
@@ -44,22 +44,30 @@ While this animation runs, SwiftUI computes intermediate values:
 
 SwiftUI requires animated data to conform to `VectorArithmetic` — providing subtraction, scaling, addition, and a zero value. This enables SwiftUI to interpolate between any two values.
 
-**Built-in conforming types**: `CGFloat`, `Double`, `Float`, `Angle` (1D), `CGPoint`, `CGSize` (2D), `CGRect` (4D).
+**Built-in conforming types**: `CGFloat`, `Double`, `Float`, plus `AnimatablePair` and `EmptyAnimatableData`. The geometry types — `Angle`, `CGPoint`, `CGSize`, `CGRect` — conform to `Animatable`, not `VectorArithmetic`; their `animatableData` is a `VectorArithmetic` projection, `Double` for `Angle` and `AnimatablePair<CGFloat, CGFloat>` for `CGPoint` and `CGSize`.
 
-**Key insight** Vector arithmetic abstracts over dimensionality. SwiftUI animates all these types with a single generic implementation.
+**Key insight** Vector arithmetic abstracts over dimensionality. SwiftUI interpolates every animatable type through one generic implementation, whatever shape its `animatableData` takes.
 
 ### Why Int Can't Be Animated
 
 `Int` doesn't conform to VectorArithmetic — no fractional intermediates exist between 3 and 4. SwiftUI simply snaps the value.
 
-**Solution**: Use `Float`/`Double` and display as `Int`:
+**Solution**: Keep the animated value a `Float`/`Double` and give the *text* something to animate. A `Text` string is not an animatable attribute, so `.animation(_:value:)` on its own re-renders the body once at the final value and the number jumps:
 
 ```swift
-@State private var count: Float = 0
+@State private var count: Double = 0
 // ...
 Text("\(Int(count))")
     .animation(.spring, value: count)
+    // ⚠️ Snaps 0 → 100 — no intermediate values are ever rendered
+
+Text("\(Int(count))")
+    .contentTransition(.numericText(value: count))
+    .animation(.spring, value: count)
+    // ✅ iOS 17+: the digits roll to the new value, in the direction of the change
 ```
+
+Neither form re-renders the body per frame, so neither displays the intermediate integers. For a number that counts through every value, conform the view to `Animatable` (Part 2).
 
 ### Model vs Presentation Values
 
@@ -122,7 +130,7 @@ Many SwiftUI modifiers conform to Animatable:
 
 ### AnimatablePair for Multi-Dimensional Data
 
-When animating multiple properties, use `AnimatablePair` to combine vectors. For example, `scaleEffect` combines `CGSize` (2D) and `UnitPoint` (2D) into a 4D vector via `AnimatablePair<CGSize.AnimatableData, UnitPoint.AnimatableData>`. Access components via `.first` and `.second`. The `@Animatable` macro (iOS 26+) eliminates this boilerplate entirely.
+When animating multiple properties, use `AnimatablePair` to combine vectors. For example, `scaleEffect` combines `CGSize` (2D) and `UnitPoint` (2D) into a 4D vector via `AnimatablePair<CGSize.AnimatableData, UnitPoint.AnimatableData>`. Access components via `.first` and `.second`. The `@Animatable` macro (Xcode 26 SDK+) eliminates this boilerplate entirely.
 
 ### Custom Animatable Conformance
 
@@ -137,7 +145,7 @@ When animating multiple properties, use `AnimatablePair` to combine vectors. For
 struct AnimatableNumberView: View, Animatable {
     var number: Double
 
-    var animatableData: Double {
+    nonisolated var animatableData: Double {
         get { number }
         set { number = newValue }
     }
@@ -153,6 +161,8 @@ AnimatableNumberView(number: value)
     .animation(.spring, value: value)
 ```
 
+`View` is main-actor isolated while `Animatable.animatableData` is a nonisolated requirement, so the property carries `nonisolated` — otherwise the conformance is rejected.
+
 #### How it works
 1. `number` changes from 0 to 100
 2. SwiftUI calls `body` for every frame of the animation
@@ -165,19 +175,19 @@ AnimatableNumberView(number: value)
 
 ---
 
-## Part 3: @Animatable Macro (iOS 26+)
+## Part 3: @Animatable Macro (Xcode 26 SDK+)
 
 ### Overview
 
 The `@Animatable` macro eliminates the boilerplate of manually conforming to the Animatable protocol.
 
-**Before iOS 26**, you had to:
+**Without the macro**, you had to:
 1. Manually conform to `Animatable`
 2. Write `animatableData` getter and setter
 3. Use `AnimatablePair` for multiple properties
 4. Exclude non-animatable properties manually
 
-**iOS 26+**, you just add `@Animatable`:
+**With it**, you just add `@Animatable`:
 
 ```swift
 @MainActor
@@ -196,7 +206,9 @@ The macro automatically:
 - Generates `Animatable` conformance
 - Inspects all stored properties
 - Creates `animatableData` from VectorArithmetic-conforming properties
-- Handles multi-dimensional data with `AnimatablePair`
+- Combines multi-dimensional data — `AnimatableValues` on iOS 26+, `AnimatablePair` before that
+
+**Availability** The macro is declared for iOS 13 and later, so your deployment target doesn't gate it; only the generated code differs.
 
 ### Before/After Comparison
 
@@ -249,7 +261,7 @@ struct HikingRouteShape: Shape {
 }
 ```
 
-**Lines of code**: 20 → 12 (40% reduction)
+**Lines of code**: 26 → 13 (50% reduction)
 
 ### @AnimatableIgnored
 
@@ -260,7 +272,7 @@ Use `@AnimatableIgnored` to exclude properties from animation.
 - **IDs** — Identifiers that shouldn't animate
 - **Timestamps** — When the view was created/updated
 - **Internal state** — Non-visual bookkeeping
-- **Non-VectorArithmetic types** — Colors, strings, booleans
+- **Non-VectorArithmetic types** — `Int`, colors, strings, booleans
 
 #### Example
 
@@ -269,7 +281,9 @@ Use `@AnimatableIgnored` to exclude properties from animation.
 @Animatable
 struct ProgressView: View {
     var progress: Double // Animated
-    var totalItems: Int // Animated (if Float, not if Int)
+
+    @AnimatableIgnored
+    var totalItems: Int // Not animated — Int isn't Animatable
 
     @AnimatableIgnored
     var title: String // Not animated
@@ -332,18 +346,18 @@ Timing curve animations use bezier curves to control the speed of animation over
 #### Built-in presets
 
 ```swift
-.animation(.linear)          // Constant speed
-.animation(.easeIn)          // Starts slow, ends fast
-.animation(.easeOut)         // Starts fast, ends slow
-.animation(.easeInOut)       // Slow start and end, fast middle
+.animation(.linear, value: isOn)      // Constant speed
+.animation(.easeIn, value: isOn)      // Starts slow, ends fast
+.animation(.easeOut, value: isOn)     // Starts fast, ends slow
+.animation(.easeInOut, value: isOn)   // Slow start and end, fast middle
 ```
 
 #### Custom timing curves
 
 ```swift
-let customCurve = UnitCurve(
-    startControlPoint: CGPoint(x: 0.2, y: 0),
-    endControlPoint: CGPoint(x: 0.8, y: 1)
+let customCurve = UnitCurve.bezier(
+    startControlPoint: UnitPoint(x: 0.2, y: 0),
+    endControlPoint: UnitPoint(x: 0.8, y: 1)
 )
 
 .animation(.timingCurve(customCurve, duration: 0.5))
@@ -367,9 +381,9 @@ Spring animations use physics simulation to create natural, organic motion.
 #### Built-in presets
 
 ```swift
-.animation(.smooth)     // No bounce (default since iOS 17)
-.animation(.snappy)     // Small amount of bounce
-.animation(.bouncy)     // Larger amount of bounce
+.animation(.smooth, value: isOn)     // No bounce (not the default — Animation.default is)
+.animation(.snappy, value: isOn)     // Small amount of bounce
+.animation(.bouncy, value: isOn)     // Larger amount of bounce
 ```
 
 #### Custom springs
@@ -426,9 +440,11 @@ withAnimation {
 #### iOS 17+
 ```swift
 withAnimation {
-    // Uses .smooth spring by default
+    // Uses Animation.default — a spring
 }
 ```
+
+`withAnimation`'s default argument is `Animation.default`, which is a spring but not one of the named presets: it compares unequal to `.smooth`, `.snappy`, and `.bouncy`.
 
 **Why the change**: Spring animations feel more natural and preserve velocity when interrupted.
 
@@ -528,7 +544,7 @@ struct AvatarView: View {
 
     var body: some View {
         Image("avatar")
-            .animation(.spring, value: selected) {
+            .animation(.spring) {
                 $0.scaleEffect(selected ? 1.5 : 1.0)
             }
             // ✅ Only scaleEffect animates, image transition doesn't
@@ -833,7 +849,7 @@ Zoom transitions also work with `fullScreenCover` and `sheet`:
 
 ```swift
 .matchedTransitionSource(id: bracelet.id, in: namespace) { source in
-    source.cornerRadius(8.0).shadow(radius: 4)
+    source.clipShape(.rect(cornerRadius: 8.0)).shadow(radius: 4)
 }
 ```
 
@@ -979,10 +995,10 @@ Each `.interactiveSpring` retargets the previous animation, and the final `.spri
 ### Property Not Animating
 
 Check in order:
-1. **Type conforms to VectorArithmetic?** — `Int` can't animate; use `Double`/`Float`
+1. **Type conforms to VectorArithmetic?** — `Int` can't animate; use `Double`/`Float`, plus `.contentTransition(.numericText(value:))` when the animated value is a `Text`
 2. **Animation modifier present?** — Need `.animation(.spring, value: x)` or `withAnimation`
 3. **Correct value tracked?** — `.animation(.spring, value: progress)` not `.animation(.spring, value: title)`
-4. **View conforms to Animatable?** — Custom views need `@Animatable` (iOS 26+) or manual `animatableData`
+4. **View conforms to Animatable?** — Custom views need `@Animatable` (Xcode 26 SDK+) or a manual `animatableData`, marked `nonisolated`
 
 ### Animation Stuttering
 

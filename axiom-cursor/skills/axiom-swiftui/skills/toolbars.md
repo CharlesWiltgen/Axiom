@@ -45,10 +45,9 @@ Use when:
 | Symptom | Cause | Fix |
 |---|---|---|
 | Toolbar items don't appear | `.toolbar` on a View not inside NavigationStack/SplitView | Move `.toolbar` to the navigation container's content, or wrap in `NavigationStack` |
-| Items appear in wrong order on iPad | Used `.navigationBarTrailing` (deprecated alias) | Use `.topBarTrailing` |
 | Customization sheet has nothing to customize | Used `.toolbar { }` instead of `.toolbar(id:)` | Switch to `.toolbar(id:)` and give each `ToolbarItem` an `id:` |
 | "…requires that 'Spacer' conform to 'ToolbarContent'" compile error | `Spacer()` placed between separate `ToolbarItem`s | Use `ToolbarSpacer(.fixed)` or `ToolbarSpacer(.flexible)` (iOS 26+); before 26, put `Spacer()` inside a `ToolbarItemGroup` |
-| Two `.primaryAction` items but only one shows | iOS HIG: one primary action per surface | Demote one to `.secondaryAction` or `.topBarTrailing` |
+| Two `.primaryAction` items render side by side in the trailing group | iOS HIG: one primary action per surface | Demote one to `.secondaryAction` or `.topBarTrailing` |
 | Toolbar items flicker when state changes | Conditional `if` inside `.toolbar` rebuilds the whole toolbar | Use `.disabled()` / `.opacity()` modifiers on stable items instead |
 | Bottom bar doesn't appear on iOS | `.bottomBar` requires `.toolbar(.visible, for: .bottomBar)` or items present | Verify visibility AND content; bottom bar hides when empty |
 | Toolbar background ignores custom material | Set `.background` on a child View | Use `.toolbarBackground(.regularMaterial, for: .navigationBar)` instead |
@@ -259,8 +258,8 @@ Lets users rearrange, add, and remove toolbar items via a customization sheet. R
 - `.reorderable` — can be moved but not hidden
 
 **Where customization appears**
-- iPadOS 16+ / macOS 13+: Edit Toolbar menu
-- iOS 26+: customization sheet via `.toolbarCustomizationBehavior` action
+- iPadOS 16+ / macOS 13+: Edit Toolbar menu — the customization UI is system-provided; there is no API to present it yourself
+- What each item may do is set by `.customizationBehavior(_:)` and `.defaultCustomization(_:options:)`
 
 **Give every customizable item a `Label` (text + SF Symbol), not a text-only or icon-only `Button`** — the customization sheet and overflow menu render the label, and a bare title or lone glyph reads as broken there.
 
@@ -342,7 +341,7 @@ NavigationStack {
 }
 ```
 
-- **Default placement** Let the system decide — `.searchable(text:)` shows the field under the title on iOS and adapts per platform.
+- **Default placement** Let the system decide — `.searchable(text:)` is bottom-aligned above the home indicator from iOS 26, and sat in the navigation bar (hidden on scroll, pull down to reveal) through iOS 18. See `skills/search-ref.md` for the per-platform table.
 - **Force it into the bar** `.searchable(text: $query, placement: .toolbar)` when you specifically want it in the toolbar region.
 - **iOS 26 collapsing search** `.searchToolbarBehavior(.minimize)` gives the search *button* that expands into a field — the modern bar pattern.
 - Like `.toolbar`, `.searchable` only works inside a navigation container (same prerequisite as Pattern 1's missing-`NavigationStack` trap).
@@ -660,7 +659,7 @@ Before merging toolbar code:
 - [ ] No conditional `if` inside `.toolbar` — use stable items with conditional label/action
 - [ ] If using `Spacer()` between toolbar items, it's inside a `ToolbarItemGroup` (or replaced with `ToolbarSpacer` on iOS 26+)
 - [ ] Customizable toolbars use `.toolbar(id:)` AND every `ToolbarItem` has an `id:`
-- [ ] Bottom bar items use `.bottomBar` placement (iOS only)
+- [ ] Bottom bar items use `.bottomBar` placement (iOS, tvOS 18+, watchOS 10+ — not on macOS)
 - [ ] Editor-style three-column layouts use `.toolbarRole(.editor)`
 - [ ] iOS 26+ apps reviewed against axiom-design (skills/liquid-glass.md) for background-material changes
 - [ ] macOS apps set `windowToolbarStyle` on the Scene (see axiom-macos (skills/windows.md))
@@ -674,7 +673,6 @@ Before merging toolbar code:
 | Symptom | Most Likely Cause |
 |---|---|
 | Toolbar items invisible | Not inside navigation container |
-| Wrong order on iPad vs iPhone | Using deprecated `.navigationBar*` placements |
 | Customization sheet empty | Missing `.toolbar(id:)` on parent |
 | Items flicker on state change | Conditional `if` inside `.toolbar` |
 | Bottom bar empty | No items OR `.toolbar(.hidden, for: .bottomBar)` somewhere upstream |
