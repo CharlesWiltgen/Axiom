@@ -185,7 +185,7 @@ Displays up to 12 potential destinations. "The trip preview panel is typically t
 
 ### Route choice panel
 
-Displays potential routes for a trip. "Each route should have a clear description so people can choose their preferred route. For example, a summary and optional description for a route could be 'Via I-280 South' and 'Traffic is light.'" (p.37)
+Displays potential routes for a trip. "Each route should have a clear description. For example, a summary and optional description for a route could be 'Via I-280 South' and 'Traffic is light.'" (p.37)
 
 ### Map panels `iOS27`
 
@@ -326,7 +326,7 @@ rather than hardcoding — `CPNavigationAlert.maximumActionsCount`,
 
 "When route guidance is paused, canceled, or finished, call the appropriate method in `CPNavigationSession`. In some cases, CarPlay route guidance may be canceled by the system. For example, if the car's native navigation system starts route guidance, CarPlay route guidance automatically terminates. In this case, your delegate will receive `mapTemplateDidCancelNavigation` and you should end route guidance immediately."
 
-Source: *Developer Guide* p.47, reinforcing navigation rule #6 on p.6.
+Source: *Developer Guide* p.48, reinforcing navigation rule #6 on p.6.
 
 ### Re-route (iOS 17.4+; segments form iOS 26.4+)
 

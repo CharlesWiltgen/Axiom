@@ -168,7 +168,7 @@ digraph carplay_category {
 
 ## Per-Category Design Rules
 
-Each subsection lists Apple's published rules verbatim where possible. Source: *Developer Guide* pp.5-6.
+Each subsection lists Apple's published rules verbatim where possible. Source: *Developer Guide* pp.4-7.
 
 ### Audio apps
 

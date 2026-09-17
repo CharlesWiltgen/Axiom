@@ -153,8 +153,16 @@ Otherwise, stick with **UIFeedbackGenerator** for simplicity.
 
 ```swift
 engine?.stoppedHandler = { reason in
-    print("Engine stopped: \(reason)")
-    self.restartEngine()
+    switch reason {
+    case .audioSessionInterrupt, .applicationSuspended:
+        // The cause is still in effect, so a restart would fail —
+        // restart with the next user-initiated playback instead
+        print("Waiting for user-initiated playback to restart")
+    case .idleTimeout, .systemError:
+        self.restartEngine()
+    default:
+        break
+    }
 }
 
 engine?.resetHandler = {
@@ -166,7 +174,7 @@ engine?.resetHandler = {
 ### Haptics feel weak or inconsistent
 
 **Check**: Did you call `prepare()` before triggering?
-- Call `prepare()` 0.1-0.5 seconds before expected use
+- Call `prepare()` shortly before the expected use — the Taptic Engine stays prepared for a short period (typically seconds), so call it again if more feedback is imminent
 - Reduces latency and ensures consistent response
 
 ---

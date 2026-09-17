@@ -34,7 +34,7 @@ For *playing* what you found and publishing Now Playing metadata, use [now-playi
 
 ## What This Skill Provides
 
-- **The count-reconciliation rule** – MusicKit shows the *catalog*, MediaPlayer shows what is *local*, and the difference between them is exact rather than a sync fault. Treating it as a health signal is the most expensive mistake in this domain, and the skill carries the case where it silently disabled a feature on most of a user's playlists
+- **The count-reconciliation rule** – MusicKit's playlist view can include entries with no local representation, MediaPlayer shows what is *local*, and the gap between them is structural rather than a sync fault. Treating it as a health signal is the most expensive mistake in this domain, and the skill carries the case where it silently disabled a feature on most of a user's playlists
 - **The playlist-entry join trap** – why `musicKit_persistentID` on a `Playlist.Entry` means something different than on a `Playlist`, and why the wrong join returns zero matches instead of an error
 - **The bulk-property rule** – why reading one MusicKit property across a large library leaves the reading task, and every later MusicKit request, never resuming for the rest of the run, with no error thrown. The mechanism is unknown and the skill says so: pool starvation is the visible symptom, but the same loop on a plain `Thread` fails identically, so fixes aimed at the executor are aimed at the wrong thing
 - **Two authorization gates that fail silently** – MusicKit and MediaPlayer each have their own, and an unmet gate returns *empty results*, not an error; plus the Info.plist key and App ID service that produce no build error when missing

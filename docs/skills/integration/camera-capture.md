@@ -19,7 +19,7 @@ Use this skill when you're:
 - Recording high-data-rate video (ProRes) with Pro Video Storage (iOS 27)
 - Handling session interruptions (phone calls, multitasking, thermal pressure)
 - Switching between front and back cameras
-- Switching cameras on iPhone Duo's two front cameras (the virtual front camera today; a camera-direction API is announced for iOS 27.1)
+- Switching cameras on iPhone Duo's two front cameras (the virtual front camera, available today; a camera-direction API from iOS 27.1)
 
 **Note:** If you just need users to pick existing photos, use [photo-library](/skills/integration/photo-library) instead. This skill is for building custom camera experiences with AVCaptureSession.
 

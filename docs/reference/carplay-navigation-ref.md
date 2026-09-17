@@ -15,7 +15,7 @@ Use this reference when:
 - Drawing into the CarPlay base view and you need to know what is and isn't allowed
 - Wiring `CPMapTemplate` route previews, route choice panels, and trip start
 - Driving turn-by-turn updates through `CPNavigationSession` (maneuvers, estimates, alerts, end/pause/resume)
-- Populating the CarPlay Dashboard map (iOS 13.4+), instrument cluster (iOS 16.4+), or HUD metadata (iOS 17.4+)
+- Populating the CarPlay Dashboard map (iOS 13.4+), instrument cluster (iOS 15.4+), or HUD metadata (iOS 17.4+)
 - Handling multitouch zoom, pitch, and rotate callbacks on `CPMapTemplate` (iOS 26+, including CarPlay Ultra)
 - Coordinating voice prompts with the vehicle's audio system without stealing the audio session
 - Testing across the full range of CarPlay screen sizes and cluster configurations
@@ -38,7 +38,7 @@ Questions you can ask Claude that will draw from this reference:
 
 ## What's Covered
 
-- **Supported displays matrix** – center display (iOS 12), CarPlay Dashboard (iOS 13.4), instrument cluster (iOS 16.4), HUD metadata (iOS 17.4) — and the rule that you must support all capabilities your app's screens enable
+- **Supported displays matrix** – center display (iOS 12), CarPlay Dashboard (iOS 13.4), instrument cluster (iOS 15.4), HUD metadata (iOS 17.4) — and the rule that you must support all capabilities your app's screens enable
 - **Base view contract** – exclusively a map, no overlays or UI; how to receive `contentStyle` light/dark signals; safe area handling around buttons
 - **Application scene manifest** for declaring main CarPlay, Dashboard, and instrument cluster scenes, plus the corresponding `CPTemplateApplicationScene` delegate roles
 - **Scene delegate lifecycle** – receiving `CPInterfaceController` and `CPWindow`, retaining both for the session, setting the root map template
@@ -66,6 +66,6 @@ This page documents the `carplay-navigation-ref` skill — the framework-and-API
 
 **Primary sources:**
 
-- CarPlay Developer Guide (Jun 2026) — base view (p.35), navigation rules (p.6), route guidance lifecycle (p.43-47), instrument cluster and HUD (p.34, p.53-58), multitouch (p.49), scene manifest (p.63-64)
+- CarPlay Developer Guide (Jun 2026) — base view (p.35), navigation rules (p.6), route guidance lifecycle (p.43-48), instrument cluster and HUD (p.34, p.53-58), multitouch (p.49), scene manifest (p.63-64)
 
 **WWDC**: 2025-216, 2022-10016, 2020-10635, 2018-213

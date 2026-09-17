@@ -39,7 +39,7 @@ Questions you can ask Claude that will draw from this skill:
 - **Entitlement request flow** – what Apple reviews, why category fit is the most common rejection reason, and how to frame your description so the right reviewer signs off
 - **Layout, color, icon, and per-template asset sizes** including the 120×120 and 180×180 icon sizes, the no-black-background rule, and the screen-resolution range (748×456 to 1920×720, plus portrait 900×1200)
 - **Error handling for iPhone-locked state** – why CarPlay typically runs with iPhone locked, what storage and Keychain access becomes unavailable, and how to surface errors in CarPlay rather than on the iPhone
-- **iOS 26 additions** – widgets in CarPlay (`.systemSmall` family, `.disfavoredLocations([.carPlay])` for unsuitable widgets), Live Activities (`.small` activity family), CarPlay Ultra and multitouch
+- **iOS 26 additions** – widgets in CarPlay (`.systemSmall` family, `.disfavoredLocations([.carPlay], for: [.systemSmall])` for unsuitable widgets), Live Activities (`.small` activity family), CarPlay Ultra and multitouch
 - **Notification rules** – which categories support notifications, the `.carPlay` authorization option, `allowInCarPlay` category option, and the no-message-body rule for communication apps
 - **Expert review checklist** covering category fit, universal guidelines, layout and assets, error and locked-state behavior, and iOS 26 additions — run it before requesting the entitlement
 

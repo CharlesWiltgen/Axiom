@@ -60,7 +60,7 @@ Questions you can ask Claude that will draw from this reference:
 - `AVAudioUnitReverbPreset.outdoorGeneral`
 
 ### Bit-perfect output (USB DAC)
-- iOS automatic passthrough, sample rate matching, USB DAC routing
+- Hardware-rate rendering, asking for the source rate with `setPreferredSampleRate(_:)`, USB DAC routing
 
 ### iOS 26+ features
 - `AVInputPickerInteraction`

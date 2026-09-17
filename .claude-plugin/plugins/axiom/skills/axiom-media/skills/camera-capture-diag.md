@@ -511,7 +511,8 @@ settings.photoQualityPrioritization = .speed
 // For balanced (general use)
 settings.photoQualityPrioritization = .balanced
 
-// Only use .quality when image quality is critical
+// .quality needs the ceiling raised first:
+// photoOutput.maxPhotoQualityPrioritization = .quality (see camera-capture.md Pattern 1)
 ```
 
 **Time to fix**: 5 min

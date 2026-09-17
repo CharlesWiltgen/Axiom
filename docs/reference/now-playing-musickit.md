@@ -36,7 +36,7 @@ Questions you can ask Claude that will draw from this reference:
 
 ## Key Insight
 
-MusicKit's `ApplicationMusicPlayer` automatically publishes to `MPNowPlayingInfoCenter`. You do not need to manually update Now Playing info when playing Apple Music content. The most common mistake is manually setting `nowPlayingInfo`, which overwrites MusicKit's automatic data and causes incorrect metadata.
+MusicKit's `ApplicationMusicPlayer` publishes Now Playing on its own — but not through your app's `MPNowPlayingInfoCenter` dictionary. The Music playback service renders the audio out of process and publishes from there, so the service and your dictionary are two separate publishers of one Lock Screen slot. You do not need to manually update Now Playing info when playing Apple Music content. The most common mistake is manually setting `nowPlayingInfo`, which overwrites MusicKit's automatic data and causes incorrect metadata.
 
 ## Documentation Scope
 

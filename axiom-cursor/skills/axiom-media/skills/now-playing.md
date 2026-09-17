@@ -304,7 +304,7 @@ class PlayerService {
 ### GOOD Code
 
 ```swift
-// ✅ CORRECT — Targets registered, enabled, with proper configuration
+// ✅ CORRECT — Targets registered, with proper configuration
 @MainActor
 class PlayerService {
     private var commandTargets: [Any] = []  // Keep strong references
@@ -351,18 +351,9 @@ class PlayerService {
         commandTargets.append(skipBackwardTarget)
     }
 
-    func teardownCommands() {
-        let commandCenter = MPRemoteCommandCenter.shared()
-        commandCenter.playCommand.removeTarget(nil)
-        commandCenter.pauseCommand.removeTarget(nil)
-        commandCenter.skipForwardCommand.removeTarget(nil)
-        commandCenter.skipBackwardCommand.removeTarget(nil)
-        commandTargets.removeAll()
-    }
-
-    // A `deinit` is nonisolated, so it cannot call the MainActor-isolated
-    // `teardownCommands()`. Removing the targets needs no isolation, and the
-    // retained targets are released with `commandTargets` either way.
+    // Teardown happens here: a `deinit` is nonisolated, so the removal cannot live
+    // in a MainActor-isolated method. Removing the targets needs no isolation, and
+    // the retained targets are released with `commandTargets` either way.
     deinit {
         let commandCenter = MPRemoteCommandCenter.shared()
         commandCenter.playCommand.removeTarget(nil)
@@ -665,13 +656,11 @@ class ModernPlayerService {
             self?.player.play()
             return .success
         }
-        session?.remoteCommandCenter.playCommand.isEnabled = true
 
         session?.remoteCommandCenter.pauseCommand.addTarget { [weak self] _ in
             self?.player.pause()
             return .success
         }
-        session?.remoteCommandCenter.pauseCommand.isEnabled = true
 
         // ✅ Try to become active Now Playing session
         session?.becomeActiveIfPossible { success in

@@ -341,7 +341,7 @@ let mediaItem = SHMediaItem(properties: [
 try catalog.addReferenceSignature(signature, representing: [mediaItem])
 
 // Save to disk
-// iOS 18+; on iOS 15-17 use: try catalog.write(to: catalogURL)
+// iOS 18+; on iOS 16-17 use: try catalog.write(to: catalogURL)
 try catalog.dataRepresentation.write(to: catalogURL)
 ```
 

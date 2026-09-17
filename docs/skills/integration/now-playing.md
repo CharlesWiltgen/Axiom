@@ -44,7 +44,7 @@ Questions you can ask Claude that will draw from this skill:
 - Session deactivation with notify option
 
 ### Remote Command Registration (Pattern 2)
-- Command targets AND `isEnabled = true`
+- Command targets (registering a target enables the command by default)
 - Skip intervals with `preferredIntervals`
 - Handler return values
 - Strong references to targets
@@ -108,7 +108,6 @@ try AVAudioSession.sharedInstance().setActive(true)
 // 2. At least one command handler
 let commandCenter = MPRemoteCommandCenter.shared()
 commandCenter.playCommand.addTarget { _ in .success }
-commandCenter.playCommand.isEnabled = true
 
 // 3. Metadata published
 MPNowPlayingInfoCenter.default().nowPlayingInfo = [
@@ -128,7 +127,7 @@ flowchart TD
     B -->|State out of sync| F["Using playbackState?<br/>→ Use playbackRate"]
 
     C -->|Category .ambient<br/>or .mixWithOthers| G[Remove .mixWithOthers]
-    C -->|No command handlers| H[Add target + isEnabled]
+    C -->|No command handlers| H[Add command handler]
     C -->|Background mode missing| I["Add 'audio' to Info.plist"]
 
     style D fill:#d4edda

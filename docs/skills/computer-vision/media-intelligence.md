@@ -33,7 +33,7 @@ For detecting *where* a face is in a single image (bounding box, landmarks), or 
 - **Lifecycle & state** – `insertOrUpdateAssets`, `update()`, `deleteAssets`/`deleteAllAssets`/`purge`, and a `State` (`.ready` / `.stale` / `.updating`) telling you when to recompute
 - **Query surface** – `allEntities`, `allFaces`, `allAssetIDs`, plus `fetchFaces(for:)` / `fetchFaces(in:)` / `fetchAssetIDs(for:)`, all as `AsyncSequence`s; `Face` is `Codable`
 - **Read-only recognition** – `identifyFaces(in:)` matches faces in new images against the existing gallery without storing anything
-- **Beta caveats** – the Simulator can't run analysis in the iOS 27 betas (test on a physical device), the working directory must exist before init, and entities are clusters rather than verified identities
+- **Simulator caveat** – Vision's face detection can't run in the Simulator under the 27 SDKs, and MediaIntelligence surfaces that as an uncatchable fatal error, so the face-detection path has to be compiled out with `#if !targetEnvironment(simulator)`; the working directory must exist before init, and entities are clusters rather than verified identities
 - **`VideoAnalyzer`** – a shared analyzer whose variadic `analyze(_:for:)` runs typed requests: `HighlightAnalysisRequest` (notable ranges + intensity levels) and `KeyFrameAnalysisRequest` (representative-frame timestamp)
 - **`MediaIntelligenceError`** – `LocalizedError` cases for working-directory, media-processing, face-grouping, and result-fetching failures
 

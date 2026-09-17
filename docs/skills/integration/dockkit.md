@@ -69,7 +69,7 @@ The `trackingStates` async sequence exposes per-subject saliency rank, speaking 
 |---------|------|-----|
 | Treating `.docked` as "ready" | Commands sent with no accessory | Gate on `.undocked` |
 | Leaving system tracking on | Custom control silently overridden | `setSystemTrackingEnabled(false)` first |
-| Missing camera permission | `.cameraTCCMissing` thrown | Request `NSCameraUsageDescription` first |
+| DockKit terms not accepted | `.cameraTCCMissing` thrown | Show an alert guiding the person through the DockKit terms-and-conditions prompt — `NSCameraUsageDescription` alone does not clear it |
 | Confusing coordinate origins | Tracking drifts or inverts | Region of interest = upper-left; observations = lower-left |
 | `Thread.sleep`/GCD between commands | Blocks, fights the async API | Use `Task.sleep`; the APIs are async |
 

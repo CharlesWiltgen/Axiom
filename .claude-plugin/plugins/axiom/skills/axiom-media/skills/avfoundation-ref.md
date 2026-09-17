@@ -77,12 +77,12 @@ On 27, `engine.connect` and `player.play()` are **deprecated**, while `setActive
 
 // Bluetooth
 .allowBluetoothHFP      // HFP (calls); replaces deprecated .allowBluetooth
-.allowBluetoothA2DP     // High quality stereo
+.allowBluetoothA2DP     // High quality stereo — output-only routing, not a recording fallback
 .bluetoothHighQualityRecording  // iOS 26+ AirPods recording
 
 // Routing
-.defaultToSpeaker       // Route to speaker (not receiver)
-.allowAirPlay           // Enable AirPlay
+.defaultToSpeaker       // Route to speaker (not receiver); .playAndRecord only
+.allowAirPlay           // Enable AirPlay; .playAndRecord only
 ```
 
 ### Interruption Handling
@@ -698,13 +698,14 @@ try AVAudioSession.sharedInstance().setCategory(.playback)
 
 // 3. Set Now Playing info (recommended)
 // Elapsed time is seconds as an NSNumber — a player node's node time is not playback time.
-// playerTime(forNodeTime:) is nil while the player is not playing, so keep the elapsed time
-// already on the lock screen rather than letting a paused publish snap the scrubber to 0:00.
-let publishedElapsed = MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPNowPlayingInfoPropertyElapsedPlaybackTime] as? Double
+// playerTime(forNodeTime:) is nil whenever the player is not playing — paused, stopped, or never
+// started — and no API call tells those apart. So keep your own `lastKnownElapsed`: written as
+// playback advances, reset to 0 when a new item is loaded. Reading the lock screen's dictionary
+// instead would republish the previous item's elapsed on a track change, which starts at 0.
 let elapsed = player.lastRenderTime
     .flatMap { player.playerTime(forNodeTime: $0) }
     .map { Double($0.sampleTime) / $0.sampleRate }
-    ?? publishedElapsed ?? 0
+    ?? lastKnownElapsed
 
 let nowPlayingInfo: [String: Any] = [
     MPMediaItemPropertyTitle: "Song Title",

@@ -17,7 +17,7 @@ Use this reference when:
 - Generating signatures with `SHSignatureGenerator` from `AVAudioPCMBuffer` chunks or finishing a signature with `signature()`
 - Defining custom `SHMediaItemProperty` keys for app-specific metadata on matched items
 - Reading match-specific properties (`matchOffset`, `predictedCurrentMatchOffset`, `frequencySkew`, `confidence`) from `SHMatchedMediaItem`
-- Managing the user's Shazam library with `SHLibrary` (read-only) or `SHMediaLibrary` (add)
+- Managing the user's Shazam library with `SHLibrary` (iOS 17+ — add, read, and delete) or the legacy write-only `SHMediaLibrary` (`add`)
 - Looking up `SHError` cases and their meanings
 - Using the `shazam` command-line tool for offline catalog generation at scale
 
@@ -47,7 +47,7 @@ Questions you can ask Claude that will draw from this reference:
 - **`SHSignature`** – `duration`, `dataRepresentation` for storage/transmission, `init(dataRepresentation:)` throwing initializer, `slices(from:duration:stride:)` for segmenting
 - **`SHSignatureGenerator`** – `append(_:at:)` for `AVAudioPCMBuffer` chunks, `signature()` to finalize, the streaming-construction pattern
 - **`SHCatalog`** and **`SHCustomCatalog`** — building catalogs in-memory, persisting to `.shazamcatalog` files, loading from URL or `Data`, the matching-many-references model
-- **`SHLibrary` (read-only) and `SHMediaLibrary` (additive)** – the user's Shazam library access split, why you must opt the user into writes
+- **`SHLibrary` (read, add, and delete) and the legacy write-only `SHMediaLibrary`** – the user's Shazam library access split, why you must opt the user into writes
 - **`SHError` cases** – the framework's error vocabulary including the silent-failure cases that indicate provisioning problems (no ShazamKit App Service enabled)
 - **Audio format requirements** – what formats `SHSession` accepts on iOS 15-16 vs iOS 17+, format conversion responsibilities
 - **`shazam` CLI** – `shazam custom-catalog create`, `shazam custom-catalog update`, `shazam signature` subcommands for offline batch signature generation and catalog construction; how it integrates into a build pipeline

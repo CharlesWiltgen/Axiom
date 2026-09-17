@@ -9,7 +9,7 @@ Systematic troubleshooting for AVFoundation camera issues including frozen previ
 
 ## Overview
 
-When camera doesn't work, the problem is usually threading (35%), session lifecycle (25%), rotation (20%), permissions (15%), or configuration (5%). This diagnostic enforces environment checks before code debugging.
+When camera doesn't work, the problem is usually threading (session work on the main thread), session lifecycle, rotation, permissions, or configuration. This diagnostic enforces environment checks before code debugging.
 
 ## Symptoms This Diagnoses
 
