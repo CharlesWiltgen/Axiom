@@ -37,7 +37,7 @@ Discovery and authorization are handled by AccessorySetupKit; communication stay
 
 ### Info.plist and descriptor must agree
 
-The `NSAccessorySetupSupports` / `NSAccessorySetupBluetoothServices` / `...CompanyIdentifiers` / `...Names` arrays must list every UUID, company ID, or name your `ASDiscoveryDescriptor` uses — or the picker finds nothing. A descriptor needs at least one of `bluetoothServiceUUID` or `bluetoothCompanyIdentifier`; a name substring alone is rejected.
+The `NSAccessorySetupKitSupports` / `NSAccessorySetupBluetoothServices` / `...CompanyIdentifiers` / `...Names` arrays must list every UUID, company ID, or name your `ASDiscoveryDescriptor` uses — or the picker finds nothing. A descriptor needs at least one of `bluetoothServiceUUID` or `bluetoothCompanyIdentifier`; a name substring alone is rejected.
 
 ### Wait for `.activated`, then present
 

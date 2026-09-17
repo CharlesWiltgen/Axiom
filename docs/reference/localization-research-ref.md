@@ -41,7 +41,7 @@ Questions you can ask Claude that will draw from this reference:
 ### Apple Terminology Matching
 - Apple Support multi-locale pages (authoritative cross-check)
 - applelocalization.com (community database, sanity-check only)
-- 15 highest-impact terms for media apps
+- 15 media-app terms worth looking up first, plus a generic-app list
 - URL-swap workflow for locale comparison
 
 ### Project Termbase (Glossary)
@@ -61,7 +61,7 @@ Questions you can ask Claude that will draw from this reference:
 - Workflow sequence to catch hardcoded strings, layout breaks, and RTL bugs
 
 ### Translation Management Systems
-- When a TMS is warranted (3+ locales, team review workflow)
+- When a TMS is warranted (several locales at once, or a review/approval workflow)
 - Comparison of Crowdin, Lokalise, Phrase, SimpleLocalize
 - Round-trip workflow with `.xcstrings`
 - Termbase integration

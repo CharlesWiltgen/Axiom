@@ -49,7 +49,7 @@ For coordinated audio/video playback, use axiom-media (`skills/shareplay-playbac
 
 Setup is one entitlement, `com.apple.developer.group-session`, and **no Info.plist keys**.
 
-Nothing in GroupActivities changed between the 26 and 27 SDKs. Guidance here is stable across that boundary.
+Nothing was added to GroupActivities in the 27 SDK line — the iOS and visionOS interfaces are identical between the 27.0 and 27.2 SDKs apart from their header lines. Guidance here is written against the 27.2 interface.
 
 ## Critical Gotchas
 
@@ -62,7 +62,7 @@ Nothing in GroupActivities changed between the 26 and 27 SDKs. Guidance here is 
 | `activeParticipants.count` read as a people count | One person on two devices is **two** participants | It's a device count; never an account identity |
 | Expecting `sessions()` to re-emit on change | It only yields *new* sessions | Observe `$state` / `$activeParticipants` separately |
 | Loading your own journal attachments | The journal echoes the full set back to the uploader | Skip attachments you added |
-| Copying sample code verbatim | Published samples, `AVFoundation.apinotes`, and even the SDK's own `sessions()` doc comment (obsolete `async { }`) contain code that doesn't compile | Compile every snippet before trusting it |
+| Copying sample code verbatim | Published samples and `AVFoundation.apinotes` contain code that doesn't compile | Compile every snippet before trusting it |
 | Assuming your app is foregrounded when a session arrives | The system may launch it in the **background** | Adapt, or call `requestForegroundPresentation()` |
 
 ## Defining the activity
@@ -223,7 +223,7 @@ session.$activeParticipants
     }
     .map { $0.current.subtracting($0.previous) }
     .filter { !$0.isEmpty }
-    .sink { [weak self] joiners in self?.sendSnapshot(to: joiners) }
+    .sink { [weak self] joiners in self?.sendSnapshot(to: .only(joiners)) }
     .store(in: &cancellables)
 ```
 
@@ -300,7 +300,7 @@ Enough to avoid the traps; template and role design is a larger subject.
 - `groupImmersionStyle` and `groupActivityAssociation` live in the SwiftUI cross-import overlay — `import SwiftUI` alongside `import GroupActivities`.
 - `Participant.isNearbyWithLocalParticipant` exists on **iOS 26 too**, not just visionOS — but it is unavailable on macOS, tvOS, and Mac Catalyst. It is **always `true` for the local participant**, so an unfiltered `contains { $0.isNearbyWithLocalParticipant }` always reports someone nearby. Filter with `$0 != session.localParticipant` first.
 - Simulated FaceTime participants in the simulator **never assign roles**, so role reservation cannot be tested there. Don't chase that as a bug.
-- `SystemCoordinator.defaultInitiatorRole` (visionOS 2) is documented only in the SDK — no WWDC session or sample covers it; they teach `assignRole` instead. `remoteParticipantStates` (visionOS 26) has **no doc comment at all**. Expect to reason from signatures for both.
+- `SpatialTemplateConfiguration.defaultInitiatorRole` (visionOS 2) — the role the initiator receives, set on the template configuration, not on `SystemCoordinator`. It is documented only in the SDK: no WWDC session or sample covers it, and they teach `assignRole` instead. `SystemCoordinator.remoteParticipantStates` (visionOS 26) has **no doc comment at all**. Expect to reason from signatures for both.
 
 ## Common Mistakes
 

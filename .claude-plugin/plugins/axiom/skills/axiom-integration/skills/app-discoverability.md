@@ -30,16 +30,16 @@ Do NOT use this skill when:
 
 ## The 6-Step Discoverability Strategy
 
-This is a proven strategy from developers who've implemented discoverability across multiple production apps. **Implementation time: One evening for minimal viable discoverability.**
+This is the order that gets an app surfaced fastest: actions first, then their surfaces, then content, then the screens people return to.
 
 ### Step 1: Add App Intents
 
-App Intents power Spotlight search, Siri requests, and Shortcut suggestions. **Without AppIntents, your app will never surface meaningfully.**
+App Intents power Spotlight search, Siri requests, and Shortcut suggestions. **Without App Intents your app's actions are not suggested** — content can still surface through Core Spotlight and `NSUserActivity`, but there is no verb for the system to offer.
 
 ```swift
 struct OrderCoffeeIntent: AppIntent {
-    static var title: LocalizedStringResource = "Order Coffee"
-    static var description = IntentDescription("Orders coffee for pickup")
+    static let title: LocalizedStringResource = "Order Coffee"
+    static let description = IntentDescription("Orders coffee for pickup")
 
     @Parameter(title: "Coffee Type")
     var coffeeType: CoffeeType
@@ -79,13 +79,13 @@ struct CoffeeAppShortcuts: AppShortcutsProvider {
         )
     }
 
-    static var shortcutTileColor: ShortcutTileColor = .tangerine
+    static let shortcutTileColor: ShortcutTileColor = .tangerine
 }
 ```
 
-**Why this matters** Without App Shortcuts, users must manually configure shortcuts. With them, your actions appear immediately in Siri, Spotlight, Action Button, and Control Center.
+**Why this matters** Without App Shortcuts, users must manually configure shortcuts. With them, your actions appear immediately in Siri, Spotlight and the Shortcuts app, and become assignable to the Action Button and Control Center.
 
-**Critical** Use `suggestedPhrase` patterns—this increases the chance that the system proposes them in Spotlight action suggestions and Siri's carousel.
+**Critical** Supply `phrases:` with `\(.applicationName)` — the system indexes them semantically and proposes them in Spotlight action suggestions and Siri, and the app name in the phrase is what disambiguates your app from others. There is no separate `suggestedPhrase` API.
 
 See: **app-shortcuts-ref** for phrase patterns and best practices
 
@@ -132,6 +132,7 @@ See: **core-spotlight-ref** for batching, deletion patterns, and best practices
 Mark important screens as eligible for search and prediction.
 
 ```swift
+@available(iOS 18.2, *)
 func viewOrder(_ order: Order) {
     let activity = NSUserActivity(activityType: "com.coffeeapp.viewOrder")
     activity.title = order.coffeeName
@@ -139,8 +140,8 @@ func viewOrder(_ order: Order) {
     activity.isEligibleForPrediction = true
     activity.persistentIdentifier = order.id.uuidString
 
-    // Connect to App Intents
-    activity.appEntityIdentifier = order.id.uuidString
+    // Connect to App Intents — EntityIdentifier, not a raw String (iOS 18.2+)
+    activity.appEntityIdentifier = EntityIdentifier(for: OrderEntity.self, identifier: order.id)
 
     // Provide rich metadata
     let attributes = CSSearchableItemAttributeSet(contentType: .item)
@@ -149,10 +150,21 @@ func viewOrder(_ order: Order) {
     activity.contentAttributeSet = attributes
 
     activity.becomeCurrent()
-
-    // In your view controller or SwiftUI view
-    self.userActivity = activity
 }
+```
+
+**Attach it per UI framework** `userActivity` is a `UIResponder` property, so it exists on a view controller and not on a SwiftUI `View`, which uses a modifier that builds the activity itself.
+
+```swift
+// UIKit
+self.userActivity = activity
+
+// SwiftUI
+Text(order.coffeeName)
+    .userActivity("com.coffeeapp.viewOrder") { activity in
+        activity.title = order.coffeeName
+        activity.isEligibleForSearch = true
+    }
 ```
 
 **Why this matters** The system learns which screens users visit frequently and suggests them proactively. Lock screen widgets, Siri suggestions, and Spotlight all benefit.
@@ -169,14 +181,14 @@ Clear descriptions and titles are critical because **Spotlight displays them dir
 
 #### ❌ DON'T: Generic or unclear
 ```swift
-static var title: LocalizedStringResource = "Do Thing"
-static var description = IntentDescription("Performs action")
+static let title: LocalizedStringResource = "Do Thing"
+static let description = IntentDescription("Performs action")
 ```
 
 #### ✅ DO: Specific, action-oriented
 ```swift
-static var title: LocalizedStringResource = "Order Coffee"
-static var description = IntentDescription("Orders coffee for pickup")
+static let title: LocalizedStringResource = "Order Coffee"
+static let description = IntentDescription("Orders coffee for pickup")
 ```
 
 **Parameter summaries must be natural language:**
@@ -252,11 +264,11 @@ See: **app-shortcuts-ref** for SiriTipView and ShortcutsLink patterns
 
 ---
 
-## Quick Implementation Pattern ("One Evening" Approach)
+## Quick Implementation Pattern
 
 For minimal viable discoverability:
 
-### 1. Define 1-3 Core App Intents (30 minutes)
+### 1. Define 1-3 Core App Intents
 ```swift
 // Your app's most valuable actions
 struct OrderCoffeeIntent: AppIntent { /* ... */ }
@@ -264,7 +276,7 @@ struct ReorderLastIntent: AppIntent { /* ... */ }
 struct ViewOrdersIntent: AppIntent { /* ... */ }
 ```
 
-### 2. Create AppShortcutsProvider (15 minutes)
+### 2. Create AppShortcutsProvider
 ```swift
 struct CoffeeAppShortcuts: AppShortcutsProvider {
     @AppShortcutsBuilder
@@ -280,42 +292,40 @@ struct CoffeeAppShortcuts: AppShortcutsProvider {
 }
 ```
 
-### 3. Index Top-Level Content (30 minutes)
+### 3. Index Top-Level Content
 ```swift
 // Index most recent/important content only
-func indexRecentOrders() {
+func indexRecentOrders() async throws {
     let recentOrders = try await OrderService.shared.recent(limit: 20)
     let items = recentOrders.map { createSearchableItem(from: $0) }
-    CSSearchableIndex.default().indexSearchableItems(items)
+    try await CSSearchableIndex.default().indexSearchableItems(items)
 }
 ```
 
-### 4. Add NSUserActivity to Detail Screens (30 minutes)
+### 4. Add NSUserActivity to Detail Screens
 ```swift
-// In your detail view controllers/views
+// In a UIViewController (a SwiftUI View uses the .userActivity modifier instead)
 let activity = NSUserActivity(activityType: "com.app.viewOrder")
 activity.isEligibleForSearch = true
 activity.becomeCurrent()
 self.userActivity = activity
 ```
 
-### 5. Test in Spotlight and Shortcuts (15 minutes)
+### 5. Test in Spotlight and Shortcuts
 - Open Shortcuts app → Search for your app → Verify shortcuts appear
 - Search Spotlight → Search for your content → Verify results
 - Invoke Siri → "Order coffee in [YourApp]" → Verify works
-
-**Total time: ~2 hours** for basic discoverability
 
 ---
 
 ## Batch Indexing for Large Content Libraries
 
-When indexing 1,000+ items, index in batches to avoid launch slowdowns:
+When you index a large library, index in batches from background work rather than at launch:
 
 ```swift
-func indexAllContent() async {
+func indexAllContent() async throws {
     let allItems = try await ContentService.shared.all()
-    let batchSize = 100
+    let batchSize = 100  // tune to your payload sizes
 
     for batch in stride(from: 0, to: allItems.count, by: batchSize) {
         let slice = Array(allItems[batch..<min(batch + batchSize, allItems.count)])
@@ -332,10 +342,19 @@ func indexAllContent() async {
 ```
 
 **Best practices**:
-- Index in batches of 100 during background processing, not at launch
+- Index in batches during background processing, not at launch
 - Use `domainIdentifier` to group content for efficient bulk deletion
 - Re-index incrementally when content changes (don't re-index everything)
-- For 50,000+ items, use `CSSearchableIndex.beginBatch()` / `endBatch()` for atomic updates
+- For a very large library, drive an explicitly created index in batch mode — batching is unsupported on the index `default()` returns:
+
+```swift
+let index = CSSearchableIndex(name: "content")
+index.beginBatch()
+// indexSearchableItems(_:completionHandler:) calls
+index.endBatch(withClientState: Data()) { error in
+    if let error { print("Batch end error: \(error)") }
+}
+```
 
 ## Spotlight Debugging
 
@@ -344,7 +363,7 @@ When indexed content doesn't appear in Spotlight:
 ### Verification Checklist
 
 1. **Check indexing succeeded** — Add completion handler logging to `indexSearchableItems`
-2. **Wait for processing** — Spotlight may take 10-30 seconds to process new items
+2. **Wait for processing** — indexing is asynchronous: the system processes items after `indexSearchableItems` returns, so confirm with a query instead of assuming immediate searchability
 3. **Search by exact title** — Spotlight may not match partial keywords initially
 4. **Check `contentType`** — Use `.item` for general content; wrong type may affect ranking
 
@@ -367,7 +386,9 @@ CSSearchableIndex.default().fetchLastClientState { state, error in
 }
 
 // Search programmatically to verify
-let query = CSSearchQuery(queryString: "title == 'My Item'*", attributes: ["title"])
+let context = CSSearchQueryContext()
+context.fetchAttributes = ["title"]
+let query = CSSearchQuery(queryString: "title == 'My Item'*", queryContext: context)
 query.foundItemsHandler = { items in
     print("Found \(items.count) items")
 }
@@ -410,16 +431,16 @@ let recentOrders = try await OrderService.shared.recent(limit: 50)
 
 ```swift
 // ❌ BAD
-static var title: LocalizedStringResource = "Action"
-static var description = IntentDescription("Does something")
+static let title: LocalizedStringResource = "Action"
+static let description = IntentDescription("Does something")
 ```
 
 **Fix** Use specific, action-oriented language.
 
 ```swift
 // ✅ GOOD
-static var title: LocalizedStringResource = "Order Coffee"
-static var description = IntentDescription("Orders your favorite coffee for pickup")
+static let title: LocalizedStringResource = "Order Coffee"
+static let description = IntentDescription("Orders your favorite coffee for pickup")
 ```
 
 ---
@@ -464,8 +485,11 @@ if order != nil {
 **Fix** Use `appEntityIdentifier` to connect them.
 
 ```swift
-// ✅ GOOD: Connect activity to App Intent entity
-activity.appEntityIdentifier = order.id.uuidString
+// ✅ GOOD: Connect activity to App Intent entity (iOS 18.2+)
+@available(iOS 18.2, *)
+func connect(_ order: Order, to activity: NSUserActivity) {
+    activity.appEntityIdentifier = EntityIdentifier(for: OrderEntity.self, identifier: order.id)
+}
 ```
 
 ---
@@ -524,9 +548,9 @@ When reviewing discoverability implementation, verify:
 
 ## Resources
 
-**WWDC**: 260, 275, 2022-10170
+**WWDC**: 2022-10170, 2023-10102, 2025-260, 2025-275
 
-**Docs**: /appintents/making-your-app-s-functionality-available-to-siri, /corespotlight
+**Docs**: /appintents/acceleratingappinteractionswithappintents, /appintents/making-app-entities-available-in-spotlight, /corespotlight
 
 **Skills**: skills/app-intents-ref.md, skills/app-shortcuts-ref.md, skills/core-spotlight-ref.md
 

@@ -35,7 +35,7 @@ Use this skill when you're:
 
 ### The PushKit rule (the one that bricks your app)
 
-When built against the iOS 13 SDK or later, **every VoIP push must report a call to CallKit** via `reportNewIncomingCall(...)` before the push handler's `completion()` runs. If it doesn't, iOS terminates your app and stops delivering VoIP pushes entirely. Report the call immediately with what you have, then do the network round-trip. Never use VoIP pushes for non-call data.
+When built against the iOS 13 SDK or later, a VoIP push must **report a call** — to CallKit via `reportNewIncomingCall(...)`, or to LiveCommunicationKit via `reportNewIncomingConversation(...)` — before the push handler's `completion()` runs. If it doesn't, iOS terminates your app and stops delivering VoIP pushes entirely. From iOS 26.4 the requirement is decided per push: PushKit's newer delegate hands you a `PKVoIPPushMetadata` whose `mustReport` is `false` for pushes you're already handling, and those need no report. The older delegate carries no such signal, so it reports on every push. Report the call immediately with what you have, then do the network round-trip. Never use VoIP pushes for non-call data.
 
 ### CallKit owns the audio session
 
@@ -57,7 +57,7 @@ It's not a replacement — it expands the model to watchOS 10.4+ and visionOS 1.
 
 | Mistake | Cost | Fix |
 |---------|------|-----|
-| Not reporting a call on a VoIP push | App killed, pushes cut off | `reportNewIncomingCall` before `completion()` |
+| Not reporting a call on a VoIP push that required a report | App killed, pushes cut off | Report in the push handler before `completion()`. On iOS 26.4+ the metadata delegate lets you skip pushes whose `mustReport` is `false`; the older delegate has no such signal, so report on every push |
 | Network work before reporting | Push times out | Report first, fetch after |
 | Activating `AVAudioSession` yourself | Silent / misrouted audio | Start audio in `provider(_:didActivate:)` |
 | Not fulfilling a `CXAction` | Stuck call | `fulfill()` / `fail()` every action |

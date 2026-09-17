@@ -33,6 +33,8 @@ let timer = Timer.scheduledTimer(
 
 **Danger**: This API retains `target`. If `self` also holds the timer, you have a retain cycle. The block-based API with `[weak self]` is always safer.
 
+**Async contexts**: the `target:selector:` and `invocation:` variants are compile errors from any `async` context (`class method 'scheduledTimer' is unavailable from asynchronous contexts; Timers scheduled in an async context may never fire.`) — `NSTimer.h` annotates exactly those two with `NS_SWIFT_UNAVAILABLE_FROM_ASYNC`. The block-based variants carry no such annotation, but they share the runtime hazard the message names: a timer added to a run loop that never runs never fires.
+
 ### Timer.init (Manual RunLoop Addition)
 
 ```swift
@@ -42,8 +44,10 @@ let timer = Timer(timeInterval: 1.0, repeats: true) { [weak self] _ in
 }
 
 // Add to specific RunLoop mode
-RunLoop.current.add(timer, forMode: .common)  // Survives scrolling
+RunLoop.main.add(timer, forMode: .common)  // Survives scrolling
 ```
+
+**`RunLoop.current` is unavailable from async contexts** (`currentRunLoop cannot be used from async contexts.`), so a recipe that has to work in both sync and `async` code uses `RunLoop.main` — which is also what a UI timer wants. A background thread's own run loop is reachable only as `RunLoop.current`, so that variant belongs in synchronous code only.
 
 ### timer.tolerance
 
@@ -146,10 +150,10 @@ timer.cancel()
 ### Lifecycle Methods
 
 ```swift
-timer.activate()   // Start — can only call ONCE (idle → running)
+timer.activate()   // Start (idle → running); a no-op on an already-active source
 timer.suspend()    // Pause (running → suspended)
-timer.resume()     // Unpause (suspended → running)
-timer.cancel()     // Stop permanently (must NOT be suspended)
+timer.resume()     // Unpause — consumes one suspension (over-resuming traps)
+timer.cancel()     // Stop permanently — legal even while suspended
 ```
 
 ### State Machine Lifecycle
@@ -162,17 +166,18 @@ timer.cancel()     // Stop permanently (must NOT be suspended)
                                ▼  │
                             suspended
                                │
-                    resume() + cancel()
+                    cancel()
                                │
                                ▼
                            cancelled
 ```
 
 **Critical rules**:
-- `activate()` can only be called once (idle → running)
-- `cancel()` requires non-suspended state (resume first if suspended)
-- `cancelled` is terminal — no further operations allowed
-- Dealloc requires non-suspended state (cancel first if needed)
+- `activate()` is the idle → running transition and is idempotent — calling it on an active source is a documented no-op, not an error
+- `cancel()` is safe on a suspended source: the source is marked cancelled and its cancel handler runs once the source is resumed
+- `cancel()` does not clear a suspension — the suspend count must be back at zero before the last reference is released (`Release of a suspended object`)
+- `cancelled` is terminal for firing, but it does not make `resume()` safe: `resume()` only consumes a suspension, so resume exactly as many times as you suspended (`Over-resume of an object`)
+- A source that was never activated must not be released either (`Release of an inactive object`) — activate it first
 
 ### Leeway (Tolerance)
 
@@ -180,10 +185,12 @@ timer.cancel()     // Stop permanently (must NOT be suspended)
 // Leeway values
 timer.schedule(deadline: .now(), repeating: 1.0, leeway: .milliseconds(100))
 timer.schedule(deadline: .now(), repeating: 1.0, leeway: .seconds(1))
-timer.schedule(deadline: .now(), repeating: 1.0, leeway: .never)  // Strict — high energy
+timer.schedule(deadline: .now(), repeating: 1.0, leeway: .never)  // Largest possible leeway
 ```
 
 Leeway is the DispatchSourceTimer equivalent of `Timer.tolerance`. Allows system to coalesce timer firings for energy efficiency.
+
+**The leeway is clamped for every fire after the first**: the system may delay the first fire by up to `leeway`, but each subsequent fire by no more than `min(leeway, repeating/2)`. With `repeating: 1.0`, `.seconds(1)` and `.never` both mean "up to 500 ms late" — `.never` is the loosest timing and the lowest energy cost, not a strict setting. Strictness comes from `flags: .strict` (see Creation above), and only together with a small leeway: `.strict` makes the system observe your leeway instead of its own lower limit, so a huge leeway stays loose even with it.
 
 ### End-to-End Example
 
@@ -204,9 +211,9 @@ timer.suspend()   // running → suspended
 // Later — resume:
 timer.resume()    // suspended → running
 
-// Cleanup — MUST resume before cancel if suspended:
+// Cleanup — the source must not be released while suspended:
 timer.setEventHandler(handler: nil)  // Break retain cycles
-timer.resume()    // Ensure non-suspended state
+timer.resume()    // Consume the suspension — this is what makes the release legal
 timer.cancel()    // running → cancelled (terminal)
 ```
 
@@ -417,8 +424,9 @@ po timer.fireDate
 # See timer interval
 po timer.timeInterval
 
-# Force RunLoop iteration (may trigger timer)
-expression -l objc -- (void)[[NSRunLoop mainRunLoop] run]
+# Run one bounded RunLoop iteration in .default mode (may fire a due timer)
+# — `[[NSRunLoop mainRunLoop] run]` never returns; don't use it in a debug session
+expression -l objc -- (BOOL)[[NSRunLoop mainRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.1]]
 ```
 
 ### DispatchSourceTimer Commands
@@ -430,8 +438,10 @@ po timer
 # Break on dispatch source cancel (all sources)
 breakpoint set -n dispatch_source_cancel
 
-# Break on EXC_BAD_INSTRUCTION to catch timer crashes
-# (Xcode does this automatically for Swift runtime errors)
+# A state-machine trap is not an exception you can catch by name. On arm64 the
+# report is EXC_BREAKPOINT (SIGTRAP) with a "BUG IN CLIENT OF LIBDISPATCH: …"
+# message (Intel showed EXC_BAD_INSTRUCTION); the message names the broken rule.
+# Read it, then break on the code that reaches the bad transition.
 
 # Check if a DispatchSource is cancelled
 expression -l objc -- (long)dispatch_source_testcancel((void*)timer)
@@ -440,8 +450,9 @@ expression -l objc -- (long)dispatch_source_testcancel((void*)timer)
 ### General Timer Debugging
 
 ```lldb
-# List all timers on the main RunLoop
-expression -l objc -- (void)CFRunLoopGetMain()
+# When does the next main-RunLoop timer fire? (CFRunLoopGetMain() on its own
+# only returns the run loop — there is no public API that lists run-loop timers)
+expression -l objc -- (double)CFRunLoopGetNextTimerFireDate(CFRunLoopGetMain(), kCFRunLoopDefaultMode)
 
 # Break when any Timer fires
 breakpoint set -S "scheduledTimerWithTimeInterval:target:selector:userInfo:repeats:"
@@ -457,7 +468,8 @@ breakpoint set -S "scheduledTimerWithTimeInterval:target:selector:userInfo:repea
 | DispatchSourceTimer | 8.0+ (GCD) | 10.10+ | 2.0+ | 9.0+ |
 | Timer.publish (Combine) | 13.0+ | 10.15+ | 6.0+ | 13.0+ |
 | AsyncTimerSequence | 16.0+ | 13.0+ | 9.0+ | 16.0+ |
-| Task.sleep | 13.0+ | 10.15+ | 6.0+ | 13.0+ |
+| Task.sleep(nanoseconds:) | 13.0+ | 10.15+ | 6.0+ | 13.0+ |
+| Task.sleep(for:) / Task.sleep(until:) (Duration, Clock) | 16.0+ | 13.0+ | 9.0+ | 16.0+ |
 
 ---
 

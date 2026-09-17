@@ -36,7 +36,7 @@ Use this skill when:
 - **SwiftUI patterns** – `Text("…")` localizes automatically, `String(localized:comment:)` with translator-facing comments, `LocalizedStringResource` for deferred resolution at render time, `LocalizedStringKey` for view APIs
 - **UIKit patterns** – modern `String(localized:)` API (iOS 15+), bundle-specific lookup, `NSLocalizedString` for older deployment targets
 - **Pluralization rules** – use String Catalog plural variations rather than format-string tricks; language plural rule categories (`zero`/`one`/`two`/`few`/`many`/`other`); how Polish, Russian, and Arabic disagree with English
-- **Device and width variations** – different strings per device class or available width
+- **Device and width variations** – strings per device class, and numeric-width variants (not size classes or Dynamic Type)
 - **RTL discipline** – `leading`/`trailing` instead of `left`/`right`, layout mirroring, image flipping for directional symbols, testing with the RTL Pseudolanguage scheme option
 - **Locale-aware formatting** – `Date.FormatStyle`, `IntegerFormatStyle`, `Decimal.FormatStyle.Currency`, `Measurement` for units; avoid baking culture-specific patterns into strings
 - **App Shortcuts localization** – phrases, parameter prompts, response dialogs, all routed through String Catalogs

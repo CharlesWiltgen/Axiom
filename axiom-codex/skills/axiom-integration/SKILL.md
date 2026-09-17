@@ -1,6 +1,6 @@
 ---
 name: axiom-integration
-description: Use when work crosses into Apple's system surfaces rather than your own UI or data — Siri and Shortcuts, widgets, in-app purchase, localization, privacy prompts, alarms, timers, calendar, reminders, contacts, background tasks, push.
+description: Use when work crosses into Apple's system surfaces rather than your own UI or data — Siri and Shortcuts, widgets, Live Activities, in-app purchase, localization, privacy prompts, alarms, timers, calendar, reminders, contacts, SharePlay, VoIP and CallKit, accessory pairing, weather, Spotlight indexing, background tasks, Background Assets, push, or push on networks with no internet.
 license: MIT
 ---
 
@@ -12,7 +12,7 @@ license: MIT
 > **Auditors are skills here.** Where this router says "Launch `some-auditor` agent", invoke the
 > matching Codex skill instead — same procedure, no Claude Code agent required.
 >
-> Available: `axiom-audit-iap`.
+> Available: `axiom-audit-iap`, `axiom-scan-security-privacy`.
 >
 > The ones that shell out — builds, tests, simulators, crash symbolication — need shell access to run.
 <!-- AXIOM_AUDITOR_INLINE_END -->
@@ -138,7 +138,7 @@ digraph integration {
 - Entitlements/certificates → **also invoke axiom-build**
 
 **VoIP push + CallKit** (VoIP app killed / pushes stopped arriving):
-- VoIP push must report a call to CallKit → **stay here** (callkit-livecommunicationkit, Part 1)
+- VoIP push must report a call — to CallKit **or** LiveCommunicationKit → **stay here** (callkit-livecommunicationkit, Part 1)
 - PushKit token vs APNs delivery → **stay here** (push-notifications for the APNs contrast)
 - Call audio silent/misrouted → **also invoke axiom-media** (AVAudioSession category)
 
@@ -182,7 +182,7 @@ digraph integration {
 | "Widgets are simple, I've done them before" | Widgets have timeline, interactivity, and Live Activity patterns that evolve yearly. |
 | "Localization is just String Catalogs" | Xcode 26 has type-safe localization, generated symbols, and #bundle macro. |
 | "Push notifications are just a payload and a token" | Token lifecycle, Focus levels, service extension gotchas cause 80% of push bugs. |
-| "I'll just bundle the assets, it's simpler" | Bundling ≥10 MB inflates first-install size and pays the cost every update. Background Assets ships with App Store install-progress integration; FM adapters can't be bundled at all. See `skills/background-assets.md`. |
+| "I'll just bundle the assets, it's simpler" | Bundling assets too large for the app bundle inflates first-install size and pays the cost every update. Background Assets ships with App Store install-progress integration; FM adapters can't be bundled at all. See `skills/background-assets.md`. |
 | "I'll use URLSession for the asset download" | URLSession doesn't integrate with App Store install progress, charging-aware scheduling, or per-app quota — and can't reach Apple-hosted asset packs at all. Background Assets is the supported channel. |
 | "On-Demand Resources still works fine" | The entire `NSBundleResourceRequest` family is deprecated in the 27 SDKs ("Use Background Assets instead"). Migrate ODR tags to asset packs. See `skills/background-assets.md`. |
 | "Just request full Calendar access" | Most apps only need to add events — EventKitUI does that with zero permissions. |
@@ -190,7 +190,7 @@ digraph integration {
 | "The person who started the SharePlay session is the host" | There is no host. Every participant is equal — the framework has no owner or turn-taking concept. `lifetimePolicy` is the only related control, and it lives on the activity. |
 | "One messenger, I'll pick reliable or unreliable per message" | `deliveryMode` is a `let` fixed at init and no `send` overload takes a mode. Mixed protocols need two `GroupSessionMessenger` instances. |
 | "I'll request Bluetooth permission and scan for the accessory" | AccessorySetupKit (iOS 18+) pairs in one tap with no broad Bluetooth prompt and grants scoped BT+Wi-Fi access. See `skills/accessorysetupkit.md`. |
-| "I'll process the VoIP push, then report the call when ready" | iOS terminates your app and stops delivering VoIP pushes if a push doesn't report a call *before* completion. Report first, fetch after. See `skills/callkit-livecommunicationkit.md`. |
+| "I'll process the VoIP push, then report the call when ready" | iOS terminates your app and stops delivering VoIP pushes if a push that required a report doesn't report a call — to CallKit or LiveCommunicationKit — *before* completion. From iOS 26.4 PushKit's metadata delegate exempts the pushes it hands you with `mustReport` `false`. Report first, fetch after. See `skills/callkit-livecommunicationkit.md`. |
 | "No internet on this network, so I'll keep my own socket open in the background" | iOS suspends the app and the socket dies. Local Push Connectivity runs a system-managed provider extension for exactly this. See `skills/local-push-connectivity.md`. |
 | "I'll activate the audio session when the call connects" | CallKit owns the audio session — activate only in `provider(_:didActivate:)` or audio is silent/misrouted. See `skills/callkit-livecommunicationkit.md`. |
 | "I'll use CNContactStore directly for picking" | CNContactPickerViewController needs no authorization and shows all contacts. |

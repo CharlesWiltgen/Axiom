@@ -9,7 +9,7 @@ This skill provides comprehensive API reference for Apple's widget and extension
 - **Interactive Widgets** (iOS 17+) — Buttons and toggles with App Intents
 - **Control Center Widgets** (iOS 18+) — System-wide quick controls
 - **Liquid Glass Widgets** (iOS 26+) — Accented rendering, glass effects, container backgrounds
-- **visionOS Widgets** (visionOS 2+) — Mounting styles, textures, proximity awareness
+- **visionOS Widgets** (visionOS 26+) — Mounting styles, textures, proximity awareness
 - **App Extensions** — Shared data, lifecycle, entitlements
 
 Widgets are SwiftUI **archived snapshots** rendered on a timeline by the system. Extensions are sandboxed executables bundled with your app.
@@ -48,7 +48,7 @@ Widgets are SwiftUI **archived snapshots** rendered on a timeline by the system.
 - **TimelineProvider** — Protocol supplying timeline entries (placeholder, snapshot, timeline generation)
 - **TimelineEntry** — Struct with widget data + display date
 - **Timeline Budget** — Daily limit (40-70) for timeline reloads
-- **Budget-Exempt** — Reloads that don't count (user-initiated, app foregrounding, system-initiated)
+- **Budget-Exempt** — Reloads that don't count (the containing app is in the foreground; the app has an active audio or navigation session; the widget performs an app intent; the widget performs an animation; locale, Dynamic Type, or Accessibility changes)
 - **Widget Family** — Size/shape (systemSmall, systemMedium, accessoryCircular, etc.)
 - **App Groups** — Entitlement for shared data container between app and extensions
 - **ControlWidget** — iOS 18+ widgets for Control Center, Lock Screen, and Action Button
@@ -123,17 +123,17 @@ No user configuration needed? Use `StaticConfiguration`. Simple static options? 
 - **`systemSmall`** (~170×170, iOS 14+) — Single piece of info, icon
 - **`systemMedium`** (~360×170, iOS 14+) — Multiple data points, chart
 - **`systemLarge`** (~360×380, iOS 14+) — Detailed view, list
-- **`systemExtraLarge`** (~720×380, iOS 15+) — Rich layouts, multiple views. iPad-only through iOS 26; the 27 cycle brings the landscape extra-large family to the **iPhone** Home Screen (a Home-Screen capability change, WWDC 2026-277, no API delta).
-- **`systemExtraLargePortrait`** `iOS27/macOS27` — portrait-oriented extra-large family (the genuine new API; visionOS already had it at 26). Declare it alongside `systemExtraLarge` so the system picks the orientation that fits the placement.
+- **`systemExtraLarge`** (~720×380, iOS 15+) — Rich layouts, multiple views. iPadOS and macOS only (doc comment: "Extra-large widgets are available in iPadOS and macOS"); the iOS Home Screen's extra-large slot is served by `systemExtraLargePortrait` instead.
+- **`systemExtraLargePortrait`** `iOS27/macOS27` — portrait-oriented extra-large family (the genuine new API; visionOS already had it at 26). Per the SDK doc comment it "can appear on the Home Screen on iOS, on the Today View on iOS and iPadOS, on the Desktop on macOS, and on visionOS" — this is the family that brings an extra-large widget to the iPhone. Declare it alongside `systemExtraLarge` so the system picks the orientation that fits the placement.
 
 > **OS27 gating** `systemExtraLargePortrait` doesn't exist before the 27 SDK, and the iPhone extra-large slot only renders on 27. Declare the families in `supportedFamilies` and gate the matching `switch` arm with `if #available(iOS 27, *)`.
 
 ### Accessory Families (Lock Screen, iOS 16+)
-- **`accessoryCircular`** (~48×48pt) — Circular complication, icon or gauge
+- **`accessoryCircular`** (~76×76pt; 72pt on smaller iPhones, 68pt on the smallest) — Circular complication, icon or gauge
 - **`accessoryRectangular`** (~160×72pt) — Above clock, text + icon
 - **`accessoryInline`** (single line) — Above date, text only
 
-> **iPad Lock Screen placement requires these accessory families.** A widget that declares only system families (`systemSmall`/`systemMedium`/`systemLarge`) will not appear on the iPad Lock Screen even with a correct `containerBackground` — the missing piece is `supportedFamilies`, not the background. Declare `accessoryRectangular` / `accessoryCircular` / `accessoryInline` to opt into the Lock Screen on both iPhone and iPad.
+> **iPad Lock Screen placement is available to both family kinds.** The accessory families reach it on iPhone and iPad; `systemSmall` also appears on the iPad Lock Screen (Per the SDK doc comment: "Starting with iPadOS 17, it also appears on the iPad Lock Screen", and the HIG's widget-size table lists iPad "Home Screen, Today View, and Lock Screen" for System small). Declare `accessoryRectangular` / `accessoryCircular` / `accessoryInline` to opt into a Lock Screen-appropriate presentation.
 
 ### Example: Supporting Multiple Families
 
@@ -226,14 +226,14 @@ WidgetCenter.shared.reloadTimelines(ofKind: "MyWidget")
 
 ### Entries vs. reloads
 
-A `Timeline`'s entries are **pre-rendered snapshots, not refetch points.** The system displays each entry's view at its `date` from data already baked into that entry — it does **not** re-run your provider or fetch anything per entry. You fetch only when `getTimeline()` runs, and *that invocation* is a **reload** — the event the daily budget counts. So 60 one-minute entries ≠ 60 updates: they are 60 archived snapshots from a single fetch, all showing the same data. Adding entries never produces fresher data and never increases reloads. To refresh the *data* you need a new **reload**: a policy trigger (`.atEnd` / `.after`), an interactive intent's `perform()` returning, a `.widgetKit` push, or an app-initiated `WidgetCenter` call.
+A `Timeline`'s entries are **pre-rendered snapshots, not refetch points.** The system displays each entry's view at its `date` from data already baked into that entry — it does **not** re-run your provider or fetch anything per entry. You fetch only when `getTimeline()` runs, and *that invocation* is a **reload** — the event the daily budget counts. So 60 one-minute entries ≠ 60 updates: they are 60 archived snapshots from a single fetch, all showing the same data. Adding entries never produces fresher data and never increases reloads. To refresh the *data* you need a new **reload**: a policy trigger (`.atEnd` / `.after`), an interactive intent's `perform()` returning, a WidgetKit push notification, or an app-initiated `WidgetCenter` call.
 
 ## Performance & Budget Quick Reference
 
 ### Timeline Refresh Budget
-- **Daily budget**: 40-70 reloads/day (varies by system load and engagement)
-- **Budget-exempt**: User-initiated reload, app foregrounding, widget added, system reboot
-- **Strategic** (4x/hour) — ~48 reloads/day, low battery impact
+- **Daily budget**: 40-70 refreshes/day; Apple's calibration: "a daily budget typically includes from 40 to 70 refreshes. This rate roughly translates to widget reloads every 15 to 60 minutes"
+- **Budget-exempt** (Apple's enumerated cases, "Keeping a widget up to date"): the containing app is in the foreground; the app has an active audio or navigation session; the widget performs an app intent; the widget performs an animation; the system locale changes; Dynamic Type or Accessibility settings change
+- **~2/hour** — ~48 reloads/day, low battery impact
 - **Aggressive** (12x/hour) — Budget exhausted by 6 PM, high impact
 - **On-demand only** — 5-10 reloads/day, minimal impact
 - Reload on significant data changes and time-based events. Avoid speculative or cosmetic reloads.
@@ -247,14 +247,14 @@ let entries = (0..<8).map { offset in
 ```
 
 ### Memory Limits
-- ~30MB for standard widgets, ~50MB for Live Activities — system terminates if exceeded
+- Extensions run under a system-enforced memory limit and the system terminates the extension when it exceeds it; Apple publishes no figure for widgets or Live Activities — measure yours in Xcode's Debug Navigator
 - Load only what you need (e.g., `loadRecentItems(limit: 10)`, not entire database)
 
 ### Network Requests
 **Never make network requests in widget views** — they won't complete before rendering. Fetch data in `getTimeline()` instead.
 
 ### Timeline Generation
-Complete `getTimeline()` in under 5 seconds. Cache expensive computations in the main app, read pre-computed data from shared container, limit to 10-20 entries.
+Apple publishes no time budget for `getTimeline()`. Create timeline entries at least about 5 minutes apart, generate as many future dates as your content allows, and cache expensive computations in the main app so the provider reads pre-computed data from the shared container.
 
 ### View Rendering
 Precompute everything in `TimelineEntry`, keep views simple. No expensive operations in `body`.
@@ -299,18 +299,15 @@ The intent updates shared data via App Groups in its `perform()` method. **When 
 
 ### Toggle with App Intent
 
-Same pattern as Button — use a `Toggle` bound to state, invoke intent on change:
+SwiftUI ships an intent-taking `Toggle` initializer (iOS 17+) whose `isOn` is a plain `Bool`, not a `Binding` — the system owns the state, so read it from the entry and hand the intent to the control:
 
 ```swift
-Toggle(isOn: $isEnabled) {
+Toggle(isOn: entry.isEnabled, intent: ToggleFeatureIntent()) {
     Text("Feature")
-}
-.onChange(of: isEnabled) { newValue in
-    Task { try? await ToggleFeatureIntent(enabled: newValue).perform() }
 }
 ```
 
-The intent follows the same `AppIntent` structure with a `@Parameter(title: "Enabled") var enabled: Bool`. See **skills/app-intents-ref.md** for full `AppIntent` definition syntax.
+There is no `.onChange` handler and no manual `perform()` call: toggling the switch runs the intent for you. The intent follows the same `AppIntent` structure with a `@Parameter(title: "Enabled") var enabled: Bool`. See **skills/app-intents-ref.md** for full `AppIntent` definition syntax.
 
 ## invalidatableContent Modifier
 
@@ -370,8 +367,8 @@ Define configuration parameters for your widget.
 import AppIntents
 
 struct SelectProjectIntent: WidgetConfigurationIntent {
-    static var title: LocalizedStringResource = "Select Project"
-    static var description = IntentDescription("Choose which project to display")
+    static let title: LocalizedStringResource = "Select Project"
+    static let description = IntentDescription("Choose which project to display")
 
     @Parameter(title: "Project")
     var project: ProjectEntity?
@@ -392,7 +389,8 @@ struct ProjectEntity: AppEntity {
     var id: String
     var name: String
 
-    static var typeDisplayRepresentation = TypeDisplayRepresentation(name: "Project")
+    static let defaultQuery = ProjectQuery()
+    static let typeDisplayRepresentation = TypeDisplayRepresentation(name: "Project")
 
     var displayRepresentation: DisplayRepresentation {
         DisplayRepresentation(title: "\(name)")
@@ -582,7 +580,7 @@ Controls how images render in accented mode. Apply to `Image` views:
 Image("myPhoto")
     .widgetAccentedRenderingMode(.accented)      // Tinted with accent color
 Image("myIcon")
-    .widgetAccentedRenderingMode(.monochrome)     // Rendered as monochrome
+    .widgetAccentedRenderingMode(.desaturated)    // Luminance mapped to the alpha channel
 Image("myBadge")
     .widgetAccentedRenderingMode(.fullColor)       // Keeps original colors (opt-out)
 ```
@@ -638,7 +636,7 @@ GlassEffectContainer(spacing: 20.0) {
 
 ## Cross-Platform Support
 
-### visionOS Widgets (visionOS 2+)
+### visionOS Widgets (visionOS 26+)
 
 visionOS widgets are 3D objects placed in physical space — mounted on surfaces or floating. They support unique spatial features.
 
@@ -701,18 +699,72 @@ Detect whether the widget background is visible (removed in accented mode):
 @Environment(\.showsWidgetContainerBackground) var showsBackground
 ```
 
-### watchOS Controls (11+)
-`ControlWidget` works identically on watchOS — available in Control Center, Action Button, and Smart Stack. Same `StaticControlConfiguration` / `ControlWidgetButton` pattern as iOS.
+### watchOS Controls (26+)
+`ControlWidget` works identically on watchOS — available in Control Center, Action Button, and Smart Stack. Same `StaticControlConfiguration` / `ControlWidgetButton` pattern as iOS. The watchOS floor is 26, not 11: the SDK stamps `ControlWidget`, `StaticControlConfiguration`, `ControlWidgetButton`, and `ControlWidgetToggle` `@available(watchOS 26.0, *)`.
 
 > Live Activity surfaces (CarPlay, macOS menu bar, Apple Watch Smart Stack) are documented in `skills/live-activities-ref.md`.
 
 ## Relevance Widgets (iOS 18+)
 
-Use `.relevanceConfiguration(for:score:attributes:)` to help the system promote widgets in Smart Stack. Attributes include `.location(CLLocation)`, `.timeOfDay(DateInterval)`, and `.activity(String)` for context-aware ranking.
+Implement `relevance()` on your timeline provider to help the system promote your widget in the Smart Stack. It returns `WidgetRelevance` values built from `WidgetRelevanceAttribute(context:)`, where the context is a `RelevantContext`:
 
-## Push Notification Updates (iOS 18+)
+```swift
+import CoreLocation
+import WidgetKit
 
-Implement `PKPushRegistryDelegate` and handle `.widgetKit` push type to receive server-to-widget pushes. Update shared container data and call `WidgetCenter.shared.reloadAllTimelines()`. Pushes to iPhone automatically sync to Apple Watch and CarPlay.
+struct Provider: TimelineProvider {
+    func placeholder(in context: Context) -> SimpleEntry { SimpleEntry(date: .now) }
+    func getSnapshot(in context: Context, completion: @escaping (SimpleEntry) -> Void) {
+        completion(SimpleEntry(date: .now))
+    }
+    func getTimeline(in context: Context, completion: @escaping (Timeline<SimpleEntry>) -> Void) {
+        completion(Timeline(entries: [SimpleEntry(date: .now)], policy: .atEnd))
+    }
+
+    func relevance() async -> WidgetRelevance<Void> {
+        let office = CLCircularRegion(
+            center: CLLocationCoordinate2D(latitude: 37.3349, longitude: -122.0090),
+            radius: 200,
+            identifier: "office"
+        )
+        return WidgetRelevance([
+            WidgetRelevanceAttribute(context: .location(office))
+        ])
+    }
+}
+```
+
+**There is no `.relevanceConfiguration(for:score:attributes:)` modifier.** The `RelevantContext` values (RelevanceKit) are: `.date(_:)` / `.date(from:to:)` (the two-date form `date(from:to:)` is deprecated in iOS 26 in favor of `date(interval:kind:)` and `date(range:kind:)`; the single-date `date(_:)` is not deprecated and emits no warning), `.location(_:)` — which takes a **`CLRegion`**, not a `CLLocation` — `.location(inferred:)` (`.home`, `.work`, `.school`, `.commute`), `.sleep(_:)`, `.fitness(_:)`, and `.hardware(headphones:)`. There is no `.timeOfDay` or `.activity` context.
+
+## Push Notification Updates (iOS 26+)
+
+Widgets do **not** use PushKit or the User Notifications framework — there is no `.widgetKit` `PKPushType` (PushKit declares only `voip`, `complication`, and `fileProvider`) and `PKPushRegistryDelegate` has nothing to register. Apple: "you can't use the User Notifications framework to register your widget for push notifications. Instead, you use WidgetKit to obtain a push token." The path is `WidgetPushHandler`:
+
+1. Add the **Push Notifications** capability to your widget extension target in Xcode.
+2. Adopt `WidgetPushHandler` and send the token to your server from `pushTokenDidChange(_:widgets:)`.
+3. Attach the handler to the widget configuration with `.pushHandler(MyPushHandler.self)`.
+4. Send the WidgetKit push notification from your server to APNs with the tokens.
+
+```swift
+@available(iOS 26.0, *)
+struct MyPushHandler: WidgetPushHandler {
+    func pushTokenDidChange(_ pushInfo: WidgetPushInfo, widgets: [WidgetInfo]) {
+        // Send pushInfo.token and subscription info to your remote notification server
+    }
+}
+
+@available(iOS 26.0, *)
+struct MyWidget: Widget {
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: "MyWidget", provider: Provider()) { entry in
+            MyWidgetView(entry: entry)
+        }
+        .pushHandler(MyPushHandler.self)
+    }
+}
+```
+
+When WidgetKit receives a push notification it reloads your timelines itself — you do not call `WidgetCenter.shared.reloadAllTimelines()` for it.
 
 ---
 
@@ -793,11 +845,10 @@ For a complete step-by-step tutorial with working code examples, see Apple's [Bu
 - [ ] No `UserDefaults.standard` in widget code
 
 **Performance**:
-- [ ] Timeline generation completes in < 5 seconds
+- [ ] Timeline entries at least ~5 minutes apart (WidgetKit's documented minimum cadence; cache expensive work in the app)
 - [ ] No network requests in widget views
 - [ ] Timeline has reasonable refresh intervals (≥ 15 min)
-- [ ] Entry count reasonable (< 20-30 entries)
-- [ ] Memory usage under limits (~30MB widgets, ~50MB activities)
+- [ ] Memory measured in the Debug Navigator (Apple publishes no widget memory figure)
 - [ ] Images optimized (asset catalog or SF Symbols preferred)
 
 **Data & State**:
@@ -816,7 +867,7 @@ For a complete step-by-step tutorial with working code examples, see Apple's [Bu
 
 **Liquid Glass** (if applicable):
 - [ ] `widgetAccentable()` applied for visual hierarchy in accented mode
-- [ ] `WidgetAccentedRenderingMode` set on images (`.accented`, `.monochrome`, or `.fullColor`)
+- [ ] `WidgetAccentedRenderingMode` set on images (`.accented`, `.desaturated`, `.accentedDesaturated`, or `.fullColor`)
 - [ ] Tested with multiple accent colors and background images
 - [ ] Container background configured with `.containerBackground(for: .widget)`
 
@@ -940,7 +991,7 @@ Button(action: { /* This won't work in widgets */ }) {
 **Symptoms**: Widget rendering slow, battery drain
 
 **Common Causes**:
-- Too many timeline entries (> 100)
+- Entries packed below WidgetKit's ~5-minute minimum cadence
 - Network requests in view code
 - Heavy computation in `getTimeline()`
 - Refresh intervals too frequent (< 15 min)
@@ -953,7 +1004,7 @@ let entries = (0..<8).map { offset in
     return SimpleEntry(date: date, data: precomputedData)
 }
 
-// ❌ BAD: Too frequent, too many entries
+// ❌ BAD: One-minute cadence, and network fetching inside the timeline
 let entries = (0..<100).map { offset in
     let date = Calendar.current.date(byAdding: .minute, value: offset, to: now)!
     return SimpleEntry(date: date, data: fetchFromNetwork())  // Network in timeline
@@ -966,15 +1017,16 @@ let entries = (0..<100).map { offset in
 
 ### Simulator vs Device
 
-- **Simulator**: Widgets refresh immediately; no budget limits apply. Useful for layout testing but misleading for refresh behavior.
+- **Simulator**: Useful for layout testing; check refresh timing on a device.
 - **Device**: Budget-limited (40-70 reloads/day). Test on device before shipping to verify real-world refresh timing.
+- **Development**: WidgetKit developer mode in Settings ignores push and reload budgets during development and testing (WWDC25-278).
 - **Xcode Previews**: Work for layout but skip `getTimeline()`. Test timeline logic with unit tests or device runs.
 
 ### Common Debugging Workflow
 
 1. Add `print()` in `getTimeline()` — verify it's called and data loads
 2. Check Console.app filtered by widget extension process name
-3. Use `WidgetCenter.shared.getCurrentConfigurations()` to verify registration
+3. Use `try await WidgetCenter.shared.currentConfigurations()` to verify registration (the `getCurrentConfigurations(_:)` form takes a completion handler)
 4. If widget shows old data after app update, verify App Groups container paths match
 
 ### Data Sharing Patterns
@@ -1003,4 +1055,4 @@ let entries = (0..<100).map { offset in
 
 ---
 
-**Platforms**: iOS 14+, iPadOS 14+, watchOS 9+, macOS 11+, visionOS 2+
+**Platforms**: iOS 14+, iPadOS 14+, watchOS 9+, macOS 11+, visionOS 26+

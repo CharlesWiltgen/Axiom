@@ -50,7 +50,7 @@ Two halves that must agree: Info.plist entitlement-style keys, and the runtime `
 
 ```xml
 <!-- Info.plist -->
-<key>NSAccessorySetupSupports</key>
+<key>NSAccessorySetupKitSupports</key>
 <array><string>Bluetooth</string><string>WiFi</string></array>
 
 <key>NSAccessorySetupBluetoothServices</key>
@@ -81,6 +81,7 @@ session.activate(on: DispatchQueue.main) { event in
     switch event.eventType {
     case .activated:
         // safe to read session.accessories or present the picker now
+        break
     case .accessoryAdded:
         if let accessory = event.accessory { connect(to: accessory) }
     case .accessoryRemoved:
@@ -133,7 +134,7 @@ Not every accessory is usable the instant the user taps the picker. A Wi-Fi acce
 case .accessoryAdded:
     guard let accessory = event.accessory else { break }
     if accessory.state == .awaitingAuthorization {
-        let settings = ASAccessorySettings.defaultSettings
+        let settings = ASAccessorySettings.default
         settings.ssid = collectedHotspotSSID                          // Wi-Fi hotspot to join
         // settings.bluetoothTransportBridgingIdentifier = sixByteID  // bridge BT Classic profiles
         session.finishAuthorization(for: accessory, settings: settings) { _ in }
@@ -142,7 +143,7 @@ case .accessoryAdded:
     }
 ```
 
-If the user backs out or setup fails, call `session.failAuthorization(for: accessory) { _ in }`. To upgrade an already-authorized accessory's permissions (e.g. add Wi-Fi to a Bluetooth-only accessory), use `updateAuthorization(for:descriptor:)` with a broader descriptor. Drive the post-pairing path by setting `setupOptions` on your `ASPickerDisplayItem` (see `skills/accessorysetupkit-ref.md`).
+If the user backs out or setup fails, call `session.failAuthorization(for: accessory) { _ in }`. To upgrade an already-authorized accessory's permissions (e.g. add Wi-Fi to a Bluetooth-only accessory), use `updateAuthorization(for:descriptor:)` (iOS 26.0+) with a broader descriptor. Drive the post-pairing path by setting `setupOptions` on your `ASPickerDisplayItem` (see `skills/accessorysetupkit-ref.md`).
 
 ## Part 5 — Migrate existing accessories
 

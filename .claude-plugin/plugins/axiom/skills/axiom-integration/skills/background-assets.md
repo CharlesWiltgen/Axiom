@@ -7,7 +7,7 @@ Background Assets delivers content too large for the app bundle — ML model var
 
 **Key insight**: Asset delivery is a *system integration* concern, not a download problem. Building a custom URLSession stack to fetch assets reinvents what `BackgroundAssets` already does correctly — and ships with App Store install-progress integration, charging-aware scheduling, and per-user quota you can't replicate.
 
-**Foundation Models adapters**: `.fmadapter` packs (~160 MB each, per-OS-version pinning) **must** be delivered via Background Assets — Apple's own documentation rules out bundling. See `axiom-ai (skills/foundation-models-adapters-ref.md)` for the adapter-specific delivery pattern.
+**Foundation Models adapters** (26-era): `.fmadapter` packs (~160 MB each, per-OS-version pinning) **must** be delivered via Background Assets — Apple's own documentation rules out bundling. The `SystemLanguageModel.Adapter` runtime is retroactively deprecated from 26.4 and **obsoleted at 27.0** in the 27 SDK with no replacement named — build adapter delivery only for a pre-27 deployment target. See `axiom-ai (skills/foundation-models-adapters-ref.md)` for the adapter-specific delivery pattern.
 
 **Requirements**: iOS 26+ / iPadOS 26+ / macOS 26+ / tvOS 26+ / visionOS 26+ for managed asset packs and Apple-hosted delivery. Older OS uses the legacy unmanaged `BADownloadManager` path.
 
@@ -28,16 +28,16 @@ Real questions developers ask that this skill answers:
 → The skill covers the cost / latency / quota / App Review tradeoffs between `StoreDownloaderExtension` (Apple-hosted) and `BADownloaderExtension` (server-hosted).
 
 #### 3. "How do I ship a Foundation Models adapter?"
-→ The skill covers adapter-specific lifecycle (per-base-model compatibility, `removeObsoleteAdapters()` at launch, `onDemand` download policy) with a cross-reference to the FM adapter runtime API.
+→ 26-era only — the adapter runtime is obsoleted at 27.0. The skill covers adapter-specific lifecycle (per-base-model compatibility, `removeObsoleteAdapters()` at launch, `onDemand` download policy) with a cross-reference to the FM adapter runtime API.
 
 #### 4. "My users report the asset pack 'isn't downloading'."
-→ The skill covers `BAErrorCode.downloadBackgroundActivityProhibited`, the "Background Activity" Settings toggle, and `AssetPack.Status` interpretation.
+→ The skill covers `BAErrorCode.downloadBackgroundActivityProhibited`, its real causes (Low Power Mode or Background App Refresh off, network), and `AssetPack.Status` interpretation.
 
 #### 5. "How do I test asset pack downloads without uploading to App Store Connect?"
 → The skill covers `xcrun ba-serve` local HTTPS mock server + developer-mode + URL override workflow.
 
 #### 6. "How big can my asset packs be?"
-→ The skill covers the 200 GB / 100-pack Apple-hosted quota, per-pack practical limits, and the "asset pack total" calculation rules.
+→ The skill covers the 200 GB / 200-pack Apple-hosted quota, per-pack practical limits, and the "asset pack total" calculation rules.
 
 ---
 
@@ -45,11 +45,11 @@ Real questions developers ask that this skill answers:
 
 If you see ANY of these, you're heading toward either an oversized IPA, a brittle custom download stack, or quota surprises:
 
-- **Bundling assets ≥10 MB that aren't needed at first launch**: Inflates first-install size, blocks updates, costs App Store ranking
+- **Bundling large assets that aren't needed at first launch**: Inflates first-install size, blocks updates, costs App Store ranking
 - **Custom `URLSession` stack to fetch asset packs**: Reinvents what Background Assets does correctly, loses install-progress integration
 - **Using `BGProcessingTask` to schedule asset downloads**: Wrong tool — `BGProcessingTask` is for compute, Background Assets is for fetching
 - **Treating asset pack download as instant**: Even `essential` packs can fail under poor network; always check `AssetPack.Status` before consuming
-- **Not handling `BAErrorCode.downloadBackgroundActivityProhibited`**: User has "Background Activity" disabled in Settings; you need a foreground fallback
+- **Not handling `BAErrorCode.downloadBackgroundActivityProhibited`**: Low Power Mode or Background App Refresh is off; you need a foreground fallback
 - **Bundling Foundation Models `.fmadapter` files in the app bundle**: Apple explicitly prohibits this — adapters are ~160 MB and per-OS-version; bundle bloat compounds across OS versions
 - **Assuming asset packs auto-evict**: The system does NOT remove asset packs while your app is installed; call `remove(assetPackWithID:)` when done
 - **Hyphens in adapter names**: The identifier regex `/fmadapter-\w+-\w+/` breaks on hyphens; use underscores
@@ -65,8 +65,8 @@ Before writing any Background Assets code, complete these:
 
 | Asset profile | Channel |
 |---------------|---------|
-| Needed at first launch, <10 MB | App bundle |
-| Needed at first launch, ≥10 MB | Background Assets with `essential` policy |
+| Needed at first launch, small enough to keep in the bundle | App bundle |
+| Needed at first launch, too large for the bundle | Background Assets with `essential` policy |
 | Needed soon after launch | Background Assets with `prefetch` policy |
 | Needed on user demand (level pack, advanced feature) | Background Assets with `onDemand` policy |
 | Foundation Models `.fmadapter` (any size) | Background Assets with `onDemand` policy (never bundle) |
@@ -79,10 +79,10 @@ Background Assets is optimized for content that's relatively stable across an ap
 
 | Concern | Apple-hosted | Server-hosted |
 |---------|--------------|----------------|
-| Hosting cost | Free (200 GB / 100-pack quota included) | Your CDN bill |
+| Hosting cost | Free (200 GB / 200-pack quota included) | Your CDN bill |
 | Asset upload | Transporter / `altool` / iTMSTransporter / App Store Connect REST API | Push to your server |
 | Update latency | Goes through App Store review | Whenever you push |
-| Per-platform availability | iOS 26+ only | iOS 26+ (managed) / iOS 16.1+ (unmanaged legacy) |
+| Per-platform availability | All platforms except watchOS (App Store distribution) | iOS 26+ (managed) / iOS 16.1+ (unmanaged legacy) |
 | App Review burden | Asset packs reviewed alongside app | App Review checks your manifest URL serves what you described |
 | Extension code | Minimal `StoreDownloaderExtension` (two-line boilerplate) | `ManagedDownloaderExtension` (managed) or `BADownloaderExtension` (unmanaged legacy) |
 | Right for | Stable content versioned with app releases | Content that needs to ship between app releases, content tied to live server features |
@@ -142,8 +142,8 @@ digraph background_assets {
     hosting [label="Hosting choice?" shape=diamond];
     apple_hosted [label="Apple-hosted\nStoreDownloaderExtension" shape=box];
     server_hosted [label="Server-hosted\nBADownloaderExtension" shape=box];
-    fm_adapter [label="Foundation Models adapter?" shape=diamond];
-    fm_pattern [label="onDemand + per-base-model lifecycle\n(see axiom-ai)" shape=box];
+    fm_adapter [label="Foundation Models adapter?\n(pre-27 only)" shape=diamond];
+    fm_pattern [label="onDemand + per-base-model lifecycle\nobsoleted at 27.0\n(see axiom-ai)" shape=box];
 
     start -> ba_or_not;
     ba_or_not -> when [label="yes"];
@@ -161,7 +161,7 @@ digraph background_assets {
     on_demand -> hosting;
     fm_pattern -> hosting;
 
-    hosting -> apple_hosted [label="iOS 26+ only,\nstable across release,\nfree quota"];
+    hosting -> apple_hosted [label="all platforms except watchOS,\nstable across release,\nfree quota"];
     hosting -> server_hosted [label="older OS support,\nupdate between releases,\nown CDN"];
 }
 ```
@@ -329,14 +329,14 @@ For the full adapter runtime contract (compile, error cases, draft model), see `
 # Serve packed asset archives over HTTPS on localhost
 xcrun ba-serve --host localhost Tutorial.aar HighQualityTextures.aar
 
-# Or override the base URL the device uses for asset lookups
+# Override the base URL — the macOS test-device path
 xcrun ba-serve url-override "https://localhost:PORT"
 ```
 
 Then on the test device:
 1. Enable Developer Mode (Settings > Privacy & Security > Developer Mode)
-2. Install the root CA cert generated by `ba-serve` via Apple Configurator
-3. For iOS / iPadOS / tvOS / visionOS, configure the URL override under Settings > Developer > Development Overrides
+2. Trust your root CA: create it in Keychain Access (Certificate Assistant > Create a Certificate Authority), deliver it as an Apple Configurator profile (File > New Profile, Certificates tab), then issue a leaf certificate from it. `ba-serve` doesn't generate the CA — it prompts you to choose an already-issued identity (pick the SSL certificate, not the root CA)
+3. For iOS / iPadOS / tvOS / visionOS, configure the URL override under Settings > Developer > Development Overrides — only macOS test devices use the `ba-serve url-override` command above
 
 The mock server runs HTTPS only — plain HTTP is not supported by the framework.
 
@@ -378,7 +378,7 @@ The mock server runs HTTPS only — plain HTTP is not supported by the framework
 - You handle quotas, retries, version management, and concurrent download coordination yourself
 - For server-hosted asset packs, you'd be implementing what `BADownloaderExtension` already provides
 - For Apple-hosted asset packs, you can't even reach Apple's CDN with URLSession — the asset packs are not addressable URLs you can fetch directly
-- Apple's framework hooks into `Background Activity` Settings, `Low Power Mode`, and per-app energy budgets; a custom stack doesn't
+- Apple's framework hooks into `Background App Refresh` Settings, `Low Power Mode`, and per-app energy budgets; a custom stack doesn't
 
 **Time cost comparison**:
 - URLSession path: 2-3 days to ship something that approximates Background Assets badly
@@ -392,7 +392,7 @@ The mock server runs HTTPS only — plain HTTP is not supported by the framework
 
 ---
 
-### Scenario 3: "We'll ship one adapter for all users"
+### Scenario 3: "We'll ship one adapter for all users" (26-era — the adapter runtime is obsoleted at 27.0)
 
 **The temptation**: "We trained one adapter, let's just ship it. Why complicate things with version-pinning?"
 
@@ -432,7 +432,7 @@ The mock server runs HTTPS only — plain HTTP is not supported by the framework
 
 - [ ] App calls `AssetPackManager.shared.checkForUpdates()` after OS upgrades?
 - [ ] App calls `remove(assetPackWithID:)` when done with a pack?
-- [ ] For Foundation Models adapters: `SystemLanguageModel.Adapter.removeObsoleteAdapters()` called at launch?
+- [ ] For Foundation Models adapters (26-era; obsoleted at 27.0): `SystemLanguageModel.Adapter.removeObsoleteAdapters()` called at launch?
 - [ ] App reads `AssetPack.Status` before consuming pack contents?
 - [ ] Error handling for `ManagedBackgroundAssetsError.assetPackNotFound` and `ManagedBackgroundAssetsError.fileNotFound`?
 - [ ] Error handling for `BAErrorCode.downloadBackgroundActivityProhibited` (foreground fallback)?
@@ -440,7 +440,7 @@ The mock server runs HTTPS only — plain HTTP is not supported by the framework
 ### Quota and size
 
 - [ ] Total of all Apple-hosted asset packs across versions ≤ 200 GB?
-- [ ] Total asset pack count ≤ 100?
+- [ ] Total asset pack count ≤ 200?
 - [ ] Old versions archived in App Store Connect to reclaim quota when needed?
 - [ ] 80% quota warning email handled by someone on the team?
 - [ ] No asset pack relies on macOS executables (excluded — CPU + GPU code only)?
@@ -448,10 +448,10 @@ The mock server runs HTTPS only — plain HTTP is not supported by the framework
 ### Production
 
 - [ ] Tested on real device, not just simulator?
-- [ ] Tested with Background Activity disabled in Settings?
+- [ ] Tested with Background App Refresh disabled in Settings?
 - [ ] Tested with Low Power Mode enabled?
 - [ ] Tested cold-install path (essential / prefetch downloads visible in install progress)?
-- [ ] For adapters: tested across at least two adjacent base-model versions?
+- [ ] For adapters (26-era; obsoleted at 27.0): tested across at least two adjacent base-model versions?
 
 ---
 
@@ -477,7 +477,7 @@ The mock server runs HTTPS only — plain HTTP is not supported by the framework
 | Package into `.aar` | `xcrun ba-package Manifest.json -o Pack.aar` |
 | Convert Steam depot (Xcode 27) | `xcrun ba-package convert --asset-pack-id <id> -l <lang> --on-demand depot.vdf -o Manifest.json` |
 | Local HTTPS test server | `xcrun ba-serve --host localhost Pack.aar` |
-| Override base URL on device | `xcrun ba-serve url-override "https://..."` |
+| Override base URL (macOS test device) | `xcrun ba-serve url-override "https://..."` |
 
 ### Errors
 
@@ -485,7 +485,7 @@ The mock server runs HTTPS only — plain HTTP is not supported by the framework
 |-------|---------|----------|
 | `ManagedBackgroundAssetsError.assetPackNotFound` | Pack ID not on Apple/your server | Verify manifest and pack ID |
 | `ManagedBackgroundAssetsError.fileNotFound` | File missing within pack | Verify file selectors in manifest |
-| `BAErrorCode.downloadBackgroundActivityProhibited` | User disabled Background Activity | Prompt user, offer foreground fallback |
+| `BAErrorCode.downloadBackgroundActivityProhibited` | Low Power Mode or Background App Refresh is off | Prompt user, offer foreground fallback |
 | `BAErrorCode.downloadWouldExceedAllowance` | Pack would push storage over quota | Free up packs with `remove(assetPackWithID:)` |
 | `SystemLanguageModel.Adapter.AssetError.compatibleAdapterNotFound` | No adapter variant matches current base model | Retrain per OS; degrade to base FM |
 

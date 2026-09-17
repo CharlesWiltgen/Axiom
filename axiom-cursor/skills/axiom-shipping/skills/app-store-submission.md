@@ -176,11 +176,11 @@ Project must contain:
 └── Third-party SDK manifests (each SDK includes its own)
 ```
 
-Common Required Reason APIs that need declaration:
-- `UserDefaults` → Reason `CA92.1`
-- File timestamp APIs → Reason `C617.1`
-- Disk space APIs → Reason `E174.1`
-- System boot time → Reason `35F9.1`
+Common Required Reason APIs that need declaration — each category has several approved codes, and the declared code must match the actual use (complete table in `skills/app-store-ref.md`):
+- `UserDefaults` → e.g. `CA92.1` (same app) or `1C8F.1` (same App Group)
+- File timestamp APIs → e.g. `C617.1` (inside app or group container) or `DDA9.1` (display to user)
+- Disk space APIs → e.g. `E174.1` (write or delete a file) or `85F4.1` (display to user)
+- System boot time → e.g. `35F9.1` (measure elapsed time)
 
 **Why it works**: Since May 2024, this is an automated gate. No human reviewer involved — the build processing system rejects submissions missing required privacy declarations.
 

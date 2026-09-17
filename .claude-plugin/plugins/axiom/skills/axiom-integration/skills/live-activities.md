@@ -31,7 +31,7 @@ For static/timeline widgets and Control Center controls, use `skills/extensions-
 | App Intents interactivity in a Live Activity | iOS 17+ |
 | Push-to-start (`pushToStartTokenUpdates`) | iOS 17.2+ |
 | Broadcast push channels (`.channel`) | iOS 18+ |
-| Frequent updates (`NSSupportsLiveActivitiesFrequentUpdates`) | iOS 18.2+ |
+| Frequent updates (`NSSupportsLiveActivitiesFrequentUpdates`) | iOS 16.2+ |
 | Apple Watch Smart Stack surfacing | watchOS 11 (paired with iOS 18) |
 | AlarmKit-backed alarms/timers | iOS 26+ |
 
@@ -42,11 +42,10 @@ Dynamic Island is hardware-specific (iPhone 14 Pro and later); Live Activities s
 | Gotcha | Why it bites | Fix |
 |--------|--------------|-----|
 | `ContentState` uses a custom Codable strategy | Custom `CodingKeys` / encoder strategies serialize on-device but **silently fail to decode** push payloads | Keep `ContentState` on default `Codable` key names |
-| `ActivityAttributes` + `ContentState` > 4KB | `Activity.request`/`update` fails (`dataTooLarge`) | Store IDs/references, use asset-catalog images, keep state minimal |
-| Activity never dismisses | Activities persist until you call `end(_:dismissalPolicy:)` | Always `end` with an explicit policy when the event completes |
-| `dismissed` ≠ gone | A dismissed activity reappears if you send another `update` | Call `end`, not just expect dismissal |
+| `ActivityAttributes` + `ContentState` > 4KB | `Activity.request`/`update` fails (`ActivityAuthorizationError.attributesTooLarge`) | Store IDs/references, use asset-catalog images, keep state minimal |
+| Activity never dismisses | An activity runs until you call `end(_:dismissalPolicy:)`, but the system ends it automatically after **8 hours** and immediately removes it from the Dynamic Island | Always `end` with an explicit policy when the event completes |
 | Widget tries to fetch data | Widget extension can't make arbitrary network calls | Deliver every change via `update` or push |
-| `Activity.request` from the background | Requires foreground unless using push-to-start (iOS 17.2+) | Start in foreground, or use push-to-start tokens |
+| `Activity.request` from the background | `Activity.request` needs the app in the foreground unless the start comes from an App Intent that adopts `LiveActivityIntent`; a server push-to-start never calls `Activity.request` at all | Start in the foreground, start from a `LiveActivityIntent`, or start remotely with push-to-start |
 
 ## Authorization and starting
 
@@ -72,7 +71,7 @@ See `skills/live-activities-ref.md` for the full `ActivityAttributes`/`ContentSt
 
 ## Lifecycle
 
-`ActivityState` has five states: `.pending` (scheduled or push-to-started, not yet displayed), `.active`, `.stale` (past its `staleDate`, still visible), `.ended` (finished, still visible until dismissed), `.dismissed` (removed). Observe them with `activity.activityStateUpdates`.
+`ActivityState` has five states: `.pending` (**iOS 26+** — scheduled to start at a specified date but not started yet), `.active`, `.stale` (**iOS 16.2+** — past its `staleDate`, still visible), `.ended` (finished, still visible until dismissed), `.dismissed` (removed). Observe them with `activity.activityStateUpdates`.
 
 End with an explicit dismissal policy:
 - `.immediate` — transient events (timer done, song finished)
@@ -128,15 +127,15 @@ let activity = try Activity.request(
 
 Channel lifecycle is **independent** of the activities — a channel ID stays valid with zero subscribers. The number of active channels is limited, so delete channels you no longer need via the channel-management API (e.g. when the game ends). You cannot *start* an activity via broadcast — push-to-start uses per-app tokens, not channels.
 
-## Frequent updates budget (iOS 18.2+)
+## Frequent updates budget (iOS 16.2+)
 
-Standard push updates are budgeted (~10-12/hour). For genuinely live data (sports, stocks):
+Standard push updates run against a system-imposed hourly budget — Apple publishes no figure for it, and exceeding it gets your updates throttled rather than rejected. For genuinely live data (sports, stocks):
 
 - Add `NSSupportsLiveActivitiesFrequentUpdates` = `YES` to Info.plist.
 - Check `ActivityAuthorizationInfo().frequentPushesEnabled` before relying on it (users can disable it).
 - Use `apns-priority: 10` for immediate, budget-counting delivery; `apns-priority: 5` for low-priority updates that don't count against the budget.
 
-Don't promise "instant" — push latency is ~1-3 seconds and the budget exists to protect battery. Position as "near real-time".
+Don't promise "instant" — push delivery is asynchronous, APNs makes no timing guarantee, and the budget exists to protect battery. Position as "near real-time".
 
 ## Interactivity (iOS 17+)
 
@@ -145,7 +144,7 @@ Buttons and toggles inside a Live Activity must use `Button(intent:)` / `Toggle(
 ## Other surfaces
 
 - `.supplementalActivityFamilies([.small])` on your `ActivityConfiguration` → Apple Watch Smart Stack (watchOS 11+)
-- CarPlay Dashboard (iOS 18+) and the Mac menu bar (macOS Sequoia+) surface a paired iPhone's Live Activity **automatically** — no code or modifier
+- CarPlay (iOS 26+) and the Mac menu bar (macOS Sequoia+) surface a paired iPhone's Live Activity **automatically** — no code or modifier (CarPlay Live Activities arrived with the 26 cycle; WWDC25 session 216)
 
 Adapt layout with `@Environment(\.activityFamily)` and simplify for Always On Display via `@Environment(\.isLuminanceReduced)`.
 
@@ -153,7 +152,6 @@ Adapt layout with `@Environment(\.activityFamily)` and simplify for Always On Di
 
 - Custom `Codable` strategy on `ContentState` — works locally, silently fails to decode pushes.
 - Never calling `end(_:dismissalPolicy:)` → activities linger for hours (negative reviews).
-- Treating `.dismissed` as terminal — a later `update` revives it; use `end`.
 - Embedding image `Data` or unbounded arrays in `ContentState` → blows the 4KB limit.
 - Promising "real-time"/"instant" to stakeholders — it's near-real-time with a battery-protecting budget.
 - Using broadcast push to *start* an activity — broadcast updates only; use push-to-start tokens.
@@ -168,7 +166,7 @@ Adapt layout with `@Environment(\.activityFamily)` and simplify for Always On Di
 - ☐ `pushType` matches your server integration (`nil`/`.token`/`.channel`)
 - ☐ Every `end` specifies a dismissal policy
 - ☐ For frequent updates: `NSSupportsLiveActivitiesFrequentUpdates` set and `frequentPushesEnabled` checked
-- ☐ Tested on a physical device (push and Dynamic Island don't work in Simulator)
+- ☐ Verified on a device or in the Simulator — Apple documents simulator push testing (`xcrun simctl push <device> <bundle-id> payload.apns`)
 
 ## Resources
 

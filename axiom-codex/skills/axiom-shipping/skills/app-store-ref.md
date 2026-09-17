@@ -304,13 +304,15 @@ This produces a PDF summarizing privacy manifests from your app and all embedded
 
 ### Required Reason API Categories
 
-| Category | APIs Covered | Common Reasons |
-|----------|-------------|----------------|
-| File timestamp | `NSFileCreationDate`, `NSFileModificationDate`, `NSURLContentModificationDateKey` | DDA9.1 (display to user), C617.1 (inside app container) |
-| System boot time | `systemUptime`, `mach_absolute_time` | 35F9.1 (measure elapsed time) |
-| Disk space | `NSFileSystemFreeSize`, `NSFileSystemSize`, `volumeAvailableCapacityKey` | E174.1 (check before writing), 85F4.1 (display to user) |
-| Active keyboard | `activeInputModes` | 54BD.1 (customize UI for keyboard) |
-| User defaults | `UserDefaults` (all access requires declaration) | CA92.1 (access within app group), 1C8F.1 (access within same app) |
+| Category | APIs Covered | Approved Reason Codes |
+|----------|-------------|----------------------|
+| File timestamp | `NSFileCreationDate`, `NSFileModificationDate`, `NSURLContentModificationDateKey` | DDA9.1 (display to user), C617.1 (inside app or group container), 3B52.1 (files provided to the app by the user), 0A2A.1 (third-party SDK wrapper) |
+| System boot time | `systemUptime`, `mach_absolute_time` | 35F9.1 (measure elapsed time), 8FFB.1 (calculate a timestamp for an in-app event), 3D61.1 (user-initiated bug report) |
+| Disk space | `NSFileSystemFreeSize`, `NSFileSystemSize`, `volumeAvailableCapacityKey` | E174.1 (write or delete a file), 85F4.1 (display to user), 7D9E.1 (user-initiated bug report), B728.1 (health research app) |
+| Active keyboard | `activeInputModes` | 54BD.1 (customize UI for keyboard), 3EC4.1 (custom keyboard app) |
+| User defaults | `UserDefaults` (all access requires declaration) | CA92.1 (access info from same app), 1C8F.1 (same App Group), C56D.1 (third-party SDK wrapper), AC6B.1 (managed app configuration) |
+
+That is the complete set in Xcode 27.2's `.xcprivacy` schema — five categories, 17 codes. Declare the code that matches the actual use, not the most familiar one.
 
 ### App Privacy Details (Nutrition Labels)
 

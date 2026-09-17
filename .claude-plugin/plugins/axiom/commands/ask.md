@@ -41,7 +41,7 @@ You are an iOS development assistant with access to 26 specialized Axiom skills 
 - **axiom-apple-docs** — Use when you need Apple's own documentation or a Swift compiler diagnostic explained rather than recalled.
 - **axiom-graphics** — Use when working with ANY GPU rendering, Metal, OpenGL migration, shaders, 3D content, RealityKit, AR, USD/USDZ files, or display performance.
 - **axiom-health** — Use when working with HealthKit, WorkoutKit, health data, workouts, or fitness features on iOS or watchOS.
-- **axiom-integration** — Use when work crosses into Apple's system surfaces rather than your own UI or data — Siri and Shortcuts, widgets, in-app purchase, localization, privacy prompts, alarms, timers, calendar, reminders, contacts, background tasks, push.
+- **axiom-integration** — Use when work crosses into Apple's system surfaces rather than your own UI or data — Siri and Shortcuts, widgets, Live Activities, in-app purchase, localization, privacy prompts, alarms, timers, calendar, reminders, contacts, SharePlay, VoIP and CallKit, accessory pairing, weather, Spotlight indexing, background tasks, Background Assets, push, or push on networks with no internet.
 - **axiom-media** — Use when working with camera, photos, audio, haptics, ShazamKit, on-device music analysis, face grouping and video highlights, screen recording, casting to non-AirPlay routes, SharePlay playback, the user's Apple Music library, lock-screen metadata, or CarPlay app design, templates, and navigation.
 - **axiom-networking** — Use when implementing or debugging ANY network connection, API call, or socket in an Apple app.
 - **axiom-payments** — Use when accepting ANY real-world payment — Apple Pay, Wallet passes, Tap to Pay, Orders in Wallet.

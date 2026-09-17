@@ -54,7 +54,7 @@
     },
     {
       "name": "axiom-integration",
-      "description": "Use when work crosses into Apple's system surfaces rather than your own UI or data — Siri and Shortcuts, widgets, in-app purchase, localization, privacy prompts, alarms, timers, calendar, reminders, contacts, background tasks, push."
+      "description": "Use when work crosses into Apple's system surfaces rather than your own UI or data — Siri and Shortcuts, widgets, Live Activities, in-app purchase, localization, privacy prompts, alarms, timers, calendar, reminders, contacts, SharePlay, VoIP and CallKit, accessory pairing, weather, Spotlight indexing, background tasks, Background Assets, push, or push on networks with no internet."
     },
     {
       "name": "axiom-media",

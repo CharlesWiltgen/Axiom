@@ -6,14 +6,14 @@ Production-safe timer patterns preventing DispatchSourceTimer crashes and RunLoo
 
 Use this skill when:
 - Timer stops firing during scrolling
-- EXC_BAD_INSTRUCTION crash in timer code
+- EXC_BREAKPOINT (SIGTRAP) crash in timer code
 - Choosing between Timer, DispatchSourceTimer, Combine, or async timer APIs
 - Implementing a repeating timer with proper lifecycle management
 
 ## Example Prompts
 
 - "My timer stops when the user scrolls the list"
-- "I'm getting EXC_BAD_INSTRUCTION in my DispatchSourceTimer code"
+- "I'm getting EXC_BREAKPOINT (SIGTRAP) in my DispatchSourceTimer code"
 - "Should I use Timer or DispatchSourceTimer?"
 - "How do I safely cancel a DispatchSourceTimer?"
 - "What's the best timer API for a background polling task?"
@@ -21,7 +21,7 @@ Use this skill when:
 ## What This Skill Provides
 
 - Timer vs DispatchSourceTimer vs Combine vs AsyncTimerSequence decision tree
-- The 4 DispatchSourceTimer crash patterns (each causes EXC_BAD_INSTRUCTION) with safe alternatives
+- The 4 DispatchSourceTimer crash patterns (each traps the process — EXC_BREAKPOINT with SIGTRAP on arm64) with safe alternatives
 - RunLoop mode explanation (why `.default` breaks during scrolling)
 - Copy-paste SafeDispatchTimer wrapper class with state machine
 - 6 anti-patterns with time costs

@@ -79,7 +79,7 @@ A few facts in this reference are load-bearing enough to call out, because the o
 
 **`GroupSessionJournal.Attachments.Element` is an array**, not a single attachment. Each iteration delivers the entire current set to everyone, including whoever uploaded it.
 
-**Nothing in GroupActivities changed between the 26 and 27 SDKs** on iOS or visionOS — no additions, no removals. Guidance here is stable across that boundary.
+**Nothing was added to GroupActivities in the 27 SDK line** — the iOS and visionOS interfaces are identical between the 27.0 and 27.2 SDKs apart from their header lines. Guidance here is written against the 27.2 interface.
 
 ## Resources
 

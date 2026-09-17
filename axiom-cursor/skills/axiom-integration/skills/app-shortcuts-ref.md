@@ -44,7 +44,7 @@ Do NOT use this skill for:
 | **Discovery** | Must be found in Shortcuts app | Instantly available after install |
 | **Configuration** | User configures in Shortcuts | Pre-configured by developer |
 | **Siri activation** | Requires custom phrase setup | Works immediately with provided phrases |
-| **Spotlight** | Requires donation or IndexedEntity | Appears automatically |
+| **Spotlight** | Discoverable while `isDiscoverable` is true (the default); donations and `IndexedEntity` add content results | Appears automatically |
 | **Action button** | Not directly accessible | Can be assigned immediately |
 | **Setup time** | Minutes per user | Zero |
 
@@ -67,11 +67,11 @@ struct MyAppShortcuts: AppShortcutsProvider {
     // Optional: Branding color
     static var shortcutTileColor: ShortcutTileColor { get }
 
-    // Optional: Dynamic updates
-    static func updateAppShortcutParameters()
-
     // Optional: Negative phrases (iOS 17+)
-    static var negativePhrases: [NegativeAppShortcutPhrase] { get }
+    static var negativePhrases: NegativeAppShortcutPhrases { get }
+
+    // The framework already provides updateAppShortcutParameters(): call it
+    // when parameter options change. Never declare or override it.
 }
 ```
 
@@ -118,7 +118,7 @@ phrases: [
 - "Start meditation in Calm"
 - "Meditate with Calm"
 
-**Why this matters** The system uses these exact phrases to trigger your intent via Siri and show suggestions in Spotlight.
+**Why this matters** The system matches these phrases by meaning, not by exact string: similar wording also invokes the intent, because the system indexes phrases semantically. Phrases for parameterized intents interpolate the parameter key path instead (see Parameterized Phrases).
 
 ---
 
@@ -132,16 +132,18 @@ static var appShortcuts: [AppShortcut] {
     AppShortcut(intent: OrderIntent(), /* ... */)
     AppShortcut(intent: ReorderIntent(), /* ... */)
 
-    if UserDefaults.standard.bool(forKey: "premiumUser") {
+    // Only `#available`-gated conditionals are allowed: `buildOptional` is
+    // unavailable for any other condition.
+    if #available(iOS 26.0, *) {
         AppShortcut(intent: CustomizeIntent(), /* ... */)
     }
 }
 ```
 
 **Result builder features:**
-- Conditional shortcuts (if/else)
-- Loop-generated shortcuts (for-in)
+- `#available`-gated conditionals (a plain `if`/`else` or `for` does not compile)
 - Inline array construction
+- No loops: compute an array outside the builder with `let`/`return`, or express a dynamic set through parameter options (see Dynamic Updates)
 
 ---
 
@@ -178,13 +180,22 @@ Pre-configure intents with specific parameter values to skip Siri's clarificatio
 ```swift
 // Intent with parameters
 struct StartMeditationIntent: AppIntent {
-    static var title: LocalizedStringResource = "Start Meditation"
+    static let title: LocalizedStringResource = "Start Meditation"
 
     @Parameter(title: "Type")
     var meditationType: MeditationType?
 
     @Parameter(title: "Duration")
     var duration: Int?
+
+    init() {}
+
+    // @Parameter exposes no memberwise initializer, so declare one to let a
+    // shortcut ship pre-set values.
+    init(meditationType: MeditationType?, duration: Int?) {
+        self.meditationType = meditationType
+        self.duration = duration
+    }
 }
 
 // Shortcuts with different parameter combinations
@@ -252,12 +263,12 @@ struct MeditationAppShortcuts: AppShortcutsProvider {
     }
 
     // Prevent false positives
-    static var negativePhrases: [NegativeAppShortcutPhrase] {
-        NegativeAppShortcutPhrases {
-            "Stop meditation"
-            "Cancel meditation"
+    static var negativePhrases: NegativeAppShortcutPhrases {
+        NegativeAppShortcutPhrases(phrases: [
+            "Stop meditation",
+            "Cancel meditation",
             "End session"
-        }
+        ])
     }
 }
 ```
@@ -344,7 +355,7 @@ Set the color for your shortcuts in the Shortcuts app.
 
 ```swift
 struct CoffeeAppShortcuts: AppShortcutsProvider {
-    static var shortcutTileColor: ShortcutTileColor = .tangerine
+    static let shortcutTileColor: ShortcutTileColor = .tangerine
 
     @AppShortcutsBuilder
     static var appShortcuts: [AppShortcut] {
@@ -379,32 +390,33 @@ Full list: `.blue`, `.grape`, `.grayBlue`, `.grayBrown`, `.grayGreen`, `.lightBl
 Call when parameter options change to refresh stored shortcuts.
 
 ```swift
-struct MeditationAppShortcuts: AppShortcutsProvider {
-    @AppShortcutsBuilder
-    static var appShortcuts: [AppShortcut] {
-        // Shortcuts can reference dynamic data
-        for session in MeditationData.favoriteSessions {
-            AppShortcut(
-                intent: StartSessionIntent(session: session),
-                phrases: ["Start \(session.name) in \(.applicationName)"],
-                shortTitle: session.name,
-                systemImageName: session.iconName
-            )
-        }
-    }
+struct StartSessionIntent: AppIntent {
+    static let title: LocalizedStringResource = "Start Session"
 
-    static func updateAppShortcutParameters() {
-        // Called automatically when needed
-        // Override only if you need custom behavior
+    @Parameter(title: "Session")
+    var session: Session
+
+    func perform() async throws -> some IntentResult { .result() }
+}
+
+struct MeditationAppShortcuts: AppShortcutsProvider {
+    static var appShortcuts: [AppShortcut] {
+        AppShortcut(
+            intent: StartSessionIntent(),
+            // The key path lets Siri fill the parameter from speech
+            phrases: ["Start \(\.$session) in \(.applicationName)"],
+            shortTitle: "Start Session",
+            systemImageName: "figure.mind.and.body"
+        )
     }
 }
 
-// In your app, when data changes
+// In your app, whenever the parameter options change
 extension MeditationData {
     func markAsFavorite(_ session: Session) {
         favoriteSessions.append(session)
 
-        // Update App Shortcuts to reflect new data
+        // Re-runs your entity query and refreshes the parameters the system stored
         MeditationAppShortcuts.updateAppShortcutParameters()
     }
 }
@@ -415,7 +427,7 @@ extension MeditationData {
 - Available options change
 - App data structure updates
 
-**Automatic invocation** The system calls this periodically, but you can force updates when you know data changed.
+**Not automatic** The framework provides `updateAppShortcutParameters()`; you call it when the options behind a parameter change, and it re-runs your entity query to gather the new option list. Never override it with an empty body — that is the refresh.
 
 ---
 
@@ -427,8 +439,8 @@ extension MeditationData {
 import AppIntents
 
 struct OrderCoffeeIntent: AppIntent {
-    static var title: LocalizedStringResource = "Order Coffee"
-    static var description = IntentDescription("Orders coffee for pickup")
+    static let title: LocalizedStringResource = "Order Coffee"
+    static let description = IntentDescription("Orders coffee for pickup")
 
     @Parameter(title: "Coffee Type")
     var coffeeType: CoffeeType
@@ -438,6 +450,16 @@ struct OrderCoffeeIntent: AppIntent {
 
     @Parameter(title: "Customizations")
     var customizations: String?
+
+    init() {}
+
+    // @Parameter generates no memberwise initializer; declare one so a
+    // preconfigured App Shortcut can ship values.
+    init(coffeeType: CoffeeType, size: CoffeeSize, customizations: String? = nil) {
+        self.coffeeType = coffeeType
+        self.size = size
+        self.customizations = customizations
+    }
 
     static var parameterSummary: some ParameterSummary {
         Summary("Order \(\.$size) \(\.$coffeeType)") {
@@ -460,9 +482,10 @@ struct OrderCoffeeIntent: AppIntent {
 }
 
 struct ReorderLastIntent: AppIntent {
-    static var title: LocalizedStringResource = "Reorder Last Coffee"
-    static var description = IntentDescription("Reorders your most recent coffee")
-    static var supportedModes: IntentModes = .background  // iOS 26+ (was `openAppWhenRun = false`)
+    static let title: LocalizedStringResource = "Reorder Last Coffee"
+    static let description = IntentDescription("Reorders your most recent coffee")
+    // iOS 26 replaces this with `supportedModes: IntentModes = .background`
+    static let openAppWhenRun: Bool = false
 
     func perform() async throws -> some IntentResult {
         guard let lastOrder = try await CoffeeService.shared.lastOrder() else {
@@ -480,8 +503,8 @@ struct ReorderLastIntent: AppIntent {
 enum CoffeeType: String, AppEnum {
     case latte, cappuccino, americano, espresso
 
-    static var typeDisplayRepresentation: TypeDisplayRepresentation = "Coffee"
-    static var caseDisplayRepresentations: [CoffeeType: DisplayRepresentation] = [
+    static let typeDisplayRepresentation: TypeDisplayRepresentation = "Coffee"
+    static let caseDisplayRepresentations: [CoffeeType: DisplayRepresentation] = [
         .latte: "Latte",
         .cappuccino: "Cappuccino",
         .americano: "Americano",
@@ -492,8 +515,8 @@ enum CoffeeType: String, AppEnum {
 enum CoffeeSize: String, AppEnum {
     case small, medium, large
 
-    static var typeDisplayRepresentation: TypeDisplayRepresentation = "Size"
-    static var caseDisplayRepresentations: [CoffeeSize: DisplayRepresentation] = [
+    static let typeDisplayRepresentation: TypeDisplayRepresentation = "Size"
+    static let caseDisplayRepresentations: [CoffeeSize: DisplayRepresentation] = [
         .small: "Small",
         .medium: "Medium",
         .large: "Large"
@@ -550,14 +573,14 @@ struct CoffeeAppShortcuts: AppShortcutsProvider {
     }
 
     // Branding
-    static var shortcutTileColor: ShortcutTileColor = .tangerine
+    static let shortcutTileColor: ShortcutTileColor = .tangerine
 
     // Prevent false positives (iOS 17+)
-    static var negativePhrases: [NegativeAppShortcutPhrase] {
-        NegativeAppShortcutPhrases {
-            "Cancel coffee order"
+    static var negativePhrases: NegativeAppShortcutPhrases {
+        NegativeAppShortcutPhrases(phrases: [
+            "Cancel coffee order",
             "Stop coffee"
-        }
+        ])
     }
 }
 ```
@@ -621,9 +644,8 @@ Once implemented, your App Shortcuts are available in:
 | **Control Center** | Add shortcuts as controls |
 | **Lock Screen widgets** | Quick actions without unlocking |
 | **Apple Pencil Pro** | Squeeze gesture assignment |
-| **Focus Filters** | Contextual filtering |
 
-**Instant availability** All locations work immediately after app install. No user setup required.
+**Instant availability** Siri, Spotlight and the Shortcuts app use the shortcuts immediately after install with no user setup. The Action Button, Control Center and Apple Pencil Pro surfaces require the person to assign your shortcut first (for the Action Button: Settings → Action Button → Shortcut → Choose a Shortcut).
 
 ---
 
@@ -660,7 +682,7 @@ Once implemented, your App Shortcuts are available in:
 **If Siri doesn't recognize phrase:**
 - Check phrase includes `\(.applicationName)`
 - Verify phrase is in appShortcuts array
-- Try simpler phrases (3-6 words ideal)
+- Try simpler phrases — brief and easy to say aloud
 - Avoid complex grammar or rare words
 
 ---
@@ -684,17 +706,17 @@ Once implemented, your App Shortcuts are available in:
 ```swift
 #if DEBUG
 struct CoffeeAppShortcuts: AppShortcutsProvider {
-    @AppShortcutsBuilder
+    // An explicit `return` disables @AppShortcutsBuilder, so the attribute is omitted
     static var appShortcuts: [AppShortcut] {
+        // AppShortcut exposes no readable metadata — keep the titles you passed in
+        let titles = ["Order", "Usual Order", "Reorder"]
         let shortcuts = [
             AppShortcut(/* ... */),
             // ...
         ]
 
         print("📱 Registered \(shortcuts.count) App Shortcuts")
-        shortcuts.forEach { shortcut in
-            print("  - \(shortcut.shortTitle)")
-        }
+        print("  - \(titles.joined(separator: "\n  - "))")
 
         return shortcuts
     }
@@ -726,7 +748,7 @@ phrases: [
 ```
 
 **Guidelines:**
-- 3-6 words ideal
+- Keep phrases brief and memorable — if it reads awkwardly aloud, it is too complicated
 - Start with verb (Order, Start, Get, Show)
 - Include `\(.applicationName)` for disambiguation
 - Use natural language users would actually say
@@ -735,13 +757,13 @@ phrases: [
 
 ### 2. Shortcut Quantity
 
-#### ❌ DON'T: Provide 20+ shortcuts
+#### ❌ DON'T: Provide more than ten shortcuts
 ```swift
-// Bad: Overwhelming
+// Bad: Overwhelming, and past the platform cap
 AppShortcut for every possible combination
 ```
 
-#### ✅ DO: Focus on 3-5 core actions
+#### ✅ DO: Focus on 3-5 core actions (the cap is ten)
 ```swift
 // Good: Focused on common tasks
 AppShortcut(intent: OrderIntent(), /* ... */)
@@ -749,7 +771,7 @@ AppShortcut(intent: ReorderIntent(), /* ... */)
 AppShortcut(intent: ViewOrdersIntent(), /* ... */)
 ```
 
-**Why** Too many shortcuts creates clutter. Focus on high-value, frequently-used actions.
+**Why** Each app can include up to 10 App Shortcuts, and Apple's guidance is "usually between two and five intents". Too many shortcuts creates clutter. Focus on high-value, frequently-used actions.
 
 ---
 
@@ -757,7 +779,9 @@ AppShortcut(intent: ViewOrdersIntent(), /* ... */)
 
 #### ❌ DON'T: Parameterize every variant
 ```swift
-// Bad: Creates 12 shortcuts (3 sizes × 4 types)
+// Bad: 12 shortcuts (3 sizes × 4 types) — past the ten-shortcut cap.
+// Note a `for` loop cannot appear in @AppShortcutsBuilder at all; a generated
+// list has to be built outside the builder.
 for size in CoffeeSize.allCases {
     for type in CoffeeType.allCases {
         AppShortcut(intent: OrderIntent(type: type, size: size), /* ... */)
@@ -810,9 +834,9 @@ systemImageName: "cup.and.saucer.fill"
 
 ## Resources
 
-**WWDC**: 2022-10170, 2022-10169, 260
+**WWDC**: 2022-10170, 2022-10169, 2023-10102, 2025-260
 
-**Docs**: /appintents/appshortcutsprovider, /appintents/appshortcut, /appintents/app-shortcuts
+**Docs**: /appintents/appshortcutsprovider, /appintents/appshortcut, /appintents/app-shortcuts, developer.apple.com/design/human-interface-guidelines/app-shortcuts
 
 **Skills**: skills/app-intents-ref.md, skills/app-discoverability.md, skills/core-spotlight-ref.md
 

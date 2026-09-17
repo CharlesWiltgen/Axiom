@@ -7,7 +7,7 @@ Comprehensive API reference for APNs HTTP/2 transport, UserNotifications framewo
 
 ```swift
 // AppDelegate — minimal remote notification setup
-class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
+class AppDelegate: NSObject, UIApplicationDelegate, @preconcurrency UNUserNotificationCenterDelegate {
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         UNUserNotificationCenter.current().delegate = self
@@ -66,9 +66,9 @@ Content-Type: application/json
 
 | Header | Required | Values | Notes |
 |--------|----------|--------|-------|
-| apns-push-type | Yes | alert, background, liveactivity, voip, complication, fileprovider, mdm, location | Must match payload content |
+| apns-push-type | Required for watchOS 6+; recommended for macOS, iOS, tvOS, iPadOS | alert, background, complication, controls, fileprovider, liveactivity, location, mdm, pushtotalk, voip, widgets | Must match payload content |
 | apns-topic | Yes | Bundle ID (or .push-type.liveactivity suffix) | Required for token-based auth |
-| apns-priority | No | 10 (immediate), 5 (power-conscious), 1 (low) | Default: 10 for alert, 5 for background |
+| apns-priority | No | 10 (immediate), 5 (power-conscious), 1 (low) | Default: 10 when omitted — including for background pushes, where 10 is an error, so set 5 explicitly |
 | apns-expiration | No | UNIX timestamp or 0 | 0 = deliver once, don't store |
 | apns-collapse-id | No | String ≤64 bytes | Replaces matching notification on device |
 | apns-id | No | UUID (lowercase) | Returned by APNs for tracking |
@@ -140,7 +140,7 @@ authorization: bearer eyAia2lkIjog...
 | target-content-id | String | Window/content identifier | iOS 13 |
 | interruption-level | String | passive/active/time-sensitive/critical | iOS 15 |
 | relevance-score | Number 0-1 | Notification summary sorting | iOS 15 |
-| filter-criteria | String | Focus filter matching | iOS 15 |
+| filter-criteria | String | Focus filter matching | iOS 16 |
 | stale-date | Number | UNIX timestamp (Live Activity) | iOS 16.1 |
 | content-state | Dict | Live Activity content update | iOS 16.1 |
 | timestamp | Number | UNIX timestamp (Live Activity) | iOS 16.1 |
@@ -336,12 +336,16 @@ switch settings.authorizationStatus {
 case .authorized: break
 case .denied:
     // Direct user to Settings
+    break
 case .provisional:
     // Upgrade to full authorization
+    break
 case .notDetermined:
     // Request authorization
+    break
 case .ephemeral:
     // App Clip — temporary
+    break
 @unknown default: break
 }
 ```
@@ -485,8 +489,10 @@ class NotificationService: UNNotificationServiceExtension {
 
         // Download and attach image
         let task = URLSession.shared.downloadTask(with: imageURL) { url, _, error in
-            defer { contentHandler(content) }
-            guard let url = url, error == nil else { return }
+            guard let url = url, error == nil else {
+                contentHandler(content)
+                return
+            }
 
             let attachment = try? UNNotificationAttachment(
                 identifier: "image",
@@ -496,6 +502,7 @@ class NotificationService: UNNotificationServiceExtension {
             if let attachment = attachment {
                 content.attachments = [attachment]
             }
+            contentHandler(content)
         }
         task.resume()
     }
@@ -617,7 +624,7 @@ try await UNUserNotificationCenter.current().add(request)
 
 | Event | Purpose | Required Fields |
 |-------|---------|----------------|
-| start | Start Live Activity remotely | attributes-type, attributes, content-state, timestamp |
+| start | Start Live Activity remotely | attributes-type, attributes, content-state, timestamp, alert |
 | update | Update content | content-state, timestamp |
 | end | End Live Activity | timestamp (content-state optional) |
 
@@ -662,7 +669,9 @@ try await UNUserNotificationCenter.current().add(request)
 }
 ```
 
-### Start Payload (Channel-Based)
+### Start Payload (Channel-Connected, iOS 18+)
+
+A broadcast (channel) push **cannot** start a Live Activity. You start it with a push-to-start payload sent to the device's push-to-start token, adding `input-push-channel` so the activity can then receive its updates over a channel:
 
 ```json
 {
@@ -678,10 +687,17 @@ try await UNUserNotificationCenter.current().add(request)
         "attributes": {
             "homeTeam": "Giants",
             "awayTeam": "Dodgers"
-        }
+        },
+        "alert": {
+            "title": "Game Starting",
+            "body": "Giants vs Dodgers is about to begin"
+        },
+        "input-push-channel": "dHN0LXNyY2gtY2hubA=="
     }
 }
 ```
+
+The channel must already exist and be valid before you send this payload, and a device not running iOS 18 or later won't start the activity from it.
 
 ### End Payload
 

@@ -1,7 +1,7 @@
 
 # SharePlay (GroupActivities) — API Reference
 
-Signatures verified against the iOS 27 SDK `.swiftinterface`. **Nothing in GroupActivities changed between the 26 and 27 SDKs** on iOS or visionOS — no additions, no removals.
+Signatures verified against the iOS 27 SDK `.swiftinterface`. **Nothing was added to GroupActivities in the 27 SDK line** — the iOS and visionOS interfaces are identical between the 27.0 and 27.2 SDKs apart from their header lines.
 
 Every symbol below is `@available(watchOS, unavailable)`. Base availability is iOS 15 / macOS 12 / tvOS 15 / visionOS 1 unless noted.
 
@@ -184,7 +184,7 @@ extension GroupSession.Sessions: Sendable where ActivityType: Sendable
 
 Yields only **new** sessions. It never re-emits when a live session's properties change.
 
-Note: the SDK doc comment for `sessions()` illustrates usage with the obsolete `async { }` spelling, which no longer compiles. Apple's own doc comments are not exempt from verification.
+Note: the SDK doc comment for `sessions()` illustrates usage with `async { }`. That still compiles — but only by resolving to the deprecated stdlib function `async(priority:operation:)`, which emits a deprecation warning under Swift 6.4 ("`async` was replaced by `Task.init` and will be removed shortly"). Apple's own doc comments are not exempt from verification.
 
 ## Participant
 

@@ -99,9 +99,9 @@ ContactAccessButton(queryString: searchText) { identifiers in
 
 | Mistake | Cost | Fix |
 |---------|------|-----|
-| Requesting full Calendar access for "add to calendar" | 30%+ denial rate | Use EventKitUI (zero permissions) |
+| Requesting full Calendar access for "add to calendar" | 1–2 sprint days recovering denied users | Use EventKitUI or write-only access |
 | Calling deprecated `requestAccess(to:)` on iOS 17 | Throws error, no prompt | Use `requestFullAccessToEvents()` |
-| Missing Info.plist key on iOS 17+ | Silent denial | Add `NSCalendarsFullAccessUsageDescription` |
+| Missing the access-level usage-description key | Not a silent denial — EventKit falls back to the older key, so the prompt shows the wrong string | Add `NSCalendarsFullAccessUsageDescription` (or the key matching the level you request) |
 | Accessing unfetched key on CNContact | Crash | Always specify `keysToFetch` |
 | Using CNContactStore for one-time picking | Unnecessary permission prompt | Use CNContactPickerViewController |
 | Ignoring `.limited` contact status | "Missing contacts" bug | Show ContactAccessButton |
@@ -116,4 +116,4 @@ ContactAccessButton(queryString: searchText) { identifiers in
 
 **WWDC**: 2023-10052, 2024-10121, 2020-10197
 
-**Docs**: /eventkit, /eventkitui, /contacts, /contactsui, /contactprovider, /technotes/tn3152, /technotes/tn3153, /technotes/tn3149
+**Docs**: /eventkit, /eventkitui, /contacts, /contactsui, /contactprovider, /technotes/tn3152-migrating-to-the-latest-calendar-access-levels, /technotes/tn3153-adopting-api-changes-for-eventkit-in-ios-macos-and-watchos, /technotes/tn3149-fetching-change-history-events

@@ -44,7 +44,7 @@ Signs you're making this harder than it needs to be:
 - ❌ Force-unwrapping device token or assuming registration always succeeds
 - ❌ Hardcoding APNs host instead of switching sandbox/production by environment
 - ❌ Setting `apns-priority: 10` for all notifications (drains battery, gets throttled)
-- ❌ Exceeding 4KB payload without realizing APNs silently rejects it
+- ❌ Exceeding 4KB payload and not checking the APNs response (413 PayloadTooLarge is returned to the sender)
 - ❌ Using FCM without disabling method swizzling when you have custom delegate handling
 - ❌ Not handling foreground notification presentation (notifications silently dropped)
 - ❌ Overusing Time Sensitive interruption level (erodes user trust, they'll disable all notifications)
@@ -78,7 +78,8 @@ func application(_ application: UIApplication,
 
 func application(_ application: UIApplication,
                  didFailToRegisterForRemoteNotificationsWithError error: Error) {
-    // Simulator cannot register. Log, don't crash.
+    // Registration failed — often no network, APNs unreachable, or a missing
+    // aps-environment entitlement. Log it and retry registration later.
 }
 ```
 
@@ -196,9 +197,10 @@ What type of notification?
 │  ├─ Active — default, sound + banner
 │  │  interruption-level: "active" (or omit, it's default)
 │  │
-│  ├─ Time Sensitive — breaks through scheduled summary, not Focus
+│  ├─ Time Sensitive — breaks through Notification Summary and Focus
 │  │  interruption-level: "time-sensitive"
 │  │  Requires: Time Sensitive Notifications capability
+│  │  (the user can turn time-sensitive interruptions off in Focus settings)
 │  │
 │  └─ Critical — breaks through Do Not Disturb and mute switch
 │     interruption-level: "critical"
@@ -326,8 +328,9 @@ Place custom data outside the `aps` dictionary:
 | Standard push | 4KB |
 | VoIP push | 5KB |
 | Live Activity | 4KB |
+| Broadcast (channel) push | 5KB |
 
-APNs silently rejects oversized payloads. No error returned to sender.
+APNs rejects an oversized payload with HTTP `413` and reason `PayloadTooLarge` — read the response rather than assuming silence.
 
 ## Categories and Actions
 
@@ -338,7 +341,9 @@ func registerNotificationCategories() {
     let replyAction = UNTextInputNotificationAction(
         identifier: "REPLY_ACTION",
         title: "Reply",
-        options: [])
+        options: [],
+        textInputButtonTitle: "Send",
+        textInputPlaceholder: "Type a message")
 
     // iOS 15+: actions with icons
     let likeIcon = UNNotificationActionIcon(systemImageName: "hand.thumbsup")
@@ -372,7 +377,7 @@ func registerNotificationCategories() {
 ### Handle Action Response
 
 ```swift
-extension AppDelegate: UNUserNotificationCenterDelegate {
+extension AppDelegate: @preconcurrency UNUserNotificationCenterDelegate {
     func userNotificationCenter(_ center: UNUserNotificationCenter,
                                 didReceive response: UNNotificationResponse,
                                 withCompletionHandler completionHandler: @escaping () -> Void) {
@@ -505,7 +510,7 @@ override func serviceExtensionTimeWillExpire() {
 }
 ```
 
-**30-second processing window**: If `didReceive` doesn't call `contentHandler` within ~30 seconds, `serviceExtensionTimeWillExpire` is called. Always deliver `bestAttemptContent` as fallback — if neither method calls the handler, the notification vanishes entirely.
+**30-second processing window**: If `didReceive` doesn't call `contentHandler` within ~30 seconds, `serviceExtensionTimeWillExpire` is called. Always deliver `bestAttemptContent` as fallback — if neither method calls the handler, the system delivers the original, unmodified notification.
 
 ## Communication Notifications (iOS 15+)
 
@@ -573,7 +578,7 @@ override func didReceive(_ request: UNNotificationRequest,
 Without this delegate method, notifications received while the app is in foreground are **silently dropped**:
 
 ```swift
-extension AppDelegate: UNUserNotificationCenterDelegate {
+extension AppDelegate: @preconcurrency UNUserNotificationCenterDelegate {
     func userNotificationCenter(_ center: UNUserNotificationCenter,
                                 willPresent notification: UNNotification,
                                 withCompletionHandler completionHandler:
@@ -750,7 +755,7 @@ func subscribeButtonTapped() async {
 }
 ```
 
-**Why it matters**: The system only shows the permission dialog once. If the user hasn't seen value yet, they tap "Don't Allow" reflexively. ~60% of users who deny never re-enable in Settings. You get one shot.
+**Why it matters**: The system only shows the permission dialog once — after a denial the only route back is Settings. If the user hasn't seen value yet, they tap "Don't Allow" reflexively. You get one shot.
 
 ### Anti-Pattern 2: Caching Device Tokens
 
@@ -780,7 +785,7 @@ override func didReceive(_ request: UNNotificationRequest,
                          withContentHandler contentHandler: @escaping (UNNotificationContent) -> Void) {
     // Download large image, no timeout handling
     downloadImage(from: url) { image in
-        // If this takes >30 seconds, notification vanishes entirely
+        // If this takes >30 seconds, the original content is delivered instead
         contentHandler(modifiedContent)
     }
 }
@@ -797,7 +802,7 @@ override func serviceExtensionTimeWillExpire() {
 }
 ```
 
-**Why it matters**: The service extension has a ~30 second window. If neither `didReceive` nor `serviceExtensionTimeWillExpire` calls the content handler, the notification disappears completely. Users never see it.
+**Why it matters**: The service extension has a ~30 second window. If neither `didReceive` nor `serviceExtensionTimeWillExpire` calls the content handler, the system displays the original contents of the notification — the media you downloaded never appears.
 
 ### Anti-Pattern 4: Using Time Sensitive for Everything
 
@@ -831,14 +836,14 @@ override func serviceExtensionTimeWillExpire() {
 
 **Pressure**: "Just ask for permission at launch, we'll fix it later."
 
-**Reality**: The system only prompts once. If the user denies, you need them to manually enable in Settings. ~60% of users never do. "Fix it later" means permanently lower opt-in rates.
+**Reality**: The system only prompts once. If the user denies, they must re-enable notifications manually in Settings — there is no second prompt. "Fix it later" means permanently lower opt-in rates.
 
 **Correct action**:
 1. Implement push registration and delivery without the permission prompt first
 2. Add contextual permission request after a user action that makes notification value obvious
 3. Test both grant and deny flows end-to-end
 
-**Push-back template**: "Permission timing directly affects our opt-in rate. A 2-hour investment now prevents a 30% lower notification reach permanently. Let me implement the contextual prompt — it's the same amount of code, just in the right place."
+**Push-back template**: "Permission timing directly affects our opt-in rate. The system prompts only once, and a denial can only be undone by hand in Settings. Getting the prompt in context is the same amount of code — just in the right place."
 
 ### Scenario 2: "Notifications Work in Dev but Not Production"
 
@@ -846,7 +851,7 @@ override func serviceExtensionTimeWillExpire() {
 
 **Pressure**: "Something is wrong with APNs, let's file a radar."
 
-**Reality**: 95% of the time it's a sandbox/production token mismatch. Dev builds use `api.sandbox.push.apple.com`, production uses `api.push.apple.com`. Tokens are different per environment. The same token sent to the wrong endpoint silently fails.
+**Reality**: Check the sandbox/production split first. Dev builds use `api.sandbox.push.apple.com`, production uses `api.push.apple.com`. Tokens are different per environment. The same token sent to the wrong endpoint silently fails.
 
 **Correct action**:
 1. Verify server is using the correct APNs endpoint for the build type
@@ -904,7 +909,7 @@ Before shipping push notifications:
 **Testing**:
 - ☑ Tested with Push Notifications Console or curl
 - ☑ Tested both foreground and background delivery
-- ☑ Tested on physical device (Simulator has no APNs token)
+- ☑ Tested on a physical device (the Simulator registers against the APNs sandbox on Apple silicon, but only `simctl push` delivers app notifications)
 
 ## Resources
 

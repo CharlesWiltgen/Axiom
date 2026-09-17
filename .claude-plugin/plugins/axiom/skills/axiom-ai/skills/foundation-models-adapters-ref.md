@@ -669,7 +669,7 @@ For server-hosted delivery (`BADownloaderExtension`), see `axiom-integration (sk
 - **Composition**: `SystemLanguageModel(adapter:)`, `SystemLanguageModel(adapter:guardrails:)`, `LanguageModelSession(model:)`
 - **Entitlement**: `com.apple.developer.foundation-model-adapter` (deployment only)
 - **Rate limits**: 3 draft-model compilations per app per day on non-macOS platforms
-- **Sizing**: ~160 MB per adapter pack; 200 GB / 100-pack Apple-hosted quota per app (shared with all asset packs); see `axiom-integration (skills/background-assets-ref.md)`
+- **Sizing**: ~160 MB per adapter pack; 200 GB / 200-pack Apple-hosted quota per app (shared with all asset packs); see `axiom-integration (skills/background-assets-ref.md)`
 
 ---
 

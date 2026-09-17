@@ -24,7 +24,7 @@ This skill covers String Catalogs, SwiftUI/UIKit localization APIs, plural handl
 
 - **Xcode 15+** for String Catalogs (`.xcstrings`)
 - **Xcode 26+** for automatic symbol generation, `#bundle` macro, and AI-powered comment generation
-- **iOS 15+** for `LocalizedStringResource`
+- **iOS 16+** for `LocalizedStringResource` (`@available(macOS 13, iOS 16, tvOS 16, watchOS 9, *)`)
 - **iOS 16+** for App Shortcuts localization
 - Earlier iOS versions use legacy `.strings` files
 
@@ -98,6 +98,8 @@ Xcode tracks state for each translation:
 - **Needs Review** (🟡) - Source changed, translation may be outdated
 - **Reviewed** (✅) - Translation approved and current
 - **Stale** (🔴) - String no longer found in source code
+
+In the file itself the `state` values are `new`, `needs_review` and `translated` — "Reviewed" is the UI's word for `translated`. Staleness is not a `state`: Xcode writes it to `extractionState` as `stale`.
 
 **Workflow**:
 1. Developer adds string → **New**
@@ -250,23 +252,25 @@ Localize app name, permissions, etc.:
 Different languages have different plural rules:
 
 - **English**: 2 forms (one, other)
-- **Russian**: 3 forms (one, few, many)
-- **Polish**: 3 forms (one, few, other)
+- **Russian**: 4 forms (one, few, many, other)
+- **Polish**: 4 forms (one, few, many, other)
 - **Arabic**: 6 forms (zero, one, two, few, many, other)
+
+Xcode's own table (`XCStringsParser.framework/Resources/variationConfigFile.plist`, 711 languages) is the authority for these sets — `ru` and `pl` both list `one, few, many, other`. What matters for a translation is the number of variations the catalog can hold, not the number of forms a language is usually described with.
 
 ### SwiftUI Plural Handling
 
 ```swift
-// Xcode automatically creates plural variations
-Text("\(count) items")
-
-// With custom formatting
-Text("\(visitorCount) Recent Visitors")
+// The extractor writes a typed key; the plural variation is added in the catalog
+Text("\(count) items")                   // key: "%lld items"
+Text("\(visitorCount) Recent Visitors")  // key: "%lld Recent Visitors"
 ```
 
-**In String Catalog**:
+**In String Catalog** (the two top-level keys `sourceLanguage` and `version` are required):
+
 ```json
 {
+  "sourceLanguage" : "en",
   "strings" : {
     "%lld Recent Visitors" : {
       "localizations" : {
@@ -290,9 +294,12 @@ Text("\(visitorCount) Recent Visitors")
         }
       }
     }
-  }
+  },
+  "version" : "1.0"
 }
 ```
+
+**Xcode does not create those variations for you.** Extraction records the key and stops: a `%lld` entry with no `variations` stays a flat `stringUnit`, and a string newly extracted from code arrives as an empty entry (`"%lld Guests" : { }`). Until someone varies it — in the catalog editor, or by hand as above — every count renders that one string. Xcode's shipped reference states the same rule: "If `StringCatalogContext` returned a `sourcePluralCasesToAdd`, the source string might have to be varied by plural, but is not yet."
 
 ### XLIFF Export Format
 
@@ -330,10 +337,47 @@ When exporting for translation (File → Export Localizations):
 let message = String(localized: "\(songCount) songs on \(albumCount) albums")
 ```
 
-Xcode creates variations for **each** variable's plural form:
-- `songCount`: one, other
-- `albumCount`: one, other
-- Total combinations: 2 × 2 = 4 translation entries
+One entry holds one substitution per argument — not a combination per pair. Each substitution names the argument it formats (`argNum`, 1-based) and its specifier, and the entry's `stringUnit` is a template referring to the substitutions by name:
+
+```json
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%lld songs on %lld albums" : {
+      "localizations" : {
+        "en" : {
+          "substitutions" : {
+            "songs" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld song" } },
+                  "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld songs" } }
+                }
+              }
+            },
+            "albums" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld album" } },
+                  "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld albums" } }
+                }
+              }
+            }
+          },
+          "stringUnit" : { "state" : "translated", "value" : "%#@songs@ on %#@albums@" }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}
+```
+
+That compiles to a single stringsdict entry whose `NSStringLocalizedFormatKey` is `%1$#@songs@ on %2$#@albums@`, with `songs` and `albums` each declaring their own plural cases. XLIFF export emits one unit per substitution per category under the same entry id (`%lld songs on %lld albums|==|substitutions.songs.plural.one`, `…|==|substitutions.albums.plural.one`, …) — an Arabic catalog needs 12 such units (2 arguments × 6 categories), not 4 combined entries.
 
 ---
 
@@ -351,26 +395,32 @@ Text("Bird Food Shop")
 **String Catalog variations**:
 ```json
 {
-  "Bird Food Shop" : {
-    "localizations" : {
-      "en" : {
-        "variations" : {
-          "device" : {
-            "applewatch" : {
-              "stringUnit" : {
-                "value" : "Bird Food"
-              }
-            },
-            "other" : {
-              "stringUnit" : {
-                "value" : "Bird Food Shop"
+  "sourceLanguage" : "en",
+  "strings" : {
+    "Bird Food Shop" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "device" : {
+              "applewatch" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Bird Food"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Bird Food Shop"
+                }
               }
             }
           }
         }
       }
     }
-  }
+  },
+  "version" : "1.0"
 }
 ```
 
@@ -380,13 +430,46 @@ Text("Bird Food Shop")
 
 ### Width Variations
 
-For dynamic type and size classes:
+Adaptive strings for a specific presentation width — Apple's `NSBundle.h` documentation describes the feature as providing "text that avoids truncation and maximizes available space". The axis takes **numeric widths**, not size-class names:
 
-```swift
-Text("Application Settings")
+```json
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "Application Settings" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "width" : {
+              "1" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Settings"
+                }
+              },
+              "200" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Application Settings"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}
 ```
 
-String Catalog can provide shorter text for narrow widths.
+`"compact"`, `"regular"`, `"short"` and friends are rejected by the catalog compiler (`error: 'compact' is invalid for the type 'Width'`); a number compiles to a `NSStringVariableWidthRuleType` table. This axis is **not** how Dynamic Type or size classes are handled — use text styles, Auto Layout, and `ViewThatFits` for those.
+
+Standard UIKit controls select the variant for the current screen size themselves. Per the same header: "Don't call this method when setting user-visible text for standard UIKit controls, such as `UILabel`. UIKit provides built-in support for adaptive strings, and automatically selects the string width variant appropriate for the current screen size." Everywhere else you select it yourself, passing the width:
+
+```swift
+let widthAware = (template as NSString).variantFittingPresentationWidth(200)
+```
 
 ---
 
@@ -511,8 +594,12 @@ formatter.locale = Locale.current
 
 let distanceString = formatter.string(from: distance)
 
-// US: "328 ft" (converts to imperial)
-// Metric countries: "100 m"
+// en_US: "0.062 mi" — the locale's natural unit for 100 m, not the one you passed
+// fr_FR: "0,1 km"
+
+// Keep the unit you passed instead of the locale's natural scale:
+formatter.unitOptions = .providedUnit
+// en_US and fr_FR both: "100 m"
 ```
 
 ### Locale-Specific Sorting
@@ -525,8 +612,8 @@ let sorted = names.sorted { (lhs, rhs) in
     lhs.localizedStandardCompare(rhs) == .orderedAscending
 }
 
-// Sweden: ["Ångström", "Apple", "Zebra"]  (Å comes first in Swedish)
-// US: ["Ångström", "Apple", "Zebra"]      (Å treated as A)
+// sv_SE: ["Apple", "Zebra", "Ångström"]   (Å sorts after Z in Swedish)
+// en_US: ["Ångström", "Apple", "Zebra"]   (Å treated as A)
 ```
 
 ---
@@ -539,13 +626,13 @@ let sorted = names.sorted { (lhs, rhs) in
 import AppIntents
 
 struct ShowTopDonutsIntent: AppIntent {
-    static var title: LocalizedStringResource = "Show Top Donuts"
+    static let title: LocalizedStringResource = "Show Top Donuts"
 
     @Parameter(title: "Timeframe")
     var timeframe: Timeframe
 
     static var parameterSummary: some ParameterSummary {
-        Summary("\(.applicationName) Trends for \(\.$timeframe)") {
+        Summary("Trends for \(\.$timeframe)") {
             \.$timeframe
         }
     }
@@ -623,7 +710,7 @@ Xcode extracts all 3 phrases into String Catalog for translation.
 - Verify all strings in String Catalog
 - Submit to App Store
 
-**Coexistence**: `.strings` and `.xcstrings` work together - Xcode checks both.
+**Coexistence**: a legacy table and a `.xcstrings` table can live in the same target side by side, but **not under the same name**. `Localizable.xcstrings` beside `Localizable.strings`/`Localizable.stringsdict` fails the localization build: "Localizable.xcstrings cannot co-exist with other .strings or .stringsdict tables with the same name." Keep the legacy file's name distinct (for example `Legacy.strings`) for as long as both exist — a differently named table is exported as its own `<file>` element.
 
 ---
 
@@ -660,8 +747,10 @@ let message = String(localized: "You have \(count) items")
 Text("\(count) item(s)")
 
 // ✅ Correct - proper plural handling
-Text("\(count) items")  // Xcode creates plural variations
+Text("\(count) items")  // key "%lld items"; the one/other variation is added in the catalog
 ```
+
+Extraction gets you the key — `%lld items` — and nothing more. Add its plural variation in the catalog (Part 4); an unvaried entry ships one form for every count.
 
 ### Ignoring RTL
 
@@ -713,10 +802,10 @@ String(localized: "Confirm", comment: "Button to confirm delete action")
 
 ### Strings not appearing in String Catalog
 
-**Cause**: Build settings not enabled
+**Cause**: The source file isn't in the target, or extraction never ran for it
 
 **Solution**:
-1. Build Settings → "Use Compiler to Extract Swift Strings" → Yes
+1. Build Settings → "Use Compiler to Extract Swift Strings" (`SWIFT_EMIT_LOC_STRINGS`) → Yes. This changes *how* strings are extracted, not whether: with it off they still land in the catalog, but SwiftUI interpolations are recorded under legacy `%@` keys (`%@ Recent Visitors`) instead of typed `%lld` keys — and only a typed key can carry a plural variation.
 2. Clean Build Folder (Cmd+Shift+K)
 3. Build project
 
@@ -731,9 +820,9 @@ String(localized: "Confirm", comment: "Button to confirm delete action")
 
 ### Plural forms incorrect
 
-**Cause**: Using `String.localizedStringWithFormat` instead of String Catalog
+**Cause**: The plural variation was never created — the key exists in the catalog but carries no `one`/`other` (or `%#@name@`) rules
 
-**Solution**: Use String Catalog's automatic plural handling:
+**Solution**: Vary the key in the catalog (Part 4). `String.localizedStringWithFormat` is the legacy equivalent, and it inflects only when its format string is backed by a plural rule in a stringsdict:
 ```swift
 // ✅ Correct
 Text("\(count) items")
@@ -744,11 +833,13 @@ Text(String.localizedStringWithFormat(NSLocalizedString("%d items", comment: "")
 
 ### XLIFF export missing strings
 
-**Cause**: "Localization Prefers String Catalogs" not set
+**Cause**: There is nothing to export — the strings were never extracted (see above), usually because the source file isn't in the target
 
 **Solution**:
-1. Build Settings → "Localization Prefers String Catalogs" → Yes
+1. Build Settings → "Use Compiler to Extract Swift Strings" → Yes
 2. Export Localizations again
+
+**Not the cause**: "Localization Prefers String Catalogs" (`LOCALIZATION_PREFERS_STRING_CATALOGS`) chooses the format of string tables *generated during an export* — it is what decides whether a generated table is exported as `<App>-InfoPlist.xcstrings` or as `en.lproj/<App>-InfoPlist.strings`. Two exports of the same project with it on and off produce identical `Localizable` trans-units.
 
 ### Generated symbols not appearing (Xcode 26+)
 
@@ -806,7 +897,7 @@ Text("App.HomeScren.Title")  // Missing 'e' in Screen
 #### How It Works
 
 1. **Add strings manually** to String Catalog using the + button
-2. **Enable build setting**: "Generate String Catalog Symbols" (ON by default in new projects)
+2. **Enable build setting**: "Generate String Catalog Symbols" → Yes (the setting defaults to NO)
 3. **Use symbols** instead of strings
 
 ```swift
@@ -819,22 +910,32 @@ Text(.appHomeScreenTitle)
 | String Type | Generated Symbol Type | Usage Example |
 |-------------|----------------------|---------------|
 | No placeholders | Static property | `Text(.introductionTitle)` |
-| With placeholders | Function with labeled arguments | `.subtitle(friendsPosts: 42)` |
+| With placeholders | Function with positional (unlabeled) arguments | `.youHaveFriends(42)` |
 
 **Key naming conversion**:
 - `App.HomeScreen.Title` → `.appHomeScreenTitle`
 - Periods removed, camel-cased
 - Available on `LocalizedStringResource`
 
+Placeholder arguments are **positional**, not labeled, and take their types from the specifiers — `generate-symbols` writes:
+
+```swift
+static func youHaveFriends(_ arg1: Int) -> LocalizedStringResource
+static func sentMessages(_ arg1: String, _ arg2: Int) -> LocalizedStringResource
+```
+
+so `.youHaveFriends(42)` compiles and `.youHaveFriends(arg1: 42)` does not (`error: extraneous argument label 'arg1:' in call`). A catalog's `argumentNames` array does not change this — it is metadata, not a parameter name.
+
 #### Code Examples
 
 ```swift
 // SwiftUI views
+@available(iOS 26, *)  // navigationSubtitle(_:) is iOS 26+
 struct ContentView: View {
     var body: some View {
         NavigationStack {
             Text(.introductionTitle)
-                .navigationSubtitle(.subtitle(friendsPosts: 42))
+                .navigationSubtitle(.subtitle(42))
         }
     }
 }
@@ -959,10 +1060,10 @@ Symbols are nested in the table namespace:
 
 ```swift
 // From Discover.xcstrings
-Text(Discover.featuredCollection)
+Text(.Discover.featuredCollection)
 
 // From Settings.xcstrings
-Text(Settings.privacyPolicy)
+Text(.Settings.privacyPolicy)
 ```
 
 **Organization strategy for large apps**:

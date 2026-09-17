@@ -28,13 +28,14 @@ Glob: **/*.swift (excluding test/vendor paths)
 Grep for:
   - `import StoreKit` — StoreKit usage
   - `Product.products(for:)` — StoreKit 2 product loading
-  - `SKProductsRequest`, `SKPaymentQueue` — StoreKit 1 (legacy)
+  - `SKProductsRequest`, `SKPaymentQueue` — StoreKit 1 (deprecated at iOS 18.0)
   - `Transaction.updates`, `Transaction.all`, `Transaction.currentEntitlements` — StoreKit 2 lifecycle
   - `SKPaymentTransactionObserver` — StoreKit 1 transaction observer
-  - `paymentQueue\(_:shouldAddStorePayment:` — promoted-purchase handler (SK1)
+  - `PurchaseIntent\.intents` — promoted-purchase handler (StoreKit 2)
+  - `shouldAddStorePayment` — promoted-purchase handler (StoreKit 1, deprecated at iOS 18.0)
 ```
 
-StoreKit 1 is not deprecated but is legacy — note if the codebase mixes both. Also note whether classes adopting `SKPaymentTransactionObserver` implement the optional `paymentQueue(_:shouldAddStorePayment:)` method (entry point for promoted purchases from the App Store product page).
+StoreKit 1 is deprecated as of iOS 18.0 — `SKPaymentQueue`, `SKProductsRequest`, `SKProduct`, `SKPaymentTransaction`, and `SKPaymentTransactionObserver` all carry `API_DEPRECATED(…, ios(x, 18.0))` and warn when compiled against a modern SDK. Note if the codebase mixes both. Also note whether the app consumes `PurchaseIntent.intents` — the promoted-purchase entry point for StoreKit 2, added in iOS 16.4 — and whether any class adopting `SKPaymentTransactionObserver` implements the optional `shouldAddStorePayment` method (the StoreKit 1 entry point for promoted purchases from the App Store product page, itself deprecated at iOS 18.0 in favour of `PurchaseIntent.intents`).
 
 ### Step 2: Identify Product Types in Use
 
@@ -143,7 +144,7 @@ Run all 13 detection patterns. For every grep match, use Read to verify the surr
 
 **Pattern**: Subscription purchase UI without price/duration/auto-renewal terms
 **Search**: `subscribe`, `subscription`, `SubscriptionView`, `PaywallView`, `SubscriptionGroup` — then grep for `auto.renew`, `cancellation`, `per month`, `per year`, `/month`, `/year`, `billed`, `renews`
-**Issue**: Guideline 3.1.2(a) requires price, duration, auto-renewal, cancellation info visible before purchase button
+**Issue**: Guideline 3.1.2(c) "Subscription Information" (reinforced by Apple Developer Program License Agreement Schedule 2) requires price, duration, auto-renewal, cancellation info visible before purchase button
 **Fix**: Show terms block adjacent to subscribe button with all four disclosures
 
 ### 11. Generic Error Messaging (MEDIUM/LOW — User Experience)
@@ -162,13 +163,26 @@ Run all 13 detection patterns. For every grep match, use Read to verify the surr
 
 ### 13. Missing Promoted-Purchase Handler (HIGH/HIGH — Marketing Revenue Loss)
 
-**Pattern**: A class adopts `SKPaymentTransactionObserver` (StoreKit 1) but does not implement the optional `paymentQueue(_:shouldAddStorePayment:)` delegate method.
+**Pattern**: In a StoreKit 1 app, a class adopting `SKPaymentTransactionObserver` that does not implement the optional `paymentQueue(_:shouldAddStorePayment:for:)` delegate method — decidable from the code alone. In a StoreKit 2 app, no consumer of `PurchaseIntent.intents` — only report this once the promoted-IAP listing is confirmed (from the user's prompt or App Store Connect), since no source file records that a product is promoted.
 **Search**:
-- `:\s*SKPaymentTransactionObserver` — collect every conforming class
-- `paymentQueue\(_:shouldAddStorePayment:` — collect every implementation
+- `SKPaymentTransactionObserver` — collect every conforming class
+- `shouldAddStorePayment` — collect every SK1 implementation
+- `PurchaseIntent\.intents` — collect every consumer (StoreKit 2 promoted purchases)
 - Read each conforming class file; flag classes with the conformance but no `shouldAddStorePayment` method
-**Issue**: Promoted IAPs initiated from the App Store product page reach the device's payment queue but are silently dropped without this handler. Marketing dollars spent on App Store promotion buy nothing — the user taps "Buy" on the product page, the app launches, and nothing happens. There is no error surfaced anywhere.
-**Fix**:
+- If the codebase has no `SKPaymentTransactionObserver` conformance anywhere it is StoreKit 2-only: report the missing `PurchaseIntent.intents` consumer only when promoted IAPs are known to be listed, and never alongside a working SK1 handler
+**Issue**: Promoted IAPs initiated from the App Store product page are delivered to the app as purchase intents. With no consumer they are silently dropped. Marketing dollars spent on App Store promotion buy nothing — the user taps "Buy" on the product page, the app launches, and nothing happens. There is no error surfaced anywhere.
+**Fix** (StoreKit 2 — `PurchaseIntent.intents` is iOS 16.4+; start the task at app launch):
+```swift
+Task {
+    for await intent in PurchaseIntent.intents {
+        // The intent carries the product the user tapped "Buy" on in the App Store;
+        // run it through the same verify → grant → finish path as any other purchase.
+        guard let result = try? await intent.product.purchase() else { continue }
+        await handlePurchaseResult(result)
+    }
+}
+```
+**Fix (StoreKit 1 only — the delegate method is deprecated at iOS 18.0)**:
 ```swift
 extension StoreObserver: SKPaymentTransactionObserver {
     func paymentQueue(_ queue: SKPaymentQueue,
@@ -181,7 +195,7 @@ extension StoreObserver: SKPaymentTransactionObserver {
     }
 }
 ```
-**Note**: SK2-only apps (no `SKPaymentTransactionObserver` conformance anywhere) do not need this handler. Returning `false` to defer the purchase is acceptable when the cached payment is later resubmitted via `SKPaymentQueue.default().add(payment)`.
+**Note**: `PurchaseIntent.intents` is unavailable on tvOS, watchOS, and visionOS. Apps with no promoted IAPs listed in App Store Connect need neither path. In the StoreKit 1 form, returning `false` to defer the purchase is acceptable when the cached payment is later resubmitted via `SKPaymentQueue.default().add(payment)`.
 
 ## Phase 3: Reason About IAP Completeness
 
@@ -197,7 +211,7 @@ Using the IAP Architecture Map from Phase 1 and your domain knowledge, check for
 | Is pricing localized using `product.displayPrice` (not hardcoded strings or manual formatting)? | Hardcoded prices | Wrong currency shown to international users → purchase abandonment and Guideline 3.1.x rejection |
 | Are upgrade/downgrade/crossgrade paths within a subscription group handled (comparing product.subscription?.subscriptionPeriod across group)? | Single-tier subscription UX | Users cannot move between tiers; churn increases |
 | Is Family Sharing supported (checking `transaction.ownershipType == .familyShared`) for non-consumables and subscriptions? | All-or-nothing family handling | Shared entitlements either granted incorrectly or blocked entirely |
-| Is refund handling implemented (Transaction.updates with revocationDate, or Transaction.refundRequestSheet for self-service)? | Revoked entitlements still active | Users keep access after refund; merchant fraud score affected |
+| Is refund handling implemented (Transaction.updates with revocationDate, or `Transaction.beginRefundRequest(in:)` / the SwiftUI `.refundRequestSheet(for:isPresented:)` modifier for self-service)? | Revoked entitlements still active | Users keep access after refund; merchant fraud score affected |
 | Is the encryption export declaration (`ITSAppUsesNonExemptEncryption` in Info.plist) set if the app uses crypto for IAP validation? | Missing export compliance | App Store Connect submission blocked pending manual review |
 
 Require evidence from the Phase 1 map — don't speculate without reading the code.
@@ -217,7 +231,7 @@ Bump severity for these combinations:
 | Missing intro offer eligibility check | Intro pricing shown in paywall | Users charged full price — refund requests and reviews | HIGH |
 | Missing Family Sharing check | Non-consumables sold | Family members either over-entitled or under-entitled | MEDIUM |
 | Missing refund handling | Subscription entitlement gated on local state | Revoked subscriptions retain access indefinitely | HIGH |
-| Missing promoted-purchase handler (Pattern 13) | StoreKit 1 active in app + App Store promoted IAP listings | Marketing-driven purchases silently fail at the app's threshold; no error surfaces and the user blames the app, not the missing handler | HIGH |
+| Promoted IAPs listed in App Store Connect (confirmed, not inferred) | No `PurchaseIntent.intents` consumer (StoreKit 2), or an `SKPaymentTransactionObserver` without `shouldAddStorePayment` (StoreKit 1) | Marketing-driven purchases silently fail at the app's threshold; no error surfaces and the user blames the app, not the missing handler | HIGH |
 | One-shot `subscription?.status` read | Long-session app lifetime (multi-day, foreground-resume usage) | Subscription expires or renews mid-session and the app keeps showing the stale state; user sees "you don't have Pro" right after paying, or keeps Pro access after expiring | HIGH |
 
 Cross-auditor overlap notes:
@@ -291,8 +305,10 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details
 - Missing subscription terms when products are non-consumable only
 - appAccountToken omitted when there is no server backend
 - Missing loot box odds when random patterns are unrelated to purchases (e.g., random animation variant)
-- Missing `paymentQueue(_:shouldAddStorePayment:)` in a StoreKit 2-only app (no `SKPaymentTransactionObserver` conformance anywhere — the SK1 delegate method is only meaningful when the SK1 observer path exists)
-- `paymentQueue(_:shouldAddStorePayment:)` returning `false` and caching the payment for deferred execution (legitimate pattern — the purchase isn't dropped, just queued)
+- Missing `shouldAddStorePayment` in a StoreKit 2-only app (no `SKPaymentTransactionObserver` conformance anywhere — the SK1 delegate method is only meaningful when the SK1 observer path exists, and it is deprecated at iOS 18.0; the StoreKit 2 equivalent is a `PurchaseIntent.intents` consumer)
+- `shouldAddStorePayment` returning `false` and caching the payment for deferred execution (legitimate StoreKit 1 pattern — the purchase isn't dropped, just queued)
+- No `PurchaseIntent.intents` consumer when the app has no promoted IAPs listed in App Store Connect (nothing can emit an intent)
+- No `PurchaseIntent.intents` consumer in a StoreKit 1 app whose `SKPaymentTransactionObserver` implements `shouldAddStorePayment` — that delegate IS the promoted-purchase handler for that codebase
 - One-shot `subscription?.status` read in a single-screen single-purpose app where the session lifetime is measured in seconds (no opportunity for mid-session state change) — verify by reading the surrounding view's lifecycle
 
 ## Related

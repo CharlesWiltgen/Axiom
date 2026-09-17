@@ -117,13 +117,13 @@ func applicationDidEnterBackground(_ application: UIApplication) {
 
 #### Async submission OS27
 
-The 27 SDKs add an asynchronous submit and deprecate the synchronous `submit(_:)` ("Use submitTaskRequest:completionHandler: instead to capture all error conditions"):
+The 27 SDKs add an asynchronous submit and deprecate the synchronous `submit(_:)` ("Use -submitTaskRequest:completionHandler: (Swift: submitTaskRequest(_:completionHandler:), or 'try await submitTaskRequest(_:)' to capture all error conditions"):
 
 ```swift
 try await BGTaskScheduler.shared.submitTaskRequest(request)
 ```
 
-The same `BGTaskScheduler.Error` cases apply — including the 26-era `immediateRunIneligible` ("immediate run not eligible due to system conditions"), which Apple's header lists among the errors the new method reports. iOS / tvOS / watchOS 27. The completion handler may be invoked on an arbitrary queue after an arbitrary delay, and Apple's header says not to call `submitTaskRequest` itself from the main thread or performance-critical contexts.
+The same `BGTaskScheduler.Error` cases apply — including the 26-era `immediateRunIneligible` ("immediate run not eligible due to system conditions"), which Apple's header lists among the errors the new method reports. iOS / tvOS 27 (`submitTaskRequest(_:completionHandler:)` is `API_UNAVAILABLE(watchos)`). The completion handler may be invoked on an arbitrary queue after an arbitrary delay, and Apple's header says not to call `submitTaskRequest` itself from the main thread or performance-critical contexts.
 
 ### Handler
 
@@ -186,7 +186,9 @@ func scheduleMaintenanceIfNeeded() {
     // Optional: Need network for cloud sync
     request.requiresNetworkConnectivity = true
 
-    // Keep within 1 week — longer may be skipped
+    // earliestBeginDate is a floor, not a schedule: the system will not start
+    // sooner, and attempts to fulfil the request within the next two days as long
+    // as the user has used your app within the past week
     // request.earliestBeginDate = ...
 
     do {
@@ -241,11 +243,11 @@ When `requiresExternalPower = true`, CPU Monitor (which normally terminates CPU-
 
 ---
 
-## Part 4: BGContinuedProcessingTask (iOS 26+, watchOS27)
+## Part 4: BGContinuedProcessingTask (iOS 26+)
 
 ### Purpose
 
-Continue **user-initiated work** after app backgrounds, with system UI showing progress. From WWDC 2025-227. The 27 SDKs extend `BGContinuedProcessingTaskRequest` (with its `SubmissionStrategy` and `Resources`) to watchOS 27.
+Continue **user-initiated work** after app backgrounds, with system UI showing progress. From WWDC 2025-227. `BGContinuedProcessingTask`, `BGContinuedProcessingTaskRequest`, its `SubmissionStrategy` and `Resources` are all `API_UNAVAILABLE(watchos)` (and unavailable on macOS, tvOS, visionOS and Mac Catalyst) — including in the 27 SDKs, which do not extend them to the watch.
 
 **NOT for**: Automatic tasks, maintenance, syncing — user must explicitly initiate.
 
@@ -274,7 +276,8 @@ Unlike other tasks, register **when user initiates action**:
 func userTappedExportButton() {
     // Register dynamically
     BGTaskScheduler.shared.register(
-        forTaskWithIdentifier: "com.yourapp.export.photos"
+        forTaskWithIdentifier: "com.yourapp.export.photos",
+        using: nil
     ) { task in
         let continuedTask = task as! BGContinuedProcessingTask
         self.handleExport(task: continuedTask)
@@ -295,7 +298,7 @@ func submitExportRequest() {
         subtitle: "0 of 100 photos complete"  // Shown in system UI
     )
 
-    // Strategy: .fail = reject if can't start now; .enqueue = queue (default)
+    // Strategy: .fail = reject if can't start now; .queue = queue (default)
     request.strategy = .fail
 
     do {
@@ -344,7 +347,7 @@ func handleExport(task: BGContinuedProcessingTask) {
 | `identifier` | String | With wildcard, can have dynamic suffix |
 | `title` | String | Shown in system progress UI |
 | `subtitle` | String | Shown in system progress UI |
-| `strategy` | Strategy | `.fail` or `.enqueue` (default) |
+| `strategy` | Strategy | `.fail` or `.queue` (default) |
 
 ### Strategy Options
 
@@ -352,7 +355,7 @@ func handleExport(task: BGContinuedProcessingTask) {
 // .fail — Reject if can't start immediately
 request.strategy = .fail
 
-// .enqueue — Queue if can't start (default)
+// .queue — Queue if can't start (default)
 // Task may run later
 ```
 
@@ -360,7 +363,7 @@ request.strategy = .fail
 
 ```swift
 // Check if GPU available for background task
-let supportedResources = BGTaskScheduler.shared.supportedResources
+let supportedResources = BGTaskScheduler.supportedResources
 if supportedResources.contains(.gpu) {
     // GPU is available
 }
@@ -409,7 +412,7 @@ func applicationDidEnterBackground(_ application: UIApplication) {
 ### SwiftUI / SceneDelegate
 
 ```swift
-.onChange(of: scenePhase) { newPhase in
+.onChange(of: scenePhase) { _, newPhase in
     if newPhase == .background {
         startBackgroundTask()
     }
@@ -499,7 +502,7 @@ extension AppDelegate: URLSessionDelegate, URLSessionDownloadDelegate {
 
 | Property | Default | Description |
 |----------|---------|-------------|
-| `sessionSendsLaunchEvents` | false | Relaunch app on completion |
+| `sessionSendsLaunchEvents` | true | Relaunch app on completion |
 | `isDiscretionary` | false | Wait for optimal conditions |
 | `allowsCellularAccess` | true | Allow cellular network |
 | `allowsExpensiveNetworkAccess` | true | Allow expensive networks |
@@ -535,7 +538,7 @@ e -l objc -- (void)[[BGTaskScheduler sharedScheduler] _simulateExpirationForTask
 Filter Console.app:
 
 ```
-subsystem:com.apple.backgroundtaskscheduler
+subsystem:com.apple.backgroundtasks
 ```
 
 ### getPendingTaskRequests
@@ -559,7 +562,7 @@ BGTaskScheduler.shared.getPendingTaskRequests { requests in
 
 | Factor | How to Check | Impact |
 |--------|--------------|--------|
-| Critically Low Battery | Battery < ~20% | Discretionary work paused |
+| Critically Low Battery | Battery very low (no threshold published) | Discretionary work paused |
 | Low Power Mode | `ProcessInfo.isLowPowerModeEnabled` | Limited activity |
 | App Usage | User opens app frequently? | Higher priority |
 | App Switcher | Not swiped away? | Swiped = no background |
@@ -584,11 +587,11 @@ NotificationCenter.default.publisher(for: .NSProcessInfoPowerStateDidChange)
 // Background App Refresh status
 switch UIApplication.shared.backgroundRefreshStatus {
 case .available:
-    // Can schedule tasks
+    break  // Can schedule tasks
 case .denied:
-    // User disabled — prompt in Settings
+    break  // User disabled — prompt in Settings
 case .restricted:
-    // MDM or parental controls — cannot enable
+    break  // MDM or parental controls — cannot enable
 @unknown default:
     break
 }
@@ -601,11 +604,11 @@ switch ProcessInfo.processInfo.thermalState {
 case .nominal:
     break  // Normal operation
 case .fair:
-    // Reduce intensive work
+    break  // Reduce intensive work
 case .serious:
-    // Minimize all background activity
+    break  // Minimize all background activity
 case .critical:
-    // Stop non-essential work immediately
+    break  // Stop non-essential work immediately
 @unknown default:
     break
 }
@@ -664,9 +667,9 @@ func application(
 
 ### Rate Limiting Behavior
 
-> "Receiving 14 pushes in a window may result in only 7 launches, maintaining a ~15-minute interval."
+> "The number of background notifications allowed by the system depends on current conditions, but don't try to send more than two or three per hour."
 
-Silent pushes are rate-limited. Don't expect launch on every push.
+Silent pushes are rate-limited — the system may delay delivery and may throttle it when the total becomes excessive, and Apple advises against sending more than two or three per hour. Don't expect launch on every push.
 
 ---
 
@@ -683,7 +686,7 @@ struct MyApp: App {
         WindowGroup {
             ContentView()
         }
-        .onChange(of: scenePhase) { newPhase in
+        .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .background {
                 scheduleAppRefresh()
             }
@@ -777,4 +780,4 @@ e -l objc -- (void)[[BGTaskScheduler sharedScheduler] _simulateExpirationForTask
 
 ---
 
-**Platforms**: iOS 13+, iOS 26+ (BGContinuedProcessingTask; watchOS 27 extends it to the watch)
+**Platforms**: iOS 13+ (tvOS 13+ for BGTaskScheduler), iOS 26+ (BGContinuedProcessingTask, iOS only)

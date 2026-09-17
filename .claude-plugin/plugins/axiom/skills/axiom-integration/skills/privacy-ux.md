@@ -173,10 +173,13 @@ func application(_ application: UIApplication,
     showCameraEducation {
         // Then request permission
         AVCaptureDevice.requestAccess(for: .video) { granted in
-            if granted {
-                self.openCamera()
-            } else {
-                self.showPermissionDeniedAlert()
+            // The completion runs on a system queue — hop back to the main actor
+            Task { @MainActor in
+                if granted {
+                    self.openCamera()
+                } else {
+                    self.showPermissionDeniedAlert()
+                }
             }
         }
     }
@@ -223,10 +226,13 @@ func handleCameraPermission() {
     case .notDetermined:
         showCameraEducation {
             AVCaptureDevice.requestAccess(for: .video) { granted in
-                if granted {
-                    self.openCamera()
-                } else {
-                    self.showSettingsPrompt()
+                // The completion runs on a system queue — hop back to the main actor
+                Task { @MainActor in
+                    if granted {
+                        self.openCamera()
+                    } else {
+                        self.showSettingsPrompt()
+                    }
                 }
             }
         }
@@ -293,13 +299,15 @@ import AppTrackingTransparency
 import AdSupport
 
 func requestTrackingPermission() {
-    // Check availability (iOS 14.5+)
-    guard #available(iOS 14.5, *) else { return }
+    // ATT only prompts while the app is active and no other permission alert is
+    // pending. If either precondition fails, no prompt appears and the status stays
+    // .notDetermined — so call this from an active, user-initiated point (a tap, or
+    // scenePhase/applicationDidBecomeActive), never from a fixed delay.
+    guard UIApplication.shared.applicationState == .active else { return }
 
-    // Wait until app is active
-    // Showing alert too early causes auto-denial
-    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-        ATTrackingManager.requestTrackingAuthorization { status in
+    ATTrackingManager.requestTrackingAuthorization { status in
+        // The completion runs on a system queue — hop back to the main actor
+        Task { @MainActor in
             switch status {
             case .authorized:
                 // User granted permission
@@ -313,8 +321,10 @@ func requestTrackingPermission() {
                 self.initializeNonTrackingSDKs()
 
             case .notDetermined:
-                // User closed dialog without choosing
-                // Treat as denied
+                // No decision recorded — the prompt may not have been shown (app not
+                // active, another permission alert pending), or the user tapped
+                // "Additional Information" on the expanded iOS 27 prompt.
+                // Treat as not authorized.
                 self.initializeNonTrackingSDKs()
 
             case .restricted:
@@ -384,17 +394,17 @@ func initializeAnalytics() {
     let status = ATTrackingManager.trackingAuthorizationStatus
 
     if status == .authorized {
-        // Full featured analytics
-        Analytics.setUserProperty(userID, forName: "user_id")
-        Analytics.enableCrossAppTracking()
+        // Full featured analytics — IDFA-based attribution is allowed
+        enableTrackingAnalytics()
     } else {
-        // Limited, privacy-preserving analytics
-        Analytics.setUserProperty("anonymous", forName: "user_id")
-        Analytics.disableCrossAppTracking()
-        Analytics.enableOnDeviceConversionTracking()
+        // Limited, privacy-preserving analytics — no IDFA, no cross-app linking
+        enableNonTrackingAnalytics()
     }
 }
 ```
+
+The two helpers are your own. Each vendor SDK exposes its own consent switch, so keep the ATT status as
+the single source of truth and let these functions fan out to whichever SDKs are enabled.
 
 ---
 
@@ -447,9 +457,9 @@ Result: App functionality continues working; tracking blocked if denied.
 **Detecting unexpected tracking connections**:
 
 1. Xcode → Product → Profile
-2. Choose "Points of Interest" instrument
+2. Pick a standard template that carries the lane — Points of Interest is an instrument inside the standard templates (e.g. Network), not an entry in the template chooser
 3. Run app
-4. Look for "Privacy" track showing network connections
+4. Look for the Points of Interest track showing network connections
 5. Review flagged domains
 
 **What it shows**: Connections to domains that may be tracking users across apps/websites.
@@ -472,20 +482,21 @@ APIs that **could** be misused for fingerprinting (identifying devices without p
 
 | API Category | Examples | Approved Reason Codes |
 |--------------|----------|----------------------|
-| **File timestamp** | `creationDate`, `modificationDate` | `C617.1` - `DDA9.1` |
-| **System boot time** | `systemUptime`, `processInfo.systemUptime` | `35F9.1`, `8FFB.1` |
-| **Disk space** | `NSFileSystemFreeSize`, `volumeAvailableCapacity` | `E174.1`, `7D9E.1` |
+| **File timestamp** | `creationDate`, `modificationDate` | `C617.1`, `DDA9.1`, `3B52.1`, `0A2A.1` |
+| **System boot time** | `systemUptime`, `processInfo.systemUptime` | `35F9.1`, `8FFB.1`, `3D61.1` |
+| **Disk space** | `NSFileSystemFreeSize`, `volumeAvailableCapacity` | `E174.1`, `85F4.1`, `7D9E.1`, `B728.1` |
 | **Active keyboards** | `activeInputModes` | `54BD.1`, `3EC4.1` |
-| **User defaults** | `UserDefaults` | `CA92.1`, `1C8F.1`, `C56D.1` |
+| **User defaults** | `UserDefaults` | `CA92.1`, `1C8F.1`, `C56D.1`, `AC6B.1` |
 
 ### Example: Disk Space API
 
 **API**: `NSFileSystemFreeSize` / `URLResourceKey.volumeAvailableCapacityKey`
 
 **Approved reasons**:
-- **E174.1**: Check if there's enough space before writing files
-- **7D9E.1**: Display storage information to user
-- **B728.1**: Include disk space in optional analytics (only if user opted in)
+- **85F4.1**: Display disk space information to the person using the device
+- **E174.1**: Write or delete a file on-device (check available space before writing)
+- **7D9E.1**: Include disk space information in an optional bug report the person chooses to submit
+- **B728.1**: Health research app — detect and inform research participants about low disk space
 
 **Declaration in manifest**:
 ```xml
@@ -533,8 +544,8 @@ if checkDiskSpace() {
 **Approved reasons**:
 - **CA92.1**: Access info stored by app (settings, preferences)
 - **1C8F.1**: Access info stored by App Group
-- **C56D.1**: Access info stored by App Clips
-- **AC6B.1**: Third-party SDK accessing its own defaults
+- **C56D.1**: Your third-party SDK provides a wrapper around the user defaults APIs for apps to use (SDKs only)
+- **AC6B.1**: Read the `com.apple.configuration.managed` key for the managed app configuration set by MDM
 
 **Declaration**:
 ```xml
@@ -551,8 +562,8 @@ if checkDiskSpace() {
 
 ### Feedback for Missing Reasons
 
-If your use case isn't covered, use Apple's feedback form:
-https://developer.apple.com/documentation/bundleresources/privacy_manifest_files/describing_use_of_required_reason_api
+If your use case isn't covered, request a new approved reason (Apple ID sign-in required):
+https://developer.apple.com/contact/request/privacy-manifest-reason/
 
 ---
 
@@ -659,8 +670,10 @@ import AVFoundation
 AVCaptureDevice.requestAccess(for: .video) { granted in
     // Handle response
 }
+```
 
-// Info.plist
+**Info.plist**:
+```xml
 <key>NSCameraUsageDescription</key>
 <string>Take photos of your meals to track nutrition</string>
 ```
@@ -668,10 +681,17 @@ AVCaptureDevice.requestAccess(for: .video) { granted in
 ### Microphone
 
 ```swift
-AVAudioSession.sharedInstance().requestRecordPermission { granted in
+import AVFAudio
+
+AVAudioApplication.requestRecordPermission { granted in
     // Handle response
 }
+```
 
+**Availability**: `AVAudioApplication` is iOS 17+ (macOS 14+, tvOS 17+, watchOS 10+). On iOS 14.5–16 the equivalent is `AVAudioSession.sharedInstance().requestRecordPermission(_:)`, deprecated in iOS 17 and unavailable on macOS/tvOS.
+
+**Info.plist**:
+```xml
 <key>NSMicrophoneUsageDescription</key>
 <string>Record voice memos</string>
 ```
@@ -693,8 +713,10 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
         manager.requestAlwaysAuthorization()     // Background location
     }
 }
+```
 
-// Info.plist (iOS 14+)
+**Info.plist (iOS 14+)**:
+```xml
 <key>NSLocationWhenInUseUsageDescription</key>
 <string>Show nearby restaurants</string>
 
@@ -711,13 +733,21 @@ PHPhotoLibrary.requestAuthorization(for: .readWrite) { status in
     switch status {
     case .authorized, .limited:  // .limited = selected photos only
         // Access granted
+        break
     case .denied, .restricted:
         // Access denied
+        break
+    case .notDetermined:
+        // No decision recorded — not authorized
+        break
     @unknown default:
         break
     }
 }
+```
 
+**Info.plist**:
+```xml
 <key>NSPhotoLibraryUsageDescription</key>
 <string>Save and share your workout photos</string>
 ```
@@ -730,7 +760,10 @@ import Contacts
 CNContactStore().requestAccess(for: .contacts) { granted, error in
     // Handle response
 }
+```
 
+**Info.plist**:
+```xml
 <key>NSContactsUsageDescription</key>
 <string>Invite friends to join you</string>
 ```
@@ -757,7 +790,7 @@ UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound
 
 ```swift
 // ❌ Bad - collecting unnecessary data
-struct UserProfile {
+struct VerboseUserProfile {
     let name: String
     let email: String
     let phone: String           // Do you really need this?
@@ -830,7 +863,7 @@ struct SettingsView: View {
 ```swift
 // ❌ Wrong
 func application(_ application: UIApplication,
-                didFinishLaunchingWithOptions...) -> Bool {
+                didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
     requestAllPermissions()  // User has no context
     return true
 }
@@ -869,13 +902,13 @@ if !granted {
 
 ### Missing tracking domains
 
-```swift
-// ❌ Wrong - privacy manifest declares tracking but no domains
+```xml
+<!-- ❌ Wrong - privacy manifest declares tracking but no domains -->
 <key>NSPrivacyTracking</key>
 <true/>
 <!-- Missing NSPrivacyTrackingDomains -->
 
-// ✅ Correct
+<!-- ✅ Correct -->
 <key>NSPrivacyTrackingDomains</key>
 <array>
     <string>tracking.example.com</string>
@@ -911,4 +944,4 @@ UserDefaults.standard.set(value, forKey: "setting")
 
 **Docs**: /bundleresources/privacy_manifest_files, /bundleresources/describing-use-of-required-reason-api, /app-store/app-privacy-details, /app-store/user-privacy-and-data-use
 
-**Skills**: skills/app-intents-ref.md, axiom-data (skills/cloudkit-ref.md), axiom-data (skills/storage.md)
+**Skills**: skills/contacts.md (contact permission handling), skills/eventkit.md (calendar permission handling), axiom-shipping (skills/app-store-ref.md), Launch `security-privacy-scanner` agent (ATT and manifest detection)

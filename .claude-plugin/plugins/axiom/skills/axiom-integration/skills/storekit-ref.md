@@ -45,7 +45,7 @@ StoreKit 2 is Apple's modern in-app purchase framework with async/await APIs, au
 New in the 27 cycle — all platforms and `@available(anyAppleOS 27, *)` (Swift 6.4 / Xcode 27) unless a bullet notes otherwise:
 
 - **Subscription Bundles and Suites** — two new `Product.ProductType` values, `.subscriptionBundle` and `.subscriptionSuite`, plus `Product.SubscriptionInfo.bundledSubscriptions: [BundledSubscription]` (non-empty only for a `.subscriptionBundle` product; each `BundledSubscription` carries `id` / `displayName` / `description` / `price` / `displayPrice` / `isFamilyShareable` / `subscriptionGroupID` / `subscriptionGroupLevel` / `subscriptionGroupDisplayName`). A *Bundle* is a group of subscriptions that can be purchased individually but are sold together in a single purchase at a better price; a *Suite* is a group of subscriptions that exist only in the context of the Suite — not purchasable individually, typically serving a related set of apps. The API is testable in Xcode 27; Apple says more details on the program are coming later in 2026.
-- **Bundle transaction fields** (back-deployed in the 27 SDK): `Transaction.bundleProductID` / `bundleSubscriptionGroupID` / `bundleTransactionID` / `bundleOriginalTransactionID` / `previousOriginalTransactionID` (all optional), `Transaction.RevocationReason.upgradedToBundle`; `RenewalInfo.bundleProductID` / `bundleSubscriptionGroupID` / `bundleOriginalTransactionID` / `willUnbundle`, `RenewalInfo.ExpirationReason.unbundled`.
+- **Bundle transaction fields** (back-deployed in the 27 SDK): `Transaction.bundleProductID` / `bundleSubscriptionGroupID` / `bundleTransactionID` / `bundleOriginalTransactionID` / `previousOriginalTransactionID` (all optional), `Transaction.RevocationReason.upgradedToBundle`; `SubscriptionRenewalInfo.bundleProductID` / `bundleSubscriptionGroupID` / `bundleOriginalTransactionID` / `willUnbundle`, `SubscriptionRenewalInfo.ExpirationReason.unbundled`.
 - **Advanced Commerce partners** — `Transaction.AdvancedCommerceInfo.Partner` (`id`, `name: String?`) and `Item.Details.partners: [Partner]`.
 - **Offer code redemption rework** — redemption APIs now return the redeemed transaction and accept `RedeemOption` values; iOS / macCatalyst / macOS / visionOS 27 only (not tvOS / watchOS, unlike the rest of this list); see Offer Codes below.
 - **`AppTransaction.all`** — an `AppTransaction.AppTransactions` async sequence yielding every `VerificationResult<AppTransaction>` for this app version, alongside the existing single `AppTransaction.shared`.
@@ -61,7 +61,7 @@ Subscriptions can now be sold to groups (a customer buys multiple seats and shar
 - **Requires StoreKit 2**; available for all auto-renewable subscriptions.
 - **On by default** for most new and existing StoreKit 2 subscriptions. If your subscription has Family Sharing enabled, group/organization sales are **opted out by default** so you control how the two options interact.
 - For group purchases, your own in-app UI triggers the StoreKit 2 purchase flow: get the number of seats requested from the customer and pass it into the StoreKit 2 purchase request. **No dedicated purchase-option symbol for the seat count ships as of the Xcode 27.0 SDK** (only the general `.quantity(_:)` option) — check newer SDKs before writing code against this.
-- When seat assignments complete (either purchase type), **the App Store assigns a transaction for each member** — your existing `Transaction.updates` / entitlement flow grants access per member. Member transactions surface as `Transaction.OwnershipType.assigned` (`"ASSIGNED"`); seat revocations as `Transaction.revocationType == .assignmentRevocation` (`"ASSIGNMENT_REVOKE"`; `revocationType` is a 26.4 field); the storefront platform for managed distribution appears as `AppStore.Platform.managed`. All three ship back-deployed in the 27 SDK.
+- When seat assignments complete (either purchase type), **the App Store assigns a transaction for each member** — your existing `Transaction.updates` / entitlement flow grants access per member. Member transactions surface as `Transaction.OwnershipType.assigned` (`"ASSIGNED"`); seat revocations as `Transaction.revocationType == .assignmentRevocation` (`"ASSIGNMENT_REVOKE"`; `revocationType` is a 26.4 field); the storefront platform for managed distribution appears as `AppStore.Platform.managed`. `assigned` and `AppStore.Platform.managed` ship back-deployed in the 27 SDK; reading `revocationType` / `.assignmentRevocation` requires an iOS 26.4+ deployment target (or an availability guard).
 - By default group purchases use Apple's included seat management (invite-link generation, acceptance tracking, seat lifecycle such as cancellations). Custom invitation flows will be powered by new App Store Server API endpoints (not yet named).
 - App Store Server API **Group management endpoints** let you query all the groups a customer is in and all the members in a group — supported for volume purchasing and for group purchases using the included seat management flows.
 
@@ -144,15 +144,19 @@ product.type // .nonConsumable
 switch product.type {
 case .consumable:
     // Coins, hints, boosts
+    break
 case .nonConsumable:
     // Premium features, level packs
+    break
 case .autoRenewable:
     // Monthly/annual subscriptions
-case .nonRenewing:
+    break
+case .nonRenewable:
     // Seasonal passes
+    break
 // OS27 also adds .subscriptionBundle / .subscriptionSuite — see the
 // Advanced Commerce additions in the Overview
-@unknown default:
+default:
     break
 }
 ```
@@ -199,7 +203,7 @@ if let introOffer = product.subscription?.introductoryOffer {
         print("Discounted price per period")
     case .payUpFront:
         print("One-time discounted price")
-    @unknown default:
+    default:
         break
     }
 }
@@ -248,9 +252,9 @@ let jwsSignature: String // From your server
 
 let result = try await product.purchase(
     confirmIn: scene,
-    options: [
-        .promotionalOffer(offerID: "promo_winback", signature: jwsSignature)
-    ]
+    options: Set(
+        Product.PurchaseOption.promotionalOffer("promo_winback", compactJWS: jwsSignature)
+    )
 )
 ```
 
@@ -263,7 +267,7 @@ let jwsSignature: String // From your server
 let result = try await product.purchase(
     confirmIn: scene,
     options: [
-        .introductoryOfferEligibility(signature: jwsSignature)
+        .introductoryOfferEligibility(compactJWS: jwsSignature)
     ]
 )
 ```
@@ -293,7 +297,7 @@ struct ProductView: View {
 
 #### From WWDC 2025-241:9:50
 
-### PurchaseResult
+### Product.PurchaseResult
 
 **Handling Purchase Results**:
 ```swift
@@ -346,11 +350,11 @@ let appTransactionID = transaction.appTransactionID
 
 #### From WWDC 2025-241:4:13
 
-**offerPeriod**:
+**offer.period**:
 ```swift
 if let offerPeriod = transaction.offer?.period {
     print("Offer duration: \(offerPeriod)")
-    // ISO 8601 duration format (e.g., "P1M" for 1 month)
+    // Product.SubscriptionPeriod (unit + value); an ISO 8601 string comes from offerPeriodStringRepresentation
 }
 ```
 
@@ -412,10 +416,7 @@ for await result in Transaction.currentEntitlements {
         continue
     }
 
-    // Only include non-refunded transactions
-    if transaction.revocationDate == nil {
-        purchasedProductIDs.insert(transaction.productID)
-    }
+    purchasedProductIDs.insert(transaction.productID)
 }
 ```
 
@@ -462,9 +463,9 @@ for await result in Transaction.all {
 }
 ```
 
-**Get Transactions for Product**:
+**Get Transactions for Product (iOS 18.4+)**:
 ```swift
-for await result in Transaction.all(matching: productID) {
+for await result in Transaction.all(for: productID) {
     guard let transaction = try? result.payloadValue else {
         continue
     }
@@ -505,7 +506,7 @@ func handleTransaction(_ result: VerificationResult<Transaction>) async {
 #### From WWDC 2021-10114
 
 **Transaction Sources**:
-- In-app purchases
+- In-app purchases completed on another device (same-device purchases arrive through `Product.PurchaseResult.success(_:)`, not `updates`)
 - Purchases from App Store (promoted IAP)
 - Offer code redemptions
 - Subscription renewals
@@ -574,7 +575,7 @@ switch appTransaction {
 case .verified(let transaction):
     let appTransactionID = transaction.appTransactionID
     // Globally unique ID for this Apple Account + app
-    // Same value appears in Transaction and RenewalInfo
+    // Same value appears in Transaction and Product.SubscriptionInfo.RenewalInfo
 
 case .unverified(_, let error):
     print("AppTransaction verification failed: \(error)")
@@ -597,7 +598,7 @@ if let appTransaction = try? await AppTransaction.shared.payloadValue {
         print("Originally downloaded on Apple TV")
     case .visionOS:
         print("Originally downloaded on Vision Pro")
-    @unknown default:
+    default:
         break
     }
 }
@@ -651,23 +652,23 @@ if appTransaction.originalPlatform == .iOS,
 
 ### Overview
 
-`RenewalInfo` provides information about auto-renewable subscription renewal state, including whether it will renew, expiration reason, and upcoming offers.
+`SubscriptionRenewalInfo` (the shipped alias for `Product.SubscriptionInfo.RenewalInfo`) provides information about auto-renewable subscription renewal state, including whether it will renew, expiration reason, and upcoming offers.
 
 ### New Fields (iOS 18.4)
 
 **appTransactionID**:
 ```swift
-let renewalInfo: RenewalInfo
+let renewalInfo: Product.SubscriptionInfo.RenewalInfo
 let appTransactionID = renewalInfo.appTransactionID
 ```
 
 #### From WWDC 2025-241:6:40
 
-**offerPeriod**:
+**offer.period**:
 ```swift
-if let offerPeriod = renewalInfo.offerPeriod {
+if let offerPeriod = renewalInfo.offer?.period {
     print("Next renewal offer period: \(offerPeriod)")
-    // ISO 8601 duration (applies at next renewal)
+    // Product.SubscriptionPeriod (unit + value); applies at the next renewal
 }
 ```
 
@@ -695,7 +696,7 @@ if let advancedInfo = renewalInfo.advancedCommerceInfo {
 
 **Renewal State**:
 ```swift
-let renewalInfo: RenewalInfo
+let renewalInfo: Product.SubscriptionInfo.RenewalInfo
 
 renewalInfo.willAutoRenew // true if subscription will renew
 renewalInfo.autoRenewPreference // Product ID customer will renew to
@@ -707,16 +708,21 @@ renewalInfo.expirationReason // Why subscription expired (if expired)
 switch renewalInfo.expirationReason {
 case .autoRenewDisabled:
     // User turned off auto-renewal
+    break
 case .billingError:
     // Payment method issue
+    break
 case .didNotConsentToPriceIncrease:
     // User didn't accept price increase - show win-back offer!
+    break
 case .productUnavailable:
     // Product no longer available
+    break
 case .unknown:
     // Unknown reason
+    break
 // The 27 SDK also adds .unbundled — see the Advanced Commerce additions
-@unknown default:
+default:
     break
 }
 ```
@@ -733,19 +739,20 @@ if let gracePeriodExpiration = renewalInfo.gracePeriodExpirationDate {
 
 **Price Increase Consent**:
 ```swift
-if let consentStatus = renewalInfo.priceIncreaseStatus {
-    switch consentStatus {
-    case .agreed:
-        // User accepted price increase
-    case .notYetResponded:
-        // User hasn't responded - show consent UI
-    @unknown default:
-        break
-    }
+switch renewalInfo.priceIncreaseStatus {
+case .noIncreasePending:
+    // No price increase awaiting consent
+    break
+case .pending:
+    // Price increase waiting on the customer - show consent UI
+    break
+case .agreed:
+    // User accepted price increase
+    break
 }
 ```
 
-### Accessing RenewalInfo
+### Accessing SubscriptionRenewalInfo
 
 **From SubscriptionStatus**:
 ```swift
@@ -778,20 +785,25 @@ let status: Product.SubscriptionInfo.Status
 switch status.state {
 case .subscribed:
     // User has active subscription - full access
+    break
 
 case .expired:
     // Subscription expired - show resubscribe/win-back offer
+    break
 
 case .inGracePeriod:
     // Billing issue but access maintained - show update payment UI
+    break
 
 case .inBillingRetryPeriod:
     // Apple retrying payment - maintain access
+    break
 
 case .revoked:
-    // Family Sharing access removed - revoke access
+    // App Store revoked access to the subscription group (e.g. a refund or a Family Sharing revocation) - revoke access
+    break
 
-@unknown default:
+default:
     break
 }
 ```
@@ -809,7 +821,8 @@ let statuses = try await Product.SubscriptionInfo.status(for: groupID)
 // Find highest service level
 let activeStatus = statuses
     .filter { $0.state == .subscribed }
-    .max { $0.transaction.productID < $1.transaction.productID }
+    .compactMap { try? $0.transaction.payloadValue }
+    .max { $0.productID < $1.productID }
 ```
 
 #### From WWDC 2025-241:6:22
@@ -818,17 +831,17 @@ let activeStatus = statuses
 ```swift
 let transactionID = transaction.id
 
-let status = try await Product.SubscriptionInfo.status(for: transactionID)
+let status = try await Product.SubscriptionInfo.status(transactionID: transactionID)
 ```
 
 #### From WWDC 2025-241:6:40
 
 **Listen for Status Updates**:
 ```swift
-for await statuses in Product.SubscriptionInfo.Status.updates(for: groupID) {
-    // Process updated statuses
+for await (groupID, statuses) in Product.SubscriptionInfo.Status.all {
+    // Process updated statuses for this group
     for status in statuses {
-        print("Status: \(status.state)")
+        print("Status: \(groupID): \(status.state)")
     }
 }
 ```
@@ -840,7 +853,7 @@ let status: Product.SubscriptionInfo.Status
 
 status.state // .subscribed, .expired, etc.
 status.transaction // VerificationResult<Transaction>
-status.renewalInfo // VerificationResult<RenewalInfo>
+status.renewalInfo // VerificationResult<Product.SubscriptionInfo.RenewalInfo>
 ```
 
 ---
@@ -890,15 +903,15 @@ let result = try await product.purchase(confirmIn: scene, options: [.billingPlan
 
 Before a customer subscribes to a commitment plan for the first time, the App Store automatically presents a one-time-per-Apple-Account disclosure sheet (number of payments required plus cancellation guidance). While the subscription is active, the system manage-subscriptions UI shows available plans, remaining payments, and when the commitment renews — present it with the existing `.manageSubscriptionsSheet(isPresented:subscriptionGroupID:)` SwiftUI modifier or UIKit `try await AppStore.showManageSubscriptions(in: scene)`.
 
-### Transaction and RenewalInfo Fields
+### Transaction and SubscriptionRenewalInfo Fields
 
 - `Transaction.billingPlanType: BillingPlanType?` — `.upFront` or `.monthly`
 - `Transaction.commitmentInfo: CommitmentInfo?` — `nil` for `.upFront`; for `.monthly` carries `billingPeriodNumber`, `totalBillingPeriods`, `expirationDate`, `price`. Always use the latest transaction for an accurate `expirationDate`.
-- `RenewalInfo.renewalBillingPlanType: BillingPlanType?` and `RenewalInfo.commitmentInfo` (`autoRenewPreference`, `renewalBillingPlanType`, `renewalDate`, `renewalPrice`, `willAutoRenew`) — describe the renewal after the current commitment ends. Both are optional; Apple documents the matching *server* fields as present only while the subscription is in a commitment, so expect `nil` outside one.
+- `SubscriptionRenewalInfo.renewalBillingPlanType: BillingPlanType?` and `SubscriptionRenewalInfo.commitmentInfo` (`autoRenewPreference`, `renewalBillingPlanType`, `renewalDate`, `renewalPrice`, `willAutoRenew`) — describe the renewal after the current commitment ends. Both are optional; Apple documents the matching *server* fields as present only while the subscription is in a commitment, so expect `nil` outside one.
 
 ### Server-Side JWS Fields
 
-Decoded `JWSTransaction` adds `billingPlanType` (`"MONTHLY"`) and a `commitmentInfo` object (`billingPeriodNumber`, `totalBillingPeriods`, `commitmentExpiresDate`, `commitmentPrice`). Decoded `JWSRenewalInfo` adds `renewalBillingPlanType` and a `commitmentInfo` object (`commitmentAutoRenewProductId`, `commitmentAutoRenewStatus`, `commitmentRenewalDate`, `commitmentRenewalPrice`, `commitmentRenewalBillingPlanType`, e.g. `"BILLED_UPFRONT"` — note the per-field server vocabularies differ: `billingPlanType` uses `"MONTHLY"`, the renewal field uses `"BILLED_UPFRONT"`; both verbatim from the session) — present only while in a commitment. App Store Server Notifications V2 continues to deliver lifecycle updates (such as monthly renewals) throughout the commitment.
+Decoded `JWSTransaction` adds `billingPlanType` (`"MONTHLY"`) and a `commitmentInfo` object (`billingPeriodNumber`, `totalBillingPeriods`, `commitmentExpiresDate`, `commitmentPrice`). Decoded `JWSRenewalInfo` adds `renewalBillingPlanType` and a `commitmentInfo` object (`commitmentAutoRenewProductId`, `commitmentAutoRenewStatus`, `commitmentRenewalDate`, `commitmentRenewalPrice`, `commitmentRenewalBillingPlanType`, e.g. `"BILLED_UPFRONT"` — both server enums use the same two raw values (`"BILLED_UPFRONT"` and `"MONTHLY"`); the example values above come from the session) — present only while in a commitment. App Store Server Notifications V2 continues to deliver lifecycle updates (such as monthly renewals) throughout the commitment.
 
 ### Testing Billing Plans
 
@@ -931,7 +944,7 @@ struct ContentView: View {
     let product: Product
 
     var body: some View {
-        ProductView(for: product)
+        ProductView(product)
     }
 }
 ```
@@ -1017,12 +1030,14 @@ SubscriptionStoreView(groupID: groupID) {
 .subscriptionStoreControlStyle(.automatic)    // Default
 .subscriptionStoreControlStyle(.picker)       // Horizontal picker
 .subscriptionStoreControlStyle(.buttons)      // Stacked buttons
-.subscriptionStoreControlStyle(.prominentPicker) // Large picker (iOS 18.4+)
+.subscriptionStoreControlStyle(.prominentPicker) // Large picker (iOS 17+)
 ```
 
 #### From WWDC 2025-241
 
-### SubscriptionOfferView (iOS 18.4+)
+### SubscriptionOfferView (iOS 26.0+)
+
+Available on iOS and visionOS 26.0+; unavailable on macOS, macCatalyst, tvOS and watchOS.
 
 **Basic Offer View**:
 ```swift
@@ -1041,7 +1056,7 @@ struct ContentView: View {
 ```swift
 let product: Product // Already loaded via Product.products(for:)
 
-SubscriptionOfferView(product: product)
+SubscriptionOfferView(product)
 ```
 
 **With Promotional Icon**:
@@ -1050,10 +1065,6 @@ SubscriptionOfferView(
     id: productID,
     prefersPromotionalIcon: true
 )
-
-// Also available as modifier
-SubscriptionOfferView(id: productID)
-    .prefersPromotionalIcon(true)
 ```
 
 **With Custom Icon**:
@@ -1062,7 +1073,7 @@ SubscriptionOfferView(id: productID) {
     Image("custom-icon")
         .resizable()
         .frame(width: 60, height: 60)
-} placeholder: {
+} placeholderIcon: {
     Image(systemName: "photo")
         .foregroundStyle(.gray)
 }
@@ -1139,15 +1150,15 @@ SubscriptionOfferView(
 ```swift
 SubscriptionStoreView(groupID: groupID)
     .subscriptionPromotionalOffer(
-        for: { subscription in
-            // Return offer for this subscription
-            return subscription.promotionalOffers.first
+        offer: { _, subscriptionInfo in
+            // Return the offer to apply for this subscription
+            return subscriptionInfo.promotionalOffers.first
         },
-        signature: { subscription, offer in
-            // Get JWS signature from server
+        compactJWS: { product, _, offer in
+            // Get the compact-JWS signature from your server
             let signature = try await server.signOffer(
-                productID: subscription.id,
-                offerID: offer.id
+                productID: product.id,
+                offerID: offer.id ?? ""
             )
             return signature
         }
@@ -1156,7 +1167,7 @@ SubscriptionStoreView(groupID: groupID)
 
 #### From WWDC 2025-241:12:17
 
-### subscriptionStatusTask Modifier (iOS 18.4+)
+### subscriptionStatusTask Modifier (iOS 17.0+)
 
 Track subscription status at the app level with a SwiftUI modifier. Eliminates manual polling by reacting to status changes automatically.
 
@@ -1169,11 +1180,10 @@ struct MyApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .environment(\.customerSubscriptionStatus, customerStatus)
                 .subscriptionStatusTask(for: "your.group.id") { statuses in
-                    if statuses.contains(where: { $0.state == .subscribed }) {
+                    if statuses.value?.contains(where: { $0.state == .subscribed }) == true {
                         customerStatus = .subscribed
-                    } else if statuses.contains(where: { $0.state == .expired }) {
+                    } else if statuses.value?.contains(where: { $0.state == .expired }) == true {
                         customerStatus = .expired
                     } else {
                         customerStatus = .notSubscribed
@@ -1206,10 +1216,11 @@ Offer codes now support all product types (previously subscription-only):
 
 **UIKit**:
 ```swift
-func showOfferCodeSheet() {
+@MainActor
+func showOfferCodeSheet() async throws {
     guard let scene = view.window?.windowScene else { return }
 
-    StoreKit.AppStore.presentOfferCodeRedeemSheet(in: scene)
+    try await StoreKit.AppStore.presentOfferCodeRedeemSheet(in: scene)
 }
 ```
 
@@ -1269,29 +1280,23 @@ if let offer = transaction.offer {
     switch offer.paymentMode {
     case .freeTrial:
         // No charge during offer period
+        break
     case .payAsYouGo:
         // Discounted price per billing period
+        break
     case .payUpFront:
         // One-time discounted price for entire duration
+        break
     case .oneTime:
         // ✨ New: One-time offer code redemption (iOS 17.2+)
-    @unknown default:
+        break
+    default:
         break
     }
 }
 ```
 
 #### From WWDC 2025-241:8:17
-
-**Legacy Access (iOS 15-17.1)**:
-```swift
-if let offerMode = transaction.offerPaymentModeStringRepresentation {
-    // String representation for older OS versions
-    print(offerMode) // "oneTime"
-}
-```
-
-#### From WWDC 2025-241:8:49
 
 ---
 
@@ -1313,25 +1318,22 @@ let keyID = "YOUR_KEY_ID"
 let issuerID = "YOUR_ISSUER_ID"
 let bundleID = "com.app.bundle"
 
-let creator = PromotionalOfferV2SignatureCreator(
-    privateKey: signingKey,
-    keyID: keyID,
-    issuerID: issuerID,
-    bundleID: bundleID
+let creator = try PromotionalOfferV2SignatureCreator(
+    signingKey: signingKey,
+    keyId: keyID,
+    issuerId: issuerID,
+    bundleId: bundleID
 )
 
 // Create signature
 let productID = "com.app.pro_monthly"
 let offerID = "promo_winback"
-let transactionID = transaction.id // Optional but recommended
+let transactionID = String(transaction.id) // Optional but recommended
 
-let signature = try creator.createSignature(
-    productIdentifier: productID,
-    subscriptionOfferIdentifier: offerID,
-    applicationUsername: nil,
-    nonce: UUID(),
-    timestamp: Date().timeIntervalSince1970,
-    transactionIdentifier: transactionID
+let signature = try await creator.createSignature(
+    productId: productID,
+    offerIdentifier: offerID,
+    transactionId: transactionID
 )
 
 // Send signature to app
@@ -1346,10 +1348,9 @@ app.get("promo-offer") { req async throws -> String in
     let productID = try req.query.get(String.self, at: "productID")
     let offerID = try req.query.get(String.self, at: "offerID")
 
-    let signature = try creator.createSignature(
-        productIdentifier: productID,
-        subscriptionOfferIdentifier: offerID,
-        transactionIdentifier: nil
+    let signature = try await creator.createSignature(
+        productId: productID,
+        offerIdentifier: offerID
     )
 
     return signature
@@ -1366,7 +1367,7 @@ app.get("promo-offer") { req async throws -> String in
 
 **Endpoint**:
 ```
-PATCH /inApps/v1/transactions/{originalTransactionId}
+PUT /inApps/v1/transactions/{originalTransactionId}/appAccountToken
 ```
 
 **Request Body**:
@@ -1387,8 +1388,10 @@ PATCH /inApps/v1/transactions/{originalTransactionId}
 
 **Endpoint**:
 ```
-GET /inApps/v2/appTransaction/{transactionId}
+GET /inApps/v1/transactions/appTransactions/{transactionId}
 ```
+
+The path accepts any `transactionId`, `originalTransactionId` or `appTransactionId`.
 
 **Response**:
 ```json
@@ -1400,7 +1403,6 @@ GET /inApps/v2/appTransaction/{transactionId}
 **Usage**:
 - Get app download information on server
 - Check app version, platform, environment
-- Available later in 2025
 
 #### From WWDC 2025-249:10:48
 
@@ -1426,7 +1428,7 @@ PUT /inApps/v2/transactions/consumption/{transactionId}
 - `customerConsented` (required): User consented to send consumption data
 - `sampleContentProvided` (optional): Sample provided before purchase
 - `deliveryStatus` (required): "DELIVERED" or various UNDELIVERED statuses
-- `refundPreference` (optional): "NO_REFUND", "GRANT_REFUND", "GRANT_PRORATED"
+- `refundPreference` (optional): "DECLINE", "GRANT_FULL", "GRANT_PRORATED"
 - `consumptionPercentage` (optional): 0-100000 (millipercent, e.g., 25000 = 25%)
 
 **Prorated Refund**:
@@ -1443,10 +1445,17 @@ PUT /inApps/v2/transactions/consumption/{transactionId}
 {
   "notificationType": "REFUND",
   "data": {
-    "signedTransactionInfo": "...",
-    "refundPercentage": 75,
-    "revocationType": "REFUND_PRORATED"
+    "signedTransactionInfo": "..."
   }
+}
+```
+
+The revocation fields are not siblings of `signedTransactionInfo` — they live inside the decoded transaction payload:
+
+```json
+{
+  "revocationType": "REFUND_PRORATED",
+  "revocationPercentage": 75000
 }
 ```
 
@@ -1454,6 +1463,8 @@ PUT /inApps/v2/transactions/consumption/{transactionId}
 - `REFUND_FULL`: 100% refund - revoke all access
 - `REFUND_PRORATED`: Partial refund - revoke proportional access
 - `FAMILY_REVOKE`: Family Sharing removed - revoke access
+
+`revocationPercentage` is the refunded/revoked share in milliunits (`75000` = 75%).
 
 Seat revocations from group/volume purchasing surface as `ASSIGNMENT_REVOKE` — see Group and Volume Subscription Purchasing.
 
@@ -1536,9 +1547,11 @@ func handleTransaction(_ transaction: Transaction) async {
         switch transaction.revocationReason {
         case .developerIssue:
             // Refund due to app issue
+            break
         case .other:
             // Other refund reason
-        @unknown default:
+            break
+        default:
             break
         }
 
@@ -1563,7 +1576,7 @@ if transaction.advancedCommerceInfo != nil {
 }
 ```
 
-Accessible through the `advancedCommerceInfo` field on both `Transaction` and `RenewalInfo`. Returns `nil` for standard IAP transactions.
+Accessible through the `advancedCommerceInfo` field on both `Transaction` and `SubscriptionRenewalInfo`. Returns `nil` for standard IAP transactions.
 
 #### From WWDC 2025-241:4:51
 
@@ -1571,7 +1584,7 @@ Accessible through the `advancedCommerceInfo` field on both `Transaction` and `R
 
 **Show Win-Back for Expired Subscription**:
 ```swift
-let renewalInfo: RenewalInfo
+let renewalInfo: Product.SubscriptionInfo.RenewalInfo
 
 if renewalInfo.expirationReason == .didNotConsentToPriceIncrease {
     // Perfect time for win-back offer!
@@ -1579,7 +1592,10 @@ if renewalInfo.expirationReason == .didNotConsentToPriceIncrease {
         groupID: groupID,
         visibleRelationship: .current
     )
-    .preferredSubscriptionOffer(offer: winBackOffer)
+    .preferredSubscriptionOffer { _, _, eligibleOffers in
+        // Win-back offer for this subscription, if the customer is eligible
+        eligibleOffers.first
+    }
 }
 ```
 
@@ -1690,7 +1706,7 @@ let products = try await Product.products(for: productIDs)
 - `.consumable` - Can purchase multiple times (coins, boosts)
 - `.nonConsumable` - Purchase once, own forever (premium, level packs)
 - `.autoRenewable` - Auto-renewing subscriptions
-- `.nonRenewing` - Fixed duration subscriptions
+- `.nonRenewable` - Fixed duration subscriptions
 
 ### Transaction States
 - `success` - Purchase completed
@@ -1702,7 +1718,7 @@ let products = try await Product.products(for: productIDs)
 - `.expired` - Subscription ended
 - `.inGracePeriod` - Billing issue, access maintained
 - `.inBillingRetryPeriod` - Apple retrying payment
-- `.revoked` - Family Sharing removed
+- `.revoked` - App Store revoked access to the subscription group
 
 ### Essential Calls
 ```swift
@@ -1712,14 +1728,14 @@ try await Product.products(for: productIDs)
 // Purchase
 try await product.purchase(confirmIn: scene)
 
-// Current entitlements
+// Current entitlements (iOS 18.4+)
 Transaction.currentEntitlements(for: productID)
 
 // Transaction listener
 Transaction.updates
 
 // Subscription status
-Product.SubscriptionInfo.status(for: groupID)
+try await Product.SubscriptionInfo.status(for: groupID)
 
 // Restore purchases
 try await AppStore.sync()

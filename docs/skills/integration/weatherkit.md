@@ -26,14 +26,14 @@ Use this skill when you're:
 - "How do I show the weather forecast with WeatherKit?"
 - "Why was my weather app rejected by App Review?"
 - "How much does WeatherKit cost / what's the quota?"
-- "How do I fetch only the daily forecast to save quota?"
+- "How do I fetch only the daily forecast?"
 - "How do I set up the WeatherKit REST API?"
 
 ## Key Concepts
 
-### Two query shapes, very different cost
+### Two query shapes
 
-`weather(for:)` fetches all datasets; `weather(for:including:)` fetches only the ones you name (returning a typed tuple). Use the focused form and cache results — every full fetch counts against your quota.
+`weather(for:)` fetches all datasets; `weather(for:including:)` fetches only the ones you name (returning a typed tuple). Apple publishes no per-dataset counting rule, so narrow the request for the smaller response and decode cost — caching is what protects the quota.
 
 ### Attribution is mandatory
 
@@ -56,7 +56,7 @@ Minute precipitation and alerts are region-limited. Query `.availability` and tr
 | Mistake | Cost | Fix |
 |---------|------|-----|
 | No attribution | App Review rejection | Show the mark + link to `legalPageURL` |
-| `weather(for:)` every refresh | Quota burn | Use `including:`, cache, honor `expirationDate` |
+| `weather(for:)` every refresh | Quota burn — repeated refetches draw on the 500,000-call monthly quota | Cache results and honor `expirationDate`; request only the datasets you show |
 | Capability/Service not configured | 401 auth errors | Enable WeatherKit; verify REST keys |
 | Assuming alerts exist everywhere | Crashes / empty UI | Check `WeatherAvailability` |
 | Querying with no location | No data | Acquire a `CLLocation` first |

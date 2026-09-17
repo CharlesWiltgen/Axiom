@@ -82,6 +82,6 @@ This page documents the `design-for-watchos` skill in the `axiom-watchos` suite.
 
 **WWDC**: 2023-10138, 2023-10031, 2022-10133, 2022-10051
 
-**Docs**: /watchos-apps/creating-an-intuitive-and-effective-ui-in-watchos-10, /watchos-apps/designing-your-app-for-the-always-on-state, /swiftui/tabview, /swiftui/navigationsplitview, /swiftui/navigationstack, /swiftui/containerbackground, /swiftui/privacysensitive, /swiftui/matchedgeometryeffect, /swiftui/timelineview, /swiftui/scenephase, /design/human-interface-guidelines/designing-for-watchos
+**Docs**: /watchos-apps/creating-an-intuitive-and-effective-ui-in-watchos-10, /watchos-apps/designing-your-app-for-the-always-on-state, /swiftui/tabview, /swiftui/navigationsplitview, /swiftui/navigationstack, /swiftui/containerbackground, /swiftui/privacysensitive, /swiftui/matchedgeometryeffect, /swiftui/timelineview, /swiftui/scenephase, developer.apple.com/design/human-interface-guidelines/designing-for-watchos
 
 **Skills**: axiom-watchos, platform-basics, smart-stack-and-complications, modernization

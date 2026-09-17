@@ -9,7 +9,7 @@ Comprehensive API reference for ActivityKit Live Activities, Dynamic Island, pus
 - **ContentState** — `Codable & Hashable` struct of dynamic data; the part that changes. Must keep total payload under 4KB.
 - **ActivityContent** — Wrapper around a `ContentState` value plus `staleDate` and `relevanceScore`.
 - **Activity** — Runtime handle returned by `Activity.request`.
-- **ActivityState** — `.pending`, `.active`, `.stale`, `.ended`, `.dismissed`.
+- **ActivityState** — `.pending` (iOS 26+), `.active`, `.stale` (iOS 16.2+), `.ended`, `.dismissed`.
 - **Dynamic Island** — iPhone 14 Pro+ presentation with compact, minimal, and expanded layouts.
 - **Push type** — `nil` (local), `.token` (per-activity push), `.channel(String)` (broadcast, iOS 18+).
 - **Channel** — APNs broadcast target; one push reaches all subscribed activities.
@@ -77,7 +77,7 @@ for activity in Activity<PizzaDeliveryAttributes>.activities {
 
 - `.immediate` — remove now
 - `.default` — linger ~4 hours showing the final state
-- `.after(Date)` — remove at a specific time
+- `.after(Date)` — remove at that time, or four hours after the activity ends, whichever comes first (the date is clamped to a four-hour window)
 
 ## Errors from `Activity.request`
 
@@ -144,7 +144,7 @@ struct PizzaLiveActivity: Widget {
 }
 ```
 
-`ActivityViewContext` exposes `attributes`, `state`, `isStale`, and `relevanceScore` to your views.
+`ActivityViewContext` exposes `activityID`, `attributes`, `state`, and `isStale` to your views.
 
 ---
 
@@ -154,7 +154,7 @@ Four regions:
 
 | Region | Shown when |
 |--------|-----------|
-| `compactLeading` / `compactTrailing` | Activity is foregrounded (compact form) |
+| `compactLeading` / `compactTrailing` | Only one Live Activity is active (compact form) |
 | `expanded` (via `DynamicIslandExpandedRegion`) | User long-presses the island |
 | `minimal` | Two+ concurrent activities from different apps |
 
@@ -197,7 +197,7 @@ Per-activity and broadcast updates use the same payload shape. Required APNs hea
 }
 ```
 
-`event` is `"update"`, `"end"`, or `"start"` (push-to-start). For push-to-start, include `attributes-type`, `attributes`, and `input-push-token: 1`.
+`event` is `"update"`, `"end"`, or `"start"` (push-to-start). A push-to-start payload must set `event: "start"` and include `alert`, `attributes-type`, and `attributes`. Optionally (iOS 18+), add `input-push-token: 1` to receive a fresh per-activity push token back, or `input-push-channel: <channelID>` so the started activity receives its updates on a broadcast channel.
 
 ---
 
@@ -217,7 +217,7 @@ Channel lifecycle is independent of activities — a channel ID stays valid with
 
 ---
 
-# Part 8: Frequent updates (iOS 18.2+)
+# Part 8: Frequent updates (iOS 16.2+)
 
 - Info.plist: `NSSupportsLiveActivitiesFrequentUpdates` = `YES`
 - Runtime gate: `ActivityAuthorizationInfo().frequentPushesEnabled` (user-toggleable)
@@ -233,7 +233,7 @@ Channel lifecycle is independent of activities — a channel ID stays valid with
 
 ## CarPlay and Mac menu bar (automatic)
 
-CarPlay Dashboard (iOS 18+) and the macOS Sequoia+ menu bar surface a paired iPhone's Live Activity automatically — no modifier or code.
+CarPlay (iOS 26+) and the macOS Sequoia+ menu bar surface a paired iPhone's Live Activity automatically — no modifier or code.
 
 ---
 

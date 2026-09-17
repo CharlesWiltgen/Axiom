@@ -37,7 +37,7 @@ Use this reference when you need:
 
 ## What's Covered
 
-- **CNContactStore** – `authorizationStatus(for:)`, `requestAccess(for:)`, `unifiedContact(withIdentifier:keysToFetch:)`, `unifiedContacts(matching:keysToFetch:)`, `unifiedMeContact(withKeysToFetch:)`, `enumerateContacts(with:)`, container and group access, `currentHistoryToken`, `.CNContactStoreDidChange` notification
+- **CNContactStore** – `authorizationStatus(for:)`, `requestAccess(for:)`, `unifiedContact(withIdentifier:keysToFetch:)`, `unifiedContacts(matching:keysToFetch:)`, `enumerateContacts(with:)`, container and group access, `currentHistoryToken`, `.CNContactStoreDidChange` notification
 - **Built-in predicates** – `predicateForContacts(matchingName:)`, `predicateForContacts(matchingEmailAddress:)`, `predicateForContacts(matching:)` for phone numbers, `predicateForContacts(withIdentifiers:)`, in-group and in-container predicates
 - **CNContact key descriptors** – `CNContactGivenNameKey`, `CNContactFamilyNameKey`, `CNContactPhoneNumbersKey`, `CNContactEmailAddressesKey`, `CNContactPostalAddressesKey`, image keys; `CNContactFormatter.descriptorForRequiredKeys(for:)` for locale-correct name formatting
 - **CNMutableContact** – value construction (`CNLabeledValue`), removing fields by assigning empty arrays, thread-safety constraint
@@ -47,7 +47,6 @@ Use this reference when you need:
 - **ContactsUI controllers** – `CNContactPickerViewController` delegate, `CNContactViewController` modes (new/unknown/contact)
 - **Contact Access Button (iOS 18+)** – `ContactAccessButton(queryString:)` SwiftUI view, customization modifiers (`.contactAccessButtonCaption`, `.contactAccessButtonStyle`), security requirements for legibility and obstruction
 - **contactAccessPicker (iOS 18+)** – bulk contact selection under limited access
-- **CNContactSavedAutoFillDetailsController (iOS 27)** – Saved AutoFill Details visibility on contact cards
 - **ContactProvider framework (iOS 18+)** – architecture, `ContactProviderManager` for main-app enable/signal flow, `ContactProviderExtension` protocol, enumerator pattern, App Group requirement, ContactProvider errors
 - **Change history (TN3149)** – `CNChangeHistoryFetchRequest`, `CNChangeHistoryEventVisitor` protocol, the `DropEverything` → re-sync semantics, token persistence
 - **Error reference** – `CNError` codes (`communicationError`, `dataAccessError`, `authorizationDenied`, `recordDoesNotExist`, `vCardMalformed`, etc.)
@@ -65,4 +64,4 @@ This page documents the `contacts-ref` skill — the API reference half of the C
 
 **WWDC**: 2024-10121
 
-**Docs**: /contacts, /contactsui, /contactprovider, /technotes/tn3149
+**Docs**: /contacts, /contactsui, /contactprovider, /technotes/tn3149-fetching-change-history-events

@@ -66,7 +66,7 @@ struct OpenCollectionIntent: OpenIntent { /* ... */ }
 
 ### Onscreen Entities
 
-Associate app entities with visible content so users can ask Siri or ChatGPT about what's on screen:
+Associate app entities with visible content so users can ask Siri or ChatGPT about what's on screen (`NSUserActivity.appEntityIdentifier` is iOS 18.2+):
 
 ```swift
 struct LandmarkDetailView: View {
@@ -91,8 +91,8 @@ struct LandmarkDetailView: View {
 **1. AppIntent** — Executable actions with parameters
 ```swift
 struct OrderSoupIntent: AppIntent {
-    static var title: LocalizedStringResource = "Order Soup"
-    static var description: IntentDescription = "Orders soup from the restaurant"
+    static let title: LocalizedStringResource = "Order Soup"
+    static let description: IntentDescription = "Orders soup from the restaurant"
 
     @Parameter(title: "Soup")
     var soup: SoupEntity
@@ -102,7 +102,7 @@ struct OrderSoupIntent: AppIntent {
 
     func perform() async throws -> some IntentResult {
         guard let quantity = quantity, quantity < 10 else {
-            throw $quantity.needsValue("Please specify how many soups")
+            throw $quantity.needsValueError("Please specify how many soups")
         }
 
         try await OrderService.shared.order(soup: soup, quantity: quantity)
@@ -118,13 +118,13 @@ struct SoupEntity: AppEntity {
     var name: String
     var price: Decimal
 
-    static var typeDisplayRepresentation: TypeDisplayRepresentation = "Soup"
+    static let typeDisplayRepresentation: TypeDisplayRepresentation = "Soup"
 
     var displayRepresentation: DisplayRepresentation {
         DisplayRepresentation(title: "\(name)", subtitle: "$\(price)")
     }
 
-    static var defaultQuery = SoupQuery()
+    static let defaultQuery = SoupQuery()
 }
 ```
 
@@ -135,8 +135,8 @@ enum SoupSize: String, AppEnum {
     case medium
     case large
 
-    static var typeDisplayRepresentation: TypeDisplayRepresentation = "Size"
-    static var caseDisplayRepresentations: [SoupSize: DisplayRepresentation] = [
+    static let typeDisplayRepresentation: TypeDisplayRepresentation = "Size"
+    static let caseDisplayRepresentations: [SoupSize: DisplayRepresentation] = [
         .small: "Small (8 oz)",
         .medium: "Medium (12 oz)",
         .large: "Large (16 oz)"
@@ -153,21 +153,21 @@ enum SoupSize: String, AppEnum {
 ```swift
 struct SendMessageIntent: AppIntent {
     // REQUIRED: Short verb-noun phrase
-    static var title: LocalizedStringResource = "Send Message"
+    static let title: LocalizedStringResource = "Send Message"
 
     // REQUIRED: Purpose explanation
-    static var description: IntentDescription = "Sends a message to a contact"
+    static let description: IntentDescription = "Sends a message to a contact"
 
     // OPTIONAL: Discovery in Shortcuts/Spotlight
-    static var isDiscoverable: Bool = true
+    static let isDiscoverable: Bool = true
 
     // OPTIONAL: Execution context (iOS 26+) — replaces the deprecated `openAppWhenRun`
-    static var supportedModes: IntentModes = .background
+    static let supportedModes: IntentModes = .background
     // iOS 18 deployment targets use the boolean instead (deprecated in iOS 26):
-    // static var openAppWhenRun: Bool = false
+    // static let openAppWhenRun: Bool = false
 
     // OPTIONAL: Authentication requirement
-    static var authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
+    static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
 }
 ```
 
@@ -189,8 +189,8 @@ struct BookAppointmentIntent: AppIntent {
     var location: LocationEntity
 
     // Parameter with default value
-    @Parameter(title: "Duration")
-    var duration: Int = 60
+    @Parameter(title: "Duration", default: 60)
+    var duration: Int
 }
 ```
 
@@ -285,7 +285,7 @@ struct BookEntity: AppEntity {
     var coverImageURL: URL?
 
     // REQUIRED: Type display name
-    static var typeDisplayRepresentation: TypeDisplayRepresentation = "Book"
+    static let typeDisplayRepresentation: TypeDisplayRepresentation = "Book"
 
     // REQUIRED: Instance display
     var displayRepresentation: DisplayRepresentation {
@@ -297,7 +297,7 @@ struct BookEntity: AppEntity {
     }
 
     // REQUIRED: Query for resolution
-    static var defaultQuery = BookQuery()
+    static let defaultQuery = BookQuery()
 }
 ```
 
@@ -425,17 +425,17 @@ struct BookEntity: AppEntity {
 ```swift
 struct ViewAccountIntent: AppIntent {
     // No authentication required
-    static var authenticationPolicy: IntentAuthenticationPolicy = .alwaysAllowed
+    static let authenticationPolicy: IntentAuthenticationPolicy = .alwaysAllowed
 }
 
 struct TransferMoneyIntent: AppIntent {
     // Requires user to be logged in
-    static var authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
+    static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
 }
 
 struct UnlockVaultIntent: AppIntent {
     // Requires device unlock (Face ID/Touch ID/passcode)
-    static var authenticationPolicy: IntentAuthenticationPolicy = .requiresLocalDeviceAuthentication
+    static let authenticationPolicy: IntentAuthenticationPolicy = .requiresLocalDeviceAuthentication
 }
 ```
 
@@ -445,7 +445,7 @@ struct UnlockVaultIntent: AppIntent {
 
 A schema-adopting intent becomes a tool in the Siri Toolbox — the *model* decides when to call it and generates its arguments, so prompt injection can attempt to invoke your intent without user intent. The App Intents system adds two guardrails (WWDC 2026-347):
 
-**Inherited authentication policy.** Schemas carry their own default `authenticationPolicy`, set internally based on each schema's sensitivity and the data it handles. Your intent is automatically assigned the schema's default — no code needed. You can still set the property explicitly, but **only to a stricter policy**: a weaker override produces a build error that reports the minimum allowed policy. Review your intents with lock-screen behavior in mind — Siri runs on the lock screen, so an attacker in physical possession of a locked device can attempt to invoke intents.
+**Inherited authentication policy.** Schemas carry their own default `authenticationPolicy`, set internally based on each schema's sensitivity and the data it handles. Your intent is automatically assigned the schema's default — no code needed. You can still set the property explicitly; never go weaker than the schema's default. A weaker override is **not** a compiler diagnostic — a plain `swiftc` build accepts `.alwaysAllowed` on any schema — so don't wait for a build error to catch it; the schema-validation machinery carries the `valueLowerThanMinimum` check. Review your intents with lock-screen behavior in mind — Siri runs on the lock screen, so an attacker in physical possession of a locked device can attempt to invoke intents.
 
 **Risk-based contextual confirmations.** Schemas also carry internal risk metadata derived from side effects — deleting device state, exfiltrating data, and updating shared content are flagged risky. Before execution, the system combines that static metadata with dynamic system state to evaluate overall risk; high-risk invocations trigger an automatic user confirmation, and declining blocks execution entirely. Risk is subtle: even a seemingly harmless `createTimer` schema accepts a model-generated label string an attacker could poison and later read back via a list query — which is why the dynamic-state half of the evaluation exists and why low-stakes schemas still confirm in some contexts.
 
@@ -521,7 +521,7 @@ On iOS 18, where `supportedModes` is unavailable, use the boolean `openAppWhenRu
 
 ```swift
 struct QuickToggleIntent: AppIntent {
-    static var openAppWhenRun: Bool = false // Runs in background
+    static let openAppWhenRun: Bool = false // Runs in background
 
     func perform() async throws -> some IntentResult {
         // Executes without opening app
@@ -542,12 +542,14 @@ struct EditDocumentIntent: AppIntent {
 
     func perform() async throws -> some IntentResult {
         // Open app to continue in UI
-        return .result(opensIntent: OpenDocumentIntent(document: document))
+        let openIntent = OpenDocumentIntent()
+        openIntent.document = document
+        return .result(opensIntent: openIntent)
     }
 }
 
 struct OpenDocumentIntent: AppIntent {
-    static var openAppWhenRun: Bool = true
+    static let openAppWhenRun: Bool = true
 
     @Parameter(title: "Document")
     var document: DocumentEntity
@@ -576,8 +578,9 @@ struct DeleteTaskIntent: AppIntent {
     func perform() async throws -> some IntentResult {
         // Request confirmation before destructive action
         try await requestConfirmation(
-            result: .result(dialog: "Are you sure you want to delete '\(task.title)'?"),
-            confirmationActionName: .init(stringLiteral: "Delete")
+            conditions: [],
+            actionName: .custom(acceptLabel: "Delete", acceptAlternatives: [], denyLabel: "Cancel", denyAlternatives: []),
+            dialog: "Are you sure you want to delete '\(task.title)'?"
         )
 
         // User confirmed, proceed
@@ -589,9 +592,9 @@ struct DeleteTaskIntent: AppIntent {
 
 ---
 
-## Multiple Choice API
+## Multiple Choice API (iOS 26+)
 
-Request user input with structured options:
+Request user input with structured options (`IntentChoiceOption` and `requestChoice(between:dialog:)` are iOS 26+ — gate call sites with `if #available(iOS 26, *)` on lower deployment targets):
 
 ```swift
 let options = [
@@ -628,7 +631,7 @@ func perform() async throws -> some IntentResult {
 }
 ```
 
-### SnippetIntent
+### SnippetIntent (iOS 26+)
 
 Return interactive snippets with follow-up action buttons:
 
@@ -636,15 +639,20 @@ Return interactive snippets with follow-up action buttons:
 func perform() async throws -> some IntentResult {
     let landmark = await findNearestLandmark()
 
+    let openIntent = OpenLandmarkIntent()
+    openIntent.landmark = landmark
+    let snippetIntent = LandmarkSnippetIntent()
+    snippetIntent.landmark = landmark
+
     return .result(
         value: landmark,
-        opensIntent: OpenLandmarkIntent(landmark: landmark),
-        snippetIntent: LandmarkSnippetIntent(landmark: landmark)
+        opensIntent: openIntent,
+        snippetIntent: snippetIntent
     )
 }
 
 struct LandmarkSnippetIntent: SnippetIntent {
-    static var title: LocalizedStringResource = "Landmark"
+    static let title: LocalizedStringResource = "Landmark"
 
     @Parameter var landmark: LandmarkEntity
 
@@ -742,7 +750,7 @@ struct EventEntity: AppEntity {
 
 **2. Type display representation** (hints what entity represents)
 ```swift
-static var typeDisplayRepresentation: TypeDisplayRepresentation = "Calendar Event"
+static let typeDisplayRepresentation: TypeDisplayRepresentation = "Calendar Event"
 ```
 
 **3. Display representation** (title and subtitle)
@@ -850,6 +858,8 @@ Enable iterative refinement before passing to next action:
 
 ## IndexedEntity: Automatic Find Actions
 
+**Availability** `IndexedEntity` is iOS 18+; the `indexingKey:` and `customIndexingKey:` forms of `@Property` used below are iOS 18.4+.
+
 ### Overview
 
 **IndexedEntity** dramatically reduces boilerplate by auto-generating Find actions from your Spotlight integration. Instead of manually implementing `EntityQuery` and `EntityPropertyQuery`, adopt IndexedEntity to get:
@@ -866,7 +876,7 @@ struct EventEntity: AppEntity, IndexedEntity {
     var id: UUID
 
     // 1. Properties with indexing keys
-    @Property(title: "Title", indexingKey: \.eventTitle)
+    @Property(title: "Title", indexingKey: \.title)
     var title: String
 
     @Property(title: "Start Date", indexingKey: \.startDate)
@@ -876,7 +886,7 @@ struct EventEntity: AppEntity, IndexedEntity {
     var endDate: Date
 
     // 2. Custom key for properties without standard Spotlight attribute
-    @Property(title: "Notes", customIndexingKey: "eventNotes")
+    @Property(title: "Notes", customIndexingKey: CSCustomAttributeKey(keyName: "eventNotes")!)
     var notes: String?
 
     // Display representation automatically maps to Spotlight
@@ -890,7 +900,7 @@ struct EventEntity: AppEntity, IndexedEntity {
         )
     }
 
-    static var typeDisplayRepresentation: TypeDisplayRepresentation = "Event"
+    static let typeDisplayRepresentation: TypeDisplayRepresentation = "Event"
 }
 ```
 
@@ -899,22 +909,22 @@ struct EventEntity: AppEntity, IndexedEntity {
 #### Standard Spotlight attribute keys
 ```swift
 // Common Spotlight keys for events
-@Property(title: "Title", indexingKey: \.eventTitle)
+@Property(title: "Title", indexingKey: \.title)
 var title: String
 
 @Property(title: "Start Date", indexingKey: \.startDate)
 var startDate: Date
 
-@Property(title: "Location", indexingKey: \.eventLocation)
+@Property(title: "Location", indexingKey: \.namedLocation)
 var location: String?
 ```
 
 #### Custom keys for non-standard attributes
 ```swift
-@Property(title: "Notes", customIndexingKey: "eventNotes")
+@Property(title: "Notes", customIndexingKey: CSCustomAttributeKey(keyName: "eventNotes")!)
 var notes: String?
 
-@Property(title: "Attendee Count", customIndexingKey: "attendeeCount")
+@Property(title: "Attendee Count", customIndexingKey: CSCustomAttributeKey(keyName: "attendeeCount")!)
 var attendeeCount: Int
 ```
 
@@ -971,13 +981,13 @@ extension LandmarkEntity {
 }
 
 // Add entities to index
-func indexLandmarks() async {
+func indexLandmarks() async throws {
     let landmarks = await fetchLandmarks()
-    try await CSSearchableIndex.default().indexAppEntities(landmarks, priority: .normal)
+    try await CSSearchableIndex.default().indexAppEntities(landmarks)
 }
 
 // Remove from index when deleted
-func deleteLandmark(_ landmark: LandmarkEntity) async {
+func deleteLandmark(_ landmark: LandmarkEntity) async throws {
     await dataStore.delete(landmark)
     try await CSSearchableIndex.default().deleteAppEntities(
         identifiedBy: [landmark.id],
@@ -1003,7 +1013,7 @@ struct TripEntity: AppEntity, IndexedEntity {
     @Property(title: "End Date", indexingKey: \.endDate)
     var endDate: Date
 
-    @Property(title: "Destination", customIndexingKey: "destination")
+    @Property(title: "Destination", customIndexingKey: CSCustomAttributeKey(keyName: "destination")!)
     var destination: String
 
     // Auto-generated Find Trips action with filters for all properties
@@ -1029,7 +1039,7 @@ The parameter summary, which is what people will see in Spotlight UI, must conta
 #### ❌ WON'T SHOW in Spotlight
 ```swift
 struct CreateEventIntent: AppIntent {
-    static var title: LocalizedStringResource = "Create Event"
+    static let title: LocalizedStringResource = "Create Event"
 
     @Parameter(title: "Title")
     var title: String
@@ -1058,8 +1068,8 @@ var notes: String? // Optional - can omit from summary
 
 #### ✅ WILL SHOW in Spotlight (Option 2: Provide default)
 ```swift
-@Parameter(title: "Notes")
-var notes: String = "" // Has default - can omit from summary
+@Parameter(title: "Notes", default: "") // Has default - can omit from summary
+var notes: String
 ```
 
 #### ✅ WILL SHOW in Spotlight (Option 3: Include in summary)
@@ -1077,10 +1087,7 @@ Intents hidden from Shortcuts won't appear in Spotlight:
 
 ```swift
 // ❌ Hidden from Spotlight
-static var isDiscoverable: Bool = false
-
-// ❌ Hidden from Spotlight
-static var assistantOnly: Bool = true
+static let isDiscoverable: Bool = false
 
 // ❌ Hidden from Spotlight
 // Intent with no perform() method (widget configuration only)
@@ -1107,6 +1114,12 @@ struct EventEntityQuery: EntityQuery {
 #### Option 2: All Entities (Small, Bounded List)
 ```swift
 struct TimezoneQuery: EnumerableEntityQuery {
+    // EnumerableEntityQuery only supplies a default for `suggestedEntities()` —
+    // `entities(for:)` is still required.
+    func entities(for identifiers: [TimezoneEntity.ID]) async throws -> [TimezoneEntity] {
+        return TimezoneEntity.allTimezones.filter { identifiers.contains($0.id) }
+    }
+
     func allEntities() async throws -> [TimezoneEntity] {
         // Small list - provide all
         return TimezoneEntity.allTimezones
@@ -1119,7 +1132,7 @@ struct TimezoneQuery: EnumerableEntityQuery {
 
 ### On-Screen Content Tagging
 
-Suggest currently active content:
+Suggest currently active content (`NSUserActivity.appEntityIdentifier` is iOS 18.2+):
 
 ```swift
 // In your detail view controller
@@ -1128,7 +1141,7 @@ func showEventDetail(_ event: Event) {
     activity.persistentIdentifier = event.id.uuidString
 
     // Spotlight suggests this event for parameters
-    activity.appEntityIdentifier = event.id.uuidString
+    activity.appEntityIdentifier = EntityIdentifier(for: EventEntity(from: event))
 
     userActivity = activity
 }
@@ -1167,7 +1180,7 @@ struct EventEntity: AppEntity, IndexedEntity {
 ```swift
 // Background intent - runs without opening app
 struct CreateEventIntent: AppIntent {
-    static var supportedModes: IntentModes = .background  // iOS 26+ (was `openAppWhenRun = false`)
+    static let supportedModes: IntentModes = .background  // iOS 26+ (was `openAppWhenRun = false`)
 
     @Parameter(title: "Title")
     var title: String
@@ -1182,16 +1195,20 @@ struct CreateEventIntent: AppIntent {
         )
 
         // Optionally open app to view created event
+        let entity = EventEntity(from: event)
+        let openIntent = OpenEventIntent()
+        openIntent.event = entity
+
         return .result(
-            value: EventEntity(from: event),
-            opensIntent: OpenEventIntent(event: EventEntity(from: event))
+            value: entity,
+            opensIntent: openIntent
         )
     }
 }
 
 // Foreground intent - opens app to specific event
 struct OpenEventIntent: AppIntent {
-    static var supportedModes: IntentModes = .foreground  // iOS 26+ (was `openAppWhenRun = true`)
+    static let supportedModes: IntentModes = .foreground  // iOS 26+ (was `openAppWhenRun = true`)
 
     @Parameter(title: "Event")
     var event: EventEntity
@@ -1217,13 +1234,18 @@ Enable Spotlight suggestions based on usage patterns:
 
 ```swift
 struct OrderCoffeeIntent: AppIntent, PredictableIntent {
-    static var title: LocalizedStringResource = "Order Coffee"
+    static let title: LocalizedStringResource = "Order Coffee"
 
     @Parameter(title: "Coffee Type")
     var coffeeType: CoffeeType
 
     @Parameter(title: "Size")
     var size: CoffeeSize
+
+    // Required by PredictableIntent — without it the conformance fails to compile
+    static var predictionConfiguration: some IntentPredictionConfiguration {
+        IntentPrediction(displayRepresentation: { DisplayRepresentation(title: "Order a coffee") })
+    }
 
     func perform() async throws -> some IntentResult {
         // Order logic
@@ -1261,7 +1283,7 @@ As long as your intent is available on macOS, they will also be available to use
 
 ```swift
 struct ProcessInvoiceIntent: AppIntent {
-    static var title: LocalizedStringResource = "Process Invoice"
+    static let title: LocalizedStringResource = "Process Invoice"
 
     // Available on macOS automatically
     // Also works: iOS apps installed on Mac (Catalyst, Mac Catalyst)
@@ -1327,9 +1349,9 @@ struct SendMessageIntent {
 
 | iOS 18 domains | Added in the 27 cycle `OS27` |
 |---|---|
-| Messages, Mail, Photos, Books, Browser, Camera, Presentation, Spreadsheet, WordProcessor, Reader, Whiteboard, Journal | Calendar, Clock, Maps, Phone, Reminders, Notes, Audio, ImageGeneration, AppStore |
+| Books, Browser, Camera, Files, Journal, Mail, Photos, Presentation, Reader, Spreadsheet, System, Whiteboard, WordProcessor | Audio, Calendar, Clock, Maps, Messages, Notes, Phone, Reminders, ImageGeneration, AppStore |
 
-(VisualIntelligence arrived in the 26 cycle. Discover each domain's exact schemas via Xcode autocomplete on `.<domain>.`)
+(VisualIntelligence arrived in the 26 cycle, Assistant in 26.2. Discover each domain's exact schemas via Xcode autocomplete on `.<domain>.`)
 
 ### Xcode schema-completeness errors `OS27`
 
@@ -1387,14 +1409,15 @@ extension OrderSoupIntent {
 
 #### Issue 1: Intent not appearing in Shortcuts
 ```swift
-// ❌ Problem: isDiscoverable = false or missing
+// ❌ Problem: isDiscoverable = false. A *missing* declaration is not a problem —
+// the SDK default is `true`.
 struct MyIntent: AppIntent {
-    // Missing isDiscoverable
+    static let isDiscoverable: Bool = false
 }
 
-// ✅ Solution: Make discoverable
+// ✅ Solution: set it back to `true` (or delete the line entirely)
 struct MyIntent: AppIntent {
-    static var isDiscoverable: Bool = true
+    static let isDiscoverable: Bool = true
 }
 ```
 
@@ -1409,7 +1432,7 @@ struct ProductEntity: AppEntity {
 // ✅ Solution: Add query
 struct ProductEntity: AppEntity {
     var id: String
-    static var defaultQuery = ProductQuery()
+    static let defaultQuery = ProductQuery()
 }
 ```
 
@@ -1457,15 +1480,15 @@ struct BookQuery: EntityQuery {
 
 #### ❌ DON'T: Generic or unclear
 ```swift
-static var title: LocalizedStringResource = "Do Thing"
-static var title: LocalizedStringResource = "Process"
+static let title: LocalizedStringResource = "Do Thing"
+static let title: LocalizedStringResource = "Process"
 ```
 
 #### ✅ DO: Verb-noun, specific
 ```swift
-static var title: LocalizedStringResource = "Send Message"
-static var title: LocalizedStringResource = "Book Appointment"
-static var title: LocalizedStringResource = "Start Workout"
+static let title: LocalizedStringResource = "Send Message"
+static let title: LocalizedStringResource = "Book Appointment"
+static let title: LocalizedStringResource = "Start Workout"
 ```
 
 ### 2. Parameter Summary
@@ -1539,9 +1562,9 @@ func perform() async throws -> some IntentResult {
 
 ```swift
 struct StartWorkoutIntent: AppIntent {
-    static var title: LocalizedStringResource = "Start Workout"
-    static var description: IntentDescription = "Starts a new workout session"
-    static var supportedModes: IntentModes = .foreground  // iOS 26+ (was `openAppWhenRun = true`)
+    static let title: LocalizedStringResource = "Start Workout"
+    static let description: IntentDescription = "Starts a new workout session"
+    static let supportedModes: IntentModes = .foreground  // iOS 26+ (was `openAppWhenRun = true`)
 
     @Parameter(title: "Workout Type")
     var workoutType: WorkoutType
@@ -1577,8 +1600,8 @@ enum WorkoutType: String, AppEnum {
     case swimming
     case yoga
 
-    static var typeDisplayRepresentation: TypeDisplayRepresentation = "Workout Type"
-    static var caseDisplayRepresentations: [WorkoutType: DisplayRepresentation] = [
+    static let typeDisplayRepresentation: TypeDisplayRepresentation = "Workout Type"
+    static let caseDisplayRepresentations: [WorkoutType: DisplayRepresentation] = [
         .running: "Running",
         .cycling: "Cycling",
         .swimming: "Swimming",
@@ -1600,9 +1623,9 @@ enum WorkoutType: String, AppEnum {
 
 ```swift
 struct AddTaskIntent: AppIntent {
-    static var title: LocalizedStringResource = "Add Task"
-    static var description: IntentDescription = "Creates a new task"
-    static var isDiscoverable: Bool = true
+    static let title: LocalizedStringResource = "Add Task"
+    static let description: IntentDescription = "Creates a new task"
+    static let isDiscoverable: Bool = true
 
     @Parameter(title: "Title")
     var title: String
@@ -1639,7 +1662,7 @@ struct TaskListEntity: AppEntity {
     var name: String
     var color: String
 
-    static var typeDisplayRepresentation: TypeDisplayRepresentation = "List"
+    static let typeDisplayRepresentation: TypeDisplayRepresentation = "List"
 
     var displayRepresentation: DisplayRepresentation {
         DisplayRepresentation(
@@ -1648,7 +1671,7 @@ struct TaskListEntity: AppEntity {
         )
     }
 
-    static var defaultQuery = TaskListQuery()
+    static let defaultQuery = TaskListQuery()
 }
 
 struct TaskListQuery: EntityQuery, EntityStringQuery {

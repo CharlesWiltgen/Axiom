@@ -87,6 +87,8 @@ editVC.editViewDelegate = self
 present(editVC, animated: true)
 ```
 
+**Swift 6 note**: `editViewDelegate = self` only compiles if `self`'s conformance is declared `@preconcurrency` — `UIViewController` is `@MainActor` and `EKEventEditViewDelegate` carries no actor annotation, so a plain conformance fails with `conformance of 'MyViewController' to protocol 'EKEventEditViewDelegate' crosses into main actor-isolated code and can cause data races`. Same for `EKEventViewDelegate` and `EKCalendarChooserDelegate` (see **eventkit-ref**, Part 7).
+
 **Why this is best**: No permission prompt. No denial risk. System handles Calendar selection and save. Works on iOS 4+.
 
 For reservations (restaurant, flight, hotel, event tickets), use **Siri Event Suggestions** instead — events appear in Calendar inbox without any permission. See the eventkit-ref skill for the INReservation donation pattern.
@@ -147,9 +149,8 @@ guard try await store.requestFullAccessToReminders() else { return }
 
 | Pattern | Time Cost | Why It's Wrong | Fix |
 |---------|-----------|----------------|-----|
-| Requesting full access for "add to calendar" | 1-2 sprint days recovering denied users | Full access prompts are denied 30%+ of the time — users distrust reading ALL calendar data | Use EventKitUI or write-only |
-| Missing Info.plist key on iOS 17+ | 1-2 hours debugging | Automatic silent denial, no crash, no error, no prompt | Add the correct usage description key |
-| Missing Info.plist key on iOS 16 and below | Immediate crash | App crashes on permission request | Add `NSCalendarsUsageDescription` |
+| Requesting full access for "add to calendar" | 1-2 sprint days recovering denied users | Full access asks for the entire calendar when the app only needs to add one event | Use EventKitUI or write-only |
+| Omitting the access-level usage-description key | 1-2 hours debugging | Not a silent denial — EventKit falls back to `NSCalendarsUsageDescription` / `NSRemindersUsageDescription`, so the prompt shows the older string (TN3153) | Add the key that matches the access level you request |
 | Calling deprecated `requestAccess(to:)` on iOS 17 | Throws error | The old API throws, does not prompt | Use `requestFullAccessToEvents()` or `requestWriteOnlyAccessToEvents()` |
 | Creating multiple EKEventStore instances | Stale data bugs | Objects from one store cannot be used with another | Create one store, reuse it |
 | Using `Date` math instead of `DateComponents` for durations | DST bugs | Adding 3600 seconds doesn't always equal 1 hour | Use `Calendar.current.date(byAdding:)` |
@@ -178,7 +179,7 @@ if let dueDate = dueDate {
     )
 }
 
-reminder.priority = EKReminderPriority.medium.rawValue
+reminder.priority = Int(EKReminderPriority.medium.rawValue)
 try store.save(reminder, commit: true)
 ```
 
@@ -187,16 +188,21 @@ try store.save(reminder, commit: true)
 Unlike events, reminder fetches are asynchronous:
 
 ```swift
+// [EKReminder] is not Sendable, so the continuation's `sending` result cannot carry it.
+// Box it to move the array across the isolation boundary.
+struct Box<T>: @unchecked Sendable { let value: T }
+
 let predicate = store.predicateForReminders(in: nil)  // nil = all calendars
-let reminders = try await withCheckedThrowingContinuation { continuation in
+let box: Box<[EKReminder]> = try await withCheckedThrowingContinuation { continuation in
     store.fetchReminders(matching: predicate) { reminders in
         if let reminders {
-            continuation.resume(returning: reminders)
+            continuation.resume(returning: Box(value: reminders))
         } else {
             continuation.resume(throwing: TodayError.failedReadingReminders)
         }
     }
 }
+let reminders = box.value
 ```
 
 ### Creating Reminder Lists
@@ -262,17 +268,6 @@ try store.commit()  // Atomic save
 | `NSRemindersUsageDescription` | `NSRemindersFullAccessUsageDescription` |
 | `authorizationStatus == .authorized` | Check for `.fullAccess` or `.writeOnly` |
 
-**Runtime compatibility**:
-```swift
-if #available(iOS 17.0, *) {
-    granted = try await store.requestFullAccessToEvents()
-} else {
-    granted = try await store.requestAccess(to: .event)
-}
-```
-
-**Keep old Info.plist keys** alongside new ones to support iOS 16 and below.
-
 **Gotcha**: Apps built with older Xcode SDKs map both `.writeOnly` and `.fullAccess` to `.authorized`. This means an app linked against an old SDK may fail to fetch events even after users granted full access — because the app sees `.authorized` but the system gave `.writeOnly`.
 
 ---
@@ -299,7 +294,7 @@ if #available(iOS 17.0, *) {
 
 **Pressure**: Product manager asks for full access "just in case."
 
-**Why resist**: Full access prompts are denied 30%+ of the time. Write-only or EventKitUI gets you event creation with near-zero denials. You can always upgrade later if a reading feature is added.
+**Why resist**: Write-only or EventKitUI gets you event creation without asking to read the user's calendar. You can always upgrade later if a reading feature is added.
 
 **Response**: "Full access shows a scary prompt about reading ALL calendar data. For adding events, EventKitUI needs no prompt at all. Let's start there and upgrade if we ship a feature that reads events."
 
@@ -307,9 +302,9 @@ if #available(iOS 17.0, *) {
 
 **Pressure**: Deadline pressure to skip migration from `requestAccess(to:)`.
 
-**Why resist**: On iOS 17, calling `requestAccess(to: .event)` throws an error — no prompt, no access, broken feature. Users on iOS 17+ get a silent failure.
+**Why resist**: TN3152: "If your app links against the iOS 17 SDK, macOS 14 SDK, or watchOS 10 SDK, calling these deprecated request methods doesn't prompt the user for access and throws an error message." The trigger is SDK linkage, not the runtime OS — every app built today links that SDK or later, so `requestAccess(to:)` throws on whatever OS version the app runs on.
 
-**Response**: "The deprecated API throws on iOS 17. It's not 'deprecated but works' — it's broken. The fix is a 3-line `#available` check."
+**Response**: "The deprecated API throws — it's not 'deprecated but works'. The fix is to call `requestFullAccessToEvents()` or `requestWriteOnlyAccessToEvents()`; the replacement is a different call, not a version check."
 
 ### Scenario 3: "Just create a new EKEventStore for each screen"
 
@@ -341,6 +336,6 @@ Key `EKErrorDomain` codes to handle:
 
 **WWDC**: 2023-10052, 2020-10197
 
-**Docs**: /eventkit, /eventkitui, /technotes/tn3152, /technotes/tn3153
+**Docs**: /eventkit, /eventkitui, /technotes/tn3152-migrating-to-the-latest-calendar-access-levels, /technotes/tn3153-adopting-api-changes-for-eventkit-in-ios-macos-and-watchos
 
 **Skills**: eventkit-ref, contacts, privacy-ux, extensions-widgets

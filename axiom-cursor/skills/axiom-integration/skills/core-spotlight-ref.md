@@ -68,8 +68,8 @@ func indexOrder(_ order: Order) {
     attributes.thumbnailData = order.imageData
 
     // Optional: Add location
-    attributes.latitude = order.location.coordinate.latitude
-    attributes.longitude = order.location.coordinate.longitude
+    attributes.latitude = NSNumber(value: order.location.coordinate.latitude)
+    attributes.longitude = NSNumber(value: order.location.coordinate.longitude)
 
     // Optional: Add rating
     attributes.rating = NSNumber(value: order.rating)
@@ -172,14 +172,15 @@ attributes.comment = "My favorite order"
 | `contentCreationDate` | When created | Date() |
 | `contentModificationDate` | Last modified | Date() |
 | `rating` | Star rating | NSNumber(value: 5) |
-| `latitude` / `longitude` | Location | 37.7749, -122.4194 |
+| `latitude` / `longitude` | Location | NSNumber(value: 37.7749) |
 
 #### Document-Specific Attributes
 
 ```swift
 // For document types
-attributes.contentType = UTType.pdf
-attributes.author = "John Doe"
+// contentType on the attribute set is the UTI string (only the initializer takes a UTType)
+attributes.contentType = UTType.pdf.identifier
+attributes.creator = "John Doe"
 attributes.pageCount = 10
 attributes.fileSize = 1024000
 attributes.path = "/path/to/document.pdf"
@@ -189,7 +190,7 @@ attributes.path = "/path/to/document.pdf"
 
 ```swift
 // For messages
-attributes.recipients = ["jane@example.com"]
+attributes.recipientEmailAddresses = ["jane@example.com"]
 attributes.recipientNames = ["Jane Doe"]
 attributes.authorNames = ["John Doe"]
 attributes.subject = "Meeting notes"
@@ -220,8 +221,6 @@ CSSearchableIndex.default().indexSearchableItems(items) { error in
     }
 }
 ```
-
-**Recommended batch size** 100-500 items per call. For larger sets, split into multiple batches.
 
 ---
 
@@ -281,10 +280,26 @@ struct OrderEntity: AppEntity, IndexedEntity {
     @Property(title: "Date", indexingKey: \.contentCreationDate)
     var orderDate: Date
 
-    static var typeDisplayRepresentation: TypeDisplayRepresentation = "Order"
+    static let typeDisplayRepresentation: TypeDisplayRepresentation = "Order"
+    static let defaultQuery = OrderEntityQuery()
 
     var displayRepresentation: DisplayRepresentation {
         DisplayRepresentation(title: "\(coffeeName)", subtitle: "Order from \(orderDate.formatted())")
+    }
+
+    // @Property wraps these in EntityProperty, so the synthesized memberwise
+    // initializer takes wrapper values — declare an explicit init for plain values
+    init(id: UUID, coffeeName: String, orderDate: Date) {
+        self.id = id
+        self.coffeeName = coffeeName
+        self.orderDate = orderDate
+    }
+}
+
+struct OrderEntityQuery: EntityQuery {
+    func entities(for identifiers: [UUID]) async throws -> [OrderEntity] {
+        // orderStore.entities(for:): your app's persistence lookup
+        []
     }
 }
 
@@ -293,6 +308,8 @@ let order = OrderEntity(id: UUID(), coffeeName: "Latte", orderDate: Date())
 let item = CSSearchableItem(appEntity: order)
 CSSearchableIndex.default().indexSearchableItems([item])
 ```
+
+**Note** `IndexedEntity` supplies no `defaultQuery` — declare one, as above (adopt `IndexedEntityQuery` (iOS 27+) rather than `EntityQuery` if your app also answers the system's reindex requests). The `indexingKey:` form of `@Property` is iOS 18.4+.
 
 #### Associate Entity with Existing Item
 ```swift
@@ -306,7 +323,7 @@ let item = CSSearchableItem(
 )
 
 // Associate with App Intent entity
-item.associateAppEntity(orderEntity, priority: .default)
+item.associateAppEntity(orderEntity)
 ```
 
 **Benefits:**
@@ -393,7 +410,7 @@ for await reply in tool.searchResults {
 }
 ```
 
-`SearchReply` carries `content`, an optional LLM-generated `label` describing the content, `queryToken` / `stageToken` (Hashable tokens — use `queryToken` to detect when the model issued a new query and the UI should refresh), and `status` (`.partial` / `.complete`). `Content` cases: `.items([CSSearchableItem])`, `.groupedItems([SearchableItemAttribute: [CSSearchableItem]])`, `.scoredItems([ScoredSearchableItem])`, `.count(SearchCount)`, `.table(SearchResultsTable)`, `.statistic(SearchStatistic)`, `.text(SearchTextResult)`.
+`SearchReply` carries `content`, an optional LLM-generated `label` describing the content, `queryToken` / `stageToken` (Hashable tokens — use `queryToken` to detect when the model issued a new query and the UI should refresh), and `status` (`.partial` / `.complete`). `Content` cases: `.items([SearchableItem])`, `.groupedItems([SearchableItemAttribute: [SearchableItem]])`, `.scoredItems([ScoredSearchableItem])`, `.count(SearchCount)`, `.table(SearchResultsTable)`, `.statistic(SearchStatistic)`, `.text(SearchTextResult)`.
 
 ### Guidance Profiles
 
@@ -445,15 +462,15 @@ struct HappinessStage: CustomStage {
     static let name = "happiness"
     static let description = "Scores hikes by how happy the author was"
     static let inputTypes: [SearchPipelineDataType] = [.items]
-    static let outputTypes: [SearchPipelineDataType] = [.scoredItems]
+    static let outputType: SearchPipelineDataType = .scoredItems
 
     @Guide(description: "Minimum happiness score (0.0-1.0) to include in results")
     var threshold: Double?
 
-    func execute(items: [CSSearchableItem]) async throws -> SearchPipelineData {
+    func execute(items: [SearchableItem]) async throws -> SearchPipelineData {
         // score(for:): your sentiment/rating logic
         let scored = items.compactMap { item -> ScoredSearchableItem? in
-            let value = score(for: item)
+            let value = score(for: item.item)
             if let threshold, value < threshold { return nil }
             return ScoredSearchableItem(item: item, score: value)
         }
@@ -466,9 +483,7 @@ let tool = SpotlightSearchTool(
 )
 ```
 
-The protocol declares **typed `execute` overloads** — `execute(items:)`, `execute(scoredItems:)`, `execute(groupedItems:)`, `execute(count:)`, `execute(table:)`, `execute(statisticName:value:)`, `execute(text:)` — implement the ones matching your declared `inputTypes` (the session's slideware shows a single `execute(on:)` that does not exist in the SDK). `SearchPipelineData.Payload` mirrors the reply content cases; stage outputs can flow back to your UI as `searchResults` replies with LLM-generated labels.
-
-Deliberately not documented here: the overlay's public `UTTypeResolutionStrategy` / `UTTypeHierarchyStrategy` / `UTTypeResolutionResult` types and `CoreSpotlightSource.sourceOptions` (a `CSSearchQueryContext.SourceOptions` passthrough) — no session or doc coverage yet; revisit when Apple documents them.
+The protocol declares **typed `execute` overloads** — `execute(items:)`, `execute(scoredItems:)`, `execute(groupedItems:)`, `execute(count:)`, `execute(table:)`, `execute(statistic:value:)`, `execute(text:)` — implement the ones matching your declared `inputTypes` (the session's slideware shows a single `execute(on:)` that does not exist in the SDK). `SearchPipelineData.Payload` mirrors the reply content cases; stage outputs can flow back to your UI as `searchResults` replies with LLM-generated labels.
 
 ### Evaluating Responses
 
@@ -605,9 +620,10 @@ struct OrderDetailView: View {
 
 ### App Intents Integration (appEntityIdentifier)
 
-Connect NSUserActivity to App Intent entities.
+Connect NSUserActivity to App Intent entities (`NSUserActivity.appEntityIdentifier` is iOS 18.2+).
 
 ```swift
+@available(iOS 18.2, *)
 func viewOrder(_ order: Order) {
     let activity = NSUserActivity(activityType: "com.app.viewOrder")
     activity.title = order.coffeeName
@@ -616,7 +632,7 @@ func viewOrder(_ order: Order) {
 
     // Connect to App Intent entity (EntityIdentifier comes from AppIntents;
     // OrderEntity is your AppEntity type — a raw String does not compile)
-    activity.appEntityIdentifier = EntityIdentifier(for: OrderEntity.self, identifier: order.id.uuidString)
+    activity.appEntityIdentifier = EntityIdentifier(for: OrderEntity.self, identifier: order.id)
 
     // Now Spotlight can surface this as an entity suggestion
     activity.becomeCurrent()
@@ -633,15 +649,16 @@ func viewOrder(_ order: Order) {
 
 ### On-Screen Content Tagging
 
-**Pattern from WWDC** Tag currently visible content for Spotlight parameter suggestions.
+**Pattern from WWDC** Tag currently visible content for Spotlight parameter suggestions (`NSUserActivity.appEntityIdentifier` is iOS 18.2+).
 
 ```swift
+@available(iOS 18.2, *)
 func showEvent(_ event: Event) {
     let activity = NSUserActivity(activityType: "com.app.viewEvent")
     activity.persistentIdentifier = event.id.uuidString
 
     // Spotlight suggests this event for intent parameters
-    activity.appEntityIdentifier = EntityIdentifier(for: EventEntity.self, identifier: event.id.uuidString)
+    activity.appEntityIdentifier = EntityIdentifier(for: EventEntity.self, identifier: event.id)
 
     activity.becomeCurrent()
     userActivity = activity
@@ -652,7 +669,7 @@ func showEvent(_ event: Event) {
 
 ---
 
-### Quick Note Integration (macOS/iPadOS)
+### Quick Note Integration (macOS/iOS)
 
 For Quick Note linking, activities must:
 1. Be the app's **current activity** (via `becomeCurrent()`)
@@ -808,7 +825,7 @@ CSSearchableIndex.default().fetchLastClientState { clientState, error in
 ### Common Issues
 
 #### Items not appearing in Spotlight
-- Wait 1-2 minutes for indexing
+- Indexing is asynchronous — the completion handler fires once the data is journaled, so check its error rather than waiting out a fixed delay
 - Verify `isEligibleForSearch = true`
 - Check System Settings → Siri & Search → [App] → Show App in Search
 - Restart device
@@ -867,13 +884,15 @@ CSSearchableIndex.default().deleteSearchableItems(withDomainIdentifiers: ["order
 
 ### 3. Set Expiration Dates
 
-#### ❌ DON'T: Index items forever
+**Default** An item with no explicit `expirationDate` expires **one month** after indexing.
+
+#### ❌ DON'T: Leave long-lived content on the one-month default
 ```swift
-// Bad: Items never expire
+// Bad: no expirationDate — the item silently drops out of search after a month
 let item = CSSearchableItem(/* ... */)
 ```
 
-#### ✅ DO: Set reasonable expiration
+#### ✅ DO: Set an expiration that matches the content's lifetime
 ```swift
 // Good: Expire after 1 year
 item.expirationDate = Date().addingTimeInterval(60 * 60 * 24 * 365)
@@ -938,7 +957,9 @@ func application(
 import CoreSpotlight
 import UniformTypeIdentifiers
 
-class OrderManager {
+final class OrderManager: Sendable {
+
+    static let shared = OrderManager()
 
     // MARK: - Core Spotlight Indexing
 
@@ -975,7 +996,7 @@ class OrderManager {
         // Delete NSUserActivity
         NSUserActivity.deleteSavedUserActivities(
             withPersistentIdentifiers: [orderID.uuidString]
-        )
+        ) { }
     }
 
     func deleteAllOrders() {
@@ -986,6 +1007,7 @@ class OrderManager {
 
     // MARK: - NSUserActivity for Current Screen
 
+    @available(iOS 18.2, *)
     func createActivityForOrder(_ order: Order) -> NSUserActivity {
         let activity = NSUserActivity(activityType: "com.coffeeapp.viewOrder")
         activity.title = order.coffeeName
@@ -994,7 +1016,7 @@ class OrderManager {
         activity.persistentIdentifier = order.id.uuidString
 
         // Connect to App Intents
-        activity.appEntityIdentifier = EntityIdentifier(for: OrderEntity.self, identifier: order.id.uuidString)
+        activity.appEntityIdentifier = EntityIdentifier(for: OrderEntity.self, identifier: order.id)
 
         // Rich metadata
         let attributes = CSSearchableItemAttributeSet(contentType: .item)
@@ -1027,6 +1049,7 @@ class OrderDetailViewController: UIViewController {
 }
 
 // SwiftUI view
+@available(iOS 18.2, *)
 struct OrderDetailView: View {
     let order: Order
 
@@ -1043,7 +1066,7 @@ struct OrderDetailView: View {
             activity.isEligibleForSearch = true
             activity.isEligibleForPrediction = true
             activity.persistentIdentifier = order.id.uuidString
-            activity.appEntityIdentifier = EntityIdentifier(for: OrderEntity.self, identifier: order.id.uuidString)
+            activity.appEntityIdentifier = EntityIdentifier(for: OrderEntity.self, identifier: order.id)
 
             let attributes = CSSearchableItemAttributeSet(contentType: .item)
             attributes.title = order.coffeeName

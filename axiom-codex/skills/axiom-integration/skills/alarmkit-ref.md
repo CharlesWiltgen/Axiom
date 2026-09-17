@@ -9,7 +9,7 @@ AlarmKit lets apps create alarms and timers that behave like the built-in Clock 
 
 ## System Requirements
 
-- **iOS 26+** (AlarmKit introduced in iOS 26). Not available on macCatalyst.
+- **iOS 26.1+ as written** — AlarmKit itself ships in iOS 26.0, but `AlarmPresentation.Alert(title:secondaryButton:secondaryButtonBehavior:)`, the initializer every alert example below uses, is **iOS 26.1+**. Not available on macCatalyst.
 - **Widget Extension** required for Live Activity / Dynamic Island presentation
 - **Physical device** recommended for alarm sound and notification testing
 
@@ -151,7 +151,7 @@ Build the configuration with the `.alarm(...)` / `.timer(...)` factory methods, 
 
 ### One-Time Alarm
 
-The system supplies the stop button automatically; you only configure the title and any secondary action. (The `stopButton` parameter was deprecated in iOS 26.1 and is no longer used.)
+The system supplies the stop button automatically; you only configure the title and any secondary action. This `title:secondaryButton:secondaryButtonBehavior:` initializer is **iOS 26.1+**; the older `title:stopButton:...` form is iOS 26.0, but its `stopButton` parameter was deprecated in iOS 26.1 and is no longer used.
 
 ```swift
 let id = UUID()
@@ -375,7 +375,7 @@ let alarms = try AlarmManager.shared.alarms
 These mutating operations are **synchronous** `throws` functions -- do not call them with `await`:
 
 ```swift
-try AlarmManager.shared.countdown(id: alarmID)  // Start the countdown
+try AlarmManager.shared.countdown(id: alarmID)  // Snooze/repeat; throws unless the alarm is alerting
 try AlarmManager.shared.pause(id: alarmID)
 try AlarmManager.shared.resume(id: alarmID)
 try AlarmManager.shared.stop(id: alarmID)       // Stop a ringing alarm
@@ -458,21 +458,21 @@ struct AlarmWidgetView: Widget {
 ```swift
 import AlarmKit
 
+@MainActor
 @Observable
 class AlarmViewModel {
     var alarms: [Alarm] = []
-    private let manager = AlarmManager.shared
 
     func requestAuthorization() {
         Task {
-            _ = try? await manager.requestAuthorization()
+            _ = try? await AlarmManager.shared.requestAuthorization()
         }
     }
 
     func loadAndObserve() {
         Task {
-            alarms = (try? manager.alarms) ?? []
-            for await updated in manager.alarmUpdates {
+            alarms = (try? AlarmManager.shared.alarms) ?? []
+            for await updated in AlarmManager.shared.alarmUpdates {
                 alarms = updated
             }
         }
@@ -504,19 +504,19 @@ class AlarmViewModel {
                 sound: .default
             )
 
-            _ = try? await manager.schedule(id: UUID(), configuration: config)
+            _ = try? await AlarmManager.shared.schedule(id: UUID(), configuration: config)
         }
     }
 
     func cancel(id: UUID) {
-        try? manager.cancel(id: id)   // synchronous
+        try? AlarmManager.shared.cancel(id: id)   // synchronous
     }
 
     func togglePause(id: UUID, isPaused: Bool) {
         if isPaused {
-            try? manager.resume(id: id)
+            try? AlarmManager.shared.resume(id: id)
         } else {
-            try? manager.pause(id: id)
+            try? AlarmManager.shared.pause(id: id)
         }
     }
 }

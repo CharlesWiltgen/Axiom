@@ -5,7 +5,7 @@
 
 **Purpose**: Guide robust, testable in-app purchase implementation
 **StoreKit Version**: StoreKit 2
-**iOS Version**: iOS 15+ (26.4+ for commitment billing plans)
+**iOS Version**: iOS 17+ (`Transaction.currentEntitlements(for:)` 18.4+; 26.4+ for commitment billing plans)
 **Xcode**: Xcode 13+ (Xcode 16+ recommended)
 **Context**: WWDC 2025-241, 2025-249, 2023-10013, 2021-10114, 2026-210, 2026-378
 
@@ -24,7 +24,7 @@
 - Family Sharing support
 
 ❌ **Do NOT use this skill for**:
-- StoreKit 1 (legacy API) - this skill focuses on StoreKit 2
+- StoreKit 1 (deprecated as of iOS 18.0) - this skill focuses on StoreKit 2
 - App Store Connect product configuration (separate documentation)
 - Pricing strategy or business model decisions
 
@@ -148,15 +148,15 @@ Before marking IAP implementation complete, **ALL** items must be verified:
 - [ ] Product loading happens at app launch or before displaying store
 
 ### Phase 3: Purchase Flow
-- [ ] Purchase uses new `purchase(confirmIn:options:)` with UI context (iOS 18.2+)
-- [ ] Purchase handles all `PurchaseResult` cases (success, userCancelled, pending)
+- [ ] Purchase uses `purchase(confirmIn:options:)` with UI context (the `UIScene` overload is iOS 17+, the `UIViewController` overload 18.2+)
+- [ ] Purchase handles all `Product.PurchaseResult` cases (success, userCancelled, pending)
 - [ ] Purchase verifies transaction signature before granting entitlement
 - [ ] Purchase stores transaction receipt/identifier for support
 - [ ] appAccountToken set for all purchases (if using server backend)
 
 ### Phase 4: Subscription Management (if applicable)
 - [ ] Subscription status tracked via `Product.SubscriptionInfo.Status`
-- [ ] Current entitlements checked via `Transaction.currentEntitlements(for:)`
+- [ ] Current entitlements checked via `Transaction.currentEntitlements(for:)` (iOS 18.4+)
 - [ ] Renewal info accessed for expiration, renewal date, offer status
 - [ ] Subscription views use ProductView or SubscriptionStoreView
 - [ ] Win-back offers implemented for expired subscriptions
@@ -299,10 +299,12 @@ extension StoreManager {
 ```swift
 extension StoreManager {
     func listenForTransactions() -> Task<Void, Never> {
-        // `Task.detached` because `StoreManager` is @MainActor; the loop must
-        // NOT run on main (it would block UI). The `await self?.handleTransaction`
-        // call hops back to main where needed. In Swift 6.2+, you can keep the
-        // loop on a regular `Task {}` if `handleTransaction` is marked `@concurrent`.
+        // `Task.detached` because `StoreManager` is @MainActor. The loop
+        // suspends between updates, so it would not block the UI on main
+        // either — detaching just keeps the main actor free between updates.
+        // The `await self?.handleTransaction` call hops back to main where
+        // needed. In Swift 6.2+, you can keep the loop on a regular `Task {}`
+        // if `handleTransaction` is marked `@concurrent`.
         Task.detached { [weak self] in
             // Listen for ALL transaction updates
             for await verificationResult in Transaction.updates {
@@ -339,7 +341,9 @@ extension StoreManager {
 
 > iOS 27 ships a redesigned system payment sheet that works in landscape — game players can unlock content and keep playing without rotating. The sheet presentation APIs below are unchanged.
 
-### Purchase with UI Context (iOS 18.2+)
+### Purchase with UI Context (iOS 17+)
+
+`Product.purchase(confirmIn:options:)` takes a scene (`some UIScene`) from iOS 17, or a `UIViewController` from iOS 18.2 — pass whichever your app has in hand when it presents the payment sheet.
 
 ```swift
 extension StoreManager {
@@ -474,7 +478,8 @@ func grantEntitlement(for transaction: Transaction) async {
     case .nonConsumable:
         await unlockFeature(productID: transaction.productID)
 
-    case .autoRenewable:
+    case .autoRenewable, .nonRenewable:
+        // Auto-renewable and non-renewing subscriptions both gate subscriber access
         await activateSubscription(productID: transaction.productID)
 
     default:
@@ -513,6 +518,8 @@ extension StoreManager {
 
 ### Check Specific Product
 
+`Transaction.currentEntitlements(for:)` is iOS 18.4+; below that, the single-result `Transaction.currentEntitlement(for:)` is the available form (deprecated in 18.4 in favour of the plural one).
+
 ```swift
 func isEntitled(to productID: String) async -> Bool {
     // Check current entitlements for specific product
@@ -539,12 +546,12 @@ func isEntitled(to productID: String) async -> Bool {
 extension StoreManager {
     func checkSubscriptionStatus(for groupID: String) async -> Product.SubscriptionInfo.Status? {
         // Get subscription statuses for group
-        guard let result = try? await Product.SubscriptionInfo.status(for: groupID),
-              let status = result.first else {
+        guard let statuses = try? await Product.SubscriptionInfo.status(for: groupID),
+              let current = statuses.first else {
             return nil
         }
 
-        return status.state
+        return current
     }
 }
 ```
@@ -571,10 +578,11 @@ func updateSubscriptionUI(for status: Product.SubscriptionInfo.Status) {
         showBillingRetryMessage()
 
     case .revoked:
-        // Family Sharing access removed
+        // App Store revoked access to the subscription group
+        // (e.g. a refund, or a Family Sharing revocation)
         removeAccess()
 
-    @unknown default:
+    default:
         break
     }
 }
@@ -677,28 +685,48 @@ extension StoreManager {
 ### Mock Store Responses
 
 ```swift
+@MainActor
 protocol StoreProtocol {
     func products(for ids: [String]) async throws -> [Product]
-    func purchase(_ product: Product) async throws -> PurchaseResult
+    func purchase(_ product: Product) async throws -> Product.PurchaseResult
 }
 
 // Production
+@MainActor
 final class StoreManager: StoreProtocol {
+    private let store: StoreProtocol
+    private(set) var purchasedProductIDs: Set<String> = []
+
+    init(store: StoreProtocol) {
+        self.store = store
+    }
+
     func products(for ids: [String]) async throws -> [Product] {
-        try await Product.products(for: ids)
+        try await store.products(for: ids)
+    }
+
+    func purchase(_ product: Product) async throws -> Product.PurchaseResult {
+        let result = try await store.purchase(product)
+        if case .success(let verificationResult) = result,
+           let transaction = try? verificationResult.payloadValue {
+            purchasedProductIDs.insert(transaction.productID)
+            await transaction.finish()
+        }
+        return result
     }
 }
 
 // Testing
+@MainActor
 final class MockStore: StoreProtocol {
     var mockProducts: [Product] = []
-    var mockPurchaseResult: PurchaseResult?
+    var mockPurchaseResult: Product.PurchaseResult?
 
     func products(for ids: [String]) async throws -> [Product] {
         mockProducts
     }
 
-    func purchase(_ product: Product) async throws -> PurchaseResult {
+    func purchase(_ product: Product) async throws -> Product.PurchaseResult {
         mockPurchaseResult ?? .userCancelled
     }
 }
@@ -707,7 +735,7 @@ final class MockStore: StoreProtocol {
 ### Test Purchase Logic
 
 ```swift
-@Test func testSuccessfulPurchase() async {
+@Test @MainActor func testSuccessfulPurchase() async throws {
     let mockStore = MockStore()
     let manager = StoreManager(store: mockStore)
 
@@ -715,14 +743,17 @@ final class MockStore: StoreProtocol {
     mockStore.mockPurchaseResult = .success(.verified(mockTransaction))
 
     // When: Purchase product
-    let result = await manager.purchase(mockProduct)
+    let result = try await manager.purchase(mockProduct)
 
-    // Then: Entitlement granted
-    #expect(result == true)
+    // Then: Purchase succeeded and the entitlement was recorded
+    guard case .success = result else {
+        Issue.record("Expected a successful purchase")
+        return
+    }
     #expect(manager.purchasedProductIDs.contains("com.app.premium"))
 }
 
-@Test func testCancelledPurchase() async {
+@Test @MainActor func testCancelledPurchase() async throws {
     let mockStore = MockStore()
     let manager = StoreManager(store: mockStore)
 
@@ -730,10 +761,13 @@ final class MockStore: StoreProtocol {
     mockStore.mockPurchaseResult = .userCancelled
 
     // When: Purchase product
-    let result = await manager.purchase(mockProduct)
+    let result = try await manager.purchase(mockProduct)
 
     // Then: No entitlement granted
-    #expect(result == false)
+    guard case .userCancelled = result else {
+        Issue.record("Expected a cancelled purchase")
+        return
+    }
     #expect(manager.purchasedProductIDs.isEmpty)
 }
 ```
@@ -894,6 +928,7 @@ using Apple.StoreKit;
 
 // Fetch and purchase
 var products = await Product.FetchProducts(new[] { "com.thecoast.capecod" });
+var product = products[0];   // the product the user selected
 var result = await product.Purchase();
 if (result.Result == PurchaseResult.ResultEnum.Success
     && result.TransactionVerification.IsVerified) {
@@ -904,7 +939,7 @@ if (result.Result == PurchaseResult.ResultEnum.Success
 // Lifecycle listener (register at app startup)
 Transaction.Updates += OnUpdate;
 
-async void OnUpdate(VerificationResult<Transaction> result) {
+void OnUpdate(object sender, VerificationResult<Transaction> result) {
     if (!result.IsVerified) return;
     var verifiedTransaction = result.SafePayload;
     if (verifiedTransaction.ProductType == ProductType.ProductTypeEnum.Consumable) {

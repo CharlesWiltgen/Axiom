@@ -74,7 +74,7 @@ Questions you can ask Claude that will draw from this reference:
 | File timestamp | `NSFileCreationDate`, `NSFileModificationDate` | C617.1 |
 | System boot time | `systemUptime`, `mach_absolute_time` | 35F9.1 |
 | Disk space | `NSFileSystemFreeSize` | E174.1 |
-| User defaults | `UserDefaults` (cross-app) | CA92.1 |
+| User defaults | `UserDefaults` | CA92.1 (same app), 1C8F.1 (same App Group) |
 
 ## Documentation Scope
 

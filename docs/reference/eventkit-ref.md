@@ -5,7 +5,7 @@ description: Complete EventKit and EventKitUI API reference — EKEventStore, EK
 
 # EventKit Reference
 
-Complete API reference for EventKit (programmatic access to the Calendar and Reminders databases) and EventKitUI (system view controllers for calendar UI). For tier-based access decisions, denial-rate framing, and pressure scenarios, see the EventKit discipline coverage in [eventkit-contacts](/skills/integration/eventkit-contacts).
+Complete API reference for EventKit (programmatic access to the Calendar and Reminders databases) and EventKitUI (system view controllers for calendar UI). For the access-tier decision tree and best practices, see the EventKit discipline coverage in [eventkit-contacts](/skills/integration/eventkit-contacts).
 
 **Platform**: iOS 4.0+, iPadOS 4.0+, macOS 10.8+, Mac Catalyst 13.1+, watchOS 2.0+, visionOS 1.0+
 
@@ -59,7 +59,7 @@ Use this reference when you need:
 
 This page documents the `eventkit-ref` skill — the API reference half of the EventKit pair.
 
-- For **the three-tier access decision, denial-rate framing, and pressure scenarios**, see [eventkit-contacts](/skills/integration/eventkit-contacts)
+- For **the three-tier access decision and pressure scenarios**, see [eventkit-contacts](/skills/integration/eventkit-contacts)
 - For **general permission UX patterns**, see [privacy-ux](/skills/integration/privacy-ux)
 - For **contacts framework APIs**, see [contacts-ref](/reference/contacts-ref)
 
@@ -67,4 +67,4 @@ This page documents the `eventkit-ref` skill — the API reference half of the E
 
 **WWDC**: 2023-10052, 2020-10197
 
-**Docs**: /eventkit, /eventkitui, /technotes/tn3152, /technotes/tn3153
+**Docs**: /eventkit, /eventkitui, /technotes/tn3152-migrating-to-the-latest-calendar-access-levels, /technotes/tn3153-adopting-api-changes-for-eventkit-in-ios-macos-and-watchos

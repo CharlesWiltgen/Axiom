@@ -1,14 +1,16 @@
 
 # WeatherKit — Apple Weather Data
 
-WeatherKit gives your app current conditions, minute/hourly/daily forecasts, severe-weather alerts, and historical averages from the Apple Weather service. The Swift API is a one-liner — `WeatherService.shared.weather(for:)` — but two things will sink you if you skip them: **mandatory attribution** (App Review rejects without it) and the **500,000-call/month quota** (every full fetch counts).
+WeatherKit gives your app current conditions, minute/hourly/daily forecasts, severe-weather alerts, and historical averages from the Apple Weather service. The Swift API is a one-liner — `WeatherService.shared.weather(for:)` — but two things will sink you if you skip them: **mandatory attribution** (App Review rejects without it) and the **500,000-call/month quota** (counted in API calls).
 
 ## Core mental model
 
-You give WeatherKit a `CLLocation`; it returns a `Weather` value containing the datasets you asked for. Two cost-relevant truths:
+You give WeatherKit a `CLLocation`; it returns a `Weather` value containing the datasets you asked for. Two shapes to keep straight:
 
-- `weather(for:)` fetches **all** datasets — convenient but quota-heavy.
-- `weather(for:including:)` fetches **only** the datasets you name, returning them as a tuple — use this to protect your quota.
+- `weather(for:)` fetches **all** datasets in one request.
+- `weather(for:including:)` fetches **only** the datasets you name, returning them as a tuple and a smaller response.
+
+Apple publishes no per-dataset counting rule for the quota, so treat both shapes as drawing on it; the difference between them is response size and decode cost.
 
 WeatherKit is a paid service with a free tier. Attribution is a contractual + App Review requirement, not a nicety.
 
@@ -39,7 +41,7 @@ Setup before any call:
 - Paid monthly tiers (USD): 1M $49.99, 2M $99.99, 5M $249.99, 10M $499.99, 20M $999.99, 50M $2,499.99, 100M $4,999.99, 150M $7,499.99, 200M $9,999.99.
 - Upgrading **resets your quota to 0** and starts a new billing period. Unused calls **don't roll over**.
 
-A `weather(for:)` call that pulls every dataset costs more than a focused query — call cost is tied to the datasets returned. If you only need current + daily, request just those with `weather(for:including:)` and cache aggressively.
+Requests draw on the same 500,000-call monthly quota. Narrow the request for the smaller response, and cache aggressively: a refresh loop, not a broad query, is what burns the cap.
 
 ## Critical Gotchas
 
@@ -47,7 +49,7 @@ A `weather(for:)` call that pulls every dataset costs more than a focused query 
 |--------|--------------|-----|
 | No attribution shown | App Review **rejects**; it also violates the WeatherKit terms | Display the Apple Weather mark + link to `legalPageURL` |
 | 401 / auth failures | WeatherKit capability not enabled, or REST JWT misconfigured | Enable the capability; verify Service ID / Key ID / Team ID for REST |
-| Quota burns fast | `weather(for:)` fetches all datasets on every call | Use `weather(for:including:)` and cache results |
+| Quota burns fast | Refetching on every view refresh draws on the 500,000-call monthly quota | Cache results and honor `expirationDate`; request only the datasets you show |
 | Assuming a dataset exists everywhere | Minute precipitation and alerts are region-limited | Check `WeatherAvailability`; handle `.unsupported` |
 | Querying without a location | WeatherKit needs a `CLLocation` | Acquire one via Core Location first |
 | Caching forever | Forecasts go stale; each datum has a validity window | Honor `metadata.expirationDate`; refetch when expired |
@@ -60,23 +62,23 @@ import CoreLocation
 
 let location = CLLocation(latitude: 37.33, longitude: -122.03)
 
-// Everything (one call, all datasets — convenient, quota-heavy)
+// Everything (one call, all datasets — the largest response)
 let weather = try await WeatherService.shared.weather(for: location)
 let temp = weather.currentWeather.temperature
 let today = weather.dailyForecast.first
 
-// Only what you need (quota-friendly) — `including:` returns a typed tuple
+// Only what you need (smaller response) — `including:` returns a typed tuple
 let (current, hourly) = try await WeatherService.shared.weather(
     for: location, including: .current, .hourly)
 ```
 
-Datasets you can request via `WeatherQuery`: `.current`, `.minute`, `.hourly`, `.daily`, `.alerts`, `.availability`, plus `.historicalComparisons` and date-ranged variants (`daily(startDate:endDate:)`, `hourly(startDate:endDate:)`) for historical averages. The tuple's element types match the order you list them; requesting a single dataset returns that type directly, not a one-element tuple.
+Datasets you can request via `WeatherQuery`: `.current`, `.minute`, `.hourly`, `.daily`, `.alerts`, `.availability`, plus `.historicalComparisons` (iOS 18+) and the date-ranged variants (`daily(startDate:endDate:)`, `hourly(startDate:endDate:)`) that return recorded data for an arbitrary range — history goes back to Aug 1, 2021, and one request returns at most 10 days. Climate averages are a different API: `WeatherService.dailyStatistics(for:including:)` and `monthlyStatistics(for:including:)` (iOS 18+) derive their values from weather recorded over past decades. The tuple's element types match the order you list them; requesting a single dataset returns that type directly, not a one-element tuple.
 
 `weather.currentWeather` (temperature, condition, humidity, UV index, wind), `.minuteForecast` (next-hour precipitation, region-limited), `.hourlyForecast`, `.dailyForecast`, `.weatherAlerts` (region-limited). Each result carries `metadata` with an `expirationDate` and the `location`.
 
 ## Mandatory attribution
 
-Apple requires the Apple Weather logo and a link to the data sources on any screen that shows WeatherKit data. Fetch it once and cache it.
+Apple requires the Apple Weather mark and a legal link to the data sources on any screen that shows weather data. Weather alerts are the exception, and get their own rules (below). Fetch the mark once and cache it.
 
 ```swift
 let attribution = try await WeatherService.shared.attribution
@@ -89,6 +91,8 @@ let logoURL = colorScheme == .dark
 ```
 
 `WeatherAttribution` exposes `combinedMarkLightURL`, `combinedMarkDarkURL`, `squareMarkURL`, `legalPageURL`, `serviceName`, and `legalAttributionText` (a text fallback when you can't render the logo/links — e.g. voice or a watch complication). If you build a *value-added* product derived from the data, attribute the source to "Weather" with a notice that Apple's data was modified.
+
+**Weather alerts are attributed differently.** Every alert you display must contain an embedded link to the Apple weather alert details page provided for that alert, its title or description must contain the full name of the issuing meteorological agency, and the alert text must not be modified, changed, altered, or obscured.
 
 ## REST API
 

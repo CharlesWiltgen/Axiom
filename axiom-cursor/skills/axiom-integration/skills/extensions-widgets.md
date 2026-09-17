@@ -8,7 +8,7 @@
 **Mental model**: Think of widgets as **archived snapshots** on a timeline, not live views. Your widget doesn't "run" continuously — it renders, gets archived, and the system displays the snapshot.
 
 **Extension sandboxing**: Extensions have:
-- Limited memory (~30MB)
+- Limited memory (Apple publishes no widget memory figure; the system terminates an extension that exceeds its limit)
 - No network access in widget views (fetch in TimelineProvider only)
 - Separate bundle container from main app
 - Require App Groups for data sharing
@@ -69,7 +69,7 @@
 
 ### Symptom
 - Widget renders but shows no data
-- Console errors: "NSURLSession not available in widget extension"
+- No error is logged — the fetch in the view never runs, so the view renders its placeholder (or nothing) and the timeline is produced without the data
 - Widget appears blank intermittently
 
 ### ❌ BAD Code
@@ -142,7 +142,7 @@ struct Provider: TimelineProvider {
 ```
 
 **Constraints**:
-- **30-second timeout** - System kills extension if getTimeline() doesn't complete
+- **No published timeout** - Apple states no time budget for `getTimeline()`; the documented minimum cadence is ~5 minutes between entries, so cache expensive work in the main app rather than doing it in the provider
 - **No background sessions** - Can't download large files
 - **Battery cost** - Every timeline reload uses battery
 - **Not guaranteed** - May fail on poor connections
@@ -205,7 +205,7 @@ print("Shared container: \(containerURL?.path ?? "MISSING")")
 
 ### Symptom
 - Widget updates frequently at first, then stops
-- Console logs: "Timeline reload budget exhausted"
+- No "budget exhausted" message is logged — the reloads simply stop counting, and ChronoCore's budget decisions appear only as routine log lines (`Reload requested for <kind> as budgeted: 0 for reason: <reason>`)
 - Widget becomes stale after a few hours
 
 ### ❌ BAD Code
@@ -434,7 +434,8 @@ Before debugging any widget or extension issue, complete this checklist:
   ```bash
   # Xcode Console
   # Filter: "widget" OR "timeline"
-  # Look for: "Timeline reload failed", "Budget exhausted"
+  # Look for: "Reload failed." (ChronoCore) and budget decisions of the form
+  #           "Reload requested for <kind> as budgeted: 0 for reason: <reason>"
   ```
 
 - ☐ **Manual reload test**
@@ -536,7 +537,7 @@ struct WidgetData: Codable {
 let data = WidgetData(
     value: "Latest",
     timestamp: Date(),
-    appVersion: Bundle.main.appVersion
+    appVersion: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
 )
 shared.set(try JSONEncoder().encode(data), forKey: "widgetData")
 
@@ -628,7 +629,7 @@ struct LightValue {
 
 // 2. Optimistic Intent — a toggle's action MUST be a SetValueIntent (ValueType == Bool)
 struct ToggleLightIntent: SetValueIntent {
-    static var title: LocalizedStringResource = "Toggle Light"
+    static let title: LocalizedStringResource = "Toggle Light"
 
     @Parameter var value: Bool   // The new on/off state the system passes in
 
@@ -677,16 +678,14 @@ Before shipping widgets:
 - ☐ No network calls in widget views (only in TimelineProvider)
 - ☐ Control Center controls use ControlValueProvider for async data
 - ☐ Tested on actual device (not just simulator) — **Required because**:
-  - Simulator doesn't enforce timeline budget limits
-  - Push notifications don't work in simulator
+  - WidgetKit push notifications are a server→APNs flow keyed to a per-install token obtained via `WidgetPushHandler` — Apple budgets them and "delivers them opportunistically", which no local injection reproduces. (Plain app notifications *can* be simulated: `xcrun simctl push <device> <bundle-id> payload.apns`)
   - App Groups container paths differ (simulator vs device)
-  - Memory limits not enforced in simulator
   - Background refresh behavior different
 - ☐ Tested all supported widget families
 - ☐ Verified widget appears in Widget Gallery
 
 ## Post-Release Monitoring
-- ☐ Monitor for "Timeline reload budget exhausted" errors
+- ☐ Monitor widget reload cadence — ChronoCore logs budget decisions as `Reload requested for <kind> as budgeted: 0 for reason: <reason>`; there is no "budget exhausted" message to grep for
 - ☐ Track widget data staleness in analytics
 - ☐ Watch App Store reviews for widget-related complaints
 - ☐ Log App Group container access for debugging

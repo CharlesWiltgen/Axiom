@@ -66,15 +66,12 @@ If you see ANY of these, suspect registration or scheduling issues:
     <string>com.yourapp.processing</string>
 </array>
 
-<!-- For BGAppRefreshTask -->
+<!-- Required: enable background modes -->
 <key>UIBackgroundModes</key>
 <array>
+    <!-- For BGAppRefreshTask -->
     <string>fetch</string>
-</array>
-
-<!-- For BGProcessingTask (add to UIBackgroundModes) -->
-<array>
-    <string>fetch</string>
+    <!-- For BGProcessingTask -->
     <string>processing</string>
 </array>
 ```
@@ -115,14 +112,14 @@ func someButtonTapped() {
 Filter Console.app for background task events:
 
 ```
-subsystem:com.apple.backgroundtaskscheduler
+subsystem:com.apple.backgroundtasks
 ```
 
 Look for:
-- "Registered handler for task with identifier"
-- "Scheduling task with identifier"
-- "Starting task with identifier"
-- "Task completed with identifier"
+- `registerForTaskWithIdentifier:` — your handler was registered
+- `Launch handler for task with identifier … has already been registered` — a duplicate registration (the system kills the app on the second registration of one identifier)
+- `submitTaskRequest failed for …` / `submitTaskRequest for … called before registering task` — the schedule never landed
+- `Processing pending event for …` / `Received run request for …` — the system launched you
 - Error messages about missing handlers or identifiers
 
 ### Step 4: Verify App Not Swiped Away (1 minute)
@@ -223,7 +220,7 @@ func applicationDidEnterBackground(_ application: UIApplication) {
 }
 
 // Or with SceneDelegate / SwiftUI
-.onChange(of: scenePhase) { newPhase in
+.onChange(of: scenePhase) { _, newPhase in
     if newPhase == .background {
         scheduleAppRefresh()
     }
@@ -297,8 +294,8 @@ func scheduleMaintenanceIfNeeded() {
     // Optional: Require network for cloud sync
     request.requiresNetworkConnectivity = true
 
-    // Don't set earliestBeginDate too far — max ~1 week
-    // If user doesn't return to app, task won't run
+    // earliestBeginDate is a floor, not a schedule — the system decides when to run
+    // If the user doesn't use the app within the past week, the request won't be fulfilled
 
     do {
         try BGTaskScheduler.shared.submit(request)
@@ -363,7 +360,7 @@ struct MyApp: App {
         WindowGroup {
             ContentView()
         }
-        .onChange(of: scenePhase) { newPhase in
+        .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .background {
                 scheduleAppRefresh()
             }
@@ -399,6 +396,8 @@ struct MyApp: App {
 **NOT for**: Automatic tasks, maintenance, syncing
 
 ```swift
+@preconcurrency import BackgroundTasks  // BGTask is not Sendable-annotated
+
 // 1. Info.plist — use wildcard for dynamic suffix
 // BGTaskSchedulerPermittedIdentifiers:
 // "com.yourapp.export.*"
@@ -406,7 +405,8 @@ struct MyApp: App {
 // 2. Register WHEN user initiates action (not at launch)
 func userTappedExportButton() {
     BGTaskScheduler.shared.register(
-        forTaskWithIdentifier: "com.yourapp.export.photos"
+        forTaskWithIdentifier: "com.yourapp.export.photos",
+        using: nil
     ) { task in
         let continuedTask = task as! BGContinuedProcessingTask
         self.handleExport(task: continuedTask)
@@ -420,7 +420,7 @@ func userTappedExportButton() {
     )
 
     // Optional: Fail if can't start immediately
-    request.strategy = .fail  // or .enqueue (default)
+    request.strategy = .fail  // or .queue (default)
 
     do {
         try BGTaskScheduler.shared.submit(request)
@@ -461,6 +461,7 @@ func handleExport(task: BGContinuedProcessingTask) {
 - Progress reporting is MANDATORY — tasks with no updates auto-expire
 - User can monitor and cancel from system UI
 - Use `.fail` strategy when work is only useful if it starts immediately
+- Under Swift 6 the type owning the handler must be `Sendable` (or an actor): the work task captures it, and `BGContinuedProcessingTask` is not `Sendable`-annotated (see Swift 6 Cancellation Integration)
 
 ---
 
@@ -597,8 +598,8 @@ func application(_ application: UIApplication,
 
 **Key points**:
 - Silent pushes are rate-limited — don't expect launch on every push
-- System coalesces multiple pushes (14 pushes may result in 7 launches)
-- Budget depletes with each launch and refills throughout day
+- System delays and rate-limits delivery — don't send more than two or three per hour
+- Budget depletes with each launch and refills over the day
 - ~30 seconds runtime per launch
 
 > For silent push notification patterns (content-available payload, throttling limits, APNs setup), see skills/push-notifications.md.
@@ -610,17 +611,26 @@ func application(_ application: UIApplication,
 When using structured concurrency, bridge BGTask expiration to task cancellation:
 
 ```swift
+@preconcurrency import BackgroundTasks  // BGTask is not Sendable-annotated
+
 func handleAppRefresh(task: BGAppRefreshTask) {
     // Create a Task that respects expiration
     let workTask = Task {
-        try await withTaskCancellationHandler {
-            // Your async work
-            try await fetchAndProcessData()
-            task.setTaskCompleted(success: true)
-        } onCancel: {
-            // Called synchronously when task.cancel() is invoked
-            // Note: Runs on arbitrary thread, keep lightweight
+        var completed = false
+        do {
+            try await withTaskCancellationHandler {
+                // Your async work
+                try await fetchAndProcessData()
+            } onCancel: {
+                // Called synchronously when task.cancel() is invoked
+                // Note: Runs on arbitrary thread, keep lightweight
+            }
+            completed = true
+        } catch {
+            // CancellationError at expiration — report failure below
         }
+        // REQUIRED on BOTH paths: the cancellation throw skips a success-only call
+        task.setTaskCompleted(success: completed)
     }
 
     // Bridge expiration to cancellation
@@ -651,6 +661,9 @@ func fetchAndProcessData() async throws {
 - `Task.checkCancellation()` throws `CancellationError` if cancelled
 - `Task.isCancelled` for non-throwing check
 - Cancellation is cooperative — your code must check and respond
+- `setTaskCompleted(success:)` belongs after the `do`/`catch`, not inside it: the expiration path throws `CancellationError` past a success-only call, and an unreported task keeps the app running until its time is spent
+- Define the register closure in a `nonisolated` context. A closure formed inside a `@MainActor` method inherits MainActor isolation, and the system calls it on the background queue you passed to `using:` — Swift 6's runtime check traps before the closure body runs
+- The type that owns the work must be `Sendable` (or an actor), because the work task captures it
 
 ---
 
@@ -709,7 +722,7 @@ From WWDC 2020-10063 "Background execution demystified":
 
 | Factor | Description | Impact |
 |--------|-------------|--------|
-| **Critically Low Battery** | <20% battery | All discretionary work paused |
+| **Critically Low Battery** | Battery very low (no threshold published) | All discretionary work paused |
 | **Low Power Mode** | User-enabled | Background activity limited |
 | **App Usage** | How often user launches app | More usage = higher priority |
 | **App Switcher** | App still visible? | Swiped away = no background |
@@ -737,9 +750,11 @@ switch status {
 case .available:
     break  // Good to schedule
 case .denied:
-    // User disabled — prompt to enable in Settings
+    break  // User disabled — prompt to enable in Settings
 case .restricted:
-    // Parental controls or MDM — can't enable
+    break  // Parental controls or MDM — can't enable
+@unknown default:
+    break
 }
 ```
 
@@ -758,7 +773,7 @@ case .restricted:
 ### Scheduling Checklist
 
 - [ ] Scheduling on main queue or background queue (if performance sensitive)?
-- [ ] `earliestBeginDate` not too far in future (max ~1 week)?
+- [ ] `earliestBeginDate` treated as a floor, not a schedule (the system decides when to run)?
 - [ ] Handling `submit()` errors?
 - [ ] Not scheduling duplicate tasks (check `pendingTaskRequests()`)?
 
@@ -929,7 +944,7 @@ case .failure:
     task.setTaskCompleted(success: false)  // ✅ Now called
 ```
 
-**Impact**: Failing to call setTaskCompleted may cause system to penalize app's background budget.
+**Impact**: Failing to call `setTaskCompleted` leaves the system running your app in the background until all its available time is consumed, wasting battery — and not calling it before the time for the task expires may result in the system killing your app.
 
 ---
 
@@ -953,21 +968,33 @@ User: "Swipe up in the app switcher."
 
 ---
 
-### Example 4: BGProcessingTask Never Runs — Missing Power Requirement
+### Example 4: BGProcessingTask Never Runs — The Submit Was Rejected
 
 **Symptom**: BGProcessingTask scheduled but never executes.
 
-**Diagnosis**: User has phone plugged in at night, but task has `requiresExternalPower = true` and user uses wireless charger.
+**Diagnosis**: `submit(_:)` threw and the error was swallowed, so no request ever reached the scheduler:
 
-Wait, that's not the issue. Real issue:
 ```swift
 let request = BGProcessingTaskRequest(identifier: "com.app.maintenance")
-// Missing: request.requiresExternalPower = true
+request.requiresExternalPower = true
+
+do {
+    try BGTaskScheduler.shared.submit(request)
+} catch {
+    // .notPermitted  — identifier missing from BGTaskSchedulerPermittedIdentifiers,
+    //                  missing UIBackgroundModes entry, unavailable resources,
+    //                  or the user denied background launches
+    // .tooManyPendingTaskRequests — too many pending requests of this type
+    // .unavailable   — Background App Refresh disabled, or running on the Simulator
+    print("submit failed: \(error)")   // never swallow this
+}
 ```
 
-Without `requiresExternalPower`, system STILL waits for charging but has less certainty. Setting it explicitly gives system clear signal.
+A swallowed `submit` error looks exactly like a task that never runs. Log it and the example resolves in one launch.
 
-Also: User must have launched app in foreground within ~2 weeks for processing tasks to be eligible.
+`requiresExternalPower` is **not** the culprit: it restricts the task to external power and disables CPU Monitor, but setting it to `false` does not make the task run — the header is explicit that even when this value is `NO` the system will not necessarily schedule the task while the device is on battery power.
+
+Also: the system attempts to fulfil a `BGProcessingTaskRequest` "within the next two days as long as the user has used your app within the past week" — no foreground launch in the past week means no fulfilment.
 
 ---
 
@@ -986,7 +1013,7 @@ e -l objc -- (void)[[BGTaskScheduler sharedScheduler] _simulateExpirationForTask
 ### Console Filter
 
 ```
-subsystem:com.apple.backgroundtaskscheduler
+subsystem:com.apple.backgroundtasks
 ```
 
 ### Task Type Summary

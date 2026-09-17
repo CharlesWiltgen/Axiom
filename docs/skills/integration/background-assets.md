@@ -10,7 +10,7 @@ Discipline-enforcing skill for delivering content larger than the app bundle thr
 ## When to Use
 
 Use this skill when:
-- Shipping content ≥10 MB that isn't needed at first launch (game level packs, ML model variants, design-tool kits, media libraries)
+- Shipping content too large for the app bundle that isn't needed at first launch (game level packs, ML model variants, design-tool kits, media libraries)
 - Shipping Foundation Models `.fmadapter` packs (~160 MB each, per-OS-version pinning) — Apple's docs rule out bundling
 - Deciding between Apple-hosted and server-hosted asset packs
 - Choosing between `essential`, `prefetch`, and `onDemand` download policies
@@ -37,7 +37,7 @@ Real questions developers ask that this skill answers:
 ## What This Skill Provides
 
 - **Channel decision** – when Background Assets is the right tool vs. app bundle, iCloud, URLSession, or `BGProcessingTask`
-- **Apple-hosted vs server-hosted decision** – cost / latency / quota / App Review tradeoffs between `StoreDownloaderExtension` (Apple-hosted, two-line boilerplate) and server hosting via `ManagedDownloaderExtension` (managed) or `BADownloaderExtension` (unmanaged legacy); 200 GB / 100-pack Apple-hosted quota
+- **Apple-hosted vs server-hosted decision** – cost / latency / quota / App Review tradeoffs between `StoreDownloaderExtension` (Apple-hosted, two-line boilerplate) and server hosting via `ManagedDownloaderExtension` (managed) or `BADownloaderExtension` (unmanaged legacy); 200 GB / 200-pack Apple-hosted quota
 - **Red flags** – the delivery mistakes that lead to oversized IPAs, brittle download stacks, or quota surprises, including taking `BADownloadManager` exclusive control on only one side (the app and its extension must both use it)
 - **Download policy cheatsheet** – `essential` (during install, counts toward App Store install progress), `prefetch` (starts during install, may continue after), `onDemand` (your code triggers via `ensureLocalAvailability(of:)`); Foundation Models adapters are always `onDemand`
 - **Info.plist setup** – managed Apple-hosted minimal set (`BAHasManagedAssetPacks=true` + `BAUsesAppleHosting=true` + `BAAppGroupID`), managed server-hosted, and legacy unmanaged variants

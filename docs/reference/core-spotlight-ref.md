@@ -82,8 +82,8 @@ func viewOrder(_ order: Order) {
     activity.isEligibleForPrediction = true
     activity.persistentIdentifier = order.id.uuidString
 
-    // Connect to App Intents
-    activity.appEntityIdentifier = order.id.uuidString
+    // Connect to App Intents — EntityIdentifier, not a raw String (iOS 18.2+)
+    activity.appEntityIdentifier = EntityIdentifier(for: OrderEntity.self, identifier: order.id)
 
     activity.becomeCurrent()
     self.userActivity = activity
@@ -96,7 +96,7 @@ Connect NSUserActivity and Core Spotlight to App Intents:
 
 ```swift
 // NSUserActivity → App Intent
-activity.appEntityIdentifier = order.id.uuidString
+activity.appEntityIdentifier = EntityIdentifier(for: OrderEntity.self, identifier: order.id)
 
 // Core Spotlight → App Intent
 let item = CSSearchableItem(appEntity: orderEntity)

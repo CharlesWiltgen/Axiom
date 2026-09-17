@@ -12,7 +12,7 @@ Comprehensive API reference for AccessorySetupKit: the session, discovery descri
 - **ASAccessoryEvent** — Delivered to the session's event handler (`eventType`, `accessory`, `error`).
 - **ASAccessorySettings** — Configuration applied when finishing a multi-step authorization.
 
-Availability: iOS 18.0+, iPadOS 18.0+. No macOS / watchOS / tvOS. Bluetooth HID accessories iOS 18.4+. Wi-Fi Aware descriptor fields iOS 26.0+. Channel Sounding (Part 7) iOS 27.0+.
+Availability: iOS 18.0+, iPadOS 18.0+. No macOS / watchOS / tvOS. Bluetooth HID accessories iOS 18.4+. Authorization upgrade (`updateAuthorization(for:descriptor:)`) iOS 26.0+. Wi-Fi Aware descriptor fields iOS 26.0+ (`ASMigrationDisplayItem.wifiAwarePairedDeviceID` is iOS 26.1+). Channel Sounding (Part 7) iOS 27.0+.
 
 ---
 
@@ -30,7 +30,7 @@ session.finishAuthorization(for: accessory, settings: settings) { error in /* ..
 session.failAuthorization(for: accessory) { error in /* ... */ }
 
 // Upgrade an authorized accessory's permissions (e.g. add Wi-Fi) with a broader descriptor
-session.updateAuthorization(for: accessory, descriptor: broaderDescriptor) { error in /* ... */ }
+session.updateAuthorization(for: accessory, descriptor: broaderDescriptor) { error in /* ... */ }   // iOS 26.0+
 
 // Lifecycle management
 session.removeAccessory(accessory) { error in /* ... */ }
@@ -52,7 +52,7 @@ let d = ASDiscoveryDescriptor()
 
 // Bluetooth (one of the first two is required)
 d.bluetoothServiceUUID = CBUUID(string: "FFF0")
-d.bluetoothCompanyIdentifier = 0x004C
+d.bluetoothCompanyIdentifier = ASBluetoothCompanyIdentifier(0x004C)
 d.bluetoothNameSubstring = "Dice"
 d.bluetoothManufacturerDataBlob = manufacturerData       // with matching mask
 d.bluetoothManufacturerDataMask = manufacturerMask
@@ -88,7 +88,7 @@ item.renameOptions = []       // ASAccessory.RenameOptions
 let migration = ASMigrationDisplayItem(name: "My Sensor", productImage: image, descriptor: descriptor)
 migration.peripheralIdentifier = knownPeripheralUUID    // CoreBluetooth peripheral UUID
 migration.hotspotSSID = "MyAccessoryNet"                // Wi-Fi accessory
-migration.wifiAwarePairedDeviceID = pairedID            // Wi-Fi Aware (iOS 26+)
+migration.wifiAwarePairedDeviceID = pairedID            // Wi-Fi Aware (iOS 26.1+)
 ```
 
 `setupOptions` controls whether the system asks for an extra authorization confirmation and whether final setup happens in-app (which drives the Part 5 `finishAuthorization` flow).
@@ -125,7 +125,7 @@ Some accessories aren't fully usable the instant the user taps the picker — a 
 
 ```swift
 // In your event handler, an accessory may be .awaitingAuthorization rather than .authorized
-let settings = ASAccessorySettings.defaultSettings
+let settings = ASAccessorySettings.default
 settings.ssid = collectedHotspotSSID                        // Wi-Fi hotspot to join
 settings.bluetoothTransportBridgingIdentifier = sixByteID   // bridge Bluetooth Classic profiles
 
@@ -134,7 +134,7 @@ session.finishAuthorization(for: accessory, settings: settings) { error in /* no
 session.failAuthorization(for: accessory) { error in /* ... */ }
 ```
 
-`ASAccessorySettings` properties: `ssid` (hotspot to connect to), `bluetoothTransportBridgingIdentifier` (6-byte classic-transport bridge ID), and the `defaultSettings` empty settings object (the class accessor — `ASAccessorySettings.default` does not exist). Separately, `updateAuthorization(for:descriptor:)` **upgrades an authorized accessory's permissions** — e.g. grant Wi-Fi to a Bluetooth-only accessory by passing a broader `ASDiscoveryDescriptor` (it does not mutate `ASAccessorySettings`).
+`ASAccessorySettings` properties: `ssid` (hotspot to connect to), `bluetoothTransportBridgingIdentifier` (6-byte classic-transport bridge ID), and `default`, the class accessor returning an empty settings object. Separately, `updateAuthorization(for:descriptor:)` (**iOS 26.0+**) **upgrades an authorized accessory's permissions** — e.g. grant Wi-Fi to a Bluetooth-only accessory by passing a broader `ASDiscoveryDescriptor` (it does not mutate `ASAccessorySettings`).
 
 ---
 
@@ -142,7 +142,7 @@ session.failAuthorization(for: accessory) { error in /* ... */ }
 
 | Key | Value |
 |-----|-------|
-| `NSAccessorySetupSupports` | array of `"Bluetooth"` / `"WiFi"` |
+| `NSAccessorySetupKitSupports` | array of `"Bluetooth"` / `"WiFi"` |
 | `NSAccessorySetupBluetoothServices` | array of service UUID strings |
 | `NSAccessorySetupBluetoothCompanyIdentifiers` | array of company-ID numbers |
 | `NSAccessorySetupBluetoothNames` | array of name strings |
@@ -171,7 +171,7 @@ peripheral.startChannelSoundingSession(config)
 
 // 3. Each completed procedure delivers a distance in meters
 func peripheral(_ peripheral: CBPeripheral,
-                didReceiveChannelSoundingProcedureResults results: CBChannelSoundingProcedureResults?,
+                didReceive results: CBChannelSoundingProcedureResults?,
                 error: Error?) {
     guard let results else { return }
     let meters = results.distance      // Double

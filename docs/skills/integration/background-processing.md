@@ -49,7 +49,7 @@ e -l objc -- (void)[[BGTaskScheduler sharedScheduler] _simulateExpirationForTask
 ### Console Log Filter
 
 ```
-subsystem:com.apple.backgroundtaskscheduler
+subsystem:com.apple.backgroundtasks
 ```
 
 ## Common Issues

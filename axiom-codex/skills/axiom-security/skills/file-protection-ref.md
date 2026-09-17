@@ -398,7 +398,8 @@ func configureDefaultFileProtection() {
 }
 
 // Call during app initialization
-func application(_ application: UIApplication, didFinishLaunchingWithOptions...) {
+func application(_ application: UIApplication,
+                didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
     configureDefaultFileProtection()
     return true
 }

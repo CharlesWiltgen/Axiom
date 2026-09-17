@@ -3,12 +3,12 @@
 
 ## Overview
 
-Timer-related crashes are among the hardest to diagnose because they're often intermittent and the crash log points to GCD internals, not your code. **Core principle**: DispatchSourceTimer has a state machine — violating it causes deterministic EXC_BAD_INSTRUCTION crashes that look random. Timer (NSTimer) has a RunLoop mode trap that silently stops your timer during scrolling. Both are preventable with the patterns in this skill.
+Timer-related crashes are among the hardest to diagnose because they're often intermittent and the crash log points to GCD internals, not your code. **Core principle**: DispatchSourceTimer has a state machine — violating it traps the process deterministically, in a way that looks random. On arm64 that trap reads **EXC_BREAKPOINT (SIGTRAP)** with a `BUG IN CLIENT OF LIBDISPATCH: …` message; `EXC_BAD_INSTRUCTION` is the same trap on Intel. Timer (NSTimer) has a RunLoop mode trap that silently stops your timer during scrolling. Both are preventable with the patterns in this skill.
 
 ## Example Prompts
 
 - "My timer stops when the user scrolls"
-- "EXC_BAD_INSTRUCTION crash in my timer code"
+- "EXC_BREAKPOINT (SIGTRAP) crash in my timer code — BUG IN CLIENT OF LIBDISPATCH"
 - "Should I use Timer or DispatchSourceTimer?"
 - "How do I safely cancel a DispatchSourceTimer?"
 - "My DispatchSourceTimer crashes on dealloc"
@@ -20,7 +20,7 @@ Timer-related crashes are among the hardest to diagnose because they're often in
 
 | Feature | Timer | DispatchSourceTimer | AsyncTimerSequence |
 |---------|-------|--------------------|--------------------|
-| Thread safety | Main thread only (RunLoop-bound) | Any queue (you choose) | Task-bound (structured concurrency) |
+| Thread safety | Run-loop-bound — any thread whose run loop runs (UI callers use the main run loop) | Any queue (you choose) | Task-bound (structured concurrency) |
 | Scrolling survival | Only in `.common` mode | Always (no RunLoop dependency) | Always (no RunLoop dependency) |
 | Precision | Low (RunLoop coalescing) | High (GCD scheduling) | Medium (clock-dependent) |
 | Lifecycle complexity | Low (invalidate + nil) | High (state machine, 4 crash patterns) | Low (task cancellation) |
@@ -72,7 +72,8 @@ let timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak s
 let timer = Timer(timeInterval: 1.0, repeats: true) { [weak self] _ in
     self?.updateProgress()
 }
-RunLoop.current.add(timer, forMode: .common)
+// RunLoop.main, not RunLoop.current — `current` is unavailable from async contexts
+RunLoop.main.add(timer, forMode: .common)
 ```
 
 ### ✅ Fixed — Combine Timer survives scrolling
@@ -87,7 +88,7 @@ Timer.publish(every: 1.0, tolerance: 0.1, on: .main, in: .common)
     .store(in: &cancellables)
 ```
 
-**Key**: The `in:` parameter defaults to `.default` if omitted — always specify `.common` explicitly.
+**Key**: `in:` has no default — `Timer.publish(every:on:)` does not compile without it. Pass `.common` so the timer keeps firing while the user scrolls. (`Timer.scheduledTimer` is the route that silently lands in `.default`.)
 
 ### RunLoop Modes
 
@@ -101,18 +102,20 @@ Timer.publish(every: 1.0, tolerance: 0.1, on: .main, in: .common)
 
 ## Part 3: The 4 DispatchSourceTimer Crash Patterns
 
-Each of these causes **EXC_BAD_INSTRUCTION** — a crash that points to GCD internals, making it hard to trace back to your timer code.
+Each of these traps the process. On arm64 the crash report shows **EXC_BREAKPOINT (SIGTRAP)** with a `BUG IN CLIENT OF LIBDISPATCH: …` message — the trap points at GCD internals, making it hard to trace back to your timer code. (Older Intel crash logs show the same trap as EXC_BAD_INSTRUCTION.)
 
-### Crash Frame → Pattern Mapping
+### Crash Message → Pattern Mapping
 
-When you see EXC_BAD_INSTRUCTION in a crash log, match the top frame:
+When you see EXC_BREAKPOINT (SIGTRAP) and a `BUG IN CLIENT OF LIBDISPATCH` message, match the message:
 
-| Top Crash Frame | Crash Pattern | Fix |
+| Crash Log Signal (arm64) | Crash Pattern | Fix |
 |---|---|---|
-| `dispatch_source_cancel` | Crash 2: Cancel while suspended | `resume()` before `cancel()` |
-| `_dispatch_source_dispose` | Crash 3: Dealloc while suspended | Resume + cancel before releasing |
-| `dispatch_resume` | Crash 4: Resume after cancel | Check `isCancelled` before operating |
-| `_dispatch_source_refs_t` / `suspend count` | Crash 1: Unbalanced suspend | Track state, only suspend if running |
+| `Release of a suspended object` | Crash 1: Unbalanced suspend | Track state, only suspend if running |
+| `Release of a suspended object` after `cancel()` | Crash 2: Cancel while suspended | `resume()` before dropping the last reference |
+| `Release of a suspended object` on dealloc | Crash 3: Dealloc while suspended | Resume before releasing |
+| `Over-resume of an object` | Crash 4: Over-resume | Resume only as many times as you suspended |
+
+The `Release of …` messages are raised from `_dispatch_queue_xref_dispose` on the release path; `Over-resume of an object` comes from `dispatch_resume`. Neither is raised by `dispatch_source_cancel` — cancelling a suspended source is legal (Crash 2's trap is the release that follows). A fifth message, `Release of an inactive object`, fires when a source is released that was never activated; Part 4's wrapper handles that case.
 
 ### DispatchSourceTimer State Machine
 
@@ -124,21 +127,22 @@ When you see EXC_BAD_INSTRUCTION in a crash log, match the top frame:
                                ▼  │
                             suspended
                                │
-                    resume() + cancel()
+                    cancel()
                                │
                                ▼
-                           cancelled (terminal)
+                           cancelled (no more firing)
 
-CRASH ZONES:
-  suspended → cancel()  = EXC_BAD_INSTRUCTION
-  suspended → dealloc   = EXC_BAD_INSTRUCTION
-  suspended → suspend() = suspend count underflow on dealloc
-  cancelled → resume()  = EXC_BAD_INSTRUCTION
+CRASH ZONES (libdispatch traps — EXC_BREAKPOINT on arm64):
+  release while suspended         = "Release of a suspended object"
+  release without activate()      = "Release of an inactive object"
+  resume() with nothing suspended = "Over-resume of an object"
+  cancel() while suspended        = legal — the cancel handler waits for a resume;
+                                    the trap is the release that follows
 ```
 
 ### Crash 1: Suspend While Already Suspended
 
-Calling `suspend()` multiple times without matching `resume()` calls. Each `suspend()` increments an internal counter. On dealloc, if the suspend count isn't zero, GCD crashes.
+Calling `suspend()` multiple times without matching `resume()` calls. Each `suspend()` increments an internal counter, and that counter must be back at zero before the last reference is released — releasing a still-suspended source traps with `Release of a suspended object`. Track your own suspends and resume exactly as many times as you suspended.
 
 #### ❌ Crash
 
@@ -153,7 +157,7 @@ timer.suspend()  // suspend count = 1
 timer.suspend()  // suspend count = 2
 
 timer.resume()   // suspend count = 1
-// Timer deallocated with suspend count = 1 → EXC_BAD_INSTRUCTION
+// Released with suspend count = 1 → libdispatch trap: "Release of a suspended object"
 ```
 
 #### ✅ Safe
@@ -177,7 +181,7 @@ func unpause() {
 
 ### Crash 2: Cancel While Suspended
 
-GCD requires a dispatch source to be in a non-suspended state before cancellation. Cancelling a suspended timer crashes immediately.
+Cancelling a suspended source is legal: `cancel()` marks the source cancelled, its cancel handler is deferred until the source is resumed, and nothing traps at the call. What traps is treating `cancel()` as if it cleared the suspension — the source is still suspended, so the release that follows raises `Release of a suspended object`.
 
 #### ❌ Crash
 
@@ -188,20 +192,23 @@ timer.setEventHandler { doWork() }
 timer.activate()
 
 timer.suspend()
-timer.cancel()  // EXC_BAD_INSTRUCTION — can't cancel while suspended
+timer.cancel()  // Legal — the cancel handler waits for a resume
+
+// timer released at end of scope, still suspended:
+// libdispatch trap — "Release of a suspended object"
 ```
 
 #### ✅ Safe
 
 ```swift
-// ALWAYS resume before cancelling
-timer.resume()   // Move out of suspended state
-timer.cancel()   // Now safe to cancel
+// Resume before the reference goes away, then cancel
+timer.resume()   // Clears the suspension — this is what makes the release legal
+timer.cancel()   // Cancel handler is delivered, then the source is disposed
 ```
 
 ### Crash 3: Dealloc While Suspended
 
-Setting the timer to nil (or letting it go out of scope) while suspended. Deallocation internally attempts cleanup that fails on a suspended source.
+Setting the timer to nil (or letting it go out of scope) while suspended. The release itself is the trap — libdispatch sees a source whose suspend count is non-zero going away and raises `Release of a suspended object`. The neighbouring case is a source that was never activated: releasing that one raises `Release of an inactive object`, which is what a wrapper that is created and then discarded without ever being scheduled hits.
 
 #### ❌ Crash
 
@@ -220,7 +227,7 @@ func pauseTimer() {
 }
 
 func cleanup() {
-    timer = nil  // Dealloc while suspended → EXC_BAD_INSTRUCTION
+    timer = nil  // Released while suspended → libdispatch trap
 }
 ```
 
@@ -231,38 +238,48 @@ func cleanup() {
     // Resume before releasing
     timer?.resume()
     timer?.cancel()
-    timer = nil  // Now safe — timer is in cancelled state
+    timer = nil  // Safe now — the suspension was consumed above
 }
 ```
 
-### Crash 4: Operate After Cancel
+### Crash 4: Over-Resume
 
-Calling `resume()` or `suspend()` on a cancelled timer. Cancellation is a terminal state — the timer cannot be reused.
+`resume()` is not "start the timer" — it consumes a suspension. Calling it on a source with nothing suspended (suspend count already 0) underflows the count and libdispatch terminates the process with `Over-resume of an object`. Cancellation is a separate axis: `cancel()` ends the timer's firing for good, but it does not touch the suspend count, so an `isCancelled` flag does not make `resume()` safe.
 
 #### ❌ Crash
 
 ```swift
+let timer = DispatchSource.makeTimerSource(queue: queue)
+timer.schedule(deadline: .now(), repeating: 1.0)
+timer.setEventHandler { doWork() }
+timer.activate()   // suspend count 0 — the source is running
+
 timer.cancel()
-timer.resume()  // EXC_BAD_INSTRUCTION — can't resume a cancelled source
+timer.resume()  // Nothing was suspended → libdispatch trap: "Over-resume of an object"
 ```
 
 #### ✅ Safe
 
 ```swift
-// Track cancellation state
-var isCancelled = false
+// Track the suspend balance — not the cancellation state
+var isSuspended = false
 
 func cancel() {
-    guard !isCancelled else { return }
-    timer.cancel()
-    isCancelled = true
+    if isSuspended {          // An outstanding suspension must be consumed before release
+        timer.resume()
+        isSuspended = false
+    }
+    timer.cancel()            // Ends firing; a cancelled source never fires again
 }
 
 func resume() {
-    guard !isCancelled else { return }  // Check before operating
+    guard isSuspended else { return }   // Resume only what you suspended
     timer.resume()
+    isSuspended = false
 }
 ```
+
+`suspend()` on a cancelled source is not a trap in itself — it increments the counter like any other suspension — but it leaves the source suspended at release, which is Crash 1 and Crash 3.
 
 ---
 
@@ -303,19 +320,25 @@ final class SafeDispatchTimer {
 
     func cancel() {
         switch state {
+        case .idle:
+            // Never scheduled: the source is still inactive, and releasing an
+            // inactive source traps ("Release of an inactive object").
+            // Activate it first so the release is legal.
+            timer.activate()
+            timer.cancel()
         case .suspended:
-            timer.resume()  // Must resume before cancel
+            timer.resume()  // Clear the suspension — releasing a suspended source traps
             timer.cancel()
         case .running:
             timer.cancel()
-        case .idle, .cancelled:
+        case .cancelled:
             return
         }
         state = .cancelled
     }
 
     deinit {
-        cancel()  // Safe cleanup regardless of current state
+        cancel()  // Safe cleanup in any state, including never-scheduled
     }
 }
 ```
@@ -354,28 +377,31 @@ class BackgroundPoller {
 
 ### Always Use a Dedicated Serial Queue
 
-DispatchSourceTimer fires its event handler on the queue you specify at creation. Using a concurrent queue creates race conditions when multiple firings overlap or when you modify shared state from the handler.
+DispatchSourceTimer fires its event handler on the queue you specify at creation. A source's handler never overlaps itself: libdispatch is not reentrant, and events that arrive while the handler is running are coalesced and delivered after it returns — on a concurrent queue exactly as on a serial one. A dedicated serial queue is still the right default, because it serializes the handler against the *other* work that touches the same state, instead of running alongside it.
 
 #### ❌ Race Condition
 
 ```swift
-// BAD: Concurrent queue — handler can fire while previous invocation is still running
+// BAD: handler runs on a global concurrent queue, racing every other
+// thread that touches count
 let timer = DispatchSource.makeTimerSource(queue: DispatchQueue.global())
 timer.setEventHandler {
     self.count += 1          // Race condition
-    self.processItem(count)  // Overlapping invocations
+    self.processItem(self.count)
 }
 ```
 
 #### ✅ Serial Queue
 
 ```swift
-// GOOD: Dedicated serial queue — handler invocations are serialized
+// GOOD: Dedicated serial queue — this handler cannot run at the same time as
+// other work you submit to the same queue
 let timerQueue = DispatchQueue(label: "com.app.timer-queue")
 let timer = DispatchSource.makeTimerSource(queue: timerQueue)
 timer.setEventHandler { [weak self] in
-    self?.count += 1          // Safe — serial queue
-    self?.processItem(count)  // No overlap
+    guard let self else { return }
+    self.count += 1            // Safe if every access to count is serialized on timerQueue
+    self.processItem(self.count)
 }
 ```
 
@@ -386,12 +412,14 @@ If your timer handler updates UI, dispatch to main:
 ```swift
 let timer = DispatchSource.makeTimerSource(queue: timerQueue)
 timer.setEventHandler { [weak self] in
-    let result = self?.computeResult()
+    guard let result = self?.computeResult() else { return }
     DispatchQueue.main.async {
         self?.updateUI(with: result)
     }
 }
 ```
+
+**The enclosing type must be main-actor-isolated** (a view controller or any `@MainActor` type — UIKit's classes are). Under Swift 6 a plain non-`Sendable` class cannot hand `self` to that `@Sendable` main-queue closure: the compiler rejects it with `sending 'self' risks causing data races`. Annotate the type `@MainActor` and keep the UI work inside it, or hop by sending a `Sendable` payload instead of `self`.
 
 ---
 
@@ -400,9 +428,9 @@ timer.setEventHandler { [weak self] in
 | Anti-Pattern | Time Cost | Fix |
 |---|---|---|
 | Timer in `.default` RunLoop mode | 30+ min debugging scroll freeze | Use `.common` mode |
-| No state tracking on DispatchSourceTimer | EXC_BAD_INSTRUCTION crash, hours to diagnose | Use SafeDispatchTimer wrapper |
-| `timer.cancel()` while suspended | Production crash | `resume()` then `cancel()` |
-| Timer on `.global()` queue | Race conditions, intermittent crashes | Dedicated serial queue |
+| No state tracking on DispatchSourceTimer | libdispatch trap (EXC_BREAKPOINT on arm64), hours to diagnose | Use SafeDispatchTimer wrapper |
+| Releasing a suspended source (including after `cancel()`) | Production crash — `Release of a suspended object` | `resume()` before the last reference goes away |
+| Timer on `.global()` queue | Race conditions with the rest of your code | Dedicated serial queue |
 | Force-unwrapping timer | Crash if timer already cancelled | Optional check or state enum |
 | Not clearing event handler before cancel | Potential retain cycle | `timer.setEventHandler(handler: nil)` then cancel |
 | Timer retains target (selector API) | Memory leak — deinit never called | Use block API with `[weak self]` |
@@ -429,7 +457,7 @@ timer.setEventHandler { [weak self] in
 
 ### Scenario 2: "The crash only happens sometimes, let's ship and fix later"
 
-**Setup**: EXC_BAD_INSTRUCTION in production crash logs. Can't reproduce reliably in development.
+**Setup**: EXC_BREAKPOINT (SIGTRAP) in production crash logs, with a `BUG IN CLIENT OF LIBDISPATCH` message. Can't reproduce reliably in development.
 
 **Pressure**: "It's rare. Users can reopen the app. We'll fix it in the next release."
 

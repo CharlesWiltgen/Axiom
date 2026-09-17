@@ -118,8 +118,10 @@ if #available(iOS 26, *) {
 There is no Ethernet allowlist, so the provider must verify the network actually hosts your server:
 
 ```swift
-// In the provider, after a failed probe of the local server:
-unmatchEthernet()   // stops the provider on THIS network; re-evaluated on network change
+// In the provider, after a failed probe of the local server (iOS 26+ only):
+if #available(iOS 26, *) {
+    unmatchEthernet()   // stops the provider on THIS network; re-evaluated on network change
+}
 ```
 
 ## Part 4 — Mission Critical Services `iOS27`

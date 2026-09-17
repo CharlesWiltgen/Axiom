@@ -123,7 +123,7 @@ Use this router when:
 ### Timer Safety
 
 **Timer crash patterns (DispatchSourceTimer)** → See `axiom-integration` (skills/timer-patterns.md)
-- 4 crash scenarios causing EXC_BAD_INSTRUCTION
+- 4 crash scenarios trapping with `BUG IN CLIENT OF LIBDISPATCH` — EXC_BREAKPOINT (SIGTRAP) on arm64, EXC_BAD_INSTRUCTION on Intel
 - RunLoop mode gotcha (Timer stops during scroll)
 - SafeDispatchTimer wrapper
 - Timer vs DispatchSourceTimer decision
@@ -208,7 +208,7 @@ Use this router when:
 18. Need to inspect variable/thread state at runtime? → See axiom-build (skills/lldb.md)
 19. Need exact LLDB command syntax? → See axiom-build (skills/lldb-ref.md)
 20. Timer stops during scrolling? → timer-patterns (RunLoop mode)
-21. EXC_BAD_INSTRUCTION crash with DispatchSourceTimer? → timer-patterns (4 crash patterns)
+21. EXC_BREAKPOINT (SIGTRAP) crash with DispatchSourceTimer — `BUG IN CLIENT OF LIBDISPATCH`? → timer-patterns (4 crash patterns)
 22. Choosing between Timer, DispatchSourceTimer, Combine timer, async timer? → timer-patterns
 23. Need timer API syntax/lifecycle? → timer-patterns-ref
 24. Code review for outdated Swift patterns? → swift-modern
@@ -371,7 +371,7 @@ User: "UI locks up when multiple API calls return at the same time"
 User: "My timer stops when the user scrolls"
 → Read: `axiom-integration` (skills/timer-patterns.md)
 
-User: "EXC_BAD_INSTRUCTION crash in my timer code"
+User: "EXC_BREAKPOINT (SIGTRAP) crash in my timer code — BUG IN CLIENT OF LIBDISPATCH"
 → Read: `axiom-integration` (skills/timer-patterns.md)
 
 User: "Should I use Timer or DispatchSourceTimer?"

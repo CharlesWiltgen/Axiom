@@ -101,11 +101,11 @@ The `Set`-based overload throws when the system can't ensure one or more packs' 
 
 ### Status streaming
 
-`statusUpdates` is an `AsyncSequence` that emits each status change.
+`statusUpdates` is an `AsyncSequence` that emits each status change. Apple's doc comment says the all-packs sequence "never finishes" — only the per-pack sequence finishes, after yielding `.finished` or `.failed`.
 
 ```swift
-// All packs
-for await update in AssetPackManager.shared.statusUpdates {
+// All packs — the property itself is actor-isolated, so await the access
+for await update in await AssetPackManager.shared.statusUpdates {
     // each update is a DownloadStatusUpdate carrying its AssetPack
 }
 
@@ -117,7 +117,7 @@ for await status in updates {
         // Download just started
         break
     case .paused:
-        // System paused (Low Power Mode, Background Activity off, network)
+        // System paused (Low Power Mode, Background App Refresh off, network)
         break
     case .downloading(_, let progress):
         // Bind progress.fractionCompleted to a ProgressView
@@ -331,12 +331,17 @@ struct DownloaderExtension: StoreDownloaderExtension {
 ### Protocol surface
 
 ```swift
-public protocol StoreDownloaderExtension: ManagedDownloaderExtension {
+// StoreKit — an empty refinement; Apple's implementation handles the mechanics
+public protocol StoreDownloaderExtension: ManagedDownloaderExtension {}
+
+// BackgroundAssets — the requirement you implement
+public protocol ManagedDownloaderExtension: BADownloaderExtension
+where Self.Configuration: ManagedDownloaderExtensionConfiguration {
     func shouldDownload(_ assetPack: AssetPack) -> Bool
 }
 ```
 
-`ManagedDownloaderExtension` is the parent protocol. Both extensions are `@main`-annotated entry points in the extension target.
+`StoreDownloaderExtension` declares nothing of its own — it is StoreKit's Apple-hosted refinement of `ManagedDownloaderExtension`, which is the protocol that declares `shouldDownload(_:)` (and supplies a protocol-extension default). Both extensions are `@main`-annotated entry points in the extension target.
 
 ### Foundation Models adapter pattern
 
@@ -552,13 +557,21 @@ Authoritative reference of every Background Assets Info.plist key.
 
 | Key | Type | Layer | Purpose |
 |-----|------|-------|---------|
-| `BAHasManagedAssetPacks` | Boolean | Managed | Opt into managed asset packs (iOS 26+) |
-| `BAUsesAppleHosting` | Boolean | Managed | Use Apple-hosted asset packs (requires Apple to manage CDN and quotas) |
+| `BAHasManagedAssetPacks` | Boolean | Managed | Opt into managed asset packs (iOS 26+) — set to `YES` |
+| `BAUsesAppleHosting` | Boolean | Managed | Use Apple-hosted asset packs — set to `YES`, and omit every other Background Assets key (the system implementation handles downloads, updates and compression) |
 | `BAAppGroupID` | String | Managed + Unmanaged | App Group identifier shared between the app and its downloader extension |
-| `BAManifestURL` | String | Unmanaged | URL serving the manifest JSON describing available packs |
-| `BAEssentialMaxInstallSize` | Number (bytes) | Unmanaged | Maximum essential asset size for first install |
-| `BAMaxInstallSize` | Number (bytes) | Unmanaged | Maximum total asset size for first install |
-| `BAInitialDownloadRestrictions` | Dictionary | Unmanaged | Restrictions applied during initial download (network, power) |
+| `BAManifestURL` | String | Unmanaged | URL serving the manifest JSON describing available packs; the system downloads it before launching your extension |
+| `BAEssentialMaxInstallSize` | Number (bytes) | Unmanaged | Combined, maximum size of the **essential** assets that download before the system launches your app (uncompressed sizes) |
+| `BAMaxInstallSize` | Number (bytes) | Unmanaged | Combined, maximum size of the **non-essential** assets that download after the essential ones (uncompressed sizes) |
+| `BAInitialDownloadRestrictions` | Dictionary | Unmanaged | Constraints on the downloads that happen immediately after app installation. Its keys are the three below |
+
+Keys inside `BAInitialDownloadRestrictions`:
+
+| Key | Type | Purpose |
+|-----|------|---------|
+| `BADownloadAllowance` | Number (bytes) | Upper bound on the combined size of the non-essential asset files, not individual files — use the **compressed** sizes |
+| `BADownloadDomainAllowList` | Array of strings | Domains the extension may download assets from, in DNS format (prefix a wildcard with `*`, e.g. `*.example.com`) |
+| `BAEssentialDownloadAllowance` | Number (bytes) | Upper bound on the combined size of the essential download files only, which download before the system launches your app — use the **compressed** sizes |
 
 ### Managed Apple-hosted minimal set
 
@@ -622,10 +635,26 @@ Asset packs are described by `Manifest.json` files packaged into `.aar` archives
 |-------|------|----------|---------|
 | `assetPackID` | String | Yes | Unique identifier for the asset pack |
 | `downloadPolicy` | Object | Yes | One of `essential`, `prefetch`, `onDemand` |
-| `fileSelectors` | Array | Yes | Files to include — each item has a `file` or `directory` key (relative path; `directory` is recursive) |
+| `fileSelectors` | Array | Yes | Files to include — each item is **one of six selector shapes** (see below); paths are relative |
 | `platforms` | Array | Yes | Empty array = all platforms; or list specific platforms |
 | `sourceRoot` `OS27` | String | No | Relative path from the manifest's location to the root against which file selectors resolve |
 | `language` `OS27` | String | No | BCP-47 tag marking the pack as localized (see Localized Asset Packs above) |
+| `userInfo` | Object | No | Custom keys and values, surfaced to your code as `AssetPack.userInfo` (JSON-encoded `Data`). **Self-hosted packs only** — remove it for Apple-hosted packs |
+
+The six selector shapes, as `xcrun ba-package template` documents them:
+
+```json
+"fileSelectors": [
+    { "file": "Videos/Introduction.m4v" },                                  // one file
+    { "directory": "Textures" },                                            // recursive
+    { "filePattern": "Audio/*.wav" },                                       // UNIX glob, relative to the source root
+    { "fileSource": "build/a.png", "fileDestination": "Textures/a.png" },   // file, renamed
+    { "directorySource": "raw", "directoryDestination": "Textures" },       // directory, renamed
+    { "fileExclusion": "Textures/draft.png" }                               // exclude what another selector matched
+]
+```
+
+A selector object with zero valid keys is a hard error: `xcrun ba-package evaluate` reports `DecodingError.typeMismatch: Expected value of type FileSelector ... Zero valid keys were found; one or two keys should be present.`
 
 ### Download policy shapes
 
@@ -683,19 +712,47 @@ public enum ManagedBackgroundAssetsError: CustomStringConvertible, LocalizedErro
 
 ```swift
 public enum BAErrorCode: Int {
-    case downloadAlreadyScheduled
-    case downloadBackgroundActivityProhibited
-    case downloadWouldExceedAllowance
-    case sessionDownloadAllowanceExceeded
+    case downloadInvalid = 0
+    case callFromExtensionNotAllowed = 50
+    case callFromInactiveProcessNotAllowed = 51
+    case callerConnectionNotAccepted = 55
+    case callerConnectionInvalid = 56
+    case downloadAlreadyScheduled = 100
+    case downloadNotScheduled = 101
+    case downloadFailedToStart = 102
+    case downloadAlreadyFailed = 103
+    case downloadEssentialDownloadNotPermitted = 109
+    case downloadBackgroundActivityProhibited = 111
+    case downloadWouldExceedAllowance = 112
+    case downloadDoesNotExist = 113
+    case sessionDownloadDisallowedByDomain = 202
+    case sessionDownloadDisallowedByAllowance = 203
+    case sessionDownloadAllowanceExceeded = 204
+    case sessionDownloadNotPermittedBeforeAppLaunch = 206
 }
 ```
 
+All 17 cases, with the four the table below expands in bold:
+
 | Case | Meaning | Response |
 |------|---------|----------|
-| `downloadAlreadyScheduled` | A download for this pack is already pending | Subscribe to `statusUpdates` instead of restarting |
-| `downloadBackgroundActivityProhibited` | User disabled "Background Activity" in Settings | Prompt user, offer foreground fallback |
-| `downloadWouldExceedAllowance` | Pack would exceed per-app storage allowance | Free up storage with `remove(assetPackWithID:)` |
-| `sessionDownloadAllowanceExceeded` | Cumulative session downloads exceeded quota | Wait and retry later |
+| `downloadInvalid` (0) | "Invalid error code" — no specific failure identified | Log the underlying error; treat it as a generic failure |
+| `callFromExtensionNotAllowed` (50) | The method can't be called from the download extension | Move the call into the app process |
+| `callFromInactiveProcessNotAllowed` (51) | The method can't be called from an inactive process | Call it from an active app or extension process |
+| `callerConnectionNotAccepted` (55) | The caller wasn't accepted, based on its application or extension identifier | Check the calling process's application / extension identifier |
+| `callerConnectionInvalid` (56) | The connection to the background asset system service is invalid | The process lost the service connection; retry from a fresh process |
+| **`downloadAlreadyScheduled`** (100) | A download for this pack is already pending | Subscribe to `statusUpdates` instead of restarting |
+| `downloadNotScheduled` (101) | The download you're asking about isn't scheduled | Verify the download identifier; nothing is enqueued under it |
+| `downloadFailedToStart` (102) | Download could not start | Retry with backoff |
+| `downloadAlreadyFailed` (103) | The download has already failed | Inspect the recorded failure; don't retry the same instance |
+| `downloadEssentialDownloadNotPermitted` (109) | Marked essential in a context that prohibits essential downloads | Schedule it non-essential, or wait for app launch |
+| **`downloadBackgroundActivityProhibited`** (111) | Low Power Mode or Background App Refresh is off | Prompt user, offer foreground fallback |
+| **`downloadWouldExceedAllowance`** (112) | Pack would exceed the per-app download allowance | Free up storage with `remove(assetPackWithID:)` |
+| `downloadDoesNotExist` (113) | The `BADownload` object no longer exists | Drop your reference to it |
+| `sessionDownloadDisallowedByDomain` (202) | URL isn't permitted before the app launches | Add the domain to `BADownloadDomainAllowList`, or wait for launch |
+| `sessionDownloadDisallowedByAllowance` (203) | Out of download allowance for this session | Wait and retry later |
+| **`sessionDownloadAllowanceExceeded`** (204) | Cumulative session downloads exceeded quota | Wait and retry later |
+| `sessionDownloadNotPermittedBeforeAppLaunch` (206) | Can't be scheduled before the app has launched | Defer to the next app launch |
 
 ### Foundation Models adapter errors
 
@@ -755,13 +812,14 @@ Runs a local HTTPS mock server for testing asset packs without uploading. Requir
 # Serve one or more archives over HTTPS on localhost
 xcrun ba-serve --host localhost Tutorial.aar HighQualityTextures.aar
 
-# Configure a base URL the device should query (useful for managed packs)
+# Configure a base URL (macOS test devices; on iOS/iPadOS/tvOS/visionOS
+# this is a Settings > Developer > Development Overrides field, not a CLI)
 xcrun ba-serve url-override "https://localhost:PORT"
 ```
 
 Setup on the test device:
 1. **Enable Developer Mode**: Settings > Privacy & Security > Developer Mode
-2. **Install the root CA cert** generated by `ba-serve` via Apple Configurator (App Store ID 1037126344)
+2. **Trust your root CA**: create it in Keychain Access (Certificate Assistant > Create a Certificate Authority), deliver it to the device as an Apple Configurator profile (File > New Profile, Certificates tab; App Store ID 1037126344), then issue a leaf SSL certificate from it. `ba-serve` does not generate the CA — it prompts you to pick an already-issued identity (choose the SSL certificate, not your root CA)
 3. **Configure URL override** on iOS / iPadOS / tvOS / visionOS via Settings > Developer > Development Overrides
 
 `ba-serve` runs HTTPS only — plain HTTP requests are rejected.
@@ -797,7 +855,7 @@ For the StoreKit plug-in's C# surface (`Product.FetchProducts`, `product.Purchas
 | Resource | Limit | Notes |
 |----------|-------|-------|
 | Total compressed asset packs across versions | **200 GB** per app | Sum of "asset pack total" across all versions in the App Store Connect record |
-| Asset pack count | **100** per app | Across all versions |
+| Asset pack count | **200** per app | Across all versions |
 | Per-pack practical limit | None documented | Apple-Hosted Background Assets "hosts up to 200GB of compressed assets" total |
 
 ### "Asset pack total" calculation rules
@@ -861,6 +919,7 @@ Removes adapter asset packs that no longer match any current base model. Call at
 
 ```swift
 import BackgroundAssets
+import System  // FileDescriptor
 
 @MainActor
 final class TutorialAssetController {
@@ -1053,8 +1112,8 @@ struct CustomDownloaderExtension: BADownloaderExtension {
 - **Extensions** — `StoreDownloaderExtension` (Apple-hosted), `BADownloaderExtension` (server-hosted), `ManagedDownloaderExtension` (parent)
 - **Unmanaged types** — `BADownloadManager`, `BAURLDownload`, `BADownload`, `BADownload.State`, `BADownload.Priority`, `BAContentRequest` (`.install`, `.update`, `.periodic`, `.languageChange` (27))
 - **Exclusive control** — `BADownloadManager.withExclusiveControl(_:)` / `withExclusiveControl(before:_:)` — `async` Swift-overlay overloads, back-deployed to iOS 16.1 / macOS 13 / tvOS 18.4 / visionOS 2.4; the completion-handler spellings are deprecated in Swift at 27
-- **Errors** — `ManagedBackgroundAssetsError.assetPackNotFound`, `.fileNotFound`; `BAErrorCode.downloadAlreadyScheduled`, `.downloadBackgroundActivityProhibited`, `.downloadWouldExceedAllowance`, `.sessionDownloadAllowanceExceeded`
-- **Info.plist** — `BAHasManagedAssetPacks`, `BAUsesAppleHosting`, `BAAppGroupID`, `BAManifestURL`, `BAEssentialMaxInstallSize`, `BAMaxInstallSize`, `BAInitialDownloadRestrictions`
+- **Errors** — `ManagedBackgroundAssetsError.assetPackNotFound`, `.fileNotFound`; `BAErrorCode` (all 17 cases, `downloadInvalid = 0` through `sessionDownloadNotPermittedBeforeAppLaunch = 206`)
+- **Info.plist** — `BAHasManagedAssetPacks`, `BAUsesAppleHosting`, `BAAppGroupID`, `BAManifestURL`, `BAEssentialMaxInstallSize`, `BAMaxInstallSize`, `BAInitialDownloadRestrictions` (whose dictionary holds `BADownloadAllowance`, `BADownloadDomainAllowList`, `BAEssentialDownloadAllowance`)
 - **Tooling** — `xcrun ba-package template`, `xcrun ba-package <manifest> -o <archive>`, `xcrun ba-package download-manifest` (self-hosted), `xcrun ba-package convert` (Steam `.vdf` → manifest, Xcode 27), `xcrun ba-package evaluate` (Xcode 27), `xcrun ba-serve --host <host> <archives...>`, `xcrun ba-serve url-override <url>`, Xcode 27 auto-attached mock server (scheme Run settings)
 - **FM bridge** — `SystemLanguageModel.Adapter.compatibleAdapterIdentifiers(name:)`, `.removeObsoleteAdapters()` (deprecated 26.4 / obsoleted 27.0 in the 27 SDK — see the Adapter Bridge status note)
 

@@ -3,9 +3,9 @@
 
 ## Core Philosophy
 
-> "The contact access button is a powerful new way to manage access to contacts, right in your app. Instead of a full-screen picker, this button fits into your existing UI."
+> The contact access button is a powerful new way to manage access to contacts right in your app. Instead of a full-screen picker, this button fits into your existing UI, and can grant access to new contacts, with a single tap.
 
-**Mental model**: Contacts has four authorization levels. Most apps should use the Contact Access Button or CNContactPickerViewController, which require no authorization at all. Only request store access when you need persistent contact data.
+**Mental model**: Contacts has four authorization levels. `CNContactPickerViewController` works at any authorization level and needs no app-level authorization; the Contact Access Button operates while authorization is limited or not determined, granting access one contact at a time. Only request full store access when contacts are the core feature.
 
 ## When to Use This Skill
 
@@ -100,8 +100,11 @@ var body: some View {
         // Contact Access Button for contacts not yet shared
         if authStatus == .limited || authStatus == .notDetermined {
             ContactAccessButton(queryString: searchText) { identifiers in
-                let contacts = await fetchContacts(withIdentifiers: identifiers)
-                // Use the newly accessible contacts
+                // Approval callback is synchronous — hop into a Task for async work
+                Task {
+                    let contacts = await fetchContacts(withIdentifiers: identifiers)
+                    // Use the newly accessible contacts
+                }
             }
         }
     }
@@ -112,7 +115,7 @@ var body: some View {
 
 ```swift
 ContactAccessButton(queryString: searchText)
-    .font(.system(weight: .bold))          // Upper text + action label
+    .font(.system(size: 17, weight: .bold))  // Upper text + action label
     .foregroundStyle(.gray)                 // Primary text color
     .tint(.green)                           // Action label color
     .contactAccessButtonCaption(.phone)     // .defaultText, .email, .phone
@@ -134,18 +137,18 @@ If any requirement fails, tapping the button does nothing. Always ensure adequat
 
 ## Anti-Patterns
 
-| Pattern | Time Cost | Why It's Wrong | Fix |
-|---------|-----------|----------------|-----|
-| Requesting full access for contact picking | 1-2 sprint days recovering denied users | Full access prompts denied 40%+ of the time | Use CNContactPickerViewController or ContactAccessButton |
-| Accessing unfetched key on CNContact | 15-30 min debugging crash | `CNContactPropertyNotFetchedException` — no clear error message | Always specify `keysToFetch` |
-| Using manual name key lists instead of formatter descriptor | 10-20 min debugging per locale | Different cultures use different name field combinations | Use `CNContactFormatter.descriptorForRequiredKeys(for:)` |
-| Creating multiple CNContactStore instances | 30+ min debugging stale data | Objects from one store can't be used with another | Create one, reuse it |
-| Fetching all keys "just in case" | App Store review risk | Overfetching triggers stricter privacy scrutiny | Fetch only the keys you need |
-| Using `CNContactStore` on main thread | 1-2 hours debugging UI freezes | "Fetch methods perform I/O" — Apple docs | Run fetches on background thread |
-| Missing `NSContactsUsageDescription` in Info.plist | 15 min debugging crash | App crashes on any contact store access attempt | Add the usage description |
-| Mutating CNMutableContact across threads | 2-4 hours debugging corruption | "CNMutableContact objects are not thread-safe" | Use immutable CNContact for cross-thread access |
-| Ignoring `.limited` status | 1-2 hours debugging "missing contacts" | App assumes full access but only sees subset | Check status and show ContactAccessButton |
-| Not handling `note` field entitlement | 30 min debugging empty notes | `com.apple.developer.contacts.notes` required | Apply for entitlement from Apple |
+| Pattern | Why It's Wrong | Fix |
+|---------|----------------|-----|
+| Requesting full access for contact picking | `CNContactPickerViewController` gives one-time access at any authorization level, so the prompt buys nothing | Use CNContactPickerViewController or ContactAccessButton |
+| Accessing unfetched key on CNContact | `CNContactPropertyNotFetchedExceptionName` — no clear error message | Always specify `keysToFetch` |
+| Using manual name key lists instead of formatter descriptor | Different cultures use different name field combinations | Use `CNContactFormatter.descriptorForRequiredKeys(for:)` |
+| Caching contacts without refetching them on change | `CNContactStoreDidChangeNotification` invalidates cached contacts, groups, and containers — you silently serve stale data | Refetch on the notification and release the old cached objects |
+| Fetching all keys "just in case" | Overfetching triggers stricter privacy scrutiny | Fetch only the keys you need |
+| Using `CNContactStore` on main thread | "CNContactStore fetch methods perform I/O" — Apple docs | Run fetches on background thread |
+| Missing `NSContactsUsageDescription` in Info.plist | App crashes on any contact store access attempt | Add the usage description |
+| Mutating CNMutableContact across threads | "CNMutableContact objects are not thread-safe" | Use immutable CNContact for cross-thread access |
+| Ignoring `.limited` status | App assumes full access but only sees subset | Check status and show ContactAccessButton |
+| Not handling `note` field entitlement | `com.apple.developer.contacts.notes` required | Apply for entitlement from Apple |
 
 ---
 
@@ -166,7 +169,7 @@ let keys: [CNKeyDescriptor] = [
 let request = CNContactFetchRequest(keysToFetch: keys)
 ```
 
-**Rule**: You may only modify properties whose values you fetched. Accessing an unfetched property throws `CNContactPropertyNotFetchedException`.
+**Rule**: You may only modify properties whose values you fetched. Accessing an unfetched property raises the Objective-C exception `CNContactPropertyNotFetchedExceptionName`.
 
 See **contacts-ref** for search predicates, save operations, name formatting, and vCard serialization.
 
@@ -222,8 +225,12 @@ try await manager.enable()         // May prompt user authorization
 try await manager.signalEnumerator()  // Trigger sync when data changes
 
 // In extension
+import ExtensionFoundation
+
 @main
 class Provider: ContactProviderExtension {
+    required init() {}  // AppExtension requires init()
+
     func configure(for domain: ContactProviderDomain) { /* setup */ }
 
     func enumerator(for collection: ContactItem.Identifier) -> ContactItemEnumerator {
@@ -246,7 +253,7 @@ class Provider: ContactProviderExtension {
 
 **Why resist**: ContactAccessButton provides exactly this — search results for contacts the app doesn't have, one-tap to grant access. No scary full-access prompt.
 
-**Response**: "ContactAccessButton gives us search-driven contact discovery without asking for full access. Users grant access to exactly the contacts they want to share, one at a time. Denial rate drops from 40%+ to near zero."
+**Response**: "ContactAccessButton gives us search-driven contact discovery without asking for full access. Users grant access to exactly the contacts they want to share, one at a time — and the button can be presented while authorization is still undetermined, so the request lands at the moment they go looking for that contact."
 
 ### Scenario 2: "Just fetch all keys, we might display any field"
 
@@ -284,6 +291,6 @@ When updating an app for iOS 18 limited access:
 
 **WWDC**: 2024-10121
 
-**Docs**: /contacts, /contactsui, /contactprovider, /technotes/tn3149
+**Docs**: /contacts, /contactsui, /contactprovider, /technotes/tn3149-fetching-change-history-events
 
 **Skills**: contacts-ref, eventkit, privacy-ux

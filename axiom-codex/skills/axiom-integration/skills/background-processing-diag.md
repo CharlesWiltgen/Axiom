@@ -39,12 +39,12 @@ Task never runs?
 
 ### Time-Cost Analysis
 
-| Approach | Time | Success Rate |
-|----------|------|--------------|
-| Check Info.plist + registration | 5 min | 70% (catches most issues) |
-| Add console logging | 15 min | 90% |
-| LLDB simulate launch | 5 min | 95% (confirms handler works) |
-| Random code changes | 2+ hours | Low |
+| Approach | Time | What it establishes |
+|----------|------|---------------------|
+| Check Info.plist + registration | 5 min | Rules out the two most common causes — identifier not permitted, handler registered after launch |
+| Add console logging | 15 min | How far the launch actually got: registration, submit, run request |
+| LLDB simulate launch | 5 min | Separates a broken handler from a request the system never granted |
+| Random code changes | 2+ hours | Nothing — it cannot tell the two failure sites above apart |
 
 ### LLDB Quick Test
 
@@ -97,30 +97,41 @@ Task terminates early?
 | Network timeout > task time | Use background URLSession |
 | Async callback after expiration | Check shouldContinue flag |
 
-**No expirationHandler = silent kill.** A `nil` expirationHandler on a multi-minute sync does NOT buy more time — the system suspends and then terminates the process with no warning, mid-write. Always set it, and have it cancel in-flight work so a checkpoint can be saved.
+**No expirationHandler = complete and unsuccessful.** A `nil` expirationHandler on a multi-minute sync does NOT buy more time: "Not setting an expiration handler results in the system marking your task as complete and unsuccessful instead of sending a warning." Always set it, and have it cancel in-flight work so a checkpoint can be saved. The kill risk sits on the other call — not calling `setTaskCompleted` before the task's time expires may result in the system killing your app.
 
 ### Swift 6 Expiration Bridge
 
 Map expiration to cooperative cancellation. Do NOT reach for `Operation`/`isCancelled` polling — bridge `expirationHandler` to `Task.cancel()` and checkpoint on `CancellationError`.
 
 ```swift
+@preconcurrency import BackgroundTasks  // BGTask is not Sendable-annotated
+
 func handleSync(task: BGProcessingTask) {
     let work = Task {
-        try await withTaskCancellationHandler {
-            for batch in pendingBatches {
-                try Task.checkCancellation()  // exits at expiration
-                try await sync(batch)
-                saveCheckpoint(after: batch)  // resume here next launch
+        var completed = false
+        do {
+            try await withTaskCancellationHandler {
+                for batch in pendingBatches {
+                    try Task.checkCancellation()  // exits at expiration
+                    try await sync(batch)
+                    saveCheckpoint(after: batch)  // resume here next launch
+                }
+            } onCancel: {
+                // Runs on arbitrary thread at expiration — keep lightweight
             }
-            task.setTaskCompleted(success: true)
-        } onCancel: {
-            // Runs on arbitrary thread at expiration — keep lightweight
+            completed = true
+        } catch {
+            // CancellationError — the checkpoint from the previous batch stands
         }
+        // REQUIRED on both paths: a success-only call is skipped by the throw above
+        task.setTaskCompleted(success: completed)
     }
 
     task.expirationHandler = { work.cancel() }  // expiration → cancellation
 }
 ```
+
+Two Swift 6 constraints this pattern has to respect: the type owning the work must be `Sendable` (or an actor), since the work task captures it; and the register closure — not this handler — must be defined in a `nonisolated` context, because a closure formed inside a `@MainActor` method inherits MainActor isolation and the system calls it on a background queue (`dispatch_assert_queue_fail` before the body runs).
 
 `Task.checkCancellation()` throws `CancellationError` the moment the system expires the task, so the next launch resumes from the last checkpoint instead of redoing the whole sync.
 
@@ -148,7 +159,7 @@ Download completes but `didFinishDownloadingTo` never fires.
 URLSession delegate not called?
 │
 ├─ Step 1: Check session configuration (2 min)
-│  ├─ Using URLSessionConfiguration.background()?
+│  ├─ Using URLSessionConfiguration.background(withIdentifier:)?
 │  │  └─ NO → Must use background config
 │  ├─ Session identifier unique?
 │  │  └─ NO → Use unique bundle-prefixed ID
@@ -203,7 +214,7 @@ Works in dev, not prod?
 │  │  └─ Check ProcessInfo.isLowPowerModeEnabled
 │  ├─ Background App Refresh disabled?
 │  │  └─ Check UIApplication.backgroundRefreshStatus
-│  └─ Battery < 20%?
+│  └─ Battery critically low?
 │     └─ System pauses discretionary work
 │
 ├─ Step 2: Check app state (2 min)
@@ -227,7 +238,7 @@ All affect task execution in production:
 
 | Factor | Check |
 |--------|-------|
-| Critically Low Battery | Battery < 20%? |
+| Critically Low Battery | Battery very low (no threshold published)? |
 | Low Power Mode | ProcessInfo.isLowPowerModeEnabled |
 | App Usage | User opens app frequently? |
 | App Switcher | App NOT swiped away? |
@@ -243,6 +254,8 @@ Add logging to track what's happening:
 func scheduleRefresh() {
     let request = BGAppRefreshTaskRequest(identifier: "com.app.refresh")
     do {
+        // `submit(_:)` is deprecated in iOS 27 (still functional, and it is the only
+        // form below iOS 27). On iOS 27 use `try await submitTaskRequest(_:)`.
         try BGTaskScheduler.shared.submit(request)
         Analytics.log("background_task_scheduled")
     } catch {
@@ -272,8 +285,8 @@ Inconsistent scheduling?
 ├─ Step 1: Understand earliestBeginDate (2 min)
 │  ├─ This is MINIMUM delay, not scheduled time
 │  │  └─ System runs when convenient AFTER this date
-│  └─ Set too far in future (> 1 week)?
-│     └─ System may skip task entirely
+│  └─ Set far in the future?
+│     └─ It is a floor — the system runs later, never earlier
 │
 ├─ Step 2: Check scheduling pattern (2 min)
 │  ├─ Does the handler reschedule as its FIRST line?
@@ -313,7 +326,7 @@ BGTaskScheduler.shared.getPendingTaskRequests { requests in
 
 ### Silent Push Is Not a Polling Hammer
 
-A "send a silent push every minute" / "60s Timer" plan does NOT yield per-minute background runs. Silent pushes (`content-available: 1`, `apns-priority: 5`) are coalesced against a per-app budget: ~14 pushes in a window may produce only ~7 launches, spaced to roughly a 15-minute floor. The budget depletes with each launch and refills over the day, so a high-frequency cadence buys fewer total launches, not more. For genuinely time-sensitive delivery, use a visible notification (`apns-priority: 10`) — not a silent-push flood.
+A "send a silent push every minute" / "60s Timer" plan does NOT yield per-minute background runs. Silent pushes (`content-available: 1`, `apns-priority: 5`) are low priority: the system may throttle delivery if the total number becomes excessive, and "the number of background notifications allowed by the system depends on current conditions, but don't try to send more than two or three per hour". Apple publishes no coalescing ratio, launch count, or interval floor, and the budget depletes with each launch and refills over the day, so a high-frequency cadence buys fewer total launches, not more. For genuinely time-sensitive delivery, use a visible notification (`apns-priority: 10`) — not a silent-push flood.
 
 **Key insight**: You request a time window. System decides when (or if) to run.
 
@@ -394,8 +407,10 @@ Task runs multiple times?
 │     └─ Use unique identifiers per task type
 │
 ├─ Step 2: Check for duplicate submissions (2 min)
-│  └─ Multiple submit() calls queued?
-│     └─ System may batch into single execution
+│  └─ Multiple submit() calls for the same identifier?
+│     └─ Each replaces the pending request; beyond 1 refresh /
+│        10 processing requests the system throws
+│        TooManyPendingTaskRequests
 │
 └─ Step 3: Check handler execution (1 min)
    └─ setTaskCompleted called promptly?
@@ -451,21 +466,25 @@ func scheduleRefreshIfNeeded() {
 
 ```
 // All background task events
-subsystem:com.apple.backgroundtaskscheduler
+subsystem:com.apple.backgroundtasks
 
-// Specific to your app
-subsystem:com.apple.backgroundtaskscheduler message:"com.yourapp"
+// Narrowed to one process
+subsystem:com.apple.backgroundtasks AND process:"YourApp"
 ```
+
+The subsystem literal is `com.apple.backgroundtasks` (category `framework`) — verified against the iOS 27.2 runtime's dyld shared cache and the live unified log, where the framework's own records read `[com.apple.backgroundtasks:framework]`. A filter naming a subsystem that does not exist matches nothing and reports clean, which is the worst failure mode for a diagnostic.
 
 ### Expected Log Sequence
 
-1. "Registered handler for task with identifier"
-2. "Scheduling task with identifier"
-3. "Starting task with identifier"
-4. (your work executes)
-5. "Task completed with identifier"
+The framework's own strings, in launch order:
 
-Missing any step = issue at that stage.
+1. `registerForTaskWithIdentifier: %{public}@` — handler registered
+2. `submitTaskRequest for %{public}@ called before registering task` / `submitTaskRequest failed for %{public}@` — the submission never landed
+3. `Processing pending event for %@` / `Received run request for %@` — the system launched you
+4. `Received request to expire %@ with reason mask: 0x%llx` — expiration delivered
+5. `Launch handler for task with identifier %@ has already been registered` — duplicate registration (the system kills the app on the second registration of one identifier)
+
+Missing step 3 with step 1 present = the system never granted the request; go to the scheduling factors, not the handler.
 
 ---
 

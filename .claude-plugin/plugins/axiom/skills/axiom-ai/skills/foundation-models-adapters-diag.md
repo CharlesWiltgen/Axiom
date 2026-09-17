@@ -281,7 +281,7 @@ The adapter asset pack never downloads, downloads partially, or surfaces a `BAEr
 
 | Error | Adapter-specific implication |
 |-------|------------------------------|
-| `BAErrorCode.downloadBackgroundActivityProhibited` | User disabled "Background Activity" in Settings; adapter feature should prompt the user or offer a foreground download path |
+| `BAErrorCode.downloadBackgroundActivityProhibited` | Low Power Mode or Background App Refresh is off; adapter feature should prompt the user or offer a foreground download path |
 | `BAErrorCode.downloadWouldExceedAllowance` | App is hitting per-user storage quota across all asset packs; `remove(assetPackWithID:)` obsolete adapter variants first |
 | `ManagedBackgroundAssetsError.assetPackNotFound` | Adapter asset pack ID mismatch between manifest and runtime call; verify both use the same `fmadapter-{name}-{variant}` form |
 

@@ -66,7 +66,7 @@ Use `WebFetch` for this — the content is text-only and renders cleanly.
 **When to use**
 - Need 10–30 terms quickly for an initial glossary pass.
 - Looking for a framework-level string (button label, menu item) that doesn't appear in help articles.
-- Want to see how Apple translates a term across 40+ locales at once.
+- Want to see how Apple translates a term across many locales at once.
 
 **When to fall back to Apple Support**
 - The term is ambiguous or contested (multiple candidate translations).
@@ -108,7 +108,7 @@ A **termbase** (or translation glossary) is a canonical mapping of app-specific 
 | Action verbs | "Pin", "Unpin", "Favorite", "Add to Library" |
 | State labels | "Downloaded", "Pending", "Offline" |
 
-Target 20–30 terms for a small app. Over 50 and it becomes maintenance overhead; under 15 and you'll miss the drift-prone cases.
+A working rule of thumb for a small app: 20–30 terms. Past ~50 it becomes maintenance overhead; below ~15 you'll miss the drift-prone cases. Nothing here is measured — tune it to how fast your UI vocabulary actually changes.
 
 ### Termbase Format
 
@@ -181,7 +181,7 @@ In a String Catalog, the comment field carries into the translator's view. Addin
 
 ## Part 4: Pseudolocalization (Layout Stress Testing)
 
-Pseudolocalization replaces source strings with lengthened, accented, or RTL-reversed variants to stress-test layout *before* real translations arrive. German strings are often 30–40% longer than English; Arabic/Hebrew require full RTL layout. Finding layout breaks in pseudolocalization is cheap; finding them after paying for translations is expensive.
+Pseudolocalization replaces source strings with lengthened, accented, or RTL-reversed variants to stress-test layout *before* real translations arrive. German runs about 20% longer than English in Apple's own UI strings — measured 1.22× the English character count across 574 framework string tables in the iOS 27.2 simulator runtime, with individual tables from 0.87× to 1.68× — and Arabic/Hebrew require full RTL layout. Finding layout breaks in pseudolocalization is cheap; finding them after paying for translations is expensive.
 
 ### Xcode Scheme Options
 
@@ -189,10 +189,12 @@ Edit scheme → Run → Options → **Application Language**:
 
 | Setting | Purpose |
 |---------|---------|
-| **Accented Pseudolanguage** | Lengthens strings 30–50%, accents every character. Stress-tests layout and truncation. |
+| **Accented Pseudolanguage** | Accents every character. Measured: the character count is unchanged (16 → 16; 42 UTF-8 bytes) because the diacritics are combining marks — a character-set test, not a length test. |
 | **Right-to-Left Pseudolanguage** | Mirrors layout, reverses text direction. Stress-tests RTL without needing Arabic/Hebrew content. |
 | **Double-Length Pseudolanguage** | Duplicates every string. Extreme stress test for wrapping/truncation. |
-| **Bounded String Pseudolanguage** | Wraps each string in `[# ... #]` brackets. Reveals non-localized (hardcoded) strings instantly. |
+| **Bounded String Pseudolanguage** | Wraps each string in `[# ... #]` brackets (measured: `Welcome to WWDC!` → `[# Welcome to WWDC! #]`). Reveals non-localized (hardcoded) strings instantly. |
+
+These options are launch arguments under the hood, which is why they can be reproduced in a scheme's Arguments pane: Bounded String sets `-NSSurroundLocalizedStrings YES`, Accented sets `-NSAccentuateLocalizedStrings YES`, Double-Length sets `-NSDoubleLocalizedStrings YES` (Xcode's own table in `IDEFoundation`). Setting `-AppleLanguages` alone selects a *language*, not one of these transforms.
 
 ### When to Run Each
 
@@ -214,7 +216,7 @@ Edit scheme → Run → Options → **Application Language**:
 
 **"We don't have translators yet — can we ship without pseudolocalization?"**
 
-No. Pseudolocalization doesn't need translators — it's a build-time toggle that uses a synthetic language. Skipping it means layout bugs get discovered *after* paying for translations, when fixing them may require re-translating resized strings. The 30-minute scheme-switching pass saves multiple hours of re-translation.
+No. Pseudolocalization doesn't need translators — it's a build-time toggle that uses a synthetic language. Skipping it means layout bugs get discovered *after* paying for translations, when fixing them may require re-translating resized strings. Walking the scheme options costs one pass through your screens; discovering the same breaks post-translation costs re-translation.
 
 ---
 
@@ -225,7 +227,7 @@ For team-scale translation passes across multiple locales, TMS tools manage tran
 ### When You Need a TMS
 
 You probably need a TMS when:
-- Translating into 3+ locales simultaneously.
+- Translating into several locales at once.
 - Multiple translators or a review/approval workflow is involved.
 - You'll do repeated passes as strings evolve (translation memory becomes valuable).
 - Non-developer stakeholders (PM, marketing) need to see and approve translations.
@@ -244,7 +246,7 @@ You probably don't need a TMS when:
 | **Phrase** | Native | Yes | Strong glossary/termbase features, VoiceOver i18n guide |
 | **SimpleLocalize** | Native | Yes | Lighter weight, simpler pricing |
 
-All four import `.xcstrings` directly (no conversion step). Most preserve the `state` field (translated / needs-review / stale) that Xcode uses — verify with your chosen tool's current docs before committing to a round-trip workflow.
+All four import `.xcstrings` directly (no conversion step). Most preserve the `state` field — Xcode's serialized values are `new`, `needs_review` and `translated`; staleness is a separate `extractionState` (`stale`), not a `state`. Verify with your chosen tool's current docs before committing to a round-trip workflow.
 
 ### Round-Trip Workflow
 
@@ -255,7 +257,7 @@ Xcode → export .xcstrings → TMS import → translate/review → TMS export �
 1. Commit `.xcstrings` with current source strings.
 2. Upload to TMS (most have CLI or Xcode integration).
 3. Translators work in TMS UI (with termbase, translation memory, comments).
-4. Reviewer transitions state from `needsReview` → `translated`.
+4. Reviewer transitions state from `needs_review` → `translated`.
 5. Export back to `.xcstrings`.
 6. Commit the updated file. Build to verify.
 
@@ -270,7 +272,7 @@ All four tools accept a termbase/glossary upload (CSV or TBX format). Import you
 For an app preparing for ADA review or App Store submission with fresh translations:
 
 1. **Pseudolocalize first** (Part 4, Bounded String mode) — fix all hardcoded strings.
-2. **Research Apple terms** (Part 1) — 15–30 most-prominent UI terms, cross-checked against Apple Support multi-locale pages.
+2. **Research Apple terms** (Part 1) — the most-prominent UI terms, cross-checked against Apple Support multi-locale pages.
 3. **Build the glossary** (Part 2) — commit to `.ai/context/localization-glossary.md` or equivalent.
 4. **Audit VoiceOver comments** (Part 3) — every `.accessibilityLabel`/`.accessibilityHint` has a `VoiceOver:`-prefixed translator comment.
 5. **Enable Xcode 26 AI comment generation** (see `localization.md` Part 10) — fills in translator context for remaining strings.

@@ -11,7 +11,7 @@ The Contacts framework provides programmatic access to the system contact databa
 
 # Part 1: CNContactStore
 
-The primary gateway for contact data. "Fetch methods perform I/O — avoid using the main thread."
+The primary gateway for contact data. Because `CNContactStore` fetch methods perform I/O, it's recommended that you avoid using the main thread to execute fetches.
 
 ## Authorization
 
@@ -44,9 +44,6 @@ let contacts = try store.unifiedContacts(
     keysToFetch: keys
 )
 
-// Current user's card
-let me = try store.unifiedMeContact(withKeysToFetch: keys)
-
 // Memory-efficient enumeration
 let request = CNContactFetchRequest(keysToFetch: keys)
 request.predicate = predicate  // Optional filter
@@ -70,9 +67,9 @@ CNContact.predicateForContactsInContainer(withIdentifier: containerId)
 ## Containers and Groups
 
 ```swift
-store.containers(matching: predicate)     // [CNContainer]
-store.groups(matching: predicate)         // [CNGroup]
-store.defaultContainerIdentifier          // String (property, not method)
+try store.containers(matching: predicate)     // [CNContainer]
+try store.groups(matching: predicate)         // [CNGroup]
+store.defaultContainerIdentifier()            // String (method, not property)
 ```
 
 **CNContainer types**: `.local`, `.exchange`, `.cardDAV`, `.unassigned`
@@ -107,7 +104,7 @@ try store.execute(saveRequest)
 
 # Part 2: CNContact Key Descriptors
 
-You MUST specify which properties to fetch. Accessing an unfetched property throws `CNContactPropertyNotFetchedException`.
+You MUST specify which properties to fetch. Accessing an unfetched property raises the Objective-C exception `CNContactPropertyNotFetchedExceptionName`.
 
 ## Common Key Constants
 
@@ -209,7 +206,7 @@ Set strings/arrays to empty, other properties to `nil`.
 
 # Part 4: CNSaveRequest
 
-Batch operations for contacts, groups, and subgroups.
+Batch operations for contacts and groups.
 
 **Platform**: iOS 9.0+, iPadOS 9.0+, macOS 10.11+, Mac Catalyst 13.1+ (no watchOS)
 
@@ -230,9 +227,9 @@ request.update(group)
 request.delete(group)
 request.addMember(contact, to: group)
 request.removeMember(contact, from: group)
-request.addSubgroup(subgroup, to: parentGroup)
-request.removeSubgroup(subgroup, from: parentGroup)
 ```
+
+**Subgroups**: `addSubgroup(_:to:)` and `removeSubgroup(_:from:)` are macOS only — `API_AVAILABLE(macos(10.11)) API_UNAVAILABLE(ios)`. On iOS, group membership goes through `addMember`/`removeMember`.
 
 ## Properties
 
@@ -260,7 +257,7 @@ let formatter = CNContactFormatter()
 
 // Format name
 let name = formatter.string(from: contact)  // String?
-let name = CNContactFormatter.string(from: contact, style: .fullName)
+let formatted = CNContactFormatter.string(from: contact, style: .fullName)
 
 // Attributed string variants
 let attributed = formatter.attributedString(from: contact)
@@ -286,7 +283,7 @@ let delimiter = CNContactFormatter.delimiter(for: contact)  // Locale-appropriat
 let data = try CNContactVCardSerialization.data(with: contacts)
 
 // Import contacts from vCard data
-let contacts = try CNContactVCardSerialization.contacts(with: data)
+let imported = try CNContactVCardSerialization.contacts(with: data)
 
 // Required keys for export
 let keys = CNContactVCardSerialization.descriptorForRequiredKeys()
@@ -346,19 +343,19 @@ Display a single contact with three initialization modes:
 
 ```swift
 // Existing contact
-let vc = CNContactViewController(for: contact)
+let vcExisting = CNContactViewController(for: contact)
 
 // Unknown contact (partial data)
-let vc = CNContactViewController(forUnknownContact: partialContact)
+let vcUnknown = CNContactViewController(forUnknownContact: partialContact)
 
 // New contact
-let vc = CNContactViewController(forNewContact: nil)
+let vcNew = CNContactViewController(forNewContact: nil)
 
 // Display mode
-vc.allowsEditing = true
-vc.allowsActions = true  // Call, message, email buttons
-vc.displayedPropertyKeys = [CNContactPhoneNumbersKey]
-vc.highlightProperty(withKey: CNContactPhoneNumbersKey, identifier: nil)
+vcExisting.allowsEditing = true
+vcExisting.allowsActions = true  // Call, message, email buttons
+vcExisting.displayedPropertyKeys = [CNContactPhoneNumbersKey]
+vcExisting.highlightProperty(withKey: CNContactPhoneNumbersKey, identifier: nil)
 ```
 
 ---
@@ -369,7 +366,10 @@ SwiftUI component for privacy-conscious contact access.
 
 ```swift
 ContactAccessButton(queryString: searchText) { identifiers in
-    let contacts = await fetchContacts(withIdentifiers: identifiers)
+    // Approval callback is synchronous — hop into a Task for async work
+    Task {
+        let contacts = await fetchContacts(withIdentifiers: identifiers)
+    }
 }
 ```
 
@@ -384,7 +384,7 @@ ContactAccessButton(queryString: searchText) { identifiers in
 ### Modifiers
 
 ```swift
-.font(.system(weight: .bold))
+.font(.system(size: 17, weight: .bold))
 .foregroundStyle(.gray)
 .tint(.green)
 .contactAccessButtonCaption(.phone)
@@ -412,25 +412,14 @@ Button("Share More Contacts") {
 }
 .contactAccessPicker(isPresented: $isPresented) { identifiers in
     // identifiers: [String] — newly permitted contacts only
-    let contacts = await fetchContacts(withIdentifiers: identifiers)
+    // Completion handler is synchronous — hop into a Task for async work
+    Task {
+        let contacts = await fetchContacts(withIdentifiers: identifiers)
+    }
 }
 ```
 
 **Difference from CNContactPickerViewController**: `contactAccessPicker` changes persistent access. `CNContactPickerViewController` provides one-time snapshots.
-
----
-
-## CNContactSavedAutoFillDetailsController iOS27
-
-Manages visibility logic for "Saved AutoFill Details" on contact cards — whether saved AutoFill information should be shown for a contact (Apple's docs also list iPadOS / Mac Catalyst 27; the class is present and compiles in the visionOS 27 SDK as well). The 27 cycle's only ContactsUI addition; no WWDC session covers it.
-
-```swift
-let controller = CNContactSavedAutoFillDetailsController()
-controller.contact = contact  // CNContact?
-controller.checkShouldShowAutofill { shouldShow, error in
-    // shouldShow: NSNumber?, error: NSError?
-}
-```
 
 ---
 
@@ -453,7 +442,7 @@ try await manager.enable()            // Async — may prompt user
 try await manager.disable()           // Deactivate
 try await manager.reset()             // Clear all provider contacts
 try await manager.invalidate()        // Terminate extension
-try await manager.signalEnumerator(for: .default)  // Trigger enumeration
+try await manager.signalEnumerator(for: .rootContainer)  // Trigger enumeration (the default)
 
 manager.isEnabled                     // Bool — activation state
 ```
@@ -463,8 +452,12 @@ manager.isEnabled                     // Bool — activation state
 ## ContactProviderExtension Protocol
 
 ```swift
+import ExtensionFoundation
+
 @main
 class Provider: ContactProviderExtension {
+    required init() {}  // AppExtension requires init()
+
     func configure(for domain: ContactProviderDomain) {
         // Setup data access
     }
@@ -493,7 +486,7 @@ class MyEnumerator: ContactItemEnumerator {
     func enumerateContent(
         in page: ContactItemPage,
         for observer: ContactItemContentObserver
-    ) {
+    ) async {
         let contact = CNMutableContact()
         contact.givenName = "Jane"
         contact.familyName = "Appleseed"
@@ -505,16 +498,18 @@ class MyEnumerator: ContactItemEnumerator {
     func enumerateChanges(
         startingAt anchor: ContactItemSyncAnchor,
         for observer: ContactItemChangeObserver
-    ) {
+    ) async {
         // Incremental updates since anchor
-        observer.didFinishEnumeratingChanges(upTo: newAnchor)
+        observer.didFinishEnumeratingChanges(upTo: newAnchor, moreComing: false)
     }
+
+    func invalidate() async {}
 }
 ```
 
 ## ContactProvider Errors
 
-| Code | Meaning |
+| Case | Meaning |
 |------|---------|
 | `featureNotAvailable` | Framework not available |
 | `deniedByUser` | User rejected |
@@ -524,6 +519,9 @@ class MyEnumerator: ContactItemEnumerator {
 | `pageExpired` | Content page expired |
 | `changeAnchorExpired` | Sync anchor expired |
 | `itemsLimitReached` | Too many contacts |
+| `extensionInvalidated` | App invalidated the extension while it was enumerating |
+| `extensionInvalidateTimeout` | Invalidate operation timed out |
+| `domainNotRegistered` | Domain has not been registered |
 
 ---
 
@@ -604,7 +602,7 @@ Error `userInfo` provides: `affectedRecords`, `affectedRecordIdentifiers`, `keyP
 | ContactAccessButton | 18.0+ | — | — | — |
 | contactAccessPicker | 18.0+ | — | — | — |
 | ContactProvider | 18.0+ | — | — | — |
-| CNChangeHistoryFetchRequest | 13.0+ | 10.15+ | — | 1.0+ |
+| CNChangeHistoryFetchRequest | 13.0+ | 10.15+ | 6.0+ | 1.0+ |
 | CNSaveRequest | 9.0+ | 10.11+ | — | 1.0+ |
 
 ---
@@ -613,6 +611,6 @@ Error `userInfo` provides: `affectedRecords`, `affectedRecordIdentifiers`, `keyP
 
 **WWDC**: 2024-10121
 
-**Docs**: /contacts, /contacts/cncontactstore, /contacts/cnmutablecontact, /contactsui, /contactsui/cncontactpickerviewcontroller, /contactprovider, /technotes/tn3149
+**Docs**: /contacts, /contacts/cncontactstore, /contacts/cnmutablecontact, /contactsui, /contactsui/cncontactpickerviewcontroller, /contactprovider, /technotes/tn3149-fetching-change-history-events
 
 **Skills**: contacts, eventkit-ref, privacy-ux

@@ -45,12 +45,9 @@ let status = EKEventStore.authorizationStatus(for: .event)  // Static method
 | `NSCalendarsWriteOnlyAccessUsageDescription` | Write-only access, iOS 17+ |
 | `NSCalendarsFullAccessUsageDescription` | Full event access, iOS 17+ |
 | `NSRemindersFullAccessUsageDescription` | Reminder access, iOS 17+ |
-| `NSCalendarsUsageDescription` | Calendar access, iOS 10-16 (keep for backward compat) |
-| `NSRemindersUsageDescription` | Reminder access, iOS 10-16 (keep for backward compat) |
-| `NSContactsUsageDescription` | Required if using EventKitUI on iOS <17 |
+| `NSContactsUsageDescription` | Required if using EventKitUI to access Contacts data |
 
-**Missing key on iOS 17+**: Silent denial (no prompt, no error, no crash).
-**Missing key on iOS 10-16**: Crash.
+**A missing access-level key falls back, it does not silently deny.** If your app omits `NSCalendarsWriteOnlyAccessUsageDescription` or `NSCalendarsFullAccessUsageDescription`, EventKit uses `NSCalendarsUsageDescription` (iOS 6.0+) as the fallback; if it omits `NSRemindersFullAccessUsageDescription`, EventKit uses `NSRemindersUsageDescription` (iOS 6.0+) as the fallback. (TN3153, "Calendar usage description keys".)
 
 ## Calendar & Source Access
 
@@ -284,7 +281,7 @@ event.addRecurrenceRule(rule)
 | Property | Type | Notes |
 |----------|------|-------|
 | `title` | `String` | |
-| `color` | `UIColor` / `cgColor: CGColor` | |
+| `cgColor` | `CGColor` | macOS additionally exposes `color: NSColor` |
 | `type` | `EKCalendarType` | `.local`, `.calDAV`, `.exchange`, `.subscription`, `.birthday` |
 | `allowsContentModifications` | `Bool` | Can write to this calendar? |
 | `isImmutable` | `Bool` | System calendar (birthday, holidays) |
@@ -302,6 +299,8 @@ event.addRecurrenceRule(rule)
 
 # Part 7: EventKitUI View Controllers
 
+**Swift 6 note**: `UIViewController` is `@MainActor`, but EventKitUI's delegate protocols carry no actor annotation, so a plain conformance does not compile — `error: conformance of 'MyViewController' to protocol 'EKEventEditViewDelegate' crosses into main actor-isolated code and can cause data races`. Declare every EventKitUI delegate conformance `@preconcurrency`, as the delegate sections below do.
+
 ## EKEventEditViewController
 
 Create/edit events. **No permission required on iOS 17+** (renders out-of-process).
@@ -312,25 +311,27 @@ Create/edit events. **No permission required on iOS 17+** (renders out-of-proces
 let editVC = EKEventEditViewController()
 editVC.event = event          // nil = new event
 editVC.eventStore = store     // Required
-editVC.editViewDelegate = self
+editVC.editViewDelegate = self   // self: @preconcurrency EKEventEditViewDelegate
 present(editVC, animated: true)
 ```
 
 ### EKEventEditViewDelegate
 
 ```swift
-func eventEditViewController(
-    _ controller: EKEventEditViewController,
-    didCompleteWith action: EKEventEditViewAction
-) {
-    // action: .canceled, .saved, .deleted
-    dismiss(animated: true)
-}
+extension MyViewController: @preconcurrency EKEventEditViewDelegate {
+    func eventEditViewController(
+        _ controller: EKEventEditViewController,
+        didCompleteWith action: EKEventEditViewAction
+    ) {
+        // action: .canceled, .saved, .deleted
+        dismiss(animated: true)
+    }
 
-func eventEditViewControllerDefaultCalendar(
-    forNewEvents controller: EKEventEditViewController
-) -> EKCalendar {
-    return store.defaultCalendarForNewEvents!
+    func eventEditViewControllerDefaultCalendar(
+        forNewEvents controller: EKEventEditViewController
+    ) -> EKCalendar {
+        return store.defaultCalendarForNewEvents!
+    }
 }
 ```
 
@@ -345,18 +346,20 @@ let viewVC = EKEventViewController()
 viewVC.event = event               // Required
 viewVC.allowsEditing = true
 viewVC.allowsCalendarPreview = true
-viewVC.delegate = self
+viewVC.delegate = self             // self: @preconcurrency EKEventViewDelegate
 navigationController?.pushViewController(viewVC, animated: true)
 ```
 
 ### EKEventViewDelegate
 
 ```swift
-func eventViewController(
-    _ controller: EKEventViewController,
-    didCompleteWith action: EKEventViewAction
-) {
-    // action: .done, .responded, .deleted
+extension MyViewController: @preconcurrency EKEventViewDelegate {
+    func eventViewController(
+        _ controller: EKEventViewController,
+        didCompleteWith action: EKEventViewAction
+    ) {
+        // action: .done, .responded, .deleted
+    }
 }
 ```
 
@@ -375,7 +378,7 @@ let chooser = EKCalendarChooser(
 )
 chooser.selectedCalendars = [store.defaultCalendarForNewEvents!]
 chooser.showsDoneButton = true
-chooser.delegate = self
+chooser.delegate = self          // self: @preconcurrency EKCalendarChooserDelegate
 present(UINavigationController(rootViewController: chooser), animated: true)
 ```
 
@@ -398,6 +401,8 @@ For apps supporting voice/video calls — integrates directly into Calendar's lo
 **Platform**: iOS 15.0+, macOS 12.0+, watchOS 8.0+, visionOS 1.0+
 
 ```swift
+@preconcurrency import EventKit
+
 class MyConferenceProvider: EKVirtualConferenceProvider {
     override func fetchAvailableRoomTypes() async throws
         -> [EKVirtualConferenceRoomTypeDescriptor] {
@@ -414,7 +419,7 @@ class MyConferenceProvider: EKVirtualConferenceProvider {
     ) async throws -> EKVirtualConferenceDescriptor {
         let url = EKVirtualConferenceURLDescriptor(
             title: nil,  // Optional — useful when multiple join URLs
-            url: URL(string: "https://myapp.com/join/\(roomId)")!
+            url: URL(string: "https://myapp.com/join/\(identifier)")!
         )
         return EKVirtualConferenceDescriptor(
             title: nil,  // Optional — distinguishes multiple room types
@@ -424,6 +429,8 @@ class MyConferenceProvider: EKVirtualConferenceProvider {
     }
 }
 ```
+
+**`@preconcurrency import EventKit` is required here.** The overrides return `EKVirtualConferenceRoomTypeDescriptor` / `EKVirtualConferenceDescriptor`, which are not `Sendable`, from `@concurrent` overrides of a superclass method — under the Swift 6 language mode that is an error (`non-Sendable type 'EKVirtualConferenceDescriptor' cannot be returned from @concurrent override to caller of superclass instance method 'fetchVirtualConference(identifier:)'`). Apple's own Xcode template for this extension point has the same shape and fails identically; `@preconcurrency` downgrades it to a warning.
 
 **Use Universal Links** for join URLs so your app opens directly.
 
@@ -459,7 +466,8 @@ let reservation = INRestaurantReservation(
 
 // 3. Create intent + response
 let intent = INGetReservationDetailsIntent(
-    reservationContainerReference: reference
+    reservationContainerReference: reference,
+    reservationItemReferences: nil
 )
 let response = INGetReservationDetailsIntentResponse(code: .success, userActivity: nil)
 response.reservations = [reservation]
@@ -544,13 +552,17 @@ try store.save(reminder, commit: true)
 
 ### Fetching Location Reminders
 
+Reminder fetches are completion-based: `fetchReminders(matching:completion:)` returns an opaque fetch identifier (for `cancelFetchRequest(_:)`), so the results arrive in the callback and there is no `async` form.
+
 ```swift
 let predicate = store.predicateForReminders(in: nil)
-let allReminders = try await fetchReminders(matching: predicate)
-let locationReminders = allReminders.filter { reminder in
-    reminder.alarms?.contains { alarm in
-        alarm.structuredLocation != nil && alarm.proximity != .none
-    } ?? false
+store.fetchReminders(matching: predicate) { reminders in
+    let locationReminders = (reminders ?? []).filter { reminder in
+        reminder.alarms?.contains { alarm in
+            alarm.structuredLocation != nil && alarm.proximity != .none
+        } ?? false
+    }
+    // locationReminders: [EKReminder] — the ones with a location alarm
 }
 ```
 
@@ -567,16 +579,18 @@ let locationReminders = allReminders.filter { reminder in
 | 2 | `noStartDate` | Missing start date |
 | 3 | `noEndDate` | Missing end date |
 | 4 | `datesInverted` | End date before start date |
-| 12 | `calendarReadOnly` | Calendar doesn't allow modifications |
-| 13 | `calendarIsImmutable` | System calendar (birthday, etc.) |
-| 15 | `sourceDoesNotAllowCalendarAddDelete` | Can't create/delete calendars on this source |
+| 6 | `calendarReadOnly` | Calendar doesn't allow modifications |
+| 11 | `objectBelongsToDifferentStore` | Cross-store object usage |
+| 12 | `invitesCannotBeMoved` | Can't move events with attendees |
+| 13 | `invalidSpan` | Invalid span value |
+| 16 | `calendarIsImmutable` | System calendar (birthday, etc.) |
+| 17 | `sourceDoesNotAllowCalendarAddDelete` | Can't create/delete calendars on this source |
 | 18 | `recurringReminderRequiresDueDate` | Recurring reminders need due date |
 | 19 | `structuredLocationsNotSupported` | Location alarms not supported |
 | 21 | `alarmProximityNotSupported` | Proximity alarms not supported |
-| 22 | `eventStoreNotAuthorized` | No permission |
-| 24 | `objectBelongsToDifferentStore` | Cross-store object usage |
-| 25 | `invitesCannotBeMoved` | Can't move events with attendees |
-| 26 | `invalidSpan` | Invalid span value |
+| 29 | `eventStoreNotAuthorized` | No permission |
+
+The ordinals come from `EKError.h`, which declares `EKErrorCode` with no explicit values — each name's number is its position in the declaration.
 
 ---
 
@@ -592,7 +606,7 @@ let locationReminders = allReminders.filter { reminder in
 | EKCalendarChooser | 4.0+ | (Catalyst 13.0+) | — | 1.0+ |
 | EKVirtualConferenceProvider | 15.0+ | 12.0+ | 8.0+ | 1.0+ |
 | Location-based reminders | 6.0+ | 10.8+ | — | — |
-| Siri Event Suggestions | 12.0+ | 11.0+ (Catalyst) | — | — |
+| Siri Event Suggestions | 13.0+ | 11.0+ (Catalyst) | — | — |
 | Schema.org markup | 14.0+ | 11.0+ (Safari/Mail) | — | — |
 
 ---
@@ -601,6 +615,6 @@ let locationReminders = allReminders.filter { reminder in
 
 **WWDC**: 2023-10052, 2020-10197
 
-**Docs**: /eventkit, /eventkitui, /eventkit/ekeventstore, /eventkit/ekevent, /eventkit/ekreminder, /eventkit/ekvirtualconferenceprovider, /technotes/tn3152, /technotes/tn3153
+**Docs**: /eventkit, /eventkitui, /eventkit/ekeventstore, /eventkit/ekevent, /eventkit/ekreminder, /eventkit/ekvirtualconferenceprovider, /technotes/tn3152-migrating-to-the-latest-calendar-access-levels, /technotes/tn3153-adopting-api-changes-for-eventkit-in-ios-macos-and-watchos
 
 **Skills**: eventkit, contacts-ref, extensions-widgets-ref

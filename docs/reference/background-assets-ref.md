@@ -13,7 +13,7 @@ Use this reference when:
 - Looking up `AssetPackManager` method signatures (`assetPack(withID:)`, `ensureLocalAvailability(of:)`, `statusUpdates`, `contents(at:searchingInAssetPackWithID:)`, `descriptor(for:)`, `checkForUpdates()`, `remove(assetPackWithID:)`)
 - Looking up `AssetPack.Status` flags (`downloadAvailable`, `downloading`, `downloaded`, `upToDate`, `outOfDate`, `obsolete`, `updateAvailable`) and the stream-only `DownloadStatusUpdate` cases (`began`, `paused`, `downloading`, `finished`, `failed`)
 - Looking up Info.plist keys (`BAHasManagedAssetPacks`, `BAUsesAppleHosting`, `BAAppGroupID`, `BAManifestURL`, `BAEssentialMaxInstallSize`, `BAMaxInstallSize`, `BAInitialDownloadRestrictions`)
-- Looking up `BAErrorCode` cases for error handling (`downloadAlreadyScheduled`, `downloadBackgroundActivityProhibited`, `downloadWouldExceedAllowance`, `sessionDownloadAllowanceExceeded`) and `ManagedBackgroundAssetsError` (`assetPackNotFound`, `fileNotFound`)
+- Looking up `BAErrorCode` cases for error handling (all 17 cases, `downloadInvalid = 0` through `sessionDownloadNotPermittedBeforeAppLaunch = 206`) and `ManagedBackgroundAssetsError` (`assetPackNotFound`, `fileNotFound`)
 - Writing a `StoreDownloaderExtension` (Apple-hosted) or `BADownloaderExtension` (server-hosted)
 - Authoring a `Manifest.json` for `xcrun ba-package`
 - Setting up local testing with `xcrun ba-serve`
@@ -52,7 +52,7 @@ Questions developers ask that this reference answers:
 - **On-Demand Resources deprecation** – the 27 SDKs deprecate the `NSBundleResourceRequest` family in favor of Background Assets
 - **Tooling** – `xcrun ba-package template / <manifest> -o / download-manifest / evaluate / convert` (`evaluate` and Steam depot `convert` are Xcode 27); `xcrun ba-serve --host / url-override` with Developer Mode + root CA setup steps; the Xcode 27 auto-attached mock server
 - **Unity plug-ins** – the Background Assets and StoreKit Apple Unity plug-ins (WWDC 2026)
-- **Apple-hosted quotas** – 200 GB total, 100-pack max per app; "asset pack total" calculation rules with Apple's documented example; quota warning at 80%; upload paths (Transporter, altool, iTMSTransporter, App Store Connect REST API)
+- **Apple-hosted quotas** – 200 GB total, 200-pack max per app; "asset pack total" calculation rules with Apple's documented example; quota warning at 80%; upload paths (Transporter, altool, iTMSTransporter, App Store Connect REST API)
 - **Foundation Models adapter bridge** – `SystemLanguageModel.Adapter.compatibleAdapterIdentifiers(name:)`, `removeObsoleteAdapters()` with the canonical adapter-download extension pattern (deprecated 26.4 / obsoleted 27.0 in the 27 SDK)
 - **Five complete patterns** – Apple-hosted managed pack lifecycle, stream-driven SwiftUI progress, Foundation Models adapter delivery (with `AssetPackManager` + `SystemLanguageModel.Adapter` composition), manifest authoring + local testing, custom server-hosted extension
 

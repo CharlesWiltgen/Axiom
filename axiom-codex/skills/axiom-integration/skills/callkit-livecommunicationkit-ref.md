@@ -9,7 +9,7 @@ Comprehensive API reference for CallKit, PushKit VoIP, LiveCommunicationKit, and
 - **CXCallController** — Requests user-initiated actions (start/end/hold/mute) as transactions.
 - **CXTransaction** — One or more `CXAction`s submitted together.
 - **CXCallUpdate** — Mutable description of a call's metadata (handle, video, caller name).
-- **PKPushRegistry** — Delivers VoIP pushes; each must report a call.
+- **PKPushRegistry** — Delivers VoIP pushes; each push must report a call or conversation (CallKit or LiveCommunicationKit) — unless the push's metadata exempts it (Part 6).
 - **ConversationManager** — LiveCommunicationKit's CXProvider analogue (watch/visionOS, default apps).
 - **CXCallDirectoryProvider** — Bulk, offline caller identification/blocking extension.
 - **LiveCallerIDLookupManager** — Real-time, PIR-based caller ID/blocking (iOS 18+).
@@ -137,6 +137,17 @@ func pushRegistry(_ registry: PKPushRegistry,
                   completion: @escaping () -> Void) {
     // MUST reportNewIncomingCall before completion() — see discipline Part 1
 }
+// iOS 26.4+ — Apple's preferred delegate for VoIP: metadata.mustReport is false
+// when the push need not be reported (app already foregrounded, already in a
+// call/conversation, or the push arrived late)
+@available(iOS 26.4, *)
+func pushRegistry(_ registry: PKPushRegistry,
+                  didReceiveIncomingVoIPPushWith payload: PKPushPayload,
+                  metadata: PKVoIPPushMetadata,
+                  withCompletionHandler completion: @escaping () -> Void) {
+    // report a call (CallKit) or conversation (LiveCommunicationKit) unless
+    // metadata.mustReport == false
+}
 func pushRegistry(_ registry: PKPushRegistry, didInvalidatePushTokenFor type: PKPushType) { }
 ```
 
@@ -163,8 +174,8 @@ manager.conversations                         // [Conversation]; ConversationMan
 
 // Cellular / default dialer (iOS 26+, EU) — singleton, no public init
 let telephony = TelephonyConversationManager.sharedInstance
-telephony.startCellularConversation(action)   // ConversationAction
-telephony.cellularServices                     // available cellular accounts
+try await telephony.startCellularConversation(action)   // action: StartCellularConversationAction
+telephony.cellularServices                     // [CellularService] — the available cellular accounts
 ```
 
 - `Conversation` — a call. `ConversationAction` — system-initiated action (mirror of `CXAction`); fulfill/fail it.

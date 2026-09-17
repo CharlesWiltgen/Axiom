@@ -6,12 +6,12 @@ Systematic troubleshooting for push notification failures: missing notifications
 ## Overview
 
 **Core Principle**: When push notifications don't work, the problem is usually:
-1. **Token/registration failures** (never registered, wrong format, expired) — 30%
-2. **Entitlement/provisioning mismatch** (capability missing, wrong environment) — 25%
-3. **Payload structure errors** (missing keys, wrong types, invalid JSON) — 15%
-4. **Focus/interruption suppression** (iOS 15+ filtering, provisional auth) — 15%
-5. **Service extension failures** (timeout, crash, missing mutable-content) — 10%
-6. **Delivery timing/throttling** (silent push budget, APNs coalescing) — 5%
+1. **Token/registration failures** (never registered, wrong format, expired)
+2. **Entitlement/provisioning mismatch** (capability missing, wrong environment)
+3. **Payload structure errors** (missing keys, wrong types, invalid JSON)
+4. **Focus/interruption suppression** (iOS 15+ filtering, provisional auth)
+5. **Service extension failures** (timeout, crash, missing mutable-content)
+6. **Delivery timing/throttling** (silent push budget, APNs coalescing)
 
 **Always verify entitlements and token registration BEFORE debugging payload or delivery logic.**
 
@@ -23,11 +23,11 @@ Symptoms that indicate push-specific issues:
 |---------|--------------|
 | No notifications at all | Missing Push Notification capability or provisioning profile |
 | Works in dev, not production | Sending to sandbox APNs with production token (or vice versa) |
-| Token registration fails on Simulator | Expected — Simulator cannot register for remote notifications |
+| Token registration fails on Simulator | Rare on Apple silicon/T2 — since iOS 16 the Simulator registers and receives pushes through the APNs sandbox. Check network reachability and the aps-environment entitlement |
 | Notifications appear without sound | Missing .sound in authorization options or payload |
 | Rich notification shows plain text | Missing mutable-content: 1 in payload |
 | Image not showing in notification | Service extension failed silently — check serviceExtensionTimeWillExpire |
-| ENTIRE notification vanishes (worse than plain text) | NSE never called contentHandler before the ~30s budget expired, and serviceExtensionTimeWillExpire has no fallback. The OS drops the whole notification, not just the media |
+| Plain text though mutable-content is set | NSE never called contentHandler before the budget expired and serviceExtensionTimeWillExpire has no fallback. The system delivers the original, unmodified notification |
 | NSE never fires at all | Extension bundle ID prefix wrong. Must be {host-app-bundle-id}.SomeName — a mismatched prefix means the NSE silently never runs, no crash, no log |
 | Silent push not waking app | System throttling (~2-3/hour), or app was force-quit by user |
 | Notifications stopped after iOS update | Focus mode enabled by default in iOS 15+; check interruption level |
@@ -41,14 +41,14 @@ Symptoms that indicate push-specific issues:
 | Rationalization | Why It Fails | Time Cost |
 |----------------|--------------|-----------|
 | "It worked yesterday, so entitlements are fine" | Provisioning profiles get regenerated during signing changes. Always re-verify. | 30-60 min debugging code when the profile lost push capability |
-| "The server says their payload is fine" | 55% of push failures are client-side (entitlements + tokens). Verify independently with curl. | 1-2 hours of finger-pointing before someone checks |
+| "The server says their payload is fine" | Entitlement and token problems are client-side; verify them independently with curl before accepting the server's word. | 1-2 hours of finger-pointing before someone checks |
 | "I'll skip token verification, the error is clearly in the payload" | Wrong-environment tokens are the #1 cause of "works in dev, not production." | 30+ min debugging valid payloads sent to invalid tokens |
 | "Focus mode doesn't matter, we use default interruption level" | Default (`active`) is filtered by Focus. Only `time-sensitive` and `critical` break through. | Hours adding code workarounds for a payload-level fix |
 | "Silent push is reliable, we use it for sync" | System throttles to ~2-3/hour and ignores force-quit apps. It's a hint, not a guarantee. | Architecture rework when silent push can't sustain real-time sync |
 | "Service extension is set up, so rich notifications should work" | Extension needs correct bundle ID suffix, mutable-content in payload, AND completing within 30s. | 30+ min when any one of the three prerequisites is missing |
 | "FCM handles everything, I don't need to understand APNs" | FCM wraps APNs. Token type confusion, missing p8 key upload, and swizzling conflicts are all APNs-level problems. | Hours debugging FCM when the issue is APNs configuration |
-| "I'll test on Simulator first" | Simulator cannot register for remote notifications. No APNs token = no real push testing. | Wasted test cycle discovering Simulator limitations |
-| "Let me rewrite the notification handler" | 80% of push failures are configuration (entitlements, tokens, environment), not code. | Hours rewriting working code while the config stays broken |
+| "I'll test on Simulator first" | On Apple silicon/T2 the Simulator registers and receives APNs sandbox pushes, but `simctl push` delivers only app notifications — VoIP, complication and other push types still need a device. | A test cycle spent discovering which Simulator limits are real |
+| "Let me rewrite the notification handler" | Configuration — entitlements, tokens, environment — is what to verify first; Steps 1-4 are cheap and decisive. | Hours rewriting working code while the config stays broken |
 | "This worked on iOS 17, the bug must be in our code" | Each iOS version changes Focus defaults, interruption filtering, and provisional behavior. | Debugging code when the fix is a payload or Settings change |
 | "Just send the push 50 times so it gets through" | Resending the same payload stacks 50 banners and gets you flagged for APNs abuse. Reliable delivery is a header problem, not a volume problem — use apns-expiration for store-and-forward and apns-collapse-id to replace, not stack. | Spam complaints and 1-star reviews; the real fix was two headers |
 | "Push is flaky, just poll the server every minute" | Polling drains battery, wastes server load, and is rejected by App Review for background abuse. APNs already does store-and-forward to offline devices via apns-expiration. | Battery drain, App Review rejection, infra cost for a problem APNs solves for free |
@@ -90,8 +90,8 @@ func application(_ application: UIApplication,
 ```
 
 **Expected output**:
-- ✅ 64-character hex token → Registration successful
-- ❌ "no valid aps-environment entitlement" → Capability misconfigured
+- ✅ A hex device token of the platform's current length → Registration successful (device tokens are variable length — never assert a length)
+- ❌ "no valid 'aps-environment' entitlement string" → Capability misconfigured
 - ❌ No callback fires at all → `registerForRemoteNotifications()` never called
 
 **Critical**: Both callbacks must be in `AppDelegate`, not `SceneDelegate`. SwiftUI apps need `@UIApplicationDelegateAdaptor`.
@@ -158,8 +158,8 @@ Not receiving any notifications?
 │
 ├─ Check Step 2 (token registration)
 │  ├─ didFailToRegister called?
-│  │  ├─ "no valid aps-environment" → Regenerate provisioning profile
-│  │  └─ Other error → Check network, device (not Simulator)
+│  │  ├─ "no valid 'aps-environment' entitlement string" → Enable Push Notifications in Signing & Capabilities, then re-download the provisioning profile
+│  │  └─ Other error → Check network reachability and APNs reachability
 │  ├─ Neither callback fires?
 │  │  └─ Verify registerForRemoteNotifications() called after app launch
 │  └─ Token received → continue
@@ -272,8 +272,8 @@ Rich notification not showing image/video?
 │  ├─ Extension has ~30 seconds to modify notification
 │  │  └─ Large file? → Use thumbnail URL, not full resolution
 │  └─ serviceExtensionTimeWillExpire calls contentHandler with a fallback?
-│     ├─ No fallback? → ENTIRE notification vanishes when the budget
-│     │  expires (worse than plain text) — OS never got contentHandler
+│     ├─ No fallback? → the system delivers the original, unmodified content
+│     │  when the budget expires — the media is dropped, the text is not
 │     └─ Always call contentHandler(bestAttemptContent) here so the
 │        text notification still shows even if the media download stalls
 │
@@ -290,9 +290,9 @@ Rich notification not showing image/video?
       └─ Missing? → Add same App Group to both targets
 ```
 
-#### NSE Timeout Fallback (Prevents the Vanishing Notification)
+#### NSE Timeout Fallback (Prevents the Media Being Dropped)
 
-The expiration handler is not optional. Without it, a stalled download lets the ~30s budget run out and the OS delivers nothing — the whole notification vanishes, which is worse than the plain-text version the user would have seen with no NSE at all.
+The expiration handler is not optional. Without it, a stalled download lets the ~30s budget run out and the system delivers the original, unmodified content — the media you downloaded never appears, which is worse than the plain-text version the user would have seen with no NSE at all.
 
 ```swift
 class NotificationService: UNNotificationServiceExtension {
@@ -307,7 +307,7 @@ class NotificationService: UNNotificationServiceExtension {
     }
 
     override func serviceExtensionTimeWillExpire() {
-        // Budget about to expire — deliver the text now so it never vanishes.
+        // Budget about to expire — deliver what we have so the media is not dropped.
         if let contentHandler, let bestAttemptContent {
             contentHandler(bestAttemptContent)
         }
@@ -343,9 +343,11 @@ Live Activity not updating from push?
 │     └─ Must handle token rotation — send updated token to server
 │
 └─ Rate limiting?
-   ├─ Frequent updates: ~10-12 per hour per Activity
-   │  └─ Exceeding? → Batch updates, reduce frequency
-   └─ Alert updates (sound/vibration): ~3-4 per hour
+   ├─ Frequent updates: a per-hour budget Apple does not publish, and which
+   │  depends on device condition
+   │  └─ Exceeding? → Batch updates, reduce frequency; NSSupportsLiveActivitiesFrequentUpdates raises the budget
+   └─ Alert updates (sound/vibration): priority-10 updates are delivered
+      immediately but draw on the same budget
       └─ Exceeding? → Reserve alerts for critical state changes
 ```
 
@@ -368,7 +370,8 @@ Notifications stopped working after iOS update?
 │     └─ Only for health/safety/security apps — apply via Apple Developer
 │
 ├─ Provisional authorization behavior changed?
-│  ├─ iOS 15+ provisional notifications appear in Notification Summary
+│  ├─ Provisional notifications (iOS 12+) are delivered quietly — no banner,
+│  │  no sound, not on the Lock Screen; they only appear in Notification Center history
 │  │  └─ User may not see them → Request full authorization
 │  └─ Was relying on provisional? → Prompt for explicit permission
 │
@@ -413,7 +416,7 @@ Apple's Push Notification Console provides server-free testing:
 
 ## Simulator Testing with simctl
 
-Simulators cannot register for remote notifications, but you can test notification handling:
+On Apple silicon and T2 Macs the iOS 16+ Simulator registers for remote notifications itself and receives real pushes from the APNs sandbox (`api.sandbox.push.apple.com`). `simctl push` is the server-free alternative — it injects a payload locally, so no APNs round trip happens:
 
 ```bash
 cat > test-push.apns << 'EOF'
@@ -439,9 +442,10 @@ xcrun simctl push booted com.your.bundle.id test-push.apns
 - ✅ Notification Service Extension processing
 - ✅ Notification Content Extension (custom UI)
 - ✅ Action handling and categories
-- ❌ APNs token registration (always fails)
-- ❌ Silent push waking app accurately
-- ❌ Live Activity push updates
+- ✅ APNs token registration and sandbox delivery (Apple silicon/T2, iOS 16+)
+- ❌ VoIP, Complication, File Provider, and other non-app push types via `simctl push` — only application remote notifications are supported
+- ❌ Real-device silent-push throttling and battery behaviour (the Simulator has no equivalent budget)
+- ❌ Live Activity push via `simctl push` — send it through the APNs sandbox instead
 
 #### Drag-and-Drop Alternative
 
@@ -508,7 +512,7 @@ Messaging.messaging().token { token, error in
 | Works dev not prod | Step 3: curl both | Switch APNs endpoint; tokens differ per environment |
 | Silent push ignored | Payload + headers | content-available: 1, push-type: background, priority: 5 |
 | Rich media missing | Extension | Add mutable-content: 1, check extension bundle ID and timeout |
-| Entire notification vanishes | NSE timeout | Call contentHandler in serviceExtensionTimeWillExpire fallback |
+| Plain text though mutable-content set | NSE timeout | Call contentHandler in serviceExtensionTimeWillExpire fallback — otherwise the original content is delivered |
 | Delivery unreliable / tempted to resend | Headers, not volume | apns-expiration (store-and-forward), apns-collapse-id (replace not stack) |
 | Live Activity stale | Topic format | Use {bundleID}.push-type.liveactivity topic |
 | Focus mode filtering | Interruption level | Use .timeSensitive for important notifications |
@@ -523,7 +527,7 @@ Messaging.messaging().token { token, error in
 
 **Pressure**: Skip client-side diagnostics and assume the server is right. Start rewriting notification handling code.
 
-**Reality**: 55% of push failures are entitlement/token issues (Steps 1-2), not code bugs. The server may be sending to the wrong environment or using an expired token.
+**Reality**: Entitlement and token problems (Steps 1-2) are client-side and are what to rule out first, not code bugs. The server may be sending to the wrong environment or using an expired token.
 
 **Correct action**: Run all 4 mandatory diagnostic steps before touching code. Share the curl test (Step 3) results with the server team — this objectively proves which side has the issue.
 
@@ -535,7 +539,7 @@ Messaging.messaging().token { token, error in
 
 **Pressure**: Start debugging notification code immediately. Assume Apple broke something.
 
-**Reality**: New iOS versions often enable Focus mode by default or change interruption level filtering. 15% of push failures are Focus/interruption suppression — no code change needed on your side.
+**Reality**: New iOS versions often enable Focus mode by default or change interruption level filtering — a payload or Settings fix, with no code change needed on your side.
 
 **Correct action**: Check Tree 6 ("Notifications stopped after iOS update"). Verify Focus mode settings on test devices before changing any code. If Focus is filtering, the fix is setting the correct `interruption-level` in the payload, not rewriting notification handling.
 
@@ -571,15 +575,15 @@ Before escalating push notification issues:
 
 - [ ] Push Notification capability enabled in Xcode (Step 1)
 - [ ] Provisioning profile contains aps-environment (Step 1)
-- [ ] Token registration callback fires with 64-char hex token (Step 2)
+- [ ] Token registration callback fires with a hex device token (Step 2)
 - [ ] curl to APNs returns HTTP/2 200 (Step 3)
 - [ ] User authorized notifications, status = 2 (Step 4)
 - [ ] APNs environment matches build type (sandbox/production)
 - [ ] Focus mode not filtering notifications on test device
-- [ ] Tested on physical device (not Simulator for token registration)
+- [ ] Tested on a physical device (the Simulator registers against the APNs sandbox on Apple silicon, but `simctl push` covers only app notifications)
 - [ ] For FCM: APNs auth key uploaded to Firebase Console
 - [ ] For silent push: background mode enabled, priority 5, no alert keys
-- [ ] For rich media: NSE bundle ID prefix matches host app, and serviceExtensionTimeWillExpire calls contentHandler so the notification never vanishes
+- [ ] For rich media: NSE bundle ID prefix matches host app, and serviceExtensionTimeWillExpire calls contentHandler so the attached media is delivered instead of dropped
 - [ ] For unreliable delivery: use apns-expiration and apns-collapse-id, not resends or polling; delete 410 Unregistered tokens server-side
 
 ## Resources

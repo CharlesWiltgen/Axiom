@@ -65,8 +65,10 @@ e -l objc -- (void)[[BGTaskScheduler sharedScheduler] _simulateExpirationForTask
 ### Console Log Filter
 
 ```
-subsystem:com.apple.backgroundtaskscheduler
+subsystem:com.apple.backgroundtasks
 ```
+
+The subsystem literal is `com.apple.backgroundtasks` (category `framework`), confirmed in the iOS 27.2 runtime's dyld shared cache. A filter naming a subsystem that does not exist matches nothing and reports clean.
 
 ## The 7 Scheduling Factors
 

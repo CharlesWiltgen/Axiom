@@ -1,13 +1,13 @@
 
 # CallKit + LiveCommunicationKit + IdentityLookup — VoIP Calls
 
-CallKit integrates your VoIP app with the system call UI — the full-screen incoming-call screen, the lock screen, Recents, Do Not Disturb, and audio routing. LiveCommunicationKit (iOS 17.4+) is the platform-expanded sibling that brings the same model to Apple Watch and visionOS and powers default calling/dialer apps. IdentityLookup handles caller identification, blocking, and message filtering. The one rule that will brick your app if you ignore it: **every VoIP push must report a call to CallKit, synchronously, or iOS kills your app and stops delivering VoIP pushes.**
+CallKit integrates your VoIP app with the system call UI — the full-screen incoming-call screen, the lock screen, Recents, Do Not Disturb, and audio routing. LiveCommunicationKit (iOS 17.4+) is the platform-expanded sibling that brings the same model to Apple Watch and visionOS and powers default calling/dialer apps. IdentityLookup handles caller identification, blocking, and message filtering. The one rule that will brick your app if you ignore it: **a VoIP push must report a call — to CallKit or LiveCommunicationKit — synchronously, or iOS kills your app and stops delivering VoIP pushes.** From iOS 26.4 a push can be exempt; see Part 1.
 
 ## Core mental model
 
 CallKit is a *coordinator*, not a calling stack. Your app does the networking and audio; CallKit owns the system UI and the **audio session lifecycle**. Two non-negotiable contracts:
 
-1. **PushKit ↔ CallKit:** a VoIP push (`PKPushRegistry`) must result in `CXProvider.reportNewIncomingCall(...)` before the push handler's completion runs. No exceptions.
+1. **PushKit ↔ CallKit:** a VoIP push (`PKPushRegistry`) must result in `CXProvider.reportNewIncomingCall(...)` — or LiveCommunicationKit's `reportNewIncomingConversation(...)` — before the push handler's completion runs. From iOS 26.4 the requirement is stated per push: `PKVoIPPushMetadata.mustReport` is `false` for pushes you are already handling, and those need no report.
 2. **CallKit owns the audio session:** you configure the category, but you only *start* audio in `provider(_:didActivate:)` and stop it in `provider(_:didDeactivate:)`. Never activate `AVAudioSession` yourself for a call.
 
 LiveCommunicationKit mirrors this with `ConversationManager` / `Conversation` and adds watchOS/visionOS reach and the default-app entitlements. IdentityLookup is separate: bulk call directories (`CXCallDirectoryProvider`, a CallKit type) and real-time Live Caller ID Lookup (iOS 18+).
@@ -28,7 +28,7 @@ For the full type/method surface, see `skills/callkit-livecommunicationkit-ref.m
 | Capability | Minimum |
 |------------|---------|
 | CallKit (`CXProvider`, `CXCallController`, `CXProviderDelegate`) | iOS 10+, Mac Catalyst, watchOS 9+, visionOS 1+ |
-| PushKit VoIP pushes; the `reportNewIncomingCall` rule | iOS 8+ (rule enforced when built against the iOS 13 SDK+) |
+| PushKit VoIP pushes; the `reportNewIncomingCall` / `reportNewIncomingConversation` rule | iOS 8+ (rule enforced when built against the iOS 13 SDK+) |
 | LiveCommunicationKit (`ConversationManager`) | iOS 17.4+, iPadOS 17.4+, Mac Catalyst 17.4+, visionOS 1.1+, watchOS 10.4+ |
 | Default calling app (`com.apple.developer.calling-app`) | iOS 18.2+ |
 | Default dialer app (`com.apple.developer.dialing-app`) | iOS 26.0+ (EU only) |
@@ -40,7 +40,7 @@ The VoIP background mode (`UIBackgroundModes` → `voip`) is required to receive
 
 | Gotcha | Why it bites | Fix |
 |--------|--------------|-----|
-| Not reporting a call on a VoIP push | iOS 13 SDK+ **terminates your app** when a push doesn't report a call, and **stops delivering VoIP pushes** if you do it repeatedly | Call `reportNewIncomingCall` in `pushRegistry(_:didReceiveIncomingPushWith:for:completion:)` on **every** VoIP push, before `completion()` |
+| Not reporting a call on a VoIP push the system required a report for | iOS 13 SDK+ **terminates your app** when a push doesn't report a call or conversation to CallKit or LiveCommunicationKit, and **stops delivering VoIP pushes** if you do it repeatedly | Report in the push handler, before `completion()`. The iOS 26.4+ metadata delegate lets you skip pushes whose `mustReport` is `false`; the older delegate carries no such signal, so report on every push there |
 | Reporting the call *after* async work | The push handler may not finish your network round-trip in time | Report the call **immediately** with what you have, then fetch details |
 | Using VoIP pushes for non-call data | Same termination penalty | Use regular APNs / `UserNotifications` for non-call payloads |
 | Activating `AVAudioSession` yourself | Breaks CallKit's routing and the call UI | Start audio only in `provider(_:didActivate:)`; stop in `provider(_:didDeactivate:)` |
@@ -49,7 +49,9 @@ The VoIP background mode (`UIBackgroundModes` → `voip`) is required to receive
 
 ## Part 1 — The PushKit rule (the one that bricks your app)
 
-This is the single most important contract in VoIP development. When you build against the iOS 13 SDK or later, **iOS requires that every VoIP push reports an incoming call to CallKit**. Fail to report a call and the system terminates your app; do it *repeatedly* and the system stops delivering VoIP pushes to your app entirely.
+This is the single most important contract in VoIP development. When you build against the iOS 13 SDK or later, **iOS requires a VoIP push to report an incoming call — to CallKit or LiveCommunicationKit**. Fail to report one your app was required to report and the system terminates your app; do it *repeatedly* and the system stops delivering VoIP pushes to your app entirely.
+
+Which pushes require a report is stated per push from iOS 26.4 onward. `pushRegistry(_:didReceiveIncomingVoIPPushWith:metadata:withCompletionHandler:)` hands you a `PKVoIPPushMetadata`, and when its `mustReport` is `false` — *"your app is running in the foreground"*, it already has an active call/conversation, or the push arrived late because of network conditions — *"you are not required to report a call or conversation"*. Apple's advice to VoIP developers is to prefer that delegate so you can ignore exactly those pushes; the older `didReceiveIncomingPushWith:for:completion:` delegate predates the flag and carries the requirement unconditionally.
 
 ```swift
 import PushKit
@@ -72,7 +74,7 @@ func pushRegistry(_ registry: PKPushRegistry,
 }
 ```
 
-Do the network round-trip *after* reporting — never gate `reportNewIncomingCall` on it. For non-call pushes, use regular notifications; VoIP pushes are exclusively for reporting calls.
+Do the network round-trip *after* reporting — never gate `reportNewIncomingCall` on it. For non-call pushes, use regular notifications; VoIP pushes are exclusively for reporting calls. The handler above is the older delegate, which has no `mustReport` signal and therefore reports on every push; on iOS 26.4 and later reach for the metadata-taking form instead — `skills/callkit-livecommunicationkit-ref.md` Part 6 has its shape.
 
 ## Part 2 — Provider setup and reporting calls
 
@@ -158,7 +160,7 @@ IdentityLookup also provides SMS/MMS filtering via `ILMessageFilterExtension` (`
 
 ## Common Mistakes
 
-- Not reporting a call on every VoIP push — the #1 way to get your app terminated and VoIP pushes cut off.
+- Not reporting a call on a VoIP push your app was required to report — the #1 way to get your app terminated and VoIP pushes cut off.
 - Doing network work before `reportNewIncomingCall` — report first, fetch after.
 - Sending non-call data over VoIP pushes — use APNs/UserNotifications.
 - Activating `AVAudioSession` yourself instead of waiting for `provider(_:didActivate:)`.
