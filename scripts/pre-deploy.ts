@@ -352,7 +352,7 @@ if (claudeCode) {
     }
   }
   console.log(
-    `  ✓ ${claudeCode.skills!.length} manifest commands checked against filesystem`,
+    `  ✓ ${(claudeCode.commands ?? []).length} manifest commands checked against filesystem`,
   );
 
   // Existence is not parity. `skills[]` is generated from each SKILL.md's
@@ -363,24 +363,50 @@ if (claudeCode) {
   // manifest, and in the /axiom:ask generated from it, through a green local
   // gate and four red CI runs. Compare the text here too, so the cheap local
   // command catches what CI catches.
-  const expectedDescriptions: Record<string, string> = Object.fromEntries(
-    manifestSkillsFromDisk(
-      pluginDir,
-      (claudeCode.skills ?? []).map((s: { name: string }) => s.name),
-    ).map((e) => [e.name, e.description]),
+  const committedSkills: { name: string; description: string }[] =
+    claudeCode.skills ?? [];
+  const generated = manifestSkillsFromDisk(
+    pluginDir,
+    committedSkills.map((s) => s.name),
   );
-  const drifted = (claudeCode.skills ?? []).filter((skill: { name: string; description: string }) => {
-    const want = expectedDescriptions[skill.name];
-    return want !== undefined && want !== skill.description;
-  });
-  if (drifted.length > 0) {
-    error(
-      "manifest-drift",
-      `${drifted.length} manifest description(s) drifted from SKILL.md frontmatter, starting with "${drifted[0].name}" — regenerate with \`npm run build:manifest\``,
-    );
+  const expectedDescriptions: Record<string, string> = Object.fromEntries(
+    generated.map((e) => [e.name, e.description]),
+  );
+  const drifted = committedSkills.filter(
+    (skill) =>
+      expectedDescriptions[skill.name] !== undefined &&
+      expectedDescriptions[skill.name] !== skill.description,
+  );
+
+  // Both directions. Iterating only the committed array is blind to a skill that
+  // is on disk but missing from the manifest — adding a suite and forgetting to
+  // regenerate, the same mistake pointing the other way — and to an entry whose
+  // skill is gone or manifest-excluded. The unit suite's deepEqual catches those;
+  // this is the cheap command, so it has to as well.
+  const committedNames = new Set(committedSkills.map((s) => s.name));
+  const absent = generated.filter((e) => !committedNames.has(e.name)).map((e) => e.name);
+  const extra = committedSkills
+    .map((s) => s.name)
+    .filter((name) => expectedDescriptions[name] === undefined);
+
+  if (drifted.length > 0 || absent.length > 0 || extra.length > 0) {
+    const detail = [
+      drifted.length > 0
+        ? `${drifted.length} description(s) drifted from SKILL.md frontmatter, starting with "${drifted[0].name}"`
+        : "",
+      absent.length > 0
+        ? `${absent.length} skill(s) on disk are missing from the manifest, starting with "${absent[0]}"`
+        : "",
+      extra.length > 0
+        ? `${extra.length} manifest entr(ies) have no corresponding skill on disk, starting with "${extra[0]}"`
+        : "",
+    ]
+      .filter(Boolean)
+      .join("; ");
+    error("manifest-drift", `${detail} — regenerate with \`npm run build:manifest\``);
   } else {
     console.log(
-      `  ✓ ${claudeCode.skills!.length} manifest descriptions match SKILL.md frontmatter`,
+      `  ✓ ${committedSkills.length} manifest descriptions match SKILL.md frontmatter`,
     );
   }
 }
