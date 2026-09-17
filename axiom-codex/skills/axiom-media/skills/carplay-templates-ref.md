@@ -391,7 +391,7 @@ CarPlay signals light/dark via `contentStyle` on your scene. Observe `contentSty
 | Configuring `CPNowPlayingTemplate` after `pushTemplate` | iOS may present the template before you push it | Configure at `templateApplicationScene(_:didConnect:)` |
 | Assuming lists always show all items | Limited-list mode caps at 12 items while driving | Handle the 12-item case — prioritize what appears |
 | Using `traitCollection` for scale | Returns iPhone scale, not car scale | Use `carTraitCollection` |
-| Drawing route overlays in the base view (navigation) | "Base view must be used exclusively to draw a map" | Use templates (navigation alert, list, information) for overlays — see navigation-ref |
+| Drawing route overlays in the base view (navigation) | "The base view must be used exclusively to draw a map." | Use templates (navigation alert, list, information) for overlays — see navigation-ref |
 
 ---
 

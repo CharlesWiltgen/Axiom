@@ -51,7 +51,7 @@ These thoughts mean STOP — you're about to violate a CarPlay rule:
 | "I'll use a custom view for the selected route" | **"The base view must be used exclusively to draw a map. Do not draw windows, alerts, panels, overlays, or user interface elements in the base view."** All UI goes through templates. | Dev Guide p.6 (nav #2) |
 | "I'll auto-play audio as soon as CarPlay connects" | **"Avoid beginning playback automatically unless your app's purpose is to play a single source."** | HIG + 2017 Audio Guide p.17 |
 | "We can add gamified challenges for long trips" | **"No gaming or social networking."** CarPlay apps must meaningfully help with driving. | Dev Guide p.4 (#5) |
-| "I'll use the Now Playing template to show our restaurant menu" | **"Use templates for their intended purpose, and only populate templates with the specified information types."** | Dev Guide p.4 (#7) |
+| "I'll use the Now Playing template to show our restaurant menu" | **"Use templates for their intended purpose, and only populate templates with the specified information types …"** | Dev Guide p.4 (#7) |
 | "CarPlay apps are just iOS apps on a second screen" | They are not. Templates are rendered by iOS, not your app. Your app supplies data; iOS handles layout, input hardware abstraction, and screen resolution. | Dev Guide p.11, p.14 |
 
 ---
@@ -60,7 +60,7 @@ These thoughts mean STOP — you're about to violate a CarPlay rule:
 
 These apply to **every** CarPlay app, regardless of category. Apple labels them "Guidelines for all CarPlay apps" in the Developer Guide, and adds separate "Additional guidelines" per category (see per-category sections below). Source: *CarPlay Developer Guide*, Jun 2026, p.4.
 
-1. **Primary purpose.** "Your CarPlay app must be designed primarily to provide the specified feature (e.g. CarPlay audio apps must be designed primarily to provide audio playback services, CarPlay parking apps must be designed primarily to provide parking services, etc.)."
+1. **Primary purpose.** "Your CarPlay app must be designed primarily to provide the specified feature (for example, CarPlay audio apps must be designed primarily to provide audio playback services, CarPlay parking apps must be designed primarily to provide parking services, etc.)."
 
 2. **Never direct to iPhone.** "Never instruct people to pick up their iPhone to perform a task. If there is an error condition, such as a required log in, you can let them know about the condition so they can take action when safe. However, alerts or messages must not include wording that asks people to manipulate their iPhone."
 
@@ -72,7 +72,7 @@ These apply to **every** CarPlay app, regardless of category. Apple labels them 
 
 6. **No message content.** "Never show the content of messages, texts, or emails on the CarPlay screen."
 
-7. **Templates as intended.** "Use templates for their intended purpose, and only populate templates with the specified information types (e.g. a list template must be used to present a list for selection, album artwork in the now playing screen must be used to show an album cover, etc.)."
+7. **Templates as intended.** "Use templates for their intended purpose, and only populate templates with the specified information types (for example, a list template must be used to present a list for selection, album artwork in the now playing screen must be used to show an album cover, etc.)."
 
 Apple separately defines "Additional guidelines" per category (see per-category sections below). The no-lyrics rule for audio apps is the most commonly cited; navigation adds its own 9 rules.
 
@@ -194,13 +194,13 @@ Each subsection lists Apple's published rules verbatim where possible. Source: *
 - Must use the provided templates — no custom maps or real-time video.
 - **Do not show CarPlay UI for tasks unrelated to driving** (account setup, detailed settings).
 - **Refresh rate caps**: UI data items no more than every 10 seconds; points of interest no more than every 60 seconds (Dev Guide p.5).
-- "Do not create POI (point of interest) apps that are focused on finding locations on a map. Driving task apps must be primarily designed to accomplish tasks and are not intended to be location finders (e.g. store finders)" (Dev Guide p.5).
+- "Do not create POI (point of interest) apps that are focused on finding locations on a map. Driving tasks apps must be primarily designed to accomplish tasks and are not intended to be location finders (for example, store finders)" (Dev Guide p.5).
 - "Use cases outside of the vehicle environment are not permitted."
 
 ### EV charging / Fueling / Parking
 
 Shared rules (Dev Guide p.5):
-- "Must provide meaningful functionality relevant to driving (e.g. your app can't just be a list of [EV chargers / fueling stations / parking locations])."
+- "Must provide meaningful functionality relevant to driving (for example, your app can't just be a list of [EV chargers / fueling stations / parking locations])."
 - "When showing locations on a map, do not expose locations other than [the category]."
 
 EV charging and fueling entitlements may be combined in a single app (Dev Guide p.13).
@@ -214,7 +214,7 @@ EV charging and fueling entitlements may be combined in a single app (Dev Guide 
 Nine rules, all load-bearing. Source: *Developer Guide* p.6.
 
 1. Must provide turn-by-turn directions with upcoming maneuvers.
-2. **Base view must be used exclusively to draw a map.** Do not draw windows, alerts, panels, overlays, or UI elements. "Don't draw lane guidance information in the base view. Instead, draw lane guidance information as a secondary maneuver using the provided template."
+2. **Base view must be used exclusively to draw a map.** Do not draw windows, alerts, panels, overlays, or UI elements. "For example, don't draw lane guidance information in the base view. Instead, draw lane guidance information as a secondary maneuver using the provided template."
 3. Use each provided template for its intended purpose (maneuver images represent maneuvers only).
 4. Must provide a way to enter panning mode — if panning is supported, include a pan button in the map template, since drag gestures aren't available in all vehicles.
 5. Touch gestures only for their intended purpose (pan, zoom, pitch, rotate).
@@ -227,8 +227,8 @@ For the implementation layer (CPMapTemplate, CPNavigationSession, instrument clu
 
 ### Quick food ordering apps
 
-- Must be Quick Service Restaurant (QSR) apps "designed primarily for driving-oriented food orders (e.g. drive thru, pick up) when in CarPlay and are not intended to be general retail apps (e.g. supermarkets, curbside pickup)" (Dev Guide p.6).
-- "Provide meaningful functionality relevant to driving."
+- Must be Quick Service Restaurant (QSR) apps "designed primarily for driving-oriented food orders (for example, drive thru, pick up) when in CarPlay and are not intended to be general retail apps (for example, supermarkets, curbside pickup)" (Dev Guide p.6).
+- "Provide meaningful functionality relevant to driving …"
 - **Simplified ordering only. Don't show a full menu.** Recent orders or favorites limited to 12 items each.
 - Map locations must expose QSR locations only.
 
@@ -243,7 +243,7 @@ Source: *CarPlay Developer Guide*, Jun 2026, p.7.
 
 - "Voice-based conversational apps must have a primary modality of voice upon launch; and after launch, appropriately respond to questions or requests and perform actions" (Dev Guide p.7).
 - "Only hold an audio session open when voice features are actively being used."
-- "Optimize for voice interaction in the driving environment (e.g. don't show text or imagery in response to queries)."
+- "Optimize for voice interaction in the driving environment (for example, don't show text or imagery in response to queries)."
 
 ---
 
@@ -394,7 +394,7 @@ Before requesting the CarPlay entitlement or shipping, run through:
 | Mistake | Why it fails | Fix |
 |---|---|---|
 | Shoehorning a finder app into "driving task" | Driving task apps are for tasks *during* driving, not location finders | Pick the correct category (parking/fueling/EV/QSR) or no CarPlay support |
-| Building a custom UI with overlays on the map | "Base view must be used exclusively to draw a map" | Use templates (list, alert, navigation alert) for all non-map UI |
+| Building a custom UI with overlays on the map | "The base view must be used exclusively to draw a map." | Use templates (list, alert, navigation alert) for all non-map UI |
 | Showing a setup/login screen on CarPlay launch | All flows must be possible without iPhone interaction | Require iPhone setup before first use; gracefully disable features in CarPlay with a CarPlay-native message |
 | Auto-playing audio on connect | "Avoid beginning playback automatically unless your app's purpose is to play a single source" | Wait for the user to select content; exception only for single-source apps with `UIBrowsableContentSupportsImmediatePlayback` |
 | Notification body contains message text | "The contents of the message must never be shown in CarPlay" | Title = sender name, subtitle = group name (if applicable), body empty |

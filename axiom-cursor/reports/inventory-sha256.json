@@ -1158,23 +1158,23 @@
     },
     {
       "path": "skills/axiom-media/skills/camera-capture.md",
-      "sha256": "5d8034b9f783e8dd32c3493d10331102325c05083f513f7899b76c9fe06dca58",
-      "bytes": 40013
+      "sha256": "9697bf412d9ff407f6614ff80464068522ab38d46aceffbcf386806553c55a41",
+      "bytes": 40093
     },
     {
       "path": "skills/axiom-media/skills/carplay-hig.md",
-      "sha256": "da1195800598c320a4593389042cf2613babb95775533bf00077e8bbf85343f9",
-      "bytes": 29796
+      "sha256": "cdc24e393f9f7eddf0c9e83a824af226ed841aa625faeb83750715a27990da1a",
+      "bytes": 29877
     },
     {
       "path": "skills/axiom-media/skills/carplay-navigation-ref.md",
-      "sha256": "43b82479aa8331ec123d53ae9a13fd1d18f2fdba48fd8e41dd0f7e6d567c6314",
-      "bytes": 34648
+      "sha256": "579a93ad8621628d7bd57daddd0df0f70e2fbed0a9d50972581e98dd8aa0769f",
+      "bytes": 34680
     },
     {
       "path": "skills/axiom-media/skills/carplay-templates-ref.md",
-      "sha256": "6a7bb5a7932eef0e6f3132b61b8c20e1d91fae1d48600793980fe93a37691abc",
-      "bytes": 18125
+      "sha256": "c79e1724ad0e94f7491efbd63e99942bf9634c66640622103a21859a1e4c3013",
+      "bytes": 18130
     },
     {
       "path": "skills/axiom-media/skills/dockkit.md",
@@ -1879,7 +1879,7 @@
   ],
   "totals": {
     "files": 375,
-    "bytes": 7513992
+    "bytes": 7514190
   },
   "excludedMirrors": 30,
   "classes": {

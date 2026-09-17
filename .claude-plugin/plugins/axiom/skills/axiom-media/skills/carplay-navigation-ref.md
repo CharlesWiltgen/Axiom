@@ -28,7 +28,7 @@ Source: *CarPlay Developer Guide*, Jun 2026, p.34.
 | iOS 15.4 | ● | ● | ● |   |
 | iOS 17.4+ | ● | ● | ● | ● |
 
-"Support all capabilities in your app for a seamless experience in all vehicle configurations."
+"Support these capabilities for a seamless experience in all vehicle configurations."
 
 ## Base View
 
@@ -164,7 +164,7 @@ digraph routeguidance {
 
 "Use `CPInterfaceController` to present templates that allow people to specify a destination. To present a new template, use `pushTemplate` with a supported `CPTemplate` class such as `CPGridTemplate`, `CPListTemplate`, `CPSearchTemplate`, or `CPVoiceControlTemplate`."
 
-"You may present multiple templates in succession to support hierarchical selection. Be sure to set `showsDisclosureIndicator` to `true` for list items that support hierarchical browsing, and push a new list template when the list item is selected. **Hierarchical selections must never exceed five levels of depth.**"
+"You may present multiple templates in succession to support hierarchical selection. For example, you can show a list template that includes list items which lead to additional sublists when selected. Be sure to set `showsDisclosureIndicator` to `true` for list items that support hierarchical browsing, and push a new list template when the list item is selected. **Hierarchical selections must never exceed five levels of depth.**"
 
 Source: *Developer Guide* p.44.
 
@@ -181,7 +181,7 @@ Source: *Developer Guide* p.44.
 
 ### Trip preview panel
 
-Displays up to 12 potential destinations. "The trip preview panel is typically the result of a destination search. When a trip is previewed, show a visual representation of that trip in your base view." (p.37)
+Displays up to 12 potential destinations. "The trip preview panel is typically the result of a destination search. When a trip is being previewed, show a visual representation of that trip in your base view." (p.37)
 
 ### Route choice panel
 
@@ -263,7 +263,7 @@ Source: *Developer Guide* p.46.
 
 ### Lane guidance (via the second maneuver)
 
-"If your app provides lane guidance information, you must use the second maneuver to show lane guidance. Create a second maneuver containing `symbolSet` with dark and light images that occupy the full width of the guidance panel (**maximum size 120pt × 18pt**), provide an empty array for `instructionVariants`, and in the `CPMapTemplateDelegate`, return `.symbolOnly` from `mapTemplate(_:displayStyleFor:)` for the maneuver."
+"If your app provides lane guidance information, you must use the second maneuver to show lane guidance. Create a second maneuver containing `symbolSet` with dark and light images that occupy the full width of the guidance panel (**maximum size 120pt × 18pt**), provide an empty array for `instructionVariants`, and in the `CPMapTemplateDelegate`, return a symbol style of `CPManeuverDisplayStyleSymbolOnly` for the maneuver."
 
 Source: *Developer Guide* p.47.
 
@@ -271,7 +271,7 @@ Source: *Developer Guide* p.47.
 
 - Use `CPNavigationSession.updateEstimates(_:for:)` to update estimates for each maneuver.
 - Use `CPMapTemplate.updateEstimates(_:for:)` to update overall trip estimates.
-- "Only update the values when significant changes occur, such as when the number of remaining minutes changes."
+- "Only update estimates when significant changes occur, such as when the number of remaining minutes changes."
 
 ### Navigation alerts
 
@@ -389,7 +389,7 @@ session.optionsPanel = CPMapPanel(/* sections, button configuration */)
 
 Source: *Developer Guide* p.49, *WWDC25-216*.
 
-"Many new vehicles support multitouch interactions, including any vehicle that supports CarPlay Ultra. If a vehicle supports multitouch interactions in CarPlay, drivers can also interact with your navigation app."
+"Many vehicles support touch gestures to zoom, pitch, and rotate maps. If a vehicle supports touch gestures in CarPlay, drivers can also interact with your navigation app."
 
 `CPMapTemplate` receives callbacks for multitouch gestures:
 
@@ -397,7 +397,7 @@ Source: *Developer Guide* p.49, *WWDC25-216*.
 - **Pitch**: two-finger slide up, two-finger slide down.
 - **Rotate**: two-finger clockwise rotate, two-finger counterclockwise rotate.
 
-Respect the HIG: "Touch gestures must only be used for their intended purpose on the map (pan, zoom, pitch, rotate)" (*Developer Guide* p.6 navigation rule #5).
+Respect the HIG: "Touch gestures must only be used for their intended purpose on the map (pan, zoom, pitch, and rotate)." (*Developer Guide* p.6 navigation rule #5).
 
 ## Keyboard and List Restrictions
 
@@ -448,9 +448,9 @@ try AVAudioSession.sharedInstance().setCategory(
 
 ### Activate and deactivate
 
-"Keep your audio session deactivated until you are ready to play a voice prompt. Call `setActive` with `YES` only when a voice prompt is ready to play. You may keep the audio session active for short durations if you know that multiple audio prompts are going to be played in rapid succession. However, while your `AVAudioSession` is active, music apps will remain ducked, and apps with spoken audio will remain paused. Don't hold on to the active state for more than a few seconds if audio prompts are not playing."
+"Keep your audio session deactivated until you are ready to play a voice prompt. Call `setActive` with `true` only when a voice prompt is ready to play. You may keep the audio session active for short durations if you know that multiple audio prompts are going to be played in rapid succession. However, while your `AVAudioSession` is active, music apps will remain ducked, and apps with spoken audio will remain paused. Don't hold on to the active state for more than few seconds if audio prompts are not playing."
 
-"When you are done playing a voice prompt, call `setActive` with `NO` to allow other audio to resume."
+"When you are done playing a voice prompt, call `setActive` with `false` to allow other audio to resume."
 
 ### Prompt style
 
@@ -495,7 +495,7 @@ Observe safe areas and light/dark mode (via `contentStyle` on the cluster scene,
 
 ## Metadata in Instrument Cluster or HUD (iOS 17.4+)
 
-Source: *Developer Guide* p.55-58. "Starting with iOS 17.4, your app can provide metadata for upcoming maneuvers. This includes maneuver state, maneuver type (e.g. 'turn right', 'make a U-turn'), junction type, and lane guidance information."
+Source: *Developer Guide* p.55-58. "Metadata can include maneuver state, maneuver type (e.g. 'turn right', 'make a U-turn'), junction type, and lane guidance information. Maneuver sharing works with iOS 17.4 or later."
 
 ### Declaring support
 
@@ -513,7 +513,7 @@ Supply multiple maneuvers including maneuver type and lane guidance when route g
 
 ### Maneuver state machine
 
-"Your app should also set the current road name, and update the maneuver state which indicates progress within a maneuver. When approaching a maneuver, the maneuver state should transition from `continue` → `initial` → `prepare` → `execute` → `continue`."
+"Set the current road name, and update the maneuver state which indicates progress within a maneuver. When approaching a maneuver, the maneuver state should transition from `continue` → `initial` → `prepare` → `execute` → `continue`."
 
 | State | Description |
 |---|---|

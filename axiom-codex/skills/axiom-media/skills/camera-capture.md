@@ -175,8 +175,9 @@ class CameraManager: NSObject {
             // 4. Configure photo output
             photoOutput.maxPhotoDimensions = camera.activeFormat.supportedMaxPhotoDimensions.last!
             // Note: .quality is a ceiling, and a shot's photoQualityPrioritization may not exceed
-            // it. Raising it turns on OIS and can rebuild a running session, so keep this line
-            // only if your capture settings will actually request .quality.
+            // it. Raising it turns on OIS when the active format's isHighPhotoQualitySupported is
+            // true, and it can rebuild a running session, so keep this line only if your capture
+            // settings will actually request .quality.
             photoOutput.maxPhotoQualityPrioritization = .quality
         }
     }
