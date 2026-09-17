@@ -15,6 +15,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { manifestUpdates } from "./manifest.ts";
 
@@ -49,3 +50,35 @@ console.log(
     ? "\nNothing to do — manifest and ask.md already match the frontmatter."
     : `\nRegenerated ${written} file(s).`,
 );
+
+// ask.md is embedded in three generated distributions, so regenerating it makes
+// them stale. Leaving that to the caller meant following this command and then
+// failing the gate on staleness it had just created — the same shape of trap as
+// the version-script entry point this file exists to replace. `set-version.js`
+// already cascades Cursor and Codex for the same reason; the MCP bundle embeds
+// commands too, so it belongs here even though the release path omits it.
+if (written > 0) {
+  console.log("\nUpdating distributions that embed ask.md:");
+  const builds = [
+    ["scripts/build-cursor.ts", "Cursor"],
+    ["scripts/build-codex.ts", "Codex"],
+  ];
+  for (const [script, label] of builds) {
+    try {
+      execFileSync(process.execPath, [path.join(root, script)], {
+        stdio: "inherit",
+        cwd: root,
+      });
+    } catch (err) {
+      throw new Error(`${label} output is stale: ${err.message}`);
+    }
+  }
+  try {
+    execFileSync("pnpm", ["run", "build:bundle"], {
+      stdio: "inherit",
+      cwd: path.join(root, "axiom-mcp"),
+    });
+  } catch (err) {
+    throw new Error(`MCP bundle is stale: ${err.message}`);
+  }
+}
