@@ -265,7 +265,7 @@ Source: *Developer Guide* p.46.
 
 "If your app provides lane guidance information, you must use the second maneuver to show lane guidance. Create a second maneuver containing `symbolSet` with dark and light images that occupy the full width of the guidance panel (**maximum size 120pt × 18pt**), provide an empty array for `instructionVariants`, and in the `CPMapTemplateDelegate`, return a symbol style of `CPManeuverDisplayStyleSymbolOnly` for the maneuver."
 
-Source: *Developer Guide* p.47.
+Source: *Developer Guide* p.47. The guide is written against the Objective-C API; in Swift that constant is spelled `.symbolOnly`.
 
 ### Estimate updates
 

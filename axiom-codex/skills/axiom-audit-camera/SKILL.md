@@ -132,7 +132,7 @@ Run all 11 detection patterns. For every grep match, use Read to verify the surr
 - `\.videoOrientation\s*=`
 - `connection\?\.videoOrientation`
 - `UIDevice\.current\.orientation` near capture code
-- `UIDeviceOrientationDidChangeNotification` paired with capture
+- `[Oo]rientationDidChangeNotification` paired with capture
 **Verify**: Read matching files; on iOS 17+ deployment, `RotationCoordinator` is the right answer.
 **Fix**: `let coordinator = AVCaptureDevice.RotationCoordinator(device: device, previewLayer: previewLayer)`; observe `videoRotationAngleForHorizonLevelCapture`/`...Preview` via KVO.
 

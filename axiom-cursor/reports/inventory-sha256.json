@@ -28,8 +28,8 @@
     },
     {
       "path": "agents/camera-auditor.md",
-      "sha256": "a79941cdb5048c97a1a7fa4428d23ede992101f723971ae7f1cfdbdd83e048dc",
-      "bytes": 25887
+      "sha256": "ee268654f12d90d124fa704f0a82898528692e93fd2ec4c3e59b7105e87f778e",
+      "bytes": 25882
     },
     {
       "path": "agents/codable-auditor.md",
@@ -1168,8 +1168,8 @@
     },
     {
       "path": "skills/axiom-media/skills/carplay-navigation-ref.md",
-      "sha256": "579a93ad8621628d7bd57daddd0df0f70e2fbed0a9d50972581e98dd8aa0769f",
-      "bytes": 34680
+      "sha256": "194258873a6a3fe6c4bb20237c6123437a79baaf51b0d0e83de6e4efa3b4c984",
+      "bytes": 34779
     },
     {
       "path": "skills/axiom-media/skills/carplay-templates-ref.md",
@@ -1879,7 +1879,7 @@
   ],
   "totals": {
     "files": 375,
-    "bytes": 7514190
+    "bytes": 7514284
   },
   "excludedMirrors": 30,
   "classes": {
