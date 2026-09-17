@@ -339,7 +339,7 @@ if (claudeCode) {
     }
   }
   console.log(
-    `  ✓ ${claudeCode.skills!.length} manifest skills checked against filesystem`,
+    `  ✓ ${(claudeCode.skills ?? []).length} manifest skills checked against filesystem`,
   );
 
   for (const cmdPath of claudeCode.commands || []) {
@@ -388,8 +388,12 @@ if (claudeCode) {
   const extra = committedSkills
     .map((s) => s.name)
     .filter((name) => expectedDescriptions[name] === undefined);
+  // A duplicated entry defeats all three comparisons above — a Set and a
+  // name→description map both collapse it, and the text comparison sees nothing
+  // wrong. The unit suite's deepEqual catches it by length; so must this.
+  const duplicated = committedNames.size !== committedSkills.length;
 
-  if (drifted.length > 0 || absent.length > 0 || extra.length > 0) {
+  if (drifted.length > 0 || absent.length > 0 || extra.length > 0 || duplicated) {
     const detail = [
       drifted.length > 0
         ? `${drifted.length} description(s) drifted from SKILL.md frontmatter, starting with "${drifted[0].name}"`
@@ -398,7 +402,10 @@ if (claudeCode) {
         ? `${absent.length} skill(s) on disk are missing from the manifest, starting with "${absent[0]}"`
         : "",
       extra.length > 0
-        ? `${extra.length} manifest entr(ies) have no corresponding skill on disk, starting with "${extra[0]}"`
+        ? `${extra.length} manifest entr(ies) have no generated counterpart — absent from disk, or excluded by MANIFEST_EXCLUDED_SKILLS — starting with "${extra[0]}"`
+        : "",
+      duplicated
+        ? `the manifest has ${committedSkills.length} entries for ${committedNames.size} distinct skills (a duplicate name)`
         : "",
     ]
       .filter(Boolean)
