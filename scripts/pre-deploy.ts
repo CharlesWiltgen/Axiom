@@ -18,6 +18,7 @@ import { VERSION_CORE } from "./version-regex.js";
 import {
   MAX_ENTRY_CHARS,
   auditListing,
+  manifestSkillsFromDisk,
   readShippedListing,
 } from "./skill-listing.ts";
 import {
@@ -351,8 +352,37 @@ if (claudeCode) {
     }
   }
   console.log(
-    `  ✓ ${claudeCode.commands!.length} manifest commands checked against filesystem`,
+    `  ✓ ${claudeCode.skills!.length} manifest commands checked against filesystem`,
   );
+
+  // Existence is not parity. `skills[]` is generated from each SKILL.md's
+  // frontmatter by set-version.js, and before this check the only thing that
+  // compared the two texts was scripts/skill-listing.test.ts — reachable via
+  // `npm run test:unit` (what CI runs) but not via `npm test` (what a
+  // maintainer runs). A corrected router description therefore sat stale in the
+  // manifest, and in the /axiom:ask generated from it, through a green local
+  // gate and four red CI runs. Compare the text here too, so the cheap local
+  // command catches what CI catches.
+  const expectedDescriptions: Record<string, string> = Object.fromEntries(
+    manifestSkillsFromDisk(
+      pluginDir,
+      (claudeCode.skills ?? []).map((s: { name: string }) => s.name),
+    ).map((e) => [e.name, e.description]),
+  );
+  const drifted = (claudeCode.skills ?? []).filter((skill: { name: string; description: string }) => {
+    const want = expectedDescriptions[skill.name];
+    return want !== undefined && want !== skill.description;
+  });
+  if (drifted.length > 0) {
+    error(
+      "manifest-drift",
+      `${drifted.length} manifest description(s) drifted from SKILL.md frontmatter, starting with "${drifted[0].name}" — regenerate with scripts/set-version.js`,
+    );
+  } else {
+    console.log(
+      `  ✓ ${claudeCode.skills!.length} manifest descriptions match SKILL.md frontmatter`,
+    );
+  }
 }
 
 heading("5. Skill Integrity");
