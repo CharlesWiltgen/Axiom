@@ -7,15 +7,15 @@ Reference for all 12 CarPlay templates — purpose, per-category availability, i
 
 ## Overview
 
-CarPlay apps are built from a fixed set of UI templates that iOS renders onto the CarPlay screen. Your app selects which template to show (the controller) and supplies data (the model); iOS handles the view. Attempting to use an unsupported template for your app category triggers a runtime exception. Source: *CarPlay Developer Guide*, Feb 2026, p.13.
+CarPlay apps are built from a fixed set of UI templates that iOS renders onto the CarPlay screen. Your app selects which template to show (the controller) and supplies data (the model); iOS handles the view. Attempting to use an unsupported template for your app category triggers a runtime exception. Source: *CarPlay Developer Guide*, Jun 2026, p.14.
 
-Your app stacks templates on the screen using `CPInterfaceController.pushTemplate(_:animated:)` and navigates back with `popTemplate(animated:)`. Each category has a maximum depth; attempts to push beyond the depth throw a runtime exception.
+Your app stacks templates on the screen using `CPInterfaceController.pushTemplate(_:animated:completion:)` and navigates back with `popTemplate(animated:completion:)`. Each category has a maximum depth; attempts to push beyond the depth throw a runtime exception.
 
 ## Template × Category Availability
 
-Source: *CarPlay Developer Guide*, Feb 2026, p.13.
+Source: *CarPlay Developer Guide*, Jun 2026, p.14.
 
-| Template | Audio | Comm | Driving task / Voice conv. | EV / Fueling / Parking / QSR | Public safety | Navigation |
+| Template | Audio / Video | Comm | Driving task / Voice conv. | EV / Fueling / Parking / QSR | Public safety | Navigation |
 |---|---|---|---|---|---|---|
 | Action sheet | ●¹ | ● | ● | ● | ● | ● |
 | Alert | ● | ● | ● | ● | ● | ● |
@@ -27,18 +27,21 @@ Source: *CarPlay Developer Guide*, Feb 2026, p.13.
 | Now playing | ● | ●¹ |   |   | ● |   |
 | Contact |   | ● |   |   | ● | ● |
 | Map |   |   |   |   |   | ● |
-| Search |   |   |   |   |   | ● |
-| Voice control |   |   | ●² |   |   | ● |
+| Search | ●³ |   |   | ●³ | ●³ | ● |
+| Voice control | ●³ | ●³ | ●² | ●³ | ●³ | ● |
 
-*¹ iOS 17 or later. ² iOS 26.4 or later (new for driving-task apps; voice-based conversational apps are iOS 26.4+ by definition).*
+*¹ iOS 17 or later. ² iOS 26.4 or later (new for driving-task apps; voice-based conversational apps are iOS 26.4+ by definition). ³ iOS 27 or later.*
+
+*Search is the exception in the shared EV / Fueling / Parking / QSR column — quick food ordering apps cannot use it.*
 
 ## Template Depth Limits
 
-Source: *CarPlay Developer Guide*, Feb 2026, p.13.
+Source: *CarPlay Developer Guide*, Jun 2026, p.14.
 
 | Category | Max template depth |
 |---|---|
 | Audio | 5 |
+| Video | 5 (same as audio) |
 | Communication | 5 |
 | EV charging | 5 |
 | Parking | 5 |
@@ -65,7 +68,7 @@ The depth includes the root template. Push beyond the limit and CarPlay throws a
 
 **iOS version**: iOS 12+ (audio iOS 17+).
 
-Source: *Developer Guide* p.14.
+Source: *Developer Guide* p.15.
 
 ---
 
@@ -81,7 +84,7 @@ Source: *Developer Guide* p.14.
 
 **iOS version**: iOS 12+.
 
-Source: *Developer Guide* p.14.
+Source: *Developer Guide* p.15.
 
 ---
 
@@ -97,9 +100,9 @@ Source: *Developer Guide* p.14.
 
 **Category availability**: Communication, Public safety, Navigation.
 
-**iOS version**: iOS 12+.
+**iOS version**: iOS 14+.
 
-Source: *Developer Guide* p.15.
+Source: *Developer Guide* p.16.
 
 ---
 
@@ -118,7 +121,7 @@ Source: *Developer Guide* p.15.
 
 **iOS version**: iOS 12+.
 
-Source: *Developer Guide* p.15, p.26.
+Source: *Developer Guide* p.16, p.28.
 
 ---
 
@@ -133,11 +136,11 @@ Source: *Developer Guide* p.15, p.26.
 - Limited label count — show only the most important summary info.
 - Leading and trailing navigation bar buttons supported iOS 16+.
 
-**Category availability**: all except Audio.
+**Category availability**: all except Audio / Video.
 
-**iOS version**: iOS 12+ (nav bar buttons iOS 16+).
+**iOS version**: iOS 14+ (nav bar buttons iOS 16+).
 
-Source: *Developer Guide* p.16.
+Source: *Developer Guide* p.17.
 
 ---
 
@@ -154,7 +157,7 @@ Source: *Developer Guide* p.16.
 | Standard list item (`CPListItem`) | Icon + title + optional subtitle + optional disclosure/progress/status indicator | 12+ |
 | Image row item (`CPListImageRowItem`) | Row of images (e.g. album artwork) in 5 element styles — row, card, condensed, grid, image grid | Row: 12+; other styles: 26+ |
 | Message item | Contact/conversation for communication apps | 26+ |
-| Assistant cell | Siri prompt cell (top or bottom of list) to start media playback or place a call | 12+ |
+| Assistant cell | Siri prompt cell (top or bottom of list) to start media playback or place a call | 15+ |
 
 ### Pinned elements (iOS 26+)
 
@@ -174,13 +177,13 @@ import CarPlay
 let item = CPListItem(text: "My title", detailText: "My subtitle")
 item.handler = { [weak self] _, completion in
     // Start playback asynchronously…
-    self?.interfaceController?.pushTemplate(CPNowPlayingTemplate.shared, animated: true)
+    self?.interfaceController?.pushTemplate(CPNowPlayingTemplate.shared, animated: true, completion: nil)
     completion()
 }
 
 let section = CPListSection(items: [item])
 let listTemplate = CPListTemplate(title: "Albums", sections: [section])
-interfaceController.pushTemplate(listTemplate, animated: true)
+interfaceController.pushTemplate(listTemplate, animated: true, completion: nil)
 ```
 
 If your list handler initiates async work and doesn't immediately call `completion()`, CarPlay shows a spinner. Call `completion()` when the work finishes so the spinner dismisses.
@@ -189,7 +192,7 @@ If your list handler initiates async work and doesn't immediately call `completi
 
 **iOS version**: iOS 12+ (element styles and pinned elements iOS 26+; message item iOS 26+).
 
-Source: *Developer Guide* p.17-19, p.30.
+Source: *Developer Guide* p.18, p.32.
 
 ---
 
@@ -211,7 +214,7 @@ Source: *Developer Guide* p.17-19, p.30.
 
 **iOS version**: iOS 12+ (multitouch iOS 26+).
 
-Source: *Developer Guide* p.34, p.46. For the full navigation-app lifecycle (startup, route guidance, instrument cluster/HUD, metadata), see `carplay-navigation-ref.md`.
+Source: *Developer Guide* p.36, p.49. For the full navigation-app lifecycle (startup, route guidance, instrument cluster/HUD, metadata), see `carplay-navigation-ref.md`.
 
 ---
 
@@ -257,11 +260,11 @@ func templateApplicationScene(
 
 Configure at connection time, not when pushed — iOS may display the template on your behalf before your code ever calls `pushTemplate`.
 
-**Category availability**: Audio, Communication (iOS 17+), Public safety.
+**Category availability**: Audio / Video, Communication (iOS 17+), Public safety.
 
-**iOS version**: iOS 12+ (sports mode iOS 18.4+).
+**iOS version**: iOS 14+ (sports mode iOS 18.4+).
 
-Source: *Developer Guide* p.20-21, p.31.
+Source: *Developer Guide* p.21-22, p.33.
 
 ---
 
@@ -279,9 +282,9 @@ Source: *Developer Guide* p.20-21, p.31.
 
 **Category availability**: Driving task, EV charging, Fueling, Parking, Public safety, Quick food ordering.
 
-**iOS version**: iOS 12+ (selected-location large pin iOS 16+).
+**iOS version**: iOS 14+ (selected-location large pin iOS 16+).
 
-Source: *Developer Guide* p.22.
+Source: *Developer Guide* p.23.
 
 ---
 
@@ -299,11 +302,11 @@ Source: *Developer Guide* p.22.
 - Many cars limit when the keyboard may be shown (see *Keyboard and list restrictions* in `carplay-navigation-ref.md`).
 - Results are `CPListItem` elements.
 
-**Category availability**: Navigation only.
+**Category availability**: Navigation, plus Audio/Video, EV charging, Fueling, Parking, and Public safety (iOS 27+). Not available to quick food ordering apps.
 
-**iOS version**: iOS 12+.
+**iOS version**: iOS 12+ for navigation; iOS 27+ for the other categories.
 
-Source: *Developer Guide* p.35.
+Source: *Developer Guide* p.24.
 
 ---
 
@@ -323,9 +326,9 @@ Source: *Developer Guide* p.35.
 
 **Category availability**: all.
 
-**iOS version**: iOS 12+.
+**iOS version**: iOS 14+.
 
-Source: *Developer Guide* p.23, p.26.
+Source: *Developer Guide* p.25, p.28.
 
 ---
 
@@ -334,30 +337,30 @@ Source: *Developer Guide* p.23, p.26.
 **Purpose**: Visual feedback for voice-based services during active voice interaction.
 
 **Use when**:
-- CarPlay navigation apps: voice-based services limited to navigation functions.
+- CarPlay navigation apps (iOS 12+).
 - Voice-based conversational apps (iOS 26.4+).
+- Driving task apps (iOS 26.4+), and all other categories (iOS 27+).
 
 **Constraints**:
 - Must be displayed while voice-based services are active.
 - To work well with other car audio, activate the audio session only when voice is in use (see *Audio handling* in the Developer Guide).
-- iOS 26.4+: up to 4 action buttons + leading and trailing navigation bar buttons.
-- All other CarPlay app categories must use SiriKit or Siri Shortcuts for voice features — not this template.
+- iOS 26.4+: up to 2 action buttons plus leading and trailing navigation bar buttons. Read `CPVoiceControlState.maximumActionButtonCount` rather than hardcoding a count.
 
-**Category availability**: Voice-based conversational (iOS 26.4+), Navigation.
+**Category availability**: All categories.
 
-**iOS version**: iOS 12+ for navigation; iOS 26.4+ for voice-based conversational.
+**iOS version**: iOS 12+ for navigation; iOS 26.4+ for driving task and voice-based conversational; iOS 27+ for the rest.
 
 **iOS 27 additions** (`iOS27`):
-- `backgroundImage` — a background image behind the voice-control UI.
-- Present it as an **overlay** over another template (e.g. over `CPMapTemplate`) instead of full-screen, via `CPInterfaceController.showOverlayTemplate(_:animated:completion:)` / `hideOverlayTemplate(animated:completion:)`. (These overlay methods are general — any `CPTemplate` can be shown over the current one.)
+- `CPVoiceControlState.backgroundImage` (set via `CPVoiceControlState(identifier:titleVariants:image:backgroundImage:repeats:)`) — a background image behind the voice-control UI.
+- Present it as an **overlay** over another template (e.g. over `CPMapTemplate`) instead of full-screen, via `CPInterfaceController.showOverlayTemplate(_:animated:completion:)` / `hideOverlayTemplate(animated:completion:)`. (The overlay is restricted to `CPVoiceControlTemplate` — no other template type may be shown as an overlay.)
 
-Source: *Developer Guide* p.24.
+Source: *Developer Guide* p.26.
 
 ---
 
 ## Asset Size Reference
 
-Source: *Developer Guide* p.26. All sizes are maximum; smaller icons render fine.
+Source: *Developer Guide* p.28. All sizes are maximum; smaller icons render fine.
 
 | Element | Max points | 3x pixels | 2x pixels |
 |---|---|---|---|
@@ -366,11 +369,11 @@ Source: *Developer Guide* p.26. All sizes are maximum; smaller icons render fine
 | Now playing action button | 20 × 20 | 60 × 60 | 40 × 40 |
 | Tab bar icon | 24 × 24 | 72 × 72 | 48 × 48 |
 
-For navigation-specific maneuver symbols and dashboard junction images, see `carplay-navigation-ref.md` (Developer Guide p.38).
+For navigation-specific maneuver symbols and dashboard junction images, see `carplay-navigation-ref.md` (Developer Guide p.39).
 
 ### Trait collection and runtime scale
 
-If you need the CarPlay screen scale at runtime, use `carTraitCollection` (not `traitCollection` — that returns the iPhone screen scale). **Only use `carTraitCollection` for display scale**; other parameters on it return iPhone values, not car values (Dev Guide p.26). For list item image sizing, read `maximumImageSize` on `CPListItem` or `CPListImageRowItem`.
+If you need the CarPlay screen scale at runtime, use `carTraitCollection` (not `traitCollection` — that returns the iPhone screen scale). **Only use `carTraitCollection` for display scale**; other parameters on it return iPhone values, not car values (Dev Guide p.28). For list item image sizing, read `maximumImageSize` on `CPListItem`; for image rows read it on the element (`CPListImageRowItemRowElement`, `…CardElement`, `…CondensedElement`, `…GridElement`, `…ImageGridElement`) — `CPListImageRowItem.maximumImageSize` is deprecated in iOS 26.
 
 ### Dark / light adaptation
 
@@ -394,11 +397,11 @@ CarPlay signals light/dark via `contentStyle` on your scene. Observe `contentSty
 
 ## Resources
 
-**Primary source**: *CarPlay Developer Guide*, Feb 2026, pp.13-31.
+**Primary source**: *CarPlay Developer Guide*, Jun 2026, pp.14-26, p.33.
 
 **Related Axiom skills:**
 
-- `carplay-hig.md` — category selection, 8 Universal Guidelines + per-category design rules (**start here**)
+- `carplay-hig.md` — category selection, 7 Universal Guidelines + per-category design rules (**start here**)
 - `carplay-navigation-ref.md` — nav-specific: base view, route guidance lifecycle, instrument cluster/HUD, metadata, multitouch
 - `now-playing-carplay.md` — Now Playing template customization + sports mode API mechanics
 

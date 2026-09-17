@@ -23,7 +23,8 @@ You integrate with DockKit only when you want *more* than the default: custom fr
 | API | Availability |
 |-----|--------------|
 | `DockAccessory`, `DockAccessoryManager` | iOS 17.0+, iPadOS 17.0+, Mac Catalyst 17.0+, macOS 14.0+ |
-| `DockAccessory.TrackingStates`, `selectSubjects`, battery states, button events | iOS 18.0+ |
+| `DockAccessory.TrackingStates`, `selectSubjects`, battery states | iOS 18.0+ |
+| `accessoryEvents` / `AccessoryEvent` (shutter, flip, zoom buttons) | iOS 17.4+ |
 | `NSCameraUsageDescription` | Required — DockKit operates inside the camera pipeline |
 
 `accessoryStateChanges` throws `DockKitError.notSupported` on macOS. Most app integration targets iOS/iPadOS.
@@ -34,7 +35,7 @@ You integrate with DockKit only when you want *more* than the default: custom fr
 |--------|--------------|-----|
 | `.docked` means **no device present** | The state names are inverted from intuition: `.docked` = stand has no phone, `.undocked` = phone is in the stand and connected | Treat `.undocked` as "ready"; gate all control on it |
 | Custom motor/inference does nothing | System tracking is on by default and overrides your commands | `try await DockAccessoryManager.shared.setSystemTrackingEnabled(false)` before custom control |
-| `.cameraTCCMissing` thrown | Camera permission not granted | Request camera access (`NSCameraUsageDescription`) before any DockKit call |
+| `.cameraTCCMissing` thrown | The DockKit camera terms and conditions have not been accepted | Show an alert that guides the person through the DockKit terms-and-conditions prompt — `NSCameraUsageDescription` alone does not clear it |
 | Coordinate origin mismatch | Region of interest uses **upper-left** (display) origin; `Observation` rects use **lower-left** (Vision) origin | Keep the two coordinate spaces straight; set `.corrected` on the `CameraInformation` orientation when your coords are already in the standard unit rect |
 | Feeding `track()` too fast/slow | Observation delivery outside the valid rate window throws `.frameRateTooHigh` / `.frameRateTooLow` | Feed observations at a steady camera-pipeline rate; handle both errors |
 
@@ -169,7 +170,11 @@ func celebrate(_ accessory: DockAccessory) async throws {
 
 The animation runs asynchronously from the stand's current position. Build custom animations with direct motor control (Part 4).
 
-## Part 7 — iOS 18 additions
+## Part 7 — Button events (iOS 17.4+)
+
+Camera and FaceTime get shutter, flip, and zoom out of the box; the same events are delivered to your app, plus custom button events (an ID and a pressed bool). Zoom carries a relative factor (2.0 = double the image / halve the field of view). Subscribe via `accessoryEvents` to implement custom behaviors — e.g. a gimbal button that starts/stops a panorama sweep.
+
+## Part 8 — iOS 18 additions
 
 #### Intelligent tracking signals
 
@@ -177,7 +182,7 @@ The on-device ML pipeline selects the most relevant subject using body/face pose
 
 ```swift
 func trackActiveSpeakers(_ accessory: DockAccessory) async throws {
-    for await state in accessory.trackingStates {
+    for try await state in try accessory.trackingStates {
         // trackedSubjects is [DockAccessory.TrackedSubjectType]: .person / .object
         let speakerIDs: [UUID] = state.trackedSubjects.compactMap { subject in
             guard case .person(let person) = subject,
@@ -190,10 +195,6 @@ func trackActiveSpeakers(_ accessory: DockAccessory) async throws {
 ```
 
 Each `TrackedSubjectType` is `.person(TrackedPerson)` or `.object(TrackedObject)`. A `TrackedPerson` exposes a `UUID` `identifier`, a face rectangle, an optional `saliencyRank` (`Int?`, rank 1 = most important, increasing monotonically), and optional `speakingConfidence` and `lookingAtCameraConfidence` (`Double?`, 0...1). `selectSubjects(_:)` takes `[UUID]`.
-
-#### Button events
-
-Camera and FaceTime get shutter, flip, and zoom out of the box; the same events are delivered to your app, plus custom button events (an ID and a pressed bool). Zoom carries a relative factor (2.0 = double the image / halve the field of view). Subscribe via `accessoryEvents` to implement custom behaviors — e.g. a gimbal button that starts/stops a panorama sweep.
 
 #### Gimbals
 
@@ -224,7 +225,7 @@ iOS 18 extends DockKit tracking in the system Camera app to photo, panorama, and
 | Case | Meaning / response |
 |------|--------------------|
 | `.notConnected` | Accessory not docked; wait for `.undocked` |
-| `.cameraTCCMissing` | Request camera permission first |
+| `.cameraTCCMissing` | DockKit camera terms and conditions not accepted — show an alert guiding the person through the prompt |
 | `.notSupported` / `.notSupportedByDevice` | Feature unavailable (e.g. on macOS, or unsupported hardware); guard with platform/feature checks |
 | `.frameRateTooHigh` / `.frameRateTooLow` | Observation feed rate out of range; throttle/steady the `track()` cadence |
 | `.noSubjectFound` | `selectSubject(at:)` point didn't intersect a tracked subject |

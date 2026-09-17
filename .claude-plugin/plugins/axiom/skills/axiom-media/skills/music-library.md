@@ -5,7 +5,7 @@
 
 ## Key Insight
 
-**MusicKit and MediaPlayer do not enumerate the same population.** `MusicKit.Playlist.entries` is the **catalog** view; `MPMediaPlaylist.items` is what exists in **this device's local media library**. They use different identifiers, have opposite performance characteristics, and on three platforms only one of them exists at all.
+**MusicKit and MediaPlayer do not enumerate the same population.** `MusicKit.Playlist.entries` is MusicKit's view of the playlist and can contain entries with no local representation; `MPMediaPlaylist.items` is what exists in **this device's local media library**. They use different identifiers, have opposite performance characteristics, and on three platforms only one of them exists at all.
 
 Treating a count difference between them as a data-integrity signal is the single most expensive mistake in this domain. See Rule 1.
 
@@ -497,7 +497,7 @@ Real apps on iOS end up using both. That is the expected outcome, not a design s
 
 | Thought | Reality |
 |---|---|
-| "MediaPlayer shows fewer members than MusicKit — sync must be incomplete" | The gap is exact and permanent: it equals the number of entries with no `playParameters`, because MusicKit shows the catalog and MediaPlayer shows what is local. A shipped guard built on this fired on 9 of 15 playlists, on every pass, forever. |
+| "MediaPlayer shows fewer members than MusicKit — sync must be incomplete" | The gap is structural, not a sync signal: it tracks the entries with no local representation — exact on all five playlists inspected, off by one library-wide. Never gate on it. A shipped guard built on this fired on 9 of 15 playlists, on every pass, forever. |
 | "Both APIs report the same count, so my join is working" | Joining entries by `musicKit_persistentID` returns zero matches even at 23/23 and 1/1. Entry ids are negative and belong to the entry, not the song. Join `catalogId` → `playbackStoreID`. |
 | "`musicKit_persistentID` means the same thing everywhere" | On a `Playlist` it is the MediaPlayer playlist id and is usable. On a `Playlist.Entry` it is the entry's own id (`kind = "_playlistEntry"`) and joins to nothing. Same key, two meanings. |
 | "`song.playParameters` is just a property read" | It is a computed property backed by MusicKit's store. Across a large library it leaves every later MusicKit request unresumed for the rest of the run, with no error. |

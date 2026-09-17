@@ -1,17 +1,17 @@
 ---
 name: carplay-hig
-description: CarPlay HIG and design discipline — app category selection, the 8 Universal Guidelines, per-category rules, entitlement review preparation, iOS 26 widgets and Live Activities, CarPlay Ultra
+description: CarPlay HIG and design discipline — app category selection, the 7 Universal Guidelines, per-category rules, entitlement review preparation, iOS 26 widgets and Live Activities, CarPlay Ultra
 ---
 
 # CarPlay HIG and Design Discipline
 
-CarPlay is not a second screen for your iPhone app. It is a regulated surface with hard design rules that Apple enforces during entitlement review — before your app ever reaches the App Store. This skill helps you pick the correct app category, comply with the 8 Universal Guidelines and per-category rules, and prepare a submission that passes review.
+CarPlay is not a second screen for your iPhone app. It is a regulated surface with hard design rules that Apple enforces during entitlement review — before your app ever reaches the App Store. This skill helps you pick the correct app category, comply with the 7 Universal Guidelines and per-category rules, and prepare a submission that passes review.
 
 ## When to Use
 
 Use this skill when you're:
 
-- Deciding whether your app belongs on CarPlay at all, and if so, in which of the 10 categories
+- Deciding whether your app belongs on CarPlay at all, and if so, in which of the 11 categories
 - Requesting a CarPlay entitlement (Apple reviews design before granting the entitlement)
 - Designing any CarPlay screen, flow, alert, or notification
 - Adding widgets or Live Activities to CarPlay on iOS 26+
@@ -32,12 +32,12 @@ Questions you can ask Claude that will draw from this skill:
 
 ## What This Skill Provides
 
-- **Category selection decision tree** for picking exactly one of the 10 CarPlay categories (Audio, Communication, Driving Task, EV Charging, Fueling, Navigation, Parking, Public Safety, Quick Food Ordering, Voice-Based Conversational), including the minimum iOS version and entitlement string for each
-- **The 8 Universal Guidelines** quoted verbatim from the CarPlay Developer Guide — primary purpose, never direct to iPhone, all flows possible in CarPlay, relevant to driving, no gaming or social networking, no message content, templates as intended, SiriKit for voice
-- **Per-category design rules** for each of the 10 categories, including the no-lyrics rule for audio apps, the 10 navigation-specific rules, the refresh-rate caps for driving task apps, the QSR simplified-ordering rule, and the voice-only modality rule for conversational apps
+- **Category selection decision tree** for picking exactly one of the 11 CarPlay categories (Audio, Communication, Driving Task, EV Charging, Fueling, Navigation, Parking, Public Safety, Quick Food Ordering, Video, Voice-Based Conversational), including the minimum iOS version and entitlement string for each
+- **The 7 Universal Guidelines** quoted verbatim from the CarPlay Developer Guide — primary purpose, never direct to iPhone, all flows possible in CarPlay, relevant to driving, no gaming or social networking, no message content, templates as intended
+- **Per-category design rules** for each of the 11 categories, including the no-lyrics rule for audio apps, the 9 navigation-specific rules, the refresh-rate caps for driving task apps, the QSR simplified-ordering rule, and the voice-only modality rule for conversational apps
 - **Anti-rationalization table** that pre-empts the dozen most common "I'll just…" thoughts that violate CarPlay rules, each paired with the specific rule and source
 - **Entitlement request flow** – what Apple reviews, why category fit is the most common rejection reason, and how to frame your description so the right reviewer signs off
-- **Layout, color, icon, and per-template asset sizes** including the 120×120 and 180×180 icon sizes, the no-black-background rule, and the screen-resolution range (800×480 to 1920×720, plus portrait 900×1200)
+- **Layout, color, icon, and per-template asset sizes** including the 120×120 and 180×180 icon sizes, the no-black-background rule, and the screen-resolution range (748×456 to 1920×720, plus portrait 900×1200)
 - **Error handling for iPhone-locked state** – why CarPlay typically runs with iPhone locked, what storage and Keychain access becomes unavailable, and how to surface errors in CarPlay rather than on the iPhone
 - **iOS 26 additions** – widgets in CarPlay (`.systemSmall` family, `.disfavoredLocations([.carPlay])` for unsuitable widgets), Live Activities (`.small` activity family), CarPlay Ultra and multitouch
 - **Notification rules** – which categories support notifications, the `.carPlay` authorization option, `allowInCarPlay` category option, and the no-message-body rule for communication apps
@@ -70,7 +70,7 @@ Most CarPlay use happens with iPhone locked in a pocket or center console. Your 
 **Primary sources (Apple):**
 
 - CarPlay HIG — developer.apple.com/design/human-interface-guidelines/carplay
-- CarPlay Developer Guide (Feb 2026) — entitlement request, template availability, per-category rules, asset sizes
+- CarPlay Developer Guide (Jun 2026) — entitlement request, template availability, per-category rules, asset sizes
 - CarPlay Audio App Programming Guide (Mar 2017) — legacy MediaPlayer path notes that still apply to iPhone-locked data access
 
 **WWDC**: 2017-719, 2018-213, 2020-10635, 2022-10016, 2025-216

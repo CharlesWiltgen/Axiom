@@ -26,7 +26,7 @@ init(catalog: SHCatalog)            // Matches against custom catalog
 
 ```swift
 func result() async -> SHSession.Result           // Single match attempt
-var results: SHManagedSession.Results             // AsyncSequence for continuous matching
+var results: SHSession.Results                    // AsyncSequence for continuous matching
 ```
 
 ## Lifecycle
@@ -44,7 +44,7 @@ var state: SHManagedSession.State   // Current session state
 
 `SHManagedSession` conforms to `Observable` (iOS 17+). SwiftUI views refresh automatically on state changes.
 
-Conforms to `Sendable` as of iOS 18.
+Conforms to `Sendable` as of iOS 17.
 
 ---
 
@@ -154,7 +154,7 @@ Metadata associated with a reference signature.
 ## Initialization
 
 ```swift
-init(properties: [SHMediaItemProperty : any NSSecureCoding & NSObjectProtocol])
+init(properties: [SHMediaItemProperty : Any])
 ```
 
 ## Predefined Properties
@@ -168,12 +168,12 @@ init(properties: [SHMediaItemProperty : any NSSecureCoding & NSObjectProtocol])
 | `.videoURL` | URL | Video URL |
 | `.genres` | [String] | Genre list |
 | `.explicitContent` | Bool | Explicit content flag |
-| `.isrc` | String | International Standard Recording Code |
+| `.ISRC` | String | International Standard Recording Code |
 | `.appleMusicID` | String | Apple Music identifier |
 | `.appleMusicURL` | URL | Apple Music URL |
 | `.webURL` | URL | Web URL for sharing |
 | `.shazamID` | String | Shazam catalog identifier |
-| `.creationDate` | Date | When item was created |
+| `.creationDate` | Date | When item was created — iOS 17+ |
 
 ## Timed Content Properties (iOS 16+)
 
@@ -232,7 +232,7 @@ Subclass of `SHMediaItem` with match-specific information. Only created by the f
 | `.matchOffset` | TimeInterval | Where in the reference the match occurred |
 | `.predictedCurrentMatchOffset` | TimeInterval | Auto-updating position in reference (seconds) |
 | `.frequencySkew` | Float | Frequency difference between matched and reference |
-| `.confidence` | Float | Match confidence (0.0 to 1.0, where 1.0 is highest) |
+| `.confidence` | Float | Match confidence (0.0 to 1.0, where 1.0 is highest) — iOS 18.4+ |
 
 `predictedCurrentMatchOffset` updates continuously during streaming matches — use it to sync UI to audio position.
 
@@ -248,7 +248,7 @@ Predefined property keys for `SHMediaItem`. Extend with custom keys using `init(
 
 ### All Predefined Keys
 
-`.title`, `.subtitle`, `.artist`, `.artworkURL`, `.videoURL`, `.genres`, `.explicitContent`, `.isrc`, `.appleMusicID`, `.appleMusicURL`, `.webURL`, `.shazamID`, `.creationDate`, `.matchOffset`, `.frequencySkew`, `.confidence`, `.timeRanges`, `.frequencySkewRanges`
+`.title`, `.subtitle`, `.artist`, `.artworkURL`, `.videoURL`, `.genres`, `.explicitContent`, `.ISRC`, `.appleMusicID`, `.appleMusicURL`, `.webURL`, `.shazamID`, `.creationDate`, `.matchOffset`, `.frequencySkew`, `.confidence` (iOS 18.4+), `.timeRanges`, `.frequencySkewRanges`
 
 ---
 
@@ -272,10 +272,12 @@ init(dataRepresentation: Data) throws
 ## Slicing
 
 ```swift
-func slices(from start: TimeInterval, duration: TimeInterval, stride: TimeInterval) -> SHSignature.Slices
+func slices(from start: TimeInterval, duration: TimeInterval, stride: TimeInterval? = nil) throws -> SHSignature.Slices
 ```
 
 Returns a sequence of signature segments of the specified duration, stepping by stride from the start offset.
+
+iOS 18+ (macOS 15+, tvOS 18+, watchOS 11+, visionOS 2+).
 
 ## Protocols
 
@@ -330,15 +332,13 @@ func addReferenceSignature(_ signature: SHSignature, representing mediaItems: [S
 ## Persistence
 
 ```swift
-func write(to url: URL) throws                  // Save .shazamcatalog file
+var dataRepresentation: Data { get }             // iOS 18+ — serialize to disk or network
+init(dataRepresentation: Data) throws            // iOS 18+ — read a serialized catalog
+func write(to url: URL) throws                   // Deprecated in iOS 18 — use dataRepresentation
 func add(from url: URL) throws                   // Load/merge from file
 ```
 
 File extension: `.shazamcatalog`
-
-## Protocols
-
-Sendable
 
 ---
 
@@ -349,7 +349,7 @@ User's synced Shazam library. Each app can only read and delete items it has add
 ## Access
 
 ```swift
-static var `default`: SHLibrary
+static let `default`: SHLibrary
 ```
 
 ## Methods
@@ -458,21 +458,20 @@ shazam signature --input <media-file> --output <signature-file>
 
 # Create custom catalog
 shazam custom-catalog create \
-    --input <signature-file> \
+    --signature-asset <signature-file> \
     --media-items <csv-file> \
     --output <catalog-file>
 
 # Update existing catalog
 shazam custom-catalog update \
-    --input <signature-file> \
-    --media-items <csv-file> \
-    --catalog <catalog-file>
+    --input <catalog-file> \
+    --signature-asset <signature-file> \
+    --media-items <csv-file>
 
 # Display catalog contents
-shazam custom-catalog display --catalog <catalog-file>
+shazam custom-catalog display --input <catalog-file>
 
-# Add/remove/export signatures and media items
-shazam custom-catalog add ...
+# Remove/export signatures and media items
 shazam custom-catalog remove ...
 shazam custom-catalog export ...
 ```

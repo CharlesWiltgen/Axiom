@@ -26,7 +26,7 @@ let asset = AVURLAsset(
 )
 let session = try await MusicUnderstandingSession(asset: asset)
 
-// Analyze ALL six areas (every SessionResult field is populated):
+// Analyze all six areas (a field stays nil when that area found nothing):
 let result = try await session.analyze()
 if let bpm = result.rhythm?.beatsPerMinute {
     print("Tempo: \(bpm) bpm")
@@ -44,7 +44,7 @@ if let bpm = result.rhythm?.beatsPerMinute {
 
 Both are `@discardableResult ... async throws -> SessionResult`.
 
-- `analyze()` — analyzes all six areas; every `SessionResult` field is non-nil.
+- `analyze()` — requests all six areas; a field is still `nil` when that area produced no result (a beat-only or noisy clip leaves `key` nil).
 - `analyze(for: Set<AnalysisType>)` — only the requested areas; **unrequested fields come back `nil`**. Use this to skip unnecessary computation.
 
 `AnalysisType` values: `.key`, `.rhythm`, `.structure`, `.pace`, `.instrumentActivity`, `.loudness`.
@@ -67,7 +67,7 @@ Two helpers tie data to time (both nested in `MusicUnderstandingSession`, both g
 if let key = result.key {
     for ranged in key.ranges {                 // [RangedValue<KeyResult.KeySignature>]
         let sig = ranged.value                 // KeySignature { tonic, mode }
-        print("\(sig.tonic) \(sig.mode)")      // e.g. .dFlat .major
+        print("\(sig.tonic) \(sig.mode)")      // e.g. dFlat major (no leading dot)
     }
 }
 // Tonic: 17 enharmonic spellings (.c, .cSharp, .dFlat, …). Mode: .major / .minor.
@@ -76,7 +76,7 @@ if let key = result.key {
 if let r = result.rhythm {
     let beats: [CMTime] = r.beats
     let bars:  [CMTime] = r.bars
-    let bpm:   Float?    = r.beatsPerMinute     // nil if fewer than 2 beats were found
+    let bpm:   Float?    = r.beatsPerMinute     // may be nil until enough audio has been analyzed
 }
 
 // StructureResult — three nested levels, each an array of ranges
@@ -155,6 +155,7 @@ let data = try JSONEncoder().encode(result)
 | `.sessionInProgress` | An analysis is already running — one at a time |
 | `.emptyAnalysisSet` | `analyze(for: [])` called with no types |
 | `.invalidAsset` | The asset could not be read |
+| `.hasProtectedContent` | The asset is DRM-protected and cannot be decoded for analysis |
 | `.internalError` | Unexpected framework failure |
 
 **One analysis per session.** Per Apple, call `analyze()` / `analyze(for:)` only once per `MusicUnderstandingSession` — create a new session for another run. Concurrent calls throw `.sessionInProgress`. Call `await session.cancel()` to stop an in-flight analysis; a canceled session cannot be reused.

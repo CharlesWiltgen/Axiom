@@ -58,7 +58,7 @@ Questions you can ask Claude that will draw from this reference:
 
 This page documents the `carplay-navigation-ref` skill — the framework-and-API half for CarPlay navigation apps.
 
-- For **the 10 navigation-specific design rules** (base-view restriction, voice control scope, audio handling, native-nav cancellation), see [CarPlay HIG](/skills/integration/carplay-hig). Start there before any navigation implementation work.
+- For **the 9 navigation-specific design rules** (base-view restriction, audio handling, native-nav cancellation), see [CarPlay HIG](/skills/integration/carplay-hig). Start there before any navigation implementation work.
 - For **template catalog and per-category availability** across all CarPlay app types, see [CarPlay Templates Reference](/reference/carplay-templates-ref)
 - For **Now Playing in CarPlay** (audio apps and the `CPNowPlayingTemplate` mechanics), see [Now Playing CarPlay Reference](/reference/now-playing-carplay)
 
@@ -66,6 +66,6 @@ This page documents the `carplay-navigation-ref` skill — the framework-and-API
 
 **Primary sources:**
 
-- CarPlay Developer Guide (Feb 2026) — base view (p.33), navigation rules (p.6), route guidance lifecycle (p.41-45), instrument cluster and HUD (p.32, p.46), multitouch (p.46), scene manifest (p.58-59)
+- CarPlay Developer Guide (Jun 2026) — base view (p.35), navigation rules (p.6), route guidance lifecycle (p.43-47), instrument cluster and HUD (p.34, p.53-58), multitouch (p.49), scene manifest (p.63-64)
 
 **WWDC**: 2025-216, 2022-10016, 2020-10635, 2018-213

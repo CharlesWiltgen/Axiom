@@ -28,8 +28,8 @@
     },
     {
       "path": "agents/camera-auditor.md",
-      "sha256": "be100ca8ba2e95efd1eff2437b74428613a3dbcb92f386ca6760d78a8ec961e5",
-      "bytes": 25559
+      "sha256": "a79941cdb5048c97a1a7fa4428d23ede992101f723971ae7f1cfdbdd83e048dc",
+      "bytes": 25887
     },
     {
       "path": "agents/codable-auditor.md",
@@ -1133,118 +1133,118 @@
     },
     {
       "path": "skills/axiom-media/SKILL.md",
-      "sha256": "848d1fd726f20c0e3e1ebc1934c92c943ac9784aea1ee33a03c42b8d7ec3f5f7",
-      "bytes": 16922
+      "sha256": "92a5f9f976c8bed919ec7d91fb6ff3580445a0c8b0640b4df5d92dd494e98bb5",
+      "bytes": 17320
     },
     {
       "path": "skills/axiom-media/skills/avfoundation-ref.md",
-      "sha256": "58db62345162aba46495d134732d729abe45dd3a62fdfca2875dda855b38743b",
-      "bytes": 23701
+      "sha256": "930d2fab52b0311bf1ce66b3a8db4e80c079a053076aa0cf0517295bec1d81d3",
+      "bytes": 24848
     },
     {
       "path": "skills/axiom-media/skills/avfoundation-video-ref.md",
-      "sha256": "ea87eef36893b8966adcd4c1388e8772dd34f2d00e90f4ef16ac61c624eb8bd5",
-      "bytes": 11183
+      "sha256": "7f5ca5bf5295edcb2bca19930086898471253fadeeb02464016fd6923ecd8351",
+      "bytes": 11178
     },
     {
       "path": "skills/axiom-media/skills/camera-capture-diag.md",
-      "sha256": "246f509cbb73b71da837d188153979cd229b7fe18d4806eccacdf4a9aa16eb10",
-      "bytes": 25488
+      "sha256": "d78624877894d8f4b53e78b20c98ae8b12e754863aba66dc04ef8a010f09097a",
+      "bytes": 25704
     },
     {
       "path": "skills/axiom-media/skills/camera-capture-ref.md",
-      "sha256": "5fbb349f326fb1027a8c9eb9eb22c76b8478152022c9bd86e24676d67f8b8d37",
-      "bytes": 48689
+      "sha256": "66b5b1bb25bd397a5788eb74d04e869771f40f52cc9220b4215ee1eb0bbc579e",
+      "bytes": 49541
     },
     {
       "path": "skills/axiom-media/skills/camera-capture.md",
-      "sha256": "bd84a77515bf52d8159e4d715c82ec6f25b36610a6fdfd50c8b4b4f60d04ca37",
-      "bytes": 39357
+      "sha256": "0eb27c2e0a34832bf18a60c57fc7e870c9f6016ed6f23a7fe52cc3c8a0cda9ac",
+      "bytes": 39741
     },
     {
       "path": "skills/axiom-media/skills/carplay-hig.md",
-      "sha256": "edee7fcdb0b97a27e643271ab8718f89a13c0a7dee70dee6cdef99dffe78ae3a",
-      "bytes": 29280
+      "sha256": "77757894fa7f80a18fdad46d33173deb4bbef743809723a7e2022b17ab440b0b",
+      "bytes": 29796
     },
     {
       "path": "skills/axiom-media/skills/carplay-navigation-ref.md",
-      "sha256": "f38848ddf869d6ca9346a4f852d096c1fa67c690525d2fe2a84e095c98e89343",
-      "bytes": 33912
+      "sha256": "8183c73b20fed30564374a37fc7466d817889f18f66844a29a885b32f8cc4065",
+      "bytes": 34691
     },
     {
       "path": "skills/axiom-media/skills/carplay-templates-ref.md",
-      "sha256": "0f86c882a098dd74de35592def253b352433a5f78b691fbcd37fa3df9444388c",
-      "bytes": 17351
+      "sha256": "6a7bb5a7932eef0e6f3132b61b8c20e1d91fae1d48600793980fe93a37691abc",
+      "bytes": 18125
     },
     {
       "path": "skills/axiom-media/skills/dockkit.md",
-      "sha256": "0f376d433645d2f586dc685afa861409fa431c92401314d04ace4efeb5347a83",
-      "bytes": 13422
+      "sha256": "064c46faf0fe51cca87cb7ae463132fee6bd56401f840d4bf2b4f2861bd711b2",
+      "bytes": 13690
     },
     {
       "path": "skills/axiom-media/skills/haptics.md",
-      "sha256": "8f9c9c072e4f983e4f5014c652cd865e593989431bc2793811cc4de5a171b85d",
-      "bytes": 20892
+      "sha256": "0d4f70c21052c471d1adaad12a4822da6fe8c80a402656dbc51c75a7a2e17ed2",
+      "bytes": 22177
     },
     {
       "path": "skills/axiom-media/skills/media-intelligence.md",
-      "sha256": "6ac426e109f769237e60fa2c60c919c84af2d669a43008c9642cb909bedd01c0",
-      "bytes": 8970
+      "sha256": "747fa9c0257e01589c8adee77e6d1a9b4039f8f545ec5ca4feac333c8023e2e5",
+      "bytes": 9500
     },
     {
       "path": "skills/axiom-media/skills/music-library.md",
-      "sha256": "964a056335a55d6291834caa54f51ea46858641aed049d9f21187509b8339834",
-      "bytes": 36619
+      "sha256": "8fa48054deabbd5d31b0a8d6da68e4868ed677596e8a05ee96c57a8240b40279",
+      "bytes": 36700
     },
     {
       "path": "skills/axiom-media/skills/music-understanding.md",
-      "sha256": "58e090514b443f6a1e10570b38d6b5365b9b47256ca190fbabef954dee7ac323",
-      "bytes": 7070
+      "sha256": "ee2a395769d5f5c89aca81fb7bdccc976dc205e37179d30908ead33835a93d36",
+      "bytes": 7258
     },
     {
       "path": "skills/axiom-media/skills/now-playing-carplay.md",
-      "sha256": "cc861d4cf3eae717f771c51d80ff9e8e92bb33d31a464a74fa10c58c9370e8fc",
-      "bytes": 8815
+      "sha256": "25e3eea516100cb4a6735d6e2ca2bb98c5a509d64eba7d26584b2a57b1ae310a",
+      "bytes": 8814
     },
     {
       "path": "skills/axiom-media/skills/now-playing-musickit.md",
-      "sha256": "55567b8ad29e87d7928c6db4f3e574b98b5009d00f45bd2f3b45912fc5b6b4a0",
-      "bytes": 15523
+      "sha256": "53715161634d4c3307fcc42de1748956d332ef2abf7df712e8d2237570e6109c",
+      "bytes": 15602
     },
     {
       "path": "skills/axiom-media/skills/now-playing.md",
-      "sha256": "9e0dfc59fdfcfce7396237164d4c05d9467de47c14fb4294dc3988188d3d0986",
-      "bytes": 52403
+      "sha256": "4364324f9d1fa89ab24ee43c1c006d1ae131949ecb04830ca59f91cdf27dad01",
+      "bytes": 52700
     },
     {
       "path": "skills/axiom-media/skills/photo-library-ref.md",
-      "sha256": "223f0d4e40eb0607393c3e4ce9ada830fb3a0b13c1395dbf8dbf4ccb6e127163",
-      "bytes": 38122
+      "sha256": "ab012e1e1cd3af4851876c21801fff837052ccfe0d7b109d63c889d5f0b78bce",
+      "bytes": 38205
     },
     {
       "path": "skills/axiom-media/skills/photo-library.md",
-      "sha256": "598807e035a110b72c7f840506b96f92ff8bc70ee9a07dd3585ea527204f1c0b",
-      "bytes": 36556
+      "sha256": "b8033de30f219cead8419557a09d0ad27747166e1bdddd9dfad342170ea4a9df",
+      "bytes": 36721
     },
     {
       "path": "skills/axiom-media/skills/screen-capture.md",
-      "sha256": "ac62a1cc78a66abb904b479d33c2a3b136094cc652cb1c3422c5f8d92f6f6a6e",
-      "bytes": 6471
+      "sha256": "5d7d9eef892a5d30c2f0e2a038a6677335349d8c9d723268805b11b8f7763fb3",
+      "bytes": 6467
     },
     {
       "path": "skills/axiom-media/skills/shareplay-playback.md",
-      "sha256": "780de015ad64ae0a36dbc64e2eb9c569eae7409803ace0ee46614baee1fbbc8b",
-      "bytes": 17001
+      "sha256": "ab393a92dd4f128bfa63ad25d222764e8d5cf67227490f55d754f3eb2d7cc121",
+      "bytes": 16999
     },
     {
       "path": "skills/axiom-media/skills/shazamkit-ref.md",
-      "sha256": "4d7cd6b89b0507952eb404116ce2b354c36f6fba7abc7c8959239f08aeb003c1",
-      "bytes": 13881
+      "sha256": "ebb8e5c5515261a8e3d3f8e330c5776c169a68603b1e7e97eb5feb7f5b12e9ac",
+      "bytes": 14122
     },
     {
       "path": "skills/axiom-media/skills/shazamkit.md",
-      "sha256": "ff4fe6175c663ea7bbc95caf237ea41e3e1a75c7325b65b57dac05e9149c4a82",
-      "bytes": 21724
+      "sha256": "b9ca16b5f21aff59048902862441706490134f04c9659a1083d13ef9273fefcc",
+      "bytes": 21748
     },
     {
       "path": "skills/axiom-media/skills/system-media-routing.md",
@@ -1879,7 +1879,7 @@
   ],
   "totals": {
     "files": 375,
-    "bytes": 7505166
+    "bytes": 7513789
   },
   "excludedMirrors": 30,
   "classes": {

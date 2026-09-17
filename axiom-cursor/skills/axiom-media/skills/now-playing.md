@@ -9,7 +9,7 @@
 
 ## Core Philosophy
 
-> "Now Playing eligibility requires THREE things working together: AVAudioSession activation, remote command handlers, and metadata publishing. Missing ANY of these silently breaks the entire system. 90% of Now Playing issues stem from incorrect activation order or missing command handlers, not API bugs."
+> "Now Playing eligibility requires THREE things working together: AVAudioSession activation, remote command handlers, and metadata publishing. Missing ANY of these silently breaks the entire system. Most Now Playing issues stem from incorrect activation order or missing command handlers, not API bugs."
 
 **Key Insight from WWDC 2022/110338**: Apps must meet two system heuristics:
 1. Register handlers for at least one remote command
@@ -55,16 +55,16 @@ iOS 26 introduces **Liquid Glass visual design** for Lock Screen and Control Cen
 - Info appears briefly then disappears (AVAudioSession deactivated)
 - Commands work in simulator but not on device (simulator has different audio stack)
 - Artwork shows placeholder then updates (race condition, not necessarily wrong)
-- Artwork never appears (format/size issue or MPMediaItemArtwork block returning nil)
+- Artwork never appears (format/size issue)
 - Play/pause state incorrect after backgrounding (not updating on playback rate changes)
 - Another app "steals" Now Playing (didn't meet eligibility requirements)
-- `playbackState` property doesn't update (iOS doesn't have `playbackState`, macOS only!)
+- `playbackState` property doesn't update (available on iOS 13+ but only *applies* on macOS; use playbackRate on iOS!)
 
 **FORBIDDEN Assumptions:**
 - "Just set nowPlayingInfo and it works" - Must have AVAudioSession + command handlers
 - "playbackState controls Control Center" - iOS ignores playbackState, uses playbackRate
 - "Artwork just needs an image" - Needs proper MPMediaItemArtwork with size handler
-- "Commands enable themselves" - Must add target AND set isEnabled = true
+- "You must set isEnabled = true or the command stays disabled" - A registered target is enabled by default; only set isEnabled when you intend to *dim* a command
 - "Update elapsed time every second" - System infers from rate, causes jitter
 
 ## Mandatory First Steps (Pre-Diagnosis)
@@ -87,7 +87,7 @@ print("Is active: \(try? session.setActive(true))")
 let commandCenter = MPRemoteCommandCenter.shared()
 print("Play enabled: \(commandCenter.playCommand.isEnabled)")
 print("Pause enabled: \(commandCenter.pauseCommand.isEnabled)")
-// Must have at least one command with target AND isEnabled = true
+// Must have at least one command with a registered target (isEnabled defaults to true)
 
 // 4. Check nowPlayingInfo dictionary
 if let info = MPNowPlayingInfoCenter.default().nowPlayingInfo {
@@ -108,7 +108,7 @@ if let info = MPNowPlayingInfoCenter.default().nowPlayingInfo {
 | Category is .ambient or has .mixWithOthers | Won't become Now Playing app | Pattern 1 |
 | No commands have targets | System ignores app | Pattern 2 |
 | Commands have targets but isEnabled = false | UI grayed out | Pattern 2 |
-| Artwork is nil | MPMediaItemArtwork block returning nil | Pattern 3 |
+| Artwork is nil | MPMediaItemPropertyArtwork never set (or set to a UIImage) | Pattern 3 |
 | Animated artwork key set but iOS 26 lock screen still shows static | Key not in `supportedAnimatedArtworkKeys` (silently disregarded) | Pattern 8 |
 | playbackRate is 0.0 when playing | Control Center shows paused | Pattern 4 |
 | Background mode "audio" not in Info.plist | Info disappears on lock | Pattern 1 |
@@ -147,12 +147,12 @@ Now Playing not working? (MediaPlayer path — MPNowPlayingInfoCenter / MPRemote
 │  │  │  └─ Pattern 2c (Handler Return)
 │  │  └─ Using wrong command center (session vs shared)?
 │  │     └─ Pattern 2d (Command Center)
-│  └─ Skip forward/backward not showing?
-│     └─ preferredIntervals not set → Pattern 2e
+│  └─ Skip buttons show 10s instead of your interval?
+│     └─ preferredIntervals left at its [10] default → Pattern 2 (Symptom 3)
 │
 ├─ Artwork problems?
 │  ├─ Never appears?
-│  │  ├─ MPMediaItemArtwork block returning nil?
+│  │  ├─ MPMediaItemPropertyArtwork key missing?
 │  │  │  └─ Pattern 3a (Artwork Block)
 │  │  └─ Image format/size invalid?
 │  │     └─ Pattern 3b (Image Format)
@@ -275,27 +275,25 @@ class PlayerService {
 ### Symptom
 - Play/pause buttons grayed out
 - Buttons visible but tapping does nothing
-- Skip buttons don't appear
+- Skip buttons don't appear, or show 10s instead of your interval
 - Commands work once then stop
 
 ### BAD Code
 
 ```swift
-// ❌ WRONG — Missing targets and isEnabled
+// ❌ WRONG — Incomplete command registration
 class PlayerService {
     func setupCommands() {
         let commandCenter = MPRemoteCommandCenter.shared()
 
-        // ❌ Added target but forgot isEnabled
+        // ❌ Returned target discarded — MPRemoteCommandCenter does not retain it
         commandCenter.playCommand.addTarget { _ in
             self.player.play()
             return .success
         }
-        // playCommand.isEnabled defaults to false!
 
         // ❌ Never added pause handler
 
-        // ❌ skipForward without preferredIntervals
         commandCenter.skipForwardCommand.addTarget { _ in
             return .success
         }
@@ -314,13 +312,12 @@ class PlayerService {
     func setupCommands() {
         let commandCenter = MPRemoteCommandCenter.shared()
 
-        // ✅ Play command - add target AND enable
+        // ✅ Play command
         let playTarget = commandCenter.playCommand.addTarget { [weak self] _ in
             self?.player.play()
             self?.updateNowPlayingPlaybackState(isPlaying: true)
             return .success
         }
-        commandCenter.playCommand.isEnabled = true
         commandTargets.append(playTarget)
 
         // ✅ Pause command
@@ -329,7 +326,6 @@ class PlayerService {
             self?.updateNowPlayingPlaybackState(isPlaying: false)
             return .success
         }
-        commandCenter.pauseCommand.isEnabled = true
         commandTargets.append(pauseTarget)
 
         // ✅ Skip forward - set preferredIntervals BEFORE adding target
@@ -341,7 +337,6 @@ class PlayerService {
             self?.skip(by: skipEvent.interval)
             return .success
         }
-        commandCenter.skipForwardCommand.isEnabled = true
         commandTargets.append(skipForwardTarget)
 
         // ✅ Skip backward
@@ -353,7 +348,6 @@ class PlayerService {
             self?.skip(by: -skipEvent.interval)
             return .success
         }
-        commandCenter.skipBackwardCommand.isEnabled = true
         commandTargets.append(skipBackwardTarget)
     }
 
@@ -366,8 +360,15 @@ class PlayerService {
         commandTargets.removeAll()
     }
 
+    // A `deinit` is nonisolated, so it cannot call the MainActor-isolated
+    // `teardownCommands()`. Removing the targets needs no isolation, and the
+    // retained targets are released with `commandTargets` either way.
     deinit {
-        teardownCommands()
+        let commandCenter = MPRemoteCommandCenter.shared()
+        commandCenter.playCommand.removeTarget(nil)
+        commandCenter.pauseCommand.removeTarget(nil)
+        commandCenter.skipForwardCommand.removeTarget(nil)
+        commandCenter.skipBackwardCommand.removeTarget(nil)
     }
 }
 ```
@@ -392,7 +393,7 @@ class PlayerService {
 ### BAD Code
 
 ```swift
-// ❌ WRONG — MPMediaItemArtwork block can return nil, no size handling
+// ❌ WRONG — Storing a UIImage directly, and a block that reads stored state
 func updateNowPlaying() {
     var nowPlayingInfo = [String: Any]()
     nowPlayingInfo[MPMediaItemPropertyTitle] = track.title
@@ -400,9 +401,9 @@ func updateNowPlaying() {
     // ❌ Storing UIImage directly (doesn't work)
     nowPlayingInfo[MPMediaItemPropertyArtwork] = image
 
-    // ❌ Or: Block that ignores requested size
+    // ❌ Or: Block that reads stored state off the main thread
     let artwork = MPMediaItemArtwork(boundsSize: image.size) { _ in
-        return self.cachedImage  // ❌ May be nil, ignores requested size
+        return self.cachedImage  // ❌ Reads a stored property, not a captured value
     }
 
     MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
@@ -438,7 +439,7 @@ class NowPlayingService {
         // and safe to capture across isolation domains
         let artwork = MPMediaItemArtwork(boundsSize: image.size) { [image] requestedSize in
             // ✅ System calls this block from any thread
-            // Captured value avoids "Main actor-isolated property" error
+            // Captured value avoids reading MainActor state off the main thread
             return image
         }
 
@@ -473,12 +474,11 @@ class NowPlayingService {
 }
 ```
 
-**Why value capture, not `nonisolated(unsafe)`**: The closure passed to `MPMediaItemArtwork` may be called by the system from any thread. Under Swift 6 strict concurrency, accessing `@MainActor`-isolated stored properties from this closure would cause a compile error. Capturing the image value directly is cleaner than using `nonisolated(unsafe)` because UIImage is immutable and thread-safe for reads.
+**Why value capture, not `nonisolated(unsafe)`**: The closure passed to `MPMediaItemArtwork` is imported without `@Sendable`, so Swift 6 will **not** diagnose a cross-thread read of `@MainActor`-isolated stored properties from it — such code compiles. Capture the image value because the system may invoke this block off the main thread at runtime, not because the compiler demands it. Capturing the value directly is still cleaner than `nonisolated(unsafe)` because UIImage is immutable and thread-safe for reads.
 
 ### Artwork Size Guidelines
-- Lock Screen: 300x300 points (600x600 @2x, 900x900 @3x)
+- Lock Screen: the system passes the size it needs to your `MPMediaItemArtwork` request handler — return the image that most closely fits it
 - Control Center: Various sizes
-- **Best practice**: Provide image at least 600x600 pixels
 
 ### Verification
 - Artwork appears on Lock Screen
@@ -658,7 +658,7 @@ class ModernPlayerService {
         // - Elapsed time
         // - Playback state (rate)
         // - Playback progress
-        session?.automaticallyPublishNowPlayingInfo = true
+        session?.automaticallyPublishesNowPlayingInfo = true
 
         // ✅ Register commands on SESSION's command center (not shared)
         session?.remoteCommandCenter.playCommand.addTarget { [weak self] _ in
@@ -912,17 +912,17 @@ Testing: Verified with 10 track changes, zero flicker.
 | Info never appears | AVAudioSession not activated | Call `setActive(true)` before playback | 5 min |
 | Info never appears | No command handlers | Add target to at least one command | 10 min |
 | Info never appears | Using `.mixWithOthers` | Remove .mixWithOthers option | 5 min |
-| Commands grayed out | `isEnabled = false` | Set `command.isEnabled = true` after adding target | 5 min |
+| Commands grayed out | `isEnabled` explicitly set to `false` | Set `command.isEnabled = true` (registering a target enables it by default) | 5 min |
 | Commands don't respond | Handler returns wrong status | Return `.success` from handler | 5 min |
 | Commands don't respond | Using shared command center with MPNowPlayingSession | Use `session.remoteCommandCenter` instead | 10 min |
-| Skip buttons missing | No preferredIntervals | Set `skipCommand.preferredIntervals = [15.0]` | 5 min |
-| Artwork never appears | MPMediaItemArtwork block returns nil | Ensure image is loaded before creating artwork | 15 min |
+| Skip buttons show 10s instead of your interval | `preferredIntervals` left at its `[10]` default | Set `skipCommand.preferredIntervals = [15.0]` | 5 min |
+| Artwork never appears | `MPMediaItemPropertyArtwork` key not set | Set it to an `MPMediaItemArtwork` | 15 min |
 | Artwork flickers | Multiple rapid updates | Single source of truth with cancellation | 20 min |
 | Wrong play/pause state | Using `playbackState` property | Use `playbackRate` (1.0 = playing, 0.0 = paused) | 10 min |
 | Progress bar stuck | Not updating on seek | Update `elapsedPlaybackTime` after seek completes | 10 min |
 | Progress bar jumps | Updating elapsed on timer | Don't update on timer; system infers from rate | 10 min |
 | Loses Now Playing to other apps | Session not reactivated on foreground | Call `becomeActiveIfPossible()` on foreground | 15 min |
-| `playbackState` doesn't work | iOS-only app | `playbackState` is macOS only; use `playbackRate` on iOS | 10 min |
+| `playbackState` doesn't work | iOS-only app | `playbackState` applies on macOS only; use `playbackRate` on iOS | 10 min |
 | Siri skip ignores preferredIntervals | Hardcoded interval in handler | Use `event.interval` from MPSkipIntervalCommandEvent | 5 min |
 | **CarPlay**: App doesn't appear | Missing entitlement | Add `com.apple.developer.carplay-audio` to entitlements | 5 min |
 | **CarPlay**: Custom buttons don't appear | Configured at wrong time | Configure at `templateApplicationScene(_:didConnect:)` | 5 min |
@@ -947,7 +947,7 @@ Testing: Verified with 10 track changes, zero flicker.
 
 ### Remote Commands
 - [ ] At least one command has target registered
-- [ ] All registered commands have `isEnabled = true`
+- [ ] No registered command is disabled (`isEnabled = false`)
 - [ ] Skip commands have `preferredIntervals` set
 - [ ] Handlers return `.success` on success
 - [ ] Using correct command center (session's vs shared)
@@ -960,12 +960,11 @@ Testing: Verified with 10 track changes, zero flicker.
 - [ ] Elapsed time set at play/pause/seek (`MPNowPlayingInfoPropertyElapsedPlaybackTime`)
 - [ ] Playback rate set (`MPNowPlayingInfoPropertyPlaybackRate`: 1.0 = playing, 0.0 = paused)
 - [ ] Artwork created with `MPMediaItemArtwork(boundsSize:requestHandler:)`
-- [ ] NOT using `playbackState` property (macOS only)
+- [ ] NOT using `playbackState` property (applies on macOS only)
 - [ ] NOT updating elapsed time on a timer
 
 ### Artwork
-- [ ] Image at least 600x600 pixels
-- [ ] MPMediaItemArtwork block never returns nil (return placeholder if needed)
+- [ ] MPMediaItemPropertyArtwork set to an MPMediaItemArtwork
 - [ ] Single source of truth prevents flickering
 - [ ] Previous artwork load cancelled on track change
 
@@ -1090,9 +1089,6 @@ class AnimatedArtworkService {
             artworkID: artworkID,
             previewImageRequestHandler: { [weak self] requestedSize in
                 // First-frame still — return synchronously when possible.
-                // ✅ guard let, NOT `await self?.method()` — optional chaining on an
-                // async call returning Optional<T> produces Optional<Optional<T>>,
-                // which won't satisfy the handler's `UIImage?` return type.
                 guard let self else { return nil }
                 return await self.loadPreviewImage(albumID: albumID, aspect: aspectRatio, size: requestedSize)
             },
@@ -1112,7 +1108,7 @@ enum ArtworkAspect { case square, tall }
 
 **`artworkID` is the cache key.** The system uses it to detect changes — keep it stable for the same artwork (e.g., `"album:\(albumID)"` for all songs on an album). A new ID forces the system to re-request both preview and video. A `UUID()` per call defeats caching entirely.
 
-**`supportedAnimatedArtworkKeys` is mandatory.** Apple's docs are explicit: "Any animated artwork keys not included in this collection will be disregarded." Don't assume both 1:1 and 3:4 are accepted on every platform — watchOS or tvOS may only accept one (or none).
+**`supportedAnimatedArtworkKeys` is mandatory.** Apple's docs are explicit: "If you specify an instance of animated artwork … using any key not in this collection it will be ignored." Don't assume both 1:1 and 3:4 are accepted on every platform — watchOS or tvOS may only accept one (or none).
 
 **Lazy loading is the contract.** The system invokes the request handlers only when the artwork is being viewed. Don't pre-download video assets unconditionally — Apple specifically warns: "Avoid performing expensive network requests for video assets in advance, as the system may ultimately not request the asset."
 
@@ -1211,7 +1207,7 @@ final class PlayerModel: MediaSessionRepresentable {
             artistName: track.artist,
             albumName: track.album,
             type: .audio,
-            duration: .finite(track.duration),      // or .live for streams — NOT ".continuous"
+            duration: .finite(track.duration),      // or .live for streams
             artwork: Artwork(id: track.id) { size in
                 try ArtworkRepresentation(data: await track.artworkData(for: size))
             }
@@ -1243,7 +1239,7 @@ let session = MediaSession(playerModel)   // observes the @Observable model; no 
 Key shapes (SDK-verified against the NowPlaying `-target arm64e-apple-ios27.0` interface):
 - **`MediaSessionRepresentable`** (`@MainActor`) requires exactly four members: `id`, `content`, `playbackSnapshot`, `commands`.
 - **`MediaPlaybackSnapshot(state:defaultPlaybackRate:elapsedTime:timestamp:)`** — `PlaybackState` is `.stopped`, `.playing(rate:)`, `.paused`, `.buffering`, `.interrupted`.
-- **`MediaDuration`** is `.live` or `.finite(TimeInterval)`. (The WWDC talk says "`.continuous`" — the SDK has no such case; use `.live`.)
+- **`MediaDuration`** is `.live`, `.continuous`, or `.finite(TimeInterval)`.
 - **`MediaCommand`** factories: `.play`, `.pause`, `.stop`, `.togglePlayPause`, `.next`, `.previous`, `.skipForward(preferredIntervals:)`, `.skipBackward(preferredIntervals:)`, `.seekToPosition`, `.seekForward(beginAction:endAction:)`, `.seekBackward(…)`, `.changePlaybackRate(supported:)`, `.changeRepeatMode(current:supported:)`, `.changeShuffleMode(current:supported:)`, `.feedback(title:shortTitle:status:)`. Chain `.enabled(false)` to dim one.
 - **`Artwork(id:artworkProvider:)`** and **`AnimatedArtwork(id:supportedAspectRatios:preview:video:)`** — both lazy `async` providers keyed on a `CGSize`; the provider returns `ArtworkRepresentation(data:)` or `ArtworkRepresentation(cgImage:)` (both `throws`).
 - **`MediaSession`** is `@MainActor` and **unavailable in app extensions**; it exposes `isApplicationPrimary` / `requestToBecomeApplicationPrimary()` (and iOS-only `isSystemPrimary` / `requestToBecomeSystemPrimary()`).

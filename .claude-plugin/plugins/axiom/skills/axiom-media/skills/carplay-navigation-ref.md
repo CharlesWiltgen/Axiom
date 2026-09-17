@@ -3,7 +3,7 @@
 
 Reference for CarPlay turn-by-turn navigation apps — base view rules, route guidance lifecycle, map template specifics, CarPlay Dashboard, instrument cluster, HUD metadata, voice prompts, multitouch, and testing.
 
-**Start with `carplay-hig.md`** for the 10 navigation-app design rules (base-view restriction, voice control scope, audio handling, etc.). This file documents the navigation framework and APIs.
+**Start with `carplay-hig.md`** for the 9 navigation-app design rules (base-view restriction, audio handling, native-nav cancellation, etc.). This file documents the navigation framework and APIs.
 
 ## Overview
 
@@ -11,7 +11,7 @@ Navigation apps have more capabilities than any other CarPlay category:
 
 - **Base view** for drawing maps (iOS 12+)
 - **CarPlay Dashboard** second map (iOS 13.4+)
-- **Instrument cluster** map display (iOS 16.4+)
+- **Instrument cluster** map display (iOS 15.4+)
 - **HUD metadata** for maneuver display in head-up displays and smaller cluster screens (iOS 17.4+)
 - **Multitouch gestures** (iOS 26+)
 
@@ -19,20 +19,20 @@ This additional surface area carries additional rules. The base-view-is-for-maps
 
 ## Supported Displays
 
-Source: *CarPlay Developer Guide*, Feb 2026, p.32.
+Source: *CarPlay Developer Guide*, Jun 2026, p.34.
 
 | iOS version | Center display | CarPlay Dashboard | Instrument cluster | HUD metadata |
 |---|---|---|---|---|
 | iOS 12 | ● |   |   |   |
 | iOS 13.4 | ● | ● |   |   |
-| iOS 16.4 | ● | ● | ● |   |
+| iOS 15.4 | ● | ● | ● |   |
 | iOS 17.4+ | ● | ● | ● | ● |
 
 "Support all capabilities in your app for a seamless experience in all vehicle configurations."
 
 ## Base View
 
-Source: *Developer Guide* p.33, reinforced at p.6 (Guidelines rule #2).
+Source: *Developer Guide* p.35, reinforced at p.6 (Guidelines rule #2).
 
 **Rule:** "The base view must be used exclusively to draw a map, and cannot be used to draw alerts, overlays, or other UI elements. All UI elements that appear on the screen, including the navigation bar and map buttons, must be implemented using other templates."
 
@@ -44,7 +44,7 @@ Source: *Developer Guide* p.33, reinforced at p.6 (Guidelines rule #2).
 
 ## Startup
 
-Source: *Developer Guide* p.40.
+Source: *Developer Guide* p.42.
 
 ### Application scene manifest
 
@@ -104,7 +104,7 @@ Navigation apps declare two CarPlay scenes — one for the main window, one for 
 </dict>
 ```
 
-Source: *Developer Guide* p.58-59.
+Source: *Developer Guide* p.63-64.
 
 ### Scene delegate lifecycle
 
@@ -128,7 +128,7 @@ func templateApplicationScene(
 }
 ```
 
-Retain references to both the `CPInterfaceController` and the `CPWindow` for the duration of the CarPlay session. Source: *Developer Guide* p.40.
+Retain references to both the `CPInterfaceController` and the `CPWindow` for the duration of the CarPlay session. Source: *Developer Guide* p.42.
 
 ### Initial map template buttons
 
@@ -138,7 +138,7 @@ Retain references to both the `CPInterfaceController` and the `CPWindow` for the
 
 ## Route Guidance Lifecycle
 
-Source: *Developer Guide* p.41.
+Source: *Developer Guide* p.43.
 
 ```dot
 digraph routeguidance {
@@ -148,7 +148,7 @@ digraph routeguidance {
     choose [label="Choose route and\nstart guidance" shape=box];
     view [label="View trip info\n+ upcoming maneuvers" shape=box];
     end [label="End guidance" shape=box];
-    reroute [label="Re-route\n(iOS 17.4+)" shape=box];
+    reroute [label="Re-route\n(iOS 17.4+; segments\nform iOS 26.4+)" shape=box];
 
     start -> select;
     select -> preview;
@@ -166,7 +166,7 @@ digraph routeguidance {
 
 "You may present multiple templates in succession to support hierarchical selection. Be sure to set `showsDisclosureIndicator` to `true` for list items that support hierarchical browsing, and push a new list template when the list item is selected. **Hierarchical selections must never exceed five levels of depth.**"
 
-Source: *Developer Guide* p.42.
+Source: *Developer Guide* p.44.
 
 ### Preview
 
@@ -177,15 +177,15 @@ Source: *Developer Guide* p.42.
 - Always provide travel estimates via `CPMapTemplate.updateEstimates(_:for:)` and update them when remaining time or distance changes.
 - You can customize the names of the start, overview, and additional-routes buttons in the trip preview panel.
 
-Source: *Developer Guide* p.42.
+Source: *Developer Guide* p.44.
 
 ### Trip preview panel
 
-Displays up to 12 potential destinations. "The trip preview panel is typically the result of a destination search. When a trip is previewed, show a visual representation of that trip in your base view." (p.36)
+Displays up to 12 potential destinations. "The trip preview panel is typically the result of a destination search. When a trip is previewed, show a visual representation of that trip in your base view." (p.37)
 
 ### Route choice panel
 
-Displays potential routes for a trip. "Each route should have a clear description so people can choose their preferred route. For example, a summary and optional description for a route could be 'Via I-280 South' and 'Traffic is light.'" (p.36)
+Displays potential routes for a trip. "Each route should have a clear description so people can choose their preferred route. For example, a summary and optional description for a route could be 'Via I-280 South' and 'Traffic is light.'" (p.37)
 
 ### Map panels `iOS27`
 
@@ -203,14 +203,14 @@ let panel = CPMapPanel(
     title: "Trip",
     sections: [section],
     buttonConfiguration: CPMapPanelButtonConfiguration(
-        primaryAction: goButton, symbolButton: nil, travelEstimates: nil))
+        primaryAction: goButton, secondaryButton: nil, travelEstimates: estimates))
 panel.delegate = self                            // CPMapPanel.Delegate: panelDidShow(_:) / panelDidHide(_:)
 
 mapTemplate.showPanel(panel) { success, error in }   // or pushPanel(_:completion:) onto the stack
 // mapTemplate.popPanel(completion:) / mapTemplate.hidePanel(completion:)
 ```
 
-- `CPMapPanel` (a `CPPanel`) holds `sections` of `CPMapPanelSection`, each with `CPMapPanelItem`s, plus an optional `CPMapPanelButtonConfiguration` for the bottom action (e.g. "Go" / "End"), which can carry `travelEstimates` and a `symbolButton`.
+- `CPMapPanel` (a `CPPanel`) holds `sections` of `CPMapPanelSection`, each with `CPMapPanelItem`s, plus an optional `CPMapPanelButtonConfiguration` for the bottom action (e.g. "Go" / "End"), which can carry `travelEstimates` and an optional `secondaryButton` (`CPButton`, which may be configured with an image).
 - `CPMapPanelItem` (a `CPPanelItem`) is built from a `CPTrip`, `CPTravelEstimates`, `CPRouteChoice`, an array of `CPRouteDetail`, a `CPChargingStationConnection`, a `CPMapTemplateWaypoint` (+ optional image), grid buttons (`init(gridButtons:)`), or a plain `CPListItem` — each (except the list item) taking a selection handler.
 - `CPMultiStopCardConfiguration` configures a multi-stop card within a panel.
 
@@ -244,7 +244,7 @@ func mapTemplate(_ mapTemplate: CPMapTemplate, startedTrip trip: CPTrip, using r
 }
 ```
 
-Source: *Developer Guide* p.43.
+Source: *Developer Guide* p.45.
 
 ### View trip information and upcoming maneuvers
 
@@ -259,13 +259,13 @@ During turn-by-turn guidance, update `upcomingManeuvers` with information on upc
 
 If you provide a second maneuver, customize its appearance via `CPManeuverDisplayStyle` returned by `CPMapTemplateDelegate`. The display style only applies to the second maneuver.
 
-Source: *Developer Guide* p.44.
+Source: *Developer Guide* p.46.
 
 ### Lane guidance (via the second maneuver)
 
-"If your app provides lane guidance information, you must use the second maneuver to show lane guidance. Create a second maneuver containing `symbolSet` with dark and light images that occupy the full width of the guidance panel (**maximum size 120pt × 18pt**), provide an empty array for `instructionVariants`, and in the `CPMapTemplateDelegate`, return a symbol style of `CPManeuverDisplayStyleSymbolOnly` for the maneuver."
+"If your app provides lane guidance information, you must use the second maneuver to show lane guidance. Create a second maneuver containing `symbolSet` with dark and light images that occupy the full width of the guidance panel (**maximum size 120pt × 18pt**), provide an empty array for `instructionVariants`, and in the `CPMapTemplateDelegate`, return `.symbolOnly` from `mapTemplate(_:displayStyleFor:)` for the maneuver."
 
-Source: *Developer Guide* p.45.
+Source: *Developer Guide* p.47.
 
 ### Estimate updates
 
@@ -291,7 +291,7 @@ mapTemplate.present(navigationAlert: alert, animated: true)
 
 iOS 16+ adds: longer subtitle text (prior versions limited to 3 lines), no action buttons (simple close), and action buttons with custom colors.
 
-Source: *Developer Guide* p.39, p.45.
+Source: *Developer Guide* p.47.
 
 #### Avatar alerts and an action array `iOS27`
 
@@ -326,13 +326,15 @@ rather than hardcoding — `CPNavigationAlert.maximumActionsCount`,
 
 "When route guidance is paused, canceled, or finished, call the appropriate method in `CPNavigationSession`. In some cases, CarPlay route guidance may be canceled by the system. For example, if the car's native navigation system starts route guidance, CarPlay route guidance automatically terminates. In this case, your delegate will receive `mapTemplateDidCancelNavigation` and you should end route guidance immediately."
 
-Source: *Developer Guide* p.45, reinforcing navigation rule #6 on p.6.
+Source: *Developer Guide* p.47, reinforcing navigation rule #6 on p.6.
 
-### Re-route (iOS 17.4+)
+### Re-route (iOS 17.4+; segments form iOS 26.4+)
 
-"Starting in iOS 17.4, your app can programmatically return to an active guidance state. Use the `CPNavigationSession` method `resumeTrip` and provide a `CPRouteInformation` object with details about the new route."
+"When route guidance is paused you can return to an active guidance state by using the `CPNavigationSession` method `resumeTrip(updatedRouteSegments:currentSegment:rerouteReason:)` (**iOS 26.4+**)."
 
-Source: *Developer Guide* p.45.
+The earlier form, `resumeTrip(updatedRouteInformation:)` with a `CPRouteInformation` object, shipped in iOS 17.4 and is **deprecated as of iOS 26.4** — keep it only for deployments that still target 17.4 through 26.3. iOS 27 adds `resumeNavigation(updatedTrip:…)` for when the destination itself changes (see *Reroute with a replacement trip* below).
+
+Source: *Developer Guide* p.48.
 
 ### Route sharing `iOS27`
 
@@ -358,8 +360,9 @@ fire the delegate.
 
 ### Reroute with a replacement trip `iOS27`
 
-`resumeTrip` (17.4) resumes the *existing* trip. 27 adds a form that swaps in a new trip and states
-why, so the system can distinguish a missed turn from a mandated detour:
+`resumeTrip` resumes the *existing* trip (the segments form above, or its deprecated 17.4 form). 27
+adds a form that swaps in a new trip and states why, so the system can distinguish a missed turn from
+a mandated detour:
 
 ```swift
 session.resumeNavigation(
@@ -370,7 +373,7 @@ session.resumeNavigation(
 )
 ```
 
-`CPRerouteReason`: `.unknown`, `.alternateRoute`, `.mandated`, `.missedTurn`, `.offline`,
+`CPRerouteReason` (iOS 26.4): `.unknown`, `.alternateRoute`, `.mandated`, `.missedTurn`, `.offline`,
 `.waypointModified`.
 
 ### Options panel on an active session `iOS27`
@@ -384,7 +387,7 @@ session.optionsPanel = CPMapPanel(/* sections, button configuration */)
 
 ## Multitouch (iOS 26+)
 
-Source: *Developer Guide* p.46, *WWDC25-216*.
+Source: *Developer Guide* p.49, *WWDC25-216*.
 
 "Many new vehicles support multitouch interactions, including any vehicle that supports CarPlay Ultra. If a vehicle supports multitouch interactions in CarPlay, drivers can also interact with your navigation app."
 
@@ -398,7 +401,7 @@ Respect the HIG: "Touch gestures must only be used for their intended purpose on
 
 ## Keyboard and List Restrictions
 
-Source: *Developer Guide* p.47.
+Source: *Developer Guide* p.50.
 
 "Some cars limit keyboard use and the lengths of lists while driving. iOS automatically disables the keyboard and reduces list lengths when the car indicates it should do so. However, if your app needs to adjust other user interface elements in response to these changes, you can receive notifications when the limits change."
 
@@ -421,7 +424,7 @@ func sessionConfiguration(
 
 ## Voice Prompts
 
-Source: *Developer Guide* p.48-49, and *Developer Guide* p.6 navigation rule #7 ("Correctly handle audio").
+Source: *Developer Guide* p.51-52, and *Developer Guide* p.6 navigation rule #7 ("Correctly handle audio").
 
 ### Audio session configuration
 
@@ -463,7 +466,7 @@ Check `AVAudioSession.promptStyle` before playing each voice prompt:
 
 ## Second Map in CarPlay Dashboard or Instrument Cluster
 
-Source: *Developer Guide* p.50-51.
+Source: *Developer Guide* p.53-54.
 
 "People using your navigation app want to see important information, even when your app is not the foreground app in CarPlay."
 
@@ -473,7 +476,7 @@ Source: *Developer Guide* p.50-51.
 - `CPDashboardController` manages the dashboard; `CPDashboardButton` for in-card buttons.
 - Two buttons can appear in the guidance card area when not actively navigating — drivers interact via dashboard buttons as well as within your main app interface.
 
-### Instrument cluster (iOS 16.4+)
+### Instrument cluster (iOS 15.4+)
 
 - `CPTemplateApplicationInstrumentClusterScene` subclass of `UIScene`.
 - `CPInstrumentClusterController` manages the cluster display.
@@ -488,11 +491,11 @@ Source: *Developer Guide* p.50-51.
 - Show a detailed view of the upcoming route, not an overview
 - Ensure the current heading is facing up (the top of the screen)"
 
-Observe safe areas and light/dark mode (via `contentMode` on the scene). The view area may be partially obscured — override `viewSafeAreaInsetsDidChange` and use `safeAreaLayoutGuide` to keep important content visible.
+Observe safe areas and light/dark mode (via `contentStyle` on the cluster scene, observed through `contentStyleDidChange(_:)`). The view area may be partially obscured — override `viewSafeAreaInsetsDidChange` and use `safeAreaLayoutGuide` to keep important content visible.
 
 ## Metadata in Instrument Cluster or HUD (iOS 17.4+)
 
-Source: *Developer Guide* p.52-55. "Starting with iOS 17.4, your app can provide metadata for upcoming maneuvers. This includes maneuver state, maneuver type (e.g. 'turn right', 'make a U-turn'), junction type, and lane guidance information."
+Source: *Developer Guide* p.55-58. "Starting with iOS 17.4, your app can provide metadata for upcoming maneuvers. This includes maneuver state, maneuver type (e.g. 'turn right', 'make a U-turn'), junction type, and lane guidance information."
 
 ### Declaring support
 
@@ -504,7 +507,7 @@ func mapTemplateShouldProvideNavigationMetadata(_ mapTemplate: CPMapTemplate) ->
 
 ### Providing maneuvers
 
-Supply multiple maneuvers including maneuver type and lane guidance when route guidance starts. Use `CPManeuver.add(_:)` and `CPLaneGuidance.add(_:)`.
+Supply multiple maneuvers including maneuver type and lane guidance when route guidance starts. Use `CPNavigationSession.add(_:)` with an array of `CPManeuver` (and again with an array of `CPLaneGuidance`).
 
 "Provide as many maneuvers as possible to support vehicles that display multiple maneuvers in the instrument cluster or HUD, and to improve performance. Additional maneuvers can be added during route guidance."
 
@@ -555,11 +558,11 @@ Lane angles specify angles (or a single angle) between -180° and +180°. Lane s
 | `good` | The vehicle can take this lane, but may need to move lanes again before upcoming maneuvers |
 | `preferred` | The vehicle should take this lane to be in the best position for upcoming maneuvers |
 
-Source: *Developer Guide* p.53-55.
+Source: *Developer Guide* p.58.
 
 ## Maneuver Symbol Asset Sizes
 
-Source: *Developer Guide* p.38. Provide variants for light and dark interfaces.
+Source: *Developer Guide* p.39. Provide variants for light and dark interfaces.
 
 | Element | Max points | 3x pixels | 2x pixels |
 |---|---|---|---|
@@ -575,7 +578,7 @@ By default `symbolImage` defines what appears in both your app and the CarPlay D
 
 ## Testing Your Navigation App
 
-Source: *Developer Guide* p.56-57. Test different display configurations to ensure your map drawing code works correctly. CarPlay supports landscape and portrait and scales from 2x at low resolutions to 3x at high resolutions.
+Source: *Developer Guide* p.61-62. Test different display configurations to ensure your map drawing code works correctly. CarPlay supports landscape and portrait and scales from 2x at low resolutions to 3x at high resolutions.
 
 ### Recommended screen sizes
 
@@ -588,13 +591,7 @@ Source: *Developer Guide* p.56-57. Test different display configurations to ensu
 
 In CarPlay Simulator, click **Configure** to change the display configuration.
 
-In Xcode Simulator, enable extra options first:
-
-```bash
-defaults write com.apple.iphonesimulator CarPlayExtraOptions -bool YES
-```
-
-Xcode Simulator does not simulate the instrument cluster or show metadata — use CarPlay Simulator for those.
+CarPlay in Xcode Simulator needs the extra-options default (`defaults write com.apple.iphonesimulator CarPlayExtraOptions -bool YES`). That path is **Xcode 26 and earlier** — Xcode 27 ships no `Simulator.app` and the key appears nowhere in that toolchain (see `carplay-hig.md`). Xcode Simulator does not simulate the instrument cluster or show metadata — use CarPlay Simulator for those.
 
 ### Recommended instrument cluster configurations
 
@@ -628,11 +625,11 @@ In CarPlay Simulator, start an active navigation session, click **Navigation** t
 
 ## Resources
 
-**Primary source**: *CarPlay Developer Guide*, Feb 2026, pp.32-59.
+**Primary source**: *CarPlay Developer Guide*, Jun 2026, pp.34-64.
 
 **Related Axiom skills:**
 
-- `carplay-hig.md` — 10 navigation-app design rules; driver-distraction framing (**start here**)
+- `carplay-hig.md` — 9 navigation-app design rules; driver-distraction framing (**start here**)
 - `carplay-templates-ref.md` — all template APIs
 - `avfoundation-ref.md` — `AVAudioSession` configuration details
 
@@ -641,5 +638,5 @@ In CarPlay Simulator, start an active navigation session, click **Navigation** t
 - WWDC26-212 "Rev up your CarPlay app" — iOS 27 map panels (CPMapPanel/CPMapPanelItem/CPMapPanelSection), route details, EV charging connections
 - WWDC25-216 "Turbocharge your app for CarPlay" — iOS 26 multitouch, CarPlay Ultra
 - WWDC22-10016 "Get more mileage out of your app with CarPlay" — metadata in HUD (iOS 17.4)
-- WWDC20-10635 "Accelerate your app with CarPlay" — Dashboard (iOS 13.4); instrument cluster added later in iOS 16.4
+- **WWDC20-10635** "Accelerate your app with CarPlay" — Dashboard (iOS 13.4); instrument cluster added later in iOS 15.4
 - WWDC18-213 "CarPlay Audio and Navigation Apps" — CPManeuver, CPTrip, CPNavigationSession origins

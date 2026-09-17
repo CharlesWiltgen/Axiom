@@ -205,7 +205,7 @@ let groupItemTime = coordinator.expectedItemTime(atHostTime: CMClockGetTime(CMCl
 
 The header calls this out specifically for ending a `.stallRecovery` suspension — but it is also your **drift probe**, and it costs no network traffic. Sample it on a slow timer to compare where you are against where the group expects you to be.
 
-Startup sync is not the whole job. Independent crystals (±50 ppm) accumulate roughly 12 ms over a four-minute track. Two remedies, and the right one depends on your product: a fractional rate trim (±0.3% is ~5 cents, inaudible) nulls it continuously but **is resampling** — forbidden if you claim bit-perfect output. Otherwise re-anchor at gapless track boundaries, which bounds error at ~15 ms indefinitely with no DSP, and accept one discontinuity inside any single item longer than ~15 minutes.
+Startup sync is not the whole job. Independent crystals (±50 ppm) accumulate roughly 12 ms over a four-minute track. Two remedies, and the right one depends on your product: a fractional rate trim (±0.3% is ~5 cents, inaudible) nulls it continuously but **is resampling** — forbidden if you claim bit-perfect output. Otherwise re-anchor at gapless track boundaries, which bounds error at ~15 ms indefinitely with no DSP, and accept one discontinuity inside any single item longer than ~5 minutes.
 
 ## Swift 6 isolation
 
@@ -220,7 +220,7 @@ It is **not** a general transport, and two constraints matter:
 - It works only with `AVPlayerPlaybackCoordinator`. The header states plainly: *"we exclude AVDelegatingPlaybackCoordinators."* A custom engine cannot use it.
 - It is **mutually exclusive** with a group session on the same coordinator. Connecting to a medium while already connected to a session populates `outError`, and a medium-connected coordinator "is not available to coordinate with a group session."
 
-Only one direction of that exclusivity is documented. `coordinateUsingCoordinationMedium(_:error:)` reports the conflict; `coordinateWithSession(_:)` returns `Void` and **cannot** — it predates the medium by eleven OS versions and has no error channel. What it does when the coordinator is already on a medium is undocumented, so don't rely on it failing loudly. Disconnect first by passing `nil` to `coordinateUsingCoordinationMedium(_:error:)`, then connect the session.
+Only one direction of that exclusivity is documented. `try coordinate(using:)` reports the conflict — it surfaces the failure through `throws`; `coordinateWithSession(_:)` returns `Void` and **cannot** — it predates the medium by eleven OS versions and has no error channel. What it does when the coordinator is already on a medium is undocumented, so don't rely on it failing loudly. Disconnect first by passing `nil` to `coordinate(using:)`, then connect the session.
 
 So for SharePlay with a custom engine, `coordinateWithSession` is the only path.
 

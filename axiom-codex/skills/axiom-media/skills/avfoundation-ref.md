@@ -9,8 +9,8 @@ import AVFoundation
 
 try AVAudioSession.sharedInstance().setCategory(
     .playback,                              // or .playAndRecord, .ambient
-    mode: .default,                         // or .voiceChat, .measurement
-    options: [.mixWithOthers, .allowBluetoothHFP]
+    mode: .default,                         // or .voiceChat (needs .playAndRecord), .measurement
+    options: [.mixWithOthers]
 )
 try AVAudioSession.sharedInstance().setActive(true)
 
@@ -33,7 +33,7 @@ myButton.addInteraction(picker)
 // AIRPODS HIGH QUALITY (iOS 26+)
 try AVAudioSession.sharedInstance().setCategory(
     .playAndRecord,
-    options: [.bluetoothHighQualityRecording, .allowBluetoothA2DP]
+    options: [.bluetoothHighQualityRecording, .allowBluetoothHFP]  // HFP is the fallback when the route lacks HQ recording
 )
 ```
 
@@ -61,7 +61,7 @@ On 27, `engine.connect` and `player.play()` are **deprecated**, while `setActive
 | `.default` | General audio |
 | `.voiceChat` | VoIP, reduces echo |
 | `.videoChat` | FaceTime-style |
-| `.gameChat` | Voice chat in games |
+| `.gameChat` | Set by Game Kit for GKVoiceChat — do not set directly; use `.voiceChat` |
 | `.videoRecording` | Camera recording |
 | `.measurement` | Flat response, no processing |
 | `.moviePlayback` | Video playback |
@@ -333,7 +333,8 @@ inputNode.removeTap(onBus: 0)
 ### Format Conversion
 
 ```swift
-// AVAudioEngine mic input is always 44.1kHz/32-bit float
+// The input format is the current hardware format — read it, never assume it.
+// On iPhone it is typically 48 kHz, not 44.1 kHz.
 // Use AVAudioConverter for other formats
 
 let inputFormat = engine.inputNode.outputFormat(forBus: 0)
@@ -433,14 +434,13 @@ All four are marked `__SWIFT_UNAVAILABLE_MSG("Swift is not supported for use wit
 
 ### iOS Behavior
 
-iOS provides **bit-perfect output by default** to USB DACs — no resampling occurs. The DAC receives the source sample rate directly.
+iOS renders the audio graph at the current hardware sample rate. A file whose rate differs is resampled; to avoid it, set the session's preferred sample rate to the source rate and let the route follow.
 
 ```swift
-// iOS automatically matches source sample rate to DAC
-// No special configuration needed for bit-perfect output
-
-let player = AVAudioPlayerNode()
-// File at 96kHz → DAC receives 96kHz
+// The graph runs at the hardware rate — a 96 kHz file is resampled unless the route runs at 96 kHz
+// Ask for the source rate before activating; the route honours it only if the DAC supports it
+try AVAudioSession.sharedInstance().setPreferredSampleRate(96000)
+try AVAudioSession.sharedInstance().setActive(true)
 ```
 
 ### Avoiding Resampling
@@ -474,10 +474,10 @@ try AVAudioSession.sharedInstance().setPreferredInput(usbPort)
 
 | Source | iOS Behavior | Notes |
 |--------|--------------|-------|
-| 44.1 kHz | Passthrough | CD quality |
-| 48 kHz | Passthrough | Video standard |
-| 96 kHz | Passthrough | Hi-res |
-| 192 kHz | Passthrough | Hi-res |
+| 44.1 kHz | Resampled unless the session rate matches | CD quality |
+| 48 kHz | Resampled unless the session rate matches | Video standard |
+| 96 kHz | Resampled unless the session rate matches | Hi-res |
+| 192 kHz | Resampled unless the session rate matches | Hi-res |
 | DSD | Not supported | Use DoP or convert |
 
 ---
@@ -511,7 +511,7 @@ class RecordingViewController: UIViewController {
     }
 }
 
-extension RecordingViewController: AVInputPickerInteractionDelegate {
+extension RecordingViewController: AVInputPickerInteraction.Delegate {
     // Implement delegate methods as needed
 }
 ```
@@ -533,7 +533,7 @@ try AVAudioSession.sharedInstance().setCategory(
     .playAndRecord,
     options: [
         .bluetoothHighQualityRecording,  // New in iOS 26
-        .allowBluetoothA2DP              // Fallback
+        .allowBluetoothHFP              // Fallback if the route lacks HQ recording
     ]
 )
 
@@ -557,7 +557,7 @@ Record 3D spatial audio using device microphone array:
 
 ```swift
 // With AVCaptureMovieFileOutput (simple)
-let audioInput = AVCaptureDeviceInput(device: audioDevice)
+let audioInput = try AVCaptureDeviceInput(device: audioDevice)
 audioInput.multichannelAudioMode = .firstOrderAmbisonics
 
 // With AVAssetWriter (full control)
@@ -581,12 +581,12 @@ let metadataGenerator = AVCaptureSpatialAudioMetadataSampleGenerator()
 func captureOutput(_ output: AVCaptureOutput,
                    didOutput sampleBuffer: CMSampleBuffer,
                    from connection: AVCaptureConnection) {
-    metadataGenerator.append(sampleBuffer)
+    _ = metadataGenerator.analyzeAudioSample(sampleBuffer)
     // Also write to FOA AssetWriterInput
 }
 
 // When recording stops, get metadata sample
-let metadataSample = metadataGenerator.createMetadataSample()
+let metadataSample = metadataGenerator.newTimedMetadataSampleBufferAndResetAnalyzer()
 // Write to metadata track
 ```
 
@@ -697,10 +697,19 @@ try AVAudioSession.sharedInstance().setCategory(.playback)
 // <array><string>audio</string></array>
 
 // 3. Set Now Playing info (recommended)
+// Elapsed time is seconds as an NSNumber — a player node's node time is not playback time.
+// playerTime(forNodeTime:) is nil while the player is not playing, so keep the elapsed time
+// already on the lock screen rather than letting a paused publish snap the scrubber to 0:00.
+let publishedElapsed = MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPNowPlayingInfoPropertyElapsedPlaybackTime] as? Double
+let elapsed = player.lastRenderTime
+    .flatMap { player.playerTime(forNodeTime: $0) }
+    .map { Double($0.sampleTime) / $0.sampleRate }
+    ?? publishedElapsed ?? 0
+
 let nowPlayingInfo: [String: Any] = [
     MPMediaItemPropertyTitle: "Song Title",
     MPMediaItemPropertyArtist: "Artist",
-    MPNowPlayingInfoPropertyElapsedPlaybackTime: player.currentTime,
+    MPNowPlayingInfoPropertyElapsedPlaybackTime: elapsed,
     MPMediaItemPropertyPlaybackDuration: duration
 ]
 MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo

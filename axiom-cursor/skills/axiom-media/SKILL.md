@@ -1,6 +1,6 @@
 ---
 name: axiom-media
-description: "Use when working with camera, photos, audio, haptics, ShazamKit, the user's Apple Music library, lock-screen metadata, or CarPlay app design, templates, and navigation. Covers AVCaptureSession, AVFoundation, Core Haptics, MediaPlayer, MusicKit."
+description: "Use when working with camera, photos, audio, haptics, ShazamKit, on-device music analysis, face grouping and video highlights, screen recording, casting to non-AirPlay routes, SharePlay playback, the user's Apple Music library, lock-screen metadata, or CarPlay app design, templates, and navigation. Covers AVCaptureSession, AVFoundation, Core Haptics, MediaPlayer, MusicKit, NowPlaying, ScreenCaptureKit, DockKit."
 ---
 
 
@@ -45,7 +45,7 @@ Delegate to the appropriate Cursor subagent when this router calls for a special
 | CarPlay navigation reference (base view, route guidance, cluster/HUD, multitouch, voice prompts, map panels + EV charging iOS 27) | See `skills/carplay-navigation-ref.md` |
 | CarPlay Now Playing template customization + sports mode | See `skills/now-playing-carplay.md` |
 | MusicKit Now Playing, ApplicationMusicPlayer playback, subscription/authorization | See `skills/now-playing-musickit.md` |
-| Enumerate the user's Apple Music **library** — MusicLibraryRequest vs MPMediaQuery, reconciling the two, playlist entries, sync, library identity, per-device `Song.id`, missing `PlayParameters`, MusicKit bulk-property pool starvation | See `skills/music-library.md` |
+| Enumerate the user's Apple Music **library** — MusicLibraryRequest vs MPMediaQuery, reconciling the two, playlist entries, sync, library identity, per-device `Song.id`, missing `PlayParameters`, MusicKit stops responding after a scan | See `skills/music-library.md` |
 | DockKit motorized stands / gimbals, subject tracking, custom motor control | See `skills/dockkit.md` |
 | Speech-to-text / transcription (SpeechAnalyzer, mic → transcript) | **Invoke axiom-ai** (`skills/ios-ml.md`) |
 
@@ -55,6 +55,7 @@ Delegate to the appropriate Cursor subagent when this router calls for a special
 digraph media {
     start [label="Media task" shape=ellipse];
     what [label="Which media feature?" shape=diamond];
+    auditor [label="camera-auditor agent" shape=box];
 
     start -> what;
     what -> "skills/camera-capture.md" [label="camera capture"];
@@ -71,6 +72,7 @@ digraph media {
     what -> "skills/screen-capture.md" [label="screen capture /\nrecording (OS27)"];
     what -> "skills/carplay-hig.md" [label="CarPlay app design\n/ categories / entitlements"];
     what -> "skills/dockkit.md" [label="DockKit stands\n/ gimbals / tracking"];
+    what -> auditor [label="camera code audit"];
 }
 ```
 
@@ -141,8 +143,8 @@ digraph media {
 | "ShazamKit is just SHSession + a delegate" | iOS 17+ has SHManagedSession which eliminates all AVAudioEngine boilerplate. |
 | "Now Playing info is just setting metadata" | Remote commands, artwork handling, and state sync have 15+ gotchas. |
 | "I'll use UIImagePickerController for photos" | PHPicker/PhotosPicker are the modern API — no permissions required. |
-| "MediaPlayer reports fewer playlist members than MusicKit, so sync is incomplete" | The gap is exact and permanent — MusicKit shows the catalog, MediaPlayer shows what is local, and the difference equals the entries with no `playParameters`. A shipped guard built on this premise silently skipped 9 of 15 playlists forever. Read `skills/music-library.md`. |
-| "Reading the music library is just a MusicLibraryRequest" | Reading one MusicKit property across a large library starves the cooperative pool and then wedges every later MusicKit request, with no error thrown. Batching the request is ~100x *slower*, not safer. |
+| "MediaPlayer reports fewer playlist members than MusicKit, so sync is incomplete" | The gap is structural, not a sync signal: it tracks the entries with no local representation — exact on all five playlists inspected, off by one library-wide. A shipped guard built on this premise silently skipped 9 of 15 playlists forever. Read `skills/music-library.md`. |
+| "Reading the music library is just a MusicLibraryRequest" | Reading one MusicKit property across a large library leaves every later MusicKit request unresumed for the rest of the run, with no error thrown. Pool starvation is a symptom, not the mechanism — a plain `Thread`, which never touches the pool, loses MusicKit identically. Batching the request is ~100x *slower*, not safer. |
 | "`Song.id` is a stable key I can store" | Its *format* differs per device for the same library (`i.…` on one, bare numeric on another). Never parse it, never use it as a cross-device key. |
 | "DockKit is just pairing a stand" | Custom control needs system tracking disabled, handles inverted dock states, and two different coordinate origins. |
 | "Grouping faces is just Vision face detection" | Vision detects faces in one image; MediaIntelligence clusters them into persistent people (entities) across a whole library, with its own working directory and state. |

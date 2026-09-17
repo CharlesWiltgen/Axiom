@@ -46,7 +46,7 @@ Signs you're making this harder than it needs to be:
 - ❌ Not observing session interruptions (app freezes on phone call)
 - ❌ Creating new AVCaptureSession for each capture (expensive)
 - ❌ Using `.photo` preset for video (wrong format)
-- ❌ Ignoring `photoQualityPrioritization` (slow captures)
+- ❌ Requesting `photoQualityPrioritization = .quality` when the use case doesn't need it (slow captures)
 - ❌ Not handling `.notAuthorized` permission state
 - ❌ Modifying session without `beginConfiguration()`/`commitConfiguration()`
 - ❌ Assigning a 27-cycle capture property while its `automatically…` flag is still `true` (raises an ObjC exception — see Anti-Pattern 5)
@@ -150,7 +150,8 @@ class CameraManager: NSObject {
     private let sessionQueue = DispatchQueue(label: "camera.session")
 
     func setupSession() {
-        sessionQueue.async { [self] in
+        sessionQueue.async { [weak self] in
+            guard let self else { return }
             session.beginConfiguration()
             defer { session.commitConfiguration() }
 
@@ -449,7 +450,8 @@ if photoOutput.isAutoDeferredPhotoDeliverySupported {
 **Delegate callbacks with deferred processing**:
 
 ```swift
-// Called for BOTH regular photos AND deferred proxies
+// Called for regular, immediate photos — a deferred capture delivers the proxy to
+// didFinishCapturingDeferredPhotoProxy *instead of* this method
 func photoOutput(_ output: AVCapturePhotoOutput,
                  didFinishProcessingPhoto photo: AVCapturePhoto,
                  error: Error?) {
@@ -463,9 +465,9 @@ func photoOutput(_ output: AVCapturePhotoOutput,
 
 // Called ONLY for deferred proxies - save to PhotoKit for later processing
 func photoOutput(_ output: AVCapturePhotoOutput,
-                 didFinishCapturingDeferredPhotoProxy deferredPhotoProxy: AVCaptureDeferredPhotoProxy,
+                 didFinishCapturingDeferredPhotoProxy deferredPhotoProxy: AVCaptureDeferredPhotoProxy?,
                  error: Error?) {
-    guard error == nil else { return }
+    guard error == nil, let deferredPhotoProxy else { return }
 
     // CRITICAL: Save proxy to library ASAP before app is backgrounded
     // App may be force-quit if memory pressure is high during backgrounding
@@ -595,7 +597,8 @@ class CameraManager {
 
 ```swift
 func switchCamera() {
-    sessionQueue.async { [self] in
+    sessionQueue.async { [weak self] in
+        guard let self else { return }
         guard let currentInput = session.inputs.first as? AVCaptureDeviceInput else {
             return
         }
@@ -658,7 +661,8 @@ class CameraManager: NSObject {
     private var currentRecordingURL: URL?
 
     func setupVideoRecording() {
-        sessionQueue.async { [self] in
+        sessionQueue.async { [weak self] in
+            guard let self else { return }
             session.beginConfiguration()
             defer { session.commitConfiguration() }
 
@@ -761,7 +765,7 @@ class DeferredStartDelegate: NSObject, AVCaptureSessionDeferredStartDelegate {
 }
 ```
 
-**Manual mode** — for apps that render preview with `AVCaptureVideoDataOutput` (automatic deferred start doesn't apply there) or need to finish their own startup work first. Check `isManualDeferredStartSupported`, set `automaticallyRunsDeferredStart = false`, keep `isDeferredStartEnabled = false` on the video data output, then call `runDeferredStartWhenNeeded()` once your first frame is presented — e.g. from a `CAMetalLayer` drawable's `addPresentedHandler`. Trigger snippet and full API table: camera-capture-ref "Deferred Start".
+**Manual mode** — for apps that render preview with `AVCaptureVideoDataOutput` (automatic mode still applies, but it waits for the data output's first frame before running) or need to finish their own startup work first. Check `isManualDeferredStartSupported`, set `automaticallyRunsDeferredStart = false`, keep `isDeferredStartEnabled = false` on the video data output, then call `runDeferredStartWhenNeeded()` once your first frame is presented — e.g. from a `CAMetalLayer` drawable's `addPresentedHandler`. Trigger snippet and full API table: camera-capture-ref "Deferred Start".
 
 **The catch**: deferring the photo output speeds up preview but the **time to first capture stays the same** — the output still has to initialize before a capture can begin. Pair deferred start with `isResponsiveCaptureEnabled = true` (Pattern 4b) so taps buffer while the photo output finishes initializing.
 
@@ -784,7 +788,7 @@ guard storage.remainingCapacity > 0 else {   // 0 = unconfigured, -1 = read fail
 
 // movieOutput: the AVCaptureMovieFileOutput already added to the session (Pattern 7)
 guard movieOutput.isProVideoStorageSupported else { return }  // or setting the flag raises
-guard !storage.isBusy else { return }  // resizing/file ops in flight; capture would raise
+guard storage.busyReasons.isEmpty else { return }  // resizing/file ops in flight; capture would fail
 movieOutput.usesProVideoStorage = true
 movieOutput.startRecording(to: movieFileURL, recordingDelegate: delegate)
 ```
@@ -800,7 +804,7 @@ See camera-capture-ref "Session Cost and System Pressure" for the companion APIs
 **Wrong**:
 ```swift
 func startCamera() {
-    session.startRunning()  // Blocks UI for 1-3 seconds!
+    session.startRunning()  // Blocks UI; never call this on the main thread
 }
 ```
 

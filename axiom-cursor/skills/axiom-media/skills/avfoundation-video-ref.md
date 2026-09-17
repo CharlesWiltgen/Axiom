@@ -106,11 +106,11 @@ func feed(_ synchronizer: AVSampleBufferRenderSynchronizer,
     let result = try await receiver.enqueue(buffer)                      // -> EnqueueResult; nonisolated(nonsending)
     _ = result
     for await event in receiver.renderingEventsAfterFinishedEnqueuing { _ = event }  // RenderingEvent
-    _ = await synchronizer.removeReceiver(receiver: receiver, at: .zero) // async -> Bool
+    _ = await synchronizer.removeReceiver(receiver, at: .zero) // async -> Bool
 }
 ```
 
-`receiver.enqueueImmediately(_:) -> EnqueueResult` is the synchronous variant. `sampleBufferReceiver(adding:)` / `removeReceiver` live on `AVSampleBufferRenderSynchronizer`; the audio overload uses the unlabeled `removeReceiver(_:at:)` form.
+`receiver.enqueueImmediately(_:) -> EnqueueResult` is the synchronous variant. `sampleBufferReceiver(adding:)` / `removeReceiver(_:at:)` live on `AVSampleBufferRenderSynchronizer`, spelled the same unlabeled way for the video and audio overloads.
 
 ### Apple Log 2 capture color (`OS27`)
 

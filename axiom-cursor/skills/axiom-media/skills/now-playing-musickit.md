@@ -82,6 +82,7 @@ func observeSubscription() {
 ```swift
 import MusicKit
 import StoreKit
+import SwiftUI
 
 // Present Apple Music subscription offer
 MusicSubscriptionOffer.Options(
@@ -136,7 +137,7 @@ import MusicKit
 
 @MainActor
 class MusicKitPlayer {
-    private let player = ApplicationMusicPlayer.shared
+    nonisolated(unsafe) private let player = ApplicationMusicPlayer.shared
 
     func play(song: Song) async throws {
         // ✅ Just play - MPNowPlayingInfoCenter updates automatically
@@ -159,7 +160,7 @@ class MusicKitPlayer {
 
 ### Observing Playback State
 
-`ApplicationMusicPlayer.Queue` and `MusicPlayer.State` are both `ObservableObject`. **Prefer binding them directly in SwiftUI** — `@ObservedObject` handles the update timing for you:
+`ApplicationMusicPlayer.Queue` and `MusicKit.MusicPlayer.State` are both `ObservableObject`. **Prefer binding them directly in SwiftUI** — `@ObservedObject` handles the update timing for you:
 
 ```swift
 struct NowPlayingBar: View {
@@ -283,7 +284,7 @@ import AVFoundation
 final class HybridPlayer {
     enum Source { case none, appleMusic, ownContent }
 
-    private let musicKitPlayer = ApplicationMusicPlayer.shared
+    nonisolated(unsafe) private let musicKitPlayer = ApplicationMusicPlayer.shared
     private let avPlayer = AVPlayer()
     private var source: Source = .none
     private var statusObservation: Task<Void, Never>?
@@ -354,7 +355,7 @@ final class HybridPlayer {
 - `UIBackgroundModes` → `audio` in Info.plist. MusicKit playback survives backgrounding without it; AVPlayer does not, and the Lock Screen entry vanishes with the audio.
 - **Registered `MPRemoteCommandCenter` targets.** Register once at launch and dispatch on `source` — for own content drive `AVPlayer`, for Apple Music forward to `ApplicationMusicPlayer` (usually a no-op, since the service handles its own transport).
 
-**Artwork for your own files** is the other half of the artwork story below, and it is where rule 3 actually gets violated. Load embedded art from `AVAsset.commonMetadata`, wrap it in `MPMediaItemArtwork`, and **re-assign the whole dictionary** — the async completion is the classic site for `var info = center.nowPlayingInfo ?? [:]`, which, if it lands after a switch, grafts your file's artwork onto Apple's title. Guard the completion on both `source` and the track id.
+**Artwork for your own files** is the other half of the artwork story below, and it is where rule 3 actually gets violated. Load embedded art with `try await asset.load(.commonMetadata)`, wrap it in `MPMediaItemArtwork`, and **re-assign the whole dictionary** — the async completion is the classic site for `var info = center.nowPlayingInfo ?? [:]`, which, if it lands after a switch, grafts your file's artwork onto Apple's title. Guard the completion on both `source` and the track id.
 
 **No periodic timer.** Write elapsed time and rate on play / pause / seek only and let the system extrapolate. A per-second timer is precisely the late writer that produces the intermittent symptom.
 

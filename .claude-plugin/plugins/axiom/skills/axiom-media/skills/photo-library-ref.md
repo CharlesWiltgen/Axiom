@@ -4,7 +4,7 @@
 ## Quick Reference
 
 ```swift
-// SWIFTUI PHOTO PICKER (iOS 16+)
+// SWIFTUI PHOTO PICKER (iOS 17+)
 import PhotosUI
 
 @State private var item: PhotosPickerItem?
@@ -83,7 +83,7 @@ PHPickerFilter.any(of: [.images, .videos])
 PHPickerFilter.all(of: [.images, .not(.screenshots)])
 PHPickerFilter.not(.livePhotos)
 
-// Playback style filters (iOS 17+)
+// Playback style filters (iOS 16+)
 PHPickerFilter.any(of: [.cinematicVideos, .slomoVideos])
 ```
 
@@ -238,7 +238,7 @@ PhotosPicker(
 |----------------------|-------------|
 | `.hidden`, `.automatic`, `.visible` | Per edge |
 
-### HDR Preservation (iOS 17+)
+### HDR Preservation (iOS 16+)
 
 ```swift
 PhotosPicker(
@@ -280,11 +280,11 @@ iOS/macOS/visionOS 27 only — unavailable on tvOS/watchOS.
 
 | Type | Members |
 |---|---|
-| `PHSharedAlbumCreationResult` | `albumIdentifier: String`, `albumURL: URL` |
+| `PHSharedAlbumCreationResult` | `albumIdentifier: String?`, `albumURL: URL?`, `error: (any Error)?` |
 | `PHSharedAlbumCreationSharingPolicy` | `.private` (default, approval required), `.public` |
 | `PHSharedAlbumCreationConfiguration` | `photoLibrary`, `defaultTitle`, `defaultPolicy` |
 
-Completion types: creation → `PHSharedAlbumCreationResult?`; posting → `Result<String, any Error>`; customization → `Void`. Cancel fires no completion on creation and customization (posting is undocumented). UIKit equivalents: `PHSharedAlbumCreationViewController`, `PHSharedAlbumPostingViewController`, `PHSharedAlbumCustomizationViewController` — none self-dismiss.
+Completion types: creation → `PHSharedAlbumCreationResult?`; posting → `Result<String, any Error>`; customization → `(Error?) -> Void`. Cancel fires no completion on creation and customization (posting is undocumented). UIKit equivalents: `PHSharedAlbumCreationViewController`, `PHSharedAlbumPostingViewController`, `PHSharedAlbumCustomizationViewController` — none self-dismiss.
 
 Deprecated in 27: `postToPhotosSharedAlbumSheet` (iOS 26.0) → `photosSharedAlbumPostingSheet`. Two breaks: `photoLibrary:` and `defaultAlbumIdentifier:` swap order, and the completion type changes `Result<Void, _>` → `Result<String, _>`.
 
@@ -342,7 +342,7 @@ if let result = try? await item.loadTransferable(type: ImageTransferable.self) {
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `itemIdentifier` | String | Unique identifier |
+| `itemIdentifier` | String? | Unique identifier |
 | `supportedContentTypes` | [UTType] | Available representations |
 
 ### PhotosPickerItem Methods
@@ -399,8 +399,7 @@ PHPhotoLibrary.requestAuthorization(for: .addOnly)
 ```swift
 // Present picker to expand limited selection
 @MainActor
-func presentLimitedLibraryPicker() {
-    guard let viewController = UIApplication.shared.keyWindow?.rootViewController else { return }
+func presentLimitedLibraryPicker(from viewController: UIViewController) {
     PHPhotoLibrary.shared().presentLimitedLibraryPicker(from: viewController)
 }
 
@@ -435,6 +434,8 @@ The callback arrives on an **arbitrary serial queue**. On a `@MainActor` type th
 ```swift
 @MainActor
 final class PhotoObserver: NSObject, PHPhotoLibraryChangeObserver {
+
+    private var fetchResult = PHAsset.fetchAssets(with: .image, options: nil)
 
     override init() {
         super.init()
@@ -869,7 +870,7 @@ Ordered list of assets from a fetch.
 ```swift
 // Access by index
 let asset = fetchResult.object(at: 0)
-let asset = fetchResult[0]
+let firstBySubscript = fetchResult[0]
 
 // Get multiple
 let assets = fetchResult.objects(at: IndexSet(0..<10))
@@ -1021,6 +1022,7 @@ nonisolated func photoLibraryDidChange(_ changeInstance: PHChange) {
 ```swift
 import SwiftUI
 import Photos
+import PhotosUI
 
 @MainActor
 @Observable

@@ -1,7 +1,7 @@
 
 # CarPlay HIG & Design Discipline
 
-Authoritative design rules for CarPlay apps. Covers app category selection, Apple's 8 Universal Guidelines plus category-specific rules, driver distraction framing, and iOS 26 additions (widgets, Live Activities, CarPlay Ultra, multitouch).
+Authoritative design rules for CarPlay apps. Covers app category selection, Apple's 7 Universal Guidelines plus category-specific rules, driver distraction framing, and iOS 26 additions (widgets, Live Activities, CarPlay Ultra, multitouch).
 
 ## Overview
 
@@ -26,13 +26,14 @@ Authoritative design rules for CarPlay apps. Covers app category selection, Appl
 ## System Requirements
 
 - **iOS 12+** for navigation apps
-- **iOS 14+** for audio, communication, EV charging, parking, public safety, quick food ordering, automaker
+- **iOS 14+** for audio, communication, EV charging, parking, public safety, quick food ordering
 - **iOS 16+** for driving task, fueling
 - **iOS 17+** for the action sheet template in audio apps and in Now Playing for communication apps
 - **iOS 17.4+** for metadata in instrument cluster/HUD and programmatic re-route
 - **iOS 18.4+** for Now Playing sports mode and notifications in driving task apps
 - **iOS 26+** for widgets, Live Activities, multitouch, CarPlay Ultra, new list element styles
 - **iOS 26.4+** for voice-based conversational apps and updated voice control template
+- **iOS 27+** for video apps
 
 ---
 
@@ -42,8 +43,8 @@ These thoughts mean STOP — you're about to violate a CarPlay rule:
 
 | Thought | Reality | Source |
 |---|---|---|
-| "I'll just show a one-time setup screen in CarPlay" | **"Don't require sign in or configuration steps in CarPlay. Don't ask the user to perform setup steps on the car's display."** Your app must be fully configured on iPhone before CarPlay use. | HIG + Dev Guide p.4 (#2, #3) |
-| "I'll show the message body — it's useful info" | **"Never show the content of messages, texts, or emails on the CarPlay screen."** Sender + group name in title/subtitle only. | Dev Guide p.4 (#6), p.25 |
+| "I'll just show a one-time setup screen in CarPlay" | **"All CarPlay flows must be possible without interacting with iPhone."** Your app must be fully configured on iPhone before CarPlay use — the HIG's framing is "If your app requires setup on iPhone, make sure people perform it before the vehicle is in motion." | Dev Guide p.4 (#3) + HIG |
+| "I'll show the message body — it's useful info" | **"Never show the content of messages, texts, or emails on the CarPlay screen."** Sender + group name in title/subtitle only. | Dev Guide p.4 (#6), p.27 |
 | "I'll direct users to finish this on iPhone" | **"Never direct people to pick up their iPhone to read or resolve an error."** This is the most-cited rule in the Developer Guide. | HIG + Dev Guide p.4 (#2), 2017 Audio Guide p.18 |
 | "I'll add a settings screen to tweak playback behavior" | **"Don't include features in CarPlay that aren't related to the primary task (e.g. unrelated settings, maintenance features, etc.)."** | Dev Guide p.4 (#4) |
 | "I'll show lyrics below the Now Playing album art" | **"Never show song lyrics on the CarPlay screen."** (Audio apps only.) | Dev Guide p.4 (audio additional rule) |
@@ -51,14 +52,13 @@ These thoughts mean STOP — you're about to violate a CarPlay rule:
 | "I'll auto-play audio as soon as CarPlay connects" | **"Avoid beginning playback automatically unless your app's purpose is to play a single source."** | HIG + 2017 Audio Guide p.17 |
 | "We can add gamified challenges for long trips" | **"No gaming or social networking."** CarPlay apps must meaningfully help with driving. | Dev Guide p.4 (#5) |
 | "I'll use the Now Playing template to show our restaurant menu" | **"Use templates for their intended purpose, and only populate templates with the specified information types."** | Dev Guide p.4 (#7) |
-| "I'll handle voice in my app directly with AVAudioEngine" | **"All voice interaction must be handled using SiriKit"** — except CarPlay navigation and voice-based conversational apps. | Dev Guide p.4 (#8) |
-| "CarPlay apps are just iOS apps on a second screen" | They are not. Templates are rendered by iOS, not your app. Your app supplies data; iOS handles layout, input hardware abstraction, and screen resolution. | Dev Guide p.10 |
+| "CarPlay apps are just iOS apps on a second screen" | They are not. Templates are rendered by iOS, not your app. Your app supplies data; iOS handles layout, input hardware abstraction, and screen resolution. | Dev Guide p.11, p.14 |
 
 ---
 
-## The 8 Universal Guidelines
+## The 7 Universal Guidelines
 
-These apply to **every** CarPlay app, regardless of category. Apple labels them "Guidelines for all CarPlay apps" in the Developer Guide, and adds separate "Additional guidelines" per category (see per-category sections below). Source: *CarPlay Developer Guide*, Feb 2026, p.4.
+These apply to **every** CarPlay app, regardless of category. Apple labels them "Guidelines for all CarPlay apps" in the Developer Guide, and adds separate "Additional guidelines" per category (see per-category sections below). Source: *CarPlay Developer Guide*, Jun 2026, p.4.
 
 1. **Primary purpose.** "Your CarPlay app must be designed primarily to provide the specified feature (e.g. CarPlay audio apps must be designed primarily to provide audio playback services, CarPlay parking apps must be designed primarily to provide parking services, etc.)."
 
@@ -74,15 +74,15 @@ These apply to **every** CarPlay app, regardless of category. Apple labels them 
 
 7. **Templates as intended.** "Use templates for their intended purpose, and only populate templates with the specified information types (e.g. a list template must be used to present a list for selection, album artwork in the now playing screen must be used to show an album cover, etc.)."
 
-8. **SiriKit for voice.** "All voice interaction must be handled using SiriKit (with the exception of CarPlay navigation and voice-based conversational apps)."
-
-Apple separately defines "Additional guidelines" per category (see per-category sections below). The no-lyrics rule for audio apps is the most commonly cited; navigation adds its own 10 rules.
+Apple separately defines "Additional guidelines" per category (see per-category sections below). The no-lyrics rule for audio apps is the most commonly cited; navigation adds its own 9 rules.
 
 ---
 
 ## App Category Selection
 
-CarPlay has **10 app categories**, each with a distinct entitlement and design rulebook. Pick exactly one (EV charging and fueling may be combined). Source: *Developer Guide* p.12.
+CarPlay has **11 app categories**, each with a distinct entitlement and design rulebook. Pick exactly one (EV charging and fueling may be combined, as may audio and video). Source: *Developer Guide* p.3, p.13.
+
+The guide does not cover CarPlay automaker apps — "a specific category of app published by automakers" — so they are not counted here.
 
 ### Decision Tree
 
@@ -99,6 +99,7 @@ digraph carplay_category {
     q8 [shape=diamond label="Dispatch, routing,\nemergency services?"];
     q9 [shape=diamond label="Task done WHILE\ndriving (NOT a finder)?"];
     q10 [shape=diamond label="Voice-first\nconversational AI?"];
+    q11 [shape=diamond label="Video playback\n(movies, TV, streaming)?"];
 
     audio [shape=box label="Audio\n(iOS 14, carplay-audio)"];
     nav [shape=box label="Navigation\n(iOS 12, carplay-maps)"];
@@ -110,6 +111,7 @@ digraph carplay_category {
     safety [shape=box label="Public Safety\n(iOS 14, carplay-public-safety)"];
     driving [shape=box label="Driving Task\n(iOS 16, carplay-driving-task)"];
     voice [shape=box label="Voice Conversational\n(iOS 26.4, carplay-voice-based-conversation)"];
+    video [shape=box label="Video\n(iOS 27, carplay-video)"];
     none [shape=octagon label="NOT eligible\nfor a CarPlay app"];
 
     start -> q1;
@@ -132,7 +134,9 @@ digraph carplay_category {
     q9 -> driving [label="yes"];
     q9 -> q10 [label="no"];
     q10 -> voice [label="yes"];
-    q10 -> none [label="no"];
+    q10 -> q11 [label="no"];
+    q11 -> video [label="yes"];
+    q11 -> none [label="no"];
 }
 ```
 
@@ -149,13 +153,14 @@ digraph carplay_category {
 | Parking | `com.apple.developer.carplay-parking` | 14 | 5 | Find/pay for parking |
 | Public safety | `com.apple.developer.carplay-public-safety` | 14 | 5 | Dispatch, routing, vehicle/location search |
 | Quick food ordering | `com.apple.developer.carplay-quick-ordering` | 14 | 2 (iOS ≤26.3) / 3 (iOS 26.4+) | Drive-thru / pickup QSR only |
+| Video | `com.apple.developer.carplay-video` | 27 | 5 (same as audio) | Video playback, AirPlay video streaming |
 | Voice-based conversational | `com.apple.developer.carplay-voice-based-conversation` | 26.4 | 3 | Voice-first conversational AI |
 
-*Source: Developer Guide p.12, p.13.*
+*Source: Developer Guide p.13, p.14.*
 
 ### Entitlement request flow
 
-"To request a CarPlay app entitlement, go to http://developer.apple.com/carplay and provide information about your app, including the category of entitlement that you are requesting. You also need to agree to the CarPlay Entitlement Addendum. Apple will review your request. If your app meets the criteria for the CarPlay app category, Apple will assign a CarPlay app entitlement to your Apple Developer account and notify you." (Dev Guide p.11)
+"To request a CarPlay app entitlement, go to http://developer.apple.com/carplay and provide information about your app, including the category of entitlement that you are requesting. You also need to agree to the CarPlay Entitlement Addendum. Apple will review your request. If your app meets the criteria for the CarPlay app category, Apple will assign a CarPlay app entitlement to your Apple Developer account and notify you." (Dev Guide p.12)
 
 **Implication:** Apple reads your app description and judges whether it actually fits the category. Shoehorning a finder-style app into "driving task" will fail. Apple's category-specific rules below are what they check against.
 
@@ -167,21 +172,21 @@ Each subsection lists Apple's published rules verbatim where possible. Source: *
 
 ### Audio apps
 
-- Use CarPlay framework; the older MediaPlayer-only path (`com.apple.developer.playable-content`) is deprecated (Dev Guide p.62).
+- Use CarPlay framework; the older MediaPlayer-only path (`com.apple.developer.playable-content`) is deprecated (Dev Guide p.67).
 - **Never show song lyrics on the CarPlay screen.**
-- Don't open an audio session until ready to play — "People expect FM radio to continue to play until they explicitly choose to play an audio stream in your app" (Dev Guide p.27).
+- Don't open an audio session until ready to play — "People expect FM radio to continue to play until they explicitly choose to play an audio stream in your app" (Dev Guide p.29).
 - "Avoid beginning playback automatically unless your app's purpose is to play a single source" (HIG).
 - "Adjust relative levels, not overall volume" — don't override the car's volume (HIG).
 - Provide a "navigable hierarchy of audio information — radio stations, albums, artists, titles, and so forth" (HIG).
-- Ensure the app works when iPhone is locked: no access to `NSFileProtectionComplete` files, certain Keychain items, or `SQLITE_OPEN_FILEPROTECTION_COMPLETE` databases (Dev Guide p.27, 2017 Audio Guide p.19).
+- Ensure the app works when iPhone is locked: no access to `NSFileProtectionComplete` files, certain Keychain items, or `SQLITE_OPEN_FILEPROTECTION_COMPLETE` databases (Dev Guide p.29, 2017 Audio Guide p.19).
 
 ### Communication apps (SiriKit Messaging or VoIP Calling)
 
 - Must provide **short-form text messaging**, VoIP calling, or both. Email is not short-form text messaging and is not permitted (Dev Guide p.5).
 - **Text messaging requires all three SiriKit intents**: `INSendMessageIntent`, `INSearchForMessagesIntent`, `INSetMessageAttributeIntent` (Dev Guide p.5).
 - **VoIP calling** must use CallKit and support `INStartCallIntent` (Dev Guide p.5).
-- Notification content: "must only include information such as the sender and group name in the title and subtitle. **The contents of the message must never be shown in CarPlay**" (Dev Guide p.25).
-- Deprecated entitlements: `com.apple.developer.carplay-messaging` and `com.apple.developer.carplay-calling` are required only to support iOS 13 and earlier. Apps targeting iOS 14+ use the CarPlay framework via `com.apple.developer.carplay-communication` (Dev Guide p.62).
+- Notification content: "must only include information such as the sender and group name in the title and subtitle. **The contents of the message must never be shown in CarPlay**" (Dev Guide p.27).
+- Deprecated entitlements: `com.apple.developer.carplay-messaging` and `com.apple.developer.carplay-calling` are required only to support iOS 13 and earlier. Apps targeting iOS 14+ use the CarPlay framework via `com.apple.developer.carplay-communication` (Dev Guide p.67).
 
 ### Driving task apps
 
@@ -198,7 +203,7 @@ Shared rules (Dev Guide p.5):
 - "Must provide meaningful functionality relevant to driving (e.g. your app can't just be a list of [EV chargers / fueling stations / parking locations])."
 - "When showing locations on a map, do not expose locations other than [the category]."
 
-EV charging and fueling entitlements may be combined in a single app (Dev Guide p.12).
+EV charging and fueling entitlements may be combined in a single app (Dev Guide p.13).
 
 ### Public safety apps
 
@@ -206,7 +211,7 @@ EV charging and fueling entitlements may be combined in a single app (Dev Guide 
 
 ### Navigation apps (turn-by-turn directions)
 
-Ten rules, all load-bearing. Source: *Developer Guide* p.6.
+Nine rules, all load-bearing. Source: *Developer Guide* p.6.
 
 1. Must provide turn-by-turn directions with upcoming maneuvers.
 2. **Base view must be used exclusively to draw a map.** Do not draw windows, alerts, panels, overlays, or UI elements. "Don't draw lane guidance information in the base view. Instead, draw lane guidance information as a secondary maneuver using the provided template."
@@ -217,9 +222,8 @@ Ten rules, all load-bearing. Source: *Developer Guide* p.6.
 7. Correctly handle audio: voice prompts must mix with the vehicle's audio, and you must not needlessly activate sessions when no audio plays.
 8. Map must be appropriate in each supported country.
 9. "Be open and responsive to feedback. Apple may contact you in the event that Apple or automakers have input to design or functionality."
-10. Voice control must be limited to navigation features.
 
-For the implementation layer (CPMapTemplate, CPNavigationSession, instrument cluster/HUD metadata, multitouch on iOS 26+), see the separate `carplay-navigation-ref` skill (planned).
+For the implementation layer (CPMapTemplate, CPNavigationSession, instrument cluster/HUD metadata, multitouch on iOS 26+), see the separate `carplay-navigation-ref` skill.
 
 ### Quick food ordering apps
 
@@ -228,9 +232,16 @@ For the implementation layer (CPMapTemplate, CPNavigationSession, instrument clu
 - **Simplified ordering only. Don't show a full menu.** Recent orders or favorites limited to 12 items each.
 - Map locations must expose QSR locations only.
 
+### Video apps (iOS 27+)
+
+Source: *CarPlay Developer Guide*, Jun 2026, p.7.
+
+- "Video apps must be designed primarily to provide video playback services."
+- "Video apps must support AirPlay video streaming."
+
 ### Voice-based conversational apps (iOS 26.4+)
 
-- "Voice-based conversational apps must have a primary modality of voice upon launch; and after launch, appropriately respond to questions or requests and perform actions" (Dev Guide p.6).
+- "Voice-based conversational apps must have a primary modality of voice upon launch; and after launch, appropriately respond to questions or requests and perform actions" (Dev Guide p.7).
 - "Only hold an audio session open when voice features are actively being used."
 - "Optimize for voice interaction in the driving environment (e.g. don't show text or imagery in response to queries)."
 
@@ -238,12 +249,12 @@ For the implementation layer (CPMapTemplate, CPNavigationSession, instrument clu
 
 ## Widgets & Live Activities in CarPlay (iOS 26+)
 
-Added in iOS 26. Source: *Developer Guide* p.8-9, *WWDC25-216* @ 2:14 (widgets) and 5:07 (Live Activities).
+Added in iOS 26. Source: *Developer Guide* p.9-10, *WWDC25-216* @ 2:14 (widgets) and 5:07 (Live Activities).
 
 ### Widgets
 
-- Support the `.systemSmall` family: `.supportedFamilies([.systemSmall])` (Dev Guide p.8).
-- If your widget is unsuitable for the car, mark it disfavored: `.disfavoredLocations([.carPlay], for: [.systemSmall])` (Dev Guide p.8). "People can still choose to show your widget but interaction will be disabled."
+- Support the `.systemSmall` family: `.supportedFamilies([.systemSmall])` (Dev Guide p.9).
+- If your widget is unsuitable for the car, mark it disfavored: `.disfavoredLocations([.carPlay], for: [.systemSmall])` (Dev Guide p.9). "People can still choose to show your widget but interaction will be disabled."
 
 **Disfavor your widget** when (Dev Guide p.4):
 - It's a game or requires extensive interaction (more than ~6 taps/refreshes)
@@ -254,7 +265,7 @@ Your app does **not** need to be a CarPlay app to support widgets. Widgets in Ca
 
 ### Live Activities
 
-- "Live Activities are supported with iOS 26 in CarPlay and CarPlay Ultra" (Dev Guide p.9).
+- "Live Activities are supported with iOS 26 in CarPlay and CarPlay Ultra" (Dev Guide p.10).
 - Support the `.small` activity family: `.supplementalActivityFamilies([.small])`.
 - If you don't support `.small`, CarPlay falls back to the compact leading + compact trailing views from your Dynamic Island configuration.
 - Your app does **not** need to be a CarPlay app to support Live Activities.
@@ -271,7 +282,7 @@ Source: CarPlay HIG (developer.apple.com/design/human-interface-guidelines/carpl
 
 ### Layout
 
-- Support resolutions **800×480 to 1920×720**; test portrait up to 900×1200 (Dev Guide p.56).
+- Support resolutions **748×456** through **1920×720**; test portrait up to 900×1200 (Dev Guide p.61).
 - "Place critical content in the upper half."
 - "Don't clutter the screen with nonessential details."
 
@@ -279,7 +290,7 @@ Source: CarPlay HIG (developer.apple.com/design/human-interface-guidelines/carpl
 
 - Use a limited palette coordinated with your app logo.
 - Test under varied real-world lighting (direct sun, night, tunnel).
-- Support both light and dark appearances — CarPlay signals via `contentStyle` / `contentStyleDidChange` (Dev Guide p.33).
+- Support both light and dark appearances — CarPlay signals via `contentStyle` / `contentStyleDidChange` (Dev Guide p.35).
 - Ensure inclusive color usage (not the sole information channel).
 
 ### Icons
@@ -300,7 +311,7 @@ Source: CarPlay HIG (developer.apple.com/design/human-interface-guidelines/carpl
 | First maneuver symbol (1-line) | 50×50 | 150×150 | 100×100 |
 | Dashboard junction image | 140×100 | 420×300 | 280×200 |
 
-*Source: Developer Guide p.26, p.38.*
+*Source: Developer Guide p.28, p.39.*
 
 For tab bar icons, prefer SF Symbols for seamless integration with the system font.
 
@@ -308,7 +319,7 @@ For tab bar icons, prefer SF Symbols for seamless integration with the system fo
 
 ## Error Handling & iPhone-Locked State
 
-From HIG and *Developer Guide* p.27:
+From HIG, *Developer Guide* p.29, and *CarPlay Audio App Programming Guide* (Mar 2017) p.19:
 
 - **Report errors in CarPlay, not on the connected iPhone.** Populate the item list or present an alert within CarPlay with a localized error description.
 - **"Never direct people to pick up their iPhone to read or resolve an error"** (HIG).
@@ -321,7 +332,7 @@ From HIG and *Developer Guide* p.27:
 
 ## Notifications in CarPlay
 
-Source: *Developer Guide* p.25.
+Source: *Developer Guide* p.27.
 
 - Supported in: communication, EV charging, parking, public safety, and (iOS 18.4+) driving task apps.
 - **Not** supported in audio, navigation (route guidance uses the CarPlay framework directly, not UNNotification), quick food ordering, fueling, or voice-based conversational apps.
@@ -336,7 +347,7 @@ UNUserNotificationCenter.current().requestAuthorization(options: options) { gran
 
 - Create a notification category with `UNNotificationCategoryOptions.allowInCarPlay`.
 - Users can show/hide your app's notifications in Settings — disable related features gracefully if the driver declines.
-- "Notifications should be used sparingly in CarPlay and must be reserved for important tasks required while driving" (Dev Guide p.25).
+- "Notifications should be used sparingly in CarPlay and must be reserved for important tasks required while driving" (Dev Guide p.27).
 - Communication apps: notifications must include sender/group name only, never message body.
 
 ---
@@ -346,7 +357,7 @@ UNUserNotificationCenter.current().requestAuthorization(options: options) { gran
 Before requesting the CarPlay entitlement or shipping, run through:
 
 ### Category fit
-- [ ] My app fits exactly one CarPlay category (or EV+fueling combined)
+- [ ] My app fits exactly one CarPlay category (or EV+fueling combined, or audio+video combined)
 - [ ] My app is *primarily* designed for that category's purpose (not tacking CarPlay onto an unrelated app)
 - [ ] I've read the category-specific rules for my category
 - [ ] My app launches and is fully usable without any iPhone interaction
@@ -356,13 +367,13 @@ Before requesting the CarPlay entitlement or shipping, run through:
 - [ ] No message/email/text body ever shown on the CarPlay screen
 - [ ] No lyrics (audio apps)
 - [ ] No prompts directing the user to iPhone — not in UI, not in errors
-- [ ] Voice interaction uses SiriKit (unless nav or voice-conversational)
+- [ ] Recording features disabled while CarPlay is active (except navigation and voice-based conversational apps, and then only with the voice control template showing)
 - [ ] Templates used only for their intended purpose
 
 ### Layout and assets
 - [ ] @2x AND @3x icons supplied (120×120, 180×180)
 - [ ] Light AND dark appearances tested
-- [ ] Tested at 800×480, 1920×720, 900×1200 (portrait)
+- [ ] Tested at 748×456, 800×480, 1920×720, 900×1200 (portrait)
 - [ ] Icon background is not black
 - [ ] Critical content is in the upper half
 
@@ -403,7 +414,7 @@ Before requesting the CarPlay entitlement or shipping, run through:
   **On 27 that `defaults write` fails silently.** `defaults` never validates key names, so it prints nothing and exits 0 while writing into the preference domain of an app the toolchain no longer ships. Nothing reads it. Anyone repeating this recipe from older notes gets no error and concludes it worked — do not treat exit 0 as evidence.
 - **Real vehicle or aftermarket head unit** — required for iPhone-locked flows, actual audio-session behavior, Siri, and instrument-cluster displays.
 
-For navigation-specific testing (cluster configurations, HUD metadata, screen sizes at 748×456 up to 1920×720), see `carplay-navigation-ref.md`. For the CarPlay audio testing loop and debugger-interference gotchas, see `now-playing-carplay.md`. Source: *Developer Guide* p.7, pp.56-57.
+For navigation-specific testing (cluster configurations, HUD metadata, screen sizes at 748×456 up to 1920×720), see `carplay-navigation-ref.md`. For the CarPlay audio testing loop and debugger-interference gotchas, see `now-playing-carplay.md`. Source: *Developer Guide* p.8, pp.61-62.
 
 ---
 
@@ -414,7 +425,7 @@ For navigation-specific testing (cluster configurations, HUD metadata, screen si
 | Source | Location |
 |---|---|
 | CarPlay HIG | developer.apple.com/design/human-interface-guidelines/carplay |
-| CarPlay Developer Guide (Feb 2026) | developer.apple.com/download/files/CarPlay-Developer-Guide.pdf |
+| CarPlay Developer Guide (Jun 2026) | developer.apple.com/download/files/CarPlay-Developer-Guide.pdf |
 | CarPlay Audio App Programming Guide (Mar 2017) | developer.apple.com/carplay/documentation/CarPlay-Audio-App-Programming-Guide.pdf |
 | CarPlay for developers (entitlement request) | developer.apple.com/carplay |
 
@@ -429,8 +440,8 @@ For navigation-specific testing (cluster configurations, HUD metadata, screen si
 **Related Axiom skills:**
 
 - `now-playing-carplay.md` — CPNowPlayingTemplate customization (API mechanics)
-- `carplay-templates-ref.md` — per-template reference *(planned)*
-- `carplay-navigation-ref.md` — navigation-specific (base view, instrument cluster, HUD, multitouch) *(planned)*
+- `carplay-templates-ref.md` — per-template reference
+- `carplay-navigation-ref.md` — navigation-specific (base view, instrument cluster, HUD, multitouch)
 - `avfoundation-ref.md` — AVAudioSession configuration for voice prompts
 - `/skill axiom-integration` — App Intents and SiriKit integration for voice-first flows
 - `/skill axiom-design` — general HIG principles (typography, color, Liquid Glass)

@@ -93,7 +93,7 @@ Apple's audio and haptic design teams established three core principles for mult
 
 ## Part 2: UIFeedbackGenerator (Simple Haptics)
 
-For most apps, `UIFeedbackGenerator` provides 3 simple haptic types without custom patterns.
+For most apps, `UIFeedbackGenerator` provides simple haptic types without custom patterns (`UICanvasFeedbackGenerator`, iOS 17.5+, adds snapping and path-completion feedback).
 
 ### UIImpactFeedbackGenerator
 
@@ -206,11 +206,11 @@ Call `prepare()` before the haptic to reduce latency:
 // ❌ Bad - unprepared haptic may lag
 @IBAction func buttonTapped(_ sender: UIButton) {
     let generator = UIImpactFeedbackGenerator()
-    generator.impactOccurred()  // May have 10-20ms delay
+    generator.impactOccurred()  // Unprepared: higher latency
 }
 ```
 
-**Prepare timing**: System keeps engine ready for ~1 second after `prepare()`.
+**Prepare timing**: The Taptic Engine stays prepared for a short period (typically seconds) after `prepare()`; call `prepare()` again if more feedback is imminent.
 
 ---
 
@@ -247,13 +247,25 @@ class HapticManager {
             // Handle interruptions (calls, Siri, etc.)
             engine?.stoppedHandler = { reason in
                 print("Engine stopped: \(reason)")
-                self.restartEngine()
+                switch reason {
+                case .audioSessionInterrupt, .applicationSuspended:
+                    // The external cause is still in effect, so a restart
+                    // would fail: restart with the next user-initiated playback
+                    print("Waiting for user-initiated playback to restart")
+                case .idleTimeout, .systemError:
+                    self.restartEngine()
+                default:
+                    break
+                }
             }
 
-            // Handle reset (audio session changes)
+            // Handle reset (media server failure)
             engine?.resetHandler = {
                 print("Engine reset")
                 self.restartEngine()
+                // A reset preserves CHHapticPattern objects, but not custom
+                // audio resources or pattern players: rebuild those here
+                self.reloadResourcesAndPlayers()
             }
 
             // Start engine
@@ -270,6 +282,13 @@ class HapticManager {
         } catch {
             print("Failed to restart engine: \(error)")
         }
+    }
+
+    /// Re-register custom audio resources and recreate pattern players.
+    /// Patterns survive a media-services reset; resources and players do not.
+    func reloadResourcesAndPlayers() {
+        // registerAudioResource(_:options:) for each custom audio file, then
+        // makePlayer(with:) / makeAdvancedPlayer(with:) for each pattern.
     }
 }
 ```
@@ -433,7 +452,7 @@ func updateTextureIntensity(player: CHHapticAdvancedPatternPlayer?) {
 }
 ```
 
-**Key difference**: `CHHapticPatternPlayer` plays once, `CHHapticAdvancedPatternPlayer` supports looping and dynamic parameter updates.
+**Key difference**: `CHHapticPatternPlayer` plays once, `CHHapticAdvancedPatternPlayer` supports looping, seeking and playback-rate control (dynamic parameter updates are available on both players).
 
 ---
 
@@ -446,10 +465,6 @@ AHAP (Apple Haptic Audio Pattern) files are JSON files combining haptic events a
 ```json
 {
   "Version": 1.0,
-  "Metadata": {
-    "Project": "My App",
-    "Created": "2024-01-15"
-  },
   "Pattern": [
     {
       "Event": {
@@ -507,7 +522,7 @@ AHAP (Apple Haptic Audio Pattern) files are JSON files combining haptic events a
 }
 ```
 
-### Loading AHAP Files
+### Loading AHAP Files (iOS 16+)
 
 ```swift
 func loadAHAPPattern(named name: String) -> CHHapticPattern? {
@@ -589,7 +604,7 @@ class AudioHapticCoordinator {
         }
 
         // Start at exact same moment
-        let startTime = CACurrentMediaTime() + 0.05  // Small delay for sync
+        let startTime = audioPlayer.deviceCurrentTime + 0.05  // Small delay for sync
 
         // Start audio
         audioPlayer.play(atTime: startTime)
@@ -597,7 +612,7 @@ class AudioHapticCoordinator {
         // Start haptic
         if let pattern = loadAHAPPattern(named: "CoordinatedPattern") {
             let player = try? hapticEngine.makePlayer(with: pattern)
-            try? player?.start(atTime: CHHapticTimeImmediate)
+            try? player?.start(atTime: hapticEngine.currentTime + 0.05)
         }
     }
 }
@@ -764,7 +779,7 @@ func safelyStartEngine() {
 1. Check Settings → Sounds & Haptics → System Haptics is ON
 2. Check Low Power Mode is OFF
 3. Verify device is iPhone 8 or newer
-4. Check intensity > 0.3 (values below may be too subtle)
+4. Check that intensity is not clamped at 0 — Core Haptics values are normalized 0.0–1.0, so a low value is a legitimate mix decision, not a bug
 5. Test with UIFeedbackGenerator to isolate Core Haptics vs system issue
 
 ### Audio out of sync with haptics

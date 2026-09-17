@@ -12,7 +12,7 @@
 - Buffer the last ~15 s for instant-replay clips
 
 Not the same as:
-- **`ImageRenderer`** (SwiftUI, iOS 16+) — rasterizes a view *you* define to a static image/PDF/`CGImage`. It only renders your own view tree; it cannot capture the live screen or other apps. Use it for a snapshot of your own UI, not screen recording.
+- **`ImageRenderer`** (SwiftUI, iOS 16+) — rasterizes a view *you* define to a static image/`CGImage`. It only renders your own view tree; it cannot capture the live screen or other apps. Use it for a snapshot of your own UI, not screen recording.
 - **ReplayKit** (`RPScreenRecorder` / broadcast upload extensions) — the pre-27 iOS screen-capture path; still valid for older OS versions and system-wide broadcast.
 
 ## The iOS flow

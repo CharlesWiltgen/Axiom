@@ -1,7 +1,7 @@
 
 # CPNowPlayingTemplate Customization
 
-**Scope**: This skill covers the Now Playing template API mechanics only — configuring buttons, customizing playback controls, and sports mode metadata. For CarPlay app design principles, category selection, the 8 Universal Guidelines, entitlement review, and per-category design rules, **see `carplay-hig.md` first**.
+**Scope**: This skill covers the Now Playing template API mechanics only — configuring buttons, customizing playback controls, and sports mode metadata. For CarPlay app design principles, category selection, the 7 Universal Guidelines, entitlement review, and per-category design rules, **see `carplay-hig.md` first**.
 
 **Time cost**: 15-20 minutes if `MPNowPlayingInfoCenter` is already wired up.
 
@@ -58,11 +58,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, CPTemplateApplicationSc
 }
 ```
 
-Source: *CarPlay Developer Guide*, Feb 2026, p.31.
+Source: *CarPlay Developer Guide*, Jun 2026, p.33.
 
 ## Sports Mode (iOS 18.4+)
 
-The Now Playing template supports a **sports mode** for apps that stream live or pre-recorded sporting events. Sports mode augments standard Now Playing metadata (playback controls, state, elapsed time) with team images, scores, a countdown/count-up clock, standings, and possession indicators. Source: *CarPlay Developer Guide*, Feb 2026, p.21.
+The Now Playing template supports a **sports mode** for apps that stream live or pre-recorded sporting events. Sports mode augments standard Now Playing metadata (playback controls, state, elapsed time) with team images, scores, a countdown/count-up clock, standings, and possession indicators. Source: *CarPlay Developer Guide*, Jun 2026, p.22.
 
 "If your app is capable of showing sports scores, you can populate your app's existing now playing template with additional text and images to represent scores for any sport that involves 2 teams."
 
@@ -113,7 +113,7 @@ CarPlay audio apps require both a background mode and the CarPlay audio entitlem
 <true/>
 ```
 
-**The entitlement is not automatic.** You request it at [developer.apple.com/carplay](https://developer.apple.com/carplay) and Apple reviews your app before granting it. The older `com.apple.developer.playable-content` entitlement (which paired with the `MPPlayableContent` APIs) is deprecated; apps supporting only that path on iOS 14+ still run but cannot customize the CarPlay UI. Source: *CarPlay Developer Guide*, Feb 2026, p.11, p.62.
+**The entitlement is not automatic.** You request it at [developer.apple.com/carplay](https://developer.apple.com/carplay) and Apple reviews your app before granting it. The older `com.apple.developer.playable-content` entitlement (which paired with the `MPPlayableContent` APIs) is deprecated; apps supporting only that path on iOS 14+ still run but cannot customize the CarPlay UI. Source: *CarPlay Developer Guide*, Jun 2026, p.12, p.67.
 
 See `carplay-hig.md` for the full entitlement request flow and what Apple reviews.
 
@@ -141,7 +141,7 @@ See `carplay-hig.md` for the full entitlement request flow and what Apple review
 
 **CarPlay Simulator (standalone Mac app):**
 
-More faithful than Xcode Simulator — includes screen sizes, dark mode signaling, and instrument cluster scenarios. Install via Xcode → Open Developer Tool → More Developer Tools… (downloads the *Additional Tools for Xcode* package; CarPlay Simulator is in the Hardware folder). Source: *CarPlay Developer Guide*, Feb 2026, p.7.
+More faithful than Xcode Simulator — includes screen sizes, dark mode signaling, and instrument cluster scenarios. Install via Xcode → Open Developer Tool → More Developer Tools… (downloads the *Additional Tools for Xcode* package; CarPlay Simulator is in the Hardware folder). Source: *CarPlay Developer Guide*, Jun 2026, p.8.
 
 **Real vehicle:**
 
@@ -162,12 +162,12 @@ Required for features Simulator can't reproduce — iPhone-locked behavior, actu
 
 **Primary sources:**
 
-- *CarPlay Developer Guide*, Feb 2026 — pp.11 (entitlements), p.21 (sports mode), p.31 (Now Playing template code)
+- *CarPlay Developer Guide*, Jun 2026 — p.12 (entitlements), p.22 (sports mode), p.33 (Now Playing template code)
 - *CarPlay Audio App Programming Guide*, March 2017 — legacy MediaPlayer path, still useful for iPhone-locked data access limits
 
 **Related Axiom skills:**
 
-- `carplay-hig.md` — **start here for any CarPlay work** (app categories, 8 Universal Guidelines, entitlement review, per-category rules)
+- `carplay-hig.md` — **start here for any CarPlay work** (app categories, 7 Universal Guidelines, entitlement review, per-category rules)
 - `now-playing.md` — iOS Now Playing (Lock Screen, Control Center) shared path
 - `now-playing-musickit.md` — MusicKit-specific Now Playing integration
 - `avfoundation-ref.md` — audio session configuration

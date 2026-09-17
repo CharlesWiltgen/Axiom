@@ -205,6 +205,7 @@ NotificationCenter.default.addObserver(
 | `.videoDeviceInUseByAnotherClient` | 3 | Another app using camera |
 | `.videoDeviceNotAvailableWithMultipleForegroundApps` | 4 | Split View (iPad) |
 | `.videoDeviceNotAvailableDueToSystemPressure` | 5 | Thermal throttling |
+| `.sensitiveContentMitigationActivated` | 6 | Sensitive content detected by an `SCVideoStreamAnalyzer` on an input (iOS 26+); resume with the analyzer's `continueStream()` |
 
 ---
 
@@ -310,7 +311,7 @@ let syncTime = await device.setExposureModeCustom(lensAperture: 2.8,
 | `AVCaptureDevice.autoISO` | System drives the gain |
 | `AVCaptureDevice.currentLensAperture` | Lock at the current aperture — the device may be mid-adjustment, so this can differ from a `lensAperture` you just read |
 
-Aperture priority is `(2.8, .autoExposureDuration, .autoISO)`; shutter priority is `(.autoLensAperture, duration, .autoISO)`. The duration and ISO sentinels also work with the older `setExposureModeCustom(duration:iso:)`.
+Aperture priority is `(2.8, AVCaptureDevice.autoExposureDuration, AVCaptureDevice.autoISO)`; shutter priority is `(AVCaptureDevice.autoLensAperture, duration, AVCaptureDevice.autoISO)`. The sentinels are static members of `AVCaptureDevice`, not of `CMTime`/`Float`, so the leading-dot shorthand does not resolve in a `duration:`/`iso:`/`lensAperture:` argument position. The duration and ISO sentinels also work with the older `setExposureModeCustom(duration:iso:)`.
 
 Read back what the system is driving — `automaticallyAdjustsLensAperture`, `automaticallyAdjustsExposureDuration`, `automaticallyAdjustsISO`, all read-only.
 
@@ -356,7 +357,8 @@ Order matters twice over: assigning `focusMode` is the engage trigger, and a lat
 ```swift
 // Switch between front and back during active session
 func switchCamera() {
-    sessionQueue.async { [self] in
+    sessionQueue.async { [weak self] in
+        guard let self else { return }
         session.beginConfiguration()
         defer { session.commitConfiguration() }
 
@@ -392,7 +394,7 @@ case .authorized: break
 case .notDetermined:
     await AVCaptureDevice.requestAccess(for: .video)
 case .denied, .restricted:
-    // Show settings prompt
+    break  // Show settings prompt
 @unknown default: break
 }
 ```
@@ -499,18 +501,18 @@ connection.preferredVideoStabilizationMode = .lowLatency
 
 Bonus (iOS 26+, iOS-only): `device.nominalFocalLengthIn35mmFilm` — nominal 35mm-equivalent focal length (`0` for virtual/external devices).
 
-### iPhone Duo Front Cameras — Announced for the iOS 27.1 SDK
+### iPhone Duo Front Cameras (iOS 27.1+)
 
-From Apple's tech talk 111465. **Absent from the 27.0 SDK; announced for 27.1, and names can change before it ships. Check the installed SDK first (`xcrun --sdk iphoneos --show-sdk-version`). Below 27.1: don't write these in code as if they compile — describe them, name the talk, and use the virtual front camera (existing discovery API) today. On 27.1 or later, betas included: grep the SDK's `.swiftinterface` and headers for the declaration; if it's there, the SDK's spelling and signature win over this table; if it's missing, say it was renamed or dropped. A filename or `#import` hit isn't a declaration — `AVKit/AVCaptureDeviceDirectionCoordinator.h` ships in 27.0 as an empty stub. Don't call them fictional. Don't fill in parameters, types, or cases this table doesn't give.** Spellings follow the talk's code where the narration differs.
+From Apple's tech talk 111465. **Absent from the 27.0 SDK; declared from the 27.1 SDK, so the spellings below are the shipped ones. Check the installed SDK first (`xcrun --sdk iphoneos --show-sdk-version`). Below 27.1: don't write these in code as if they compile — describe them, name the talk, and use the virtual front camera (existing discovery API) today. On 27.1 or later, betas included: grep the SDK's `.swiftinterface` and headers for the declaration; if it's there, the SDK's spelling and signature win over this table; if it's missing, say it was renamed or dropped. A filename or `#import` hit isn't a declaration — `AVKit/AVCaptureDeviceDirectionCoordinator.h` ships in 27.0 as an empty stub. Don't call them fictional. Don't fill in parameters, types, or cases this table doesn't give.** Spellings follow the talk's code where the narration differs.
 
 iPhone Duo has two front cameras, both square-sensor ultra-wides: one on the outer display and an under-display camera on the inner one. Direction replaces position as the question to ask — a `.front` camera can face away from the user, and a rear camera faces the user when the device is flipped open.
 
 | Key | API | Behavior | Talk |
 |---|---|---|---|
 | `camera.virtual` | (no type name given) | Discovered by a discovery session for `.front` with the wide-angle or ultra-wide type; switches automatically — inner camera when open, outer when closed, "the most relevant front camera for your app"; the talk doesn't say which it picks when flipped open with the app on the outer display — don't assume either; only shared capabilities — up to 1080p and 60 fps, no depth | 111465 0:57 |
-| `camera.types` | `.builtInOuterUltraWideCamera`, `.builtInInnerUltraWideCamera` | Individual cameras with full capabilities — outer up to 4K and up to 120 fps, inner 1080p up to 60 fps; depth only here; your app switches on open and close | 111465 1:44 |
+| `camera.types` | `AVCaptureDevice.DeviceType.builtInOuterUltraWideCamera`, `.builtInInnerUltraWideCamera` | Individual cameras with full capabilities — outer up to 4K and up to 120 fps, inner 1080p up to 60 fps; depth only here; your app switches on open and close | 111465 1:44 |
 | `camera.direction` | `AVCaptureDeviceDirectionCoordinator(view:deviceTypes:changeHandler:)` (AVKit) | Reports which cameras face toward and away from the user relative to one view, and calls the handler when that view's display changes — as the device opens or closes, or as the app moves to the outer display while flipped open. Main-actor; one per view, so two when showing UI on both displays | 111465 4:06 |
-| `camera.descriptor` | `AVCaptureDeviceDescriptor` | Main-actor-safe, Sendable stand-in for an `AVCaptureDevice`; the coordinator provides descriptors rather than devices (the sample's handler receives a value named `map` — its type isn't shown). Pass them to your camera actor and reconfigure the session there — don't call AVFoundation from the handler | 111465 5:38 |
+| `camera.descriptor` | `AVCaptureDeviceDescriptor` | Main-actor-safe, Sendable stand-in for an `AVCaptureDevice`; the coordinator provides descriptors rather than devices — the handler receives an `AVCaptureDeviceDirectionMap` whose `forwardFacingDeviceDescriptors` / `backwardFacingDeviceDescriptors` are arrays of `AVCaptureDeviceDescriptor`. Pass them to your camera actor and reconfigure the session there — don't call AVFoundation from the handler | 111465 5:38 |
 
 When the handler fires: hand the forward-facing camera's descriptor to your camera actor, which reconfigures the session and applies mirroring (mirror when a rear camera faces the user), and update UI from the handler (the coordinator is main-actor). To override automatic mirroring, the actor sets the preview connection's `automaticallyAdjustsVideoMirroring = false` before setting `isVideoMirrored`, and only when `isVideoMirroringSupported`, or AVFoundation throws `NSInvalidArgumentException`. From then on the app owns mirroring on every switch: `isVideoMirrored = true` whenever the camera in use faces the user, `false` when it faces away. Today's APIs that still apply on Duo: `videoGravity` to fit or fill the preview on the inner display (a full-field-of-view rear-camera stream leaves room around it for controls), `setDynamicAspectRatio(_:)` for a landscape crop from the square sensor (see Dynamic Aspect Ratio above), the rotation coordinator (it updates when the app changes displays), and sensor-orientation compensation — on by default for every Duo front camera; disable it once you apply the rotation coordinator's capture angle (see Sensor Orientation Compensation above). Apple articles: "Choosing a Camera by the Direction it Faces", "Supporting Device Rotation in Your Camera App".
 
@@ -694,11 +696,11 @@ photoOutput.capturePhoto(with: settings, delegate: self)
 func readinessCoordinator(_ coordinator: AVCapturePhotoOutputReadinessCoordinator,
                           captureReadinessDidChange captureReadiness: AVCapturePhotoOutput.CaptureReadiness) {
     switch captureReadiness {
-    case .ready:                         // Can capture immediately
-    case .notReadyMomentarily:           // Brief delay, prevent double-tap
-    case .notReadyWaitingForCapture:     // Flash firing, sensor reading
-    case .notReadyWaitingForProcessing:  // Processing previous photo
-    case .sessionNotRunning:             // Session stopped
+    case .ready:                         break  // Can capture immediately
+    case .notReadyMomentarily:           break  // Brief delay, prevent double-tap
+    case .notReadyWaitingForCapture:     break  // Flash firing, sensor reading
+    case .notReadyWaitingForProcessing:  break  // Processing previous photo
+    case .sessionNotRunning:             break  // Session stopped
     @unknown default: break
     }
 }
@@ -754,21 +756,20 @@ settings.flashMode = .auto  // .off, .on, .auto
 if photoOutput.isAppleProRAWSupported {
     photoOutput.isAppleProRAWEnabled = true
 
-    // Capture ProRAW
-    let query = photoOutput.isAppleProRAWEnabled
-        ? AVCapturePhotoOutput.AppleProRAWQuery(photoOutput)
-        : nil
-    if let rawType = query?.availableRawPixelFormatTypes.first {
-        let settings = AVCapturePhotoSettings(
+    // Capture ProRAW — the output reports its own raw formats; Apple ProRAW is one of them
+    if let rawType = photoOutput.availableRawPhotoPixelFormatTypes.first(where: {
+        AVCapturePhotoOutput.isAppleProRAWPixelFormat($0)
+    }) {
+        let rawSettings = AVCapturePhotoSettings(
             rawPixelFormatType: rawType,
             processedFormat: [AVVideoCodecKey: AVVideoCodecType.hevc]
         )
+        _ = rawSettings
     }
 }
 
 // HDR configuration
-settings.photoQualityPrioritization = .quality  // Enables computational photography/HDR
-// HDR is automatic with .balanced or .quality — no separate toggle needed
+settings.photoQualityPrioritization = .balanced  // HDR is automatic with .balanced or .quality — no separate toggle needed
 ```
 
 **Note**: ProRAW requires iPhone 12 Pro or later. HDR is automatic with quality prioritization — Apple's Deep Fusion and Smart HDR are controlled by the system based on the quality setting.
@@ -809,7 +810,7 @@ let settings1 = AVCapturePhotoSettings()  // Use once
 let settings2 = AVCapturePhotoSettings()  // Use for second capture
 
 // Copy settings for similar captures
-let settings2 = AVCapturePhotoSettings(from: settings1)
+let settings3 = AVCapturePhotoSettings(from: settings1)
 ```
 
 ---
@@ -849,9 +850,10 @@ extension CameraManager: AVCapturePhotoCaptureDelegate {
 
     // Deferred processing proxy (iOS 17+)
     func photoOutput(_ output: AVCapturePhotoOutput,
-                     didFinishCapturingDeferredPhotoProxy deferredPhotoProxy: AVCaptureDeferredPhotoProxy,
+                     didFinishCapturingDeferredPhotoProxy deferredPhotoProxy: AVCaptureDeferredPhotoProxy?,
                      error: Error?) {
-        guard error == nil, let data = deferredPhotoProxy.fileDataRepresentation() else { return }
+        guard error == nil, let deferredPhotoProxy,
+              let data = deferredPhotoProxy.fileDataRepresentation() else { return }
         replaceThumbnailWithFinal(data)
     }
 }
@@ -985,7 +987,7 @@ Pre-allocated, system-wide storage for high-data-rate captures (e.g. ProRes) giv
 | `AVProVideoStorage.isSupported` | Class property — device + OS support |
 | `AVProVideoStorage.shared` | Nullable singleton |
 | `initialCapacity` / `remainingCapacity` | Bytes; `0` = unconfigured, `-1` = read failure. `initialCapacity` = user-allocated size; `remainingCapacity` decreases while recording |
-| `isBusy` | KVO-observable; resizing/file ops in flight — starting a capture while busy raises an exception |
+| `busyReasons` | KVO-observable `Set<AVProVideoStorage.BusyReason>` (`.adjustingCapacity`, `.replenishing`, `.capturing`); non-empty while resizing/file ops are in flight — starting a video capture while it is non-empty fails with an error |
 | `openSettings()` | Jump to the Settings allocation UI |
 | `AVCaptureMovieFileOutput.isProVideoStorageSupported` / `usesProVideoStorage` | Setting the flag while unsupported raises an exception. Recording writes to pre-allocated storage, then moves to your URL when capture finishes |
 | `AVAssetWriter.isProVideoStorageSupported` / `usesProVideoStorage` | Same pair for `AVCaptureVideoDataOutput`-based recording |
@@ -1061,8 +1063,8 @@ import AVFoundation
 
 @MainActor
 class CameraManager: NSObject, ObservableObject {
-    let session = AVCaptureSession()
-    let photoOutput = AVCapturePhotoOutput()
+    nonisolated(unsafe) let session = AVCaptureSession()
+    nonisolated(unsafe) let photoOutput = AVCapturePhotoOutput()
     private let sessionQueue = DispatchQueue(label: "camera.session")
     private var rotationCoordinator: AVCaptureDevice.RotationCoordinator?
     private var rotationObservation: NSKeyValueObservation?

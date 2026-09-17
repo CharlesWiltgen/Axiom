@@ -69,8 +69,8 @@ Grep for:
   - `AVAudioSession\.sharedInstance` — audio session usage
   - `\.setCategory\(\.playAndRecord` / `\.setCategory\(\.record` / `\.setCategory\(\.playback` / `\.setCategory\(\.ambient` — category choice
   - `\.setActive\(true`, `\.setActive\(false` — audio session activation
-  - `\.sessionWasInterrupted`, `\.sessionInterruptionEnded` — interruption observers
-  - `\.sessionRuntimeError` — runtime error observer
+  - `\.wasInterruptedNotification`, `\.interruptionEndedNotification` — interruption observers
+  - `\.runtimeErrorNotification` — runtime error observer
   - `AVCaptureSessionWasInterrupted`, `AVCaptureSessionInterruptionEnded`, `AVCaptureSessionRuntimeError` — legacy notification names (deprecated iOS 18)
   - `wasInterruptedNotification`, `interruptionEndedNotification`, `runtimeErrorNotification`, `didStartRunningNotification`, `didStopRunningNotification` — **current** names (`AVCaptureSession.<name>`). Search for BOTH spellings: the legacy constants do not appear as substrings of the current ones, so a legacy-only search reports "no observer" on correct modern code
   - `AVAudioSession\.interruptionNotification` — audio interruption
@@ -114,7 +114,7 @@ Present this map in the output before proceeding.
 
 ## Phase 2: Detect Known Anti-Patterns
 
-Run all 10 detection patterns. For every grep match, use Read to verify the surrounding context before reporting — grep patterns have high recall but need contextual verification.
+Run all 11 detection patterns. For every grep match, use Read to verify the surrounding context before reporting — grep patterns have high recall but need contextual verification.
 
 ### Pattern 1: Main Thread Session Work (CRITICAL/HIGH)
 
@@ -138,10 +138,10 @@ Run all 10 detection patterns. For every grep match, use Read to verify the surr
 
 ### Pattern 3: Missing Session Interruption Observers (HIGH/HIGH)
 
-**Issue**: Without `sessionWasInterrupted`/`sessionInterruptionEnded` observers, the camera dies on a phone call or Control Center pull-down and never recovers.
+**Issue**: Without interruption observers the session stops with no UI feedback — preview stays black and the app looks frozen until the interruption ends (the session restarts itself when appropriate).
 **Search**:
-- Files containing `AVCaptureSession` but not `sessionWasInterrupted`
-- Files containing `AVCaptureSession` but not `sessionInterruptionEnded`
+- Files containing `AVCaptureSession` but neither `wasInterruptedNotification` nor `AVCaptureSessionWasInterrupted`
+- Files containing `AVCaptureSession` but neither `interruptionEndedNotification` nor `AVCaptureSessionInterruptionEnded`
 - `NotificationCenter.*AVCaptureSession` proximity
 **Verify**: Read matching files; check whether observers exist AND whether the handler updates UI state to reflect interruption.
 **Fix**: Observe `AVCaptureSession.wasInterruptedNotification` and `AVCaptureSession.interruptionEndedNotification`; on interruption, show "Camera unavailable" UI; on end, restart the session if it's not running. (The `.AVCaptureSessionWasInterrupted` spelling was deprecated in iOS 18.)
@@ -164,13 +164,13 @@ Run all 10 detection patterns. For every grep match, use Read to verify the surr
 **Verify**: Read matching files; if PHPicker/PhotosPicker is the only consumer, the permission request is unnecessary.
 **Fix**: Drop the permission request when only PHPicker/PhotosPicker is in use. Request only when accessing assets directly via `PHFetchResult`.
 
-### Pattern 6: Missing Photo Quality Settings (MEDIUM/LOW)
+### Pattern 6: Photo Quality Prioritization Set to `.quality` (MEDIUM/LOW)
 
-**Issue**: `AVCapturePhotoSettings()` without `photoQualityPrioritization` defaults to `.quality`, slowing capture by 200-500ms per shot. Wrong default for social/messaging apps.
+**Issue**: `settings.photoQualityPrioritization = .quality` is opt-in and costs shot-to-shot time — the default is `.balanced`, so a settings object that leaves the property unset is already correct. Maximum quality is the wrong trade-off for social/messaging apps.
 **Search**:
-- `AVCapturePhotoSettings\(` — verify followed by `photoQualityPrioritization` assignment
-**Verify**: Read matching files; flag only when no `photoQualityPrioritization` is set in the same setup block.
-**Fix**: `let settings = AVCapturePhotoSettings(); settings.photoQualityPrioritization = .balanced` (or `.speed` for messaging).
+- `\.photoQualityPrioritization\s*=\s*\.quality`
+**Verify**: Read matching files; confirm the app wants maximum quality rather than the `.balanced` default.
+**Fix**: `let settings = AVCapturePhotoSettings(); settings.photoQualityPrioritization = .balanced` (or `.speed` for messaging). Only set the property to override the `.balanced` default.
 
 ### Pattern 7: AVAudioSession Category Mismatch (MEDIUM/MEDIUM)
 
@@ -178,7 +178,6 @@ Run all 10 detection patterns. For every grep match, use Read to verify the surr
 **Search**:
 - `\.setCategory\(\.playback` near video capture code
 - `\.setCategory\(\.ambient` near recording code
-- Video recording (`AVCaptureMovieFileOutput` or `AVCaptureAudioDataOutput`) without any `setCategory` call
 **Verify**: Read matching files; if audio is captured, `.playAndRecord` or `.record` is required.
 **Fix**: `try AVAudioSession.sharedInstance().setCategory(.playAndRecord, mode: .videoRecording, options: [.defaultToSpeaker])`.
 
@@ -201,11 +200,11 @@ Run all 10 detection patterns. For every grep match, use Read to verify the surr
 
 ### Pattern 10: Synchronous Photo Loading on Main (LOW/MEDIUM)
 
-**Issue**: `try!` on `loadTransferable` or main-thread `PHImageManager.requestImage` blocks the UI when loading large images.
+**Issue**: `try!` on `loadTransferable`, or `PHImageManager.requestImage` with `PHImageRequestOptions.isSynchronous = true`, blocks the caller when loading large images.
 **Search**:
 - `try!\s+.*loadTransferable`
 - `PHImageManager\..*requestImage` — verify async handling
-**Verify**: Read matching files; flag synchronous patterns and missing `Task { ... }` wrappers.
+**Verify**: Read matching files; flag `try!` on `loadTransferable` and any `PHImageRequestOptions` with `isSynchronous = true` (`requestImage` is asynchronous by default).
 **Fix**: `let image = try await item.loadTransferable(type: Data.self)`.
 
 ### Pattern 11: 27-Cycle Capture Property Set While Its Automatic Flag Is On (HIGH/MEDIUM)
@@ -224,7 +223,7 @@ Using the Capture Map from Phase 1 and your domain knowledge, check for what's *
 
 | Question | What it detects | Why it matters |
 |----------|----------------|----------------|
-| Is `sessionRuntimeError` (NotificationCenter or `.sessionRuntimeErrorPublisher`) observed and does the handler attempt restart? | Dead-session silence | A runtime error leaves the session stopped; without observation the camera is permanently black until the user kills and relaunches |
+| Is the runtime-error notification (`AVCaptureSession.runtimeErrorNotification`, or `NotificationCenter.default.publisher(for:)` on it) observed and does the handler attempt restart? | Dead-session silence | A runtime error leaves the session stopped; without observation the camera is permanently black until the user kills and relaunches |
 | Is the session queue created with default attributes (serial), not `attributes: .concurrent`? | Concurrent session queue | A concurrent queue lets reconfiguration calls race; `addInput` / `addOutput` interleave and corrupt session state |
 | When permission is denied, does the UI show "Open Settings" guidance and observe `UIApplication.didBecomeActiveNotification` to re-check on return? | Stuck-denied state | User grants in Settings, comes back, app still shows denial — they think the feature is broken |
 | When the app moves to background, does the session stop, and on foreground does it restart only after permission re-check? | Hot session in background | A running session in the background drains battery and may be killed by the OS, leaving a corrupted runtime state |
@@ -233,7 +232,7 @@ Using the Capture Map from Phase 1 and your domain knowledge, check for what's *
 | For iOS 17+ deployment, is `RotationCoordinator` wired with KVO observation of `videoRotationAngleForHorizonLevel...`? | Stale rotation handling | Manual orientation tracking misses rotation locks and split-view orientation; photos save with wrong orientation |
 | Are device discovery sites using `AVCaptureDevice.DiscoverySession` rather than the deprecated `AVCaptureDevice.devices()` enumeration? | Hidden device support | `devices()` doesn't surface external cameras (iPad), Continuity Camera, or new device types |
 | Is the session reconfigured (input/output add/remove) inside a single `beginConfiguration`/`commitConfiguration` block, not split across calls? | Non-atomic reconfig | Half-applied changes cause runtime errors that the user sees as a frozen camera |
-| For multi-cam sessions (`AVCaptureMultiCamSession`), is `isMultiCamSupported` checked before construction? | Crash on unsupported device | `AVCaptureMultiCamSession` crashes the app on devices that don't support it (older iPhones, simulator) |
+| For multi-cam sessions (`AVCaptureMultiCamSession`), is `isMultiCamSupported` checked before construction? | Unsupported configuration | Multi-cam runs only on platforms with sufficient hardware bandwidth, system memory, and thermal performance (Apple documents no crash) |
 | For `loadTransferable` from `PhotosPickerItem`, is the call awaited and result error-handled (not `try!`)? | Picker crash on large videos | `try!` crashes the app on permission revocation or oversized payloads — user blames the photo, not the picker |
 
 Require evidence from the Phase 1 map — don't speculate without reading the code.
@@ -251,9 +250,9 @@ Bump severity for these combinations:
 | `UIImagePickerController` for `.photoLibrary` (Pattern 4) | `PHPhotoLibrary.requestAuthorization` (Pattern 5) | Two anti-patterns reinforcing each other; unnecessary permission prompt the user can deny | HIGH |
 | AVAudioSession `.playback` for recording (Pattern 7) | `AVCaptureMovieFileOutput` writing video | Video files have no audio — silent footage uploaded to app's backend | HIGH |
 | Missing `setActive(false)` on session end (Phase 3) | Multiple capture sessions in app lifecycle | Cross-session audio interference; other apps' audio stays ducked indefinitely | MEDIUM |
-| Missing `sessionRuntimeError` observer (Phase 3) | No restart logic | Single runtime error permanently kills the camera until app relaunch | HIGH |
+| Missing `runtimeErrorNotification` observer (Phase 3) | No restart logic | Single runtime error permanently kills the camera until app relaunch | HIGH |
 | Concurrent session queue (Phase 3) | Multiple `addInput`/`addOutput` calls | Reconfiguration race → "Cannot add input/output" runtime error | HIGH |
-| `AVCaptureMultiCamSession` (Phase 3) | No `isMultiCamSupported` check | Hard crash on unsupported devices; reproduces only on older iPhones in production | CRITICAL |
+| `AVCaptureMultiCamSession` (Phase 3) | No `isMultiCamSupported` check | Unsupported multi-cam configuration on hardware without multi-cam support | CRITICAL |
 | Hot session in background (Phase 3) | Movie file output recording | OS may kill the recording process; battery drain compounds the problem | MEDIUM |
 | Permission denied UI (Phase 3) | No `didBecomeActiveNotification` observer | User grants in Settings, returns, still sees denial — believes feature is broken | MEDIUM |
 
@@ -280,7 +279,7 @@ Cross-auditor overlap notes:
 
 Scoring:
 - **RELIABLE**: No CRITICAL issues, all session work on a dedicated serial queue, full interruption coverage (camera + audio + runtime error), `RotationCoordinator` on iOS 17+, AVAudioSession deactivated on end, permission UX handles denial-then-grant, modern picker for photo selection.
-- **FRAGILE**: No CRITICAL issues, but some HIGH/MEDIUM patterns (deprecated videoOrientation on iOS 17+, missing photoQualityPrioritization, missing `setActive(false)`, partial interruption coverage). Camera works in the happy path but fails on phone-call interruption or rotation lock.
+- **FRAGILE**: No CRITICAL issues, but some HIGH/MEDIUM patterns (deprecated videoOrientation on iOS 17+, missing `setActive(false)`, partial interruption coverage). Camera works in the happy path but fails on phone-call interruption or rotation lock.
 - **BROKEN**: Any CRITICAL issue (main-thread session start blocking UI, missing interruption + audio capture, missing purpose strings, AVCaptureMultiCamSession without support check, AVAudioSession `.playback` for video recording producing silent files).
 
 ## Output Format

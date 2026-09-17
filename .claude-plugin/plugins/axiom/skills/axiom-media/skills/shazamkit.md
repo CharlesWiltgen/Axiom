@@ -327,8 +327,7 @@ session.match(signature)
 let catalog = SHCustomCatalog()
 
 // Create signature from audio
-let generator = SHSignatureGenerator()
-let signature = try await generator.signature(from: avAsset)
+let signature = try await SHSignatureGenerator.signature(from: avAsset)
 
 // Create metadata
 let mediaItem = SHMediaItem(properties: [
@@ -342,7 +341,8 @@ let mediaItem = SHMediaItem(properties: [
 try catalog.addReferenceSignature(signature, representing: [mediaItem])
 
 // Save to disk
-try catalog.write(to: catalogURL)
+// iOS 18+; on iOS 15-17 use: try catalog.write(to: catalogURL)
+try catalog.dataRepresentation.write(to: catalogURL)
 ```
 
 ### Building at Scale with Shazam CLI (macOS 13+)
@@ -352,13 +352,13 @@ try catalog.write(to: catalogURL)
 shazam signature --input video.mp4 --output video.shazamsignature
 
 # Create catalog from signature + CSV metadata
-shazam custom-catalog create --input video.shazamsignature --media-items metadata.csv --output catalog.shazamcatalog
+shazam custom-catalog create --signature-asset video.shazamsignature --media-items metadata.csv --output catalog.shazamcatalog
 
 # Update existing catalog with new content
-shazam custom-catalog update --input newvideo.shazamsignature --media-items newmeta.csv --catalog catalog.shazamcatalog
+shazam custom-catalog update --input catalog.shazamcatalog --signature-asset newvideo.shazamsignature --media-items newmeta.csv
 
 # Display catalog contents
-shazam custom-catalog display --catalog catalog.shazamcatalog
+shazam custom-catalog display --input catalog.shazamcatalog
 ```
 
 CSV format maps headers to `SHMediaItemProperty` keys. Run `shazam custom-catalog create --help` for the full mapping.
@@ -423,7 +423,7 @@ Read, add, and remove items from the user's synced Shazam library. Your app can 
 try await SHLibrary.default.addItems([matchedMediaItem])
 
 // Read (only items your app added)
-let items = SHLibrary.default.items
+let items = await SHLibrary.default.items
 
 // Remove
 try await SHLibrary.default.removeItems([mediaItem])
@@ -459,8 +459,7 @@ SHMediaLibrary.default.add([matchedMediaItem]) { error in
 
 ```swift
 let asset = AVURLAsset(url: audioFileURL)
-let generator = SHSignatureGenerator()
-let signature = try await generator.signature(from: asset)
+let signature = try await SHSignatureGenerator.signature(from: asset)
 ```
 
 Accepts any `AVAsset` with an audio track (`AVURLAsset` is the concrete subclass — `AVAsset(url:)` is deprecated for Swift since iOS 18). Multiple tracks are mixed automatically.
@@ -500,14 +499,14 @@ File extension: `.shazamsignature`
 ```swift
 // WRONG — splits audio into segments
 for segment in audioSegments {
-    let sig = try await generator.signature(from: segment)
+    let sig = try await SHSignatureGenerator.signature(from: segment)
     try catalog.addReferenceSignature(sig, representing: [mediaItem])
 }
 ```
 
 ```swift
 // RIGHT — one signature per media asset, use timed media items
-let sig = try await generator.signature(from: fullAsset)
+let sig = try await SHSignatureGenerator.signature(from: fullAsset)
 let items = timeRanges.map { range in
     SHMediaItem(properties: [.title: range.title, .timeRanges: [range.interval]])
 }
@@ -615,7 +614,6 @@ Custom catalogs don't need it, but Shazam catalog matching silently fails withou
 | Shazam CLI | — | — | 13+ | — | — | — |
 | signatureFromAsset | 16+ | 16+ | 13+ | 16+ | 9+ | 1+ |
 | Timed media items | 16+ | 16+ | 13+ | 16+ | 9+ | 1+ |
-| SHManagedSession Sendable | 18+ | 18+ | 15+ | 18+ | 11+ | 2+ |
 
 ---
 
@@ -629,8 +627,9 @@ Supported use cases per Apple HIG:
 **Best practices** (verbatim from HIG):
 
 - **Stop recording as soon as possible.** "When people allow your app to record audio for recognition, they don't expect the microphone to stay on. To help preserve privacy, only record for as long as it takes to get the sample you need."
-- **Let people opt in to storing recognized songs to iCloud.** "If your app can store recognized songs to iCloud, give people a way to first approve this action. Even though both the Music Recognition control and the Shazam app show your app as the source of the recognized song, people appreciate having control over which apps can store content in their library."
-- **Show Apple Music attribution** when displaying matched song details (required by Apple Music Identity Guidelines)
+- **Let people opt in to storing your app's recognized songs to their iCloud library.** "If your app can store recognized songs to iCloud, give people a way to first approve this action. Even though both the Music Recognition control and the Shazam app show your app as the source of the recognized song, people appreciate having control over which apps can store content in their library."
+
+Also: show Apple Music attribution when displaying matched song details, per Apple Music Identity Guidelines.
 
 ---
 

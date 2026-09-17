@@ -6,11 +6,11 @@ Systematic troubleshooting for AVFoundation camera issues: frozen preview, wrong
 ## Overview
 
 **Core Principle**: When camera doesn't work, the problem is usually:
-1. **Threading** (session work on main thread) - 35%
-2. **Session lifecycle** (not started, interrupted, not configured) - 25%
-3. **Rotation** (deprecated APIs, missing coordinator) - 20%
-4. **Permissions** (denied, not requested) - 15%
-5. **Configuration** (wrong preset, missing input/output) - 5%
+1. **Threading** (session work on main thread)
+2. **Session lifecycle** (not started, interrupted, not configured)
+3. **Rotation** (deprecated APIs, missing coordinator)
+4. **Permissions** (denied, not requested)
+5. **Configuration** (wrong preset, missing input/output)
 
 **Always check threading and session state BEFORE debugging capture logic.** (For launch speed and recording sustainability, see Patterns 16-17.)
 
@@ -435,9 +435,7 @@ previewLayer.connection?.videoRotationAngle = coordinator.videoRotationAngleForH
 
 // Observe changes
 observation = coordinator.observe(\.videoRotationAngleForHorizonLevelPreview) { [weak previewLayer] coord, _ in
-    DispatchQueue.main.async {
-        previewLayer?.connection?.videoRotationAngle = coord.videoRotationAngleForHorizonLevelPreview
-    }
+    previewLayer?.connection?.videoRotationAngle = coord.videoRotationAngleForHorizonLevelPreview
 }
 ```
 
@@ -495,7 +493,7 @@ func mirrorImage(_ image: UIImage) -> UIImage? {
 
 **Symptom**: Photo capture takes 2+ seconds
 
-**Root cause**: `photoQualityPrioritization = .quality` (default for some devices)
+**Root cause**: `photoQualityPrioritization = .quality` requested in `AVCapturePhotoSettings` (the default is `.balanced`)
 
 **Diagnostic**:
 ```swift
@@ -524,11 +522,14 @@ settings.photoQualityPrioritization = .balanced
 
 **Solution**: Enable deferred processing (iOS 17+)
 ```swift
-photoOutput.isAutoDeferredPhotoDeliveryEnabled = true
+// Setting this while unsupported throws NSInvalidArgumentException — check support first
+if photoOutput.isAutoDeferredPhotoDeliverySupported {
+    photoOutput.isAutoDeferredPhotoDeliveryEnabled = true
+}
 
 // Then handle proxy in delegate:
-// - didFinishProcessingPhoto gives proxy for immediate display
-// - didFinishCapturingDeferredPhotoProxy gives final image later
+// - didFinishCapturingDeferredPhotoProxy fires *instead of* didFinishProcessingPhoto and yields the proxy (not the final image)
+// - the final image is rendered later in the Photo Library (PHAssetResource / PHImageManager)
 ```
 
 **Time to fix**: 30 min

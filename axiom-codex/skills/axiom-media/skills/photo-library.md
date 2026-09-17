@@ -31,7 +31,7 @@ Signs you're making this harder than it needs to be:
 - ❌ Using UIImagePickerController (deprecated for photo selection)
 - ❌ Requesting full library access when picker suffices (privacy violation)
 - ❌ Ignoring `.limited` authorization status (users can't expand selection)
-- ❌ Not handling Transferable loading failures (crashes on large photos)
+- ❌ Not handling Transferable loading failures (the load returns nil)
 - ❌ Synchronously loading images from picker results (blocks UI)
 - ❌ Decoding a full-resolution image into memory — a 48MP / RAW / panorama photo is a ~190 MB decompressed bitmap; loading it whole gets the app jetsammed (the "crashes on big photos" report). Downsample with ImageIO.
 - ❌ Using PhotoKit APIs when you only need to pick photos (over-engineering)
@@ -82,7 +82,7 @@ What do you need?
 ### 3. Info.plist Keys
 
 ```xml
-<!-- Required for any PhotoKit access -->
+<!-- Required for PHPhotoLibrary access; the pickers below need no key -->
 <key>NSPhotoLibraryUsageDescription</key>
 <string>Access your photos to share them</string>
 
@@ -93,7 +93,7 @@ What do you need?
 
 ## Core Patterns
 
-### Pattern 1: SwiftUI PhotosPicker (iOS 16+)
+### Pattern 1: SwiftUI PhotosPicker (iOS 17+)
 
 **Use case**: Let users select photos in a SwiftUI app.
 
@@ -165,7 +165,7 @@ matching: .screenshots
 matching: .screenRecordings
 
 // Slo-mo videos
-matching: .sloMoVideos
+matching: .slomoVideos
 
 // Cinematic videos (iOS 16+)
 matching: .cinematicVideos
@@ -318,7 +318,9 @@ config.filter = .bursts
 // Configure for embedded use
 var config = PHPickerConfiguration()
 config.selection = .continuous  // Live updates instead of waiting for Add button
-config.mode = .compact  // Single row layout (optional)
+// Note: `PHPickerMode.compact` (config.mode = .compact) is a `static var` in the SDK, so
+// Swift 6 language mode rejects it as shared mutable state. For a single-row picker use
+// SwiftUI's `.photosPickerStyle(.compact)`.
 config.selectionLimit = 10
 
 // Hide accessories
@@ -348,9 +350,9 @@ picker.moveAsset(withIdentifier: "assetID", afterAssetWithIdentifier: "otherID")
 
 **Cost**: 20 min implementation, no permissions required
 
-### Pattern 2b: Options Menu & HDR Support (iOS 17+)
+### Pattern 2b: Options Menu & HDR Support (iOS 16+)
 
-The picker now shows an Options menu letting users choose to strip location metadata from photos. This works automatically with PhotosPicker and PHPicker. It is **user**-controlled — to strip metadata unconditionally, see Pattern 2c.
+The picker now exposes a location control (labelled `Location Included` on iOS 27) letting users choose to include or strip location metadata from photos. This works automatically with PhotosPicker and PHPicker. It is **user**-controlled — to strip metadata unconditionally, see Pattern 2c.
 
 **Preserving HDR content**:
 
@@ -441,6 +443,7 @@ By default, iOS shows "Select More Photos" prompt when `.limited` is detected. T
 
 ```swift
 import Photos
+import PhotosUI
 
 class PhotoLibraryManager {
 
@@ -580,7 +583,7 @@ Three system sheets for creating, posting to, and customizing shared albums — 
 | UIKit VCs never self-dismiss | All three delegates. You dismiss |
 | The UIKit creation delegate is **tri-state** | success = `creationResult` non-nil; failure = `error` non-nil; **cancel = both nil** |
 
-**Apple's doc comments are wrong here.** The creation sheet's prose says the completion receives a `String` identifier — the real parameter is `PHSharedAlbumCreationResult?`. The delegate header references an `albumIdentifier` property on the view controller that does not exist (it is `creationResult`). Read the signatures, not the prose.
+**Apple's doc comments are wrong here.** The delegate header references an `albumIdentifier` property on the view controller that does not exist (it is `creationResult`). Read the signatures, not the prose.
 
 **Default sharing policy is `.private`** (invite/approval required). `.public` lets anyone with the link in without approval — an explicit opt-in you should surface in your own UI, not silently pass through. Note the label differs between layers: SwiftUI takes `defaultSharingPolicy:`, the UIKit configuration property is `defaultPolicy`.
 
@@ -599,7 +602,7 @@ The completion type also changes from `Result<Void, any Error>` to `Result<Strin
 
 **Use case**: Properly handle async image loading with error handling.
 
-**The problem**: Default `Image` Transferable only supports PNG. Most photos are JPEG/HEIF.
+**The problem**: Default `Image` Transferable supports PNG and JPEG, but not HEIF/HEIC.
 
 ```swift
 // Custom Transferable for any image format
@@ -925,7 +928,7 @@ Before shipping photo library features:
 
 #### Image Loading
 - ☑ All loading is async (no UI blocking)
-- ☑ Custom Transferable handles JPEG/HEIF (not just PNG)
+- ☑ Custom Transferable handles HEIF/HEIC, which the default `Image` Transferable does not
 - ☑ Error handling for failed loads
 - ☑ Loading indicator for large files
 
