@@ -247,7 +247,7 @@ let cameras = discoverySession.devices
 | `.builtInTrueDepthCamera` | Front TrueDepth (Face ID) |
 | `.builtInLiDARDepthCamera` | LiDAR depth |
 
-iPhone Duo adds inner and outer ultra-wide front cameras and a virtual front camera; the individual cameras' device types are announced for the iOS 27.1 SDK — see iPhone Duo Front Cameras below.
+iPhone Duo adds inner and outer ultra-wide front cameras and a virtual front camera; the individual cameras' device types ship in the iOS 27.1 SDK — see iPhone Duo Front Cameras below.
 
 ### Device Configuration
 
@@ -503,18 +503,55 @@ Bonus (iOS 26+, iOS-only): `device.nominalFocalLengthIn35mmFilm` — nominal 35m
 
 ### iPhone Duo Front Cameras (iOS 27.1+)
 
-From Apple's tech talk 111465. **Absent from the 27.0 SDK; declared from the 27.1 SDK, so the spellings below are the shipped ones. Check the installed SDK first (`xcrun --sdk iphoneos --show-sdk-version`). Below 27.1: don't write these in code as if they compile — describe them, name the talk, and use the virtual front camera (existing discovery API) today. On 27.1 or later, betas included: grep the SDK's `.swiftinterface` and headers for the declaration; if it's there, the SDK's spelling and signature win over this table; if it's missing, say it was renamed or dropped. A filename or `#import` hit isn't a declaration — `AVKit/AVCaptureDeviceDirectionCoordinator.h` ships in 27.0 as an empty stub. Don't call them fictional. Don't fill in parameters, types, or cases this table doesn't give.** Spellings follow the talk's code where the narration differs.
+From Apple's tech talk 111465. **These shipped in the iOS 27.1 SDK; the snippet below is compiled against it. Gate 27.1 calls at `@available(iOS 27.1, *)`. Below 27.1 the symbols don't exist — use the virtual front camera (existing discovery API) and don't write the rest as code. The SDK's spelling and signature win over this file; if a name is missing, check for a rename before calling it dropped. Don't call them fictional. Don't invent parameters, types, or cases this section doesn't give.**
 
 iPhone Duo has two front cameras, both square-sensor ultra-wides: one on the outer display and an under-display camera on the inner one. Direction replaces position as the question to ask — a `.front` camera can face away from the user, and a rear camera faces the user when the device is flipped open.
 
-| Key | API | Behavior | Talk |
-|---|---|---|---|
-| `camera.virtual` | (no type name given) | Discovered by a discovery session for `.front` with the wide-angle or ultra-wide type; switches automatically — inner camera when open, outer when closed, "the most relevant front camera for your app"; the talk doesn't say which it picks when flipped open with the app on the outer display — don't assume either; only shared capabilities — up to 1080p and 60 fps, no depth | 111465 0:57 |
-| `camera.types` | `AVCaptureDevice.DeviceType.builtInOuterUltraWideCamera`, `.builtInInnerUltraWideCamera` | Individual cameras with full capabilities — outer up to 4K and up to 120 fps, inner 1080p up to 60 fps; depth only here; your app switches on open and close | 111465 1:44 |
-| `camera.direction` | `AVCaptureDeviceDirectionCoordinator(view:deviceTypes:changeHandler:)` (AVKit) | Reports which cameras face toward and away from the user relative to one view, and calls the handler when that view's display changes — as the device opens or closes, or as the app moves to the outer display while flipped open. Main-actor; one per view, so two when showing UI on both displays | 111465 4:06 |
-| `camera.descriptor` | `AVCaptureDeviceDescriptor` | Main-actor-safe, Sendable stand-in for an `AVCaptureDevice`; the coordinator provides descriptors rather than devices — the handler receives an `AVCaptureDeviceDirectionMap` whose `forwardFacingDeviceDescriptors` / `backwardFacingDeviceDescriptors` are arrays of `AVCaptureDeviceDescriptor`. Pass them to your camera actor and reconfigure the session there — don't call AVFoundation from the handler | 111465 5:38 |
+#### The virtual front camera — works on any SDK
 
-When the handler fires: hand the forward-facing camera's descriptor to your camera actor, which reconfigures the session and applies mirroring (mirror when a rear camera faces the user), and update UI from the handler (the coordinator is main-actor). To override automatic mirroring, the actor sets the preview connection's `automaticallyAdjustsVideoMirroring = false` before setting `isVideoMirrored`, and only when `isVideoMirroringSupported`, or AVFoundation throws `NSInvalidArgumentException`. From then on the app owns mirroring on every switch: `isVideoMirrored = true` whenever the camera in use faces the user, `false` when it faces away. Today's APIs that still apply on Duo: `videoGravity` to fit or fill the preview on the inner display (a full-field-of-view rear-camera stream leaves room around it for controls), `setDynamicAspectRatio(_:)` for a landscape crop from the square sensor (see Dynamic Aspect Ratio above), the rotation coordinator (it updates when the app changes displays), and sensor-orientation compensation — on by default for every Duo front camera; disable it once you apply the rotation coordinator's capture angle (see Sensor Orientation Compensation above). Apple articles: "Choosing a Camera by the Direction it Faces", "Supporting Device Rotation in Your Camera App".
+A discovery session for `.front` with the wide-angle or ultra-wide type returns the virtual front camera; there is no separate device type. It switches automatically — inner camera when the device is open, outer when closed — using "the most relevant front camera for your app". The talk doesn't say which it picks when the device is flipped open with the app on the outer display; don't assume either way. It offers only the cameras' shared capabilities: up to 1080p and 60 fps, no depth. (111465 0:57)
+
+#### The individual cameras — iOS 27.1
+
+`.builtInOuterUltraWideCamera` (up to 4K, 120 fps) and `.builtInInnerUltraWideCamera` (1080p, 60 fps, under-display) identify the two cameras separately, each with its full capabilities — depth included. Your app then owns the switch on open and close. (111465 1:44)
+
+#### Direction, not position — iOS 27.1
+
+`position` can't tell two front cameras apart, and a `.front` camera can face away from the user. `AVCaptureDeviceDirectionCoordinator` (AVKit) reports which cameras face toward and away from the user relative to one view, and calls its handler when that view's display changes — as the device opens or closes, or as the app moves to the outer display while flipped open. It's main-actor; one coordinator per view, so two when you show UI on both displays. (111465 4:06)
+
+```swift
+// iOS 27.1: report camera direction relative to a view; hand descriptors to your camera actor
+@available(iOS 27.1, *)
+@MainActor
+func startDirectionTracking(
+    in view: UIView,
+    onChange: @escaping ([AVCaptureDeviceDescriptor], [AVCaptureDeviceDescriptor]) -> Void
+) -> AVCaptureDeviceDirectionCoordinator {
+    AVCaptureDeviceDirectionCoordinator(
+        view: view,
+        deviceTypes: [
+            .builtInOuterUltraWideCamera,
+            .builtInInnerUltraWideCamera,
+            .builtInDualWideCamera,
+        ],
+        changeHandler: { map in
+            onChange(map.forwardFacingDeviceDescriptors, map.backwardFacingDeviceDescriptors)
+        }
+    )
+}
+```
+
+The handler receives an `AVCaptureDeviceDirectionMap`; `AVCaptureDeviceDescriptor` is a main-actor-safe, Sendable stand-in for an `AVCaptureDevice`, exposing `deviceType`, `localizedName`, `position`, `uniqueID`, and `mediaTypes`. Pass the descriptors to your camera actor and reconfigure the session there — don't call AVFoundation from the handler. (111465 5:38)
+
+The coordinator calls its handler on the main actor — once soon after creation with the directions in effect, then on every change (`deviceDirections` returns an empty map until that first call); hold a strong reference for as long as the view stays onscreen. It reports only the built-in types you list — external, Continuity Camera, and Desk View cameras have no effect — and it leaves out the virtual front camera, because the system moves that one for you: list the two physical front cameras in its place. On a single-display iPhone it reports the same grouping in one call and never changes, so one code path runs everywhere.
+
+In your actor, resolve a descriptor with `AVCaptureDevice(uniqueID:)`, reconfigure a single video input rather than connecting both cameras in a multicam session, and handle a resolution that finds no device — the camera set can change again while the call is in flight. Mask the preview while the new camera starts and restore it once frames arrive.
+
+Mirroring follows direction, not `position`: a connection auto-mirrors any camera whose `position` is `.front`, which describes where the camera sits, not where it points. Take over only when the two disagree — a rear camera facing forward (mirror it, so people get the selfie they expect) or a front camera facing backward (present it unmirrored). Set `automaticallyAdjustsVideoMirroring = false` before assigning `isVideoMirrored`, and only when `isVideoMirroringSupported`, or AVFoundation raises an exception; leave automatic mirroring alone otherwise. Reapply after reconnecting an input — the new preview connection doesn't carry your override.
+
+Today's APIs that still apply on Duo: `videoGravity` to fit or fill the preview on the inner display (a full-field-of-view rear-camera stream leaves room around it for controls), `setDynamicAspectRatio(_:)` for a landscape crop from the square sensor (see Dynamic Aspect Ratio above), a rotation coordinator per camera — create a new one each time you switch cameras, and on Duo the angles change as the app moves between displays — and sensor-orientation compensation: on by default for every Duo front camera, disable it once you apply the rotation coordinator's capture angle (see Sensor Orientation Compensation above).
+
+Apple articles: "Choosing a Camera by the Direction it Faces", "Supporting Device Rotation in Your Camera App", "Registering a Camera Capture Accessory on iPhone Duo".
 
 ---
 
@@ -1150,6 +1187,6 @@ extension CameraManager: AVCapturePhotoCaptureDelegate {
 
 **Tech Talks**: 111465
 
-**Docs**: /avfoundation/avcapturesession, /avfoundation/avcapturedevice, /avfoundation/avcapturephotosettings, /avfoundation/avcapturedevice/rotationcoordinator, /avfoundation/avprovideostorage, /avfoundation/avcapturesmartframingmonitor
+**Docs**: /avfoundation/avcapturesession, /avfoundation/avcapturedevice, /avfoundation/avcapturephotosettings, /avfoundation/avcapturedevice/rotationcoordinator, /avfoundation/avprovideostorage, /avfoundation/avcapturesmartframingmonitor, /avkit/choosing-a-camera-by-the-direction-it-faces, /avfoundation/registering-a-camera-capture-accessory-on-iphone-duo, /avfoundation/supporting-device-rotation-in-your-camera-app
 
 **Skills**: skills/camera-capture.md, skills/camera-capture-diag.md, skills/avfoundation-video-ref.md (typed buffer attachments, `OS27`)

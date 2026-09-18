@@ -120,7 +120,7 @@ flowchart LR
   - *"My layout breaks on iPad. How do I make it adaptive?"*
   - *"Should I use GeometryReader or onGeometryChange?"*
 
-- **[iPhone Duo](/skills/ui-design/iphone-duo)** – Apple's two-display foldable iPhone: poses, vertical bars, the fold, and the layout APIs announced for iOS 27.1
+- **[iPhone Duo](/skills/ui-design/iphone-duo)** – Apple's two-display foldable iPhone: poses, vertical bars, the fold, and the iOS 27.1 layout APIs
   - *"How do I prepare my app for iPhone Duo?"*
   - *"How do I keep my controls out of the fold?"*
 

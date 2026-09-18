@@ -5,7 +5,7 @@ description: Use when preparing an app for iPhone Duo, Apple's two-display folda
 
 # iPhone Duo
 
-Adapt your app to iPhone Duo, Apple's first two-display iPhone: a compact outer display and a large inner display that folds. This skill explains how the device changes your layout, which system behavior you get for free, and the new layout and scene tools Apple announced for the iOS 27.1 SDK.
+Adapt your app to iPhone Duo, Apple's first two-display iPhone: a compact outer display and a large inner display that folds. This skill explains how the device changes your layout, which system behavior you get for free, and the new layout and scene tools Apple shipped in the iOS 27.1 SDK.
 
 ## When to Use
 
@@ -31,7 +31,7 @@ Use this skill when:
 - **Readiness today** – per-side safe areas, the tab sidebar, and window-request handling that work with the current SDK
 - **Vertical bars** – which bars move to the side, item order, overflow priorities, and when to turn the behavior off
 - **The fold** – rules for keeping controls reachable without hiding them, and for spacing and sizing custom grids around it
-- **Announced APIs** – vertical-bar overrides, reserved regions, arrangements, the hinge, and the camera accessory, clearly marked as announced for the iOS 27.1 SDK
+- **27.1 APIs** – vertical-bar overrides, reserved regions, arrangements, the hinge, and the camera accessory, with iOS 27.1 availability and `@available` gating
 
 ## Related
 

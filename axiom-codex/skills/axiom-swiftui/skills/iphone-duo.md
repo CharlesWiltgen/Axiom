@@ -4,11 +4,11 @@ iPhone Duo is Apple's first two-display iPhone: an outer display, and a larger i
 
 ## SDK Status — Read First
 
-Apple announced the Duo-specific APIs in six tech talks (111461–111466, September 2026). They shipped in the **iOS 27.1 SDK** and are present in the iOS 27.2 SDK. Everything marked iOS 27.0 or earlier compiles today.
+Apple announced the Duo-specific APIs in six tech talks (111461–111466, September 2026). They shipped in the **iOS 27.1 SDK** (and are in the 27.2 SDK); every snippet below is compiled against it. Gate 27.1 calls at `@available(iOS 27.1, *)` and keep the pre-27.1 path compiling.
 
-- **Check the installed SDK first** (`xcrun --sdk iphoneos --show-sdk-version`). Below 27.1: don't write an API from the table in code as if it compiles — describe it, name the talk, and give today's alternative. On 27.1 or later, betas included: grep the SDK's `.swiftinterface` and headers for the name; if it's there, the SDK's spelling and signature win over this table; if it's missing, say it was renamed or dropped.
+- **Check the installed SDK first** (`xcrun --sdk iphoneos --show-sdk-version`). Below 27.1 the 27.1 symbols don't exist — describe the API, name the talk, and give today's alternative. On 27.1 or later: grep the SDK's `.swiftinterface` and headers for the name; the SDK's spelling and signature win over this file; if it's missing, check for a rename before calling it dropped.
 - **Never call iPhone Duo or these APIs fictional or hallucinated.** They come from Apple's own tech talks and are in the shipped SDK.
-- **Never invent parameters, types, or cases** the table doesn't give.
+- **Never invent parameters, types, or cases** beyond what the snippets and the SDK give.
 
 ## When to Use This Skill
 
@@ -19,7 +19,7 @@ Use when:
 - Interactive UI lands in the fold or under the inner camera
 - Choosing between reserved regions, arrangements, and the hinge
 - Showing content on another display, or opening multiple windows on iPhone
-- Code or a question names an API from the 27.1 table (`onHingeChange`, `ArrangementView`, `reservedRegions`, `axisBehavior`, …)
+- Code or a question names a 27.1 API (`onHingeChange`, `ArrangementView`, `reservedRegions`, `axisBehavior`, …)
 
 #### Related Skills
 - axiom-uikit (skills/uikit-modernization.md) — the resizing baseline Duo builds on: scene lifecycle, geometry, size classes
@@ -45,7 +45,7 @@ Use when:
 → Hinge: effects and interactions, never layout.
 
 #### 6. "Add .axisBehavior(.horizontalOnly) to my Select button"
-→ In the 27.1 SDK (table); 27.0 builds never get vertical bars — ship titles, images, and priorities now.
+→ Vertical Bars: the axis APIs are iOS 27.1; a build against 27.0 or earlier never gets vertical bars — ship titles, images, and priorities until you rebuild.
 
 ## Red Flags — Anti-Patterns to Prevent
 
@@ -77,6 +77,7 @@ Use when:
 - **Multitasking** A 50/50 split view places two apps side by side, each with its controls on its outer edge. Picture in Picture can pin to the top; the app below resizes vertically.
 - **Offset, don't center** Most content offsets away from the side controls — align to horizontal safe-area insets and it happens for you. Center on the full display only for non-scrolling, highly visual UI whose interactive elements the controls can't cover. A full-width background under inset scrolling content also works.
 - **Inner display** Don't stretch the iPhone layout. Use a split view, a two-column rearrangement when width allows, or a tab sidebar for information-dense apps. Keep the hierarchy identical inside and out — people open and close the device mid-task.
+- **Games** Lock to portrait or landscape, but fill the screen in every pose; change the aspect ratio rather than letterboxing or pillarboxing (HIG).
 
 ## Behavior by the SDK You Build Against
 
@@ -166,7 +167,7 @@ UIApplication.shared.activateSceneSession(for: request) { error in
 }
 ```
 
-The Swift name is `UIWindowScene.ActivationAction`; the ObjC name `UIWindowSceneActivationAction` doesn't compile in Swift. The talks don't say whether `supportsMultipleWindows` updates live as the device closes — check on the Duo simulator for your Xcode build, and fall back to both size classes if it can't be instantiated.
+The Swift name is `UIWindowScene.ActivationAction`; the ObjC name `UIWindowSceneActivationAction` doesn't compile in Swift. The talks don't say whether `supportsMultipleWindows` updates live as the device closes — check on a Duo simulator (Tooling and Testing), and fall back to both size classes when in doubt.
 
 #### Match the new corners and support landscape
 
@@ -183,7 +184,8 @@ Built against the 27.1 SDK, navigation, toolbar, and tab bar items share one ver
 #### Which bars go vertical
 
 - Only a split view's detail column; other columns keep horizontal bars. Inspectors get no vertical bar.
-- Sheets: on the outer display a sheet's toolbar goes vertical; on the inner display sheets center with horizontal bars. A sheet placed on the right gets a vertical bar; one on the left doesn't. The placement APIs — `.presentationPlacement(.trailing)` and `sheetPresentationController?.preferredPlacement = .trailing`, both iOS 27; the UIKit one is ignored when `sourceView` is set — take leading/trailing, but the rule is physical right/left.
+- Sheets: on the outer display a sheet's toolbar goes vertical by default (disable it with the off switch below); on the inner display sheets center with horizontal bars. A sheet placed on the right gets a vertical bar; one on the left doesn't. The placement APIs — `.presentationPlacement(.trailing)` and `sheetPresentationController?.preferredPlacement = .trailing`, both iOS 27; the UIKit one is ignored when `sourceView` is set — take leading/trailing, but the rule is physical right/left.
+- Controls that belong to a content area stay with it, not on the side — Mail keeps the list's controls above the leading pane (HIG).
 - The bar stays on the hardware side under right-to-left languages; content adapts around it.
 - Keyboard accessory bars stay on the keyboard.
 - The inner display in portrait keeps horizontal bars.
@@ -216,28 +218,87 @@ inboxItem.badge = .count(7)            // iOS 26: a symbol-only item that still 
 - Give every item a title and an image — a SwiftUI `Label`, or a `UIBarButtonItem` with both. Bars show the icon; the overflow menu shows title and icon.
 - Items with an icon go vertical; text-only items stay horizontal. An item that switches between a symbol and text (a custom Select/Done) belongs on the horizontal axis — the system edit button already stays there.
 - Replace inline counts with a badge. Text that carries real information, like a cart total, stays in a horizontal bar.
-- Custom views, complex views, and wide controls like segmented controls stay horizontal unless opted in (table).
-- Vertical bars have a fixed width and flexible height; once a custom view opts in, it must fit that width or adapt its layout. Flexible spacers collapse to zero vertically; fixed spacers keep their minimum. Don't add extra spacing.
+- Custom views, complex views, and wide controls like segmented controls stay horizontal unless opted in (Axis, edge, compression, and the off switch).
+- Vertical bars have a fixed width and flexible height; once a custom view opts in, it must fit that width or adapt its layout. Flexible spacers collapse to zero vertically; fixed spacers keep their minimum. Don't add extra spacing — group items with `ToolbarItemGroup` / `UIBarButtonItemGroup`, which supply it and adapt it.
 - Vertical bars have no scroll-edge effect but gain a background under Reduce Transparency — keep custom content legible either way.
+- A hero or background image extends under the vertical bar with `.backgroundExtensionEffect()` (SwiftUI) or `UIBackgroundExtensionView` (UIKit).
 
 #### Plan for overflow
 
-The outer display in landscape overflows most. Decide per view whether the toolbar or the tab bar compresses first — navigation-focused views keep their tabs, task-focused views keep their actions. By default the toolbar compresses first and the tabs stay; a task-focused view opts into keeping its actions (see the table below). Merge your own overflow menu into the system one, keep the ellipsis for overflow only, and rank items with `visibilityPriority`: frequent actions and badged status items should collapse last. By default items overflow from the bottom up. A non-nil `additionalOverflowItems` always shows the overflow button. The keyboard and Picture in Picture in open portrait also shrink the bar.
+The outer display in landscape overflows most. Decide per view whether the toolbar or the tab bar compresses first — navigation-focused views keep their tabs, task-focused views keep their actions. By default the toolbar compresses first and the tabs stay; a task-focused view opts into keeping its actions (Axis, edge, compression, and the off switch). Merge your own overflow menu into the system one, keep the ellipsis for overflow only, and rank items with `visibilityPriority`: frequent actions and badged status items should collapse last. By default items overflow from the bottom up. A non-nil `additionalOverflowItems` always shows the overflow button. The keyboard and Picture in Picture in open portrait also shrink the bar.
 
 #### When to turn vertical bars off
 
 A single-page, bottom-heavy layout like a calculator, or a sheet whose only item is Close, may work better with horizontal bars.
 
-Axis overrides, the vertical-edge query, the compression preference, and the switch that turns vertical bars off are in the 27.1 SDK — see the table below.
+#### Axis, edge, compression, and the off switch
+
+The inferred axis is usually right — a title-only item stays horizontal, an item with an image goes vertical. Override it per item when a custom view, a wide control, or a symbol↔text toggle needs a specific axis. All of these are iOS 27.1; below that, items keep whatever axis the system infers, and the knobs don't exist. A build against the 27.0 SDK or earlier never sees a vertical bar at all.
+
+```swift
+// SwiftUI — iOS 27.1: per-item axis override, compression order, and the edge read
+@available(iOS 27.1, *)
+struct BarControls: View {
+    @Environment(\.toolbarVerticalEdge) private var edge: HorizontalEdge?
+
+    var body: some View {
+        NavigationStack {
+            SummaryView()
+                .toolbar {
+                    ToolbarItem {
+                        Button("Select", systemImage: "checkmark.circle") { }
+                    }
+                    .axisBehavior(.horizontalOnly)   // symbol↔text toggles and wide controls stay horizontal
+                    ToolbarItem {
+                        Button("Compass", systemImage: "location.north.circle") { }
+                    }
+                    .axisBehavior(.verticalPreferred)   // opt a custom view in (icon items infer this already)
+                }
+                .toolbarVerticalCompressionBehavior(.prefersToolbarItems)   // tab bar compresses first
+                .overlay(alignment: .bottom) {
+                    // .leading / .trailing while a bar is vertical; nil when items can't go vertical
+                    Text(edge == .trailing ? "Bar: trailing" : edge == .leading ? "Bar: leading" : "No vertical bar")
+                        .font(.caption)
+                }
+        }
+    }
+}
+
+@available(iOS 27.1, *)
+struct HorizontalBarsOnly: View {
+    var body: some View {
+        SummaryView()
+            .toolbarVerticalBehavior(.disabled)   // bottom-heavy screens keep horizontal bars
+    }
+}
+```
+
+```swift
+// UIKit — iOS 27.1: the item's axis, the compression preference, the off switch, the edge
+@available(iOS 27.1, *)
+final class PlayerViewController: UIViewController {
+    override var preferredVerticalBarBehavior: UIVerticalBarBehavior { .disabled }
+}
+
+@MainActor
+func tuneVerticalBar(_ item: UIBarButtonItem, _ navigationItem: UINavigationItem, _ traits: UITraitCollection) {
+    guard #available(iOS 27.1, *) else { return }   // below 27.1 the knobs don't exist; bars stay horizontal
+    item.axisBehavior = .verticalPreferred          // .horizontalOnly keeps a wide custom view put
+    navigationItem.verticalBarCompressionBehavior = .prefersBarItems   // keep the item; compress the tab bar
+    if traits.verticalBarEdge == .trailing {
+        // .leading / .trailing / .unspecified — inset the side that holds the bar
+    }
+}
+```
 
 ## The Fold and the Camera
 
 When iPhone Duo is partially folded, the display curves through the center and splits into regions. Two kinds of **reserved region** shape the usable space:
 
-- **Division** — the fold. Active only while partially folded; zero width when flat.
+- **Division** — the fold. Active only while partially folded; zero width when flat. The element is a `ReservedRegion` (SwiftUI) or `UIView.ReservedRegion` (UIKit); both expose `frame`, `margins`, and `isActive`.
 - **Occlusion** — the inner FaceTime camera. Active only while that camera runs.
 
-The outer display's camera is always present, and system bars already lay out around it.
+The outer display's camera is always present — it shares the corner with the Dynamic Island, which expands for Live Activities — and the system accounts for it, including when bars go to the side (HIG).
 
 #### Displacement rules
 
@@ -256,23 +317,126 @@ These change spacing and column count, not which region content lives in, so the
 
 - **Keep each item inside one region while folded.** Preserve the outer margins and widen the spacing around the fold (Apple's Fitness example, 111463 5:56).
 - **Consider an even column count.** Apple suggests preferring an even number of columns when a division region exists, active or not (111463 7:36). The middle gap lands on the fold only when the grid is centered on the display and the fold runs vertically through it, as in book pose; otherwise place the gap from the region's `frame`. `GridItem(.adaptive(minimum:))` picks its own count, which can be odd.
-- **Find the fold (27.1).** Read the division region's `frame`, passing `.includeInactive` for the column decision (SwiftUI; the table gives no UIKit spelling) — `regions.query` in the table below. Below 27.1, only system components know where the fold is: don't hard-code the display's midpoint or check the device model.
+- **Find the fold.** Read the division region's `frame`, passing `.includeInactive` for the column decision. Below 27.1 only system components know where the fold is: don't hard-code the display's midpoint or check the device model.
+
+```swift
+// SwiftUI — iOS 27.1: the fold's and the camera's regions, in view coordinates
+@available(iOS 27.1, *)
+func foldGap(proxy: GeometryProxy) -> CGFloat {
+    proxy.reservedRegions(kind: .division, options: .includeInactive)
+        .filter(\.isActive)
+        .map(\.frame.width)
+        .max() ?? 0
+}
+
+// UIKit — iOS 27.1
+@MainActor
+func cameraOcclusionRect(in view: UIView) -> CGRect? {
+    guard #available(iOS 27.1, *) else { return nil }
+    return view.reservedRegions(kind: .occlusion).first?.frame
+}
+```
 
 ## Arrangements
 
 An arrangement places a primary and a secondary view by rules — size classes, aspect ratio, and active fold regions. It sits between navigation containers and content containers.
 
 - **Split** — main and detail content where neither view may be obscured, like a player and its transcript. The default style; it splits along the longer axis unless restricted. If the split can't use the view's long axis (e.g. `.axes(.horizontal)` in a tall view), it shows a single view (the primary, in the talk's example) — keep the secondary reachable another way.
-- **Overlay** — a clear foreground and background, like controls over readable content. It layers one view over the other, and goes side by side when folded.
+- **Overlay** — a clear foreground and background, like controls over readable content. Closed or fully open, it layers the primary over the secondary; partially folded, the primary moves to the trailing (or bottom) region and the secondary to the leading (or top).
 - Follow existing patterns: an HStack or VStack split becomes a split arrangement; a ZStack overlay becomes an overlay arrangement.
 - Never nest a navigation container inside an arrangement, and never put an arrangement inside a `List` or `ScrollView`.
 - Put it inside the navigation container — the talks nest it in a `NavigationStack` and make the UIKit controller the navigation root. Use it for split-like layout without a split view's expand/collapse.
 
-The API is in the 27.1 SDK — see the table below.
+The API is iOS 27.1; below that, use `NavigationSplitView` (or nested stacks) for the same jobs — arrangements don't exist there.
+
+```swift
+// SwiftUI — iOS 27.1: split or overlay by rules
+@available(iOS 27.1, *)
+struct PlayerScreen: View {
+    var body: some View {
+        NavigationStack {
+            ArrangementView {
+                PlayerView()
+            } secondary: {
+                UpNextView()
+            }
+            .arrangementViewStyle(.split.axes(.horizontal))   // or .overlay
+        }
+    }
+}
+
+@available(iOS 27.1, *)
+struct PlayerView: View {
+    var body: some View { Text("Now playing") }
+}
+
+@available(iOS 27.1, *)
+struct UpNextView: View {
+    @Environment(\.overlayArrangementZIndex) private var zIndex: Int   // changes as the device folds
+    var body: some View { Text(zIndex > 0 ? "Collapsed" : "Expanded") }
+}
+```
+
+```swift
+// UIKit — iOS 27.1: the arrangement controller is the navigation root
+@available(iOS 27.1, *)
+@MainActor
+final class ArrangementHost {
+    let controller = UIArrangementViewController()
+
+    func place(player: UIViewController, upNext: UIViewController) {
+        controller.setViewController(player, for: .primary)
+        controller.setViewController(upNext, for: .secondary)
+        controller.updateArrangement(.split.axes(.horizontal))
+    }
+
+    func primaryZIndex() -> Int {
+        controller.state(for: .primary)?.zIndex ?? 0
+    }
+}
+```
 
 ## Hinge
 
-The hinge reports a status — closed, partially open, fully open — and a continuous angle. Use it for effects and interactions, like a pitch bend or a zoom that follows the fold, never for layout. A missing hinge means the device has none; reset hinge-driven state whenever the device isn't partially open. The API is in the 27.1 SDK — see the table below.
+The hinge reports a status — closed, partially open, fully open — and a continuous angle. Use it for effects and interactions, like a pitch bend or a zoom that follows the fold, never for layout. A missing hinge means the device has none; reset hinge-driven state whenever the device isn't partially open. The API is iOS 27.1; below that your app never sees hinge updates.
+
+```swift
+// SwiftUI — iOS 27.1
+@available(iOS 27.1, *)
+struct HingeDrivenView: View {
+    @State private var bend = Angle.zero
+
+    var body: some View {
+        Text("Pitch bend")
+            .rotationEffect(bend)
+            .onHingeChange { _, new in
+                if let hinge = new.hinge, hinge.status == .partiallyOpen {
+                    bend = hinge.angle
+                } else {
+                    bend = .zero   // no hinge, or not partially open: reset
+                }
+            }
+    }
+}
+```
+
+```swift
+// UIKit — iOS 27.1: the same state, delivered to an interaction
+@available(iOS 27.1, *)
+@MainActor
+final class HingeObserver {
+    private var interaction: UIHingeInteraction?
+
+    func attach(to view: UIView, onChange: @escaping (UIHinge.Status, CGFloat) -> Void) {
+        let interaction = UIHingeInteraction { _, update in
+            guard let hinge = update.hinge else { return }   // nil: this hierarchy provides no hinge
+            onChange(hinge.status, hinge.angle)              // angle is in radians
+        }
+        view.addInteraction(interaction)
+        self.interaction = interaction
+    }
+}
+```
 
 ## Scenes and Accessories
 
@@ -310,27 +474,63 @@ Register the accessory on the view whose visibility should gate it.
 
 #### The Duo camera accessory
 
-On iPhone Duo, a camera variant shows UI on the outer display — a teleprompter, or something to show the person being photographed — while your camera UI runs on the inner display. It's available only while the app is full screen on the inner display with an active camera session, and it arrives in 27.1 (table below). Camera direction and the new front cameras: axiom-media (skills/camera-capture.md, skills/camera-capture-ref.md).
+On iPhone Duo, a camera variant shows UI on the outer display — a teleprompter, or something to show the person being photographed — while your camera UI runs on the inner display. It's available only while the app is full screen on the inner display with an active camera session, and it's iOS 27.1 — below that the type doesn't exist, so ship without it. Camera direction and the new front cameras: axiom-media (skills/camera-capture.md, skills/camera-capture-ref.md).
 
-## iOS 27.1 SDK API
+```swift
+// SwiftUI — iOS 27.1: outer-display UI while an inner-display camera session runs
+@available(iOS 27.1, *)
+struct CameraScreen: View {
+    @State private var showsOuterUI = true
+    @State private var accessoryAvailable = false
 
-From Apple's tech talks 111461–111466. **Every name below is in the iOS 27.2 SDK; confirm each against the SDK you build with. Don't write a name the table doesn't give, and don't fill in parameters, types, or cases it omits.** Spellings follow the talks' code where the narration differs. Re-check each Xcode release.
+    var body: some View {
+        Text("Camera preview")
+            .sceneAccessory {
+                CameraCaptureAccessory(isEnabled: $showsOuterUI) {
+                    Text("Teleprompter")
+                }
+                .onAvailabilityChange { accessoryAvailable = $0 }
+            }
+    }
+}
+```
 
-| Key | SwiftUI | UIKit | Behavior | Talk |
-|---|---|---|---|---|
-| `bars.axis` | `.axisBehavior(.verticalPreferred)` / `.horizontalOnly` on a `ToolbarItem` | `UIBarButtonItem.axisBehavior` | Overrides the inferred axis; custom views stay horizontal unless `.verticalPreferred` | 111462 8:08 |
-| `bars.edge` | `@Environment(\.toolbarVerticalEdge)` | `traitCollection.verticalBarEdge` | Which edge holds the vertical bar; nil or unspecified when items can't go vertical | 111462 10:36 |
-| `bars.compression` | `.toolbarVerticalCompressionBehavior(.prefersToolbarItems)` (narration: "toolbarCompressionBehavior") | `navigationItem.verticalBarCompressionBehavior = .prefersBarItems` | Chooses whether toolbar items or the tab bar compress first. Default: toolbar compresses first. `.prefersToolbarItems` / `.prefersBarItems`: the tab bar compresses first | 111462 12:23 |
-| `bars.disable` | `.toolbarVerticalBehavior(.disabled)` | `override var preferredVerticalBarBehavior: UIVerticalBarBehavior` returning `.disabled` | Keeps horizontal bars | 111462 14:47 |
-| `regions.query` | `GeometryProxy.reservedRegions(kind: .division` or `.occlusion`, `options: .includeInactive)` | `UIView.reservedRegions(kind:)` | Returns regions with a `frame` — elements are `ReservedRegion` / `UIViewReservedRegion` (111461 7:37); active ones only unless `.includeInactive`; for custom bars and edge-to-edge UI (111461 8:27) | 111463 6:46 |
-| `arrangement.view` | `ArrangementView { primary } secondary: { … }` | `UIArrangementViewController` with `setViewController(_:for: .primary` / `.secondary)` | Two-view layout container | 111463 11:23 |
-| `arrangement.style` | `.arrangementViewStyle(.split)`, `.split.axes(.horizontal)`, `.overlay` | `updateArrangement(_:)` with a `UISplitArrangement`, e.g. `.split.axes(.horizontal)` | Picks split or overlay; restricts split axes | 111463 12:00 |
-| `arrangement.zindex` | `@Environment(\.overlayArrangementZIndex)` | `state(for: .primary)?.zIndex` | Overlay stacking order; changes as the device folds | 111463 14:07 |
-| `hinge` | `.onHingeChange { old, new in }` — `new.hinge?.status == .partiallyOpen`, `.angle` (an `Angle`) | `UIHingeInteraction` | Hinge status and live angle; nil hinge on devices without one | 111464 1:44 |
-| `accessory.camera` | `CameraCaptureAccessory { … }` or `CameraCaptureAccessory(isEnabled:) { … }`, with `.onAvailabilityChange`, inside `.sceneAccessory` | — | Outer-display UI during an inner-display camera session | 111464 5:43 |
+UIKit registers the same content on the capture view controller and holds the returned registration:
 
-- Xcode 27.1 Device Hub: an iPhone Duo simulator with open, close, rotate, and fold controls (111461 0:56). Confirm the device type instantiates on your Xcode — the type ships, but on 27.2 `simctl create` still rejects it against both installed iPhone runtimes (`Incompatible device`). `iPhone Fold` is a different product.
-- Xcode's app-modernization agent skill, renamed "App Resizability", now covers SwiftUI and iPhone Duo (111461 9:15).
+```swift
+// UIKit — iOS 27.1
+@available(iOS 27.1, *)
+@MainActor
+final class ScriptSceneDelegate: NSObject, UIWindowSceneDelegate {
+    func scene(_ scene: UIScene, willConnectTo session: UISceneSession,
+               options connectionOptions: UIScene.ConnectionOptions) {
+        // connectionOptions.sceneAccessoryUserInfo carries the object you pass as userInfo, when you pass one
+    }
+}
+
+@available(iOS 27.1, *)
+@MainActor
+final class CameraViewController: UIViewController {
+    private var registration: UISceneAccessoryRegistration?
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        let configuration = UISceneConfiguration()
+        configuration.delegateClass = ScriptSceneDelegate.self
+        registration = registerSceneAccessory(
+            .cameraCapture(sceneConfiguration: configuration)
+        )
+    }
+}
+```
+
+Availability (`isAvailable`) and your on/off switch (`isEnabled`) are separate: the system decides when it can present, you decide whether to offer. Content appears only while the app is foreground, capturing, and on the inner display; it yields to the top-most registration of its kind, and goes away when capture stops, the app backgrounds, or the device closes — keep essential controls on the inner display and treat the accessory as an enhancement. Test on hardware; Simulator has no camera. Apple article: "Registering a camera capture accessory on iPhone Duo".
+
+## Tooling and Testing
+
+- **Device Hub** — Xcode 27.1's Device Hub drives an iPhone Duo simulator with open, close, rotate, and fold controls (111461 0:56); Apple's overview notes the Duo simulator in Device Hub requires Xcode 27.1. The device type creates against the **iOS 27.1 runtime**; the 27.0 runtime rejects it (`Incompatible device`). `iPhone Fold` is a different product.
+- **Simulator gaps** — per the Xcode 27.1 beta release notes, StandBy is unavailable in the iPhone Duo Simulator runtime, and running and debugging most app extensions is unavailable there.
+- **App Resizability** — Xcode's app-modernization agent skill, renamed "App Resizability", now covers SwiftUI and iPhone Duo (111461 9:15). See axiom-uikit (skills/uikit-modernization.md).
 
 ## Pressure Scenarios
 
@@ -338,7 +538,7 @@ From Apple's tech talks 111461–111466. **Every name below is in the iOS 27.2 S
 A model check covers one device and breaks in Split View and iPhone Mirroring. Size classes and per-side safe areas take the same time and cover every pose. Push back: "Size classes handle Duo and every future device; a model check handles one."
 
 #### "That API doesn't exist — drop the Duo section"
-The APIs come from Apple's September 2026 tech talks and are in the iOS 27.1 SDK and later. Keep the guidance, verify each name against the installed SDK, and ship today's alternatives where the SDK you build with is older.
+The APIs come from Apple's September 2026 tech talks and shipped in the iOS 27.1 SDK. Keep the guidance, verify each name against the installed SDK, and where the SDK you build with is older, ship today's alternatives and say what the 27.1 rebuild brings (the bar behavior is link-time).
 
 #### "Just hide the controls when it's folded"
 Hiding ties functionality to a pose. Move the controls to the region that suits their purpose; system components already do this.
@@ -354,12 +554,12 @@ Hiding ties functionality to a pose. Move the controls to the region that suits 
 - ☑ New-window affordances are gated; scene-request errors are handled
 - ☑ Interactive UI stays out of the fold through system components or displacement — never by hiding
 - ☑ Tested closed, open in both orientations, partially folded, and in both halves of Split View
-- ☑ No API from the table is written without checking the installed SDK's `.swiftinterface`
+- ☑ 27.1 APIs carry `@available(iOS 27.1, *)`; the app still compiles against the older SDK you support
 
 ## Resources
 
 **Tech Talks**: 111461, 111462, 111463, 111464, 111465, 111466
 
-**Docs**: /swiftui/view/defaulttabbarplacement(_:), /swiftui/view/sceneaccessory(content:), /swiftui/externalnoninteractiveaccessory, /swiftui/environmentvalues/supportsmultiplewindows, /uikit/uiwindowscene/activationaction, /uikit/uiapplication/activatescenesession(for:errorhandler:), /uikit/uinavigationitem/pinnedtrailinggroup
+**Docs**: /swiftui/view/defaulttabbarplacement(_:), /swiftui/view/sceneaccessory(content:), /swiftui/externalnoninteractiveaccessory, /swiftui/environmentvalues/supportsmultiplewindows, /uikit/uiwindowscene/activationaction, /uikit/uiapplication/activatescenesession(for:errorhandler:), /uikit/uinavigationitem/pinnedtrailinggroup, /technologyoverviews/preparing-your-app-for-iphone-duo, /design/human-interface-guidelines/designing-for-iphone-duo
 
 **Skills**: axiom-uikit (skills/uikit-modernization.md), skills/layout.md, skills/toolbars.md, skills/presentations.md, axiom-media (skills/camera-capture.md, skills/camera-capture-ref.md)

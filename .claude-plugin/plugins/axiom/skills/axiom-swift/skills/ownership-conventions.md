@@ -584,11 +584,11 @@ where S: ~Copyable & ~Escapable, S.Element == Int, S.Failure == Never {
 
 Drop the `S.Failure == Never` constraint and the loop must be written `for try x in s` in a `throws` function.
 
-### Announced for 6.4, absent from Xcode 27.0
+### Announced for 6.4, absent from Xcode 27.0 and 27.1
 
-Two stdlib features announced at WWDC 2026-262 are not in Xcode 27.0 (swiftlang-6.4.0.34.1, compile-verified):
+Two stdlib features announced at WWDC 2026-262 are not in Xcode 27.0 or 27.1 (swiftlang-6.4.0.34.1; compile-verified on both):
 
-| Feature | State in 27.0 |
+| Feature | State in 27.0 / 27.1 |
 |---------|---------------|
 | `Dictionary.mapKeyedValues` | Absent |
 | `FilePath` as a stdlib type | Still requires `import System` |

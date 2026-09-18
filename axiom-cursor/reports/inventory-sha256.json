@@ -358,8 +358,8 @@
     },
     {
       "path": "scripts/user-prompt-submit.py",
-      "sha256": "fdd123c20e276c795207bff863de92f292c7b930eb8d0922d3ddf35fcea077b6",
-      "bytes": 46842
+      "sha256": "66f362f127de2227a0508373f3c939a0ba1ae31820056fee4ea68e37f9764785",
+      "bytes": 46778
     },
     {
       "path": "skills/axiom-accessibility/SKILL.md",
@@ -1153,13 +1153,13 @@
     },
     {
       "path": "skills/axiom-media/skills/camera-capture-ref.md",
-      "sha256": "66b5b1bb25bd397a5788eb74d04e869771f40f52cc9220b4215ee1eb0bbc579e",
-      "bytes": 49541
+      "sha256": "cc3ab2e7caae271e4d98d500cd9ae2955c2c3f166f752a27724f46c30af23bdf",
+      "bytes": 51263
     },
     {
       "path": "skills/axiom-media/skills/camera-capture.md",
-      "sha256": "9697bf412d9ff407f6614ff80464068522ab38d46aceffbcf386806553c55a41",
-      "bytes": 40093
+      "sha256": "cf4bc39014982d8d797175e66d6d01a47441c4f448dd897dba14ba74b34f15d3",
+      "bytes": 40144
     },
     {
       "path": "skills/axiom-media/skills/carplay-hig.md",
@@ -1548,8 +1548,8 @@
     },
     {
       "path": "skills/axiom-swift/skills/ownership-conventions.md",
-      "sha256": "5690650c363d0dac16c0586ad299f1981b3a08cc986b29165f75def944a0b950",
-      "bytes": 22857
+      "sha256": "47f18e9227f7571360ffa7a4b1b638d23cca4f8472029b042584ea117130b906",
+      "bytes": 22889
     },
     {
       "path": "skills/axiom-swift/skills/swift-modern.md",
@@ -1613,8 +1613,8 @@
     },
     {
       "path": "skills/axiom-swiftui/skills/iphone-duo.md",
-      "sha256": "8b461f5aaf2d626f297defa8569fb2f0e6054aed24422e79a76e051b856c9975",
-      "bytes": 28447
+      "sha256": "2cbef947cea1d846f494880701cf5a8c0a581f5f1974510b20bab1e20c82d938",
+      "bytes": 34886
     },
     {
       "path": "skills/axiom-swiftui/skills/layout-ref.md",
@@ -1783,8 +1783,8 @@
     },
     {
       "path": "skills/axiom-uikit/skills/uikit-modernization.md",
-      "sha256": "c060f73dc5a4cb6e4cc627fe85226a25a26d4451614b9b2bf8a8b1248c5f1711",
-      "bytes": 26344
+      "sha256": "a74552e777e484862d59ef5774551788c353e8c8503ac1da0c73a286847a5f12",
+      "bytes": 26333
     },
     {
       "path": "skills/axiom-vision/SKILL.md",
@@ -1879,7 +1879,7 @@
   ],
   "totals": {
     "files": 375,
-    "bytes": 7574162
+    "bytes": 7582331
   },
   "excludedMirrors": 30,
   "classes": {

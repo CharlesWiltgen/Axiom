@@ -281,7 +281,7 @@ Menus gain an automatic "Ask Siri" affordance, and UIKit adds a View Annotations
 
 ## Let Xcode do the mechanical migration
 
-Xcode 27 ships an app-modernization agent skill that rewrites `UIScreen.main` calls → `traitCollection`/scene bounds, orientation checks → size classes, and can migrate to the scene life cycle. Export the skill for other tools with `xcrun agent skills export`. See `axiom-xcode-mcp` for the agentic-Xcode workflow. Xcode 27.1 extends this skill to SwiftUI and iPhone Duo under a new name — see axiom-swiftui (skills/iphone-duo.md, Announced for the iOS 27.1 SDK).
+Xcode 27 ships an app-modernization agent skill that rewrites `UIScreen.main` calls → `traitCollection`/scene bounds, orientation checks → size classes, and can migrate to the scene life cycle. Export the skill for other tools with `xcrun agent skills export`. See `axiom-xcode-mcp` for the agentic-Xcode workflow. Xcode 27.1 extends this skill to SwiftUI and iPhone Duo under a new name — see axiom-swiftui (skills/iphone-duo.md, Tooling and Testing).
 
 ## Resources
 

@@ -131,9 +131,9 @@ if re.search(r'swiftui|@state\b|@binding\b|@observable\b|@environment\b|navigati
     matches.append("axiom-swiftui")
 
 # UI — iPhone Duo (hub: axiom-swiftui skills/iphone-duo.md). API tokens are Apple-only
-# identifiers, so they stay UNGATED. Several are announced for the iOS 27.1 SDK and absent
-# from released SDKs; they still route, because the hub is where Claude learns not to write
-# them as compiling code. No bare "duo" token — Duo two-factor prompts are not iPhone Duo.
+# identifiers, so they stay UNGATED. They shipped in the iOS 27.1 SDK; they still route,
+# because the hub is where the API surface is taught. No bare "duo" token — Duo two-factor
+# prompts are not iPhone Duo.
 if "axiom-swiftui" not in matches and re.search(r'iphone[\s-]*duo|onhingechange|uihingeinteraction|uiviewreservedregion|uiarrangementviewcontroller|axisbehavior|toolbarverticaledge|verticalbaredge|toolbarverticalbehavior|preferredverticalbarbehavior|verticalbarcompression\w*|toolbarverticalcompression\w*|cameracaptureaccessory|sceneaccessory|externalnoninteractiveaccessory|defaulttabbarplacement', prompt_lower):
     matches.append("axiom-swiftui")
 
