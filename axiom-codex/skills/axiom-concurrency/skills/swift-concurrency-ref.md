@@ -1331,11 +1331,11 @@ func fastBridge() async -> Data {
 
 **Use checked continuations during development, switch to unsafe only after thorough testing and when profiling shows the check is a bottleneck.**
 
-### Single-Resume `Continuation` (OS27 — limited in 27.0)
+### Single-Resume `Continuation` (OS27 — limited through 27.1)
 
 Swift 6.4 adds `withContinuation`, vending a `~Copyable` `Continuation` whose `resume` methods are `consuming` — so a **double-resume is a build error** (`'c' consumed more than once`) rather than a runtime crash. It is the statically-checked successor to `withCheckedContinuation`.
 
-**Not a drop-in replacement in 27.0.** Because the continuation is `~Copyable`, resuming it from an `@escaping` callback does not compile — `noncopyable 'c' cannot be consumed when captured by an escaping closure or borrowed by a non-Escapable type` — which is exactly the delegate / completion-handler bridging that `withCheckedContinuation` is for. Only synchronous resume inside the `withContinuation` body works today; never-resuming is **not** diagnosed.
+**Not a drop-in replacement in 27.0 or 27.1.** Because the continuation is `~Copyable`, resuming it from an `@escaping` callback does not compile — `noncopyable 'c' cannot be consumed when captured by an escaping closure or borrowed by a non-Escapable type` — which is exactly the delegate / completion-handler bridging that `withCheckedContinuation` is for. Only synchronous resume inside the `withContinuation` body works today; never-resuming is **not** diagnosed.
 
 ```swift
 @available(anyAppleOS 27, *)
@@ -1347,7 +1347,7 @@ func value() async -> Int {
 }
 ```
 
-Keep `withCheckedContinuation` for real callback bridging: Xcode 27.0 (swiftlang-6.4.0.34.1) ships with the escaping-closure limitation (verified at SIL). On a newer toolchain, compile the commented escaping line before relying on it.
+Keep `withCheckedContinuation` for real callback bridging: Xcode 27.0 and 27.1 (swiftlang-6.4.0.34.1) ship with the escaping-closure limitation (re-probed at SIL on both builds). On a newer toolchain, compile the commented escaping line before relying on it.
 
 ### Continuation Gotcha Table
 

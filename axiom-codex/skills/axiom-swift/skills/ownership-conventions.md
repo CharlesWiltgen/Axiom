@@ -542,7 +542,7 @@ func buildIDs() {
 func consumeIDs(_ x: consuming UniqueArray<Int>) { _ = x.count }
 ```
 
-`Ref`/`MutableRef` are the single-value analog of `Span`/`MutableSpan`: non-escapable, so the borrow can't outlive its source. On the concurrency side, `withTaskCancellationShield` is usable now and the single-resume `Continuation` is present but limited in 27.0 — see `swift-concurrency-ref`.
+`Ref`/`MutableRef` are the single-value analog of `Span`/`MutableSpan`: non-escapable, so the borrow can't outlive its source. On the concurrency side, `withTaskCancellationShield` is usable now and the single-resume `Continuation` is present but limited through 27.1 — see `swift-concurrency-ref`.
 
 Paren-free optional existentials and opaque types now compile under Swift 6.4 — `var overlay: any Drawable?` and `some P?` no longer have to be written `(any Drawable)?`.
 

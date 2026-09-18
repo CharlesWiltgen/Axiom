@@ -185,8 +185,8 @@ For every grep match, use Read to verify the surrounding context before reportin
 
 **Pattern**: Scene-activation calls that can't report failure
 **Search**: `requestSceneSessionActivation`, `activateSceneSession\(for:` — Read the `errorHandler` argument
-**Issue**: `requestSceneSessionActivation` is headed for deprecation, and a nil or empty error handler hides failures. iPhone Duo's outer display can't create windows, so requests there fail
-**Fix**: `UIApplication.shared.activateSceneSession(for: request) { error in … }` (iOS 17) with a real fallback; in menus, `UIWindowScene.ActivationAction`, which hides itself when new windows aren't available
+**Issue**: `requestSceneSessionActivation` is headed for deprecation, and a nil or empty error handler hides failures. iPhone Duo's outer display can't create windows, so requests there fail — and `supportsMultipleWindows` is `true` on both displays once the scene manifest opts in, so it can't tell you which display you're on (measured on the 27.1 Duo simulator)
+**Fix**: `UIApplication.shared.activateSceneSession(for: request) { error in … }` (iOS 17) with a real fallback; in menus, `UIWindowScene.ActivationAction`, which hides itself when new windows aren't available — preferred over gating on `supportsMultipleWindows` alone
 
 ## Phase 3: Reason About Resize Completeness
 

@@ -118,8 +118,8 @@
     },
     {
       "path": "agents/resize-auditor.md",
-      "sha256": "93d21ed0d6ba4a66d2f4b27d7d3fcc7a6bd538f5b3e06e54f459c68f8cfe8d12",
-      "bytes": 21947
+      "sha256": "9bd7fd6ed7cb29f281b0504d56373703f41c50d2c18415adf8f2b133c388acd2",
+      "bytes": 22184
     },
     {
       "path": "agents/screenshot-validator.md",
@@ -533,8 +533,8 @@
     },
     {
       "path": "skills/axiom-concurrency/skills/swift-concurrency-ref.md",
-      "sha256": "31bfd5aa7b7805b646360d9b4c28bc5ab43ad698dbbb131d5dc5f9e0108735e8",
-      "bytes": 56183
+      "sha256": "d7b09ca687c5df20bbd509b72a8a908598cac3f40a2f3a95900adf7f6f39ace0",
+      "bytes": 56220
     },
     {
       "path": "skills/axiom-concurrency/skills/swift-concurrency.md",
@@ -1398,8 +1398,8 @@
     },
     {
       "path": "skills/axiom-performance/skills/swift-performance.md",
-      "sha256": "d29a0a9159db4965e86f78a1413207ea31e8ef4ff356c88c9accfd4c81c56552",
-      "bytes": 35885
+      "sha256": "8a7b3030e30be7b9e7a055b185a0f435d4d420208f4e136f7936ac27b8cd5957",
+      "bytes": 36572
     },
     {
       "path": "skills/axiom-performance/skills/trace-comparison.md",
@@ -1548,8 +1548,8 @@
     },
     {
       "path": "skills/axiom-swift/skills/ownership-conventions.md",
-      "sha256": "47f18e9227f7571360ffa7a4b1b638d23cca4f8472029b042584ea117130b906",
-      "bytes": 22889
+      "sha256": "1184a5210228a2fbeb69a106cc7d4da3a1b65db741fbeaccd17545f2e7381000",
+      "bytes": 22894
     },
     {
       "path": "skills/axiom-swift/skills/swift-modern.md",
@@ -1879,7 +1879,7 @@
   ],
   "totals": {
     "files": 375,
-    "bytes": 7583256
+    "bytes": 7584222
   },
   "excludedMirrors": 30,
   "classes": {
