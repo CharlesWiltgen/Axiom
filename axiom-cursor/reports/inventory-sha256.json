@@ -678,8 +678,8 @@
     },
     {
       "path": "skills/axiom-design/skills/app-composition.md",
-      "sha256": "f02dedd491cb0fd6d8c12cc198a2ec18ab357e331e4ac6b8da0a5bbe7d0033e5",
-      "bytes": 47055
+      "sha256": "34f8a00e3b963dcb57571b27a13db8dc37c35ef5925bcc3a706f955dd4528406",
+      "bytes": 47239
     },
     {
       "path": "skills/axiom-design/skills/hig-ref.md",
@@ -1879,7 +1879,7 @@
   ],
   "totals": {
     "files": 375,
-    "bytes": 7583072
+    "bytes": 7583256
   },
   "excludedMirrors": 30,
   "classes": {
