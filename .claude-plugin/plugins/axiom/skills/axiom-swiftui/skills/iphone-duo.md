@@ -132,7 +132,7 @@ UIKit: `tabBarController.sidebar.preferredPlacement = .sidebar`. The SwiftUI mod
 
 #### Gate new-window affordances
 
-iPhone Duo is the first iPhone with multiple windows of one app, and only its inner display can create them. Both paths need `UIApplicationSupportsMultipleScenes` set to `YES` in the scene manifest (axiom-uikit (skills/uikit-modernization.md)), and `openWindow(id:value:)` needs a matching `WindowGroup(id:for:)` (axiom-design (skills/app-composition.md)). Apple's own doc comment for `supportsMultipleWindows` limits `true` to macOS (any SwiftUI-lifecycle app) and iPadOS (a SwiftUI-lifecycle app with that manifest key set) — every other platform and configuration reports `false`. On today's SDK that means the value is `false` on iPhone; the talks don't say how Duo's inner display changes it.
+iPhone Duo is the first iPhone with multiple windows of one app, and only its inner display can create them. Both paths need `UIApplicationSupportsMultipleScenes` set to `YES` in the scene manifest (axiom-uikit (skills/uikit-modernization.md)), and `openWindow(id:value:)` needs a matching `WindowGroup(id:for:)` (axiom-design (skills/app-composition.md)). Apple's doc comment for `supportsMultipleWindows` limits `true` to macOS and iPadOS with that key — but on iPhone Duo the key is what decides: measured on the 27.1 Duo simulator, the value is `true` on the closed outer display and the open inner display alike, and it does not change as the device opens or closes; without the key it is `false`. So it reports that the manifest is configured, not which display can create windows — rely on the system's own control (`UIWindowScene.ActivationAction`, which hides itself where new windows aren't available) rather than gating on this value alone.
 
 ```swift
 struct ItemRow: View {
@@ -144,6 +144,7 @@ struct ItemRow: View {
         Text(item.title)
             .contextMenu {
                 if supportsMultipleWindows {
+                    // true on both Duo displays; the request still fails on the outer one
                     Button("Open in New Window") { openWindow(id: "detail", value: item.id) }
                 }
             }
@@ -167,7 +168,7 @@ UIApplication.shared.activateSceneSession(for: request) { error in
 }
 ```
 
-The Swift name is `UIWindowScene.ActivationAction`; the ObjC name `UIWindowSceneActivationAction` doesn't compile in Swift. The talks don't say whether `supportsMultipleWindows` updates live as the device closes — check on a Duo simulator (Tooling and Testing), and fall back to both size classes when in doubt.
+The Swift name is `UIWindowScene.ActivationAction`; the ObjC name `UIWindowSceneActivationAction` doesn't compile in Swift. The value is pose-independent (measured on the 27.1 Duo simulator), so the affordance doesn't need rebuilding as the device folds — and where new windows aren't available, `UIWindowScene.ActivationAction` hides itself.
 
 #### Match the new corners and support landscape
 

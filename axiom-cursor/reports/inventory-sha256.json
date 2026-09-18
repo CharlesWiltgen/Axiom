@@ -1613,8 +1613,8 @@
     },
     {
       "path": "skills/axiom-swiftui/skills/iphone-duo.md",
-      "sha256": "2cbef947cea1d846f494880701cf5a8c0a581f5f1974510b20bab1e20c82d938",
-      "bytes": 34886
+      "sha256": "b314f384344fcda6e5960bdb85b52e58cd113c6bd8e10d05100a88aebc7ed306",
+      "bytes": 35264
     },
     {
       "path": "skills/axiom-swiftui/skills/layout-ref.md",
@@ -1879,7 +1879,7 @@
   ],
   "totals": {
     "files": 375,
-    "bytes": 7582331
+    "bytes": 7582709
   },
   "excludedMirrors": 30,
   "classes": {
