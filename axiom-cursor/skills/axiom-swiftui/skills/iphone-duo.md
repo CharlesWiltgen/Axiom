@@ -74,7 +74,7 @@ Use when:
 - **Poses** Closed; open in portrait or landscape; partially folded like a book; seated like a laptop (tabletop) with the inner display facing you; standing on its edges.
 - **Still an iPhone app** Adapt to size classes and scene bounds, never to the device.
 - **Controls on the side** Built against the 27.1 SDK, in every pose except inner-display portrait, bars lay out vertically along the side, sharing that edge with the status bar, the Dynamic Island, and Live Activities. When space runs out, items collapse into the overflow menu.
-- **Multitasking** A 50/50 split view places two apps side by side, each with its controls on its outer edge (the left half's `toolbarVerticalEdge` reads `.leading`) and the compact-width layout in each half. Picture in Picture can pin to the top; the app below resizes vertically.
+- **Multitasking** A 50/50 split view places two apps side by side, each with its controls on its outer edge (`toolbarVerticalEdge` reads `.leading` left, `.trailing` right) and the compact-width layout in each half. Picture in Picture can pin to the top; the app below resizes vertically.
 - **Offset, don't center** Most content offsets away from the side controls — align to horizontal safe-area insets and it happens for you. Center on the full display only for non-scrolling, highly visual UI whose interactive elements the controls can't cover. A full-width background under inset scrolling content also works.
 - **Inner display** Don't stretch the iPhone layout. Use a split view, a two-column rearrangement when width allows, or a tab sidebar for information-dense apps. Keep the hierarchy identical inside and out — people open and close the device mid-task.
 - **Games** Lock to portrait or landscape, but fill the screen in every pose; change the aspect ratio rather than letterboxing or pillarboxing (HIG).
@@ -176,7 +176,7 @@ The Swift name is `UIWindowScene.ActivationAction`; the ObjC name `UIWindowScene
 
 #### Test both halves of Split View
 
-Drag the app to the left half, then the right. The vertical bar follows the app's outer edge, so the larger safe-area inset switches sides — `toolbarVerticalEdge` reads `.leading` in the left half (measured on the 27.1 Duo simulator). A half reports **compact width / regular height**, the same width class as the outer display, so the compact layout is what people see in Split View; read it from the environment rather than keying a wide layout to the display.
+Drag the app to the left half, then the right. The vertical bar follows the app's outer edge, so the larger safe-area inset switches sides — `toolbarVerticalEdge` reads `.leading` in the left half and `.trailing` in the right (measured on the 27.1 Duo simulator). A half reports **compact width / regular height**, the same width class as the outer display, so the compact layout is what people see in Split View; read it from the environment rather than keying a wide layout to the display.
 
 ## Vertical Bars
 
