@@ -295,9 +295,9 @@ UIKit's `readableContentGuide` does all of this automatically, including the Dyn
 | Outer, portrait | `.compact` | `.regular` |
 | Outer, landscape | `.compact` | `.compact` |
 | Inner, full screen | `.regular` | `.regular` |
-| Inner, one half of Split View | not stated | not stated |
+| Inner, one half of Split View | `.compact` | `.regular` |
 
-Opening the device moves the app to the inner display mid-session: horizontal becomes `.regular`, and vertical does too if the outer display was in landscape — adapt, and keep state. Apple's talks give no size classes for a Split View half, so read them from the environment rather than inferring `.regular` from the display. Full guidance: skills/iphone-duo.md.
+Opening the device moves the app to the inner display mid-session: horizontal becomes `.regular`, and vertical does too if the outer display was in landscape — adapt, and keep state. Apple's talks left the Split View half unstated; measured on the 27.1 Duo simulator it reports `.compact` width, like the outer display — read it from the environment rather than inferring `.regular` from the display. Full guidance: skills/iphone-duo.md.
 
 ---
 

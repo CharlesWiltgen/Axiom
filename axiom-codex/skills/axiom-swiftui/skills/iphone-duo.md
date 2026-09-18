@@ -59,7 +59,7 @@ Use when:
 | "I'll hide the controls when it's folded" | Displace, never hide: move, resize, or reorganize so every function stays reachable in every pose. |
 | "I'll read the hinge angle to size my panes" | The hinge drives effects and interactions. Layout uses arrangements and reserved regions. |
 | "Each pose gets its own layout" | Design for the two horizontal size classes — compact outside, regular inside. An optional tabletop layout must keep every control and the same hierarchy. |
-| "It's on the inner display, so it's wide" | A Split View half is half the inner display, and Apple hasn't said which size class it reports. Read the size class from the environment; never key a wide layout to the display. |
+| "It's on the inner display, so it's wide" | A Split View half reports compact width, like the outer display (measured on the 27.1 Duo simulator). Read the size class from the environment; never key a wide layout to the display. |
 | "The New Window button can always show" | The outer display can't create windows. Gate the affordance. |
 
 ## The Device
@@ -69,12 +69,12 @@ Use when:
 | Outer, portrait | `.compact` | `.regular` |
 | Outer, landscape | `.compact` | `.compact` |
 | Inner, full screen | `.regular` | `.regular` |
-| Inner, one half of Split View | not stated | not stated |
+| Inner, one half of Split View | `.compact` | `.regular` |
 
 - **Poses** Closed; open in portrait or landscape; partially folded like a book; seated like a laptop (tabletop) with the inner display facing you; standing on its edges.
 - **Still an iPhone app** Adapt to size classes and scene bounds, never to the device.
 - **Controls on the side** Built against the 27.1 SDK, in every pose except inner-display portrait, bars lay out vertically along the side, sharing that edge with the status bar, the Dynamic Island, and Live Activities. When space runs out, items collapse into the overflow menu.
-- **Multitasking** A 50/50 split view places two apps side by side, each with its controls on its outer edge. Picture in Picture can pin to the top; the app below resizes vertically.
+- **Multitasking** A 50/50 split view places two apps side by side, each with its controls on its outer edge (the left half's `toolbarVerticalEdge` reads `.leading`) and the compact-width layout in each half. Picture in Picture can pin to the top; the app below resizes vertically.
 - **Offset, don't center** Most content offsets away from the side controls — align to horizontal safe-area insets and it happens for you. Center on the full display only for non-scrolling, highly visual UI whose interactive elements the controls can't cover. A full-width background under inset scrolling content also works.
 - **Inner display** Don't stretch the iPhone layout. Use a split view, a two-column rearrangement when width allows, or a tab sidebar for information-dense apps. Keep the hierarchy identical inside and out — people open and close the device mid-task.
 - **Games** Lock to portrait or landscape, but fill the screen in every pose; change the aspect ratio rather than letterboxing or pillarboxing (HIG).
@@ -176,7 +176,7 @@ The Swift name is `UIWindowScene.ActivationAction`; the ObjC name `UIWindowScene
 
 #### Test both halves of Split View
 
-Drag the app to the left half, then the right. The vertical bar follows the app's outer edge, so the larger safe-area inset switches sides. The talks don't say which horizontal size class each half reports: check on the Duo simulator for your Xcode build, and make the half's layout work at both size classes either way.
+Drag the app to the left half, then the right. The vertical bar follows the app's outer edge, so the larger safe-area inset switches sides — `toolbarVerticalEdge` reads `.leading` in the left half (measured on the 27.1 Duo simulator). A half reports **compact width / regular height**, the same width class as the outer display, so the compact layout is what people see in Split View; read it from the environment rather than keying a wide layout to the display.
 
 ## Vertical Bars
 
