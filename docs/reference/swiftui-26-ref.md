@@ -28,6 +28,7 @@ Questions you can ask Claude that will draw from this reference:
 
 - "What Liquid Glass APIs are available in iOS 26?"
 - "How do I keep nested corners concentric with their container in iOS 26?"
+- "How should a custom bottom sheet's corners match the iPhone's screen corners?"
 - "How do I use the @Animatable macro?"
 - "How do I embed web content with WebView in SwiftUI?"
 - "How do I intercept form submissions in a SwiftUI WebView?"
@@ -73,6 +74,7 @@ Questions you can ask Claude that will draw from this reference:
 - Per-corner and per-edge initializer variants
 - `RoundedRectangularShape` protocol
 - `GeometryProxy.containerCornerInsets`; `concentricCornerRadii` (iOS 27)
+- Matching the device's screen corners without a hard-coded radius; custom bottom sheets (fixed top corners, concentric bottom corners)
 
 ### Performance Improvements
 - 6x faster simple lists

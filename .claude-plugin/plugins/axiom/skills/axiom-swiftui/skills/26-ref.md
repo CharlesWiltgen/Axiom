@@ -165,13 +165,26 @@ Button("To Top", systemImage: "chevron.up") { scrollToTop() }
 
 A `Shape` whose corners resolve concentric to the container shape's corners — sharing a center with the container's corner radius — instead of using a hardcoded value. System containers (sheets, glass containers, widgets) provide the container shape automatically; give a custom container one with `.containerShape(_:)`. When a corner sits far from the container's corner the resolved radius can be zero (square corner) — pass `.concentric(minimum:)` to guarantee a floor. If the container shape isn't a `RoundedRectangularShape`, the result is an inset version of the container shape.
 
+The device's screen is a container too: a view that extends to the display's rounded corners (under `.ignoresSafeArea()`) resolves its corners concentric to the hardware's, and on a device with square corners they resolve to zero. So never look up the screen's corner radius — not through a private screen property, not from a per-model table; let the shape resolve it.
+
 ```swift
 // Inside a sheet/glass container/widget the container shape is provided;
 // on a custom container, set .containerShape(.rect(cornerRadius: 32)) on the container.
 CardContent()
     .padding(12)
     .background(ConcentricRectangle(corners: .concentric(minimum: .fixed(8))).fill(.background))
+
+// A custom bottom sheet, shaped like the Notes Format sheet: fixed top corners,
+// bottom corners concentric with the device's
+SheetContent()
+    .background(
+        ConcentricRectangle(uniformTopCorners: .fixed(24), uniformBottomCorners: .concentric)
+            .fill(.background)
+            .ignoresSafeArea()
+    )
 ```
+
+Give a bottom-attached sheet concentric bottom corners, not zero. Flush with the screen edge they resolve to the display's own radius, so the sheet reads as continuing below the glass; once it's inset (a floating detent, or any padding) they keep the display's center, where a zero radius would show a square corner inside the rounded screen.
 
 On iPhone Duo, concentricity follows each display's corner shape — `ConcentricRectangle` (UIKit: `UICornerConfiguration`) fits both displays without per-device radii. See skills/iphone-duo.md (Match the new corners and support landscape).
 
@@ -184,7 +197,7 @@ On iPhone Duo, concentricity follows each display's corner shape — `Concentric
 | `Edge.Corner.Style` | `.fixed(_:)`, `.concentric`, `.concentric(minimum:)`; expressible by int/float literal (`corners: 12`); animatable |
 | `RoundedRectangularShape` | Protocol for containers whose corners resolve concentrically (`Capsule` conforms); `corners(in:)` → `RoundedRectangularShapeCorners?` |
 | `GeometryProxy.containerCornerInsets` | Insets of the container's corners, for manual layout near corners |
-| `GeometryProxy.concentricCornerRadii` / `concentricCornerRadii(in:)` `OS27` | Read back the resolved concentric radii for a frame |
+| `GeometryProxy.concentricCornerRadii` / `concentricCornerRadii(in:)` `OS27` | Read back the resolved concentric radii for a frame without drawing a shape — for custom drawing (`Canvas`), animations, or a surface a `Shape` can't express (the result is optional) |
 
 There is no `.containerConcentric` corner style. Use `RoundedRectangle`/`Capsule` when the radius must not track the container; `ConcentricRectangle` supersedes `ContainerRelativeShape` (iOS 14, rounded-rect only) for concentric nesting.
 
