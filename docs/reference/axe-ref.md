@@ -51,13 +51,15 @@ Always inspect the UI tree before automating interactions:
 axe describe-ui --udid $UDID
 
 # 2. Tap by accessibility ID (most stable)
-axe tap --id "loginButton" --udid $UDID
+axe tap --id "loginButton" --tap-style physical --udid $UDID
 
 # 3. Or by label (stable, but may change with localization)
-axe tap --label "Login" --udid $UDID
+axe tap --label "Login" --tap-style physical --udid $UDID
 ```
 
 **Priority order:** `--id` (most stable) > `--label` > `-x -y` coordinates (last resort).
+
+**Pass `--tap-style physical`.** AXe's default style sends a simulator tap that SwiftUI buttons, list rows, menus, and tabs ignored in testing on Xcode 27.1 — and AXe still reports `✓ … completed successfully`. `xcui tap` adds the flag for you. Either way, check that the tap did something rather than trusting its output.
 
 ## Documentation Scope
 

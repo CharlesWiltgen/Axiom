@@ -13,7 +13,7 @@ Drive and validate the iOS simulator UI and accessibility with `xcui` (plus AXe 
 Guides you through scriptable simulator UI and accessibility testing:
 
 1. **Preflights the environment** with `xcui doctor` — confirms AXe is installed (offers `xcui doctor --install` if missing) and a simulator is booted
-2. **Drives input via AXe** – `axe tap --id <id>` (real HID touch), `axe type`, `axe swipe`
+2. **Drives input via `xcui`** – `xcui tap --id <id>` (a physical touch), `xcui type`, `xcui swipe`, which forward to AXe
 3. **Synchronizes with `xcui wait`** – `--for-element <id>` instead of sleeping or re-screenshotting
 4. **Asserts on the accessibility tree** – `xcui assert --id <id> --label "…" --trait button --single` (exit 1 on failure)
 5. **Sets accessibility state** – `xcui a11y set --toggle <name> --value on --app <bundle-id>`, then re-asserts
@@ -27,10 +27,11 @@ Guides you through scriptable simulator UI and accessibility testing:
 
 ## Usage Tips
 
-- `xcui` auto-resolves the booted simulator; pass `--udid` to target a specific one
+- `xcui` auto-resolves the booted simulator when exactly one is booted; with more, it refuses to run without `--udid` and lists the booted devices
 - Output is JSON by default; add `--human` for prose
 - Exit codes: `0` pass · `1` assertion-fail/timeout · `2` environment error
-- For taps and typing, call `axe` directly — `xcui` owns waiting, asserting, and accessibility config, not input
+- A tap reports success whether or not anything happened, so confirm the result with `xcui wait` or `xcui assert`
+- Calling `axe tap` directly? Add `--tap-style physical` — AXe's default tap style is ignored by SwiftUI buttons, list rows, menus, and tabs
 
 ## Related
 
