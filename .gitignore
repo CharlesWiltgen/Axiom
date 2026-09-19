@@ -82,6 +82,8 @@ axiom-mcp/docs/
 
 # Local tool build artifacts (distributed binaries live in plugins/axiom/bin/)
 tools/xclog/xclog
+tools/xclog/xclog-amd64
+tools/xclog/xclog-arm64
 tools/xcui/xcui
 tools/xcui/xcui-amd64
 tools/xcui/xcui-arm64

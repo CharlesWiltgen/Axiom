@@ -92,7 +92,7 @@ import {
   upsertRouterNote,
   validateHomeCoverage,
 } from "./inline-auditors.ts";
-import { parsePorcelain, resolveStaleness } from "./staleness.ts";
+import { parsePorcelain, resolveGoBinaryStaleness, resolveStaleness } from "./staleness.ts";
 import { findDashViolations } from "./docs-dashes.ts";
 import { renderCursorDistribution } from "./cursor/render.ts";
 import { compareCursorPaths } from "./cursor/compare.ts";
@@ -134,7 +134,12 @@ function gitDirtySet(cwd: string): { gitAvailable: boolean; dirty: Set<string> }
     // `café.md` would arrive as `caf\303\251.md`, never match path.relative()'s
     // real UTF-8, get filtered out, and a genuinely-stale artifact would ship
     // green. Paths with spaces are still quoted — parsePorcelain unquotes those.
-    const out = execSync("git -c core.quotepath=false status --porcelain", {
+    // `-uall` lists untracked FILES individually. At git's default (-unormal) a new
+    // untracked directory collapses to one "dir/" entry, so a brand-new source file
+    // inside it never matches a walked path and the staleness gates (12b/12f/12t)
+    // read it as "nothing changed" — a new skill directory or Go package would be
+    // invisible to the very checks meant to see it. Ignored files stay excluded.
+    const out = execSync("git -c core.quotepath=false status --porcelain -uall", {
       cwd,
       stdio: "pipe",
       encoding: "utf8",
@@ -1751,6 +1756,157 @@ if (argsGoFiles.length < 2) {
         groups.map((g) => `[${g.join(", ")}]`).join(" ≠ "),
     );
   }
+}
+
+// ── 12t. Go Tool Binary Staleness ──
+
+// Files staged for THIS commit. The staleness clauses read the working tree, but a
+// commit ships HEAD: staging source without the rebuilt binary lands both out of
+// step while every worktree check reads green. Empty outside a commit, so the
+// staged clause is vacuous during a plain `npm test`.
+const stagedPaths = (() => {
+  try {
+    return new Set<string>(
+      execSync("git -c core.quotepath=false diff --cached --name-only", { cwd: root, stdio: "pipe", encoding: "utf8" })
+        .split("\n")
+        .map((l: string) => l.trim())
+        .filter(Boolean),
+    );
+  } catch {
+    return new Set<string>();
+  }
+})();
+
+heading("12t. Go Tool Binary Staleness");
+
+// The compiled binary in bin/ is what SHIPS — the plugin, the MCP bundle, and the
+// Codex/Cursor variants all carry bin/<tool>, never tools/<tool>/*.go. So a Go edit
+// whose binary was never rebuilt ships the OLD tool while the repo and the skills
+// document the new behavior, and every other gate stays green: 12g compares args.go
+// copies, 12h confirms the binary is present and listed, and step 15 (Phase 2 only)
+// runs `go test` against the SOURCE. None of them compares source to binary.
+//
+// Found 2026-09-19: a session rewrote tools/xcui tap handling and rebuilt bin/xcui by
+// hand; nothing would have caught skipping that step. Same hybrid rule as 12b/12f —
+// mtime pre-filters, git dirtiness confirms — so a fresh clone is not flagged.
+const goToolsRoot = path.join(root, "tools");
+const goBinDir = path.join(pluginDir, "bin");
+if (fs.existsSync(goToolsRoot) && fs.statSync(goToolsRoot).isDirectory()) {
+  // Files `go build` ignores, so an edit to one cannot make the binary stale and
+  // flagging it would be unfixable: it is content, so no rebuild clears it.
+  // testdata/ is excluded wholesale (Go never compiles it); leading _ or . likewise;
+  // and a GOOS-suffixed file for another platform is not part of a darwin build.
+  const goIgnoresFile = (name: string) =>
+    name.startsWith("_") ||
+    name.startsWith(".") ||
+    /_(linux|windows|plan9|js|wasm|aix|android|freebsd|netbsd|openbsd|solaris)(_[a-z0-9]+)?\.go$/.test(name);
+
+  let goModules: string[] = [];
+  const goInputs: {
+    tool: string;
+    binaryMtimeMs: number | null;
+    binaryDirty: boolean;
+    binaryStaged: boolean;
+    sources: { path: string; mtimeMs: number }[];
+    deletedSources: string[];
+    stagedSources: string[];
+  }[] = [];
+
+  // The whole block is guarded: an unreadable dir, a dangling *.go symlink, or a
+  // file removed mid-walk would otherwise throw out of Phase 1, skipping every
+  // later check and bypassing the error() channel entirely — a crash the hook
+  // reports in the same words as a finding.
+  try {
+    goModules = fs
+      .readdirSync(goToolsRoot, { withFileTypes: true })
+      .filter((d: fs.Dirent) => d.isDirectory() && fs.existsSync(path.join(goToolsRoot, d.name, "go.mod")))
+      .map((d: fs.Dirent) => d.name)
+      .sort();
+
+    for (const name of goModules) {
+      const moduleDir = path.join(goToolsRoot, name);
+      const binaryPath = path.join(goBinDir, name);
+      const relBinary = path.relative(root, binaryPath);
+      const sources: { path: string; mtimeMs: number }[] = [];
+      let isCommand = false;
+
+      const walkModule = (dir: string) => {
+        for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+          if (entry.name === "testdata" || goIgnoresFile(entry.name)) continue;
+          const full = path.join(dir, entry.name);
+          if (entry.isDirectory()) {
+            walkModule(full);
+          } else if (entry.name.endsWith(".go") || entry.name === "go.mod" || entry.name === "go.sum") {
+            sources.push({ path: path.relative(root, full), mtimeMs: fs.statSync(full).mtimeMs });
+            if (!isCommand && entry.name.endsWith(".go") && !entry.name.endsWith("_test.go")) {
+              isCommand = /^package main\b/m.test(fs.readFileSync(full, "utf8"));
+            }
+          }
+        }
+      };
+      walkModule(moduleDir);
+
+      // A library module under tools/ ships no binary, so requiring one would block
+      // every commit until someone committed a 6 MB file that should not exist.
+      if (!isCommand && !fs.existsSync(binaryPath)) continue;
+
+      const modulePrefix = path.relative(root, moduleDir) + path.sep;
+      const deletedSources = [...gitStatus.dirty].filter(
+        (p) => p.startsWith(modulePrefix) && p.endsWith(".go") && !fs.existsSync(path.join(root, p)),
+      );
+
+      const binaryStat = fs.existsSync(binaryPath) ? fs.statSync(binaryPath) : null;
+      goInputs.push({
+        tool: name,
+        binaryMtimeMs: binaryStat?.isFile() ? binaryStat.mtimeMs : null,
+        binaryDirty: gitStatus.dirty.has(relBinary),
+        binaryStaged: stagedPaths.has(relBinary),
+        sources,
+        deletedSources,
+        stagedSources: [...stagedPaths].filter((p) => p.startsWith(modulePrefix) && p.endsWith(".go")),
+      });
+    }
+  } catch (err) {
+    error(
+      "go-binary-staleness",
+      `could not read the Go tool sources under tools/ (${(err as Error).message}) — the binary staleness check could not run`,
+    );
+  }
+
+  if (goInputs.length === 0) {
+    console.log("  ✓ no Go command modules under tools/ — nothing to compare");
+  } else {
+    const goVerdicts = resolveGoBinaryStaleness(goInputs, gitStatus.dirty, gitStatus.gitAvailable);
+    let goProblems = 0;
+    for (const verdict of goVerdicts) {
+      if (verdict.state === "stale") {
+        goProblems++;
+        error(
+          "go-binary-staleness",
+          `bin/${verdict.tool} is stale — ${verdict.reason}. Run: cd tools/${verdict.tool} && make install`,
+        );
+      } else if (verdict.state === "binary-not-staged") {
+        goProblems++;
+        error(
+          "go-binary-staleness",
+          `bin/${verdict.tool} — ${verdict.reason}. Stage it too: git add .claude-plugin/plugins/axiom/bin/${verdict.tool}`,
+        );
+      } else if (verdict.state === "missing-binary") {
+        goProblems++;
+        error(
+          "go-binary-staleness",
+          `tools/${verdict.tool} builds a command but has no committed bin/${verdict.tool} — build it with: cd tools/${verdict.tool} && make install`,
+        );
+      }
+    }
+    if (goProblems === 0) {
+      console.log(
+        `  ✓ ${goVerdicts.length} Go tool binar${goVerdicts.length === 1 ? "y matches its" : "ies match their"} source (${goVerdicts.map((v) => v.tool).join(", ")})`,
+      );
+    }
+  }
+} else {
+  warn("go-binary-staleness", "no tools/ directory — skipping Go binary staleness check");
 }
 
 // ── 12h. MCP Tool Binary Coverage ──
