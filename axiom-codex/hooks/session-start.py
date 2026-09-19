@@ -164,7 +164,7 @@ try:
 
 ---
 
-**xcui** (scriptable sim UI & accessibility testing): Available at `{xcui_path}`. Drives the simulator via AXe + simctl. Run `xcui doctor` first (verifies AXe; `--install` adds it via brew). Key verbs: `xcui wait --for-element <id>`, `xcui assert --id <id> --label … --trait … --single`, `xcui a11y set --toggle <name> --value <on/off> --app <id>`, `xcui dialog accept|dismiss` (or `pregrant <bundle-id> <service>…`), `xcui voiceover traverse|assert --sequence <file>`. For taps use `axe tap --id <id>` directly. Workflow: `axiom-tools` (skills/xcui-ref.md). Command: `/axiom:ui`."""
+**xcui** (scriptable sim UI & accessibility testing): Available at `{xcui_path}`. Drives the simulator via AXe + simctl. Run `xcui doctor` first (verifies AXe; `--install` adds it via brew). Key verbs: `xcui wait --for-element <id>`, `xcui assert --id <id> --label … --trait … --single`, `xcui a11y set --toggle <name> --value <on/off> --app <id>`, `xcui dialog accept|dismiss` (or `pregrant <bundle-id> <service>…`), `xcui voiceover traverse|assert --sequence <file>`. For taps use `xcui tap --id <id>` — it sends a physical touch; bare `axe tap` needs `--tap-style physical` or SwiftUI controls ignore it while still reporting success. Workflow: `axiom-tools` (skills/xcui-ref.md). Command: `/axiom:ui`."""
 except OSError:
     pass
 

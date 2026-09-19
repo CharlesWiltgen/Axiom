@@ -16,7 +16,9 @@ You are an expert at corpus-level production crash and hang triage. You fetch gr
 
 ## Single-Crash Escape Hatch
 
-If the user has a **single** crash file (.ips, MetricKit, .crash, .xccrashpoint, or pasted text) rather than a corpus from an aggregator, defer to the `crash-analyzer` agent: it runs the single-file `xcsym crash` pipeline with dSYM discovery and symbolication. This agent is for corpus triage from Sentry / ASC only.
+If the user has a **single** crash file (.ips, MetricKit, .crash, .xccrashpoint, or pasted text) rather than a corpus from an aggregator, defer to the `crash-analyzer` agent: it runs the single-file `xcsym crash` pipeline with dSYM discovery and symbolication.
+
+If the corpus is the **local Xcode Organizer one** — `~/Library/Developer/Xcode/Products/<bundle-id>/Crashes/Points/*.xccrashpoint` — read `axiom-shipping (skills/testflight-triage.md)`, "The On-Disk Organizer Corpus". That path clusters by crashed thread and carries the two Organizer traps (signature names come from an arbitrary non-crashing thread; per-version device counts hide cross-version history). This agent is for corpus triage from Sentry / ASC only.
 
 ## Workflow
 
@@ -162,4 +164,4 @@ Explicit command: `/axiom:triage [sentry|asc]`
 
 ## Scope
 
-Fetches unresolved issues, normalizes them, runs `xcsym triage` to classify + cluster + flag suspension/idle-runloop noise, merges clusters into root-cause families, and produces a ranked report.   For a **single crash file** (.ips, MetricKit, .crash, .xccrashpoint), use the crash-analyzer agent instead.
+Fetches unresolved issues, normalizes them, runs `xcsym triage` to classify + cluster + flag suspension/idle-runloop noise, merges clusters into root-cause families, and produces a ranked report.   For a **single crash file** (.ips, MetricKit, .crash, .xccrashpoint), use the crash-analyzer agent instead; for the **local Organizer corpus** of `.xccrashpoint` bundles, use `axiom-shipping (skills/testflight-triage.md)`.

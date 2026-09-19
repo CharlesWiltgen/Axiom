@@ -191,6 +191,35 @@ Built against the 27.1 SDK, navigation, toolbar, and tab bar items share one ver
 - Keyboard accessory bars stay on the keyboard.
 - The inner display in portrait keeps horizontal bars.
 
+#### Host the bar in a system-managed container
+
+Items join the vertical bar only from inside one of the system-managed containers above. The same `.bottomBar` items on a view with none of them — in a bare `fullScreenCover`, say — render as a horizontal capsule along the bottom, while `toolbarVerticalEdge` still reads `.trailing` (measured on the 27.1 Duo simulator, closed). Adding a `NavigationStack` to a custom full-screen layer brings two side effects:
+
+- **The stack paints an opaque background** over whatever is behind it. Apply `.containerBackground(.clear, for: .navigation)` to the content *inside* the stack; applied to the `NavigationStack` itself it had no effect (both measured).
+- **The stack gives its content the window's safe-area insets back**, even under an ancestor's `.ignoresSafeArea()` — measured trailing 84 pt and bottom 34 pt on the closed Duo, where the content outside the stack read zero. Re-apply `.ignoresSafeArea()` inside the stack if the layout depends on reading zero.
+
+```swift
+struct PlayerCover: View {
+    var body: some View {
+        ZStack {
+            ArtworkBackground()
+            NavigationStack {
+                PlayerControls()
+                    .ignoresSafeArea()
+                    .toolbar(.hidden, for: .navigationBar)
+                    .containerBackground(.clear, for: .navigation)   // inside the stack, not on it
+                    .toolbar {
+                        ToolbarItem(placement: .bottomBar) {
+                            Button("Shuffle", systemImage: "shuffle") { }
+                        }
+                    }
+            }
+        }
+        .ignoresSafeArea()
+    }
+}
+```
+
 #### Order items top to bottom
 
 1. Back (automatic in a navigation container) or a custom close. SwiftUI: `.cancellationAction`. UIKit: a leading item, with `leftItemsSupplementBackButton` left `false` (the default).
@@ -224,9 +253,16 @@ inboxItem.badge = .count(7)            // iOS 26: a symbol-only item that still 
 - Vertical bars have no scroll-edge effect but gain a background under Reduce Transparency — keep custom content legible either way.
 - A hero or background image extends under the vertical bar with `.backgroundExtensionEffect()` (SwiftUI) or `UIBackgroundExtensionView` (UIKit).
 
+#### What your styling survives
+
+- **System items ignore your styling.** In the vertical bar a system `Toggle` or `Button` item ignores `.foregroundStyle` and `.opacity`; a `Toggle` shows "on" as a lit disc. `.contextMenu` on a system `Toggle` item does nothing (measured on the 27.1 Duo simulator).
+- **A custom view keeps it (measured).** Opt the item in with `.axisBehavior(.verticalPreferred)` and its own `.foregroundStyle`, `.opacity`, and `.contextMenu` all work in the bar — the route for on/off/unavailable states the system rendering can't show.
+- **`Menu(primaryAction:)` shows no on/off state** in the bar (reported, not re-measured).
+- **The overflow menu shows each item's title and icon**, taken from its `Label`, but **no on/off state and no context menu** (reported). If state matters once an item overflows, put it in the title ("Repeat One").
+
 #### Plan for overflow
 
-The outer display in landscape overflows most. Decide per view whether the toolbar or the tab bar compresses first — navigation-focused views keep their tabs, task-focused views keep their actions. By default the toolbar compresses first and the tabs stay; a task-focused view opts into keeping its actions (Axis, edge, compression, and the off switch). Merge your own overflow menu into the system one, keep the ellipsis for overflow only, and rank items with `visibilityPriority`: frequent actions and badged status items should collapse last. By default items overflow from the bottom up. A non-nil `additionalOverflowItems` always shows the overflow button. The keyboard and Picture in Picture in open portrait also shrink the bar.
+The outer display in landscape overflows most. Decide per view whether the toolbar or the tab bar compresses first — navigation-focused views keep their tabs, task-focused views keep their actions. By default the toolbar compresses first and the tabs stay; a task-focused view opts into keeping its actions (Axis, edge, compression, and the off switch). Merge your own overflow menu into the system one, keep the ellipsis for overflow only, and rank items with `visibilityPriority`: frequent actions and badged status items should collapse last. By default items overflow from the bottom up; `.visibilityPriority(.high)` works on custom items too (measured: of ten custom items in a seven-slot bar, the last two marked `.high` stayed and the three above them overflowed). A non-nil `additionalOverflowItems` always shows the overflow button. The keyboard and Picture in Picture in open portrait also shrink the bar.
 
 #### When to turn vertical bars off
 
@@ -235,6 +271,12 @@ A single-page, bottom-heavy layout like a calculator, or a sheet whose only item
 #### Axis, edge, compression, and the off switch
 
 The inferred axis is usually right — a title-only item stays horizontal, an item with an image goes vertical. Override it per item when a custom view, a wide control, or a symbol↔text toggle needs a specific axis. All of these are iOS 27.1; below that, items keep whatever axis the system infers, and the knobs don't exist. A build against the 27.0 SDK or earlier never sees a vertical bar at all.
+
+`toolbarVerticalEdge` (UIKit: `traitCollection.verticalBarEdge`) reports the system's *preferred* edge "regardless of whether a vertical bar is currently visible", and is nil (`.unspecified`) where the system never places one — hardware without a vertical bar, or a size class or orientation that doesn't use it (UIKit header doc). What the value does and doesn't tell you:
+
+- It is set before any toolbar item exists, and reads the same inside and outside a navigation container (measured).
+- It is nil on the open inner display in portrait, half-folded included, and reads nil briefly during the opening transition (reported). Don't animate on a transient nil.
+- A non-nil edge doesn't mean *your* items are vertical — outside a system-managed container they stay horizontal (Host the bar in a system-managed container).
 
 ```swift
 // SwiftUI — iOS 27.1: per-item axis override, compression order, and the edge read
@@ -257,7 +299,7 @@ struct BarControls: View {
                 }
                 .toolbarVerticalCompressionBehavior(.prefersToolbarItems)   // tab bar compresses first
                 .overlay(alignment: .bottom) {
-                    // .leading / .trailing while a bar is vertical; nil when items can't go vertical
+                    // .leading / .trailing where the system places bars vertically; nil where it never does
                     Text(edge == .trailing ? "Bar: trailing" : edge == .leading ? "Bar: leading" : "No vertical bar")
                         .font(.caption)
                 }
@@ -530,6 +572,11 @@ Availability (`isAvailable`) and your on/off switch (`isEnabled`) are separate: 
 ## Tooling and Testing
 
 - **Device Hub** — Xcode 27.1's Device Hub drives an iPhone Duo simulator with open, close, rotate, and fold controls (111461 0:56); Apple's overview notes the Duo simulator in Device Hub requires Xcode 27.1. The device type creates against the **iOS 27.1 runtime**; the 27.0 runtime rejects it (`Incompatible device`). `iPhone Fold` is a different product.
+- **The 27.1 runtime is Duo-only.** Creating iPhone 17, 17 Pro, 17e, or iPad Pro on it fails with the same `Incompatible device` (SimError 403), so keep the 27.0 runtime for every other device (measured with Xcode 27.1).
+- **Poses are Device Hub-only.** No `simctl` or `devicectl` command opens, closes, or folds the simulator. `devicectl device motion hinge-angle` only *reads* the hinge, and `devicectl device orientation set` prints success and changes nothing on the Duo (measured closed; reported open). Check the window size after every pose change: closing from open-landscape has been reported landing in closed-portrait one time and closed-landscape another.
+- **Screenshots default to the inner display**, which is black while the device is closed — for `simctl io … screenshot` and `devicectl device capture` alike. Capture the outer display by name: axiom-tools (skills/device-control-ref.md, Display masks and multi-display devices).
+- **Name closed poses by the hinge**, never by "turned left/right". Closed and upright, the hinge is the left edge, the camera and status bar sit top-right, and the vertical bar runs down the trailing edge (`toolbarVerticalEdge == .trailing`, measured). With the hinge along the bottom the camera is top-left and the bar moves to the leading edge; hinge along the top puts the camera bottom-right and the bar trailing (reported). The bar follows the camera's edge.
+- **Synthetic taps** — send a physical touch (`xcui tap` does; bare `axe tap` needs `--tap-style physical`), or the bar's items ignore the tap while it reports ✓: axiom-tools (skills/xcui-ref.md, Tap styles). The bar's overflow (⋯) button did not open under any tap style or a 0.2–1.0 s hold in the closed pose (measured); test overflowed actions in a pose with room for them.
 - **Simulator gaps** — per the Xcode 27.1 beta release notes, StandBy is unavailable in the iPhone Duo Simulator runtime, and running and debugging most app extensions is unavailable there.
 - **App Resizability** — Xcode's app-modernization agent skill, renamed "App Resizability", now covers SwiftUI and iPhone Duo (111461 9:15). See axiom-uikit (skills/uikit-modernization.md).
 

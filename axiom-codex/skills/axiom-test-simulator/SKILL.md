@@ -34,13 +34,20 @@ xcrun simctl list devices -j | jq '.devices | to_entries[] | .value[] | select(.
 # Check booted simulators
 xcrun simctl list devices -j | jq '.devices | to_entries[] | .value[] | select(.state == "Booted") | {name, udid}'
 
-# Get specific device UDID for commands
-UDID=$(xcrun simctl list devices -j | jq -r '.devices | to_entries[] | .value[] | select(.state == "Booted") | .udid' | head -1)
+# Get specific device UDID for commands — only when exactly ONE is booted.
+# With several booted (other sessions often keep their own), choose by name from the
+# list above; `head -1` silently drives whichever sorts first, and its taps still print ✓.
+BOOTED=$(xcrun simctl list devices -j | jq -r '.devices | to_entries[] | .value[] | select(.state == "Booted") | .udid')
+if [ "$(printf '%s\n' "$BOOTED" | grep -c .)" = 1 ]; then
+  UDID=$BOOTED
+else
+  echo "Several simulators are booted — set UDID to the one you mean from the list above"
+fi
 
 # Boot if needed (get UDID first, then boot)
 xcrun simctl boot "iPhone 16 Pro"
 
-# Preflight AXe + booted sim with xcui doctor (AXe enables real HID tap/swipe/type/describe-ui)
+# Preflight AXe + booted sim with xcui doctor (AXe enables tap/swipe/type/describe-ui)
 if command -v axe &> /dev/null; then
   echo "AXe available - UI automation enabled (tap, swipe, type, describe-ui)"
   AXE_AVAILABLE=true
@@ -238,7 +245,8 @@ xcui doctor --install  # installs cameroncooke/axe/axe via brew if missing
 # Discover UI elements first (get accessibility identifiers)
 axe describe-ui --udid $UDID
 
-# Tap by accessibility identifier (RECOMMENDED - stable)
+# Tap by accessibility identifier (RECOMMENDED - stable). xcui sends a physical
+# touch; bare `axe tap` needs --tap-style physical or SwiftUI controls ignore it
 xcui tap --id "loginButton" --udid $UDID
 
 # Tap by label
@@ -247,8 +255,8 @@ xcui tap --label "Submit" --udid $UDID
 # Tap at coordinates (less stable)
 xcui tap -x 200 -y 400 --udid $UDID
 
-# Long press
-xcui tap -x 200 -y 400 --duration 1.0 --udid $UDID
+# Long press (tap has no hold option; 1.2 s opens a .contextMenu)
+xcui touch -x 200 -y 400 --down --up --delay 1.2 --udid $UDID
 
 # Gesture presets
 xcui gesture scroll-down --udid $UDID     # Scroll content down
@@ -303,7 +311,7 @@ xcui a11y set --toggle reduce-transparency --value on --app com.example.App
 xcui a11y set --toggle dynamic-type --value accessibility-extra-large
 ```
 
-Supported `a11y set` toggles: `dynamic-type`, `increase-contrast`, `reduce-motion`, `reduce-transparency`. For taps, use `xcui tap --id <id>` (forwards to AXe's real HID touch). Full reference: `axiom-tools (skills/xcui-ref.md)`.
+Supported `a11y set` toggles: `dynamic-type`, `increase-contrast`, `reduce-motion`, `reduce-transparency`, `voiceover`. For taps, use `xcui tap --id <id>` (a physical touch down/up). A tap prints ✓ whether or not anything happened, so assert the result with `xcui wait`/`xcui assert` rather than trusting the tap's output. With more than one simulator booted, pass `--udid` on every xcui command — xcui refuses to guess. Full reference: `axiom-tools (skills/xcui-ref.md)`.
 
 ### 16. Network Conditioning (low-bitrate / latency / loss)
 

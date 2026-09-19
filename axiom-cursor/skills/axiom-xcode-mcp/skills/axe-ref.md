@@ -29,14 +29,16 @@ axe --version
 axe describe-ui --udid $UDID
 
 # 2. THEN: Tap by accessibility ID (preferred)
-axe tap --id "loginButton" --udid $UDID
+axe tap --id "loginButton" --tap-style physical --udid $UDID
 
 # 3. OR: Tap by label
-axe tap --label "Login" --udid $UDID
+axe tap --label "Login" --tap-style physical --udid $UDID
 
 # 4. LAST RESORT: Tap by coordinates from describe-ui output
-axe tap -x 200 -y 400 --udid $UDID
+axe tap -x 200 -y 400 --tap-style physical --udid $UDID
 ```
+
+**Always pass `--tap-style physical`.** AXe's default style (`automatic`) sends FBSimulator `tapAt` to anything that isn't a switch, and on Xcode 27.1 + AXe 1.8.0 that activated no SwiftUI `Button`, `List` row, `Menu`, `Menu` row, or tab — while printing `✓ … completed successfully`. `physical` (touch down/up) activated all of them (measured 2026-09-19; matrix in `axiom-tools (skills/xcui-ref.md)`). `xcui tap` adds the flag for you.
 
 **Priority order for targeting elements:**
 1. `--id` (accessibilityIdentifier) - most stable
@@ -49,26 +51,29 @@ axe tap -x 200 -y 400 --udid $UDID
 
 ```bash
 # Coordinate-based (fragile - breaks with layout changes)
-axe tap -x 200 -y 400 --udid $UDID
+axe tap -x 200 -y 400 --tap-style physical --udid $UDID
 
 # Accessibility-based (stable - survives UI changes)
-axe tap --id "loginButton" --udid $UDID
-axe tap --label "Login" --udid $UDID
+axe tap --id "loginButton" --tap-style physical --udid $UDID
+axe tap --label "Login" --tap-style physical --udid $UDID
 ```
 
-**Always prefer `--id` or `--label` over coordinates.**
+**Always prefer `--id` or `--label` over coordinates** — with one caveat: selectors tap the element's accessibility activation point, not its pixels. A view whose accessibility frame is skewed (a label hidden with `.fixedSize()` + `.frame(width: 0).clipped()`) gets tapped off target and the tap still prints ✓. When a selector tap changes nothing, screenshot, measure the visible center, and tap `-x/-y`.
 
 ## Getting the Simulator UDID
 
 AXe requires the simulator UDID for most commands:
 
 ```bash
-# Get booted simulator UDID
-UDID=$(xcrun simctl list devices -j | jq -r '.devices | to_entries[] | .value[] | select(.state == "Booted") | .udid' | head -1)
+# List booted simulators, then pick one by name — never `head -1`
+xcrun simctl list devices booted
+UDID=<UDID of the device you mean>
 
 # List all simulators
 axe list-simulators
 ```
+
+With more than one simulator booted, a `head -1` pick drives whichever device sorts first, and every tap on it still prints ✓. `xcui` refuses to guess in that case; direct AXe calls need you to choose.
 
 ## Touch & Tap Commands
 
@@ -76,23 +81,24 @@ axe list-simulators
 
 ```bash
 # Tap element with accessibilityIdentifier
-axe tap --id "loginButton" --udid $UDID
+axe tap --id "loginButton" --tap-style physical --udid $UDID
 
 # Tap element with accessibility label
-axe tap --label "Submit" --udid $UDID
+axe tap --label "Submit" --tap-style physical --udid $UDID
 ```
 
 ### Tap by Coordinates
 
 ```bash
 # Basic tap
-axe tap -x 200 -y 400 --udid $UDID
+axe tap -x 200 -y 400 --tap-style physical --udid $UDID
 
 # Tap with timing controls
-axe tap -x 200 -y 400 --pre-delay 0.5 --post-delay 0.3 --udid $UDID
+axe tap -x 200 -y 400 --tap-style physical --pre-delay 0.5 --post-delay 0.3 --udid $UDID
 
-# Long press: use touch with --down --up --delay (tap has no hold option)
-axe touch -x 200 -y 400 --down --up --delay 1.0 --udid $UDID
+# Long press: use touch with --down --up --delay (tap has no hold option);
+# a 1.2 s hold opened a SwiftUI .contextMenu
+axe touch -x 200 -y 400 --down --up --delay 1.2 --udid $UDID
 ```
 
 ### Low-Level Touch Events
@@ -291,15 +297,15 @@ axe describe-ui --point 200,400 --udid $UDID
 UDID=$(xcrun simctl list devices -j | jq -r '.devices | to_entries[] | .value[] | select(.state == "Booted") | .udid' | head -1)
 
 # Tap email field and type
-axe tap --id "emailTextField" --udid $UDID
+axe tap --id "emailTextField" --tap-style physical --udid $UDID
 axe type "user@example.com" --udid $UDID
 
 # Tap password field and type
-axe tap --id "passwordTextField" --udid $UDID
+axe tap --id "passwordTextField" --tap-style physical --udid $UDID
 axe type "password123" --udid $UDID
 
 # Tap login button
-axe tap --id "loginButton" --udid $UDID
+axe tap --id "loginButton" --tap-style physical --udid $UDID
 
 # Wait and screenshot
 sleep 2
@@ -316,7 +322,7 @@ axe describe-ui --udid $UDID > /tmp/ui-tree.json
 cat /tmp/ui-tree.json | jq '.[] | select(.identifier != null) | {identifier, label, type}'
 
 # 3. Use discovered identifiers in automation
-axe tap --id "discoveredIdentifier" --udid $UDID
+axe tap --id "discoveredIdentifier" --tap-style physical --udid $UDID
 ```
 
 ### Scroll to Find Element
@@ -325,7 +331,7 @@ axe tap --id "discoveredIdentifier" --udid $UDID
 # Scroll down until element appears (pseudo-code pattern)
 for i in {1..5}; do
   if axe describe-ui --udid $UDID | grep -q "targetElement"; then
-    axe tap --id "targetElement" --udid $UDID
+    axe tap --id "targetElement" --tap-style physical --udid $UDID
     break
   fi
   axe gesture scroll-down --udid $UDID
@@ -337,7 +343,7 @@ done
 
 ```bash
 # Automation with error capture
-if ! axe tap --id "submitButton" --udid $UDID; then
+if ! axe tap --id "submitButton" --tap-style physical --udid $UDID; then
   axe screenshot --output /tmp/error-state.png --udid $UDID
   axe describe-ui --udid $UDID > /tmp/error-ui-tree.json
   echo "Failed to tap submitButton - see error-state.png"
@@ -357,7 +363,7 @@ Most commands support timing options:
 
 ```bash
 # Example with full timing control
-axe tap --id "button" --pre-delay 0.5 --post-delay 0.3 --udid $UDID
+axe tap --id "button" --pre-delay 0.5 --post-delay 0.3 --tap-style physical --udid $UDID
 ```
 
 ## AXe vs simctl
@@ -389,13 +395,17 @@ axe tap --id "button" --pre-delay 0.5 --post-delay 0.3 --udid $UDID
 
 ### Tap Doesn't Work
 
-1. Check element is enabled (`"enabled": true` in describe-ui)
-2. Try adding `--pre-delay 0.5` for slow-loading UI
-3. Verify correct UDID with `axe list-simulators`
+A tap that changes nothing still prints `✓ … completed successfully`, so check in this order:
+
+1. **Tap style** — add `--tap-style physical`. The default sends `tapAt`, which SwiftUI controls ignored in every case measured.
+2. **Wrong device** — with more than one simulator booted, confirm `--udid` names the one on screen (`xcrun simctl list devices booted`).
+3. **Skewed accessibility frame** — the selector resolved, but to a point off the visible control; tap measured `-x/-y` instead.
+4. Check element is enabled (`"enabled": true` in describe-ui)
+5. Try adding `--pre-delay 0.5` for slow-loading UI
 
 ### Type Not Working
 
-1. Ensure text field is focused first: `axe tap --id "textField"`
+1. Ensure text field is focused first: `axe tap --id "textField" --tap-style physical`
 2. Check keyboard is visible
 3. For unreliable input, split long strings into multiple `axe type` calls, or use `--stdin`/`--file`
 

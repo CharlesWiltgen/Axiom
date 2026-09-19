@@ -133,8 +133,8 @@
     },
     {
       "path": "agents/simulator-tester.md",
-      "sha256": "c140fa74f8286c1c2647e45513d20fe2deafb2991e84b3cce1c83aaa8fa9b71c",
-      "bytes": 21093
+      "sha256": "483a9c71738c1d194f7fa012a9d52f3f9a1a6f2455612a60efdc01b0ec308462",
+      "bytes": 21879
     },
     {
       "path": "agents/spm-conflict-resolver.md",
@@ -213,8 +213,8 @@
     },
     {
       "path": "agents/triage-analyzer.md",
-      "sha256": "0e51e4c59067e5b474314f21ac89d099832d3221c1f7e843fceafa480994b34d",
-      "bytes": 11205
+      "sha256": "ce8f4b35dfce8cb68e5fedb8b4da4929b5dc892f9fa93aeb36c9851c980cea45",
+      "bytes": 11733
     },
     {
       "path": "agents/ux-flow-auditor.md",
@@ -978,13 +978,13 @@
     },
     {
       "path": "skills/axiom-integration/skills/localization-research-ref.md",
-      "sha256": "5015b9224e965d04313ac382148de907cdd1f18ef214050ab8aa68ace332844e",
-      "bytes": 16589
+      "sha256": "2ca978fcc4ea1c736dba0f5de8f29a8fbb46c6707a0d08a181ae6e5b162a7d9e",
+      "bytes": 17999
     },
     {
       "path": "skills/axiom-integration/skills/localization.md",
-      "sha256": "c60212fde0d8dfce4906a9cba9354b5933d2cedd28ed3e665f9e472beb1d5888",
-      "bytes": 34900
+      "sha256": "adc484b65485ada0c775d33e8c780e7cd9e69d6aea5e73e3d7018103dbac5054",
+      "bytes": 40365
     },
     {
       "path": "skills/axiom-integration/skills/privacy-ux.md",
@@ -1613,8 +1613,8 @@
     },
     {
       "path": "skills/axiom-swiftui/skills/iphone-duo.md",
-      "sha256": "e33bab2539cc6a9620c0f7ed3ce185bf4583549cdf0864a238297ed3651cb8fb",
-      "bytes": 35550
+      "sha256": "3d06b19fe4fc9b545efb6440ea3ac944ee01be9d5e4309146c67c48626952d4c",
+      "bytes": 41762
     },
     {
       "path": "skills/axiom-swiftui/skills/layout-ref.md",
@@ -1708,8 +1708,8 @@
     },
     {
       "path": "skills/axiom-tools/skills/device-control-ref.md",
-      "sha256": "f37e2904e862fa65ee49273f6befbc08bc538f6c2944e94f464d67a48641774f",
-      "bytes": 25848
+      "sha256": "e4a480ed405551c7fa865a1332c0c8a9de092cdba3a3acea58766416a28bb3ac",
+      "bytes": 29447
     },
     {
       "path": "skills/axiom-tools/skills/getting-started.md",
@@ -1733,8 +1733,8 @@
     },
     {
       "path": "skills/axiom-tools/skills/xcui-ref.md",
-      "sha256": "fdacecb2394054b8ba58234ea06f98fc8e8a3e2722ce2d61964f46dfb9620d7b",
-      "bytes": 11629
+      "sha256": "145d1f3934c0ea47b94295d4fd5c33e4585abf521632e1d3e954c4a19ccdd311",
+      "bytes": 14511
     },
     {
       "path": "skills/axiom-uikit/SKILL.md",
@@ -1783,8 +1783,8 @@
     },
     {
       "path": "skills/axiom-uikit/skills/uikit-modernization.md",
-      "sha256": "a74552e777e484862d59ef5774551788c353e8c8503ac1da0c73a286847a5f12",
-      "bytes": 26333
+      "sha256": "83b6fccada55a978e76e3ca7b99946d7470b922eb7e4b6472d58d151198b3b0a",
+      "bytes": 26924
     },
     {
       "path": "skills/axiom-vision/SKILL.md",
@@ -1858,8 +1858,8 @@
     },
     {
       "path": "skills/axiom-xcode-mcp/skills/axe-ref.md",
-      "sha256": "47b199c7d961758f36ec06f26a4f21b3a8c7b71d3f093432b41b64c2d5a8d6f6",
-      "bytes": 11562
+      "sha256": "b7cb79c3382494e787ab0db0054c8566c8e5791a9357c53b5da49cd0c27e0de4",
+      "bytes": 13419
     },
     {
       "path": "skills/axiom-xcode-mcp/skills/xcode-mcp-ref.md",
@@ -1879,7 +1879,7 @@
   ],
   "totals": {
     "files": 375,
-    "bytes": 7589185
+    "bytes": 7612515
   },
   "excludedMirrors": 30,
   "classes": {

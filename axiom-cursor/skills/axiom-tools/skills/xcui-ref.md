@@ -4,7 +4,7 @@
 
 # xcui Reference (Scriptable Simulator UI & Accessibility Testing)
 
-xcui makes iOS-simulator UI and accessibility testing scriptable for coding harnesses. It owns the test-harness semantics AXe and simctl lack — waiting, asserting, accessibility config, dialogs, computed VoiceOver — and is also the front door for input: `xcui tap`/`type`/`swipe` forward to AXe verbatim, so you get AXe's real HID touch without having to manage its environment yourself.
+xcui makes iOS-simulator UI and accessibility testing scriptable for coding harnesses. It owns the test-harness semantics AXe and simctl lack — waiting, asserting, accessibility config, dialogs, computed VoiceOver — and is also the front door for input: `xcui tap`/`type`/`swipe` forward to AXe, with a physical touch supplied for `tap` (see Tap styles), so input lands without you managing AXe's environment or flags yourself.
 
 ## Invocation
 
@@ -12,11 +12,13 @@ In Cursor, `xcui` is external and is not placed on `PATH` by the plugin. Check `
 
 If it is absent, you have two working options and should say which you took:
 - Put it on PATH — clone the repo and symlink `.claude-plugin/plugins/axiom/bin/xcui` (see the Pi install guide). This is the only way to get `resize sweep`, `wait`, `assert`, `a11y`, `dialog`, and `voiceover`, which have no AXe equivalent.
-- For **input only**, call AXe directly: `axe tap`/`type`/`swipe` take the same flags the `xcui` passthrough forwards, and AXe installs with `brew install cameroncooke/axe/axe`. You then own the `DEVELOPER_DIR` handling yourself — rare, since AXe 1.8.0 loads SimulatorKit under Xcode 27 unaided.
+- For **input only**, call AXe directly: `axe tap`/`type`/`swipe` take the same flags the `xcui` passthrough forwards — add `--tap-style physical` to every `axe tap` (see Tap styles) — and AXe installs with `brew install cameroncooke/axe/axe`. You then own the `DEVELOPER_DIR` handling yourself — rare, since AXe 1.8.0 loads SimulatorKit under Xcode 27 unaided.
 
 ## Prerequisite: run `xcui doctor`
 
-`xcui doctor` verifies AXe (the input/tree engine), Homebrew, Xcode, and a booted sim. If AXe is missing and brew is present, `xcui doctor --install` runs `brew install cameroncooke/axe/axe` (explicit/consented — never silent). Exit 0 = ready; exit 2 = AXe missing or no booted sim (see `problems`/`next_steps` in the JSON). When several sims are booted, every verb targets the lowest UDID deterministically; `doctor` adds a `note` listing them, and `--udid <id>` (accepted by every verb, `doctor` included) targets a specific one.
+`xcui doctor` verifies AXe (the input/tree engine), Homebrew, Xcode, and a booted sim. If AXe is missing and brew is present, `xcui doctor --install` runs `brew install cameroncooke/axe/axe` (explicit/consented — never silent). Exit 0 = ready to drive; exit 2 = something would stop a device command — AXe missing, no booted sim, several booted with no `--udid`, or an AXe too old for the tap style xcui sends (AXe 1.7.0 added `--tap-style`). Read `problems`/`next_steps` in the JSON; `booted` lists every booted device, so a `--udid` can be picked from it without parsing prose.
+
+**More than one booted sim → pass `--udid` on every command.** Without it, every device verb refuses with exit 2 and lists each booted sim's UDID, name, and runtime, so the retry is one step. It refuses rather than guessing because a guess drives the wrong device while every tap still prints ✓. With one booted sim, `--udid` is optional. `doctor` doesn't refuse — it reports the devices in `booted` and fails the gate, leaving `booted_udid` empty because nothing may be targeted in that state.
 
 ## Subcommands
 
@@ -29,7 +31,7 @@ If it is absent, you have two working options and should say which you took:
   - `reduce-transparency` — `defaults write com.apple.Accessibility ReduceTransparencyEnabled`; needs relaunch (pass `--app`).
   - `voiceover` — `devicectl device settings voiceover --enable|--disable`; `--value` is `on`/`off`. Applies live; no relaunch. The only toggle that leaves the simctl/defaults world — simctl has no VoiceOver setter. Read the state back with `xcrun devicectl device info voiceover -d <udid>`.
 - `xcui a11y reset` — clear xcui-set overrides (delete the defaults keys, content_size → large, increase_contrast → disabled).
-- `xcui dialog accept | dismiss [--udid <udid>]` — find the frontmost system alert and tap the right button: `accept` prefers the most-permissive standard grant (`Allow While Using App` › `Allow Once` › `Allow` › `OK` › `Open`), `dismiss` prefers the decline (`Don't Allow` › `Cancel` › `Not Now`). A one-button alert is tapped for either intent. Matching is case- and apostrophe-insensitive (curly `’` = straight `'`). The tap delegates to `axe tap` (by id when present, else by label). Exit `0` handled, `1` no actionable alert.
+- `xcui dialog accept | dismiss [--udid <udid>]` — find the frontmost system alert and tap the right button with a physical touch: `accept` prefers the most-permissive standard grant (`Allow While Using App` › `Allow Once` › `Allow` › `OK` › `Open`), `dismiss` prefers the decline (`Don't Allow` › `Cancel` › `Not Now`). A one-button alert is tapped for either intent. Matching is case- and apostrophe-insensitive (curly `’` = straight `'`). The tap delegates to `axe tap` (by id when present, else by label). Exit `0` handled, `1` no actionable alert.
 - `xcui dialog pregrant <bundle-id> <service>… [--udid <udid>]` — grant permissions ahead of time via `simctl privacy … grant`, so the dialog never appears. Services are `simctl privacy` names (`camera`, `photos`, `location`, `microphone`, `contacts`, …). Prefer this over `accept` when you control the test setup — no alert means nothing to race.
 - `xcui voiceover traverse [--udid <udid>]` — emit the **computed** VoiceOver announcement sequence: walk the a11y tree in focus order (top-to-bottom, leading-to-trailing) and render each focusable element as `label, value, trait` (plus `dimmed` when disabled). Output is a `sequence` JSON array.
 - `xcui voiceover assert --sequence <file> [--udid <udid>]` — compare the live announcement sequence to an expected one; the file may be a bare JSON string array **or** a saved `traverse` report (it round-trips). Reports every differing index (one entry per mismatched position, plus a length-mismatch note when counts differ); exit `1` on any mismatch.
@@ -72,15 +74,36 @@ Three `devicectl` failures are separated, because they need different fixes:
 
 ## Input — `xcui tap`, not `axe tap`
 
-Input verbs forward to AXe verbatim: same flags, same output, same exit code. Use them instead of calling `axe` directly and the SimulatorKit/`DEVELOPER_DIR` handling comes along automatically, so guidance can't drift out of it.
+Input verbs forward to AXe: the flags you pass go through untouched, with the same output and exit code. Use them instead of calling `axe` directly and the SimulatorKit/`DEVELOPER_DIR` handling and the physical tap style come along automatically, so guidance can't drift out of them.
 
-Forwarded: `tap`, `slider`, `type`, `swipe`, `drag`, `touch`, `gesture`, `button`, `key`, `key-sequence`, `key-combo`, `screenshot`. `--udid` is injected when omitted. `xcui tap --help` shows AXe's own flags.
+Forwarded: `tap`, `slider`, `type`, `swipe`, `drag`, `touch`, `gesture`, `button`, `key`, `key-sequence`, `key-combo`, `screenshot`. `--udid` is injected when omitted and exactly one sim is booted. `xcui tap --help` shows AXe's own flags.
 
 ```bash
-xcui tap --id loginButton --udid <udid>     # real HID touch, not pointer-hover
+xcui tap --id loginButton --udid <udid>     # physical touch down/up
 xcui type "user@example.com" --udid <udid>
+xcui touch -x 200 -y 400 --down --up --delay 1.2 --udid <udid>   # long press — tap has no hold option
 axe describe-ui --udid <udid>              # raw a11y tree (xcui assert/wait parse this)
 ```
+
+### Tap styles
+
+AXe's `tap` takes `--tap-style automatic|simulator|physical`. AXe's default, `automatic`, sends a physical touch only to switches and toggles and FBSimulator `tapAt` to everything else — and `tapAt` activated none of the targets below:
+
+| SwiftUI target | `automatic` | `simulator` | `physical` |
+|---|---|---|---|
+| `Toggle` / switch | fires (the one target `automatic` sends a physical touch to) | no effect | fires |
+| `Button` | no effect | no effect | fires |
+| `List` row (`NavigationLink`) | no effect | no effect | pushes |
+| `Button` inside a `List` | no effect | no effect | fires |
+| `Menu` | no effect | no effect | opens |
+| Row of an open `Menu` | no effect | no effect | fires |
+| Tab of a `TabView` (iPhone) | no effect | no effect | selects |
+
+The switch row is AXe's documented behavior for `automatic` ("physical touch for switches/toggles and simulator tap for other targets"); the rest was measured 2026-09-19 with Xcode 27.1 and AXe 1.8.0 on iPhone 17 (iOS 27.0) and iPhone Duo (iOS 27.1) simulators, where AXe printed `✓ … completed successfully` for every no-effect cell. So `xcui tap` adds `--tap-style physical` when you pass no style (pass one to override), and `xcui dialog` taps physically. Calling `axe tap` yourself? Add `--tap-style physical`.
+
+**Verify the effect, never the ✓.** A tap that changes nothing prints the same success line as one that works. After any tap that matters, confirm the result with `xcui wait --for-element`, `xcui assert`, or a screenshot.
+
+**Selectors tap the accessibility frame, not the pixels.** `--id` and `--label` resolve to the element's accessibility activation point. When a view's accessibility frame is skewed — a label hidden with `.fixedSize()` plus `.frame(width: 0).clipped()` is one measured case, where the tap landed about 27 pt from the visible control — the tap misses and still prints ✓. Screenshot, measure the visible center, and tap `-x/-y` in points, or fix the view so its frame matches what it draws.
 
 > **Still calling `axe` directly?** `describe-ui`, `stream-video`, and `record-video` stay bare — the first is what xcui itself parses, and the two streaming verbs outlive any request timeout. Those are the only calls that need a `DEVELOPER_DIR=` prefix, and only when `xcui doctor` reports an `axe_developer_dir` (rare — AXe 1.8.0 loads SimulatorKit under Xcode 27 unaided).
 

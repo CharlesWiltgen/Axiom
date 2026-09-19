@@ -110,7 +110,8 @@ CI order is unchanged at the front: simctl or xcodebuild boots the sim → devic
 |------------|--------------|-----|
 | `device info displays` | works (verified) | bounds, pointScale, nativeSize, `framebufferMaskIdentifier` (exact JSON keys) |
 | `device capture screenshot` / `screen-record` | works (verified) | PNG / H.264 `.mp4` capture, sim or device — see Screen capture below |
-| `device orientation get` (also `set`, `rotate`) | works (`get` verified) | orientation without entering the app |
+| `device orientation set` / `get` (also `rotate`) | works (verified) — **except iPhone Duo**, see Rotating a simulator | rotate a sim headlessly; simctl has no rotate verb |
+| `device motion hinge-angle` | works, read-only | streams the hinge angle (0° closed, 180° open) for 60 s by default; nothing in devicectl or simctl sets it |
 | `device settings biometrics [--enable\|--disable]` | works (verified) | enroll / unenroll Face ID / Touch ID |
 | `device simulate biometrics --success\|--failure` | works (verified) | drive a match / no-match |
 | `device settings appearance --mode light\|dark` | works (verified) | force Dark/Light; also `--look-and-feel clear\|tinted`, text size, contrast |
@@ -143,6 +144,21 @@ ERROR: The capability "Get Lock State" is not supported by this device.
 `info lockState` is confirmed device-only; `info files`, `copy`, and `profile *` are reported
 device-only on simulators. In CI, treat `CoreDeviceError 1001` as "skip on simulator", not a failure.
 
+### Rotating a simulator
+
+`simctl` has no rotate verb, and keystroke automation of the GUI is no substitute — it reported success while rotating nothing. Rotate from the host with devicectl and verify by screenshot **dimensions**:
+
+```bash
+xcrun devicectl device orientation set -d "$SIM" landscapeLeft   # portrait | portraitUpsideDown | landscapeLeft | landscapeRight
+xcrun simctl io "$SIM" screenshot rotated.png                      # width and height must swap
+xcrun devicectl device orientation set -d "$SIM" portrait
+```
+
+Verified 2026-09-19: iPhone 17 (iOS 27.0) 1206×2622 → 2622×1206, iPad Pro 11-inch (iOS 27.0) 1668×2420 → 2420×1668, and the app received the new size both times.
+
+- **iPhone Duo ignores it.** `set` prints `New Device Orientation: landscapeLeft`, `get` still reads `portrait`, and nothing rotates — measured closed, and reported open on the inner display too. Duo poses change only through Device Hub's pose controls: axiom-swiftui (skills/iphone-duo.md, Tooling and Testing).
+- **On iPad, only the host can rotate.** An app's own `requestGeometryUpdate` is refused on iPad under the windowing model (`UISceneErrorDomain` 101; axiom-uikit (skills/uikit-modernization.md)), so a test that needs landscape should rotate from the harness with the command above, not from inside the app.
+
 ## Screen capture — screenshot & video
 
 `devicectl device capture` is the **unified** capture path: one `-d <udid>` selector across
@@ -162,7 +178,7 @@ xcrun devicectl device capture screen-record -d <udid> --destination clip.mp4 --
 | Flag | screenshot | screen-record | Notes |
 |------|------------|---------------|-------|
 | `--destination` | `.png` only | `.mp4` only | wrong extension is a hard error, not a coercion |
-| `--display-unique-id` | yes | yes | pick from `device info displays`; omit = primary display |
+| `--display-unique-id` | yes | yes | the `uniqueId` from `device info displays`. Omitted, the capture is **not** always the primary display — on iPhone Duo it is the inner display, even while closed and dark |
 | `--codec` | — | `h264` (default), `hevc` | |
 | `--mask-policy` | — | `ignored` (default), `premultipliedAlpha`, `black` | bezel mask for non-rectangular displays |
 | `--duration <s>` | — | auto-stop after N seconds | omit = record until SIGINT |
@@ -177,9 +193,32 @@ Reach for these only when devicectl capture doesn't fit — none reach a physica
 
 | Tool | Use | Watch out |
 |------|-----|-----------|
-| `simctl io <udid> screenshot [--type png] <file>` | sim PNG; `-` writes to stdout | sim only |
-| `simctl io <udid> recordVideo [--codec h264\|hevc] [--mask ignored\|alpha\|black] <file>` | sim video to a `.mov` | default codec is `hevc` (devicectl defaults `h264`); stop with SIGINT; sim only |
+| `simctl io <udid> screenshot [--type png] [--display <port>] [--mask ignored\|alpha\|black] <file>` | sim PNG; `-` writes to stdout | sim only; `--display` takes a port UUID from `simctl io <udid> enumerate` (not devicectl's `uniqueId`) |
+| `simctl io <udid> recordVideo [--codec h264\|hevc] [--mask ignored\|black] <file>` | sim video to a `.mov` | default codec is `hevc` (devicectl defaults `h264`); stop with SIGINT; sim only. `--mask alpha` is accepted but unsupported for video — it renders black |
 | `axe record-video --output f.mp4` / `axe stream-video` | sim video / live preview stream (mjpeg, jpeg, ffmpeg, bgra) | sim only; `record-video` stops on Ctrl+C — see `axiom-xcode-mcp (skills/axe-ref.md)` |
+
+### Display masks and multi-display devices
+
+For non-rectangular displays, `simctl io … screenshot --mask` chooses what the corners hold:
+
+| `--mask` | Corners | Use it to see |
+|---|---|---|
+| `alpha` | transparent (premultiplied alpha) | what the user sees on the glass |
+| `ignored` | the full framebuffer rectangle | what a device screenshot captures — anything a view leaves under a corner lands in it |
+| `black` | black, no alpha channel | a flat image for tools that drop alpha |
+
+Compare `alpha` and `ignored` when judging content near a corner. The alpha channel is also a measurement: on iPhone Duo's outer display the fully transparent run along the top and bottom rows is 18 px at the left corners and 185 px at the right (iOS 27.1 simulator).
+
+**A device with two displays needs the display named.** iPhone Duo's default capture — `simctl io` and `devicectl device capture` alike — is the inner display (2007×2853 px), which is black while the device is closed. Capture the outer display (1398×2034 px) explicitly:
+
+```bash
+xcrun simctl io "$SIM" enumerate                   # the outer display's port is the one 1398 wide
+xcrun simctl io "$SIM" screenshot --display=<port UUID> outer.png
+xcrun devicectl device info displays -d "$SIM"      # outer is "LCD", inner "LCD-1"; shows which is active
+xcrun devicectl device capture screenshot -d "$SIM" --display-unique-id <uniqueId> --destination outer.png
+```
+
+The two tools use different identifiers for the same display: simctl wants the **port UUID** from `enumerate`, devicectl the **`uniqueId`** from `info displays`. Guessing names fails — simctl rejects `--display=LCD-2`, and `2`, `4`, and `external` are accepted but hang without a frame.
 
 ## Status bar for screenshots
 
@@ -384,7 +423,9 @@ trying to kill is still running. Confirm against the process, not the exit code:
 ```bash
 killall -9 Simulator DeviceHub
 pgrep -l Simulator DeviceHub    # must print NOTHING
-``` CarPlay simulation moved with it, into DeviceKit's
+```
+
+CarPlay simulation moved with it, into DeviceKit's
 `CarPlaySimulator.devicekitplugin`; the Xcode 26 `defaults write com.apple.iphonesimulator
 CarPlayExtraOptions -bool YES` key does not exist anywhere in the 27 toolchain.
 

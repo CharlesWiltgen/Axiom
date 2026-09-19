@@ -147,6 +147,7 @@ You no longer own a fixed canvas — you express preferences the user and system
   windowScene.sizeRestrictions?.minimumSize = CGSize(width: 400, height: 600)
   ```
 - **Orientation lock** — a *preference*, not a guarantee, in resizable environments. Override `UIViewController.prefersInterfaceOrientationLocked` (returns `Bool`) and call `setNeedsUpdateOfPrefersInterfaceOrientationLocked()` when it changes; read the resolved state from `windowScene.effectiveGeometry.isInterfaceOrientationLocked` (iOS 26).
+- **Requesting an orientation** — iPad refuses it under the windowing model. `windowScene.requestGeometryUpdate(.iOS(interfaceOrientations: .landscapeRight))` calls its `errorHandler` with `UISceneErrorDomain` code 101, "The current windowing mode does not allow for programmatic changes to interface orientation", and the scene keeps its size. The error handler is the only signal, so always pass one. The same request rotated an iPhone scene (measured on iPad Pro 11-inch and iPhone 17, iOS 27.0 simulators). On iPad, lay out for the size you're given instead of forcing an orientation.
 - **Interactive vs settled resize** — `UIWindowSceneGeometry.isInteractivelyResizing` (iOS 26) is `true` while the user drags; throttle expensive work during the drag and settle when it clears. SwiftUI's equivalent is `.onInteractiveResizeChange(_:)` (see axiom-swiftui (skills/layout-ref.md)).
 
 ## iPhone Mirroring compatibility

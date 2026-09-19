@@ -90,6 +90,57 @@ Each entry has:
 }
 ```
 
+### Two key styles — and what a tool must read
+
+An entry's key is either the English source text itself or a symbolic identifier. The first entry below has the English as its key; the second uses a symbolic key and carries the English in an explicit source unit.
+
+```json
+"Songs" : {
+
+  },
+"quality.high" : {
+  "comment" : "Playback quality: 256 kbps",
+  "extractionState" : "extracted_with_value",
+  "localizations" : { "en" : { "stringUnit" : { "state" : "new", "value" : "High" } } }
+}
+```
+
+`String(localized: "Songs")` produces the first; `String(localized: "quality.high", defaultValue: "High")` produces the second, with `extracted_with_value` and an explicit source unit. So **the source string is `localizations[sourceLanguage]` if present, else the key** — a tool has to handle both, not pick one. (`sourceLanguage` is a top-level field and is not always `en`: in a catalog whose source is German the unit lands under `de`, so a tool that hardcodes `en` reads a translation as if it were the source.) A tool that reads only the source localization skips every key-as-English entry, and a search over keys alone misses every symbolic one.
+
+### Writing a catalog from a tool
+
+Xcode has one byte layout, and a generic JSON writer rewrites the whole file — measured on a real 970-key catalog, `json.dump(..., indent=2)` produced a **26,531-line diff** that buried the actual translation. The layout:
+
+| Rule | Value |
+|---|---|
+| Indent | 2 spaces |
+| Key separator | `" : "` — a space *before* the colon |
+| Encoding | literal UTF-8, never `\u` escapes |
+| Trailing newline | none |
+| Empty entry | `{`, a blank line, then `}` at the entry's own indent |
+| Keys inside an entry | sorted by code point |
+| Keys of the top-level `strings` map | two writers, two orders — see below |
+
+**The two Apple writers order the top-level keys differently.** `xcstringstool` sorts by code point. The Xcode editor's order matches Foundation's `localizedStandardCompare`, which is punctuation-aware: measured across two editor-written revisions of the same 1,086- and 1,447-key catalog, that comparison had 0 violations while plain code-point order had 139 and 212. So running `xcstringstool sync` over an editor-maintained catalog re-sorts every key — a 16,005-line diff on a file whose meaning did not change. Match whichever order the file already uses.
+
+**`xcstringstool` ships with Xcode** and is the headless path in and out of a catalog. It is not on `PATH`; run it through `xcrun`:
+
+```bash
+xcrun xcstringstool extract --SwiftUI --modern-localizable-strings -o /tmp/sd $(find Sources -name '*.swift')
+xcrun xcstringstool sync Localizable.xcstrings --stringsdata /tmp/sd/*.stringsdata --skip-marking-strings-stale
+xcrun xcstringstool print Localizable.xcstrings   # every key
+```
+
+(`Sources/**/*.swift` is not a substitute for that `find`: macOS ships bash 3.2, which has no `globstar`, so `**` silently matches one directory level.)
+
+**`sync` prunes.** It is not an additive merge: every entry missing from the `.stringsdata` is marked `extractionState: stale` if it has translations and **deleted outright if it has none** — exit 0, no warning. Measured on a two-entry catalog: the untranslated entry vanished and the translated one came back stale. `--skip-marking-strings-stale` is the guard, and with it a 1,447-key catalog synced intact (122 untranslated entries all survived).
+
+That makes the filename matter twice over: `sync` matches a `.stringsdata` table to the catalog **by filename**, so `Localizable.xcstrings` takes the `Localizable` table. Point it at `Strings.xcstrings` and nothing matches — so nothing is added, and without the guard flag every entry is pruned or staled.
+
+`sync` re-emits the canonical layout only when it has something to write; a pure reformat with no source change is left exactly as it is, so it is not a repair tool for a bad write.
+
+To write translations — which `sync` does not do — parse, mutate only the entries you mean to touch, and re-emit in the layout above, ordering the top-level keys the way the file already orders them. In JavaScript, `JSON.parse` also hoists integer-like keys (`"30"`) to the front, so a parse/stringify round-trip reorders the file on its own; parse into an order-preserving structure instead.
+
 ### Translation States
 
 Xcode tracks state for each translation:
@@ -795,6 +846,28 @@ String(localized: "Confirm", comment: "Button to confirm delete action")
 ```
 
 **Impact**: "Confirm" could mean "verify" or "acknowledge" - context matters for accurate translation.
+
+### Expecting a comment to separate two meanings
+
+A comment gives a translator context; it does **not** split a key. One English word used for two concepts is one entry with one translation, and the comments are merged:
+
+```swift
+String(localized: "High", comment: "Energy level of a track")
+String(localized: "High", comment: "Playback quality: 256 kbps")
+```
+
+```json
+"High" : { "comment" : "Energy level of a track\nPlayback quality: 256 kbps" }
+```
+
+`xcstringstool sync` says so — `notice: Key "High" used with multiple comments: …` — and then the catalog ships whichever translation the translator picked for both. Give each meaning its own key and keep the English in a default value:
+
+```swift
+String(localized: "energy.high", defaultValue: "High", comment: "Energy level of a track")
+String(localized: "quality.high", defaultValue: "High", comment: "Playback quality: 256 kbps")
+```
+
+This bites hardest where a short word is reused across features — a picker label and a Siri phrase, say — because the wrong sense only shows up in the other feature's UI. Before renaming any enum title or button to a short common word, search the catalog for that exact key.
 
 ---
 
