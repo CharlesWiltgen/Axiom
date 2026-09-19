@@ -197,6 +197,31 @@ Reach for these only when devicectl capture doesn't fit — none reach a physica
 | `simctl io <udid> recordVideo [--codec h264\|hevc] [--mask ignored\|black] <file>` | sim video to a `.mov` | default codec is `hevc` (devicectl defaults `h264`); stop with SIGINT; sim only. `--mask alpha` is accepted but unsupported for video — it renders black |
 | `axe record-video --output f.mp4` / `axe stream-video` | sim video / live preview stream (mjpeg, jpeg, ffmpeg, bgra) | sim only; `record-video` stops on Ctrl+C — see `axiom-xcode-mcp (skills/axe-ref.md)` |
 
+### A black capture is not evidence about your app
+
+A screenshot can come back entirely black, or fail outright, while every other instrument
+reports a healthy device — so a black capture says nothing about your app until you check
+the display state. `simctl io <udid> screenConfig power off|on` is the reproducible way in
+(measured on an iPhone 17 / iOS 27.0 simulator):
+
+| State | `simctl io … screenshot` | What the other instruments say |
+|---|---|---|
+| Screen powered off | **fails**: `Timeout waiting for screen surfaces` | `devicectl device info displays` still reports `backlightState: activeOn` |
+| After `screenConfig power on` | **succeeds, entirely black** | same, plus `axe describe-ui` returns the full tree with real frames |
+
+The second row is the dangerous one: the command exits 0, writes a valid PNG, and the
+accessibility tree still answers, so an agent reading only exit codes concludes the app
+rendered nothing. Nothing recovered it here — `axe button home`, `axe button lock`, a tap,
+and a second `power on` all left the framebuffer black. `xcrun simctl shutdown <udid>`
+followed by `boot` restored real pixels.
+
+**The cross-check is the accessibility tree.** A full tree plus black pixels means the
+display, not your app; an empty tree plus black pixels means the app really is showing
+nothing. A locked device is a third case and looks different again — its lock screen stays
+lit, so a black frame is not simply "the device locked itself" (measured: still lit 20 s
+after `axe button lock`). On iPhone Duo, a fourth: the inner display is the default capture
+target and is black while the device is closed — see axiom-swiftui (skills/iphone-duo.md).
+
 ### Display masks and multi-display devices
 
 For non-rectangular displays, `simctl io … screenshot --mask` chooses what the corners hold:
