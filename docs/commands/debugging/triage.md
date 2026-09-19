@@ -30,3 +30,4 @@ Pull, classify, and rank production crash issues from Sentry or App Store Connec
 - [triage-analyzer](/agents/triage-analyzer) – The agent behind this command
 - [production-triage](/skills/debugging/production-triage) – Skill with Sentry/ASC fetch patterns, clustering, and the suspension noise classifier
 - [/axiom:analyze-crash](/commands/debugging/analyze-crash) – Use this instead when you have a single crash log to investigate
+- [testflight-triage](/skills/debugging/testflight-triage) – Use this instead for the local Xcode Organizer corpus of `.xccrashpoint` bundles

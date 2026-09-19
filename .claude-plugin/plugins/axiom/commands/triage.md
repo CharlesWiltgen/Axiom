@@ -24,6 +24,11 @@ Launches the **triage-analyzer** agent to pull grouped production issues from th
 4. Merges clusters into root-cause families and ranks by users affected.
 5. Produces a report that demotes likely-noise issues with reasons — never drops them.
 
+## Not This Command
+
+- **One crash file** (.ips, MetricKit, .crash, a single `.xccrashpoint`) → `/axiom:analyze-crash`
+- **The local Xcode Organizer corpus** (`~/Library/Developer/Xcode/Products/<bundle-id>/Crashes/Points/*.xccrashpoint`) → `axiom-shipping (skills/testflight-triage.md)`, "The On-Disk Organizer Corpus"
+
 ## Prefer Natural Language?
 
 You can also trigger this agent with:
