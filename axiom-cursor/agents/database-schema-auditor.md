@@ -82,8 +82,8 @@ Run all 10 detection patterns. For every grep match, use Read to verify the surr
 ### Pattern 1: ADD COLUMN NOT NULL Without DEFAULT (CRITICAL/HIGH)
 
 **Issue**: SQLite requires DEFAULT for NOT NULL columns added to existing tables. Without it, the migration crashes for any table with existing rows.
-**Search**: `ADD\s+COLUMN.*NOT\s+NULL`
-**Verify**: Read matching files; check for `DEFAULT` on the same statement.
+**Search**: `ADD\s+COLUMN.*NOT\s+NULL`, `add\(column:.*\.notNull\(`
+**Verify**: Read matching files; check for `DEFAULT` on the same statement (GRDB: `.defaults(to:)` or `.defaults(sql:)` on the same column).
 **Fix**: `ADD COLUMN name TEXT NOT NULL DEFAULT ''`
 
 ### Pattern 2: DROP TABLE on User Data (CRITICAL/HIGH)
@@ -102,7 +102,7 @@ Run all 10 detection patterns. For every grep match, use Read to verify the surr
 ### Pattern 4: ALTER TABLE Without Idempotency Check (CRITICAL/HIGH)
 
 **Issue**: `ADD COLUMN` on a column that already exists fails with "duplicate column name". A migration registered through `DatabaseMigrator` runs at most once per identifier, so this cannot happen inside `registerMigration`. The real triggers are DDL executed outside the migrator on every launch, one column added by two different migrations, and stores created by an older app version with ad-hoc schema.
-**Search**: `ADD\s+COLUMN`, `addColumn`
+**Search**: `ADD\s+COLUMN`, `addColumn`, `add\(column:`
 **Verify**: Read matching files; check for an existence guard (`db.columns(in:)`, `PRAGMA table_info`) or a do-catch. DDL inside `registerMigration` needs no guard.
 **Fix**: Guard on introspection — `let exists = try db.columns(in: "users").contains { $0.name == "email" }`, then alter only when `exists` is false. `PRAGMA table_info` or a do-catch around the ALTER also works. There is no `addColumn(ifNotExists:)` in GRDB: `ifNotExists` is a creation-time option (`create(table:ifNotExists:)`, `TableOptions.ifNotExists`), and SQLite's ADD COLUMN has no such clause.
 
@@ -115,10 +115,10 @@ Run all 10 detection patterns. For every grep match, use Read to verify the surr
 
 ### Pattern 6: Foreign Key Added to an Existing Table Without an Orphan Check (HIGH/MEDIUM)
 
-**Issue**: Foreign keys are creation-time in both SQLite and GRDB — `foreignKey(_:references:columns:onDelete:onUpdate:deferred:)` on the table definition; a `TableAlteration` can only add, rename, or drop columns. Adding one to an existing table means recreating it, and orphaned child rows make that recreation fail: GRDB's default deferred checks run `checkForeignKeys()` before the migration commits.
-**Search**: `FOREIGN\s+KEY`, `REFERENCES` — declared inside `CREATE TABLE`, never added by an ALTER
-**Verify**: Read matching files; where the constraint is new on an existing table, check for orphan cleanup or a `PRAGMA foreign_key_check` before the recreation. There is no `addForeignKey` API.
-**Fix**: Clean up orphans first, or run `PRAGMA foreign_key_check` to validate before recreating the table.
+**Issue**: A foreign key on an *existing* column is creation-time in both SQLite and GRDB — `foreignKey(_:references:columns:onDelete:onUpdate:deferred:)` on the table definition, and there is no `addForeignKey` API — so adding one means recreating the table, and orphaned child rows make that recreation fail: GRDB's default deferred checks run `checkForeignKeys()` before the migration commits. A *new* column can carry a foreign key without a rebuild: `ALTER TABLE … ADD COLUMN … REFERENCES` (GRDB: `t.add(column:).references(...)`). With foreign keys on, SQLite requires that column to default to NULL, so it starts with no orphans.
+**Search**: `FOREIGN\s+KEY`, `REFERENCES` — in `CREATE TABLE`, on an `ADD COLUMN`, or GRDB `.references(`
+**Verify**: Read matching files; where the constraint is new on an existing column, check for orphan cleanup or a `PRAGMA foreign_key_check` before the recreation. A new `ADD COLUMN … REFERENCES` column needs neither.
+**Fix**: Clean up orphans first, or run `PRAGMA foreign_key_check` to validate before recreating the table. If the relationship can live on a new column, add it with `ADD COLUMN … REFERENCES` instead of rebuilding.
 
 ### Pattern 7: Foreign Key Enforcement Disabled (HIGH/HIGH)
 

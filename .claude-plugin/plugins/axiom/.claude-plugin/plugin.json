@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "27.1.0",
+  "version": "27.1.1",
   "description": "Battle-tested Claude Code skills, agents, and tools for modern xOS (iOS, iPadOS, macOS, watchOS, tvOS) development",
   "author": {
     "name": "Charles Wiltgen"

@@ -1298,9 +1298,9 @@ final class TrackTests: XCTestCase {
 
 ## tvOS
 
-**No local file on tvOS is *guaranteed* to persist, but SwiftData does keep a local store there.** `Documents` and `Caches` exist from the first launch, and `Application Support` is a real, separate directory — SwiftData does not create it for you, and it is not aliased to `Caches`. What differs from iOS is where a default store lands: on tvOS a container's default URL is `Library/Caches/default.store`, the one directory the system may purge, where iOS uses `Library/Application Support/default.store`.
+**No local file on tvOS is guaranteed to persist — `Documents`, `Application Support`, and `Caches` can all be deleted while your app isn't running.** SwiftData still keeps a local store there. `Documents` and `Caches` exist from the first launch, and `Application Support` is a real, separate directory — SwiftData does not create it for you, and it is not aliased to `Caches`. What differs from iOS is where a default store lands: on tvOS a container's default URL is `Library/Caches/default.store`, where iOS uses `Library/Application Support/default.store`.
 
-Pass an explicit store URL under Application Support when you need durability, and treat CloudKit sync (`cloudKitDatabase: .private(...)`) as the belt-and-braces option rather than a requirement. See axiom-swift (skills/tvos.md) for full tvOS storage constraints.
+Pointing the store at Application Support does not make it durable. Make iCloud the source of truth — CloudKit sync (`cloudKitDatabase: .private(...)`) — and treat the local store as a cache the app can rebuild from it. See axiom-swift (skills/tvos.md) for full tvOS storage constraints.
 
 ---
 

@@ -68,20 +68,20 @@ Skip: `*/Pods/*`, `*/Carthage/*`, `*/.build/*`, `*/DerivedData/*`, `*/scratch/*`
 ### Pattern 2: `@MainActor` Missing on UI Tests (CRITICAL)
 
 **Issue**: Swift 6 requires explicit actor isolation
-**Why flaky**: In Swift 6 language mode this is a compile error, not a flake — the compiler refuses the call. Constructing the `@MainActor` type off-actor is fine; calling an isolated member from a non-isolated test is what fails, and it only becomes a runtime data race in a project still on `-swift-version 5`.
+**Why it fails**: Calling a main actor-isolated member from a non-isolated test is a compile error in every language mode — Swift 5 (minimal or complete checking) and Swift 6 alike — so it breaks the build rather than flaking. Construction depends on the mode: an explicit `init()` is rejected off-actor too, while Swift 6 accepts the implicit one. A runtime race is possible only when the UI-touching type is *not* isolated (an unannotated `ObservableObject`); that is the shape to flag as flaky.
 **Detection**: Tests accessing UI types without @MainActor
 
 ```swift
-// ❌ FLAKY - Main actor-isolated ViewModel used from a non-isolated test
+// ❌ BUILD FAILURE - Main actor-isolated ViewModel used from a non-isolated test
 @Test func viewModelUpdates() async {
-    let vm = ContentViewModel()  // Constructing a @MainActor type off-actor is fine
+    let vm = ContentViewModel()  // implicit init: accepted in Swift 6; an explicit init() is rejected here too
     vm.load()  // ERROR: main actor-isolated instance method 'load()' cannot be called from outside of the actor
 }
 
 // ✅ CORRECT - Proper isolation
 @Test @MainActor func viewModelUpdates() async {
     let vm = ContentViewModel()
-    await vm.load()
+    vm.load()
 }
 ```
 
@@ -319,7 +319,7 @@ For each match:
       vm.load()  // ERROR: main actor-isolated instance method cannot be called from outside of the actor
   }
   ```
-  - **Root cause**: Calling a @MainActor type from a non-isolated test — a compile error in Swift 6, a data race under `-swift-version 5`
+  - **Root cause**: Calling a @MainActor type from a non-isolated test — a compile error in every language mode
   - **Fix**: Add `@MainActor` to test function
 
 ## HIGH Issues
