@@ -20,7 +20,7 @@ Diagnoses WHY tests fail, especially intermittent/flaky failures in Swift Testin
 
 ### Critical (Will Cause Intermittent Failures)
 - **Missing `await confirmation`** – Async callback without proper waiting
-- **Missing `@MainActor`** – Data races when accessing UI types in Swift 6
+- **Missing `@MainActor`** – Tests that call main-actor UI types without `@MainActor` (a build failure in every Swift mode, not a flake)
 
 ### High Priority (Parallel Execution Failures)
 - **Shared mutable state** – `static var` in test suites causing race conditions
