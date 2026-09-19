@@ -30,6 +30,7 @@ Use this reference when:
 Questions you can ask Claude that will draw from this reference:
 
 - "How does Apple Music translate 'Up Next' in French?"
+- "Where can I read Apple's own Siri phrase wording for a locale?"
 - "How do I build a localization glossary for my app?"
 - "Should I pseudolocalize before paying for translations?"
 - "Which Translation Management System should I use for an `.xcstrings` project?"
@@ -39,6 +40,7 @@ Questions you can ask Claude that will draw from this reference:
 ## What's Covered
 
 ### Apple Terminology Matching
+- Apple's shipped translations inside the simulator runtime (`Music.app/<lang>.lproj`, `AppShortcuts.strings`)
 - Apple Support multi-locale pages (authoritative cross-check)
 - applelocalization.com (community database, sanity-check only)
 - 15 media-app terms worth looking up first, plus a generic-app list

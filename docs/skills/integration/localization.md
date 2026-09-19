@@ -19,6 +19,7 @@ Use this skill when:
 - Preparing App Shortcuts and App Intents for localization
 - Debugging missing translations, wrong plural forms, or layout mirroring problems
 - Adopting Xcode 26 type-safe generated symbols and the `#bundle` macro
+- Writing a script or tool that reads or edits an `.xcstrings` file
 
 ## Example Prompts
 
@@ -29,6 +30,8 @@ Use this skill when:
 - "How do I migrate from `.strings` to a String Catalog?"
 - "When should I use `LocalizedStringResource` instead of `String(localized:)`?"
 - "How do I localize an App Shortcut phrase?"
+- "My script rewrote the whole String Catalog — what layout does Xcode expect?"
+- "Two different features both show 'High' — why do they share one translation?"
 
 ## What This Skill Provides
 
@@ -42,6 +45,7 @@ Use this skill when:
 - **App Shortcuts localization** – phrases, parameter prompts, response dialogs, all routed through String Catalogs
 - **Xcode 26 generated symbols** – compile-time type safety for keys (`Text(.appHomeScreenTitle)`), automatic comment generation, `#bundle` macro for Swift Package localization, refactoring tools
 - **Migration paths** – `.strings` → `.xcstrings`, `.stringsdict` → catalog plural variations, removing manual `Localizable.strings` from build phases
+- **Writing a catalog from a tool** – the byte layout Xcode expects, the two key styles a reader must handle, `xcstringstool` extract/sync (including what `sync` prunes), and why one English word used for two meanings ships one translation
 
 ## Related
 

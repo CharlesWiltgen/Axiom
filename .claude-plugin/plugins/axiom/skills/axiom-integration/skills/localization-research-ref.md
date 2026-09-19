@@ -38,9 +38,29 @@ Do NOT use this skill for:
 
 Users expect "Shuffle," "Up Next," "Now Playing," "Smart Playlist" to mean exactly what they mean in Apple Music. Diverging from Apple's canonical translations feels wrong in every language — even if your translation is technically correct.
 
+### Apple's own translations, on disk (most exact)
+
+Every installed simulator runtime ships Apple's shipped `.strings` for its bundled apps — the same text users read in Music, Mail, and Settings. `.strings` there are binary plists, so read them with `plutil`:
+
+```bash
+RT=$(xcrun simctl list runtimes -j | python3 -c 'import json,sys; print([r["runtimeRoot"] for r in json.load(sys.stdin)["runtimes"] if r["platform"]=="iOS"][-1])')
+ls "$RT/Applications/Music.app" | grep lproj          # 56 locales in the 27.0 and 27.1 runtimes
+plutil -p "$RT/Applications/Music.app/fr.lproj/Localizable.strings" | grep -i '"Songs"'
+```
+
+Music.app's keys are the English text, so grep the key and read the value: `Songs` is `Morceaux` in French and `노래` in Korean; `Shuffle` is `Aléatoire` and `임의 재생`. Some apps ship no `en.lproj` for exactly that reason — the key is the English.
+
+The same runtime holds hundreds of **`AppShortcuts.strings`** files (753 in the iOS 27.0 runtime), which are Apple's own registered Siri phrases — the precedent to follow for phrase *structure*, not just vocabulary:
+
+```bash
+find "$RT" -name AppShortcuts.strings | head
+```
+
+Use this first when you need the exact form of a UI string. Use the Support pages below when you need what a user *says* out loud, which is a different register — the button may be `Lire` while the Siri verb is `mets`.
+
 ### Primary Sanity Check (Authoritative)
 
-**Apple Support multi-locale pages** — the authoritative source. Apple's help articles ship in every supported locale with hand-translated terminology. Fetch the same article across locales and compare:
+**Apple Support multi-locale pages** — authoritative for spoken and user-facing phrasing. Apple's help articles ship in every supported locale with hand-translated terminology. Fetch the same article across locales and compare:
 
 | Locale | URL pattern |
 |--------|-------------|
