@@ -32,6 +32,7 @@ Use this skill when:
 - **Vertical bars** – which bars move to the side, item order, overflow priorities, and when to turn the behavior off
 - **The fold** – rules for keeping controls reachable without hiding them, and for spacing and sizing custom grids around it
 - **27.1 APIs** – vertical-bar overrides, reserved regions, arrangements, the hinge, and the camera accessory, with iOS 27.1 availability and `@available` gating
+- **Simulator testing** – which runtime carries the Duo device type, which poses only Device Hub can set, and how to capture each display
 
 ## Related
 
