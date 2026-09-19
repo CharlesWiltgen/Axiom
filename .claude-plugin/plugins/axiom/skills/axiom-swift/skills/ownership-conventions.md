@@ -118,10 +118,11 @@ func consumeOnce() {
 The move needs a function scope: a top-level `let data` is a *global*, and a
 global noncopyable value cannot be consumed
 (`error: cannot consume noncopyable stored property 'data' that is global`).
-`consume` also only moves a value of `~Copyable` type. Applied to a copyable
-value it changes nothing: the compiler warns `'consume' applied to
-bitwise-copyable type 'LargeValue' has no effect` and the original binding stays
-usable.
+`consume` ends a local binding's lifetime whether or not the type is copyable:
+reusing a consumed `[UInt8]`-backed struct is the same `error: 'd' used after
+consume`. The one exception is a bitwise-copyable (trivial) type such as
+`struct Point { var x: Int }`, where the compiler warns `'consume' applied to
+bitwise-copyable type 'Point' has no effect` and the binding stays usable.
 
 ### Pattern 5: Noncopyable Type
 
@@ -147,7 +148,7 @@ struct FileHandle: ~Copyable {
 
     consuming func close() {
         Darwin.close(fd)
-        // Handle consumed — can't use after close()
+        discard self  // skip deinit — without this, deinit closes fd a second time
     }
 
     deinit {
@@ -155,10 +156,13 @@ struct FileHandle: ~Copyable {
     }
 }
 
-// Usage
-let file = try FileHandle(path: "/tmp/data.txt")
-let data = file.read(count: 1024)  // borrowing
-file.close()  // consuming — file invalidated
+// Usage — inside a function: a top-level `let` is a global, which can't be consumed
+func readHeader() throws -> Data {
+    let file = try FileHandle(path: "/tmp/data.txt")
+    let data = file.read(count: 1024)  // borrowing
+    file.close()  // consuming — file invalidated
+    return data
+}
 ```
 
 ### Pattern 6: Reducing ARC Traffic
