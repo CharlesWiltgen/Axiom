@@ -95,6 +95,10 @@ func runInput(out io.Writer, verb string, args []string) int {
 		res, err := runAxe(context.Background(), inputTimeout, verb, "--help")
 		out.Write(res.Stdout)
 		os.Stderr.Write(res.Stderr)
+		if verb == "tap" && err == nil {
+			// AXe's help documents its own default, which xcui overrides.
+			fmt.Fprintf(os.Stderr, "\nxcui note: xcui sends %s %s unless you pass %s yourself.\n", tapStyleFlag, tapStylePhysical, tapStyleFlag)
+		}
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "xcui %s --help: %v\n", verb, err)
 			return 2
@@ -111,11 +115,17 @@ func runInput(out io.Writer, verb string, args []string) int {
 		}
 		args = append([]string{"--udid", udid}, args...)
 	}
+	if verb == "tap" {
+		args = withPhysicalTapStyle(args)
+	}
 
 	res, err := runAxe(ctx, inputTimeout, append([]string{verb}, args...)...)
 	out.Write(res.Stdout)
 	os.Stderr.Write(res.Stderr)
 	if err != nil {
+		if isUnknownTapStyleError(string(res.Stderr)) {
+			fmt.Fprintf(os.Stderr, "xcui %s: this AXe has no %s (added in AXe 1.7.0), which xcui sends on every tap — upgrade with `brew upgrade cameroncooke/axe/axe`, or run `axe %s` directly\n", verb, tapStyleFlag, verb)
+		}
 		if IsTimeoutError(err) {
 			fmt.Fprintf(os.Stderr, "xcui %s: timed out after %s\n", verb, inputTimeout)
 			return 2
@@ -134,6 +144,37 @@ func runInput(out io.Writer, verb string, args []string) int {
 		return 1
 	}
 	return 0
+}
+
+// tapStyleFlag and tapStylePhysical are AXe's spelling for the only tap style that
+// works. AXe's default sends FBSimulator tapAt for anything but a switch, which
+// SwiftUI buttons, list rows, menus, and tabs ignored on Xcode 27.1 + AXe 1.8.0 while
+// AXe still printed ✓; a physical touch down/up activated all of them. Both the `tap`
+// passthrough and `dialog`'s alert taps go through withPhysicalTapStyle, so the flag
+// is spelled once — `doctor` reports if a future AXe stops offering it.
+const (
+	tapStyleFlag     = "--tap-style"
+	tapStylePhysical = "physical"
+)
+
+// withPhysicalTapStyle prepends AXe's physical tap style unless the caller chose one.
+func withPhysicalTapStyle(args []string) []string {
+	if hasFlag(args, tapStyleFlag) {
+		return args
+	}
+	return append([]string{tapStyleFlag, tapStylePhysical}, args...)
+}
+
+// isUnknownTapStyleError spots AXe rejecting the flag xcui supplies — what an AXe
+// older than 1.7.0 does to every tap. The message names xcui's own addition, so
+// without this the user reads an error about a flag they never passed.
+func isUnknownTapStyleError(stderr string) bool {
+	return strings.Contains(stderr, "Unknown option") && strings.Contains(stderr, tapStyleFlag)
+}
+
+// tapStyleSupported reports whether `axe tap --help` still documents the flag.
+func tapStyleSupported(tapHelp string) bool {
+	return strings.Contains(tapHelp, tapStyleFlag)
 }
 
 // hasFlag reports whether args already carries name, in either `--flag value` or

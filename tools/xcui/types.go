@@ -10,13 +10,18 @@ type DoctorReport struct {
 	XcodePath  string `json:"xcode_path,omitempty"`
 	// AxeDeveloperDir is the DEVELOPER_DIR xcui injects for AXe when the selected
 	// Xcode relocated SimulatorKit.framework (Xcode 27 beta). Empty when unneeded.
-	AxeDeveloperDir string   `json:"axe_developer_dir,omitempty"`
-	BootedUDID      string   `json:"booted_udid,omitempty"`
-	Installed       bool     `json:"installed,omitempty"` // true if --install ran brew
-	OK              bool     `json:"ok"`
-	Note            string   `json:"note,omitempty"` // advisory (e.g. >1 sim booted); does not flip OK
-	Problems        []string `json:"problems,omitempty"`
-	NextSteps       []string `json:"next_steps,omitempty"`
+	AxeDeveloperDir string `json:"axe_developer_dir,omitempty"`
+	// BootedUDID is the device commands will target. It is empty when several are
+	// booted and no --udid was given, because nothing may be targeted in that state.
+	BootedUDID string `json:"booted_udid,omitempty"`
+	// Booted lists every booted device when xcui resolved them itself, so a caller
+	// can pick a --udid from JSON instead of parsing prose.
+	Booted    []bootedSim `json:"booted,omitempty"`
+	Installed bool        `json:"installed,omitempty"` // true if --install ran brew
+	OK        bool        `json:"ok"`
+	Note      string      `json:"note,omitempty"` // advisory; blockers go in Problems and flip OK
+	Problems  []string    `json:"problems,omitempty"`
+	NextSteps []string    `json:"next_steps,omitempty"`
 }
 
 // WaitReport is the JSON payload of `xcui wait`.

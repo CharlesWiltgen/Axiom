@@ -1,6 +1,11 @@
 package main
 
-import "testing"
+import (
+	"context"
+	"errors"
+	"reflect"
+	"testing"
+)
 
 func TestVersionConstSet(t *testing.T) {
 	if version == "" {
@@ -88,50 +93,136 @@ func TestPickBootedUDIDNoneBooted(t *testing.T) {
 	}
 }
 
-// With more than one sim booted the candidates must come back sorted, so the
-// pick is stable across runs (Go map iteration order is randomized — without
-// sorting, wait/assert could target a different sim each run).
-func TestBootedUDIDsSortedDeterministic(t *testing.T) {
-	const twoBooted = `{"devices":{
-	  "com.apple.CoreSimulator.SimRuntime.iOS-26-0":[
-	    {"udid":"ZZZZ","state":"Booted","name":"iPhone 17 Pro"},
-	    {"udid":"AAAA","state":"Booted","name":"iPhone 17"},
-	    {"udid":"MMMM","state":"Shutdown","name":"iPad"}
-	  ]}}`
-	got, err := bootedUDIDs([]byte(twoBooted))
+// Two same-named devices on different runtimes is the real-world shape: the
+// runtime is the only thing that tells "iPhone 17 (26.5)" from "iPhone 17 (27)".
+const threeBootedTwoRuntimes = `{"devices":{
+  "com.apple.CoreSimulator.SimRuntime.iOS-27-0":[
+    {"udid":"ZZZZ","state":"Booted","name":"iPhone 17"},
+    {"udid":"MMMM","state":"Shutdown","name":"iPad"}
+  ],
+  "com.apple.CoreSimulator.SimRuntime.iOS-26-5":[
+    {"udid":"AAAA","state":"Booted","name":"iPhone 17"}
+  ],
+  "com.apple.CoreSimulator.SimRuntime.iOS-27-1":[
+    {"udid":"DDDD","state":"Booted","name":"iPhone Duo"}
+  ]}}`
+
+// Sorted by UDID so the refusal lists devices in the same order every run
+// (Go map iteration order is randomized).
+func TestBootedSimsSortedWithRuntime(t *testing.T) {
+	got, err := bootedSims([]byte(threeBootedTwoRuntimes))
 	if err != nil {
 		t.Fatalf("err: %v", err)
 	}
-	if !equalStrings(got, []string{"AAAA", "ZZZZ"}) {
-		t.Errorf("bootedUDIDs = %v, want [AAAA ZZZZ] (sorted)", got)
+	want := []bootedSim{
+		{UDID: "AAAA", Name: "iPhone 17", Runtime: "iOS 26.5"},
+		{UDID: "DDDD", Name: "iPhone Duo", Runtime: "iOS 27.1"},
+		{UDID: "ZZZZ", Name: "iPhone 17", Runtime: "iOS 27.0"},
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("bootedSims = %+v, want %+v", got, want)
 	}
 }
 
-func TestBootedUDIDsNoneBooted(t *testing.T) {
+func TestBootedSimsNoneBooted(t *testing.T) {
 	none := `{"devices":{"r":[{"udid":"AAAA","state":"Shutdown","name":"x"}]}}`
-	got, err := bootedUDIDs([]byte(none))
+	got, err := bootedSims([]byte(none))
 	if err != nil {
 		t.Fatalf("err: %v", err)
 	}
-	if len(got) != 0 {
-		t.Errorf("expected no booted sims, got %v", got)
+	if !reflect.DeepEqual(got, []bootedSim(nil)) {
+		t.Errorf("bootedSims = %#v, want nil", got)
+	}
+}
+
+func TestRuntimeLabel(t *testing.T) {
+	cases := map[string]string{
+		"com.apple.CoreSimulator.SimRuntime.iOS-26-5":     "iOS 26.5",
+		"com.apple.CoreSimulator.SimRuntime.watchOS-27-0": "watchOS 27.0",
+		"com.apple.CoreSimulator.SimRuntime.xrOS-27-0":    "xrOS 27.0",
+		"com.apple.CoreSimulator.SimRuntime.iOS":          "iOS", // no version suffix
+		"r":                                               "r",   // unrecognized shape passes through rather than vanishing
+	}
+	for in, want := range cases {
+		if got := runtimeLabel(in); got != want {
+			t.Errorf("runtimeLabel(%q) = %q, want %q", in, got, want)
+		}
+	}
+}
+
+// With 2+ booted, a silent pick drove the WRONG device while every tap printed
+// ✓ (six calls, measured in a downstream project 2026-08-31). The refusal must
+// name every candidate so the caller can retry with --udid in one step.
+func TestPickBootedUDIDRefusesWhenSeveralBooted(t *testing.T) {
+	udid, err := pickBootedUDID([]byte(threeBootedTwoRuntimes))
+	if udid != "" {
+		t.Errorf("udid = %q, want empty — no device may be guessed", udid)
+	}
+	var amb *ambiguousSimError
+	if !errors.As(err, &amb) {
+		t.Fatalf("err = %v, want *ambiguousSimError", err)
+	}
+	want := "3 simulators are booted and no --udid was given; refusing to guess which one to drive. " +
+		"Re-run with --udid set to one of:\n" +
+		"  AAAA  iPhone 17 (iOS 26.5)\n" +
+		"  DDDD  iPhone Duo (iOS 27.1)\n" +
+		"  ZZZZ  iPhone 17 (iOS 27.0)"
+	if err.Error() != want {
+		t.Errorf("message =\n%s\nwant\n%s", err.Error(), want)
+	}
+}
+
+func TestResolveUDIDExplicitSkipsAmbiguityCheck(t *testing.T) {
+	// --udid is the escape hatch: it must never consult simctl. Asserted on the
+	// exec seam, not just the return value — otherwise deleting the early return
+	// would shell out to the developer's real simctl and the test would still pass.
+	calls := withFakeExec(t, threeBootedTwoRuntimes)
+	got, err := resolveUDID(context.Background(), "DDDD")
+	if err != nil || got != "DDDD" {
+		t.Errorf("resolveUDID(explicit) = %q, %v; want DDDD, nil", got, err)
+	}
+	if len(*calls) != 0 {
+		t.Errorf("ran %d subprocess(es), want none", len(*calls))
 	}
 }
 
 func TestDoctorExitCode(t *testing.T) {
 	cases := []struct {
-		axe, sim, works bool
-		want            int
+		axe, sim, works, blocked bool
+		want                     int
 	}{
-		{true, true, true, 0},
-		{true, true, false, 2}, // present + booted but AXe can't load its frameworks
-		{false, true, true, 2},
-		{true, false, true, 2},
-		{false, false, false, 2},
+		{true, true, true, false, 0},
+		{true, true, false, false, 2}, // present + booted but AXe can't load its frameworks
+		{false, true, true, false, 2},
+		{true, false, true, false, 2},
+		{false, false, false, false, 2},
+		// doctor is the gate the docs call "exit 0 = ready". An environment where
+		// every device verb refuses (2+ booted, no --udid) or where AXe cannot take
+		// the tap style xcui sends is NOT ready, however healthy the rest looks.
+		{true, true, true, true, 2},
 	}
 	for _, c := range cases {
-		if got := doctorExitCode(c.axe, c.sim, c.works); got != c.want {
-			t.Errorf("doctorExitCode(%v,%v,%v) = %d, want %d", c.axe, c.sim, c.works, got, c.want)
+		if got := doctorExitCode(c.axe, c.sim, c.works, c.blocked); got != c.want {
+			t.Errorf("doctorExitCode(%v,%v,%v,%v) = %d, want %d", c.axe, c.sim, c.works, c.blocked, got, c.want)
+		}
+	}
+}
+
+func TestSimLabel(t *testing.T) {
+	// simctl names often already carry the OS version, so appending the runtime
+	// verbatim produced "iPhone 17 (27) (iOS 27.0)".
+	cases := []struct {
+		in   bootedSim
+		want string
+	}{
+		{bootedSim{Name: "iPhone 17 (27)", Runtime: "iOS 27.0"}, "iPhone 17 (27)"},
+		{bootedSim{Name: "iPhone 17 (26.5)", Runtime: "iOS 26.5"}, "iPhone 17 (26.5)"},
+		{bootedSim{Name: "iPhone Duo", Runtime: "iOS 27.1"}, "iPhone Duo (iOS 27.1)"},
+		{bootedSim{Name: "iPad", Runtime: ""}, "iPad"},
+	}
+	for _, c := range cases {
+		if got := simLabel(c.in); got != c.want {
+			t.Errorf("simLabel(%+v) = %q, want %q", c.in, got, c.want)
 		}
 	}
 }

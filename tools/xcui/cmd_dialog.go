@@ -131,12 +131,13 @@ func findAlertButton(roots []AXElement, intent alertIntent) (AXElement, bool) {
 }
 
 // tapArgs builds the `axe tap` argument vector, preferring the stable
-// accessibility id and falling back to the visible label.
+// accessibility id and falling back to the visible label. The tap is physical:
+// AXe's default style left alerts on screen while the report said handled.
 func tapArgs(el AXElement, udid string) []string {
 	if id := deref(el.AXUniqueID); id != "" {
-		return []string{"tap", "--id", id, "--udid", udid}
+		return append([]string{"tap"}, withPhysicalTapStyle([]string{"--id", id, "--udid", udid})...)
 	}
-	return []string{"tap", "--label", buttonLabel(el), "--udid", udid}
+	return append([]string{"tap"}, withPhysicalTapStyle([]string{"--label", buttonLabel(el), "--udid", udid})...)
 }
 
 func runDialog(out io.Writer, args []string) int {
@@ -187,7 +188,10 @@ func runDialogTap(out io.Writer, action string, args []string) int {
 		return 1
 	}
 	rep.Button = buttonLabel(btn)
-	if _, err := runAxe(ctx, 0, tapArgs(btn, udid)...); err != nil {
+	if res, err := runAxe(ctx, 0, tapArgs(btn, udid)...); err != nil {
+		if isUnknownTapStyleError(string(res.Stderr)) {
+			fmt.Fprintf(os.Stderr, "dialog: this AXe has no %s (added in AXe 1.7.0), which xcui sends on every tap — upgrade with `brew upgrade cameroncooke/axe/axe`\n", tapStyleFlag)
+		}
 		fmt.Fprintln(os.Stderr, "dialog:", err)
 		return 2
 	}

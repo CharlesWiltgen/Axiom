@@ -156,7 +156,7 @@ func TestTapArgsPrefersID(t *testing.T) {
 	roots, _ := parseDescribeUI([]byte(permissionAlert))
 	btn, _ := findAlertButton(roots, intentAccept) // "Allow" has AXUniqueId allow.btn
 	got := tapArgs(btn, "UDID1")
-	want := []string{"tap", "--id", "allow.btn", "--udid", "UDID1"}
+	want := []string{"tap", "--tap-style", "physical", "--id", "allow.btn", "--udid", "UDID1"}
 	if !equalStrings(got, want) {
 		t.Errorf("tapArgs = %v, want %v", got, want)
 	}
@@ -166,7 +166,7 @@ func TestTapArgsFallsBackToLabel(t *testing.T) {
 	roots, _ := parseDescribeUI([]byte(permissionAlert))
 	btn, _ := findAlertButton(roots, intentDismiss) // "Don't Allow", no AXUniqueId
 	got := tapArgs(btn, "UDID1")
-	want := []string{"tap", "--label", "Don't Allow", "--udid", "UDID1"}
+	want := []string{"tap", "--tap-style", "physical", "--label", "Don't Allow", "--udid", "UDID1"}
 	if !equalStrings(got, want) {
 		t.Errorf("tapArgs = %v, want %v", got, want)
 	}

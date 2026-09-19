@@ -12,8 +12,13 @@ import (
 	"time"
 )
 
-func doctorExitCode(axePresent, simBooted, axeWorks bool) int {
-	if axePresent && simBooted && axeWorks {
+// doctorExitCode maps the environment to xcui's documented gate: 0 means a caller
+// can go straight on to driving the simulator. blocked covers the states where the
+// pieces are all present but a device command would still refuse or fail — several
+// simulators booted with no --udid, or an AXe that cannot take the tap style xcui
+// sends. Reporting those as OK is what makes `xcui doctor && xcui tap …` lie.
+func doctorExitCode(axePresent, simBooted, axeWorks, blocked bool) int {
+	if axePresent && simBooted && axeWorks && !blocked {
 		return 0
 	}
 	return 2
@@ -62,11 +67,25 @@ func runDoctor(out io.Writer, args []string) int {
 		}
 	}
 
+	// smokeUDID is the device the AXe smoke test exercises. It is deliberately
+	// separate from rep.BootedUDID: under ambiguity xcui still wants to prove AXe
+	// works, but must not advertise a target nothing will drive.
+	smokeUDID := ""
+	blocked := false
 	if udid, booted, err := resolveBootedInfo(ctx, *udidFlag); err == nil {
-		rep.BootedUDID = udid
+		smokeUDID = udid
+		rep.Booted = booted
 		if len(booted) > 1 {
-			rep.Note = fmt.Sprintf("%d simulators booted (%s) — xcui targets %s; pass --udid to pick another", len(booted), strings.Join(booted, ", "), udid)
-			rep.NextSteps = append(rep.NextSteps, "pass --udid <udid> to target a specific simulator")
+			// Keep this in step with ambiguousSimError in sim.go, which does the refusing.
+			blocked = true
+			labels := make([]string, len(booted))
+			for i, s := range booted {
+				labels[i] = fmt.Sprintf("%s %s", s.UDID, simLabel(s))
+			}
+			rep.Problems = append(rep.Problems, fmt.Sprintf("%d simulators booted (%s) — every device command refuses to run without --udid", len(booted), strings.Join(labels, ", ")))
+			rep.NextSteps = append(rep.NextSteps, "pass --udid <udid> on every command to target a specific simulator")
+		} else {
+			rep.BootedUDID = udid
 		}
 	} else {
 		rep.Problems = append(rep.Problems, "no booted simulator")
@@ -84,13 +103,25 @@ func runDoctor(out io.Writer, args []string) int {
 				rep.Note = joinNote(rep.Note, "AXe has verbs xcui does not forward ("+strings.Join(missing, ", ")+") — call them as `axe <verb>` until Axiom adds them")
 			}
 		}
+		// xcui supplies --tap-style physical on every tap. If a future AXe drops or
+		// renames the flag, each tap fails on an unknown flag; say so here instead.
+		if res, err := ExecRun(ctx, 10*time.Second, axePath, "tap", "--help"); err == nil {
+			if !tapStyleSupported(string(res.Stdout)) {
+				// AXe gained --tap-style in 1.7.0. Older AXe fails every xcui tap and
+				// every dialog accept/dismiss on an unknown flag, and describe-ui (the
+				// smoke test below) never touches it — so check for it explicitly.
+				blocked = true
+				rep.Problems = append(rep.Problems, "this AXe ("+orNone(rep.AxeVersion)+") does not offer `axe tap "+tapStyleFlag+"` — xcui requires AXe 1.7.0 or newer; every tap and dialog would fail on an unknown flag")
+				rep.NextSteps = append(rep.NextSteps, "upgrade AXe: brew upgrade cameroncooke/axe/axe")
+			}
+		}
 	}
 
 	axeWorks := true
-	if axePath != "" && rep.BootedUDID != "" {
+	if axePath != "" && smokeUDID != "" {
 		// Read the override AFTER the smoke test, not before: the decision is now
 		// made by running AXe, so asking first would always report "none".
-		if res, err := runAxe(ctx, 30*time.Second, "describe-ui", "--udid", rep.BootedUDID); err != nil {
+		if res, err := runAxe(ctx, 30*time.Second, "describe-ui", "--udid", smokeUDID); err != nil {
 			stderr := strings.TrimSpace(string(res.Stderr))
 			switch {
 			case IsTimeoutError(err):
@@ -120,11 +151,14 @@ func runDoctor(out io.Writer, args []string) int {
 		}
 	}
 
-	code := doctorExitCode(axePath != "", rep.BootedUDID != "", axeWorks)
+	code := doctorExitCode(axePath != "", smokeUDID != "", axeWorks, blocked)
 	rep.OK = code == 0
 
 	if *human {
 		fmt.Fprintf(out, "AXe: %s\nSim: %s\nOK: %v\n", orNone(rep.AxePath), orNone(rep.BootedUDID), rep.OK)
+		for _, s := range rep.Booted {
+			fmt.Fprintf(out, "  booted: %s  %s\n", s.UDID, simLabel(s))
+		}
 		if rep.Note != "" {
 			fmt.Fprintf(out, "  note: %s\n", rep.Note)
 		}

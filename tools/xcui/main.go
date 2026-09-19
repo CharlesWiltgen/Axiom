@@ -22,7 +22,8 @@ Usage:
   xcui resize sweep --sizes <WxH,...> [--screenshot-dir <d>] [--assert-id <id>] [--strict]
                                                 Drive breakpoints, shoot and assert each (OS 27+)
 
-Input (forwarded to AXe verbatim — same flags, same output, same exit code):
+Input (forwarded to AXe — same flags, output and exit code; tap also gets
+--tap-style physical unless you pass a style):
   xcui tap | slider | type | swipe | drag | touch | gesture   Drive the UI
   xcui button | key | key-sequence | key-combo                Hardware buttons and keys
   xcui screenshot                                             Capture the display as PNG
@@ -31,8 +32,9 @@ Prefer these over calling 'axe' directly: they inherit xcui's SimulatorKit/
 DEVELOPER_DIR handling, so they keep working under an Xcode that AXe cannot load
 on its own. Run 'xcui tap --help' to see AXe's own flags for a verb.
 
-Default output is JSON; pass --human for prose. Most verbs auto-resolve the booted
-simulator; pass --udid to target a specific one.
+Default output is JSON; pass --human for prose. Verbs auto-resolve the booted
+simulator when exactly one is booted; with several, they exit 2 and list them —
+pass --udid to name the one you mean.
 
 Run 'xcui <command> --help' for per-command flags.
 `
