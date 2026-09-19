@@ -126,7 +126,18 @@ func migration00X_ChangeColumnType() throws {
 
 ### Adding Foreign Key Constraint
 
-SQLite's `ALTER TABLE` has no `ADD CONSTRAINT`, so there are two routes: an indexed column whose relationship the app enforces, or a table rebuild that produces a declared constraint.
+SQLite's `ALTER TABLE` has no `ADD CONSTRAINT`, so a constraint can't be attached to a column that already exists.
+
+**When the relationship lives in a new column, add it with its constraint.** `ADD COLUMN … REFERENCES` declares a foreign key SQLite enforces like any other, with no rebuild. With foreign keys on, SQLite requires the new column to default to NULL, so it starts with no orphans; fill it with an `UPDATE`, which the constraint then checks. Rows with no match keep `NULL`.
+
+```sql
+ALTER TABLE tracks ADD COLUMN album_id TEXT REFERENCES albums(id) ON DELETE CASCADE;
+UPDATE tracks SET album_id = (SELECT id FROM albums WHERE albums.title = tracks.album_name);
+```
+
+In GRDB: `t.add(column: "album_id", .text).references("albums", onDelete: .cascade)` inside `db.alter(table:)`.
+
+When the column must be `NOT NULL`, or the constraint belongs on a column that already exists, there are two routes: an indexed column whose relationship the app enforces, or a table rebuild that produces a declared constraint.
 
 #### Route 1 — indexed column, application-level relationship
 
@@ -366,8 +377,9 @@ What are you trying to do?
 ├─ Rename column?
 │  └─ Add new column → Migrate data → Deprecate old → Done
 ├─ Add foreign key?
+│  ├─ New nullable column? → ADD COLUMN … REFERENCES → Populate with UPDATE → Done
 │  ├─ App-level relationship? → Add column → Populate data → Add index → Done
-│  └─ Declared constraint? → Rebuild the table (create new → copy → drop old → rename) → Done
+│  └─ Declared constraint on an existing or NOT NULL column? → Rebuild the table (create new → copy → drop old → rename) → Done
 └─ Complex refactor?
    └─ Break into multiple migrations → Test each step → Done
 ```

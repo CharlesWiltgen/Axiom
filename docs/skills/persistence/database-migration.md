@@ -37,17 +37,17 @@ Questions you can ask Claude that will draw from this skill:
 ### Critical Rules (Data Loss Prevention)
 
 **NEVER do these with user data:**
-- ❌ DROP TABLE
+- ❌ DROP TABLE with user data
 - ❌ Modify shipped migrations (create new one)
-- ❌ Recreate tables to change schema
+- ❌ Drop a table before copying its rows (a rebuild goes create new → copy → drop old → rename)
 - ❌ Add NOT NULL column without DEFAULT
-- ❌ Delete columns (SQLite limitation)
+- ❌ Delete columns before retiring them in code
 
 ### Safe Patterns
 - Adding nullable columns
 - Adding columns with defaults
 - Type migration (new column → migrate → deprecate)
-- Foreign key addition sequence
+- Foreign keys: a new column with `ADD COLUMN … REFERENCES`, or a copy-first table rebuild
 - Index creation
 
 ### Testing Workflows
