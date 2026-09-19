@@ -80,11 +80,11 @@ Patterns 1, 2, 3, 6, and 7 are unaffected — the compiler has nothing to say ab
 
 ### 1. Missing @MainActor on UI Classes (CRITICAL/HIGH)
 
-**Pattern**: UIViewController, UIView, ObservableObject without @MainActor
-**Search**: `class.*UIViewController`, `class.*ObservableObject` — check 5 lines before for @MainActor
+**Pattern**: ObservableObject (and other UI-state classes) without @MainActor
+**Search**: `class.*ObservableObject` — check 5 lines before for @MainActor
 **Issue**: Crashes when UI modified from background threads
 **Fix**: Add `@MainActor` to class declaration
-**Note**: SwiftUI Views are implicitly @MainActor — not an issue
+**Note**: `UIViewController` and `UIView` subclasses are NOT findings — both classes are `NS_SWIFT_UI_ACTOR`, so every subclass inherits `@MainActor` without an annotation. SwiftUI Views are implicitly @MainActor too. Skip this pattern entirely when the target sets `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`: every unannotated class is already @MainActor there.
 **Field signal**: Crashes with xcsym `pattern_tag=swift_concurrency_violation` (fires on `_swift_task_isCurrentExecutor` in the exception subtype) almost always trace back to this anti-pattern. If the user has `.ips` artifacts, run `xcsym crash --format=summary <file>` and correlate the crashed frames with grep hits.
 
 ### 2. Unsafe Task Self Capture (HIGH/HIGH)
@@ -243,6 +243,7 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details
 - Async functions with minimal computation (a single network call, a short string format) — don't flag for missing @concurrent
 - @MainActor classes accessing their own properties
 - SwiftUI Views (implicitly @MainActor)
+- `UIViewController` / `UIView` subclasses without `@MainActor` (inherited from UIKit's `NS_SWIFT_UI_ACTOR`)
 - Task captures where self is a struct (value type)
 - `@unchecked Sendable` with clear migration comment (downgrade to LOW)
 - GCD usage in legacy modules marked for future migration

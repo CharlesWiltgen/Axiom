@@ -10,7 +10,7 @@ Scan your Swift codebase for common Swift 6 concurrency anti-patterns and violat
 
 ## What This Command Checks
 
-1. **Missing @MainActor on UI Classes** – View controllers and ObservableObjects without @MainActor
+1. **Missing @MainActor on UI Classes** – ObservableObjects and other UI-state classes without @MainActor (view controllers and views inherit it from UIKit)
 2. **Unsafe Task Self Capture** – Tasks capturing self strongly without [weak self]
 3. **Sendable Violations** – Non-Sendable types crossing actor boundaries
 4. **Improper Actor Isolation** – Unsafe data access from actor contexts
@@ -124,7 +124,7 @@ The command will:
 ```
 🔴 CRITICAL: Missing @MainActor (4 issues)
   - ProfileViewModel.swift:12 - ObservableObject without @MainActor
-  - SettingsVC.swift:23 - UIViewController without @MainActor
+  - SettingsStore.swift:23 - ObservableObject without @MainActor
   Impact: Potential data race crashes
 
 🔴 CRITICAL: Unsafe Task Self Capture (2 issues)
