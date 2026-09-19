@@ -425,12 +425,12 @@ class NowPlayingService {
         // ✅ Prevent race conditions - only update if still current track
         guard trackURL == currentArtworkURL else { return }
 
-        // ✅ Create MPMediaItemArtwork with VALUE CAPTURE (not stored property)
-        // This is Swift 6 strict concurrency compliant — UIImage is immutable
-        // and safe to capture across isolation domains
-        let artwork = MPMediaItemArtwork(boundsSize: image.size) { [image] requestedSize in
-            // ✅ System calls this block from any thread
-            // Captured value avoids reading MainActor state off the main thread
+        // ✅ @Sendable + VALUE CAPTURE. Without @Sendable, this closure inherits
+        // @MainActor from the class, and Swift 6 traps at its entry when the
+        // system calls it off the main thread — whatever the body reads
+        let artwork = MPMediaItemArtwork(boundsSize: image.size) { @Sendable [image] requestedSize in
+            // ✅ System calls this block from any thread; the captured
+            // UIImage is immutable, so reading it there is safe
             return image
         }
 
@@ -465,7 +465,7 @@ class NowPlayingService {
 }
 ```
 
-**Why value capture, not `nonisolated(unsafe)`**: The closure passed to `MPMediaItemArtwork` is imported without `@Sendable`, so Swift 6 will **not** diagnose a cross-thread read of `@MainActor`-isolated stored properties from it — such code compiles. Capture the image value because the system may invoke this block off the main thread at runtime, not because the compiler demands it. Capturing the value directly is still cleaner than `nonisolated(unsafe)` because UIImage is immutable and thread-safe for reads.
+**Why `@Sendable` and a value capture**: The request handler is imported without `@Sendable`, so a closure written inside a `@MainActor` type inherits `@MainActor` — and Swift 6 inserts a runtime check at its entry. The system calls the handler off the main thread, so it traps there no matter what the body reads, and nothing warns at compile time. Marking the closure `@Sendable` makes it nonisolated, which removes the trap. Then capture the `UIImage` value (immutable, safe to read from any thread) instead of reading `self`: a `@MainActor` property read from the `@Sendable` closure is only a warning here, and at runtime it's an unsynchronized cross-thread read. The value capture is also cleaner than `nonisolated(unsafe)`.
 
 ### Artwork Size Guidelines
 - Lock Screen: the system passes the size it needs to your `MPMediaItemArtwork` request handler — return the image that most closely fits it
@@ -1038,7 +1038,8 @@ class AnimatedArtworkService {
 
         // Always set static artwork — backward compat for iOS 18-25
         // and the system fallback when animation is suppressed (low power, Reduce Motion, etc.)
-        let staticArtwork = MPMediaItemArtwork(boundsSize: staticImage.size) { [staticImage] _ in
+        // @Sendable: the system calls this off the main thread (Pattern 3)
+        let staticArtwork = MPMediaItemArtwork(boundsSize: staticImage.size) { @Sendable [staticImage] _ in
             staticImage
         }
         nowPlayingInfo[MPMediaItemPropertyArtwork] = staticArtwork

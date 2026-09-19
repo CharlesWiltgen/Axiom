@@ -881,7 +881,7 @@ A NEW framework (iOS 27, iPadOS 27, macOS 27, visionOS 27) for shipping a crash 
 
 ### Extension Setup
 
-Two configuration points, both supplied by Xcode's "Crash Report Extension" template:
+Two configuration points, both supplied by Xcode's "Crash Reporter Extension" template:
 
 - **Extension point identifier** — the extension's Info.plist declares it:
 

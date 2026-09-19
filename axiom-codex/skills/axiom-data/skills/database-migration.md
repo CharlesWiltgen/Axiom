@@ -171,14 +171,20 @@ CREATE TABLE new_tracks (
     id       TEXT NOT NULL PRIMARY KEY,
     album_id TEXT REFERENCES albums(id)
 );
+-- LEFT JOIN: a track with no matching album keeps a NULL album_id.
+-- An inner JOIN leaves it out of the copy, and DROP TABLE then deletes it.
 INSERT INTO new_tracks (id, album_id)
-    SELECT t.id, a.id FROM tracks t JOIN albums a ON a.title = t.album_name;
+    SELECT t.id, a.id FROM tracks t LEFT JOIN albums a ON a.title = t.album_name;
 DROP TABLE tracks;
 ALTER TABLE new_tracks RENAME TO tracks;
 PRAGMA foreign_key_check;   -- one row per violation; abort before COMMIT if any
 COMMIT;
 PRAGMA foreign_keys = ON;
 ```
+
+Carry every column you're keeping in the `INSERT … SELECT` — whatever it leaves out is gone once `DROP TABLE` runs — and compare the row count before and after.
+
+In a GRDB `registerMigration`, run only the `CREATE` / `INSERT` / `DROP` / `ALTER … RENAME` statements. The migrator already owns the transaction, so a second `BEGIN` fails, and its default `foreignKeyChecks: .deferred` runs the migration with foreign keys off and checks them right before committing.
 
 Enforcement is a connection setting, not a schema property: `PRAGMA foreign_keys = ON`, which GRDB sets by default — `Configuration.foreignKeysEnabled` defaults to `true`. Declared but unenforced is the one outcome worth avoiding.
 

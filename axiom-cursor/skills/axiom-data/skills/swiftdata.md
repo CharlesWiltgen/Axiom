@@ -121,7 +121,9 @@ final class Track {
     @Attribute(.unique) var id: String
     var title: String
 
-    @Relationship(deleteRule: .cascade, inverse: \Album.tracks)
+    // No cascade on this side: deleting one track would delete its album,
+    // and Album.tracks' cascade would then delete every sibling track
+    @Relationship(inverse: \Album.tracks)
     var album: Album?
 
     init(id: String, title: String, album: Album? = nil) {
@@ -805,7 +807,7 @@ Run the sweep on a background context (not the main one), keyed by the natural I
 ```swift
 @Model
 final class Track {
-    @Relationship(deleteRule: .cascade, inverse: \Album.tracks)
+    @Relationship(inverse: \Album.tracks)
     var album: Album?  // ✅ Must be optional for CloudKit
 
     init(album: Album? = nil) {
@@ -887,7 +889,6 @@ let container = try ModelContainer(for: schema, configurations: testConfig)
 @Model
 final class Track {
     @Relationship(
-        deleteRule: .cascade,
         minimumModelCount: 0,
         maximumModelCount: 1,  // Track belongs to at most one album
         inverse: \Album.tracks

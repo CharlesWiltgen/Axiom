@@ -420,10 +420,12 @@ final class NoteTag {
     @Attribute(.unique) var id: String
     var addedAt: Date  // Metadata on relationship
 
-    @Relationship(deleteRule: .cascade)
+    // No cascade on the junction's own sides: removing one tag from one note
+    // would delete that note and that tag, and their cascades would take the rest
+    @Relationship(inverse: \Note.noteTags)
     var note: Note?
 
-    @Relationship(deleteRule: .cascade)
+    @Relationship(inverse: \Tag.noteTags)
     var tag: Tag?
 
     init(id: String, note: Note, tag: Tag, addedAt: Date) {
@@ -445,6 +447,11 @@ final class Note {
     var tags: [Tag] {
         noteTags.compactMap { $0.tag }
     }
+
+    init(id: String, title: String) {
+        self.id = id
+        self.title = title
+    }
 }
 
 @Model
@@ -457,6 +464,11 @@ final class Tag {
 
     var notes: [Note] {
         noteTags.compactMap { $0.note }
+    }
+
+    init(id: String, name: String) {
+        self.id = id
+        self.name = name
     }
 }
 ```

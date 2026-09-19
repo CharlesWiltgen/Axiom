@@ -836,7 +836,7 @@ systemImageName: "cup.and.saucer.fill"
 
 **WWDC**: 2022-10170, 2022-10169, 2023-10102, 2025-260
 
-**Docs**: /appintents/appshortcutsprovider, /appintents/appshortcut, /appintents/app-shortcuts, developer.apple.com/design/human-interface-guidelines/app-shortcuts
+**Docs**: /appintents/appshortcutsprovider, /appintents/appshortcut, /appintents/app-shortcuts, /design/human-interface-guidelines/app-shortcuts
 
 **Skills**: skills/app-intents-ref.md, skills/app-discoverability.md, skills/core-spotlight-ref.md
 

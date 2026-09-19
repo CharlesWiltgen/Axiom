@@ -583,8 +583,8 @@
     },
     {
       "path": "skills/axiom-data/skills/database-migration.md",
-      "sha256": "1c07d9932976a171f74a94dc6d63bae5ce06a9abefe5110c4e6e5f210090f89c",
-      "bytes": 18564
+      "sha256": "7868c376048ecb49d775b5293c8c1772dc8fe824d4ed0d8f45bc1a743ed90424",
+      "bytes": 19186
     },
     {
       "path": "skills/axiom-data/skills/grdb-app-groups.md",
@@ -663,13 +663,13 @@
     },
     {
       "path": "skills/axiom-data/skills/swiftdata-migration.md",
-      "sha256": "1eeef72720c7db24d127d06c30077c3f17314d94d970425fa0432fb1dd5e82e1",
-      "bytes": 29486
+      "sha256": "e482d8e530a89aa20df1c69462e33a04e8926bc708e91534b09317b4518f1eac",
+      "bytes": 29835
     },
     {
       "path": "skills/axiom-data/skills/swiftdata.md",
-      "sha256": "6ae19b506ef7f4aea21398c279be473082c3b9476fea509535cd4862e06dea9a",
-      "bytes": 45852
+      "sha256": "ffcd7fa659e5f0d2c4b4dfa38400c2ba47972864c8bcf2c3fc39b2e30a11e711",
+      "bytes": 45924
     },
     {
       "path": "skills/axiom-design/SKILL.md",
@@ -883,8 +883,8 @@
     },
     {
       "path": "skills/axiom-integration/skills/app-shortcuts-ref.md",
-      "sha256": "fc3f9410fe1b4ac0cdfb13c5fb1750528faaf2bcbfe9da2961ea42126864f825",
-      "bytes": 24098
+      "sha256": "073a7d9e714c6f2d0c66714f66e29dc349fe94d489a7142ff02af507c0f1d616",
+      "bytes": 24079
     },
     {
       "path": "skills/axiom-integration/skills/background-assets-ref.md",
@@ -1213,8 +1213,8 @@
     },
     {
       "path": "skills/axiom-media/skills/now-playing.md",
-      "sha256": "ae17c8eeba7b2a32ee83c3cdba2cb3829ba5f84a555c33b70107f1a192b25d02",
-      "bytes": 52222
+      "sha256": "f05f31a73b3fa137e105b41ec45df5c76e92e842da3bed18d8e6a97ac4bc82ca",
+      "bytes": 52549
     },
     {
       "path": "skills/axiom-media/skills/photo-library-ref.md",
@@ -1383,8 +1383,8 @@
     },
     {
       "path": "skills/axiom-performance/skills/metrickit-ref.md",
-      "sha256": "c8eeff8dbdab1275b08ddd86637f18be6a56f504098b71da40cd0ff7dbcf1e05",
-      "bytes": 39189
+      "sha256": "b429b0aaa184d63d68ef5aa7fec0b8f8493d29f2b5aa27b6815096fa4adce775",
+      "bytes": 39191
     },
     {
       "path": "skills/axiom-performance/skills/objc-block-retain-cycles.md",
@@ -1548,8 +1548,8 @@
     },
     {
       "path": "skills/axiom-swift/skills/ownership-conventions.md",
-      "sha256": "1184a5210228a2fbeb69a106cc7d4da3a1b65db741fbeaccd17545f2e7381000",
-      "bytes": 22894
+      "sha256": "8411832f85a3b80342cf969053c142cd82a2cf7f6a3d8f9cd086d5353de3b241",
+      "bytes": 23218
     },
     {
       "path": "skills/axiom-swift/skills/swift-modern.md",
@@ -1879,7 +1879,7 @@
   ],
   "totals": {
     "files": 375,
-    "bytes": 7584222
+    "bytes": 7585899
   },
   "excludedMirrors": 30,
   "classes": {
