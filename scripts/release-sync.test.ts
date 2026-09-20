@@ -3,8 +3,7 @@ import test from "node:test";
 import {
   classifyReleaseSync,
   compareVersions,
-  unpublishedShippedVersions,
-} from "./release-sync.ts";
+  unpublishedShippedVersions, fetchPublishedVersions } from "./release-sync.ts";
 
 test("orders releases above their prereleases", () => {
   assert.ok(compareVersions("27.0.0-beta.47", "27.0.0-beta.48") < 0);
@@ -134,4 +133,20 @@ test("reports nothing when both surfaces agree", () => {
     publishedToNpm: ["27.0.0-beta.48"],
   });
   assert.deepEqual(v, { unresolved: [], superseded: [] });
+});
+
+test("fetchPublishedVersions bounds the registry call so a hung request cannot stall the gate", async () => {
+  // Both callers — pre-deploy §3c and xpublish's Step 4.9 surface check — run
+  // this against the live registry. Without a bound, an unreachable-but-not-
+  // refusing registry hangs the release instead of failing it, the same defect
+  // §12k's npm --dry-run call was measured with (still running at 100s).
+  let seen: RequestInit | undefined;
+  const fakeFetch = (async (_url: string, init?: RequestInit) => {
+    seen = init;
+    return { ok: true, json: async () => ({ versions: { "1.0.0": {} } }) } as unknown as Response;
+  }) as unknown as typeof fetch;
+
+  const versions = await fetchPublishedVersions(fakeFetch);
+  assert.deepEqual(versions, ["1.0.0"]);
+  assert.ok(seen?.signal, "no AbortSignal passed — the call is unbounded");
 });

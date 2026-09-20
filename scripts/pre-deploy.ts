@@ -93,6 +93,7 @@ import {
   validateHomeCoverage,
 } from "./inline-auditors.ts";
 import { parsePorcelain, resolveGoBinaryStaleness, resolveStaleness } from "./staleness.ts";
+import { classifyNpmFailure, npmErrorCode } from "./npm-resolution.ts";
 import { findDashViolations } from "./docs-dashes.ts";
 import { renderCursorDistribution } from "./cursor/render.ts";
 import { compareCursorPaths } from "./cursor/compare.ts";
@@ -2145,21 +2146,42 @@ heading("12k. Pi Install Manifest");
   if (process.argv.slice(2).includes("--static")) {
     console.log("  ⊘ Skipped (--static: needs the npm registry)");
   } else {
+    // Bounded: npm's own retry defaults mean an unreachable-but-not-refusing
+    // registry never returns on its own. Measured against a black-holed address,
+    // the unbounded call was still running at 100 s and had to be killed — a
+    // release gate that hangs is worse than one that fails.
+    const npmDryRunTimeoutMs = 120_000;
     try {
-      execSync("npm install --omit=dev --dry-run", { cwd: root, stdio: "pipe" });
+      execSync("npm install --omit=dev --dry-run", { cwd: root, stdio: "pipe", timeout: npmDryRunTimeoutMs });
       console.log("  ✓ `npm install --omit=dev` resolves — Pi's install path is clear");
     } catch (e: unknown) {
-      const err = e as { stderr?: Buffer | string; stdout?: Buffer | string };
-      const out = `${err.stderr ?? ""}${err.stdout ?? ""}`;
-      // Discriminate: only a resolution conflict is Axiom's bug. Any other
-      // failure (offline, registry down) must not fail the release.
-      if (out.includes("ERESOLVE")) {
+      const err = e as { stderr?: Buffer | string; stdout?: Buffer | string; code?: string };
+      const out = `${err.stderr ?? ""}\n${err.stdout ?? ""}`;
+      // execSync reports a timeout kill as code ETIMEDOUT (errno -60). Measured
+      // on darwin/node 24: `killed` is an exec() field execSync never sets, and
+      // `signal === "SIGTERM"` both over-fires (an operator or CI shutdown kill
+      // reads as a timeout) and under-fires (a child that traps TERM reports a
+      // null signal). The code is set in every timeout case and in none other.
+      const timedOut = err.code === "ETIMEDOUT";
+      // Fail closed: skip ONLY when the registry was unreachable. Anything else
+      // breaks `pi install git:` for every user exactly as ERESOLVE does.
+      const kind = classifyNpmFailure(out, { timedOut });
+      const npmCode = npmErrorCode(out);
+      if (kind === "network") {
+        console.log(
+          timedOut
+            ? `  ⊘ Skipped (npm --dry-run exceeded ${npmDryRunTimeoutMs / 1000}s — registry unreachable?)`
+            : `  ⊘ Skipped (could not reach the npm registry${npmCode ? `: ${npmCode}` : ""})`,
+        );
+      } else if (kind === "environment") {
+        // Not evidence about the manifest: an unwritable npm cache, a full disk,
+        // or npm missing from PATH. Say which, and do not fail the release for it.
+        console.log(`  ⊘ Skipped (npm could not run here${npmCode ? `: ${npmCode}` : " — is npm on PATH?"})`);
+      } else {
         error(
           "pi-manifest",
-          "root dependency graph does not resolve: `npm install --omit=dev` fails with ERESOLVE, so `pi install git:` aborts before installing anything (GH #54). Fix the peer conflict with a narrow `overrides` entry — passing --legacy-peer-deps only hides it from this gate.",
+          `root dependency graph does not resolve: \`npm install --omit=dev\` failed${npmCode ? ` with ${npmCode}` : ""}, so \`pi install git:\` aborts before installing anything (GH #54). For a peer conflict use a narrow \`overrides\` entry — --legacy-peer-deps only hides it from this gate.`,
         );
-      } else {
-        console.log("  ⊘ Skipped (npm --dry-run unavailable — offline?)");
       }
     }
   }

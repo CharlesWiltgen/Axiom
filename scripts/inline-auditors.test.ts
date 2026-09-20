@@ -11,8 +11,10 @@
 
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import {
   AUDITOR_HOMES,
+  GENERATED_PREFIX,
   SCAN_TOOLS,
   auditAreaByAgent,
   deriveSuiteReferences,
@@ -583,5 +585,22 @@ describe("validateHomeCoverage", () => {
 
   it("keeps SCAN_TOOLS to read+search only", () => {
     assert.deepEqual([...SCAN_TOOLS].sort(), ["Glob", "Grep", "Read"]);
+  });
+});
+
+describe("cross-package marker", () => {
+  it("matches axiom-mcp's necessarily-duplicated copy", () => {
+    // The published axiom-mcp package cannot reach this repo, so the marker is
+    // duplicated there by necessity — previously "kept in sync" by a comment
+    // only. Asserted from here rather than from the MCP suite so that package
+    // stays runnable from a standalone checkout or tarball. A drifted marker
+    // silently stops skipping the generated auditor copies, and dev, prod and
+    // Codex would disagree on the skill set again.
+    const mcpParser = readFileSync(
+      new URL("../axiom-mcp/src/loader/parser.ts", import.meta.url),
+      "utf8",
+    );
+    const mcpPrefix = mcpParser.match(/GENERATED_PREFIX = '([^']+)'/)?.[1];
+    assert.equal(mcpPrefix, GENERATED_PREFIX);
   });
 });
