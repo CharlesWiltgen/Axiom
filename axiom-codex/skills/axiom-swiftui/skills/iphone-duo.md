@@ -250,10 +250,27 @@ inboxItem.badge = .count(7)            // iOS 26: a symbol-only item that still 
 - Replace inline counts with a badge. Text that carries real information, like a cart total, stays in a horizontal bar.
 - Custom views, complex views, and wide controls like segmented controls stay horizontal unless opted in (Axis, edge, compression, and the off switch).
 - Vertical bars have a fixed width and flexible height; once a custom view opts in, it must fit that width or adapt its layout. Flexible spacers collapse to zero vertically; fixed spacers keep their minimum. Don't add extra spacing — group items with `ToolbarItemGroup` / `UIBarButtonItemGroup`, which supply it and adapt it.
-- **That width is about 48 pt** — measured 48.6 pt with 44 pt items and 49.0 pt with 54 pt items on the 27.1 Duo simulator, so it does not follow the item size. Nothing shapes the bar: SwiftUI's `toolbarBackground` takes a visibility or a style, and UIKit's vertical-bar API surface is the edge, the behavior, and the compression preference — there is no appearance class for it.
-- **The bar magnifies a symbol, so point sizes aren't comparable with the rest of your UI.** The same custom item drawn at `.system(size: 20)` measures 22 pt wide in an ordinary row and 28 pt in the bar — about 1.27× — while an explicitly framed 36 pt shape measures 36 pt in both (measured on the 27.1 Duo simulator, unchanged at 44 pt and 54 pt item sizes). Size a custom bar item by the shape you frame, not by matching a symbol's point size to one elsewhere on screen.
-- Vertical bars have no scroll-edge effect but gain a background under Reduce Transparency — keep custom content legible either way.
-- A hero or background image extends under the vertical bar with `.backgroundExtensionEffect()` (SwiftUI) or `UIBackgroundExtensionView` (UIKit).
+- **That width measured 48.6–49.0 pt** on the 27.1 Duo simulator, closed pose, reading the
+  bar's own edges off an outer-display screenshot at `pointScale: 3`. It did not follow the
+  items: the same two readings came from runs whose custom item views were framed at 44 pt
+  and at 54 pt. (A 54 pt frame exceeding the bar is not a contradiction of "must fit that
+  width" above — the frame is what the item's label asks for, and the bar is what it gets.)
+- **Nothing in the API controls the bar's width or shape.** `ToolbarPlacement` has no
+  vertical-bar member at all in the 27.1 SDK (`automatic`, `bottomBar`, `navigationBar`,
+  `windowToolbar`, `tabBar`, `accessoryBar`), so `toolbarBackgroundVisibility(_:for:)` —
+  the current spelling; the `toolbarBackground(_ visibility:)` overload is renamed — cannot
+  target it. UIKit exposes only behavior and reads: `preferredVerticalBarBehavior` and
+  `childForPreferredVerticalBarBehavior`, `verticalBarCompressionBehavior`,
+  `UIBarButtonItem.axisBehavior`, `setNeedsUpdateOfVerticalBarConfiguration`, and a
+  **read-only** `UITraitCollection.verticalBarEdge`. There is no vertical-bar appearance
+  class.
+- **The bar draws a symbol about 1.27× larger than the same symbol elsewhere, so point
+  sizes are not comparable across the boundary.** Measured on the 27.1 Duo simulator at
+  three sizes — a `.system(size:)` star rendered 13.33 → 17.00 pt, 22.00 → 28.00 pt, and
+  31.00 → 39.33 pt going from an ordinary row into the bar (ratios 1.275, 1.273, 1.269;
+  the differences 3.67, 6.00, 8.33 pt do not hold, so it scales rather than pads). An
+  explicitly framed 36 pt shape measured 36 pt in both. Size a custom bar item by the shape
+  you frame, not by matching a symbol's point size to one elsewhere on screen.
 
 #### What your styling survives
 

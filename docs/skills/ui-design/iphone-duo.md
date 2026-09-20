@@ -33,7 +33,7 @@ Use this skill when:
 - **The fold** – rules for keeping controls reachable without hiding them, and for spacing and sizing custom grids around it
 - **27.1 APIs** – vertical-bar overrides, reserved regions, arrangements, the hinge, and the camera accessory, with iOS 27.1 availability and `@available` gating
 - **Simulator testing** – which runtime carries the Duo device type, which poses only Device Hub can set, and how to capture each display
-- **Bar metrics** – the vertical bar's fixed width, and why a symbol's point size in the bar doesn't match the same symbol elsewhere
+- **Bar metrics** – the vertical bar's measured width, and why a symbol's point size in the bar doesn't match the same symbol elsewhere
 
 ## Related
 
