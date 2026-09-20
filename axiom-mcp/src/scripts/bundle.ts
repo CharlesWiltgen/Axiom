@@ -14,23 +14,11 @@
 import { readdir, readFile, writeFile, mkdir, stat, copyFile, chmod } from 'fs/promises';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
-import { parseSkill, parseCommand, parseAgent, parseReferenceFile, applyAnnotations, Skill, SkillAnnotations } from '../loader/parser.js';
+import { parseSkill, parseCommand, parseAgent, parseReferenceFile, applyAnnotations, isGeneratedSubSkill, Skill, SkillAnnotations } from '../loader/parser.js';
 import type { BundleV2 } from '../loader/types.js';
 import { buildIndex, serializeIndex } from '../search/index.js';
 import { buildCatalog } from '../catalog/index.js';
 import { MCP_TOOL_BINARIES } from '../tools/binaries.js';
-
-// Generated inline-auditor sub-skills exist only so Agent-Skills-spec harnesses
-// (which have no agents) can reach an auditor procedure; MCP already ships every
-// auditor as a first-class agent. Every consumer that walks skills/*/skills/*.md
-// must skip them identically — the bundler drops them, so the annotation
-// generator must not annotate them. Mirrors build-codex.ts; marker string is kept
-// in sync with GENERATED_PREFIX in scripts/inline-auditors.ts.
-export const GENERATED_PREFIX = '<!-- GENERATED from agents/';
-
-export function isGeneratedSubSkill(content: string): boolean {
-  return content.startsWith(GENERATED_PREFIX);
-}
 
 async function loadAnnotations(): Promise<SkillAnnotations> {
   try {
@@ -87,7 +75,7 @@ export async function generateBundle(pluginPath: string): Promise<BundleV2> {
               try {
                 const refContent = await readFile(join(refsDir, refFile), 'utf-8');
                 // Bundling the inlined copies would double-count and trip the
-                // pre-deploy mcp-fidelity check. See isGeneratedSubSkill above.
+                // pre-deploy mcp-fidelity check. See isGeneratedSubSkill in loader/parser.ts.
                 if (isGeneratedSubSkill(refContent)) continue;
                 const refSkill = applyAnnotations(
                   parseReferenceFile(refContent, refFile, entry),

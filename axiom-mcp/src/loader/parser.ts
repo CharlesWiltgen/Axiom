@@ -405,3 +405,23 @@ export function filterSkillSections(
 function extractNameFromFilename(filename: string): string {
   return filename.replace(/\.md$/, '');
 }
+
+/**
+ * Inlined auditor copies are generated for harnesses that cannot invoke an agent.
+ * MCP ships every auditor as a first-class agent, so every consumer that walks
+ * a suite's skills directory must skip them identically — the bundler drops them, the
+ * annotation generator must not annotate them, and dev mode must not serve them,
+ * or dev and prod disagree on the skill set, the catalog counts and the search
+ * corpus.
+ *
+ * This lives in the parser rather than in scripts/bundle.ts because the runtime
+ * loader needs it too: a long-running server must not import a build CLI just to
+ * reach one predicate. The literal is duplicated from scripts/inline-auditors.ts
+ * (the root repo is unreachable from the published package) and a test asserts
+ * the two stay equal.
+ */
+export const GENERATED_PREFIX = '<!-- GENERATED from agents/';
+
+export function isGeneratedSubSkill(content: string): boolean {
+  return content.startsWith(GENERATED_PREFIX);
+}
