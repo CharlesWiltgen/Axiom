@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import plistlib
 import sys
 import os
 from datetime import datetime
@@ -22,13 +23,60 @@ if not resolve_context_decision(os.getcwd(), os.environ.get("AXIOM_SESSION_CONTE
     print(json.dumps({}))
     sys.exit(0)
 
-# Read using-axiom content
+# Claude Code keeps a hook's additionalContext inline only up to 10,000 chars.
+# Past that it saves the text to a file and the model sees a 2,000-char preview
+# (https://code.claude.com/docs/en/hooks). So this hook injects only the always-on
+# span of axiom-tools/SKILL.md, not the whole file; the routing table, Device Hub
+# notes and tool references stay in the skill, which loads on demand.
+# session-start_test.py holds the worst-case output under the limit.
+SESSION_START_BEGIN = "<!-- AXIOM_SESSION_START_BEGIN"
+SESSION_START_END = "<!-- AXIOM_SESSION_START_END -->"
+
+
+def session_start_span(skill_text: str) -> str:
+    """The text between the AXIOM_SESSION_START markers, or the whole skill if
+    they are missing, misordered or enclose nothing, so a broken marker can
+    only make the output bigger."""
+    begin = skill_text.find(SESSION_START_BEGIN)
+    nl = skill_text.find("\n", begin) if begin != -1 else -1
+    end = skill_text.find(SESSION_START_END, nl) if nl != -1 else -1
+    span = skill_text[nl + 1:end].strip() if end != -1 else ""
+    return span or skill_text
+
+
+# Read the always-on part of axiom-tools
 try:
     with open(f"{plugin_root}/skills/axiom-tools/SKILL.md", "r") as f:
-        using_axiom_content = f.read()
+        using_axiom_content = session_start_span(f.read())
 except Exception as e:
     print(f"[WARN SessionStart] Failed to read axiom-tools skill: {e}", file=sys.stderr)
     using_axiom_content = f"Error reading axiom-tools skill: {e}"
+
+
+def plist_string(path: str, key: str) -> str | None:
+    """A string value from a plist, or None if the file or key is missing."""
+    try:
+        with open(path, "rb") as f:
+            value = plistlib.load(f).get(key)
+    except Exception:
+        return None
+    return value if isinstance(value, str) and value else None
+
+
+# The installed toolchain, read from plists (no xcodebuild subprocess at startup).
+xcode_path = os.environ.get("AXIOM_XCODE_PATH", "/Applications/Xcode.app")
+xcode_version = plist_string(f"{xcode_path}/Contents/Info.plist", "CFBundleShortVersionString")
+ios_sdk_version = plist_string(
+    f"{xcode_path}/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk/SDKSettings.plist",
+    "Version",
+)
+installed_toolchain = ""
+if xcode_version:
+    sdk = f" with the iOS {ios_sdk_version} SDK" if ios_sdk_version else ""
+    installed_toolchain = f"""
+
+Installed on this machine: Xcode {xcode_version}{sdk} (`{xcode_path}`). That proves
+those versions exist; it does not prove nothing newer has shipped."""
 
 # Platform context - behavioral rules for handling iOS version uncertainty.
 # Deliberately does NOT assert the model's training cutoff or list the skipped
@@ -37,14 +85,14 @@ except Exception as e:
 # Axiom states the iOS-version ground truth; the old reactive Stop hook
 # (stop-validation.sh) was retired — it false-blocked on prose that merely
 # discussed version-denial phrasings and added nothing a current model needs.
-# See GH #39 and axiom-nnue.
+# See GH #39 and axiom-nnue. It also no longer names a "current" major, which goes
+# stale every September; the installed Xcode, when there is one, is stated instead.
 current_date = datetime.now().strftime("%A, %Y-%m-%d")
 platform_context = f"""## iOS / Xcode VERSION GROUND TRUTH (Current date: {current_date})
 
-iOS 26 is the current major line — Apple went straight from iOS 18 to iOS 26 at
-WWDC 2025; the in-between majors (19-25) were never released. Xcode 26 ships with
-it. A newer major may have shipped since your training cutoff — don't assume 26 is
-still the latest.
+Apple went straight from iOS 18 to iOS 26 at WWDC 2025; the in-between majors
+(19-25) were never released. A new major ships every year, so 26 may no longer be
+the latest — don't assume it is.{installed_toolchain}
 
 BEHAVIORAL RULES:
 1. NEVER claim an iOS/Xcode version "doesn't exist" or is "wrong" because it
@@ -62,8 +110,7 @@ BEHAVIORAL RULES:
 This is a behavioral instruction grounded in Apple's release history, not a claim
 about your training data."""
 
-# Detect Apple for-LLM documentation in Xcode
-xcode_path = os.environ.get("AXIOM_XCODE_PATH", "/Applications/Xcode.app")
+# Detect Apple for-LLM documentation in Xcode (xcode_path is set above)
 apple_docs_path = f"{xcode_path}/Contents/PlugIns/IDEIntelligenceChat.framework/Versions/A/Resources/AdditionalDocumentation"
 diagnostics_path = f"{xcode_path}/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/share/doc/swift/diagnostics"
 
@@ -105,7 +152,7 @@ try:
 
 ---
 
-**xclog** (simulator console capture): Available at `{xclog_path}`. Captures print()/os_log()/Logger output as structured JSON. Use `xclog list` to find bundle IDs, `xclog launch <bundle-id> --timeout 30s --max-lines 200` for bounded capture. For crash diagnosis workflow, see `axiom-tools` (skills/xclog-ref.md). Command: `/axiom:console`."""
+**xclog** (simulator console capture as structured JSON): Available at `{xclog_path}`. Command: `/axiom:console`. Usage: `axiom-tools` (skills/xclog-ref.md)."""
 except OSError:
     pass
 
@@ -140,7 +187,7 @@ try:
 
 ---
 
-**xcsym** (crash symbolication): Available at `{xcsym_path}`. Symbolicates .ips, MetricKit, Apple legacy .crash text files, and Xcode Organizer .xccrashpoint bundles with LLM-friendly JSON. Use `xcsym crash <file>` for full triage (point at the bundle directory or the inner .crash), `xcsym verify <file>` for dSYM diagnostics. For crash analysis workflow, see `axiom-tools` (skills/xcsym-ref.md). Command: `/axiom:analyze-crash`."""
+**xcsym** (crash symbolication for .ips, MetricKit, .crash and .xccrashpoint): Available at `{xcsym_path}`. Command: `/axiom:analyze-crash`. Usage: `axiom-tools` (skills/xcsym-ref.md)."""
 except OSError:
     pass
 
@@ -164,7 +211,7 @@ try:
 
 ---
 
-**xcui** (scriptable sim UI & accessibility testing): Available at `{xcui_path}`. Drives the simulator via AXe + simctl. Run `xcui doctor` first (verifies AXe; `--install` adds it via brew). Key verbs: `xcui wait --for-element <id>`, `xcui assert --id <id> --label … --trait … --single`, `xcui a11y set --toggle <name> --value <on/off> --app <id>`, `xcui dialog accept|dismiss` (or `pregrant <bundle-id> <service>…`), `xcui voiceover traverse|assert --sequence <file>`. For taps use `xcui tap --id <id>` — it sends a physical touch; bare `axe tap` needs `--tap-style physical` or SwiftUI controls ignore it while still reporting success. Workflow: `axiom-tools` (skills/xcui-ref.md). Command: `/axiom:ui`."""
+**xcui** (scriptable sim UI & accessibility testing): Available at `{xcui_path}`. Run `xcui doctor` first. Tap with `xcui tap --id <id>`; bare `axe tap` needs `--tap-style physical`, or SwiftUI controls ignore it while it still reports success. Command: `/axiom:ui`. Usage: `axiom-tools` (skills/xcui-ref.md)."""
 except OSError:
     pass
 
@@ -186,21 +233,24 @@ try:
 
 ---
 
-**xcprof** (structured xctrace capture + analysis): Available at `{xcprof_path}`. Turns an Instruments `.trace` into a token-lean structured report (compact JSON or terse markdown) — resolves xctrace's id/ref back-references that defeat grep, gives an honest per-family support matrix, hot/user-code frame attribution, and approximate main-thread stalls. Run `xcprof doctor` to verify xctrace; `xcprof record --preset cpu --attach <pid|name>` to capture (bounded by `--max-duration`; `-- <cmd>` launch needs `--allow-launch`, `--all-processes` needs `--allow-all-processes`; `--dry-run` previews the command); `xcprof analyze <trace> [--json] [--dsym <path>] [--start-ms N --end-ms N]` to analyze; `xcprof compare <baseline> <current> [--fail-on-regression] [--threshold-pct N]` to diff two traces for CPU-share regressions (exit 3 gates CI). CPU family round-trips record→analyze→compare; memory/network/energy parsing is later. Workflow: `axiom-tools` (skills/xcprof-ref.md), `axiom-performance` (skills/trace-comparison.md)."""
+**xcprof** (structured xctrace capture + analysis): Available at `{xcprof_path}`. Run `xcprof doctor` first; the verbs are `record`, `analyze` and `compare`. Usage: `axiom-tools` (skills/xcprof-ref.md), `axiom-performance` (skills/trace-comparison.md)."""
 except OSError:
     pass
 
-# Build the context message
+# Build the context message. The facts only this hook knows (the platform rules,
+# installed toolchain and tool paths) come first. If a future change pushes the
+# total past Claude Code's inline limit, the preview then starts with them, not
+# with skill text the model can load on its own.
 additional_context = f"""<EXTREMELY_IMPORTANT>
 You have Axiom iOS development skills.
 
-{platform_context}
+{platform_context}{apple_docs_context}{xclog_context}{xcsym_context}{xcui_context}{xcprof_context}
 
 ---
 
-**Below is the full content of your 'axiom:axiom-tools' skill - your introduction to using Axiom skills. For all other Axiom skills, use the 'Skill' tool:**
+**Below is the always-on part of your 'axiom:axiom-tools' skill. Its routing table, Device Hub notes and tool references load with the 'Skill' tool, as do all other Axiom skills:**
 
-{using_axiom_content}{apple_docs_context}{xclog_context}{xcsym_context}{xcui_context}{xcprof_context}
+{using_axiom_content}
 
 </EXTREMELY_IMPORTANT>"""
 

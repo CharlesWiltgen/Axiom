@@ -119,6 +119,31 @@ function mcpToolChars(root: string): FootprintPart {
   };
 }
 
+/**
+ * Chars of axiom-tools/SKILL.md that hooks/session-start.py injects: the span
+ * between its AXIOM_SESSION_START markers, or the whole file when they are
+ * missing or enclose nothing (the hook falls back the same way). The hook adds
+ * ~1.5-4k chars of session facts it computes at run time (version rules, tool
+ * paths), which a static count cannot see; hooks/session-start_test.py bounds
+ * the full output.
+ */
+export function sessionStartSpanChars(skillFile: string): number {
+  if (!fs.existsSync(skillFile)) return 0;
+  const text = fs.readFileSync(skillFile, "utf8");
+  const m = /<!-- AXIOM_SESSION_START_BEGIN[^\n]*\n([\s\S]*?)<!-- AXIOM_SESSION_START_END -->/.exec(text);
+  const span = m ? m[1].trim() : "";
+  return (span || text).length;
+}
+
+/**
+ * Upper bound on that span. Claude Code keeps a hook's additionalContext inline
+ * only up to 10,000 chars (https://code.claude.com/docs/en/hooks), and the hook
+ * adds up to ~4k of run-time facts, so the span must stay near 5.5k. The full
+ * output test in hooks/session-start_test.py runs in predeploy, not in CI; this
+ * bound is the part CI enforces.
+ */
+export const SESSION_START_SPAN_CEILING = 5_500;
+
 export function measureFootprints(root: string): HarnessFootprint[] {
   const cc = path.join(root, ".claude-plugin/plugins/axiom");
   const toolsSkill = path.join(cc, "skills/axiom-tools/SKILL.md");
@@ -137,8 +162,8 @@ export function measureFootprints(root: string): HarnessFootprint[] {
       {
         label: "session-start hook injection",
         count: 1,
-        // The hook injects axiom-tools/SKILL.md in full, not just its description.
-        chars: fs.existsSync(toolsSkill) ? fs.readFileSync(toolsSkill, "utf8").length : 0,
+        // The hook injects the marked span of axiom-tools/SKILL.md, not just its description.
+        chars: sessionStartSpanChars(toolsSkill),
       },
     ]),
     withTotal("cursor", [
