@@ -8,6 +8,8 @@ import {
   FOOTPRINT_CEILINGS,
   measureFootprints,
   reportFootprints,
+  SESSION_START_SPAN_CEILING,
+  sessionStartSpanChars,
 } from "./always-on-footprint.ts";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -128,6 +130,24 @@ test("no harness exceeds its tracked ceiling", () => {
         `reduce the footprint; do not raise the ceiling`,
     );
   }
+});
+
+// The session-start hook injects only the AXIOM_SESSION_START span of
+// axiom-tools/SKILL.md. Counting the whole file would overstate it, and a
+// missing marker would silently put the whole file back in every session.
+test("counts only the marked span the session-start hook injects", () => {
+  const skill = path.join(root, ".claude-plugin/plugins/axiom/skills/axiom-tools/SKILL.md");
+  const whole = fs.readFileSync(skill, "utf8").length;
+  const span = sessionStartSpanChars(skill);
+  assert.ok(span > 0, "the span should not be empty");
+  assert.ok(span < whole, `span ${span} should be smaller than the whole skill ${whole}; are the markers missing?`);
+  assert.ok(
+    span <= SESSION_START_SPAN_CEILING,
+    `session-start span ${span} exceeds ${SESSION_START_SPAN_CEILING}: with the hook's run-time facts ` +
+      `it would pass Claude Code's 10,000-char hook limit — shrink the span`,
+  );
+  const cc = measureFootprints(root).find((f) => f.harness === "claude-code")!;
+  assert.equal(cc.parts.find((p) => p.label === "session-start hook injection")!.chars, span);
 });
 
 test("report names each harness and its token estimate", () => {
