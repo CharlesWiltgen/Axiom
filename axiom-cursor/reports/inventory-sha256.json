@@ -1703,8 +1703,8 @@
     },
     {
       "path": "skills/axiom-tools/SKILL.md",
-      "sha256": "6740ecfb850d4f850c299a2ff2f7054c069a4282c29161660f12af107e99a67e",
-      "bytes": 9667
+      "sha256": "6c49334747919cde595c56f1b96fd8c1a6b2383751a359eb8309a913d9f64fe6",
+      "bytes": 9922
     },
     {
       "path": "skills/axiom-tools/skills/device-control-ref.md",
@@ -1879,7 +1879,7 @@
   ],
   "totals": {
     "files": 375,
-    "bytes": 7612515
+    "bytes": 7612770
   },
   "excludedMirrors": 30,
   "classes": {
