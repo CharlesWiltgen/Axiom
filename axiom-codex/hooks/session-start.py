@@ -22,6 +22,37 @@ if not resolve_context_decision(os.getcwd(), os.environ.get("AXIOM_SESSION_CONTE
     print(json.dumps({}))
     sys.exit(0)
 
+if os.environ.get("AXIOM_HARNESS") == "codex":
+    context = f"""<EXTREMELY_IMPORTANT>
+Axiom provides Apple-platform development guidance. For any iOS/Swift task, read
+all applicable Axiom routers BEFORE responding or acting, including clarifications.
+Load `{plugin_root}/skills/<router>/SKILL.md` with file or terminal tools available
+in this session, then follow its referenced child guidance. If Axiom MCP retrieval
+tools are available, they are another loading path. Read relevant sections on demand.
+Never assume a tool named Skill or Read exists. Report unavailable guidance clearly.
+
+Start with environment/build guidance for build failures, architecture guidance for
+UI, data or concurrency work, then implementation guidance. Multi-domain work needs
+all relevant routers. Preserve the checks and safeguards in the loaded procedures.
+
+Never reject an iOS/Xcode version because it postdates training. Establish current
+versions from Axiom guidance or https://support.apple.com/en-us/123075, not training.
+Before OS-specific advice, establish the deployment target from the project or user.
+For newer APIs (including OS27), give @available/#available gates and a fallback
+that supports that target. Do not present newer APIs as universally deployable.
+
+Use only capabilities exposed by this session. Load auditor procedures as skills;
+execute them sequentially when collaboration is unavailable. If collaboration tools
+are present, respect their documented concurrency limits and the requested model.
+Resolve helper paths under `{plugin_root}/bin/` (xclog, xcsym, xcui, xcprof), checking
+existence, executable permission and a non-mutating help/version probe before use.
+Do not assume helpers are on PATH. Optional Xcode/MCP capabilities need detection.
+</EXTREMELY_IMPORTANT>"""
+    print(json.dumps({"hookSpecificOutput": {
+        "hookEventName": "SessionStart", "additionalContext": context,
+    }}))
+    sys.exit(0)
+
 # Read using-axiom content
 try:
     with open(f"{plugin_root}/skills/axiom-tools/SKILL.md", "r") as f:

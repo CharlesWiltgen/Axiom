@@ -22,6 +22,7 @@ PLUGIN_ROOT = os.path.dirname(HOOKS_DIR)  # .../plugins/axiom
 def run_in(cwd: str, env_override: dict | None = None) -> dict:
     env = os.environ.copy()
     env.pop("AXIOM_SESSION_CONTEXT", None)
+    env.pop("AXIOM_HARNESS", None)
     if env_override:
         env.update(env_override)
     out = subprocess.run(
@@ -60,6 +61,36 @@ class TestSessionStartGate(unittest.TestCase):
             with open(os.path.join(d, "App.swift"), "w"):
                 pass
             self.assertFalse(has_context(run_in(d, {"AXIOM_SESSION_CONTEXT": "never"})))
+
+
+class TestCodexStartup(unittest.TestCase):
+    def test_codex_context_is_bounded_and_preserves_required_safeguards(self):
+        with tempfile.TemporaryDirectory() as d:
+            payload = run_in(d, {"AXIOM_SESSION_CONTEXT": "always", "AXIOM_HARNESS": "codex"})
+        context = payload["hookSpecificOutput"]["additionalContext"]
+        self.assertLessEqual(len(context.encode("utf-8")), 2500)
+        self.assertIn("SKILL.md", context)
+        self.assertIn("deployment target", context)
+        self.assertIn("#available", context)
+        for safeguard in ("BEFORE responding or acting", "Multi-domain work needs", "Never reject an iOS/Xcode version", "Use only capabilities exposed"):
+            with self.subTest(safeguard=safeguard):
+                self.assertIn(safeguard, context)
+        self.assertNotIn("use the 'Skill' tool", context)
+        self.assertNotIn("Below is the full content", context)
+
+    def test_codex_respects_the_non_apple_project_gate(self):
+        with tempfile.TemporaryDirectory() as d:
+            os.mkdir(os.path.join(d, ".git"))
+            with open(os.path.join(d, "index.js"), "w"):
+                pass
+            self.assertEqual(run_in(d, {"AXIOM_HARNESS": "codex"}), {})
+
+    def test_canonical_claude_still_injects_the_full_onboarding_skill(self):
+        with tempfile.TemporaryDirectory() as d:
+            context = run_in(d, {"AXIOM_SESSION_CONTEXT": "always"})["hookSpecificOutput"]["additionalContext"]
+        self.assertIn("Below is the full content", context)
+        self.assertIn("Skill Priority for iOS Development", context)
+        self.assertIn("DEPLOYMENT TARGET", context)
 
 
 if __name__ == "__main__":
