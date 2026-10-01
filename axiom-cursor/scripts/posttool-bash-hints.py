@@ -35,8 +35,11 @@ Input:
 
 Output:
 
-    Zero or more lines on stdout, each starting with ``💡``. Each line
-    is a self-contained hint the agent can act on.
+    Canonical Claude invocations emit zero or more plain-text hint lines.
+    Generated invocations set ``AXIOM_HARNESS=codex`` to read terminal text
+    from stdin ``tool_response`` (string or explicit ``output`` field) and
+    emit one PostToolUse ``hookSpecificOutput.additionalContext`` object.
+    Unknown response fields are not scanned; no hints produce no output.
 
 Exit code: always 0.
 """
@@ -240,17 +243,32 @@ def main() -> int:
     if data.get("tool_name") != "Bash":
         return 0
 
-    output = os.environ.get("CURSOR_TOOL_OUTPUT", "")
+    codex = os.environ.get("AXIOM_HARNESS") == "codex"
+    if codex:
+        response = data.get("tool_response")
+        output = response.get("output") if isinstance(response, dict) else response
+        if not isinstance(output, str):
+            return 0
+    else:
+        output = os.environ.get("CURSOR_TOOL_OUTPUT", "")
     tool_input = data.get("tool_input") or {}
     command = tool_input.get("command", "") if isinstance(tool_input, dict) else ""
+    if not isinstance(command, str):
+        command = ""
     duration_ms = data.get("duration_ms")
     if not isinstance(duration_ms, int):
         duration_ms = None
 
-    for hint in match_patterns(output):
-        print(hint)
-    for hint in duration_hints(command, output, duration_ms):
-        print(hint)
+    hints = match_patterns(output) + duration_hints(command, output, duration_ms)
+    if codex:
+        if hints:
+            print(json.dumps({"hookSpecificOutput": {
+                "hookEventName": "PostToolUse",
+                "additionalContext": "\n".join(hints),
+            }}, ensure_ascii=False))
+    else:
+        for hint in hints:
+            print(hint)
     return 0
 
 

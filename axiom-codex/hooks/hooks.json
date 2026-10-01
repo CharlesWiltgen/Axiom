@@ -6,7 +6,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${PLUGIN_ROOT}/hooks/posttool-bash-hints.py\""
+            "command": "AXIOM_HARNESS=codex python3 \"${PLUGIN_ROOT}/hooks/posttool-bash-hints.py\"",
+            "statusMessage": "Axiom: PostToolUse terminal hints"
           }
         ]
       },
@@ -15,7 +16,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${PLUGIN_ROOT}/hooks/swift-guardrails.py\""
+            "command": "AXIOM_HARNESS=codex python3 \"${PLUGIN_ROOT}/hooks/swift-guardrails.py\"",
+            "statusMessage": "Axiom: PostToolUse Swift guardrails"
           }
         ]
       }
@@ -25,7 +27,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${PLUGIN_ROOT}/hooks/session-start.sh\""
+            "command": "AXIOM_HARNESS=codex \"${PLUGIN_ROOT}/hooks/session-start.sh\"",
+            "statusMessage": "Axiom: SessionStart onboarding"
           }
         ]
       }
@@ -35,7 +38,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${PLUGIN_ROOT}/hooks/user-prompt-submit.py\""
+            "command": "AXIOM_HARNESS=codex python3 \"${PLUGIN_ROOT}/hooks/user-prompt-submit.py\"",
+            "statusMessage": "Axiom: UserPromptSubmit routing"
           }
         ]
       }
@@ -45,7 +49,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${PLUGIN_ROOT}/hooks/subagent-start.py\""
+            "command": "AXIOM_HARNESS=codex python3 \"${PLUGIN_ROOT}/hooks/subagent-start.py\"",
+            "statusMessage": "Axiom: SubagentStart subagent guidance"
           }
         ]
       }

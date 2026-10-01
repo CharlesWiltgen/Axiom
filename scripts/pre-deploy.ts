@@ -2229,7 +2229,7 @@ heading("12l. Codex Hooks Fidelity");
         }
         const emittedCmds = new Set((emittedGroup.hooks ?? []).map((h) => h.command));
         for (const h of g.hooks ?? []) {
-          const want = (h.command ?? "").replaceAll("CLAUDE_PLUGIN_ROOT", "PLUGIN_ROOT");
+          const want = `AXIOM_HARNESS=codex ${(h.command ?? "").replaceAll("CLAUDE_PLUGIN_ROOT", "PLUGIN_ROOT")}`;
           if (!emittedCmds.has(want)) {
             error("codex-hooks", `${event} command dropped from emitted Codex hooks: ${want}`);
             groupsOk = false;

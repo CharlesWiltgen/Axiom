@@ -10,6 +10,9 @@
  */
 
 import { describe, it } from "node:test";
+import fs from "node:fs";
+import path from "node:path";
+import { spawnSync } from "node:child_process";
 import assert from "node:assert/strict";
 import { translateHooksToCodex, shouldCopyHookScript } from "./codex-hooks.js";
 
@@ -41,19 +44,25 @@ const CC_HOOKS = {
 const EXPECTED_CODEX_HOOKS = {
   hooks: {
     PostToolUse: [
-      { matcher: "Bash", hooks: [{ type: "command", command: 'python3 "${PLUGIN_ROOT}/hooks/posttool-bash-hints.py"' }] },
-      { matcher: "Write|Edit", hooks: [{ type: "command", command: 'python3 "${PLUGIN_ROOT}/hooks/swift-guardrails.py"' }] },
+      { matcher: "Bash", hooks: [{ type: "command", command: 'AXIOM_HARNESS=codex python3 "${PLUGIN_ROOT}/hooks/posttool-bash-hints.py"', statusMessage: "Axiom: PostToolUse terminal hints" }] },
+      { matcher: "Write|Edit", hooks: [{ type: "command", command: 'AXIOM_HARNESS=codex python3 "${PLUGIN_ROOT}/hooks/swift-guardrails.py"', statusMessage: "Axiom: PostToolUse Swift guardrails" }] },
     ],
     SessionStart: [
-      { hooks: [{ type: "command", command: '"${PLUGIN_ROOT}/hooks/session-start.sh"' }] },
+      { hooks: [{ type: "command", command: 'AXIOM_HARNESS=codex "${PLUGIN_ROOT}/hooks/session-start.sh"', statusMessage: "Axiom: SessionStart onboarding" }] },
     ],
     UserPromptSubmit: [
-      { hooks: [{ type: "command", command: 'python3 "${PLUGIN_ROOT}/hooks/user-prompt-submit.py"' }] },
+      { hooks: [{ type: "command", command: 'AXIOM_HARNESS=codex python3 "${PLUGIN_ROOT}/hooks/user-prompt-submit.py"', statusMessage: "Axiom: UserPromptSubmit routing" }] },
     ],
   },
 };
 
 describe("translateHooksToCodex", () => {
+  it("selects Codex protocol explicitly without mutating canonical commands", () => {
+    const input = structuredClone(CC_HOOKS);
+    const commands = Object.values(translateHooksToCodex(input).hooks).flatMap(groups => groups.flatMap(group => group.hooks.map(hook => hook.command)));
+    assert.equal(commands.every(command => command?.startsWith("AXIOM_HARNESS=codex ")), true);
+    assert.deepEqual(input, CC_HOOKS);
+  });
   it("produces the full Codex manifest: root-var renamed, Read group dropped, structure preserved", () => {
     assert.deepEqual(translateHooksToCodex(CC_HOOKS), EXPECTED_CODEX_HOOKS);
   });
@@ -116,5 +125,26 @@ describe("shouldCopyHookScript", () => {
   it("skips non-script files (metadata.txt, hooks.json)", () => {
     assert.equal(shouldCopyHookScript("metadata.txt"), false);
     assert.equal(shouldCopyHookScript("hooks.json"), false);
+  });
+});
+
+
+describe("generated Codex terminal hook", () => {
+  it("delivers stdin hints through the generated command from root and nested cwd", () => {
+    const pluginRoot = path.resolve("axiom-codex");
+    const manifest = JSON.parse(fs.readFileSync(path.join(pluginRoot, "hooks/hooks.json"), "utf8"));
+    const command = manifest.hooks.PostToolUse.find(group => group.matcher === "Bash").hooks[0].command;
+    const payload = { tool_name: "Bash", tool_input: { command: "swift build" }, tool_response: "data race detected" };
+    for (const cwd of [process.cwd(), path.resolve("docs")]) {
+      const result = spawnSync("sh", ["-lc", command], {
+        cwd, input: JSON.stringify(payload), encoding: "utf8",
+        env: { ...process.env, PLUGIN_ROOT: pluginRoot, CLAUDE_TOOL_OUTPUT: "linker command failed" },
+      });
+      assert.deepEqual({ status: result.status, stderr: result.stderr, output: JSON.parse(result.stdout) }, {
+        status: 0, stderr: "", output: { hookSpecificOutput: {
+          hookEventName: "PostToolUse", additionalContext: "💡 Concurrency issue. Try: skill axiom-concurrency",
+        } },
+      });
+    }
   });
 });

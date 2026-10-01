@@ -16,7 +16,7 @@
 //      re-triggering it via UserPromptSubmit is a documented follow-up.
 //   3. Drop `matcher` on events where Codex doesn't support it (UserPromptSubmit, Stop).
 //
-// No per-hook command rewriting is needed beyond the plugin-root rename: the
+// Generated commands select the Codex protocol with AXIOM_HARNESS=codex: the
 // format-on-save hook was retired and swift-guardrails.py reads tool_input from the
 // stdin JSON (Claude Code file_path OR a Codex apply_patch patch), so it is
 // harness-agnostic and ports with no special transform or exclusion (bd axiom-tybr).
@@ -40,7 +40,7 @@ export const CODEX_EXCLUDED_HOOK_SCRIPTS = new Set(['pretool-crash-route.py']);
 // Codex injects $PLUGIN_ROOT for plugin-bundled hooks and runs the command via
 // `sh -lc`, so the variable shell-expands exactly like Claude Code's ${CLAUDE_PLUGIN_ROOT}.
 function rewriteCommand(command) {
-  return command.replaceAll('CLAUDE_PLUGIN_ROOT', 'PLUGIN_ROOT');
+  return `AXIOM_HARNESS=codex ${command.replaceAll('CLAUDE_PLUGIN_ROOT', 'PLUGIN_ROOT')}`;
 }
 
 /**
@@ -69,11 +69,22 @@ export function translateHooksToCodex(ccHooks) {
       if (group.matcher !== undefined && !MATCHERLESS_EVENTS.has(event)) {
         newGroup.matcher = group.matcher;
       }
-      newGroup.hooks = (group.hooks ?? []).map((entry) =>
-        typeof entry.command === 'string'
-          ? { ...entry, command: rewriteCommand(entry.command) }
-          : { ...entry },
-      );
+      newGroup.hooks = (group.hooks ?? []).map((entry) => {
+        if (typeof entry.command !== 'string') return { ...entry };
+        const purposes = {
+          'posttool-bash-hints.py': 'terminal hints',
+          'swift-guardrails.py': 'Swift guardrails',
+          'session-start.sh': 'onboarding',
+          'user-prompt-submit.py': 'routing',
+          'subagent-start.py': 'subagent guidance',
+        };
+        const handler = Object.keys(purposes).find(name => entry.command.includes(`/hooks/${name}"`));
+        return {
+          ...entry,
+          command: rewriteCommand(entry.command),
+          ...(handler ? { statusMessage: `Axiom: ${event} ${purposes[handler]}` } : {}),
+        };
+      });
       translatedGroups.push(newGroup);
     }
     // Drop an event whose groups were all excluded (e.g. PreToolUse → only "Read").

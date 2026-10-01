@@ -416,5 +416,67 @@ class TestMatchPatternsUnit(unittest.TestCase):
         self.assertIn("/axiom:fix-build", hints[1])
 
 
+class TestCodexProtocol(unittest.TestCase):
+    def test_stdin_output_produces_one_structured_context_in_rule_order(self):
+        payload = bash_payload()
+        payload["tool_response"] = "data race detected\nlinker command failed"
+        out, code = run_hook(payload, env_override={"AXIOM_HARNESS": "codex"})
+        self.assertEqual((out, code), (json.dumps({
+            "hookSpecificOutput": {
+                "hookEventName": "PostToolUse",
+                "additionalContext": "💡 Concurrency issue. Try: skill axiom-concurrency\n"
+                    "💡 Build configuration issue. Try: /axiom:fix-build",
+            },
+        }, ensure_ascii=False) + "\n", 0))
+
+    def test_codex_does_not_read_claude_environment_output(self):
+        payload = bash_payload()
+        payload["tool_response"] = "Build succeeded"
+        self.assertEqual(run_hook(payload, output="data race", env_override={"AXIOM_HARNESS": "codex"}), ("", 0))
+
+    def test_claude_retains_plain_text_environment_output(self):
+        payload = bash_payload()
+        payload["tool_response"] = "linker command failed"
+        self.assertEqual(run_hook(payload, output="data race", env_override={"AXIOM_HARNESS": "claude"}),
+            ("💡 Concurrency issue. Try: skill axiom-concurrency\n", 0))
+
+    def test_codex_output_object_reads_only_output_text(self):
+        payload = bash_payload()
+        payload["tool_response"] = {"output": "data race", "metadata": "linker command failed"}
+        out, code = run_hook(payload, env_override={"AXIOM_HARNESS": "codex"})
+        self.assertEqual((json.loads(out), code), ({"hookSpecificOutput": {
+            "hookEventName": "PostToolUse", "additionalContext": "💡 Concurrency issue. Try: skill axiom-concurrency",
+        }}, 0))
+
+    def test_codex_missing_or_malformed_output_is_a_no_op(self):
+        for response in (None, {}, [], 123, {"output": 123}, {"metadata": "data race"}):
+            with self.subTest(response=response):
+                payload = bash_payload("xcodebuild test", duration_ms=300_001)
+                payload["tool_response"] = response
+                self.assertEqual(run_hook(payload, env_override={"AXIOM_HARNESS": "codex"}), ("", 0))
+
+    def test_codex_malformed_command_does_not_crash(self):
+        payload = bash_payload(duration_ms=300_001)
+        payload["tool_input"] = {"command": 123}
+        payload["tool_response"] = "Build succeeded"
+        self.assertEqual(run_hook(payload, env_override={"AXIOM_HARNESS": "codex"}), ("", 0))
+
+    def test_codex_non_terminal_tools_are_a_no_op(self):
+        for name in ("apply_patch", "mcp__example__read", "spawn_agent"):
+            with self.subTest(name=name):
+                payload = bash_payload()
+                payload.update(tool_name=name, tool_response="data race")
+                self.assertEqual(run_hook(payload, env_override={"AXIOM_HARNESS": "codex"}), ("", 0))
+
+    def test_codex_preserves_slow_test_threshold(self):
+        for duration, expected in ((300_000, ""), (300_001, "💡 Slow test run (300s). Try: skill axiom-testing for parallelization, simulator reuse, .serialized traits")):
+            with self.subTest(duration=duration):
+                payload = bash_payload("xcodebuild test", duration_ms=duration)
+                payload["tool_response"] = "Test passed"
+                out, code = run_hook(payload, env_override={"AXIOM_HARNESS": "codex"})
+                want = json.dumps({"hookSpecificOutput": {"hookEventName": "PostToolUse", "additionalContext": expected}}, ensure_ascii=False) + "\n" if expected else ""
+                self.assertEqual((out, code), (want, 0))
+
+
 if __name__ == "__main__":
     unittest.main()
