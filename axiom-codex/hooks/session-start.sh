@@ -17,7 +17,11 @@ python3 "${SCRIPT_DIR}/session-start.py" "$PLUGIN_ROOT"
 rc=$?
 if [[ $rc -ne 0 ]]; then
     echo "[WARN SessionStart] Python script failed (exit $rc)" >&2
-    echo '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"Axiom hook failed to initialize. Skills are still available via the Skill tool."}}'
+    if [[ "${AXIOM_HARNESS:-}" == "codex" ]]; then
+        echo '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"Axiom hook failed to initialize. Read relevant local skills/<router>/SKILL.md under the Axiom plugin root using available file or terminal tools, then follow its child guidance. Available Axiom MCP retrieval tools are another loading path."}}'
+    else
+        echo '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"Axiom hook failed to initialize. Skills are still available via the Skill tool."}}'
+    fi
 fi
 
 exit 0

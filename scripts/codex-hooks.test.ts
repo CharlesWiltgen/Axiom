@@ -12,6 +12,7 @@
 import { describe, it } from "node:test";
 import fs from "node:fs";
 import path from "node:path";
+import os from "node:os";
 import { spawnSync } from "node:child_process";
 import assert from "node:assert/strict";
 import { translateHooksToCodex, shouldCopyHookScript } from "./codex-hooks.js";
@@ -147,4 +148,45 @@ describe("generated Codex terminal hook", () => {
       });
     }
   });
+});
+
+describe("startup shell fallback", () => {
+  for (const harness of ["codex", "claude"]) {
+    it(`provides usable ${harness} guidance after child failure from root and nested cwd`, () => {
+      const fixture = fs.mkdtempSync(path.join(os.tmpdir(), "axiom-startup-failure-"));
+      try {
+        const pluginRoot = path.join(fixture, 'package with "quotes"');
+        const hooks = path.join(pluginRoot, "hooks");
+        const nested = path.join(fixture, "workspace", "nested");
+        fs.mkdirSync(hooks, { recursive: true });
+        fs.mkdirSync(nested, { recursive: true });
+        const source = harness === "codex" ? "axiom-codex" : ".claude-plugin/plugins/axiom";
+        fs.copyFileSync(path.join(source, "hooks/session-start.sh"), path.join(hooks, "session-start.sh"));
+        fs.chmodSync(path.join(hooks, "session-start.sh"), 0o755);
+        fs.writeFileSync(path.join(hooks, "session-start.py"), "import sys\nsys.exit(23)\n");
+        const manifest = JSON.parse(fs.readFileSync(path.join(source, "hooks/hooks.json"), "utf8"));
+        const command = manifest.hooks.SessionStart[0].hooks[0].command;
+        for (const cwd of [path.dirname(nested), nested]) {
+          const env: NodeJS.ProcessEnv = { ...process.env, PLUGIN_ROOT: pluginRoot, CLAUDE_PLUGIN_ROOT: pluginRoot, CODEX_HOME: fixture };
+          delete env.AXIOM_HARNESS;
+          const result = spawnSync("sh", ["-lc", command], { cwd, env, input: "{}", encoding: "utf8", timeout: 5000 });
+          assert.equal(result.status, 0, result.stderr);
+          assert.match(result.stderr, /Python script failed \(exit 23\)/);
+          const response = JSON.parse(result.stdout);
+          const context = response.hookSpecificOutput.additionalContext;
+          assert.equal(response.hookSpecificOutput.hookEventName, "SessionStart");
+          if (harness === "codex") {
+            assert.match(context, /skills\/<router>\/SKILL\.md/);
+            assert.match(context, /file or terminal tools/);
+            assert.match(context, /MCP/);
+            assert.doesNotMatch(context, /via the Skill tool/);
+          } else {
+            assert.equal(context, "Axiom hook failed to initialize. Skills are still available via the Skill tool.");
+          }
+        }
+      } finally {
+        fs.rmSync(fixture, { recursive: true, force: true });
+      }
+    });
+  }
 });
