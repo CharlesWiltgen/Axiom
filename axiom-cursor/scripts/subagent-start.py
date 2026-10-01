@@ -110,7 +110,21 @@ if agent_type.endswith("-noskills"):
     print("{}")
     sys.exit(0)
 
-context = """You have access to Axiom iOS development skills via the Skill tool. If your task involves iOS, Swift, Xcode, or Apple frameworks, invoke the matching skill BEFORE doing the work:
+awareness = "You have access to Axiom iOS development skills via the Skill tool. If your task involves iOS, Swift, Xcode, or Apple frameworks, invoke the matching skill BEFORE doing the work:"
+invocation = 'Invoke with: Skill tool, skill name (e.g., "axiom-swiftui").'
+if os.environ.get("AXIOM_HARNESS") == "codex":
+    plugin_root = os.path.dirname(_hook_dir)
+    awareness = f"""You have access to Axiom iOS development skills. For iOS, Swift, Xcode, or Apple
+framework tasks, read all applicable routers BEFORE responding or acting, including
+clarifications. Load `{plugin_root}/skills/<router>/SKILL.md` with available file or
+terminal tools, then follow referenced child guidance. Available Axiom MCP retrieval
+is another loading path. Report unavailable guidance clearly:"""
+    invocation = """Use only tools exposed by this session. Preserve the checks and safeguards in
+loaded guidance. Establish the deployment target before OS-specific advice; give
+@available/#available gates and a fallback for newer APIs, including OS27.
+Never reject an iOS/Xcode version because it postdates training."""
+
+context = f"""{awareness}
 
 - `axiom-build` — build failures, Xcode, simulator, SPM
 - `axiom-swiftui` — SwiftUI views, navigation, layout, animation, architecture
@@ -130,7 +144,7 @@ context = """You have access to Axiom iOS development skills via the Skill tool.
 - `axiom-uikit` — UIKit/SwiftUI bridging, Auto Layout, Combine, TextKit
 - `axiom-location` — Core Location, MapKit, geofencing, directions
 
-Invoke with: Skill tool, skill name (e.g., "axiom-swiftui")."""
+{invocation}"""
 
 output = {
     "hookSpecificOutput": {

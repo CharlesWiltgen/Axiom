@@ -35,6 +35,7 @@ def run_hook_in(payload: dict, cwd: str | None = None,
     # the more robust spawn target for the test process.
     env = os.environ.copy()
     env.pop("AXIOM_SESSION_CONTEXT", None)
+    env.pop("AXIOM_HARNESS", None)
     if env_override:
         env.update(env_override)
     result = subprocess.run(
@@ -88,6 +89,29 @@ class TestSubagentStartInjection(unittest.TestCase):
         self.assertEqual(
             payload["hookSpecificOutput"]["hookEventName"], "SubagentStart"
         )
+
+
+class TestCodexSubagentGuidance(unittest.TestCase):
+    def test_codex_preserves_roster_and_uses_available_loading_paths(self):
+        payload = {"agent_type": "general-purpose"}
+        canonical = run_hook_in(payload, env_override={"AXIOM_SESSION_CONTEXT": "always"})["hookSpecificOutput"]["additionalContext"]
+        codex = run_hook_in(payload, env_override={"AXIOM_SESSION_CONTEXT": "always", "AXIOM_HARNESS": "codex"})["hookSpecificOutput"]["additionalContext"]
+        self.assertEqual([line for line in codex.splitlines() if line.startswith('- `')], [line for line in canonical.splitlines() if line.startswith('- `')])
+        self.assertIn("Skill tool", canonical)
+        self.assertNotIn("Skill tool", codex)
+        self.assertIn(os.path.dirname(os.path.dirname(HOOK)) + "/skills/<router>/SKILL.md", codex)
+        for requirement in ("BEFORE responding or acting", "MCP", "deployment target", "#available", "fallback"):
+            with self.subTest(requirement=requirement):
+                self.assertIn(requirement, codex)
+
+    def test_codex_preserves_project_and_agent_skip_gates(self):
+        env = {"AXIOM_SESSION_CONTEXT": "always", "AXIOM_HARNESS": "codex"}
+        for agent in ('beads:task-agent', 'plugin-dev:future-tool', 'red-noskills'):
+            with self.subTest(agent=agent):
+                self.assertEqual(run_hook_in({"agent_type": agent}, env_override=env), {})
+        with tempfile.TemporaryDirectory() as root:
+            os.mkdir(os.path.join(root, '.git'))
+            self.assertEqual(run_hook_in({"agent_type": "general-purpose"}, cwd=root, env_override={"AXIOM_SESSION_CONTEXT": "never", "AXIOM_HARNESS": "codex"}), {})
 
 
 class TestSubagentStartSkips(unittest.TestCase):
