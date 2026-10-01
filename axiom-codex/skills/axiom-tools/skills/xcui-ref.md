@@ -6,7 +6,9 @@ xcui makes iOS-simulator UI and accessibility testing scriptable for coding harn
 
 On **Claude Code**, `xcui` is already on PATH — the plugin's `bin/` is auto-resolved. Run `xcui <subcommand>`.
 
-On **Codex, Pi, and MCP installs there is no bundled binary**: those install skills only, and no install path puts Axiom's tools on `PATH`. Check with `command -v xcui` before using any `xcui` command in this file.
+On **Codex plugin installs**, use `<plugin-root>/bin/xcui`, where `<plugin-root>` is the directory containing `.codex-plugin/plugin.json` (also supplied in Axiom's startup context). The examples below use the bare command name; substitute this absolute path unless `command -v xcui` confirms PATH availability. Check the file is executable and run `--help` before using it; report missing files, permission errors, or unsupported architecture as unavailable capabilities.
+
+On **Pi and MCP-only installs there is no bundled binary**: those install skills only, and no install path puts Axiom's tools on `PATH`. Check with `command -v xcui` before using any `xcui` command in this file.
 
 If it is absent, you have two working options and should say which you took:
 - Put it on PATH — clone the repo and symlink `.claude-plugin/plugins/axiom/bin/xcui` (see the Pi install guide). This is the only way to get `resize sweep`, `wait`, `assert`, `a11y`, `dialog`, and `voiceover`, which have no AXe equivalent.

@@ -5,7 +5,9 @@ xclog captures iOS simulator console output by combining `simctl launch --consol
 
 ## Invocation
 
-`xclog` is on PATH as a bare command (Claude Code 2.1.91+ resolves plugin `bin/` entries automatically). Just run `xclog <subcommand>` — no prefix, no path lookup.
+On **Claude Code**, `xclog` is on PATH as a bare command (Claude Code 2.1.91+ resolves plugin `bin/` entries automatically). Just run `xclog <subcommand>` — no prefix, no path lookup.
+
+On **Codex plugin installs**, use `<plugin-root>/bin/xclog`, where `<plugin-root>` is the directory containing `.codex-plugin/plugin.json` (also supplied in Axiom's startup context). The examples below use the bare command name; substitute this absolute path unless `command -v xclog` confirms PATH availability. Check the file is executable and run `list --help` before using it; report missing files, permission errors, or unsupported architecture as unavailable capabilities.
 
 ## When to Use
 

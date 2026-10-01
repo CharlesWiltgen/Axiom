@@ -40,6 +40,15 @@ if (fs.existsSync(OUTPUT_DIR)) {
 fs.mkdirSync(OUTPUT_SKILLS, { recursive: true });
 fs.mkdirSync(OUTPUT_MANIFEST, { recursive: true });
 
+const outputBin = path.join(OUTPUT_DIR, 'bin');
+fs.mkdirSync(outputBin, { recursive: true });
+for (const helper of ['xclog', 'xcsym', 'xcui', 'xcprof']) {
+  const source = path.join(root, '.claude-plugin/plugins/axiom/bin', helper);
+  const destination = path.join(outputBin, helper);
+  fs.copyFileSync(source, destination);
+  fs.chmodSync(destination, fs.statSync(source).mode);
+}
+
 // Parse SKILL.md frontmatter via gray-matter (shared with axiom-mcp)
 function parseFrontmatter(content: string): Record<string, string> {
   const { data } = matter(content);

@@ -7,7 +7,9 @@ xcsym symbolicates `.ips` (v1/v2), MetricKit (`MXCrashDiagnostic`), Apple's lega
 
 ## Invocation
 
-`xcsym` is on PATH as a bare command (Claude Code 2.1.91+ resolves plugin `bin/` entries automatically). Just run `xcsym <subcommand>` — no prefix, no path lookup.
+On **Claude Code**, `xcsym` is on PATH as a bare command (Claude Code 2.1.91+ resolves plugin `bin/` entries automatically). Just run `xcsym <subcommand>` — no prefix, no path lookup.
+
+On **Codex plugin installs**, use `<plugin-root>/bin/xcsym`, where `<plugin-root>` is the directory containing `.codex-plugin/plugin.json` (also supplied in Axiom's startup context). The examples below use the bare command name; substitute this absolute path unless `command -v xcsym` confirms PATH availability. Check the file is executable and run `--help` before using it; report missing files, permission errors, or unsupported architecture as unavailable capabilities.
 
 ## When to Use
 

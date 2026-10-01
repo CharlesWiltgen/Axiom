@@ -7,7 +7,9 @@ xcprof turns an Instruments `.trace` into a structured, token-lean report for LL
 xcprof has two front-ends over the same engine — use whichever your harness provides:
 
 - **Claude Code** — `xcprof` is on PATH as a bare command (plugin `bin/` is auto-resolved). Run `xcprof <subcommand>`. The examples below use this CLI syntax.
-- **MCP clients (Codex, Cursor, …)** — four wrapper tools (xcprof is currently the only Axiom bin tool exposed over MCP).
+- **MCP clients** — four profiling wrapper tools.
+
+On **Codex plugin installs**, use `<plugin-root>/bin/xcprof`, where `<plugin-root>` is the directory containing `.codex-plugin/plugin.json` (also supplied in Axiom's startup context). The examples below use the bare command name; substitute this absolute path unless `command -v xcprof` confirms PATH availability. Check the file is executable and run `--help` before using it; report missing files, permission errors, or unsupported architecture as unavailable capabilities.
 
 | CLI subcommand | MCP tool | Required input |
 |---|---|---|
