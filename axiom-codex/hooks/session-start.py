@@ -6,10 +6,15 @@ import sys
 import os
 from datetime import datetime
 
+import hook_diagnostics
+
+hook_diagnostics.begin("session-start")
+
 from project_detect import resolve_context_decision
 
 if len(sys.argv) < 2:
     print(json.dumps({"error": "Usage: session-start.py <plugin_root>"}), file=sys.stderr)
+    hook_diagnostics.record_exit(1)
     sys.exit(1)
 
 plugin_root = sys.argv[1]
@@ -58,6 +63,7 @@ try:
     with open(f"{plugin_root}/skills/axiom-tools/SKILL.md", "r") as f:
         using_axiom_content = f.read()
 except Exception as e:
+    hook_diagnostics.record_exception(e)
     print(f"[WARN SessionStart] Failed to read axiom-tools skill: {e}", file=sys.stderr)
     using_axiom_content = f"Error reading axiom-tools skill: {e}"
 
@@ -137,7 +143,8 @@ try:
 ---
 
 **xclog** (simulator console capture): Available at `{xclog_path}`. Captures print()/os_log()/Logger output as structured JSON. Use `xclog list` to find bundle IDs, `xclog launch <bundle-id> --timeout 30s --max-lines 200` for bounded capture. For crash diagnosis workflow, see `axiom-tools` (skills/xclog-ref.md). Command: `/axiom:console`."""
-except OSError:
+except OSError as error:
+    hook_diagnostics.record_exception(error)
     pass
 
 # Detect xcsym binary. The size floor (axiom-1kn) catches marketplace-
@@ -172,7 +179,8 @@ try:
 ---
 
 **xcsym** (crash symbolication): Available at `{xcsym_path}`. Symbolicates .ips, MetricKit, Apple legacy .crash text files, and Xcode Organizer .xccrashpoint bundles with LLM-friendly JSON. Use `xcsym crash <file>` for full triage (point at the bundle directory or the inner .crash), `xcsym verify <file>` for dSYM diagnostics. For crash analysis workflow, see `axiom-tools` (skills/xcsym-ref.md). Command: `/axiom:analyze-crash`."""
-except OSError:
+except OSError as error:
+    hook_diagnostics.record_exception(error)
     pass
 
 # Detect xcui binary. Same size-floor logic as xclog/xcsym (truncated
@@ -196,7 +204,8 @@ try:
 ---
 
 **xcui** (scriptable sim UI & accessibility testing): Available at `{xcui_path}`. Drives the simulator via AXe + simctl. Run `xcui doctor` first (verifies AXe; `--install` adds it via brew). Key verbs: `xcui wait --for-element <id>`, `xcui assert --id <id> --label … --trait … --single`, `xcui a11y set --toggle <name> --value <on/off> --app <id>`, `xcui dialog accept|dismiss` (or `pregrant <bundle-id> <service>…`), `xcui voiceover traverse|assert --sequence <file>`. For taps use `xcui tap --id <id>` — it sends a physical touch; bare `axe tap` needs `--tap-style physical` or SwiftUI controls ignore it while still reporting success. Workflow: `axiom-tools` (skills/xcui-ref.md). Command: `/axiom:ui`."""
-except OSError:
+except OSError as error:
+    hook_diagnostics.record_exception(error)
     pass
 
 # Detect xcprof binary. Same size-floor logic as the other bundled tools.
@@ -218,7 +227,8 @@ try:
 ---
 
 **xcprof** (structured xctrace capture + analysis): Available at `{xcprof_path}`. Turns an Instruments `.trace` into a token-lean structured report (compact JSON or terse markdown) — resolves xctrace's id/ref back-references that defeat grep, gives an honest per-family support matrix, hot/user-code frame attribution, and approximate main-thread stalls. Run `xcprof doctor` to verify xctrace; `xcprof record --preset cpu --attach <pid|name>` to capture (bounded by `--max-duration`; `-- <cmd>` launch needs `--allow-launch`, `--all-processes` needs `--allow-all-processes`; `--dry-run` previews the command); `xcprof analyze <trace> [--json] [--dsym <path>] [--start-ms N --end-ms N]` to analyze; `xcprof compare <baseline> <current> [--fail-on-regression] [--threshold-pct N]` to diff two traces for CPU-share regressions (exit 3 gates CI). CPU family round-trips record→analyze→compare; memory/network/energy parsing is later. Workflow: `axiom-tools` (skills/xcprof-ref.md), `axiom-performance` (skills/trace-comparison.md)."""
-except OSError:
+except OSError as error:
+    hook_diagnostics.record_exception(error)
     pass
 
 # Build the context message

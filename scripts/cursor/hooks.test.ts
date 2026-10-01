@@ -109,6 +109,7 @@ test("renders the native Cursor hook manifest and non-executable runtime copies"
   assert.deepEqual([...byPath.keys()].sort(), [
     "hooks/hooks.json",
     "scripts/cursor-hook-adapter.py",
+    "scripts/hook_diagnostics.py",
     "scripts/posttool-bash-hints.py",
     "scripts/pretool-crash-route.py",
     "scripts/project_detect.py",
@@ -117,7 +118,7 @@ test("renders the native Cursor hook manifest and non-executable runtime copies"
     "scripts/user-prompt-submit.py",
   ]);
   for (const file of files) assert.equal(file.mode, 0o644);
-  for (const filename of ["posttool-bash-hints.py", "project_detect.py", "swift-guardrails.py"]) {
+  for (const filename of ["posttool-bash-hints.py", "project_detect.py", "swift-guardrails.py", "hook_diagnostics.py"]) {
     assert.equal(
       byPath.get(`scripts/${filename}`)!.content,
       fs.readFileSync(path.join(canonicalHooks, filename), "utf8"),

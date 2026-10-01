@@ -41,6 +41,8 @@ import json
 import os
 import re
 import sys
+
+import hook_diagnostics
 from dataclasses import dataclass
 from typing import Callable
 
@@ -64,7 +66,8 @@ def affected_swift_files(stdin_text: str) -> list[str]:
     """The .swift paths an edit touched, from either harness's tool_input shape."""
     try:
         data = json.loads(stdin_text)
-    except Exception:
+    except Exception as error:
+        hook_diagnostics.record_exception(error)
         return []
     if not isinstance(data, dict):
         return []
@@ -283,7 +286,8 @@ def build_response(stdin_text: str) -> dict | None:
         try:
             with open(path, encoding="utf-8", errors="replace") as f:
                 lines = f.read().splitlines()
-        except Exception:
+        except Exception as error:
+            hook_diagnostics.record_exception(error)
             continue
         for check in _CHECKS:
             hits = check.fn(lines)[:3]
@@ -312,7 +316,8 @@ def build_response(stdin_text: str) -> dict | None:
 def main() -> None:
     try:
         response = build_response(sys.stdin.read())
-    except Exception:
+    except Exception as error:
+        hook_diagnostics.record_exception(error)
         sys.exit(0)  # never fail the edit
     if response is not None:
         print(json.dumps(response))
@@ -320,4 +325,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    hook_diagnostics.begin("swift-guardrails")
     main()

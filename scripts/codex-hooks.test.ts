@@ -190,3 +190,31 @@ describe("startup shell fallback", () => {
     });
   }
 });
+
+describe("generated Codex hook diagnostics", () => {
+  it("records every generated handler lifecycle without changing protocol output", () => {
+    const fixture = fs.mkdtempSync(path.join(os.tmpdir(), "axiom-generated-diagnostics-"));
+    try {
+      const pluginRoot = path.resolve("axiom-codex");
+      const manifest = JSON.parse(fs.readFileSync(path.join(pluginRoot, "hooks/hooks.json"), "utf8"));
+      const payload = JSON.stringify({ prompt: "Swift concurrency Sendable", agent_type: "general-purpose", tool_name: "Bash", tool_input: { command: "swift build" }, tool_response: "data race detected" });
+      let index = 0;
+      for (const [event, groups] of Object.entries(manifest.hooks) as [string, { hooks: { command: string }[] }[]][]) {
+        for (const { command } of groups.flatMap(group => group.hooks)) {
+          const env: NodeJS.ProcessEnv = { ...process.env, PLUGIN_ROOT: pluginRoot, AXIOM_SESSION_CONTEXT: "always" };
+          delete env.AXIOM_HOOK_DIAGNOSTICS_DIR;
+          const baseline = spawnSync("sh", ["-lc", command], { cwd: fixture, env, input: payload, encoding: "utf8", timeout: 5000 });
+          const destination = path.join(fixture, `diagnostics-${index++}`);
+          env.AXIOM_HOOK_DIAGNOSTICS_DIR = destination;
+          const enabled = spawnSync("sh", ["-lc", command], { cwd: fixture, env, input: payload, encoding: "utf8", timeout: 5000 });
+          assert.deepEqual({ status: enabled.status, stdout: enabled.stdout, stderr: enabled.stderr }, { status: baseline.status, stdout: baseline.stdout, stderr: baseline.stderr });
+          assert.equal(enabled.status, 0);
+          const records = fs.readFileSync(path.join(destination, "axiom-hooks.jsonl"), "utf8").trim().split("\n").map(line => JSON.parse(line));
+          assert.deepEqual(records.map(record => [record.event, record.phase, record.outcome]), [[event, "start", "running"], [event, "end", "success"]]);
+        }
+      }
+    } finally {
+      fs.rmSync(fixture, { recursive: true, force: true });
+    }
+  });
+});

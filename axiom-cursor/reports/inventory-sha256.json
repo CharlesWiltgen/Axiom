@@ -332,14 +332,19 @@
       "bytes": 26497
     },
     {
+      "path": "scripts/hook_diagnostics.py",
+      "sha256": "2e2958683624ec81615e3072aef13ba7267b7c82d1a409b962eab1b40fe04ba5",
+      "bytes": 5355
+    },
+    {
       "path": "scripts/posttool-bash-hints.py",
-      "sha256": "1185c37917792e182006cdbcf1cc7ab658b90f843792a754a0aa94da8f13f567",
-      "bytes": 10023
+      "sha256": "3318a16c2b84b6689a0d4aa7d14fca0ead0f6a346c7bb8502ad9bcecdbd8179b",
+      "bytes": 10156
     },
     {
       "path": "scripts/pretool-crash-route.py",
-      "sha256": "797990a0857d08e9f7893246e44556058d4fab8ea9f7bce35e0041d4cdc29cfd",
-      "bytes": 5569
+      "sha256": "9c52d9a8c3912ee944802604f815f3c01aef6dd929f67ca7e2e1b6db9ec5f108",
+      "bytes": 5702
     },
     {
       "path": "scripts/project_detect.py",
@@ -348,18 +353,18 @@
     },
     {
       "path": "scripts/subagent-start.py",
-      "sha256": "98fbef899fd412e0f54f6b98ac9de8db7639ae17726d98e25b082e107a29b2ea",
-      "bytes": 6008
+      "sha256": "4c91d240e770ac26f79ac86ace8347707d6318d134621269a9bec21f670158f5",
+      "bytes": 6183
     },
     {
       "path": "scripts/swift-guardrails.py",
-      "sha256": "700681916e570fb6e31208241c1a071c7c80b4d2cfa937b119464e937e7aaaa6",
-      "bytes": 12348
+      "sha256": "c01114bdda99f770ade2fc25487a2706a2958f1f8bcc43929f3f92d6b5ba433e",
+      "bytes": 12598
     },
     {
       "path": "scripts/user-prompt-submit.py",
-      "sha256": "66f362f127de2227a0508373f3c939a0ba1ae31820056fee4ea68e37f9764785",
-      "bytes": 46778
+      "sha256": "ff434084bf5825670c1b595546feb4ccaf268e74b2e93efa8d4cb9b6e1efe72e",
+      "bytes": 46957
     },
     {
       "path": "skills/axiom-accessibility/SKILL.md",
@@ -1878,8 +1883,8 @@
     }
   ],
   "totals": {
-    "files": 375,
-    "bytes": 7613321
+    "files": 376,
+    "bytes": 7619546
   },
   "excludedMirrors": 30,
   "classes": {

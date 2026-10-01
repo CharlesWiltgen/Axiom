@@ -32,10 +32,15 @@ import json
 import os
 import sys
 
+import hook_diagnostics
+
+hook_diagnostics.begin("subagent-start")
+
 try:
     input_data = json.load(sys.stdin)
     agent_type = input_data.get("agent_type", "")
-except Exception:
+except Exception as error:
+    hook_diagnostics.record_exception(error)
     print("{}")
     sys.exit(0)
 
@@ -57,7 +62,8 @@ try:
     if not resolve_context_decision(os.getcwd(), os.environ.get("AXIOM_SESSION_CONTEXT")):
         print("{}")
         sys.exit(0)
-except Exception:
+except Exception as error:
+    hook_diagnostics.record_exception(error)
     pass  # fail-open: detection unavailable → proceed with skill injection
 
 # Skip agents that won't benefit from Axiom skills

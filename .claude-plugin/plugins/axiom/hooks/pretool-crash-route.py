@@ -36,6 +36,8 @@ from __future__ import annotations
 import json
 import sys
 
+import hook_diagnostics
+
 
 def classify_path(path: str) -> str:
     """Categorize a file path so the caller can pick the right hint.
@@ -124,7 +126,8 @@ def build_output(kind: str, path: str) -> dict:
 def main() -> int:
     try:
         data = json.load(sys.stdin)
-    except Exception:
+    except Exception as error:
+        hook_diagnostics.record_exception(error)
         return 0  # malformed input → silent no-op
     if not isinstance(data, dict):
         return 0
@@ -142,4 +145,5 @@ def main() -> int:
 
 
 if __name__ == "__main__":
+    hook_diagnostics.begin("pretool-crash-route")
     sys.exit(main())

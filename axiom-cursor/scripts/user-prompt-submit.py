@@ -20,6 +20,10 @@ import os
 import re
 import sys
 
+import hook_diagnostics
+
+hook_diagnostics.begin("user-prompt-submit")
+
 # Drain stdin FIRST — before the project gate below — so a gated-off invocation
 # still consumes the prompt payload the parent wrote to our stdin. Exiting with
 # the pipe undrained risks EPIPE / a pipe-buffer stall on the writer side for a
@@ -27,7 +31,8 @@ import sys
 try:
     input_data = json.load(sys.stdin)
     prompt = input_data.get("prompt", "")
-except Exception:
+except Exception as error:
+    hook_diagnostics.record_exception(error)
     print("{}")
     sys.exit(0)
 
@@ -54,7 +59,8 @@ try:
     if not resolve_context_decision(os.getcwd(), os.environ.get("AXIOM_SESSION_CONTEXT")):
         print("{}")
         sys.exit(0)
-except Exception:
+except Exception as error:
+    hook_diagnostics.record_exception(error)
     pass  # fail-open: detection unavailable → proceed with keyword matching
 
 # Cap at 2000 chars — iOS keywords appear early, avoids regex on huge pastes

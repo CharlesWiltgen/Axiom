@@ -51,6 +51,8 @@ import os
 import re
 import sys
 
+import hook_diagnostics
+
 # Pattern hints. Each entry is (compiled_regex, hint_text). Hints are
 # kept short — one line, names the skill or command to invoke. Order
 # doesn't matter for correctness, but related hints are grouped for
@@ -236,7 +238,8 @@ def duration_hints(command: str, output: str, duration_ms: int | None) -> list[s
 def main() -> int:
     try:
         data = json.load(sys.stdin)
-    except Exception:
+    except Exception as error:
+        hook_diagnostics.record_exception(error)
         return 0  # malformed input → silent no-op
     if not isinstance(data, dict):
         return 0
@@ -273,4 +276,5 @@ def main() -> int:
 
 
 if __name__ == "__main__":
+    hook_diagnostics.begin("posttool-bash-hints")
     sys.exit(main())
