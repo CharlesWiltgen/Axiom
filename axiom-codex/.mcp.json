@@ -4,7 +4,7 @@
       "command": "npx",
       "args": [
         "-y",
-        "axiom-mcp"
+        "axiom-mcp@27.1.2"
       ]
     }
   }
