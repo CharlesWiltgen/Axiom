@@ -11,6 +11,7 @@ import {
   agentToSkillName,
 } from './codex-exclude.js';
 import { translateHooksToCodex, shouldCopyHookScript } from './codex-hooks.js';
+import { adaptHealthCheckForCodex } from './codex-auditors.js';
 import { isGeneratedSubSkill, parseAgentTools } from './inline-auditors.ts';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -486,7 +487,9 @@ for (const file of agentFiles) {
     '---',
     // Agent-skills cite sibling agents and /axiom: commands the same way routers do,
     // and Codex has neither — so they need the same translation.
-    bashNote + rewriteAgentInvokesForCodex(body.trim()),
+    bashNote + rewriteAgentInvokesForCodex(agentName === 'health-check'
+      ? adaptHealthCheckForCodex(body.trim(), [...sourceAgentNames])
+      : body.trim()),
     '',
   ].join('\n');
 

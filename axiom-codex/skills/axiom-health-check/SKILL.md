@@ -5,7 +5,7 @@ license: MIT
 ---
 # Health Check Meta-Audit Agent
 
-You are an orchestrator that launches specialized Axiom auditors in parallel, collects their findings, deduplicates by file:line, and produces a unified health report.
+Run specialized Axiom auditor procedures using the execution mode below, collect their findings, deduplicate by file:line, and produce a unified health report.
 
 ## Files to Exclude
 
@@ -99,11 +99,47 @@ Run these only when their framework signals are present in the codebase:
 
 If the user says "skip X" or "exclude X", remove that auditor from the run list. Acknowledge which auditors were excluded and why.
 
-## Phase 2: Launch Auditors in Parallel
+## Phase 2: Run Selected Auditor Procedures
 
-Dispatch one Agent call per auditor selected in Phase 1. Do not merge auditors, skip them, or run their scans inline. N selected → N Agent calls in parallel.
+Read each selected auditor's matching local Codex skill below using an available file reader. If using Axiom MCP instead, call `axiom_get_agent` with the canonical auditor name (the left column below), not `axiom_read_skill` with a generated Codex skill ID. Use the returned procedure as instructions in this execution mode; its Claude model/tool metadata does not select Codex capabilities. Keep one distinct procedure and report per selected auditor; do not merge or omit audits.
 
-Use the Agent tool with `run_in_background: true` for each selected auditor. Launch ALL of them in parallel — do not wait for one to finish before starting another.
+Choose execution mode from actual host capabilities and delegation policy:
+
+- If delegation is permitted and `spawn_agent` plus completion tools such as `wait_agent` are available, delegate each procedure with its skill path, Phase 0 scope, exclusions, emphasis, and report destination. Use bounded batches within the host's concurrency limit, counting this orchestrator and already running agents. Wait for results and release occupied slots before starting more; never spawn every auditor at once without checking capacity.
+- If delegation is unavailable or prohibited, run the matching skills sequentially in this session, writing each distinct report before the next procedure. Do not invent tools or silently skip audits.
+- Preserve the user's requested model and reasoning effort. Otherwise inherit the current model; do not substitute a Claude model label. If the requested model cannot run, report that limitation instead of substituting another model.
+
+Auditor-to-skill mapping:
+
+- `accessibility-auditor` → `axiom-audit-accessibility` (`../axiom-audit-accessibility/SKILL.md`)
+- `build-fixer` → `axiom-fix-build` (`../axiom-fix-build/SKILL.md`)
+- `camera-auditor` → `axiom-audit-camera` (`../axiom-audit-camera/SKILL.md`)
+- `codable-auditor` → `axiom-audit-codable` (`../axiom-audit-codable/SKILL.md`)
+- `concurrency-auditor` → `axiom-audit-concurrency` (`../axiom-audit-concurrency/SKILL.md`)
+- `core-data-auditor` → `axiom-audit-core-data` (`../axiom-audit-core-data/SKILL.md`)
+- `database-schema-auditor` → `axiom-audit-database-schema` (`../axiom-audit-database-schema/SKILL.md`)
+- `energy-auditor` → `axiom-audit-energy` (`../axiom-audit-energy/SKILL.md`)
+- `foundation-models-auditor` → `axiom-audit-foundation-models` (`../axiom-audit-foundation-models/SKILL.md`)
+- `icloud-auditor` → `axiom-audit-icloud` (`../axiom-audit-icloud/SKILL.md`)
+- `liquid-glass-auditor` → `axiom-audit-liquid-glass` (`../axiom-audit-liquid-glass/SKILL.md`)
+- `memory-auditor` → `axiom-audit-memory` (`../axiom-audit-memory/SKILL.md`)
+- `modernization-helper` → `axiom-modernize` (`../axiom-modernize/SKILL.md`)
+- `networking-auditor` → `axiom-audit-networking` (`../axiom-audit-networking/SKILL.md`)
+- `resize-auditor` → `axiom-audit-resize` (`../axiom-audit-resize/SKILL.md`)
+- `screenshot-validator` → `axiom-validate-screenshots` (`../axiom-validate-screenshots/SKILL.md`)
+- `security-privacy-scanner` → `axiom-scan-security-privacy` (`../axiom-scan-security-privacy/SKILL.md`)
+- `spritekit-auditor` → `axiom-audit-spritekit` (`../axiom-audit-spritekit/SKILL.md`)
+- `storage-auditor` → `axiom-audit-storage` (`../axiom-audit-storage/SKILL.md`)
+- `swift-performance-analyzer` → `axiom-analyze-swift-performance` (`../axiom-analyze-swift-performance/SKILL.md`)
+- `swiftdata-auditor` → `axiom-audit-swiftdata` (`../axiom-audit-swiftdata/SKILL.md`)
+- `swiftui-architecture-auditor` → `axiom-audit-swiftui-architecture` (`../axiom-audit-swiftui-architecture/SKILL.md`)
+- `swiftui-layout-auditor` → `axiom-audit-swiftui-layout` (`../axiom-audit-swiftui-layout/SKILL.md`)
+- `swiftui-nav-auditor` → `axiom-audit-swiftui-nav` (`../axiom-audit-swiftui-nav/SKILL.md`)
+- `swiftui-performance-analyzer` → `axiom-analyze-swiftui-performance` (`../axiom-analyze-swiftui-performance/SKILL.md`)
+- `test-failure-analyzer` → `axiom-analyze-test-failures` (`../axiom-analyze-test-failures/SKILL.md`)
+- `testing-auditor` → `axiom-audit-testing` (`../axiom-audit-testing/SKILL.md`)
+- `textkit-auditor` → `axiom-audit-textkit` (`../axiom-audit-textkit/SKILL.md`)
+- `ux-flow-auditor` → `axiom-audit-ux-flow` (`../axiom-audit-ux-flow/SKILL.md`)
 
 Today's date tag for filenames: use ISO format `YYYY-MM-DD`.
 
@@ -131,7 +167,7 @@ While auditors run, inform the user:
 
 After all auditors complete:
 
-1. Use TaskOutput to collect the summary from each background agent launched in Phase 2. Wait for all agents to return before proceeding.
+1. Collect each delegated result using the available completion tools, or collect each sequential procedure's summary. Wait for all selected audits to finish or have a recorded failure before proceeding. A failure or unavailable capability is not a passed audit.
 2. Read each `scratch/health-check-*-{date}.md` file
 3. Parse findings — look for file:line references and severity levels
 4. Identify duplicate file:line references across multiple auditor reports
@@ -216,4 +252,4 @@ Explicit command: Users can also invoke this agent directly with `axiom-health-c
 
 ## Scope
 
-Orchestrates multiple specialized auditors in parallel, deduplicates findings, and produces a unified report.
+Runs all selected specialized auditor procedures through bounded delegation or sequential execution, deduplicates findings, and produces a unified report.
