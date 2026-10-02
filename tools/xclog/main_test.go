@@ -1,13 +1,140 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"os"
+	"os/exec"
+	"path/filepath"
+	"reflect"
 	"regexp"
 	"strings"
 	"testing"
 	"time"
 )
+
+func TestLogCommandScopesSimulator(t *testing.T) {
+	for _, test := range []struct {
+		name string
+		cfg  Config
+		args []string
+		want []string
+	}{
+		{"selected stream", Config{Device: "fixture-udid"}, []string{"stream", "--predicate", "processIdentifier == 123"}, []string{"xcrun", "simctl", "spawn", "fixture-udid", "log", "stream", "--predicate", "processIdentifier == 123"}},
+		{"default history", Config{Device: "booted"}, []string{"show", "--last", "5m"}, []string{"xcrun", "simctl", "spawn", "booted", "log", "show", "--last", "5m"}},
+		{"physical archive", Config{DeviceUDID: "physical-device"}, []string{"show", "/fixture/device.logarchive"}, []string{"log", "show", "/fixture/device.logarchive"}},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			if got := logCommand(context.Background(), &test.cfg, test.args...).Args; !reflect.DeepEqual(got, test.want) {
+				t.Fatalf("command = %q, want %q", got, test.want)
+			}
+		})
+	}
+}
+
+func TestLaunchCommandUnbuffersConsole(t *testing.T) {
+	t.Setenv("SIMCTL_CHILD_NSUnbufferedIO", "NO")
+	t.Setenv("AXIOM_FIXTURE_ENV", "preserved")
+	cmd := launchCommand(context.Background(), "org.example.fixture", &Config{Device: "fixture-udid"})
+	want := []string{"xcrun", "simctl", "launch", "--console", "--terminate-running-process", "fixture-udid", "org.example.fixture"}
+	if !reflect.DeepEqual(cmd.Args, want) {
+		t.Fatalf("command = %q, want %q", cmd.Args, want)
+	}
+	env := map[string]string{}
+	for _, value := range cmd.Env {
+		key, value, found := strings.Cut(value, "=")
+		if found {
+			env[key] = value
+		}
+	}
+	got := []string{env["SIMCTL_CHILD_NSUnbufferedIO"], env["AXIOM_FIXTURE_ENV"]}
+	if want := []string{"YES", "preserved"}; !reflect.DeepEqual(got, want) {
+		t.Fatalf("launch environment = %q, want %q", got, want)
+	}
+}
+
+func TestShowReportsLogFailure(t *testing.T) {
+	dir := t.TempDir()
+	script := `#!/bin/sh
+if [ "$1 $2 $3 $4" = "simctl list devices -j" ]; then
+    echo '{"devices":{"fixture-runtime":[{"udid":"fixture-udid","state":"Booted"}]}}'
+    exit 0
+fi
+echo fixture-log-query-failed >&2
+exit 23
+`
+	for _, name := range []string{"xcrun", "log"} {
+		if err := os.WriteFile(filepath.Join(dir, name), []byte(script), 0755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	t.Setenv("PATH", dir+string(os.PathListSeparator)+os.Getenv("PATH"))
+	t.Setenv("AXIOM_XCLOG_TEST_CLI", "1")
+	cmd := exec.Command(os.Args[0], "-test.run=^TestXclogCLIHelper$")
+	output, err := cmd.CombinedOutput()
+	exit, ok := err.(*exec.ExitError)
+	if !ok || exit.ExitCode() != 1 || !strings.Contains(string(output), "fixture-log-query-failed") {
+		t.Fatalf("failed log query returned error %v and output %q; want exit 1 and contextual log error", err, output)
+	}
+}
+
+func TestXclogCLIHelper(t *testing.T) {
+	if os.Getenv("AXIOM_XCLOG_TEST_CLI") != "1" {
+		return
+	}
+	os.Args = []string{"xclog", "show", "Fixture", "--device", "fixture-udid"}
+	if value := os.Getenv("AXIOM_XCLOG_TEST_ARGS"); value != "" {
+		var args []string
+		if err := json.Unmarshal([]byte(value), &args); err != nil {
+			t.Fatal(err)
+		}
+		os.Args = append([]string{"xclog"}, args...)
+	}
+	main()
+	os.Exit(0)
+}
+
+func TestShowFailureRemovesPhysicalArchive(t *testing.T) {
+	dir := t.TempDir()
+	bin := filepath.Join(dir, "bin")
+	if err := os.Mkdir(bin, 0755); err != nil {
+		t.Fatal(err)
+	}
+	script := `#!/bin/sh
+if [ "$1" = collect ]; then
+    while [ "$#" -gt 0 ]; do
+        if [ "$1" = --output ]; then mkdir "$2"; exit 0; fi
+        shift
+    done
+fi
+echo fixture-log-query-failed >&2
+exit 23
+`
+	if err := os.WriteFile(filepath.Join(bin, "log"), []byte(script), 0755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", bin+string(os.PathListSeparator)+os.Getenv("PATH"))
+	t.Setenv("TMPDIR", dir)
+	t.Setenv("AXIOM_XCLOG_TEST_CLI", "1")
+	t.Setenv("AXIOM_XCLOG_TEST_ARGS", `["show","Fixture","--device-udid","00008101-000A1234AB1234CD"]`)
+	cmd := exec.Command(os.Args[0], "-test.run=^TestXclogCLIHelper$")
+	output, err := cmd.CombinedOutput()
+	exit, ok := err.(*exec.ExitError)
+	if !ok || exit.ExitCode() != 1 || !strings.Contains(string(output), "fixture-log-query-failed") {
+		t.Fatalf("expected failed history query: error %v, output %q", err, output)
+	}
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var names []string
+	for _, entry := range entries {
+		names = append(names, entry.Name())
+	}
+	if want := []string{"bin"}; !reflect.DeepEqual(names, want) {
+		t.Fatalf("remaining temporary files = %q, want %q", names, want)
+	}
+}
 
 // Argument-order independence (axiom-v9in): launch/attach/show must accept flags
 // before or after the target, with identical results. xclog historically forced
