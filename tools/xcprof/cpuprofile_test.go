@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"reflect"
 	"testing"
 )
 
@@ -15,6 +16,29 @@ func loadFixture(t *testing.T, name string) []byte {
 }
 
 const wantSamples = 21 // rows in testdata/cpu-profile.xml
+
+func TestParseCPUProfileDirectFrames(t *testing.T) {
+	const directFrames = `<trace-query-result><node>
+<row><sample-time id="1">100</sample-time><thread id="2" fmt="Main Thread (Example, pid: 101)"/><cycle-weight id="3">100</cycle-weight><tagged-backtrace id="4"><frame id="5" name="compute" addr="0x100001100"><binary id="6" name="Example" UUID="AAAAAAAA-0000-0000-0000-000000000002" arch="arm64" load-addr="0x100000000" path="/example/Example"/></frame><frame id="7" name="main" addr="0x100001000"><binary ref="6"/></frame></tagged-backtrace></row>
+<row><sample-time id="8">200</sample-time><thread ref="2"/><cycle-weight ref="3"/><tagged-backtrace ref="4"/></row>
+<row><sample-time id="9">300</sample-time><thread ref="2"/><cycle-weight id="10">25</cycle-weight><tagged-backtrace id="11"><frame id="12" name="other" addr="0x100001200"><binary ref="6"/></frame><frame ref="7"/></tagged-backtrace></row>
+</node></trace-query-result>`
+	compute := Frame{Name: "compute", Addr: "0x100001100", BinaryName: "Example", BinaryPath: "/example/Example", UUID: "AAAAAAAA-0000-0000-0000-000000000002", Arch: "arm64", LoadAddr: "0x100000000"}
+	main := Frame{Name: "main", Addr: "0x100001000", BinaryName: "Example", BinaryPath: "/example/Example", UUID: "AAAAAAAA-0000-0000-0000-000000000002", Arch: "arm64", LoadAddr: "0x100000000"}
+	other := Frame{Name: "other", Addr: "0x100001200", BinaryName: "Example", BinaryPath: "/example/Example", UUID: "AAAAAAAA-0000-0000-0000-000000000002", Arch: "arm64", LoadAddr: "0x100000000"}
+	want := []Sample{
+		{TimeNS: 100, Weight: 100, ThreadName: "Main Thread (Example, pid: 101)", IsMainThread: true, Frames: []Frame{compute, main}},
+		{TimeNS: 200, Weight: 100, ThreadName: "Main Thread (Example, pid: 101)", IsMainThread: true, Frames: []Frame{compute, main}},
+		{TimeNS: 300, Weight: 25, ThreadName: "Main Thread (Example, pid: 101)", IsMainThread: true, Frames: []Frame{other, main}},
+	}
+	got, err := parseCPUProfile([]byte(directFrames))
+	if err != nil {
+		t.Fatalf("parse direct-frame export: %v", err)
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("parsed direct-frame samples = %+v, want %+v", got, want)
+	}
+}
 
 func TestParseCPUProfileRowCount(t *testing.T) {
 	samples, err := parseCPUProfile(loadFixture(t, "cpu-profile.xml"))
