@@ -1,11 +1,12 @@
 {
   "name": "axiom-mcp",
   "version": "27.1.2",
-  "description": "MCP server for Axiom — Apple-platform development skills, agents, and tools",
+  "description": "MCP server for Axiom \u2014 Apple-platform development skills, agents, and tools",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "axiom-mcp": "./dist/index.js"
+    "axiom-mcp": "./dist/index.js",
+    "xcproject": "./dist/bin/xcproject"
   },
   "files": [
     "dist",

@@ -18,7 +18,7 @@ import { parseSkill, parseCommand, parseAgent, parseReferenceFile, applyAnnotati
 import type { BundleV2 } from '../loader/types.js';
 import { buildIndex, serializeIndex } from '../search/index.js';
 import { buildCatalog } from '../catalog/index.js';
-import { MCP_TOOL_BINARIES } from '../tools/binaries.js';
+import { MCP_PACKAGED_BINARIES } from '../tools/binaries.js';
 
 async function loadAnnotations(): Promise<SkillAnnotations> {
   try {
@@ -188,7 +188,7 @@ export function computeBundleStats(bundle: BundleV2): BundleStats {
 }
 
 /**
- * Copy every MCP tool binary (see `MCP_TOOL_BINARIES`) from the plugin `bin/`
+ * Copy every MCP tool and workflow binary (see `MCP_PACKAGED_BINARIES`) from the plugin `bin/`
  * into `dist/bin` so the published npm package (which ships only `dist/`) can
  * run them for non-Claude-Code MCP clients.
  *
@@ -198,10 +198,10 @@ export function computeBundleStats(bundle: BundleV2): BundleStats {
  * the resolver's job — each tool reports itself unavailable on unsupported
  * platforms; copying the committed file works on any build host.)
  */
-async function copyToolBinaries(pluginPath: string, outputDir: string): Promise<void> {
+export async function copyToolBinaries(pluginPath: string, outputDir: string): Promise<void> {
   const destDir = join(outputDir, 'bin');
   await mkdir(destDir, { recursive: true });
-  for (const name of MCP_TOOL_BINARIES) {
+  for (const name of MCP_PACKAGED_BINARIES) {
     const src = join(pluginPath, 'bin', name);
     const dest = join(destDir, name);
     let info;
@@ -210,13 +210,22 @@ async function copyToolBinaries(pluginPath: string, outputDir: string): Promise<
     } catch (err) {
       throw new Error(
         `MCP tool binary '${name}' is missing at ${src} (${(err as Error).message}). ` +
-        `It is listed in MCP_TOOL_BINARIES and committed in the plugin bin/, so it must be ` +
-        `present before bundling — refusing to publish a package missing the axiom_${name}_* tools.`,
+        `It is listed in MCP_PACKAGED_BINARIES and committed in the plugin bin/, so it must be ` +
+        `present before bundling — refusing to publish a package missing its helpers.`,
       );
     }
     await copyFile(src, dest);
     await chmod(dest, 0o755);
     console.log(`Copied ${name} binary (${(info.size / 1024 / 1024).toFixed(1)} MB) to ${dest}`);
+  }
+  const licenseDir = join(outputDir, 'licenses');
+  await mkdir(licenseDir, { recursive: true });
+  try {
+    const license = await readFile(join(pluginPath, 'licenses/xcproject.txt'));
+    if (license.length === 0) throw new Error('empty license');
+    await writeFile(join(licenseDir, 'xcproject.txt'), license, { mode: 0o644 });
+  } catch (err) {
+    throw new Error(`Cannot package xcproject license from ${pluginPath}: ${(err as Error).message}`);
   }
 }
 

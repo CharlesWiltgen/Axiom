@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { computeBundleStats, generateBundle } from './bundle.js';
+import { computeBundleStats, generateBundle, copyToolBinaries } from './bundle.js';
 import { isGeneratedSubSkill } from '../loader/parser.js';
 import type { BundleV2 } from '../loader/types.js';
 import { makeSkill, makeAgent } from '../test-helpers.js';
-import { mkdtemp, rm, mkdir, writeFile } from 'fs/promises';
+import { mkdtemp, rm, mkdir, writeFile, readFile, stat } from 'fs/promises';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
 import { tmpdir } from 'os';
@@ -166,5 +166,42 @@ describe(isGeneratedSubSkill, () => {
     expect(isGeneratedSubSkill(
       '# Layout\n\nSee the GENERATED from agents/ note in the auditor docs.'
     )).toBe(false);
+  });
+});
+
+
+describe('copyToolBinaries', () => {
+  for (const missingLicense of [false, true]) {
+    it(missingLicense ? 'rejects a missing xcproject license' : 'packages xcproject with its third-party license', async () => {
+      const directory = await mkdtemp(join(tmpdir(), 'axiom-binary-bundle-'));
+      const plugin = join(directory, 'plugin');
+      const output = join(directory, 'dist');
+      try {
+        await mkdir(join(plugin, 'bin'), { recursive: true });
+        await mkdir(join(plugin, 'licenses'));
+        for (const name of ['xcprof', 'xclog', 'xcsym', 'xcproject']) {
+          await writeFile(join(plugin, 'bin', name), `fixture binary ${name}`, { mode: 0o644 });
+        }
+        if (!missingLicense) await writeFile(join(plugin, 'licenses/xcproject.txt'), 'fixture Apple license');
+        if (missingLicense) {
+          await expect(copyToolBinaries(plugin, output)).rejects.toThrow(/xcproject.*license|license.*xcproject/i);
+        } else {
+          await copyToolBinaries(plugin, output);
+          expect(await readFile(join(output, 'bin/xcproject'), 'utf8')).toBe('fixture binary xcproject');
+          expect((await stat(join(output, 'bin/xcproject'))).mode & 0o777).toBe(0o755);
+          expect(await readFile(join(output, 'licenses/xcproject.txt'), 'utf8')).toBe('fixture Apple license');
+        }
+      } finally {
+        await rm(directory, { recursive: true, force: true });
+      }
+    });
+  }
+});
+
+
+describe('packaged xcproject CLI', () => {
+  it('exposes the native inspector through the npm bin mapping', async () => {
+    const manifest = JSON.parse(await readFile(fileURLToPath(new URL('../../package.json', import.meta.url)), 'utf8'));
+    expect(manifest.bin.xcproject).toBe('./dist/bin/xcproject');
   });
 });
