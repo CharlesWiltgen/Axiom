@@ -1618,8 +1618,8 @@
     },
     {
       "path": "skills/axiom-swiftui/skills/iphone-duo.md",
-      "sha256": "3d06b19fe4fc9b545efb6440ea3ac944ee01be9d5e4309146c67c48626952d4c",
-      "bytes": 41762
+      "sha256": "eb54736f266a2496bdbebb2b39286b1a2b9cb6a8ebdf72f0502f02cb4f94892e",
+      "bytes": 43435
     },
     {
       "path": "skills/axiom-swiftui/skills/layout-ref.md",
@@ -1713,8 +1713,8 @@
     },
     {
       "path": "skills/axiom-tools/skills/device-control-ref.md",
-      "sha256": "e4a480ed405551c7fa865a1332c0c8a9de092cdba3a3acea58766416a28bb3ac",
-      "bytes": 29447
+      "sha256": "4e6df19e573b7ca17703ef13dc4c3ea8a1335edeb42074afe594cc47a709981b",
+      "bytes": 31793
     },
     {
       "path": "skills/axiom-tools/skills/getting-started.md",
@@ -1884,7 +1884,7 @@
   ],
   "totals": {
     "files": 376,
-    "bytes": 7620390
+    "bytes": 7624409
   },
   "excludedMirrors": 30,
   "classes": {

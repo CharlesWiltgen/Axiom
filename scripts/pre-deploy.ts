@@ -93,6 +93,7 @@ import {
   validateHomeCoverage,
 } from "./inline-auditors.ts";
 import { parsePorcelain, resolveGoBinaryStaleness, resolveStaleness } from "./staleness.ts";
+import { classifyNpmFailure, npmErrorCode, runNpmDryRun } from "./npm-resolution.ts";
 import { findDashViolations } from "./docs-dashes.ts";
 import { renderCursorDistribution } from "./cursor/render.ts";
 import { compareCursorPaths } from "./cursor/compare.ts";
@@ -2145,22 +2146,39 @@ heading("12k. Pi Install Manifest");
   if (process.argv.slice(2).includes("--static")) {
     console.log("  ⊘ Skipped (--static: needs the npm registry)");
   } else {
+    // Bounded: npm's own retry defaults mean an unreachable-but-not-refusing
+    // registry never returns on its own. Measured against a black-holed address,
+    // the unbounded call was still running at 100 s and had to be killed — a
+    // release gate that hangs is worse than one that fails.
+    const npmDryRunTimeoutMs = 120_000;
     try {
-      execSync("npm install --omit=dev --dry-run", { cwd: root, stdio: "pipe" });
-      console.log("  ✓ `npm install --omit=dev` resolves — Pi's install path is clear");
-    } catch (e: unknown) {
-      const err = e as { stderr?: Buffer | string; stdout?: Buffer | string };
-      const out = `${err.stderr ?? ""}${err.stdout ?? ""}`;
-      // Discriminate: only a resolution conflict is Axiom's bug. Any other
-      // failure (offline, registry down) must not fail the release.
-      if (out.includes("ERESOLVE")) {
-        error(
-          "pi-manifest",
-          "root dependency graph does not resolve: `npm install --omit=dev` fails with ERESOLVE, so `pi install git:` aborts before installing anything (GH #54). Fix the peer conflict with a narrow `overrides` entry — passing --legacy-peer-deps only hides it from this gate.",
-        );
+      const probe = await runNpmDryRun(root, { timeoutMs: npmDryRunTimeoutMs });
+      if (probe.status === 0 && !probe.timedOut && !probe.errorCode) {
+        console.log("  ✓ `npm install --omit=dev` resolves — Pi's install path is clear");
       } else {
-        console.log("  ⊘ Skipped (npm --dry-run unavailable — offline?)");
+        const launchOutput = probe.errorCode === "ENOENT"
+          ? "npm: command not found"
+          : probe.errorCode ? `npm error code ${probe.errorCode}` : "";
+        const out = `${probe.stderr}\n${probe.stdout}\n${launchOutput}`;
+        const kind = classifyNpmFailure(out, { timedOut: probe.timedOut });
+        const npmCode = npmErrorCode(out);
+        if (kind === "network") {
+          console.log(
+            probe.timedOut
+              ? `  ⊘ Skipped (npm --dry-run exceeded ${npmDryRunTimeoutMs / 1000}s — registry unreachable?)`
+              : `  ⊘ Skipped (could not reach the npm registry${npmCode ? `: ${npmCode}` : ""})`,
+          );
+        } else if (kind === "environment") {
+          console.log(`  ⊘ Skipped (npm could not run here${npmCode ? `: ${npmCode}` : " — is npm on PATH?"})`);
+        } else {
+          error(
+            "pi-manifest",
+            `root dependency graph does not resolve: \`npm install --omit=dev\` failed${npmCode ? ` with ${npmCode}` : ""}, so \`pi install git:\` aborts before installing anything (GH #54). For a peer conflict use a narrow \`overrides\` entry — --legacy-peer-deps only hides it from this gate.`,
+          );
+        }
       }
+    } catch (failure: unknown) {
+      error("pi-manifest", failure instanceof Error ? failure.message : "npm dry-run execution failed");
     }
   }
 }

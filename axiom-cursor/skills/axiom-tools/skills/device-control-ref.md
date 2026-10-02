@@ -203,7 +203,44 @@ Reach for these only when devicectl capture doesn't fit — none reach a physica
 |------|-----|-----------|
 | `simctl io <udid> screenshot [--type png] [--display <port>] [--mask ignored\|alpha\|black] <file>` | sim PNG; `-` writes to stdout | sim only; `--display` takes a port UUID from `simctl io <udid> enumerate` (not devicectl's `uniqueId`) |
 | `simctl io <udid> recordVideo [--codec h264\|hevc] [--mask ignored\|black] <file>` | sim video to a `.mov` | default codec is `hevc` (devicectl defaults `h264`); stop with SIGINT; sim only. `--mask alpha` is accepted but unsupported for video — it renders black |
+| `simctl io <udid> screenConfig power on\|off` | force a sim display off/on | sim only; leaves the framebuffer black until the device is rebooted — see A black capture on a simulator |
 | `axe record-video --output f.mp4` / `axe stream-video` | sim video / live preview stream (mjpeg, jpeg, ffmpeg, bgra) | sim only; `record-video` stops on Ctrl+C — see `axiom-xcode-mcp (skills/axe-ref.md)` |
+
+### A black capture on a simulator, and what it is not
+
+On a simulator, `simctl io <udid> screenConfig power off|on` produces two failures that
+both look like the app rendered nothing (measured on an iPhone 17 / iOS 27.0 simulator;
+there is no physical-device equivalent of this command):
+
+| State | `simctl io … screenshot` | `devicectl device info displays` |
+|---|---|---|
+| Screen powered off | **fails**: `Timeout waiting for screen surfaces` | still reports `backlightState: activeOn` |
+| After `screenConfig power on` | **succeeds, entirely black** | same |
+
+The second row is the dangerous one: exit 0, a valid PNG, and `axe describe-ui` still
+returns the full tree with real frames. The state is also sticky — `axe button home`,
+`axe button lock`, a tap, and a second `power off` → `power on` cycle all left the
+framebuffer black; `xcrun simctl shutdown <udid>` followed by `boot` restored real pixels.
+
+**`backlightState` is worth reading first — it just doesn't see this one.** It tracks a
+dark display accurately in the case you are far more likely to hit: on iPhone Duo the
+closed inner display reports `backlightState: off` and `active: false` while the outer
+reports `activeOn`, so one `device info displays` names the dark display outright. What
+the table above records is narrower than "the instruments lie": `simctl`'s `screenConfig`
+power state does not propagate to `devicectl`'s view of the display.
+
+So, in order, when a capture comes back black:
+
+1. **Read `device info displays`.** A display reporting `off`/`active: false` is the
+   answer — usually that you captured the wrong display on a two-display device.
+2. **Read the accessibility tree.** A full tree with black pixels points at the display
+   rather than the app; an empty tree points at the app, though it also covers axe failing
+   to attach or an accessibility-opaque view, so it narrows rather than concludes.
+3. **Only then suspect the app.**
+
+A *locked* device is the counter-case worth knowing: it does not go black at all — its
+lock screen stays lit (still lit 20 s after `axe button lock`), so a black frame is never
+simply "the device locked itself".
 
 ### Display masks and multi-display devices
 

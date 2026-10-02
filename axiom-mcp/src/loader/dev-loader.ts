@@ -1,6 +1,6 @@
 import { readdir, readFile, stat, watch } from 'fs/promises';
 import { join } from 'path';
-import { parseSkill, parseCommand, parseAgent, parseReferenceFile, applyAnnotations, filterSkillSections, Skill, Command, Agent, SkillSection, SkillAnnotations } from './parser.js';
+import { parseSkill, parseCommand, parseAgent, parseReferenceFile, applyAnnotations, filterSkillSections, isGeneratedSubSkill, Skill, Command, Agent, SkillSection, SkillAnnotations } from './parser.js';
 import { Config, Logger } from '../config.js';
 import { Loader } from './types.js';
 import { buildIndex, search, SearchIndex, SearchResult } from '../search/index.js';
@@ -106,6 +106,12 @@ export class DevLoader implements Loader {
                     if (!refFile.endsWith('.md')) continue;
                     try {
                       const refContent = await readFile(join(refsDir, refFile), 'utf-8');
+                      // Inlined auditor copies are generated for harnesses that
+                      // cannot invoke an agent; MCP ships each auditor as a
+                      // first-class agent, so the bundler drops them. Dev mode
+                      // must drop them identically or dev and prod disagree on
+                      // the skill set, the catalog counts, and the search corpus.
+                      if (isGeneratedSubSkill(refContent)) continue;
                       const refSkill = applyAnnotations(
                         parseReferenceFile(refContent, refFile, entry),
                         annotations,

@@ -23,6 +23,9 @@ import { VERSION_RE } from "./version-regex.js";
 
 export const NPM_PACKAGE = "axiom-mcp";
 
+/** Bound for a single registry metadata GET. */
+export const REGISTRY_FETCH_TIMEOUT_MS = 30_000;
+
 type Parsed = { core: number[]; pre: string[] | null };
 
 function parse(version: string): Parsed | null {
@@ -135,6 +138,12 @@ export async function fetchPublishedVersions(
 ): Promise<string[]> {
   const res = await fetchImpl(`https://registry.npmjs.org/${NPM_PACKAGE}`, {
     headers: { accept: "application/json" },
+    // Bounded for the same reason §12k's `npm install --dry-run` is: both
+    // callers (pre-deploy §3c, xpublish's surface check) run this against the
+    // live registry, and an unreachable-but-not-refusing host would hang the
+    // release rather than fail it. One metadata GET needs far less room than a
+    // dependency-graph resolve, hence the smaller bound.
+    signal: AbortSignal.timeout(REGISTRY_FETCH_TIMEOUT_MS),
   });
   if (!res.ok) throw new Error(`registry returned ${res.status}`);
   const body = (await res.json()) as { versions?: Record<string, unknown> };

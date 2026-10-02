@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { computeBundleStats, generateBundle, isGeneratedSubSkill } from './bundle.js';
+import { computeBundleStats, generateBundle } from './bundle.js';
+import { isGeneratedSubSkill } from '../loader/parser.js';
 import type { BundleV2 } from '../loader/types.js';
 import { makeSkill, makeAgent } from '../test-helpers.js';
 import { mkdtemp, rm, mkdir, writeFile } from 'fs/promises';

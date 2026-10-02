@@ -17,7 +17,7 @@ import { readdir, readFile, writeFile, stat } from 'fs/promises';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
 import matter from 'gray-matter';
-import { isGeneratedSubSkill } from './bundle.js';
+import { isGeneratedSubSkill } from '../loader/parser.js';
 
 // --- Types ---
 

@@ -250,8 +250,27 @@ inboxItem.badge = .count(7)            // iOS 26: a symbol-only item that still 
 - Replace inline counts with a badge. Text that carries real information, like a cart total, stays in a horizontal bar.
 - Custom views, complex views, and wide controls like segmented controls stay horizontal unless opted in (Axis, edge, compression, and the off switch).
 - Vertical bars have a fixed width and flexible height; once a custom view opts in, it must fit that width or adapt its layout. Flexible spacers collapse to zero vertically; fixed spacers keep their minimum. Don't add extra spacing — group items with `ToolbarItemGroup` / `UIBarButtonItemGroup`, which supply it and adapt it.
-- Vertical bars have no scroll-edge effect but gain a background under Reduce Transparency — keep custom content legible either way.
-- A hero or background image extends under the vertical bar with `.backgroundExtensionEffect()` (SwiftUI) or `UIBackgroundExtensionView` (UIKit).
+- **That width measured 48.6–49.0 pt** on the 27.1 Duo simulator, closed pose, reading the
+  bar's own edges off an outer-display screenshot at `pointScale: 3`. It did not follow the
+  items: the same two readings came from runs whose custom item views were framed at 44 pt
+  and at 54 pt. (A 54 pt frame exceeding the bar is not a contradiction of "must fit that
+  width" above — the frame is what the item's label asks for, and the bar is what it gets.)
+- **Nothing in the API controls the bar's width or shape.** `ToolbarPlacement` has no
+  vertical-bar member at all in the 27.1 SDK (`automatic`, `bottomBar`, `navigationBar`,
+  `windowToolbar`, `tabBar`, `accessoryBar`), so `toolbarBackgroundVisibility(_:for:)` —
+  the current spelling; the `toolbarBackground(_ visibility:)` overload is renamed — cannot
+  target it. UIKit exposes only behavior and reads: `preferredVerticalBarBehavior` and
+  `childForPreferredVerticalBarBehavior`, `verticalBarCompressionBehavior`,
+  `UIBarButtonItem.axisBehavior`, `setNeedsUpdateOfVerticalBarConfiguration`, and a
+  **read-only** `UITraitCollection.verticalBarEdge`. There is no vertical-bar appearance
+  class.
+- **The bar draws a symbol about 1.27× larger than the same symbol elsewhere, so point
+  sizes are not comparable across the boundary.** Measured on the 27.1 Duo simulator at
+  three sizes — a `.system(size:)` star rendered 13.33 → 17.00 pt, 22.00 → 28.00 pt, and
+  31.00 → 39.33 pt going from an ordinary row into the bar (ratios 1.275, 1.273, 1.269;
+  the differences 3.67, 6.00, 8.33 pt do not hold, so it scales rather than pads). An
+  explicitly framed 36 pt shape measured 36 pt in both. Size a custom bar item by the shape
+  you frame, not by matching a symbol's point size to one elsewhere on screen.
 
 #### What your styling survives
 
@@ -574,7 +593,7 @@ Availability (`isAvailable`) and your on/off switch (`isEnabled`) are separate: 
 - **Device Hub** — Xcode 27.1's Device Hub drives an iPhone Duo simulator with open, close, rotate, and fold controls (111461 0:56); Apple's overview notes the Duo simulator in Device Hub requires Xcode 27.1. The device type creates against the **iOS 27.1 runtime**; the 27.0 runtime rejects it (`Incompatible device`). `iPhone Fold` is a different product.
 - **The 27.1 runtime is Duo-only.** Creating iPhone 17, 17 Pro, 17e, or iPad Pro on it fails with the same `Incompatible device` (SimError 403), so keep the 27.0 runtime for every other device (measured with Xcode 27.1).
 - **Poses are Device Hub-only.** No `simctl` or `devicectl` command opens, closes, or folds the simulator. `devicectl device motion hinge-angle` only *reads* the hinge, and `devicectl device orientation set` prints success and changes nothing on the Duo (measured closed; reported open). Check the window size after every pose change: closing from open-landscape has been reported landing in closed-portrait one time and closed-landscape another.
-- **Screenshots default to the inner display**, which is black while the device is closed — for `simctl io … screenshot` and `devicectl device capture` alike. Capture the outer display by name: axiom-tools (skills/device-control-ref.md, Display masks and multi-display devices).
+- **Screenshots default to the inner display**, which is black while the device is closed — for `simctl io … screenshot` and `devicectl device capture` alike. Capture the outer display by name: axiom-tools (skills/device-control-ref.md, Display masks and multi-display devices). A closed inner display is not the only way to get an all-black capture — axiom-tools (skills/device-control-ref.md, A black capture on a simulator, and what it is not).
 - **Name closed poses by the hinge**, never by "turned left/right". Closed and upright, the hinge is the left edge, the camera and status bar sit top-right, and the vertical bar runs down the trailing edge (`toolbarVerticalEdge == .trailing`, measured). With the hinge along the bottom the camera is top-left and the bar moves to the leading edge; hinge along the top puts the camera bottom-right and the bar trailing (reported). The bar follows the camera's edge.
 - **Synthetic taps** — send a physical touch (`xcui tap` does; bare `axe tap` needs `--tap-style physical`), or the bar's items ignore the tap while it reports ✓: axiom-tools (skills/xcui-ref.md, Tap styles). The bar's overflow (⋯) button did not open under any tap style or a 0.2–1.0 s hold in the closed pose (measured); test overflowed actions in a pose with room for them.
 - **Simulator gaps** — per the Xcode 27.1 beta release notes, StandBy is unavailable in the iPhone Duo Simulator runtime, and running and debugging most app extensions is unavailable there.

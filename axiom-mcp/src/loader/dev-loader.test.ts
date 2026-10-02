@@ -80,6 +80,19 @@ Main entry points.
     await writeFile(join(skillDir, 'SKILL.md'), skillFrontmatter, 'utf-8');
     await writeFile(join(refsDir, 'patterns.md'), patternsContent, 'utf-8');
     await writeFile(join(refsDir, 'api-ref.md'), apiRefContent, 'utf-8');
+    // The bundler drops inlined auditor copies (MCP ships each auditor as a
+    // first-class agent), so dev mode must drop them identically or dev and prod
+    // disagree on the skill set, the catalog counts, and the search corpus.
+    await writeFile(
+      join(refsDir, 'codable-auditor.md'),
+      `<!-- GENERATED from agents/codable-auditor.md by scripts/build-inlined-auditors.ts — do not edit. -->
+
+# Codable Auditor
+
+Generated auditor procedure.
+`,
+      'utf-8',
+    );
 
     loader = new DevLoader(tmpPlugin, noopLogger as any, { mode: 'dev', logLevel: 'error', enableAppleDocs: false } as any);
     await loader.loadSkills();
@@ -94,6 +107,11 @@ Main entry points.
     expect(skillsMap.has('axiom-test-suite')).toBe(true);
     expect(skillsMap.has('axiom-test-suite--patterns')).toBe(true);
     expect(skillsMap.has('axiom-test-suite--api-ref')).toBe(true);
+  });
+
+  it('excludes generated inline-auditor sub-skills, exactly as the bundler does', async () => {
+    const skillsMap = await loader.loadSkills();
+    expect(skillsMap.has('axiom-test-suite--codable-auditor')).toBe(false);
   });
 
   it('infers skill type from reference filename', async () => {
