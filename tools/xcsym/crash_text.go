@@ -647,6 +647,11 @@ func parseAppleCrashFrame(trimmed string, images []UsedImage) (Frame, bool) {
 
 	// What remains is the symbol. Can be empty (Apple sometimes emits
 	// only "+ offset" for stripped frames) or "<deduplicated_symbol>".
+	if strings.HasPrefix(strings.ToLower(rest), "0x") {
+		if _, err := strconv.ParseUint(rest, 0, 64); err == nil {
+			rest = ""
+		}
+	}
 	f.Symbol = rest
 	f.Symbolicated = rest != "" && rest != "<deduplicated_symbol>"
 

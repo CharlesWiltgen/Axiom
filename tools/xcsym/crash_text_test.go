@@ -3,8 +3,23 @@ package main
 import (
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 )
+
+func TestParseAppleCrashFrame_LoadAddressIsUnsymbolicated(t *testing.T) {
+	const uuid = "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE"
+	images := []UsedImage{{Name: "App", UUID: uuid, LoadAddress: 0x104000000, Size: 0x1000000}}
+	for _, load := range []string{"0x104000000", "0X104000000"} {
+		t.Run(load, func(t *testing.T) {
+			got, ok := parseAppleCrashFrame("0 App 0x104001270 "+load+" + 4720", images)
+			want := Frame{Address: "0x104001270", Image: "App", UUID: uuid, ImageOffset: 4720}
+			if !ok || !reflect.DeepEqual(got, want) {
+				t.Fatalf("parsed frame = %#v, ok=%v; want %#v, ok=true", got, ok, want)
+			}
+		})
+	}
+}
 
 // TestParseAppleCrash_Fixture is the end-to-end smoke test for the .crash
 // text parser. It asserts the high-value fields the symbolicate /
