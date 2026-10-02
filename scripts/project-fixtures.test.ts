@@ -6,6 +6,7 @@ import os from "node:os";
 import path from "node:path";
 import { describe, it } from "node:test";
 import { scanText } from "./leak-scan.ts";
+import "../tools/xcproject/xcproject.test.ts";
 
 const fixtures = path.join(import.meta.dirname, "fixtures/xcode-projects");
 
@@ -393,6 +394,170 @@ const sourceRoot =
   path.resolve(import.meta.dirname, "..");
 const regressions = process.env.AXIOM_PROJECT_REGRESSION === "1";
 
+function workflowCommand(source: string, key: string): string {
+  const lines = source.split("\n");
+  const actual = lines.find(
+    (line) =>
+      line.startsWith("xcproject settings ") &&
+      line.endsWith(`--key ${key} --value-only`),
+  );
+  if (actual) return actual;
+  const legacy = lines.find((line) =>
+    key === "IPHONEOS_DEPLOYMENT_TARGET"
+      ? line.startsWith("find . -maxdepth") ||
+        line.startsWith('grep -r "IPHONEOS')
+      : line.startsWith(`grep "${key}"`),
+  );
+  assert.ok(legacy, `No literal workflow command found for ${key}`);
+  return legacy;
+}
+
+function captureWorkflowSettings(
+  directory: string,
+  format: string,
+  target: string,
+  configuration: string,
+  sdk: string,
+) {
+  const project = path.join(directory, "Example.xcodeproj");
+  const file = path.join(project, `project.${format}`);
+  const replay = process.env.AXIOM_PROJECT_ORACLE_REPLAY;
+  if (replay) {
+    const captures = JSON.parse(fs.readFileSync(replay, "utf8"));
+    const matching = captures.filter(
+      (c: {
+        format: string;
+        exit: number;
+        selection: {
+          target: string;
+          configuration: string;
+          sdk: string;
+          arch: string;
+        };
+      }) =>
+        c.exit === 0 &&
+        c.format === format &&
+        c.selection.target === target &&
+        c.selection.configuration === configuration &&
+        c.selection.sdk === sdk &&
+        c.selection.arch === "arm64",
+    );
+    assert.equal(
+      matching.length,
+      1,
+      "Need exactly one independently recorded oracle",
+    );
+    const records = JSON.parse(matching[0].stdout);
+    const originalProject =
+      matching[0].argv[matching[0].argv.indexOf("-project") + 1];
+    for (const record of records) {
+      assert.equal(record.buildSettings.PROJECT_FILE_PATH, originalProject);
+      record.buildSettings.PROJECT_FILE_PATH = project;
+    }
+    const input = path.join(directory, "settings.json");
+    fs.writeFileSync(input, JSON.stringify(records));
+    return {
+      PROJECT: project,
+      TARGET: target,
+      CONFIGURATION: configuration,
+      SDK: sdk,
+      SETTINGS_JSON: input,
+    };
+  }
+  const raw =
+    format === "pbxproj"
+      ? execFileSync("plutil", ["-convert", "json", "-o", "-", file], {
+          encoding: "utf8",
+        })
+      : execFileSync(
+          "xcrun",
+          [
+            "swift",
+            "-e",
+            "import Foundation; let d = try Data(contentsOf: URL(fileURLWithPath: CommandLine.arguments[1])); let v = try JSONSerialization.jsonObject(with:d, options:[.json5Allowed]); FileHandle.standardOutput.write(try JSONSerialization.data(withJSONObject:v))",
+            file,
+          ],
+          { encoding: "utf8", timeout: 60_000 },
+        );
+  const data = JSON.parse(raw);
+  if (format === "xcproj") {
+    delete data.packages;
+    for (const target of data.targets) delete target["package-product-members"];
+    fs.writeFileSync(file, JSON.stringify(data));
+  } else {
+    const removed = new Set(
+      Object.keys(data.objects).filter((id) => {
+        const object = data.objects[id];
+        return (
+          [
+            "XCRemoteSwiftPackageReference",
+            "XCLocalSwiftPackageReference",
+            "XCSwiftPackageProductDependency",
+          ].includes(object.isa) || object.productRef
+        );
+      }),
+    );
+    for (const id of removed) delete data.objects[id];
+    for (const object of Object.values(data.objects) as Record<
+      string,
+      unknown
+    >[]) {
+      delete object.packageReferences;
+      delete object.packageProductDependencies;
+      if (Array.isArray(object.files))
+        object.files = object.files.filter((id) => !removed.has(id));
+    }
+    const openstep = (v: unknown): string => {
+      if (Array.isArray(v)) return `(${v.map(openstep).join(",")})`;
+      if (v !== null && typeof v === "object")
+        return `{${Object.entries(v)
+          .map(([key, value]) => `${JSON.stringify(key)}=${openstep(value)};`)
+          .join("")}}`;
+      const scalar = JSON.stringify(v);
+      assert.notEqual(scalar, undefined);
+      return scalar!;
+    };
+    fs.writeFileSync(file, `// !$*UTF8*$!\n${openstep(data)}\n`);
+  }
+  const processCheck = spawnSync("pgrep", ["-x", "xcodebuild"], {
+    encoding: "utf8",
+  });
+  assert.equal(
+    processCheck.status,
+    1,
+    `Existing Xcode build; do not run another: ${processCheck.stdout}${processCheck.stderr}`,
+  );
+  const argv = [
+    "xcodebuild",
+    "-project",
+    project,
+    "-target",
+    target,
+    "-configuration",
+    configuration,
+    "-sdk",
+    sdk,
+    "-showBuildSettings",
+    "-json",
+  ];
+  const result = spawnSync("xcrun", argv, {
+    encoding: "utf8",
+    timeout: 60_000,
+    maxBuffer: 8 * 1024 * 1024,
+  });
+  assert.equal(result.error, undefined);
+  assert.equal(result.status, 0, result.stderr);
+  const input = path.join(directory, "settings.json");
+  fs.writeFileSync(input, result.stdout);
+  return {
+    PROJECT: project,
+    TARGET: target,
+    CONFIGURATION: configuration,
+    SDK: sdk,
+    SETTINGS_JSON: input,
+  };
+}
+
 describe("project workflow regressions", { skip: !regressions }, () => {
   for (const format of ["pbxproj", "xcproj"] as const) {
     for (const shell of ["bash", "zsh"]) {
@@ -422,13 +587,10 @@ describe("project workflow regressions", { skip: !regressions }, () => {
               ),
               "utf8",
             );
-            const command = source
-              .split("\n")
-              .find(
-                (line) =>
-                  line.startsWith("find . -maxdepth") ||
-                  line.startsWith('grep -r "IPHONEOS'),
-              );
+            const command = workflowCommand(
+              source,
+              "IPHONEOS_DEPLOYMENT_TARGET",
+            );
             assert.ok(command, "No status deployment-target command found");
             const target =
               scenario === "extension" ||
@@ -446,17 +608,23 @@ describe("project workflow regressions", { skip: !regressions }, () => {
               release: "26.3",
               inherited: "26.1",
             }[scenario];
+            const configuration = scenario === "release" ? "Release" : "Debug";
+            const sdk =
+              scenario === "simulator" ? "iphonesimulator" : "iphoneos";
+            const capture = captureWorkflowSettings(
+              path.join(directory, layout),
+              format,
+              target,
+              configuration,
+              sdk,
+            );
             const result = spawnSync(shell, ["-c", command], {
               cwd: directory,
               encoding: "utf8",
               timeout: 20_000,
               env: {
                 ...process.env,
-                AXIOM_TARGET: target,
-                AXIOM_CONFIGURATION:
-                  scenario === "release" ? "Release" : "Debug",
-                AXIOM_SDK:
-                  scenario === "simulator" ? "iphonesimulator" : "iphoneos",
+                ...capture,
               },
             });
             t.diagnostic(
@@ -512,27 +680,40 @@ describe("project workflow regressions", { skip: !regressions }, () => {
               ),
               "utf8",
             );
-            const command = source
-              .split("\n")
-              .find(
-                (line) =>
-                  line.startsWith("find . -maxdepth") ||
-                  line.startsWith('grep -r "IPHONEOS'),
-              );
+            const command = workflowCommand(
+              source,
+              "IPHONEOS_DEPLOYMENT_TARGET",
+            );
             assert.ok(command);
-            const result = spawnSync(shell, ["-c", command], {
+            const discovery = source
+              .split("\n")
+              .find((line) => line === "xcproject inspect --root .");
+            const selectedCommand =
+              scenario === "missing-target" ? command : (discovery ?? command);
+            const capture =
+              scenario === "missing-target"
+                ? captureWorkflowSettings(
+                    directory,
+                    format,
+                    "Primary",
+                    "Debug",
+                    "iphoneos",
+                  )
+                : {};
+            const result = spawnSync(shell, ["-c", selectedCommand], {
               cwd: directory,
               encoding: "utf8",
               timeout: 20_000,
               env: {
                 ...process.env,
-                AXIOM_TARGET:
+                ...capture,
+                TARGET:
                   scenario === "missing-target" ? "AbsentTarget" : "Primary",
               },
             });
             t.diagnostic(
               JSON.stringify({
-                argv: [shell, "-c", command],
+                argv: [shell, "-c", selectedCommand],
                 scenario,
                 expected: "nonzero exit with diagnostic",
                 exit: result.status,
@@ -560,9 +741,9 @@ describe("project workflow regressions", { skip: !regressions }, () => {
         "ONLY_ACTIVE_ARCH",
         "DEBUG_INFORMATION_FORMAT",
         "GCC_PREPROCESSOR_DEFINITIONS",
-      ];
+      ] as const;
       for (const setting of settings) {
-        it(`${format}/${shell}: locates ${setting} declarations under ios/`, (t) => {
+        it(`${format}/${shell}: returns ${setting} for Primary/Debug under ios/`, (t) => {
           const directory = fs.mkdtempSync(
             path.join(os.tmpdir(), "project-regression-"),
           );
@@ -579,24 +760,25 @@ describe("project workflow regressions", { skip: !regressions }, () => {
               ),
               "utf8",
             );
-            const commands = source
-              .split("\n")
-              .filter((line) => line.startsWith(`grep "${setting}"`));
-            assert.equal(
-              commands.length,
-              1,
-              `Expected the census command for ${setting}`,
+            const command = workflowCommand(source, setting);
+            const capture = captureWorkflowSettings(
+              path.join(directory, "ios"),
+              format,
+              "Primary",
+              "Debug",
+              "iphoneos",
             );
-            const result = spawnSync(shell, ["-c", commands[0]], {
+            const result = spawnSync(shell, ["-c", command], {
               cwd: directory,
               encoding: "utf8",
               timeout: 20_000,
+              env: { ...process.env, ...capture },
             });
             t.diagnostic(
               JSON.stringify({
-                argv: [shell, "-c", commands[0]],
+                argv: [shell, "-c", command],
                 setting,
-                expected: "nonempty declaration",
+                expected: "selected effective setting",
                 exit: result.status,
                 stdout: result.stdout,
                 stderr: result.stderr,
@@ -604,10 +786,13 @@ describe("project workflow regressions", { skip: !regressions }, () => {
             );
             assert.equal(result.error, undefined);
             assert.equal(result.status, 0);
-            assert.ok(
-              result.stdout.trim().length > 0,
-              `Empty setting lookup: ${commands[0]}`,
-            );
+            const expected = {
+              SWIFT_COMPILATION_MODE: "singlefile",
+              ONLY_ACTIVE_ARCH: "NO",
+              DEBUG_INFORMATION_FORMAT: "dwarf",
+              GCC_PREPROCESSOR_DEFINITIONS: "DEBUG=1",
+            }[setting];
+            assert.equal(result.stdout.trim(), expected);
           } finally {
             fs.rmSync(directory, { recursive: true, force: true });
           }

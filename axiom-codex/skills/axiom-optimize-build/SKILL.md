@@ -25,8 +25,7 @@ Scan the Xcode project and identify optimization opportunities in these categori
 
 **Check Debug configuration**:
 
-Use Glob to locate project file:
-- Pattern: `**/*.xcodeproj/project.pbxproj`
+Follow `axiom-build (skills/build-performance.md)`, "Project selection and effective settings": discover both inner filenames at any depth, select the project/target/configuration/SDK explicitly, and distinguish declarations from a fresh Xcode effective-settings capture. `xcproject inspect` is read-only; an Xcode query needs authorized scope because it can resolve packages or write state. If no effective capture is permitted, label values declared/unverified. Never report the first grep hit as the selected Debug setting.
 
 Scan for these settings in Debug configuration:
 - `SWIFT_COMPILATION_MODE` should be `singlefile` (incremental)
@@ -46,13 +45,13 @@ Scan for these settings in Debug configuration:
 **Link-Time Optimization (Release Only)**:
 - `LLVM_LTO` should be `YES` or `YES_THIN` for Release builds (reduces binary size, improves performance)
 - **Warning**: Increases Release build time significantly, only use for production
-- Check with: `grep "LLVM_LTO" project.pbxproj`
+- Check with: `xcproject settings --project "$PROJECT" --input "$SETTINGS_JSON" --target "$TARGET" --configuration "$CONFIGURATION" --sdk "$SDK" --key LLVM_LTO --value-only`
 
 ### 2. Build Phase Scripts (MEDIUM-HIGH IMPACT)
 
 ```bash
-# Find build phase scripts
-grep -A 10 "shellScript" project.pbxproj
+# Read the selected target's entire phase/rule graph; script bodies can be arrays.
+xcproject inspect --project "$PROJECT" --target "$TARGET" --configuration "$CONFIGURATION"
 ```
 
 **Red flags**:
@@ -78,9 +77,9 @@ fi
 
 **Enable type checking warnings**:
 
-Check if these compiler flags are present:
+Check if these compiler flags are present (an array value spans several lines — read the whole value):
 ```bash
-grep "OTHER_SWIFT_FLAGS" project.pbxproj
+xcproject settings --project "$PROJECT" --input "$SETTINGS_JSON" --target "$TARGET" --configuration "$CONFIGURATION" --sdk "$SDK" --key OTHER_SWIFT_FLAGS --value-only
 ```
 
 Recommend adding:
@@ -89,14 +88,18 @@ Recommend adding:
 
 **How to find slow files**:
 ```bash
-# Run build with timing
-xcodebuild -workspace YourApp.xcworkspace \
+# After build authorization, set BUILD_LOG to a task-owned file.
+pgrep -x xcodebuild | wc -l
+if xcodebuild -workspace YourApp.xcworkspace \
   -scheme YourScheme \
-  clean build \
-  OTHER_SWIFT_FLAGS="-Xfrontend -debug-time-function-bodies" | \
-  grep ".[0-9]ms" | \
-  sort -nr | \
-  head -20
+  build \
+  OTHER_SWIFT_FLAGS="-Xfrontend -debug-time-function-bodies" > "$BUILD_LOG" 2>&1; then
+  grep ".[0-9]ms" "$BUILD_LOG" | sort -nr | head -20
+else
+  build_status=$?
+  echo "Timing build failed for YourApp.xcworkspace/YourScheme (exit $build_status); see $BUILD_LOG" >&2
+  exit "$build_status"
+fi
 ```
 
 ### 4. Swift Package Build Plugins (LOW-MEDIUM IMPACT)
@@ -145,42 +148,36 @@ Use Glob to find Xcode project files:
 - Workspaces: `**/*.xcworkspace`
 - Projects: `**/*.xcodeproj`
 
-### Step 2: Locate project.pbxproj
+### Step 2: Select the Project and Build Context
 
-Use Glob to find project configuration:
-- Pattern: `**/*.xcodeproj/project.pbxproj`
+Use `xcproject inspect --root .` if available, or Glob for `**/*.xcodeproj/project.pbxproj` and `**/*.xcodeproj/project.xcproj`. Clarify multiple projects/targets. Follow the shared build-performance selection workflow above; shell variables do not persist across tool calls. Retain included xcconfig files and project/target conditions when reading declarations.
 
-### Step 3: Scan Build Settings
+### Step 3: Scan Effective Build Settings
 
-Use grep to check for key build settings:
-
-```bash
-# Check compilation mode
-grep "SWIFT_COMPILATION_MODE" project.pbxproj
-
-# Check architecture settings
-grep "ONLY_ACTIVE_ARCH" project.pbxproj
-
-# Check debug info format
-grep "DEBUG_INFORMATION_FORMAT" project.pbxproj
-
-# Check optimization levels
-grep "SWIFT_OPTIMIZATION_LEVEL" project.pbxproj
-```
-
-### Step 4: Find Build Phase Scripts
+Use a fresh authorized Xcode capture matching the selected project, target, configuration and SDK. Repeat for Debug and Release; do not infer missing settings as optimal defaults.
 
 ```bash
-# Extract all shell scripts from build phases
-grep -A 20 "shellScript" project.pbxproj
+xcproject settings --project "$PROJECT" --input "$SETTINGS_JSON" --target "$TARGET" --configuration "$CONFIGURATION" --sdk "$SDK" --key SWIFT_COMPILATION_MODE --value-only
+xcproject settings --project "$PROJECT" --input "$SETTINGS_JSON" --target "$TARGET" --configuration "$CONFIGURATION" --sdk "$SDK" --key ONLY_ACTIVE_ARCH --value-only
+xcproject settings --project "$PROJECT" --input "$SETTINGS_JSON" --target "$TARGET" --configuration "$CONFIGURATION" --sdk "$SDK" --key DEBUG_INFORMATION_FORMAT --value-only
+xcproject settings --project "$PROJECT" --input "$SETTINGS_JSON" --target "$TARGET" --configuration "$CONFIGURATION" --sdk "$SDK" --key SWIFT_OPTIMIZATION_LEVEL --value-only
 ```
 
-### Step 5: Check for Compiler Flags
+### Step 4: Read Build Phase Scripts and Membership
 
 ```bash
-# Look for existing Swift flags
-grep "OTHER_SWIFT_FLAGS" project.pbxproj
+xcproject inspect --project "$PROJECT" --target "$TARGET" --configuration "$CONFIGURATION"
 ```
+
+For JSON5, Read the selected target's `build-phases` and `build-rules` in `declarations`: string phase references and object phases are both valid, and a script can be a string or an array of lines. For OpenStep, follow `buildPhases`/`buildRules` into `objects`; Read each whole `shellScript` value. Keep script names, inputs/outputs, conditions and selected-target ownership together. Follow file/folder membership and exception sets before attributing a source file to the selected target; a synchronized folder is not a precomputed file list.
+
+### Step 5: Check Compiler Flags
+
+```bash
+xcproject settings --project "$PROJECT" --input "$SETTINGS_JSON" --target "$TARGET" --configuration "$CONFIGURATION" --sdk "$SDK" --key OTHER_SWIFT_FLAGS --value-only
+```
+
+This is a general Xcode settings value. Inspect architecture-conditioned declarations and verify actual per-architecture compiler invocations before claiming those flags are active. Without authorized settings queries, report declared/unverified values with their conditions.
 
 ## Output Format
 

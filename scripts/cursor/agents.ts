@@ -31,8 +31,8 @@ export const CURSOR_AGENT_ADVISORIES = {
   "build-optimizer": {
     event: "PreToolUse",
     matcher: "Edit|Write",
-    command: "bash -c 'if echo \"$TOOL_INPUT_FILE_PATH\" | grep -qE \"\\.pbxproj$\"; then echo \"Warning: Modifying Xcode project file. Ensure backup exists.\"; fi; exit 0'",
-    advisory: "Before editing or writing a `.pbxproj` file, warn: \"Modifying Xcode project file. Ensure backup exists.\"",
+    command: "bash -c 'if echo \"$TOOL_INPUT_FILE_PATH\" | grep -qE \"\\.(pbxproj|xcproj)$\"; then echo \"Warning: Modifying Xcode project file. Ensure backup exists.\"; fi; exit 0'",
+    advisory: "Before editing or writing a `.pbxproj` or `.xcproj` file, warn: \"Modifying Xcode project file. Ensure backup exists.\"",
   },
   "iap-implementation": {
     event: "PreToolUse",

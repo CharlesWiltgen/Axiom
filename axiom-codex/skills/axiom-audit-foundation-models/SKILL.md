@@ -23,8 +23,10 @@ Skip: `*Tests.swift`, `*Previews.swift`, `*/Pods/*`, `*/Carthage/*`, `*/.build/*
 
 ### Step 1: Identify Imports and Deployment Target
 
+Establish the actual project, target, configuration and SDK before making deployment-specific recommendations. Discover both `project.pbxproj` and JSON5 `project.xcproj` at any depth, excluding dependency/cache directories. Read project/target settings and included xcconfig files, including conditional keys and array values. Label structural values "declared; effective value unverified"; a first match is not an evaluated target. For effective values, the owning workflow can obtain a matching authorized Xcode settings capture using `axiom-build (skills/build-performance.md)`, "Project selection and effective settings". Do not launch Xcode under file-read-only scope. Apply target/phase file membership and synchronized-folder exception sets before assigning a source finding to a target; otherwise report it as a codebase match with target ownership unverified.
+
 ```
-Glob: **/*.swift, **/*.xcconfig
+Glob: **/*.swift, **/*.xcconfig, **/project.pbxproj, **/project.xcproj
 Grep for:
   - `import\s+FoundationModels` — files using the framework
   - `IPHONEOS_DEPLOYMENT_TARGET`, `MACOSX_DEPLOYMENT_TARGET` — must be iOS 26+/macOS 26+

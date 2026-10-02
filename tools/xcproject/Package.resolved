@@ -1,0 +1,14 @@
+{
+  "originHash" : "66e36b7bfab05ff41700efe0eede9d3f8978c4d49c6a148e7c8dcb20fdafdd27",
+  "pins" : [
+    {
+      "identity" : "xcode-project-format",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/xcode-project-format.git",
+      "state" : {
+        "revision" : "296395785f7544f27ef929006b79af57e67092d3"
+      }
+    }
+  ],
+  "version" : 3
+}

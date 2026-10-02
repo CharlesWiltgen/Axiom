@@ -35,8 +35,24 @@ find . -name "*.swift" -exec grep -l "struct.*View.*body" {} \; | wc -l
 # Check for potential issues
 grep -r "Timer\|NotificationCenter\.default\.addObserver" --include="*.swift" | wc -l
 
-# iOS deployment target
-grep -r "IPHONEOS_DEPLOYMENT_TARGET" *.xcodeproj/project.pbxproj 2>/dev/null | head -1
+```
+
+### Deployment Target Selection
+
+Check `command -v xcproject`. If unavailable, use Glob for `**/*.xcodeproj/project.pbxproj` and `**/*.xcodeproj/project.xcproj`, then Read the project and xcconfig declarations. Report the target/configuration and label the value "declared; effective value unverified". JSON5 has conditional keys and trailing commas; `jq` and `plutil` are not JSON5 readers. Do not substitute the first grep match for a deployment target.
+
+With `xcproject` available, inventory projects at any depth (dependency/cache directories are excluded):
+
+```bash
+xcproject inspect --root .
+```
+
+Multiple projects require an explicit `--project`. From the inventory, select the actual project, target, configuration and SDK; clarify ambiguity. A `.xcodeproj` may contain either inner filename. A container with neither is incomplete; both present require choosing the authoritative format rather than guessing.
+
+Use an existing matching Xcode settings capture, or follow `axiom-build (skills/build-performance.md)`, "Project selection and effective settings", to obtain one under authorized scope. A settings query can resolve packages or write build-system state; file-read permission alone does not authorize it. Set `PROJECT`, `TARGET`, `CONFIGURATION`, `SDK` and `SETTINGS_JSON` explicitly in the same shell call as the reader (shell variables do not persist across tool calls). Verify capture freshness after project/xcconfig changes.
+
+```bash
+xcproject settings --project "$PROJECT" --input "$SETTINGS_JSON" --target "$TARGET" --configuration "$CONFIGURATION" --sdk "$SDK" --key IPHONEOS_DEPLOYMENT_TARGET --value-only
 ```
 
 ### Format as Dashboard
@@ -55,7 +71,7 @@ Environment
 Project Analysis
    SwiftUI views: [count]
    Potential memory patterns: [count] [warning if > 0]
-   Deployment target: iOS [version]
+   Deployment target: iOS [version] ([project]/[target]/[configuration]/[SDK]; effective or declared/unverified)
 
 Suggested Actions
    [Based on findings, suggest 2-3 most relevant audits or skills]

@@ -16,7 +16,7 @@ const expectedWarnings = {
 
 const expectedAdvisories = {
   "build-fixer": "Before running a shell command containing `killall`, deleting DerivedData with `rm -rf`, or erasing a simulator with `xcrun simctl erase`, warn: \"Destructive command detected.\"",
-  "build-optimizer": "Before editing or writing a `.pbxproj` file, warn: \"Modifying Xcode project file. Ensure backup exists.\"",
+  "build-optimizer": "Before editing or writing a `.pbxproj` or `.xcproj` file, warn: \"Modifying Xcode project file. Ensure backup exists.\"",
   "iap-implementation": "Before editing or writing a StoreKit-related path or `.storekit` file, warn: \"Modifying StoreKit configuration.\"",
   "simulator-tester": "Before running a `simctl` command that erases, deletes, shuts down, or boots simulator state, warn: \"Simulator state change command.\"",
   "test-debugger": "Before deleting `.xcresult` test results with `rm -rf`, warn: \"About to delete test results.\"",

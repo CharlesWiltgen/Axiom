@@ -2,6 +2,10 @@
 
 Scans SwiftUI codebases for Liquid Glass adoption opportunities AND adoption-completeness gaps — both surfaces where the iOS 26+ visual treatment isn't yet applied (old `UIBlurEffect`/`NSVisualEffectView`/`.material`, custom floating views without glass, positionally placed toolbar actions, search bars in old positions) and adoption issues like unstyled pre-26 fallbacks, wrong variant for content type (Regular vs Clear), nested glass causing visual muddiness, an app-wide `UIDesignRequiresCompatibility` opt-out, and missing accessibility re-check after glass adoption.
 
+## Project Formats and Settings
+
+The auditor reads both `project.pbxproj` and JSON5 `project.xcproj` inside `.xcodeproj`, including nested layouts. Select the actual project, target, configuration and SDK. It reads declarations and xcconfig files and labels unresolved values. The owning workflow can supply `xcproject` inspection output and a fresh matching Xcode settings capture obtained within authorized scope. An Xcode query can resolve packages or write state, so the file-read auditor does not run it. Source findings retain target membership and synchronized-folder exclusions.
+
 ## Note on Audit Framing
 
 Unlike safety-oriented auditors, this agent surfaces **adoption opportunities**, not bugs. A pre-adoption codebase isn't broken — it's pre-adoption. The Health Score reflects adoption progress (NOT ADOPTED → PARTIAL → ADOPTED), and findings are ranked by user-visible impact rather than danger.
@@ -17,12 +21,14 @@ Unlike safety-oriented auditors, this agent surfaces **adoption opportunities**,
 ## How to Use
 
 **Natural language:**
+
 - "Can you check my app for Liquid Glass adoption opportunities?"
 - "I'm updating my app to iOS 26, what UI improvements can I make?"
 - "Review my SwiftUI code for Liquid Glass patterns"
 - "I have old UIBlurEffect code, should I migrate to Liquid Glass?"
 
 **Explicit command:**
+
 ```bash
 /axiom:audit liquid-glass
 ```

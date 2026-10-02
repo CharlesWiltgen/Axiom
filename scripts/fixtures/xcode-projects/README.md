@@ -57,6 +57,8 @@ AXIOM_PROJECT_SOURCE_ROOT=/path/to/axiom-checkout \
 
 This suite is intentionally RED before the compatibility implementation. It expects deep discovery, extension/Release/SDK selection, inherited settings, nested build-performance lookups, and explicit errors for missing or ambiguous selection. It stays disabled in the normal green suite.
 
-`AXIOM_TARGET`, `AXIOM_CONFIGURATION`, and `AXIOM_SDK` label the desired selection in the probes. They are test context, not an existing supported command interface: the current snippets ignore them and return the first declaration. When implementing selection, adapt the probes to the actual public selector interface before using their results as acceptance evidence.
+The adapter sets `PROJECT`, `TARGET`, `CONFIGURATION`, `SDK` and `SETTINGS_JSON` used by the literal documented `xcproject settings` command. It invokes Xcode only on temporary copies with package references removed, after checking for existing builds. It does not build or launch an app. Build-performance assertions compare selected effective values, including `ONLY_ACTIVE_ARCH=NO` for the device-query context; raw fixture declarations still record `YES`.
+
+To replay existing independently recorded captures without invoking Xcode, set `AXIOM_PROJECT_ORACLE_REPLAY=/path/to/effective-settings.json`. Replays relocate only `PROJECT_FILE_PATH` to the copied fixture and leave all setting values unchanged. They test shell selection and the reader, not a fresh Xcode query or current runtime behavior. The CLI's separate retained-oracle test verifies all fourteen original captures without identity relocation.
 
 Evidence logs and effective-setting measurements belong in task-owned scratch and the issue tracker. Do not commit logs with temporary or personal paths. Runtime/helper acceptance and distribution verification remain separate work.

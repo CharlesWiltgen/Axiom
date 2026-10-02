@@ -1217,7 +1217,7 @@
       "matcher": "Edit|Write",
       "disposition": "agent-prompt.advisory",
       "warning": "Warning: Modifying Xcode project file. Ensure backup exists.",
-      "advisory": "Before editing or writing a `.pbxproj` file, warn: \"Modifying Xcode project file. Ensure backup exists.\""
+      "advisory": "Before editing or writing a `.pbxproj` or `.xcproj` file, warn: \"Modifying Xcode project file. Ensure backup exists.\""
     },
     {
       "id": "agent:iap-implementation:PreToolUse:Edit|Write",

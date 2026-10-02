@@ -26,8 +26,14 @@ Analyze Package.swift and Package.resolved to:
 - `Package.resolved` - Resolved versions (if exists)
 
 **Also check**:
-- `*.xcodeproj/project.pbxproj` - Xcode project packages
+- `*.xcodeproj/project.pbxproj`, or `project.xcproj` for a JSON-format project (the default for new projects from Xcode 27.2) - Xcode project packages. In `project.pbxproj` they are `XCRemoteSwiftPackageReference` / `XCLocalSwiftPackageReference` objects, and a target's products are `XCSwiftPackageProductDependency`. In `project.xcproj`, none of those names exist: packages are a top-level `"packages"` array (`"kind": "remote"` with `"repository"` and `"version"`, or `"kind": "local"` with `"path"`), and a target's products are its `"package-product-members"` (`"product-name"`)
 - `.swiftpm/` - SPM cache/state
+
+### Project Package Relationships
+
+Locate both inner filenames recursively, excluding dependency/cache directories. Check `command -v xcproject`, then use `xcproject inspect --root .` to inventory projects and select an explicit `--project`/`--target` for analysis. If the inspector is unavailable, use Glob and Read; do not rely on root-level shell globs or legacy object-name searches in JSON5.
+
+Read complete structured values. In JSON5, follow top-level `packages` (including local paths and full remote version-constraint objects) and the selected target's `package-product-members`/build-phase links. Phase entries can be strings or objects. In OpenStep, follow `PBXProject.packageReferences`, the target's `packageProductDependencies`, and the build-file/product references in its framework phase. Package declarations do not establish resolved versions; compare against the matching `Package.resolved` and dependency graph. Structural inspection does not resolve packages.
 
 ## Conflict Patterns (Swift 6 / iOS 18+)
 
@@ -65,8 +71,8 @@ swift package diagnose-api-breaking-changes
 
 **Detection**:
 ```bash
-# Check for duplicate framework linking
-grep -r "frameworks" *.xcodeproj/project.pbxproj | grep -i "duplicate"
+# Inspect selected package-product and framework-phase relationships, then Read the graph.
+xcproject inspect --project "$PROJECT" --target "$TARGET"
 
 # Check Package.resolved for same package twice
 # Option 1: With jq (if installed)
