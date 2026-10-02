@@ -66,7 +66,7 @@ Accepted inputs: `.ips` (v1 and v2 JSON), MetricKit `MXCrashDiagnostic` JSON, Ap
 
 **Output is compact JSON by default** (single-line, token-lean for LLM consumers); every report subcommand (`crash`, `resolve`, `find-dsym`, `list-dsyms`, `verify`) takes `--human` for a terse prose rendering, and `… | jq .` gives indented JSON. `anonymize` is the exception — its output is a crash document in the `.ips` wire format (compact header line + pretty payload), not a report, so it has no `--human`.
 
-**Flag placement matters.** Go's `flag` package stops parsing at the first positional, so flags must come before the file path. `xcsym crash <file> --format=summary` fails with a usage error.
+**Flags can precede or follow the file path.** Both `xcsym crash --format=summary <file>` and `xcsym crash <file> --format=summary` are accepted.
 
 ### verify — dSYM Match Diagnostics
 

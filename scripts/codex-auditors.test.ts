@@ -7,6 +7,11 @@ const source = fs.readFileSync(".claude-plugin/plugins/axiom/agents/health-check
 const agents = fs.readdirSync(".claude-plugin/plugins/axiom/agents").filter(name => name.endsWith(".md")).map(name => name.slice(0, -3));
 
 describe("adaptHealthCheckForCodex", () => {
+  it("requires verified diff scope before starting a requested Codex diff audit", () => {
+    const adapted = adaptHealthCheckForCodex(source, agents);
+    assert.ok(adapted.includes("Codex does not provide the command launcher"));
+    assert.ok(adapted.includes("obtain a verified `DIFF SCOPE` block before auditing"));
+  });
   it("preserves canonical scope and reporting while adapting orchestration", () => {
     const adapted = adaptHealthCheckForCodex(source, agents);
     assert.equal(/Agent calls?|Agent tool|run_in_background|TaskOutput/.test(adapted), false);

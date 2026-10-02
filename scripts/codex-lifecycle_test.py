@@ -114,6 +114,57 @@ class LifecycleTests(unittest.TestCase):
             (report["status"], report["checks"].get("turn_outcome")), ("failed", False)
         )
 
+    def test_requires_selected_child_success_from_wait_output(self):
+        cases = [
+            ({"status": {"selected": {"completed": "AXIOM_CHILD_COMPLETE"}}}, True),
+            ({"status": {"other": {"completed": "AXIOM_CHILD_COMPLETE"}}}, False),
+            (
+                {"status": {"selected": {"errored": "completed AXIOM_CHILD_COMPLETE"}}},
+                False,
+            ),
+            ({"status": {}, "timed_out": True}, False),
+            (
+                {"status": {"selected": {"completed": "prefix AXIOM_CHILD_COMPLETE"}}},
+                False,
+            ),
+        ]
+        self.assertEqual(
+            [
+                lifecycle.completed_child(json.dumps(output), "selected")
+                for output, _ in cases
+            ],
+            [expected for _, expected in cases],
+        )
+        self.assertFalse(lifecycle.completed_child("invalid JSON", "selected"))
+
+    def test_rejects_subagent_dispatch_without_child_delivery_and_completion(self):
+        cases = [
+            ([], False),
+            ([{"child": True, "subagent_context_complete": False}], True),
+            ([{"child": True, "subagent_context_complete": True}], False),
+        ]
+        for requests, completed in cases:
+            with self.subTest(requests=requests, completed=completed):
+
+                def dispatched_only(
+                    binary,
+                    package,
+                    case,
+                    report,
+                    requests=requests,
+                    completed=completed,
+                ):
+                    report.update(
+                        turn_statuses=["completed"],
+                        transport={"requests": requests},
+                        child_completed=completed,
+                    )
+                    report["checks"]["subagent_dispatch"] = True
+
+                with patch.object(lifecycle, "_run_case", dispatched_only):
+                    report = lifecycle.run_case("fixture", Path("."), "subagent")
+                self.assertEqual(report["status"], "failed")
+
     def test_detects_full_multiline_context_in_serialized_input(self):
         request = json.dumps([{"text": lifecycle.OFFLOAD}])
         self.assertTrue(lifecycle.context_present(lifecycle.OFFLOAD, request))

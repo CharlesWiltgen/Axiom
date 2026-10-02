@@ -208,7 +208,7 @@ xclog attach MyApp --human --no-color
 ## Coverage by Source
 
 | Swift API | launch | attach | show |
-|-----------|:------:|:------:|:----:|
+|-----------|--------|--------|------|
 | `print()` | yes | no | no |
 | `debugPrint()` | yes | no | no |
 | `NSLog()` | yes | yes | yes |
@@ -216,7 +216,7 @@ xclog attach MyApp --human --no-color
 | `Logger` | yes | yes | yes |
 
 | | Simulator | Physical Device |
-|---|:-:|:-:|
+|---|---|---|
 | `launch` | yes | no |
 | `attach` | yes | no |
 | `show` | yes | yes |

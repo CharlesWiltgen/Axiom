@@ -4,7 +4,7 @@ Axiom is available as a native plugin for OpenAI Codex, bringing its iOS develop
 
 ## What You Get
 
-The Codex plugin includes 184 specialized skills covering:
+The native Codex plugin includes router suites, auditor workflows, and supporting reference and diagnostic guides covering:
 
 - **SwiftUI** – layout, navigation, animations, performance, architecture, debugging
 - **Data** – SwiftData, Core Data, GRDB, CloudKit, migrations, Codable
@@ -43,7 +43,7 @@ Run `npx skills list -g` (or `npx skills list` for project-scoped) to see instal
 
 ### Codex plugin marketplace (full plugin, including hooks)
 
-`npx skills` installs the skill content. To install the **full Codex plugin** — skills *plus* Axiom's lifecycle hooks (iOS-version ground-truth at session start, automatic skill routing, and the `@State` write-time guardrail) — add Axiom as a native Codex plugin from its bundled marketplace:
+`npx skills` installs the skill content. To install the **full Codex plugin** — skills, bundled helpers, an installation check, and Axiom's lifecycle hooks (compact session onboarding, automatic skill routing, terminal diagnostic hints, and the `@State` write-time guardrail) — add Axiom as a native Codex plugin from its bundled marketplace:
 
 ```bash
 codex plugin marketplace add CharlesWiltgen/Axiom
@@ -58,6 +58,20 @@ hooks = true
 ```
 
 On first run after enabling, Codex asks you to trust the plugin's hooks (they ship in the plugin's `hooks/` directory). Approve to activate them.
+
+### Check the native plugin installation
+
+Axiom’s startup guidance identifies the plugin root, the directory containing `.codex-plugin/plugin.json`. Run the read-only installation check from any working directory:
+
+```bash
+node "<plugin-root>/scripts/doctor.mjs"
+```
+
+The report checks packaged skills, hooks and their dependencies, bundled helper availability, and configured MCP version. Host trust, server connectivity, and optional Xcode availability remain unknown unless you supply sanitized host metadata.
+
+The full plugin bundles `xclog`, `xcsym`, `xcui`, and `xcprof` under `<plugin-root>/bin/`. Use those absolute paths unless the helper is already on PATH. The `npx skills` installation contains skill content only.
+
+Hook diagnostics are off by default. To investigate a hook failure, set `AXIOM_HOOK_DIAGNOSTICS_DIR` for the Codex process to a private directory you own. Diagnostics record bounded hook lifecycle metadata, excluding prompts, tool output, credentials, and exception messages. Execution labels identify each Axiom hook; a label alone does not establish a failure’s cause.
 
 ### Manual Marketplace (alternative)
 
@@ -130,7 +144,7 @@ The Codex plugin includes the same skill content as the Claude Code plugin, with
 
 | Feature | Claude Code | Codex |
 |---------|-------------|-------|
-| Skills | 27 routers + 306 specialized | 27 routers + 275 specialized (the other 31 are listed below) |
+| Skills | Router suites and supporting guides | Same routers and references; auditor procedures are exposed as skills |
 | Agents | 42 autonomous auditors | All 42, converted to skills you invoke by name (`axiom-audit-memory`, `axiom-fix-build`, …) |
 | Commands | 17 `/axiom:*` commands | Not supported in Codex plugins — use the equivalent agent-skill above |
 | Hooks | Lifecycle hooks (skill routing, `@State` guardrail, version ground-truth) | Supported via the native plugin install — set `features.hooks = true` |

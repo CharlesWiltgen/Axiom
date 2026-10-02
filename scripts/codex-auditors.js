@@ -4,7 +4,7 @@ export function adaptHealthCheckForCodex(content, agents) {
   const replacements = [
     [
       "You are an orchestrator that launches specialized Axiom auditors in parallel, collects their findings, deduplicates by file:line, and produces a unified health report.",
-      "Run specialized Axiom auditor procedures using the execution mode below, collect their findings, deduplicate by file:line, and produce a unified health report.",
+      "Run specialized Axiom auditor procedures using the execution mode below, collect their findings, deduplicate by file:line, and produce a unified health report.\n\nCodex does not provide the command launcher that constructs diff scope. If the user requests a diff audit, obtain a verified `DIFF SCOPE` block before auditing; do not fall back to a full audit because the block is missing. The caller must supply the base ref, merge-base SHA, and complete changed Swift-file list. Full audits require no scope block.",
     ],
     ["## Phase 2: Launch Auditors in Parallel", "## Phase 2: Run Selected Auditor Procedures"],
     [

@@ -36,7 +36,7 @@ Use this reference when:
 
 ## What's Covered
 
-- **Invocation** – `xcui` is on PATH as a bare command (plugin `bin/` is auto-resolved); run `xcui <subcommand>`
+- **Invocation** – Claude Code resolves `xcui` from the plugin’s `bin/` directory. Native Codex plugin installs use `<plugin-root>/bin/xcui` unless `command -v xcui` confirms PATH availability; `<plugin-root>` is the directory containing `.codex-plugin/plugin.json`.
 - **`doctor` subcommand** – verifies AXe, Homebrew, Xcode, and a booted simulator; `--install` runs `brew install cameroncooke/axe/axe` (explicit/consented, never silent); `--human` for prose. Exit 0 means a device command can run now, so it also fails when several simulators are booted with no `--udid` (every other subcommand refuses in that state) or when AXe predates `--tap-style`; the `booted` array lists each device to pick a `--udid` from; `--udid <id>` reports a specific one
 - **`wait` subcommand** – `--for-element <id>`, `--gone <id>`, or `--idle`, with `--timeout` and `--poll`; polls the accessibility tree until the condition holds or the deadline passes (the headless equivalent of `waitForExistence`)
 - **`assert` subcommand** – `--id <id>` plus optional `--label`, `--value`, `--trait`, and `--single`; `--single` asserts the id resolves to exactly one element; `--trait` matches a bare word (`button`, `image`) against the AX role or type

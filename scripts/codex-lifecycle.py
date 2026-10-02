@@ -127,6 +127,19 @@ def classify(status, entries):
     return "unknown_failure"
 
 
+def completed_child(output, target):
+    try:
+        result = json.loads(output)
+    except (json.JSONDecodeError, TypeError):
+        return False
+    if not isinstance(result, dict) or not isinstance(result.get("status"), dict):
+        return False
+    status = result["status"].get(target)
+    return (
+        isinstance(status, dict) and status.get("completed") == "AXIOM_CHILD_COMPLETE"
+    )
+
+
 def retain(directory: Path, report):
     directory.mkdir(parents=True, exist_ok=True)
     owned = Path(tempfile.mkdtemp(prefix="lifecycle-", dir=directory))
@@ -275,6 +288,12 @@ def run_case(binary, package, case):
         report["checks"]["terminal_exit_zero"] = report.get("terminal_exit_codes") == [
             0
         ]
+    if case == "subagent" and "capability_unavailable" not in report:
+        report["checks"]["complete_child_context_delivery"] = any(
+            request.get("child") and request.get("subagent_context_complete")
+            for request in report.get("transport", {}).get("requests", [])
+        )
+        report["checks"]["child_turn_completed"] = report.get("child_completed") is True
     if (
         "harness_error" not in report
         and report["checks"]
@@ -291,6 +310,7 @@ def _run_case(binary, package, case, report):
     server = None
     state = {"requests": [], "errors": [], "tools": []}
     texts = []
+    child_identity = {"target": None}
     with (
         tempfile.TemporaryDirectory(
             prefix="axiom-lifecycle-", dir="/private/tmp"
@@ -485,7 +505,8 @@ def _run_case(binary, package, case, report):
                                 }
                                 if case == "subagent":
                                     args = {
-                                        "message": "AXIOM_CHILD_FIXTURE. Return AXIOM_CHILD_COMPLETE immediately."
+                                        "message": "AXIOM_CHILD_FIXTURE. Return AXIOM_CHILD_COMPLETE immediately.",
+                                        "fork_context": False,
                                     }
                                 if case == "edit":
                                     patch = "*** Begin Patch\n*** Add File: Fixture.swift\n+// Authored Axiom edit fixture\n*** End Patch"
@@ -519,6 +540,55 @@ def _run_case(binary, package, case, report):
                                     }
                             else:
                                 report["capability_unavailable"] = leaf
+                        if case == "subagent" and parent_requests == 1 and not child:
+                            outputs = [
+                                json.loads(entry["output"])
+                                for entry in body.get("input", [])
+                                if entry.get("type") == "function_call_output"
+                                and entry.get("call_id") == "fixture-call"
+                            ]
+                            target = next(
+                                (
+                                    output.get("agent_id")
+                                    for output in outputs
+                                    if output.get("agent_id")
+                                ),
+                                None,
+                            )
+                            wait_tool = next(
+                                (
+                                    (name, tool)
+                                    for name, tool in tools
+                                    if name.rsplit(".", 1)[-1] == "wait_agent"
+                                ),
+                                None,
+                            )
+                            if target and wait_tool:
+                                child_identity["target"] = target
+                                name, _ = wait_tool
+                                item = {
+                                    "id": "fixture-wait-call",
+                                    "type": "function_call",
+                                    "call_id": "fixture-wait-call",
+                                    "name": name.rsplit(".", 1)[-1],
+                                    "namespace": name.rsplit(".", 1)[0],
+                                    "arguments": json.dumps(
+                                        {"targets": [target], "timeout_ms": 10000}
+                                    ),
+                                }
+                        if case == "subagent" and not child:
+                            report["child_completed"] = report.get(
+                                "child_completed", False
+                            ) or any(
+                                completed_child(
+                                    entry.get("output", ""), child_identity["target"]
+                                )
+                                for entry in body.get("input", [])
+                                if entry.get("type") == "function_call_output"
+                                and entry.get("call_id") == "fixture-wait-call"
+                            )
+                        if child:
+                            item["content"][0]["text"] = "AXIOM_CHILD_COMPLETE"
                         response_id = "fixture-response-" + str(len(state["requests"]))
                         response = {
                             "id": response_id,
@@ -896,6 +966,22 @@ def _run_case(binary, package, case, report):
                         and r["outcome"] == "exception"
                         and r["exception_class"] == "RuntimeError"
                         for r in report["synthetic_diagnostics"]
+                    )
+            if case == "subagent":
+                contexts = [
+                    entry["text"]
+                    for run in production
+                    if run["eventName"] == "subagentStart"
+                    for entry in run.get("entries", [])
+                    if entry.get("kind") == "context"
+                ]
+                for request, serialized in zip(state["requests"], texts):
+                    request["subagent_context_complete"] = (
+                        request["child"]
+                        and bool(contexts)
+                        and all(
+                            context_present(context, serialized) for context in contexts
+                        )
                     )
             report["transport"] = state
             report["checks"]["no_harness_or_provider_errors"] = (

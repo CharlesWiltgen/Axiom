@@ -3,12 +3,12 @@
   "files": [
     {
       "path": ".cursor-plugin/plugin.json",
-      "sha256": "ab67a5ce32d5491a803b3d43c878f412d7a034aa0d2b0f952d6aa4e65e1f6437",
+      "sha256": "2e1c1485ba5478763ddc0bae144224c959f9d4b8210fd69df5515d35e5d39838",
       "bytes": 578
     },
     {
       "path": "README.md",
-      "sha256": "083330af06a460c83719aa988d2f2a5f7e812a121acf329d016193bd4364d3d9",
+      "sha256": "a06b3f3efaee9190e667b5e8beec4f368524d2137cf5aea5d783b078c1146c8e",
       "bytes": 3314
     },
     {
@@ -1723,7 +1723,7 @@
     },
     {
       "path": "skills/axiom-tools/skills/xclog-ref.md",
-      "sha256": "a46ee89236b072cbf5d69ed9f225ef5a2caefb83ab7249391f0a716974fb120b",
+      "sha256": "01b8c506104d7a0c6dbc96f4003b012dd91c36d2b82a7520fb8fdfeb3ce30776",
       "bytes": 11066
     },
     {
@@ -1733,8 +1733,8 @@
     },
     {
       "path": "skills/axiom-tools/skills/xcsym-ref.md",
-      "sha256": "c26679b3dcce50ebc1d278faced4a62be2250744c1d0d96b24c3cf0b9e5b5988",
-      "bytes": 24587
+      "sha256": "50fb0870b3b4958a76c74200476c78eaa20da8124b771e21492de33fb8446f3e",
+      "bytes": 24541
     },
     {
       "path": "skills/axiom-tools/skills/xcui-ref.md",
@@ -1884,7 +1884,7 @@
   ],
   "totals": {
     "files": 376,
-    "bytes": 7620436
+    "bytes": 7620390
   },
   "excludedMirrors": 30,
   "classes": {

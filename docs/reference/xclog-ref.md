@@ -31,7 +31,7 @@ Use this reference when:
 
 ## What's Covered
 
-- **Invocation** – `xclog` is on PATH as a bare command (Claude Code 2.1.91+ resolves plugin `bin/` entries automatically); no prefix or path lookup needed
+- **Invocation** – Claude Code resolves `xclog` from the plugin’s `bin/` directory. Native Codex plugin installs use `<plugin-root>/bin/xclog` unless `command -v xclog` confirms PATH availability; `<plugin-root>` is the directory containing `.codex-plugin/plugin.json`.
 - **`list` subcommand** – discover installed apps, JSON-lines output (`bundle_id`, `name`, `version`)
 - **`launch` subcommand** – full capture (print + debugPrint + NSLog + os_log + Logger), simulator only, terminates any running instance of the target app
 - **`attach` subcommand** – monitor an already-running process via os_log only, simulator only, preserves app state but no `print()` capture
