@@ -1,10 +1,13 @@
 import { readdir, readFile, stat, watch } from 'fs/promises';
 import { join } from 'path';
-import { parseSkill, parseCommand, parseAgent, parseReferenceFile, applyAnnotations, filterSkillSections, isGeneratedSubSkill, Skill, Command, Agent, SkillSection, SkillAnnotations } from './parser.js';
-import { Config, Logger } from '../config.js';
-import { Loader } from './types.js';
-import { buildIndex, search, SearchIndex, SearchResult } from '../search/index.js';
-import { buildCatalog, CatalogResult } from '../catalog/index.js';
+import { parseSkill, parseCommand, parseAgent, parseReferenceFile, applyAnnotations, filterSkillSections, isGeneratedSubSkill } from './parser.js';
+import type { Skill, Command, Agent, SkillSection, SkillAnnotations } from './parser.js';
+import type { Config, Logger } from '../config.js';
+import type { Loader } from './types.js';
+import { buildIndex, search } from '../search/index.js';
+import type { SearchIndex, SearchResult } from '../search/index.js';
+import { buildCatalog } from '../catalog/index.js';
+import type { CatalogResult } from '../catalog/index.js';
 import { detectXcode, loadAppleDocs } from './xcode-docs.js';
 
 export type ChangeKind = 'skills' | 'commands' | 'agents' | null;

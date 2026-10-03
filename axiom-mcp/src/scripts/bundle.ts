@@ -14,7 +14,8 @@
 import { readdir, readFile, writeFile, mkdir, stat, copyFile, chmod } from 'fs/promises';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
-import { parseSkill, parseCommand, parseAgent, parseReferenceFile, applyAnnotations, isGeneratedSubSkill, Skill, SkillAnnotations } from '../loader/parser.js';
+import { parseSkill, parseCommand, parseAgent, parseReferenceFile, applyAnnotations, isGeneratedSubSkill } from '../loader/parser.js';
+import type { Skill, SkillAnnotations } from '../loader/parser.js';
 import type { BundleV2 } from '../loader/types.js';
 import { buildIndex, serializeIndex } from '../search/index.js';
 import { buildCatalog } from '../catalog/index.js';
