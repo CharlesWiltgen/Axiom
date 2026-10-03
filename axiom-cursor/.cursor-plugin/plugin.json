@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "27.1.3",
+  "version": "27.2.0",
   "description": "Battle-tested Cursor skills, agents, commands, hooks, and MCP for modern Apple platform development.",
   "author": {
     "name": "Charles Wiltgen",

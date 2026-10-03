@@ -111,7 +111,7 @@ When user asks to "audit", "review", "scan", or "check" code, delegate to the ap
 ## Routing Instructions
 
 1. **Match user's question** to the skills and agents listed above
-2. **Invoke matching skill** using the Skill tool
+2. **Invoke matching skill** by reading its `SKILL.md`
 3. **For code review requests** (audit, review, scan, check), delegate to the appropriate subagent(s)
 4. **If no clear match**, use the `getting-started` skill to help find the right resource
 

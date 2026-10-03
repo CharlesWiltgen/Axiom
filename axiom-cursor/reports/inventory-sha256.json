@@ -3,12 +3,12 @@
   "files": [
     {
       "path": ".cursor-plugin/plugin.json",
-      "sha256": "2e1c1485ba5478763ddc0bae144224c959f9d4b8210fd69df5515d35e5d39838",
+      "sha256": "22087ff812f73fdc2237b02e8f4c64eeaea94ffeed27996721fb43598d0ea070",
       "bytes": 578
     },
     {
       "path": "README.md",
-      "sha256": "a06b3f3efaee9190e667b5e8beec4f368524d2137cf5aea5d783b078c1146c8e",
+      "sha256": "97829e1d43b99404c98c2a8874fe0514acd04bb00c5cbe19cad214c136335e6c",
       "bytes": 3314
     },
     {
@@ -233,8 +233,8 @@
     },
     {
       "path": "commands/axiom-ask.md",
-      "sha256": "a953f9a959a5f3544a5b3ac7d6be8b35b923dedd1d3861981fdbedc5306974a0",
-      "bytes": 8371
+      "sha256": "0bd3cc5a325cb0955894f86b028ed951577ce479373a636190650872aaad0cc8",
+      "bytes": 8376
     },
     {
       "path": "commands/axiom-audit.md",
@@ -328,23 +328,23 @@
     },
     {
       "path": "scripts/cursor-hook-adapter.py",
-      "sha256": "d581f30fb83c2350f765d0d0acce4cc1497cd16f16a2be5360b0528f0d090565",
-      "bytes": 26497
+      "sha256": "eff7438a9f01264466b1c055798e48addf0d4098fe35fc7adc450b86fce968ba",
+      "bytes": 26743
     },
     {
       "path": "scripts/hook_diagnostics.py",
-      "sha256": "2e2958683624ec81615e3072aef13ba7267b7c82d1a409b962eab1b40fe04ba5",
-      "bytes": 5355
+      "sha256": "027923c800db3e14bbab0152c512e630466914935657ac86f477b1a3e710ca8d",
+      "bytes": 5535
     },
     {
       "path": "scripts/posttool-bash-hints.py",
-      "sha256": "3318a16c2b84b6689a0d4aa7d14fca0ead0f6a346c7bb8502ad9bcecdbd8179b",
-      "bytes": 10156
+      "sha256": "ac5f7d0791bb8e2cc6718f05d38e01c83a907bfb070f756d88aad00d45985fb3",
+      "bytes": 11096
     },
     {
       "path": "scripts/pretool-crash-route.py",
-      "sha256": "9c52d9a8c3912ee944802604f815f3c01aef6dd929f67ca7e2e1b6db9ec5f108",
-      "bytes": 5702
+      "sha256": "3d003f004c6eb064546d6513e5e970b9f86b68036e881e5d78f9032e0a155dd1",
+      "bytes": 6346
     },
     {
       "path": "scripts/project_detect.py",
@@ -353,18 +353,18 @@
     },
     {
       "path": "scripts/subagent-start.py",
-      "sha256": "26380c52cc6bb43cc8170d2ed64d924b23bfcdc12c7885206d17eb2fb31c4bc4",
-      "bytes": 7073
+      "sha256": "ba1e164914b7fc8dd204c92bf151d349ffe7da0e01633af0df502a23c7dfd7d1",
+      "bytes": 7809
     },
     {
       "path": "scripts/swift-guardrails.py",
-      "sha256": "c01114bdda99f770ade2fc25487a2706a2958f1f8bcc43929f3f92d6b5ba433e",
-      "bytes": 12598
+      "sha256": "f80b3806e31ce5319e6a3497a4e106cde4cb3104acbaae416eba36f25dc9b21e",
+      "bytes": 13242
     },
     {
       "path": "scripts/user-prompt-submit.py",
-      "sha256": "ff434084bf5825670c1b595546feb4ccaf268e74b2e93efa8d4cb9b6e1efe72e",
-      "bytes": 46957
+      "sha256": "1d41790f098b3b08cf5bba330f4589cdd3da43a91e83a633983df90324ff3c03",
+      "bytes": 47601
     },
     {
       "path": "skills/axiom-accessibility/SKILL.md",
@@ -1884,7 +1884,7 @@
   ],
   "totals": {
     "files": 376,
-    "bytes": 7638762
+    "bytes": 7642801
   },
   "excludedMirrors": 30,
   "classes": {

@@ -20,7 +20,25 @@ import os
 import re
 import sys
 
-import hook_diagnostics
+try:
+    import hook_diagnostics
+except ImportError:  # Diagnostics are optional; a missing module must not break the hook.
+    import os as _os
+    from types import SimpleNamespace
+
+    def _diagnostics_unavailable(*_):
+        # Requested but unavailable: the same fixed notice as an unwritable journal.
+        if _os.environ.get("AXIOM_HOOK_DIAGNOSTICS_DIR"):
+            try:
+                _os.write(2, b"Axiom hook diagnostics unavailable.\n")
+            except OSError:
+                pass
+
+    hook_diagnostics = SimpleNamespace(
+        begin=_diagnostics_unavailable,
+        record_exception=lambda *_: None,
+        record_exit=lambda *_: None,
+    )
 
 hook_diagnostics.begin("user-prompt-submit")
 

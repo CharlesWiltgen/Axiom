@@ -286,6 +286,7 @@ def subagent_start(payload: Dict[str, Any]) -> Dict[str, str]:
     child_output = run_child(
         "subagent-start.py",
         {"agent_type": subagent_type},
+        env={**os.environ, "AXIOM_HARNESS": "cursor"},
         cwd=_workspace_root(payload),
     )
     if not child_output.strip():
@@ -406,6 +407,9 @@ def post_shell(payload: Dict[str, Any]) -> Dict[str, str]:
     if isinstance(duration, (int, float)) and not isinstance(duration, bool) and duration > 0:
         canonical_payload["duration_ms"] = int(duration)
     environment = dict(os.environ)
+    # An inherited AXIOM_HARNESS=codex would make the child read stdin tool_response,
+    # which Cursor never sends, and silently drop every hint.
+    environment.pop("AXIOM_HARNESS", None)
     environment["CURSOR_TOOL_OUTPUT"] = output_text
     child_output = run_child("posttool-bash-hints.py", canonical_payload, environment)
     lines = [line.strip() for line in child_output.splitlines() if line.strip()]
