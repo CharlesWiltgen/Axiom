@@ -411,7 +411,7 @@ def post_shell(payload: Dict[str, Any]) -> Dict[str, str]:
     # which Cursor never sends, and silently drop every hint.
     environment.pop("AXIOM_HARNESS", None)
     environment["CURSOR_TOOL_OUTPUT"] = output_text
-    child_output = run_child("posttool-bash-hints.py", canonical_payload, environment)
+    child_output = run_child("posttool-bash-hints.py", canonical_payload, environment, cwd=_workspace_root(payload))
     lines = [line.strip() for line in child_output.splitlines() if line.strip()]
     return {"additional_context": "\n".join(lines)} if lines else {}
 
@@ -438,7 +438,7 @@ def _contained(pathname: str, roots: List[str]) -> bool:
     return False
 
 
-def _validated_post_write_context(payload: Dict[str, Any]) -> Tuple[str, str, int, bytes]:
+def _validated_post_write_context(payload: Dict[str, Any]) -> Tuple[str, str, int, bytes, str]:
     cwd_value = payload.get("cwd")
     if cwd_value is None:
         # Cursor's postToolUse(Write) payload carries workspace_roots but no cwd
@@ -551,7 +551,10 @@ def _validated_post_write_context(payload: Dict[str, Any]) -> Tuple[str, str, in
     line_count = chunks.count(b"\n")
     if chunks and not chunks.endswith(b"\n"):
         line_count += 1
-    return resolved_file, cwd, line_count, bytes(chunks)
+    # The child's project gate must see the root that holds the file, which in a
+    # multi-root workspace need not be workspace_roots[0].
+    file_root = max((root for root in roots if _contained(resolved_file, [root])), key=len)
+    return resolved_file, cwd, line_count, bytes(chunks), file_root
 
 
 def _sanitized_swift_context(response: Dict[str, Any], line_count: int) -> str:
@@ -619,7 +622,7 @@ def post_write(payload: Dict[str, Any]) -> Dict[str, str]:
         raw_path = tool_input.get("file_path")
         if isinstance(raw_path, str) and not raw_path.endswith(".swift"):
             return {}
-    file_path, cwd, line_count, validated_source = _validated_post_write_context(payload)
+    file_path, cwd, line_count, validated_source, file_root = _validated_post_write_context(payload)
     if not file_path.endswith(".swift"):
         return {}
     try:
@@ -632,7 +635,7 @@ def post_write(payload: Dict[str, Any]) -> Dict[str, str]:
                 "tool_input": {"file_path": snapshot_path},
                 "cwd": cwd,
             }
-            child_output = run_child("swift-guardrails.py", canonical_payload)
+            child_output = run_child("swift-guardrails.py", canonical_payload, cwd=file_root)
     except AdapterError:
         raise
     except OSError:

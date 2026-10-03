@@ -3,12 +3,12 @@
   "files": [
     {
       "path": ".cursor-plugin/plugin.json",
-      "sha256": "22087ff812f73fdc2237b02e8f4c64eeaea94ffeed27996721fb43598d0ea070",
+      "sha256": "0387a232137d85885cef542a33d9cf8d7a252d1beae9aeae49ff4132a9340f7b",
       "bytes": 578
     },
     {
       "path": "README.md",
-      "sha256": "97829e1d43b99404c98c2a8874fe0514acd04bb00c5cbe19cad214c136335e6c",
+      "sha256": "229a57d26a6fc94678d0d6d39421bf7c078900bc6c1fa0385815332634e2a811",
       "bytes": 3314
     },
     {
@@ -328,8 +328,8 @@
     },
     {
       "path": "scripts/cursor-hook-adapter.py",
-      "sha256": "eff7438a9f01264466b1c055798e48addf0d4098fe35fc7adc450b86fce968ba",
-      "bytes": 26743
+      "sha256": "ac1525066c99c32fc04b03ffd001f5ffe3efa30074df58e3ea1eac019b024d2b",
+      "bytes": 27047
     },
     {
       "path": "scripts/hook_diagnostics.py",
@@ -338,8 +338,8 @@
     },
     {
       "path": "scripts/posttool-bash-hints.py",
-      "sha256": "757646a583025e77c2366fd037281c4eacd5a869be61d93e5262d3ae5d050b6a",
-      "bytes": 16129
+      "sha256": "3726e3a5d09315027712a4ba7cb5b406f817fea88ae99ba39b4bd0e1fbe9f0e2",
+      "bytes": 11363
     },
     {
       "path": "scripts/pretool-crash-route.py",
@@ -358,8 +358,8 @@
     },
     {
       "path": "scripts/swift-guardrails.py",
-      "sha256": "3ae4653fa8636f08f8e091ee4cabddd63a1c418a98ec81fdcfbf17f29a59d01d",
-      "bytes": 13534
+      "sha256": "8a7dfa91815501054de7722230380573220d13d2d6a35acc56c7a8780abc5d7e",
+      "bytes": 13670
     },
     {
       "path": "scripts/user-prompt-submit.py",
@@ -1884,7 +1884,7 @@
   ],
   "totals": {
     "files": 376,
-    "bytes": 7648402
+    "bytes": 7644076
   },
   "excludedMirrors": 30,
   "classes": {

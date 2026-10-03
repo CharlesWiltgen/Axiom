@@ -1,6 +1,6 @@
 # Axiom for Cursor
 
-A native Cursor plugin for modern Apple platform development, generated from Axiom 27.2.0.
+A native Cursor plugin for modern Apple platform development, generated from Axiom 27.2.1.
 
 ## Included
 
