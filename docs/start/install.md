@@ -89,17 +89,18 @@ Axiom skills route automatically based on iOS-specific keywords in your question
 
 ## Non-Apple Projects
 
-Axiom's session hook auto-detects whether your working directory is part of an
-Apple project (Xcode project/workspace, Swift package, or Swift sources) and
-**skips** its context injection when it isn't — so opening Claude Code in a web,
-Node, or game-engine project stays clean.
+Axiom's hooks auto-detect whether your working directory is part of an Apple
+project (Xcode project/workspace, Swift package, or Swift sources) and stay
+**silent** when it isn't — no session context, skill routing, terminal hints,
+Swift write guardrails, or crash-report routing — so opening Claude Code in a
+web, Node, or game-engine project stays clean.
 
 Override with the `AXIOM_SESSION_CONTEXT` environment variable (it survives plugin
 updates, unlike editing plugin files):
 
-- `AXIOM_SESSION_CONTEXT=always` – force Axiom context on (e.g. an Apple project
+- `AXIOM_SESSION_CONTEXT=always` – force Axiom's hooks on (e.g. an Apple project
   with a non-standard layout the auto-detector misses).
-- `AXIOM_SESSION_CONTEXT=never` – force it off for a given project or shell.
+- `AXIOM_SESSION_CONTEXT=never` – force them off for a given project or shell.
 
 Set it in your shell profile or a project `.envrc`.
 

@@ -32,13 +32,16 @@ argument completions.
   and lists which Axiom command-line tools (`xclog`, `xcsym`, `xcui`, `xcprof`)
   are on your `PATH`. Gated to Apple projects; override with
   `AXIOM_SESSION_CONTEXT=always|never`.
-- **Swift write guardrail** (`tool_result`) — runs `swiftformat` on written
-  `.swift` files (when installed) and flags `@State` declarations missing an
-  explicit access level.
-- **Crash-file routing** (`tool_result`) — when a `.ips`/`.crash`/`.xccrashpoint`
+- **Swift write guardrail** (`tool_result`) — flags `@State` declarations in
+  written `.swift` files that are missing an explicit access level.
+- **Crash-file routing** (`tool_call`) — when a `.ips`/`.crash`/`.xccrashpoint`
   file is read, suggests the right `xcsym` command.
 - **Bash skill hints** (`tool_result`) — scans command output for known iOS
   error signatures and points at the matching skill.
+
+The tool hooks are also gated to Apple projects, with the same
+`AXIOM_SESSION_CONTEXT` override; they check on each call rather than once per
+session.
 
 ## Install
 

@@ -73,6 +73,7 @@ The plugin registers supported Cursor hooks for session start, prompt submission
 - The read hook routes crash reports. Opening an `.ips`, legacy `.crash`, or `.xccrashpoint` path adds a note pointing at the `axiom_xcsym_crash` MCP tool instead of reading the raw file. It emits no `permission` field, so it never gates the read.
 - The prompt hook is the per-prompt router. Cursor's `beforeSubmitPrompt` supplies the prompt text and accepts `additional_context`, so Axiom's canonical routing carries over: a prompt that matches a router is annotated with the skill to invoke before the model answers. It stays silent outside an Apple project and on prompts under five characters.
 
+- Every hook stays silent when the workspace is not an Apple project. Override with `AXIOM_SESSION_CONTEXT`, described under [Non-Apple Projects](/start/install#non-apple-projects).
 - Hooks are advisory and fail open on malformed input, missing files, child failure, oversized output, or timeout.
 - The write hook runs after the edit. Its findings do not block or undo the change.
 - No hook is a permission boundary, and no emitted hook uses fail-closed behavior.

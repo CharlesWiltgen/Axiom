@@ -178,6 +178,7 @@ The Codex plugin includes the same skill content as the Claude Code plugin, with
 - Hooks only run with the **native plugin install** (`codex plugin add axiom@axiom-marketplace`), not the `npx skills` skills-only install
 - Confirm `features.hooks = true` is set in `~/.codex/config.toml`, and that you approved the hook trust prompt on first run
 - Codex runs hook commands through `sh -lc`, which sources your login profile — make sure your profile writes nothing to **stdout** (send any echoes to stderr or guard them behind a TTY check), or it can corrupt a hook's output
+- Hooks stay silent outside an Apple project by design. If your Apple project uses a layout the detector misses, set `AXIOM_SESSION_CONTEXT=always` in the environment you launch Codex from — see [Non-Apple Projects](/start/install#non-apple-projects)
 
 ## Also Available
 

@@ -82,7 +82,7 @@ It adds:
 
 - **Commands** – `/axiom-fix-build`, `/axiom-audit <area>`, `/axiom-health-check`, `/axiom-analyze-crash`, `/axiom-profile`, `/axiom-console`, `/axiom-ui`, and 8 more. Each triggers the matching skill inline.
 - **Session guardrail** – injects the iOS/Xcode version ground truth (so the agent never claims iOS 26 "doesn't exist") and lists which Axiom tools are on your PATH. Gated to Apple projects; override with `AXIOM_SESSION_CONTEXT=always|never`.
-- **Tool hooks** – runs `swiftformat` on Swift writes, flags `@State` without an access level, routes crash-file reads to `xcsym`, and surfaces skill hints from command output.
+- **Tool hooks** – flags `@State` without an access level on Swift writes, routes crash-file reads to `xcsym`, and surfaces skill hints from command output. Also gated to Apple projects, with the same override.
 
 ## Built-in Tools (xclog, xcsym, xcui, xcprof)
 
