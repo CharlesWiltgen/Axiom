@@ -267,6 +267,16 @@ class TestFailSafe(unittest.TestCase):
         self.assertEqual(result.returncode, 0)
         self.assertEqual(result.stdout.strip(), "")
 
+    def test_undecodable_stdin_exits_zero(self):
+        result = subprocess.run(
+            [sys.executable, HOOK],
+            input=b"\xff\xfe",
+            capture_output=True,
+            timeout=15,
+            env=dict(os.environ, AXIOM_SESSION_CONTEXT="always", PYTHONIOENCODING="utf-8:strict"),
+        )
+        self.assertEqual((result.returncode, result.stdout), (0, b""))
+
     def test_non_object_json_exits_zero(self):
         result = run_hook(json.dumps([1, 2, 3]))
         self.assertEqual(result.returncode, 0)

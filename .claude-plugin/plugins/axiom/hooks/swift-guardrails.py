@@ -332,7 +332,11 @@ def build_response(stdin_text: str) -> dict | None:
 
 
 def main() -> None:
-    stdin_text = sys.stdin.read()
+    try:
+        stdin_text = sys.stdin.read()
+    except Exception as error:
+        hook_diagnostics.record_exception(error)
+        sys.exit(0)  # never fail the edit
     try:
         from project_detect import resolve_context_decision
 
