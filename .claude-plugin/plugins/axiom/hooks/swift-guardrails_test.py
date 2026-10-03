@@ -34,6 +34,7 @@ def run_hook(stdin: str) -> subprocess.CompletedProcess:
         capture_output=True,
         text=True,
         timeout=15,
+        env=dict(os.environ, AXIOM_SESSION_CONTEXT="always"),
     )
 
 

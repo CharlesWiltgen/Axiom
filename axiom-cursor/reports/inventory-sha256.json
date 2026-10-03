@@ -338,13 +338,13 @@
     },
     {
       "path": "scripts/posttool-bash-hints.py",
-      "sha256": "ac5f7d0791bb8e2cc6718f05d38e01c83a907bfb070f756d88aad00d45985fb3",
-      "bytes": 11096
+      "sha256": "757646a583025e77c2366fd037281c4eacd5a869be61d93e5262d3ae5d050b6a",
+      "bytes": 16129
     },
     {
       "path": "scripts/pretool-crash-route.py",
-      "sha256": "3d003f004c6eb064546d6513e5e970b9f86b68036e881e5d78f9032e0a155dd1",
-      "bytes": 6346
+      "sha256": "446229edf85179142b27284943e65c893343a2152f2daca3b0b45bd1edaf8d5c",
+      "bytes": 6622
     },
     {
       "path": "scripts/project_detect.py",
@@ -358,8 +358,8 @@
     },
     {
       "path": "scripts/swift-guardrails.py",
-      "sha256": "f80b3806e31ce5319e6a3497a4e106cde4cb3104acbaae416eba36f25dc9b21e",
-      "bytes": 13242
+      "sha256": "3ae4653fa8636f08f8e091ee4cabddd63a1c418a98ec81fdcfbf17f29a59d01d",
+      "bytes": 13534
     },
     {
       "path": "scripts/user-prompt-submit.py",
@@ -1884,7 +1884,7 @@
   ],
   "totals": {
     "files": 376,
-    "bytes": 7642801
+    "bytes": 7648402
   },
   "excludedMirrors": 30,
   "classes": {

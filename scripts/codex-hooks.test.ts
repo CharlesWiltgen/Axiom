@@ -131,6 +131,32 @@ describe("shouldCopyHookScript", () => {
 
 
 describe("generated Codex terminal hook", () => {
+  it("keeps terminal hints silent outside Apple projects and during documentation reads", () => {
+    const pluginRoot = path.resolve("axiom-codex");
+    const manifest = JSON.parse(fs.readFileSync(path.join(pluginRoot, "hooks/hooks.json"), "utf8"));
+    const command = manifest.hooks.PostToolUse.find(group => group.matcher === "Bash").hooks[0].command;
+    const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "axiom-terminal-scope-"));
+    try {
+      fs.mkdirSync(path.join(workspace, ".git"));
+      for (const testCase of [
+        { apple: false, override: "", terminal: "swift build" },
+        { apple: true, override: "never", terminal: "swift build" },
+        { apple: true, override: "", terminal: "cat README.md" },
+      ]) {
+        if (testCase.apple) fs.writeFileSync(path.join(workspace, "Package.swift"), "// swift-tools-version: 6.0\n");
+        const result = spawnSync("sh", ["-lc", command], {
+          cwd: workspace, encoding: "utf8",
+          input: JSON.stringify({ tool_name: "Bash", tool_input: { command: testCase.terminal },
+            tool_response: { output: "CoreData: error during migration\nLeaks: memory leak in MyClass", exit_code: 0 } }),
+          env: { ...process.env, PLUGIN_ROOT: pluginRoot, AXIOM_SESSION_CONTEXT: testCase.override },
+        });
+        assert.deepEqual({ status: result.status, stderr: result.stderr, stdout: result.stdout },
+          { status: 0, stderr: "", stdout: "" }, JSON.stringify(testCase));
+      }
+    } finally {
+      fs.rmSync(workspace, { recursive: true, force: true });
+    }
+  });
   it("delivers stdin hints through the generated command from root and nested cwd", () => {
     const pluginRoot = path.resolve("axiom-codex");
     const manifest = JSON.parse(fs.readFileSync(path.join(pluginRoot, "hooks/hooks.json"), "utf8"));

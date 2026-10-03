@@ -332,8 +332,16 @@ def build_response(stdin_text: str) -> dict | None:
 
 
 def main() -> None:
+    stdin_text = sys.stdin.read()
     try:
-        response = build_response(sys.stdin.read())
+        from project_detect import resolve_context_decision
+
+        if not resolve_context_decision(os.getcwd(), os.environ.get("AXIOM_SESSION_CONTEXT")):
+            return
+    except Exception as error:
+        hook_diagnostics.record_exception(error)
+    try:
+        response = build_response(stdin_text)
     except Exception as error:
         hook_diagnostics.record_exception(error)
         sys.exit(0)  # never fail the edit

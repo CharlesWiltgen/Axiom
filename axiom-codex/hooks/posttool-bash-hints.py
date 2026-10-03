@@ -49,6 +49,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import shlex
 import sys
 
 try:
@@ -115,6 +116,18 @@ _PATTERN_RULES: list[tuple[re.Pattern, str]] = [
 ]
 
 
+_DIAGNOSTIC_LINE = re.compile(
+    r"\b(?:error|warning|failed|failure|detected|unavailable)\b|never called|not available|"
+    r"Unable to simultaneously satisfy constraints|Leaks:|CKError\s*\d",
+    re.IGNORECASE,
+)
+_ISSUE_TERMS = r"(?:migration\s+(?:errors?|failures?|issues?|problems?)|memory leaks?|retain cycles?)\b"
+_NEGATED_ISSUE = re.compile(
+    r"\b(?:no|without)\s+" + _ISSUE_TERMS + r"(?:\s+(?:or|and)\s+" + _ISSUE_TERMS + r")*",
+    re.IGNORECASE,
+)
+
+
 def match_patterns(output: str) -> list[str]:
     """Return every pattern hint that matches ``output``, in rule order.
 
@@ -123,7 +136,96 @@ def match_patterns(output: str) -> list[str]:
     """
     if not output:
         return []
-    return [hint for pattern, hint in _PATTERN_RULES if pattern.search(output)]
+    fragments = [_NEGATED_ISSUE.sub("", line)
+                 for line in re.split(r"[;\n]|(?<=[.!?])\s+", output)]
+    diagnostics = [line for line in fragments if _DIAGNOSTIC_LINE.search(line)]
+    return [hint for pattern, hint in _PATTERN_RULES
+            if any(pattern.search(line) for line in diagnostics)]
+
+
+def is_documentation_command(command: str) -> bool:
+    """Suppress source inspection; explicit log reads and runtime pipelines remain useful."""
+    try:
+        lexer = shlex.shlex(command, posix=True, punctuation_chars=";&|\n<>")
+        lexer.whitespace = " \t\r"
+        tokens = list(lexer)
+    except ValueError:
+        return True  # Unknown shell syntax is not evidence of a diagnostic producer.
+    groups: list[tuple[list[str], bool]] = []
+    group: list[str] = []
+    pipeline = False
+    for token in tokens + [";"]:
+        if token and all(character in ";&|\n" for character in token):
+            groups.append((group, pipeline))
+            group = []
+            pipeline = token == "|"
+        else:
+            group.append(token)
+    readers = {"cat", "head", "tail", "less", "more", "bat", "nl"}
+    searches = {"rg", "grep", "sed", "awk"}
+    inspectors = readers | searches | {"curl", "wget"}
+    option_arguments = {"-u", "--unset", "-C", "--chdir", "-a", "-f", "-g"}
+    runtime = False
+    inspection = False
+    for words, pipeline in groups:
+        while words:
+            if re.match(r"^[A-Za-z_][A-Za-z0-9_]*=", words[0]):
+                words = words[1:]
+            elif os.path.basename(words[0]) in {"env", "sudo", "time", "command", "exec"}:
+                words = words[1:]
+                while words and words[0].startswith("-"):
+                    option, words = words[0], words[1:]
+                    if option in option_arguments and words:
+                        words = words[1:]
+            else:
+                break
+        if not words:
+            continue
+        program = os.path.basename(words[0])
+        if program in {"sh", "bash", "zsh"}:
+            runtime = True
+            for index, word in enumerate(words[1:], 1):
+                if re.fullmatch(r"-[A-Za-z]*c[A-Za-z]*", word) and index + 1 < len(words):
+                    if is_documentation_command(words[index + 1]):
+                        return True
+                    runtime = True
+                    break
+            continue
+        if program in inspectors:
+            operands: list[str] = []
+            pattern_provided = False
+            arguments = iter(words[1:])
+            pattern_options = {"-e", "--regexp", "-f", "--file", "--expression"} if program in searches else set()
+            paired_options = pattern_options | {"-A", "-B", "-C", "--context", "-g", "--glob"}
+            if program in {"head", "tail"}:
+                paired_options |= {"-n", "-c", "--lines", "--bytes"}
+            if program == "awk":
+                paired_options |= {"-F", "-v"}
+            for word in arguments:
+                if word in paired_options:
+                    next(arguments, None)
+                    pattern_provided |= word in pattern_options
+                elif word.startswith("-"):
+                    pattern_provided |= any(word.startswith(option + "=") for option in pattern_options)
+                    pattern_provided |= program in searches and word.startswith(("-e", "-f")) and not word.startswith("--") and len(word) > 2
+                elif not re.fullmatch(r"[<>]+", word):
+                    operands.append(word)
+            if program in searches and not pattern_provided:
+                operands = operands[1:]  # The first operand is the pattern or program.
+            if (operands and "-" not in words
+                    and all(word.endswith((".log", ".crash", ".ips")) for word in operands)):
+                runtime = True
+                continue
+            if pipeline and not operands:
+                continue  # A filter consumes the preceding runtime output.
+            return True
+        if program in {"echo", "printf"} or (program == "git" and "status" in words[1:]):
+            inspection = True
+        elif program == "git":
+            return True
+        elif program not in {"cd", "pwd", "true", "false", ":", "export"}:
+            runtime = True
+    return inspection and not runtime
 
 
 # Tokenize a Bash command so we can answer "is this an xcodebuild call"
@@ -267,6 +369,14 @@ def main() -> int:
     if data.get("tool_name") != "Bash":
         return 0
 
+    try:
+        from project_detect import resolve_context_decision
+
+        if not resolve_context_decision(os.getcwd(), os.environ.get("AXIOM_SESSION_CONTEXT")):
+            return 0
+    except Exception as error:
+        hook_diagnostics.record_exception(error)
+
     codex = os.environ.get("AXIOM_HARNESS") == "codex"
     if codex:
         response = data.get("tool_response")
@@ -279,6 +389,8 @@ def main() -> int:
     command = tool_input.get("command", "") if isinstance(tool_input, dict) else ""
     if not isinstance(command, str):
         command = ""
+    if is_documentation_command(command):
+        return 0
     duration_ms = data.get("duration_ms")
     if not isinstance(duration_ms, int):
         duration_ms = None

@@ -26,6 +26,7 @@ def run_hook(payload: dict) -> tuple[str, int]:
         capture_output=True,
         text=True,
         timeout=5,
+        env=dict(os.environ, AXIOM_SESSION_CONTEXT="always"),
     )
     return result.stdout, result.returncode
 

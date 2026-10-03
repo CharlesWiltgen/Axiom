@@ -20,7 +20,7 @@ HOOK = os.path.join(os.path.dirname(__file__), "posttool-bash-hints.py")
 
 def run_hook(payload: dict, output: str = "", env_override: dict | None = None) -> tuple[str, int]:
     """Invoke the hook with the given stdin payload + tool output env var."""
-    env = os.environ.copy()
+    env = dict(os.environ, AXIOM_SESSION_CONTEXT="always", AXIOM_HARNESS="claude")
     env["CLAUDE_TOOL_OUTPUT"] = output
     if env_override:
         env.update(env_override)
@@ -46,6 +46,64 @@ def bash_payload(command: str = "swift build", duration_ms: int | None = None) -
     if duration_ms is not None:
         payload["duration_ms"] = duration_ms
     return payload
+
+
+class TestDocumentationReads(unittest.TestCase):
+    def test_document_and_source_inspection_does_not_emit_error_hints(self):
+        commands = (
+            "cat README.md", "rg migration docs", "sed -n '1,80p' guide.md",
+            "head guide.md", "git show HEAD:README.md", "curl https://example.test/guide",
+            "cd app && cat README.md", "env FOO=bar /bin/cat README.md",
+            "sh -c 'cat README.md'", "cat README.md | grep error",
+            "nl -ba README.md", "bash -lc 'cat README.md'", "env -i cat README.md",
+            "env -u FOO cat README.md", "cat build.log README.txt",
+        )
+        text = "CoreData: error during migration\nLeaks: memory leak in MyClass\n"
+        for harness in ("claude", "codex"):
+            for command in commands:
+                with self.subTest(harness=harness, command=command):
+                    payload = bash_payload(command)
+                    payload["tool_response"] = {"output": text, "exit_code": 0}
+                    self.assertEqual(run_hook(payload, text, {"AXIOM_HARNESS": harness}), ("", 0))
+
+    def test_topic_mentions_and_negated_errors_do_not_emit_hints(self):
+        for text in (
+            "Guide to migration, retain cycle and memory leak prevention.",
+            "No migration error or memory leak occurred.",
+            "warning: no memory leak detected",
+            "Migration completed successfully.\nAn unrelated error occurred.",
+            "@MainActor and Sendable\niCloud Drive and FileProtection",
+            "warning: no migration errors or memory leaks detected",
+            "No memory leaks or retain cycles detected.",
+        ):
+            with self.subTest(text=text):
+                self.assertEqual(run_hook(bash_payload(), text), ("", 0))
+
+    def test_runtime_diagnostics_and_explicit_log_reads_still_emit_hints(self):
+        text = "CoreData: error during migration\nLeaks: memory leak in MyClass\n"
+        for command in (
+            "swift run App", "xcrun simctl spawn booted log show", "cat build.log",
+            "tail -n 80 '/tmp/app log.log'", "grep error app.log", "rg error build.log",
+            "cat < app.log", "git status && swift build", "echo Building; swift run App",
+            "swift build | tail -n 20",
+            "grep -e error -e warning app.log", "swift run App | grep -e error -e warning",
+            "swift run App | awk -F : '/error/ {print $0}'", "echo starting; bash build.sh",
+            "rg -n error app.log", "cat -n app.log", "grep -eerror app.log",
+        ):
+            with self.subTest(command=command):
+                payload = bash_payload(command)
+                payload["tool_response"] = {"output": text, "exit_code": 0}
+                out, code = run_hook(payload, text, {"AXIOM_HARNESS": "codex"})
+                self.assertEqual((json.loads(out)["hookSpecificOutput"]["additionalContext"], code),
+                    ("💡 Database migration issue. Try: skill axiom-data\n💡 Memory issue detected. Try: skill axiom-performance", 0))
+
+    def test_negated_memory_does_not_hide_a_real_migration_failure(self):
+        for text in (
+            "migration failed; no memory leak detected", "migration failed: no migration mapping model found",
+            "warning: no memory leak detected, migration failed",
+        ):
+            with self.subTest(text=text):
+                self.assertEqual(run_hook(bash_payload(), text), ("💡 Database migration issue. Try: skill axiom-data\n", 0))
 
 
 class TestPatternMatching(unittest.TestCase):
@@ -449,12 +507,12 @@ class TestCodexProtocol(unittest.TestCase):
     def test_claude_retains_plain_text_environment_output(self):
         payload = bash_payload()
         payload["tool_response"] = "linker command failed"
-        self.assertEqual(run_hook(payload, output="data race", env_override={"AXIOM_HARNESS": "claude"}),
+        self.assertEqual(run_hook(payload, output="data race detected", env_override={"AXIOM_HARNESS": "claude"}),
             ("💡 Concurrency issue. Try: skill axiom-concurrency\n", 0))
 
     def test_codex_output_object_reads_only_output_text(self):
         payload = bash_payload()
-        payload["tool_response"] = {"output": "data race", "metadata": "linker command failed"}
+        payload["tool_response"] = {"output": "data race detected", "metadata": "linker command failed"}
         out, code = run_hook(payload, env_override={"AXIOM_HARNESS": "codex"})
         self.assertEqual((json.loads(out), code), ({"hookSpecificOutput": {
             "hookEventName": "PostToolUse", "additionalContext": "💡 Concurrency issue. Try: skill axiom-concurrency",

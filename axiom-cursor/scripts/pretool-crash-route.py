@@ -34,6 +34,7 @@ a broken hook shouldn't block Read operations.
 from __future__ import annotations
 
 import json
+import os
 import sys
 
 try:
@@ -151,6 +152,13 @@ def main() -> int:
         return 0
     if data.get("tool_name") != "Read":
         return 0
+    try:
+        from project_detect import resolve_context_decision
+
+        if not resolve_context_decision(os.getcwd(), os.environ.get("AXIOM_SESSION_CONTEXT")):
+            return 0
+    except Exception as error:
+        hook_diagnostics.record_exception(error)
     ti = data.get("tool_input") or {}
     if not isinstance(ti, dict):
         return 0
