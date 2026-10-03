@@ -1,6 +1,6 @@
 # xcproject
 
-Read-only Xcode project inspection, built with Swift 6.4 or newer. The universal binary declares a macOS 14 minimum and supports `project.pbxproj` and Xcode's JSON5 `project.xcproj` inside the unchanged `.xcodeproj` container.
+Read-only Xcode project inspection, built with Swift 6.4 or newer. Axiom supports macOS 26 and newer. The universal binary reads `project.pbxproj` and Xcode's JSON5 `project.xcproj` inside the unchanged `.xcodeproj` container.
 
 ```sh
 make test
@@ -16,7 +16,7 @@ Discovery skips dependency/cache directories and directory symlinks. Missing pro
 
 Claude Code and Pi carry the inspector under the canonical plugin's `bin/xcproject`; Codex carries `bin/xcproject` inside its generated package. Invoke the absolute package path when `command -v xcproject` is empty. The MCP npm package exposes the same native executable as its `xcproject` CLI and includes Apple's license. It has no `axiom_xcproject_*` MCP wrapper. Cursor and other MCP clients without shell access must use the documented file-reading fallback.
 
-`make install` records the pre-build source inputs and installed binary/license hashes in the canonical plugin's `build-info/xcproject.json`. The pre-deploy gate verifies those bytes in the working tree and Git index, plus Codex artifact parity. This build record checks artifact integrity; it is not a macOS 14 runtime result.
+`make install` records the pre-build source inputs and installed binary/license hashes in the canonical plugin's `build-info/xcproject.json`. The pre-deploy gate verifies those bytes in the working tree and Git index, plus Codex artifact parity. This build record checks artifact integrity; runtime compatibility requires execution on a supported OS.
 
 ## Effective settings
 
