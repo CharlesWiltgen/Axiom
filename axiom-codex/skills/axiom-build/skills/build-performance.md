@@ -26,6 +26,43 @@ For automated scanning and quick wins:
 
 The build-optimizer agent scans for common issues and provides immediate fixes. Use this skill for deep analysis.
 
+## Project selection and effective settings
+
+The `.xcodeproj` container holds `project.pbxproj` or JSON5 `project.xcproj`. Use Glob for both filenames at any depth and exclude dependency/cache folders. With `command -v xcproject` available:
+
+```bash
+xcproject inspect --root .
+xcproject inspect --project "$PROJECT" --target "$TARGET" --configuration "$CONFIGURATION"
+```
+
+Select an actual project, target, configuration and SDK before comparing settings. Multiple projects require `--project`; missing targets/configurations fail explicitly. Set variables in the same shell call, or substitute the selected literal paths/names. The inspector validates JSON5 with Apple's pinned typed library and reads OpenStep structurally. Its `declarations` output preserves conditional keys, arrays and references; it does not evaluate them.
+
+For effective values, use a fresh matching `xcodebuild -showBuildSettings -json` capture. Obtain authorization for this query: Xcode may resolve packages or write build-system state even though it does not build or launch the app. File-read-only scope permits structural inspection. In that scope, label values "declared; effective value unverified" and report the selected target/configuration plus all applicable project/target/xcconfig conditions instead of choosing a first match.
+
+```bash
+# Check existing processes and investigate active builds before starting a query.
+pgrep -x xcodebuild | wc -l
+# Set PROJECT, TARGET, CONFIGURATION, SDK and SETTINGS_JSON explicitly.
+# SETTINGS_JSON must be a task-owned output file; capture Xcode's exit status.
+if xcrun xcodebuild -project "$PROJECT" -target "$TARGET" -configuration "$CONFIGURATION" -sdk "$SDK" -showBuildSettings -json > "$SETTINGS_JSON"; then
+  xcproject settings --project "$PROJECT" --input "$SETTINGS_JSON" --target "$TARGET" --configuration "$CONFIGURATION" --sdk "$SDK" --key SWIFT_COMPILATION_MODE
+else
+  query_status=$?
+  echo "Xcode settings query failed for $PROJECT/$TARGET/$CONFIGURATION/$SDK (exit $query_status)" >&2
+  exit "$query_status"
+fi
+```
+
+Use the reader only after a successful query. It verifies capture identity and returns a nonempty requested key; missing data is an error. Regenerate after project, xcconfig, environment or selection changes. Use Xcode for inheritance, include chains, defaults, SDK overrides and variable expansion. `--arch` checks the capture's single `ARCHS` selection; general settings output does not establish architecture-conditioned compiler flags. Inspect those declarations and verify the actual compiler invocation separately.
+
+For structured analysis, Read the entire selected value, never a fixed number of grep context lines:
+
+- JSON5: top-level `packages` and `files`; selected target's `build-settings`, `build-phases`, `build-rules` and `package-product-members`. Phase entries may be strings or objects; scripts may be strings or arrays of lines. A conditionless key applies across configurations, but target and xcconfig overrides still matter.
+- OpenStep: follow `rootObject` into `objects`, target configuration/phase/rule/package-product references, and the referenced file/folder/exception objects.
+- Membership: follow explicit target/phase membership and synchronized-folder target membership, base/group paths and exception sets. Folder declarations are not an enumerated source list; apply filesystem rules/exclusions before assigning files or findings to a target. Omitted defaults remain omitted.
+
+If `xcproject` is unavailable, Read both-format declarations and included xcconfig files directly. `project.xcproj` is JSON5, so `jq` and `plutil` cannot parse it; `xcrun xcprojformatter --input "$PROJECT"` can validate/format it when available, but has no query API. Preserve unresolved settings and memberships as unverified rather than inventing effective values.
+
 ## The Build Performance Workflow
 
 ### Step 1: Measure Baseline (Required)
@@ -256,8 +293,8 @@ Build Settings → FUSE_BUILD_SCRIPT_PHASES → YES
 **Check current settings**:
 
 ```bash
-# In project.pbxproj
-grep "SWIFT_COMPILATION_MODE" project.pbxproj
+# Use the selected fresh Xcode capture from Project selection and effective settings.
+xcproject settings --project "$PROJECT" --input "$SETTINGS_JSON" --target "$TARGET" --configuration "$CONFIGURATION" --sdk "$SDK" --key SWIFT_COMPILATION_MODE --value-only
 ```
 
 **Optimal configuration**:
@@ -267,13 +304,16 @@ grep "SWIFT_COMPILATION_MODE" project.pbxproj
 | **Debug** | `singlefile` (Incremental) | Only recompiles changed files |
 | **Release** | `wholemodule` | Maximum optimization |
 
-```swift
+```
 // ❌ BAD - Whole module in Debug
 SWIFT_COMPILATION_MODE = wholemodule; // ALL configs
+"SWIFT_COMPILATION_MODE": "wholemodule",  // project.xcproj: no condition = ALL configs
 
 // ✅ GOOD - Incremental for Debug
 Debug: SWIFT_COMPILATION_MODE = singlefile;
 Release: SWIFT_COMPILATION_MODE = wholemodule;
+"SWIFT_COMPILATION_MODE[config=Debug]": "singlefile",    // project.xcproj
+"SWIFT_COMPILATION_MODE[config=Release]": "wholemodule",
 ```
 
 **How to fix**:
@@ -292,7 +332,7 @@ Release: SWIFT_COMPILATION_MODE = wholemodule;
 
 **Check**:
 ```bash
-grep "ONLY_ACTIVE_ARCH" project.pbxproj
+xcproject settings --project "$PROJECT" --input "$SETTINGS_JSON" --target "$TARGET" --configuration "$CONFIGURATION" --sdk "$SDK" --key ONLY_ACTIVE_ARCH --value-only
 ```
 
 **Fix**:
@@ -324,7 +364,7 @@ grep "ONLY_ACTIVE_ARCH" project.pbxproj
 
 ```bash
 # Check current
-grep "DEBUG_INFORMATION_FORMAT" project.pbxproj
+xcproject settings --project "$PROJECT" --input "$SETTINGS_JSON" --target "$TARGET" --configuration "$CONFIGURATION" --sdk "$SDK" --key DEBUG_INFORMATION_FORMAT --value-only
 ```
 
 **How to fix**:
@@ -519,7 +559,7 @@ Build Log:
 **Reduce variants** (unify settings at project/workspace level):
 ```bash
 # Check for macro differences
-grep "GCC_PREPROCESSOR_DEFINITIONS" project.pbxproj
+xcproject settings --project "$PROJECT" --input "$SETTINGS_JSON" --target "$TARGET" --configuration "$CONFIGURATION" --sdk "$SDK" --key GCC_PREPROCESSOR_DEFINITIONS --value-only
 
 # Move target-specific macros to project level where possible
 Project → Build Settings → Preprocessor Macros → [unify here]

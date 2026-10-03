@@ -23,8 +23,8 @@
     },
     {
       "path": "agents/build-optimizer.md",
-      "sha256": "aa18e514430df8e90ed6a7e6c0373dbad0ce4b6659d6c83c70f66f149cbdccdc",
-      "bytes": 6668
+      "sha256": "b33966fd3e274982cfa49cfbfb2d7779d2a077651cf29b3539a541f56b685214",
+      "bytes": 9565
     },
     {
       "path": "agents/camera-auditor.md",
@@ -63,8 +63,8 @@
     },
     {
       "path": "agents/foundation-models-auditor.md",
-      "sha256": "57a21c0e35db94f0890bd4ba690bf8a46bc613d31aa5fc825805ab13bb84ce6b",
-      "bytes": 32911
+      "sha256": "dc17ba903a6ea2580f017691f022c1d1f4307ff9ad2d3d55f2b79bcfa5193927",
+      "bytes": 33820
     },
     {
       "path": "agents/grdb-performance-auditor.md",
@@ -93,8 +93,8 @@
     },
     {
       "path": "agents/liquid-glass-auditor.md",
-      "sha256": "bc10065940b46f146c473dff07446b61202e235e0dc6bf7ee3e5149702b55358",
-      "bytes": 28069
+      "sha256": "2e91305223fb72d3a44c142b391546cd2d004bdf2b361c884cabb0cba1211efc",
+      "bytes": 28958
     },
     {
       "path": "agents/memory-auditor.md",
@@ -138,8 +138,8 @@
     },
     {
       "path": "agents/spm-conflict-resolver.md",
-      "sha256": "a4c054d56bc211a59870c6744a53a610bfdc7d97dc7d7d0c7ca63cd65c82cb7a",
-      "bytes": 11702
+      "sha256": "801e3cdc6c47a4d9e1e1a5a12954e7efbda56a50f2d489e338c5cc5bd13c3b0a",
+      "bytes": 13249
     },
     {
       "path": "agents/spritekit-auditor.md",
@@ -293,8 +293,8 @@
     },
     {
       "path": "commands/axiom-status.md",
-      "sha256": "f0f60f34e3fd94ae5ecc0ee7e676ce715c0b71e2d1ca4d3a2a4d5fdc2c055abc",
-      "bytes": 1999
+      "sha256": "f5448149460c2e72d766964f5b7b6412a077ad68b2e8ec723c1bb23199ecdece",
+      "bytes": 3602
     },
     {
       "path": "commands/axiom-test-simulator.md",
@@ -323,8 +323,8 @@
     },
     {
       "path": "reports/capability-disposition.json",
-      "sha256": "8a98c10c8e8cb98d94ad496aca5069225bfffb3d053601d4a86f1412436234bf",
-      "bytes": 35480
+      "sha256": "b392d35043170e6a7a4b374beac1e4914b45a4e772b76f1c6228e98a785001f2",
+      "bytes": 35493
     },
     {
       "path": "scripts/cursor-hook-adapter.py",
@@ -498,8 +498,8 @@
     },
     {
       "path": "skills/axiom-build/skills/build-performance.md",
-      "sha256": "0795d74d5f6ed4e23976efd0ef3521b783b555a38701846758b4eeecfc0c3f5b",
-      "bytes": 25165
+      "sha256": "fcf9c5b34bfebf62311bc8b40984c91d621b85ae70062d8dc681539a116ad6c8",
+      "bytes": 29783
     },
     {
       "path": "skills/axiom-build/skills/lldb-ref.md",
@@ -1884,7 +1884,7 @@
   ],
   "totals": {
     "files": 376,
-    "bytes": 7624409
+    "bytes": 7636885
   },
   "excludedMirrors": 30,
   "classes": {

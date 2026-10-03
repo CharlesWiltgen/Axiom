@@ -2,6 +2,10 @@
 
 Scans Foundation Models (Apple Intelligence) code for issues — both known anti-patterns like missing availability checks, main-thread `respond()` calls, manual JSON parsing of model output, and missing specific error catches, and architectural gaps like prompt-injection risk from direct user-text interpolation, `@Generable` enums without `@frozen` (future-case crash on iOS update), missing Cancel UX on long generations, missing transcript trimming for multi-turn chats, stale availability cache when users disable Apple Intelligence in Settings, missing retry logic for transient errors, and partial-output validation gaps.
 
+## Project Formats and Settings
+
+The auditor reads both `project.pbxproj` and JSON5 `project.xcproj` inside `.xcodeproj`, including nested layouts. Select the actual project, target, configuration and SDK. It reads declarations and xcconfig files and labels unresolved values. The owning workflow can supply `xcproject` inspection output and a fresh matching Xcode settings capture obtained within authorized scope. An Xcode query can resolve packages or write state, so the file-read auditor does not run it. Source findings retain target membership and synchronized-folder exclusions.
+
 ## What It Does
 
 - Detects 10 known anti-patterns (no `SystemLanguageModel.default.availability` check before `LanguageModelSession()`, synchronous `respond()` blocking main thread, manual `JSONDecoder` of model output instead of `@Generable`, missing `exceededContextWindowSize` catch, missing `guardrailViolation` / `contentFiltered` catch, session created in button handler, no streaming for long generations, missing `@Guide` on numeric/collection properties, nested type without `@Generable`, no fallback UI when unavailable)
@@ -12,6 +16,7 @@ Scans Foundation Models (Apple Intelligence) code for issues — both known anti
 ## How to Use
 
 **Natural language:**
+
 - "Can you check my Foundation Models code for issues?"
 - "Review my @Generable structs for correctness"
 - "Audit my Apple Intelligence integration"
@@ -19,6 +24,7 @@ Scans Foundation Models (Apple Intelligence) code for issues — both known anti
 - "Check if I'm handling Foundation Models errors properly"
 
 **Explicit command:**
+
 ```bash
 /axiom:audit foundation-models
 ```

@@ -49,8 +49,9 @@ import {
   extractDocStats,
   checkMarkerSpec,
 } from "./doc-stats.js";
+import { checkSwiftToolBuild, checkCodexToolArtifacts } from "./swift-tool.ts";
 import { scanReferencedToolBinaries } from "../axiom-mcp/src/scripts/binary-coverage.ts";
-import { MCP_TOOL_BINARIES } from "../axiom-mcp/src/tools/binaries.ts";
+import { MCP_TOOL_BINARIES, MCP_PACKAGED_BINARIES } from "../axiom-mcp/src/tools/binaries.ts";
 import {
   parseFrontmatterAreas,
   parseBodyTable,
@@ -93,7 +94,7 @@ import {
   validateHomeCoverage,
 } from "./inline-auditors.ts";
 import { parsePorcelain, resolveGoBinaryStaleness, resolveStaleness } from "./staleness.ts";
-import { classifyNpmFailure, npmErrorCode, runNpmDryRun } from "./npm-resolution.ts";
+import { classifyNpmFailure, npmErrorCode, npmInstallEnvironment, runNpmDryRun } from "./npm-resolution.ts";
 import { findDashViolations } from "./docs-dashes.ts";
 import { renderCursorDistribution } from "./cursor/render.ts";
 import { compareCursorPaths } from "./cursor/compare.ts";
@@ -1759,7 +1760,7 @@ if (argsGoFiles.length < 2) {
   }
 }
 
-// ── 12t. Go Tool Binary Staleness ──
+// ── 12t. Tool Binary Staleness ──
 
 // Files staged for THIS commit. The staleness clauses read the working tree, but a
 // commit ships HEAD: staging source without the rebuilt binary lands both out of
@@ -1778,7 +1779,7 @@ const stagedPaths = (() => {
   }
 })();
 
-heading("12t. Go Tool Binary Staleness");
+heading("12t. Tool Binary Staleness");
 
 // The compiled binary in bin/ is what SHIPS — the plugin, the MCP bundle, and the
 // Codex/Cursor variants all carry bin/<tool>, never tools/<tool>/*.go. So a Go edit
@@ -1910,6 +1911,14 @@ if (fs.existsSync(goToolsRoot) && fs.statSync(goToolsRoot).isDirectory()) {
   warn("go-binary-staleness", "no tools/ directory — skipping Go binary staleness check");
 }
 
+const swiftProblems = [
+  ...checkSwiftToolBuild(root),
+  ...(stagedPaths.size ? checkSwiftToolBuild(root, true) : []),
+];
+for (const problem of swiftProblems) error("swift-binary-staleness", `${problem}; run cd tools/xcproject && make install and stage source, binary, license and build-info together`);
+if (!swiftProblems.length) console.log("  ✓ xcproject source, binary and license hashes match the recorded build");
+for (const problem of checkCodexToolArtifacts(root, stagedPaths.size > 0)) error("codex-tool-distribution", `${problem}; run npm run build:codex and stage generated artifacts`);
+
 // ── 12h. MCP Tool Binary Coverage ──
 
 heading("12h. MCP Tool Binary Coverage");
@@ -1925,7 +1934,7 @@ const mcpListed = new Set<string>(MCP_TOOL_BINARIES);
 const mcpReferenced = scanReferencedToolBinaries(mcpToolsDir);
 const mcpMissingFromList = [...mcpReferenced].filter((b) => !mcpListed.has(b));
 const mcpUnusedInList = [...mcpListed].filter((b) => !mcpReferenced.has(b));
-const mcpMissingBinaries = [...mcpListed].filter((b) => !fs.existsSync(path.join(pluginDir, "bin", b)));
+const mcpMissingBinaries = [...MCP_PACKAGED_BINARIES].filter((b) => !fs.existsSync(path.join(pluginDir, "bin", b)));
 if (mcpMissingFromList.length) {
   error("mcp-binary-coverage", `tools resolve bin/<name> not in MCP_TOOL_BINARIES (bundler won't ship them): ${mcpMissingFromList.join(", ")}`);
 }
@@ -1933,7 +1942,7 @@ if (mcpUnusedInList.length) {
   error("mcp-binary-coverage", `MCP_TOOL_BINARIES lists binaries no tool references: ${mcpUnusedInList.join(", ")}`);
 }
 if (mcpMissingBinaries.length) {
-  error("mcp-binary-coverage", `MCP_TOOL_BINARIES entries missing from committed plugin bin/: ${mcpMissingBinaries.join(", ")}`);
+  error("mcp-binary-coverage", `MCP_PACKAGED_BINARIES entries missing from committed plugin bin/: ${mcpMissingBinaries.join(", ")}`);
 }
 if (!mcpMissingFromList.length && !mcpUnusedInList.length && !mcpMissingBinaries.length) {
   console.log(`  ✓ MCP tool binaries consistent (${[...mcpListed].join(", ") || "none"}) — list ↔ tool refs ↔ plugin bin/`);
@@ -3386,7 +3395,7 @@ heading("17. axiom-pi Extension Tests");
   };
   const run = (check: string, label: string, cmd: string, timeout: number): void => {
     try {
-      execSync(cmd, { cwd: axiomPiDir, stdio: "pipe", timeout });
+      execSync(cmd, { cwd: axiomPiDir, stdio: "pipe", timeout, env: npmInstallEnvironment(process.env) });
     } catch (e: unknown) {
       const err = e as { stdout?: Buffer; stderr?: Buffer };
       fail(check, label, err.stdout?.toString() || err.stderr?.toString() || "");

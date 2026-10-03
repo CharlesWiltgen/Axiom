@@ -10,7 +10,16 @@
 
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { classifyNpmFailure, npmErrorCode } from "./npm-resolution.ts";
+import { classifyNpmFailure, npmErrorCode, npmInstallEnvironment } from "./npm-resolution.ts";
+
+describe("npmInstallEnvironment", () => {
+  it("removes inherited one-off script options while preserving project policy and the input", () => {
+    const expected = { PATH: "/usr/bin", npm_config_strict_allow_scripts: "true", npm_config_userconfig: "/project/.npmrc" };
+    const source = { ...expected, npm_config_allow_scripts: "*", NPM_CONFIG_ALLOW_SCRIPTS: "*" };
+    assert.deepEqual(npmInstallEnvironment(source), expected);
+    assert.deepEqual(source, { ...expected, npm_config_allow_scripts: "*", NPM_CONFIG_ALLOW_SCRIPTS: "*" });
+  });
+});
 
 describe("classifyNpmFailure", () => {
   it("calls a peer conflict a resolution failure (GH #54, the case the gate was built for)", () => {

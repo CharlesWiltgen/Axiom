@@ -37,11 +37,21 @@ func SymbolicateForTier(ctx context.Context, raw *RawCrash, images ImageStatus, 
 
 	g := buildFrameGroups(raw, threadIdxs)
 	var warnings []string
+	mismatched := make(map[string]string, len(images.Mismatched))
+	for _, image := range images.Mismatched {
+		mismatched[image.UUID] = image.Kind
+	}
 
 	for uuid, refs := range g.refs {
 		addrs := g.addrs[uuid]
 		img, ok := g.imagesByUUID[uuid]
 		if !ok {
+			continue
+		}
+		if kind, rejected := mismatched[uuid]; rejected {
+			warnings = append(warnings, fmt.Sprintf(
+				"symbolicate: %s (UUID %s) — dSYM %s mismatch; %d frames left unsymbolicated",
+				img.Name, uuid, kind, len(refs)))
 			continue
 		}
 		entry, err := d.Find(ctx, uuid, img.Arch)

@@ -1,13 +1,16 @@
-# Axiom Go CLI Tools
+# Axiom CLI Tools
 
-Standalone command-line tools that ship with Axiom. Each is a separate, **zero-dependency** Go module (no third-party `require` block), built as a universal macOS binary and bundled into the plugin and the npm package.
+Standalone command-line tools that ship with Axiom, built as universal macOS binaries. The existing console, crash, UI and profiling tools are separate, **zero-dependency** Go modules. New tools use Swift 6.4 or newer; `xcproject` pins Apple's `XcodeProjectFormat` library for structured JSON5 reads.
 
-| Tool | Purpose |
-|------|---------|
-| `xclog` | Capture simulator/device console output as structured JSON |
-| `xcsym` | Symbolicate and triage `.ips`, MetricKit, `.crash`, and `.xccrashpoint` crashes |
-| `xcui` | Drive and assert on the simulator UI and accessibility tree |
-| `xcprof` | Record and analyze xctrace/Instruments CPU profiles |
+| Tool        | Purpose                                                                         |
+| ----------- | ------------------------------------------------------------------------------- |
+| `xclog`     | Capture simulator/device console output as structured JSON                      |
+| `xcsym`     | Symbolicate and triage `.ips`, MetricKit, `.crash`, and `.xccrashpoint` crashes |
+| `xcui`      | Drive and assert on the simulator UI and accessibility tree                     |
+| `xcprof`    | Record and analyze xctrace/Instruments CPU profiles                             |
+| `xcproject` | Inspect either Xcode project format and verify captured effective settings      |
+
+See [xcproject](xcproject/README.md) for its Swift build, license and inspection contract. The Go argument-parser conventions below apply to the four existing Go modules.
 
 ## Contributor requirements
 

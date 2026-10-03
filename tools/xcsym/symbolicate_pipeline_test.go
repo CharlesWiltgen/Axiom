@@ -3,9 +3,56 @@ package main
 import (
 	"context"
 	"errors"
+	"reflect"
 	"strings"
 	"testing"
 )
+
+func TestSymbolicateForTier_RejectsMismatchedDsymAndPreservesMatchedImage(t *testing.T) {
+	const rejectedUUID = "AAAAAAAA-0000-0000-0000-000000000001"
+	const matchedUUID = "BBBBBBBB-0000-0000-0000-000000000002"
+	for _, kind := range []string{MismatchUUID, MismatchArch} {
+		t.Run(kind, func(t *testing.T) {
+			raw := &RawCrash{
+				UsedImages: []UsedImage{
+					{UUID: rejectedUUID, Name: "Rejected", LoadAddress: 0x1000, Arch: "arm64"},
+					{UUID: matchedUUID, Name: "Matched", LoadAddress: 0x2000, Arch: "arm64"},
+				},
+				Threads: []Thread{{Triggered: true, Frames: []Frame{
+					{Index: 0, Address: "0x1100", Image: "Rejected", UUID: rejectedUUID},
+					{Index: 1, Address: "0x2100", Image: "Matched", UUID: matchedUUID},
+					{Index: 2, Address: "0x1200", Image: "Rejected", UUID: rejectedUUID, Symbol: "supplied", Symbolicated: true},
+				}}},
+				CrashedIdx: 0,
+			}
+			d := NewDiscoverer(DiscovererOptions{Explicit: t.TempDir(), SkipDefaults: true, SkipCache: true, SkipSpotlight: true})
+			old := resolveBatchFn
+			t.Cleanup(func() { resolveBatchFn = old })
+			var resolved [][]string
+			resolveBatchFn = func(_ context.Context, _, _, _ string, addresses []string) ([]*SymbolResult, error) {
+				resolved = append(resolved, addresses)
+				return []*SymbolResult{{Symbol: "resolved", File: "App.swift", Line: 30, Symbolicated: true}}, nil
+			}
+			status := ImageStatus{
+				Mismatched: []ImageMatch{{UUID: rejectedUUID, Name: "Rejected", Kind: kind}},
+				Matched:    []ImageMatch{{UUID: matchedUUID, Name: "Matched", Arch: "arm64"}},
+			}
+			warnings := SymbolicateForTier(context.Background(), raw, status, d, TierStandard)
+			want := []Frame{
+				{Index: 0, Address: "0x1100", Image: "Rejected", UUID: rejectedUUID},
+				{Index: 1, Address: "0x2100", Image: "Matched", UUID: matchedUUID, Symbol: "resolved", File: "App.swift", Line: 30, Symbolicated: true},
+				{Index: 2, Address: "0x1200", Image: "Rejected", UUID: rejectedUUID, Symbol: "supplied", Symbolicated: true},
+			}
+			if !reflect.DeepEqual(raw.Threads[0].Frames, want) {
+				t.Fatalf("frames = %#v; want %#v", raw.Threads[0].Frames, want)
+			}
+			wantWarnings := []string{"symbolicate: Rejected (UUID AAAAAAAA-0000-0000-0000-000000000001) — dSYM " + kind + " mismatch; 1 frames left unsymbolicated"}
+			if !reflect.DeepEqual(warnings, wantWarnings) || !reflect.DeepEqual(resolved, [][]string{{"0x2100"}}) {
+				t.Fatalf("warnings = %v, resolved = %v; want %v, [[0x2100]]", warnings, resolved, wantWarnings)
+			}
+		})
+	}
+}
 
 // TestBuildFrameGroups_NameCollisionKeepsFramesSeparate guards axiom-mv5.
 // When two UsedImages share a Name (multi-framework copies, or MetricKit

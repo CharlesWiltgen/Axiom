@@ -298,7 +298,9 @@ func main() {
 	case "attach":
 		runAttach(ctx, cancel, target, &cfg, out)
 	case "show":
-		runShow(target, &cfg, out)
+		if err := runShow(ctx, target, &cfg, out); err != nil {
+			fatal("%v", err)
+		}
 	default:
 		fmt.Fprintf(os.Stderr, "Unknown command: %s\n\n", subcmd)
 		fmt.Fprint(os.Stderr, usage)
@@ -442,6 +444,23 @@ func findPIDViaLaunchctl(ctx context.Context, device, bundleID string) int {
 	return 0
 }
 
+func logCommand(ctx context.Context, cfg *Config, args ...string) *exec.Cmd {
+	var cmd *exec.Cmd
+	if cfg.DeviceUDID != "" {
+		cmd = exec.CommandContext(ctx, "log", args...)
+	} else {
+		cmd = exec.CommandContext(ctx, "xcrun", append([]string{"simctl", "spawn", cfg.Device, "log"}, args...)...)
+	}
+	cmd.Stderr = os.Stderr
+	return cmd
+}
+
+func launchCommand(ctx context.Context, bundleID string, cfg *Config) *exec.Cmd {
+	cmd := exec.CommandContext(ctx, "xcrun", "simctl", "launch", "--console", "--terminate-running-process", cfg.Device, bundleID)
+	cmd.Env = append(cmd.Environ(), "SIMCTL_CHILD_NSUnbufferedIO=YES")
+	return cmd
+}
+
 func runLaunch(ctx context.Context, cancel context.CancelFunc, bundleID string, cfg *Config, out io.Writer) {
 	waitForSimulatorBoot(ctx, cfg.Device)
 
@@ -450,11 +469,7 @@ func runLaunch(ctx context.Context, cancel context.CancelFunc, bundleID string, 
 	var cmds []*exec.Cmd
 
 	// Launch with --console for stdout/stderr capture
-	simctlArgs := []string{
-		"simctl", "launch", "--console", "--terminate-running-process",
-		cfg.Device, bundleID,
-	}
-	simctl := exec.CommandContext(ctx, "xcrun", simctlArgs...)
+	simctl := launchCommand(ctx, bundleID, cfg)
 	cmds = append(cmds, simctl)
 
 	stdout, err := simctl.StdoutPipe()
@@ -525,7 +540,7 @@ func runLaunch(ctx context.Context, cancel context.CancelFunc, bundleID string, 
 	if cfg.Subsystem != "" {
 		predicate = fmt.Sprintf("processIdentifier == %d AND subsystem == '%s'", appPID, cfg.Subsystem)
 	}
-	logCmd := exec.CommandContext(ctx, "log", "stream",
+	logCmd := logCommand(ctx, cfg, "stream",
 		"--level", "debug",
 		"--style", "ndjson",
 		"--predicate", predicate,
@@ -558,6 +573,7 @@ func runLaunch(ctx context.Context, cancel context.CancelFunc, bundleID string, 
 }
 
 func runAttach(ctx context.Context, cancel context.CancelFunc, target string, cfg *Config, out io.Writer) {
+	waitForSimulatorBoot(ctx, cfg.Device)
 	lines := make(chan LogLine, 256)
 	var wg sync.WaitGroup
 
@@ -577,7 +593,7 @@ func runAttach(ctx context.Context, cancel context.CancelFunc, target string, cf
 	fmt.Fprintf(os.Stderr, "NOTE: print()/debugPrint() not available in attach mode. Use 'xclog launch' for full capture.\n")
 	fmt.Fprintf(os.Stderr, "---\n")
 
-	logCmd := exec.CommandContext(ctx, "log", "stream",
+	logCmd := logCommand(ctx, cfg, "stream",
 		"--level", "debug",
 		"--style", "ndjson",
 		"--predicate", predicate,
@@ -605,7 +621,7 @@ func runAttach(ctx context.Context, cancel context.CancelFunc, target string, cf
 	cleanup([]*exec.Cmd{logCmd})
 }
 
-func runShow(target string, cfg *Config, out io.Writer) {
+func runShow(ctx context.Context, target string, cfg *Config, out io.Writer) error {
 	predicate := ""
 	if pid, err := strconv.Atoi(target); err == nil {
 		predicate = fmt.Sprintf("processIdentifier == %d", pid)
@@ -625,9 +641,13 @@ func runShow(target string, cfg *Config, out io.Writer) {
 
 		tmpDir, err := os.MkdirTemp("", "xclog-*")
 		if err != nil {
-			fatal("cannot create temp dir: %v", err)
+			return fmt.Errorf("creating temporary log archive for %q: %w", target, err)
 		}
-		defer os.RemoveAll(tmpDir)
+		defer func() {
+			if err := os.RemoveAll(tmpDir); err != nil {
+				fmt.Fprintf(os.Stderr, "xclog: removing collected archive %s: %v\n", tmpDir, err)
+			}
+		}()
 
 		archivePath := filepath.Join(tmpDir, "device.logarchive")
 		collectArgs := []string{
@@ -640,10 +660,10 @@ func runShow(target string, cfg *Config, out io.Writer) {
 			collectArgs = append(collectArgs, "--predicate", predicate)
 		}
 
-		collectCmd := exec.Command("log", collectArgs...)
+		collectCmd := exec.CommandContext(ctx, "log", collectArgs...)
 		collectCmd.Stderr = os.Stderr
 		if err := collectCmd.Run(); err != nil {
-			fatal("log collect failed: %v (is the device connected and unlocked?)", err)
+			return fmt.Errorf("log collect for %q from device %s failed: %w (is the device connected and unlocked?)", target, cfg.DeviceUDID, err)
 		}
 
 		fmt.Fprintf(os.Stderr, "Collected. Parsing archive...\n")
@@ -652,7 +672,7 @@ func runShow(target string, cfg *Config, out io.Writer) {
 			"--info", "--debug",
 		}
 	} else {
-		// Simulator / local: query system log directly
+		waitForSimulatorBoot(ctx, cfg.Device)
 		fmt.Fprintf(os.Stderr, "Showing logs (last %s) for %q\n", cfg.Last, target)
 		logShowArgs = []string{"show",
 			"--last", cfg.Last,
@@ -664,13 +684,13 @@ func runShow(target string, cfg *Config, out io.Writer) {
 
 	fmt.Fprintf(os.Stderr, "---\n")
 
-	showCmd := exec.Command("log", logShowArgs...)
+	showCmd := logCommand(ctx, cfg, logShowArgs...)
 	showStdout, err := showCmd.StdoutPipe()
 	if err != nil {
-		fatal("log show pipe: %v", err)
+		return fmt.Errorf("log show pipe for %q: %w", target, err)
 	}
 	if err := showCmd.Start(); err != nil {
-		fatal("log show failed: %v", err)
+		return fmt.Errorf("starting log show for %q: %w", target, err)
 	}
 
 	lines := make(chan LogLine, 256)
@@ -701,13 +721,16 @@ func runShow(target string, cfg *Config, out io.Writer) {
 		}
 	}
 
-	showCmd.Wait()
+	if err := showCmd.Wait(); err != nil && !hitLimit && ctx.Err() == nil {
+		return fmt.Errorf("log show for %q on simulator %s or device %s failed: %w", target, cfg.Device, cfg.DeviceUDID, err)
+	}
 
 	if count == 0 {
 		fmt.Fprintf(os.Stderr, "No matching log entries found.\n")
 	} else {
 		fmt.Fprintf(os.Stderr, "--- %d entries\n", count)
 	}
+	return nil
 }
 
 // streamLines reads raw lines from a reader and sends them as LogLines.

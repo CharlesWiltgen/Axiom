@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { test } from "node:test";
 import matter from "gray-matter";
 import { CURSOR_AGENT_ADVISORIES, transformAgent } from "./agents.ts";
@@ -77,7 +78,7 @@ test("maps all six canonical agent hooks to exact owner-specific Cursor advisori
     "build-optimizer": {
       event: "PreToolUse",
       matcher: "Edit|Write",
-      advisory: "Before editing or writing a `.pbxproj` file, warn: \"Modifying Xcode project file. Ensure backup exists.\"",
+      advisory: "Before editing or writing a `.pbxproj` or `.xcproj` file, warn: \"Modifying Xcode project file. Ensure backup exists.\"",
     },
     "iap-implementation": {
       event: "PreToolUse",
@@ -114,6 +115,23 @@ test("maps all six canonical agent hooks to exact owner-specific Cursor advisori
     );
     assert.match(transformAgent(agent, "full").file.content, new RegExp(escapeRegExp(contract.advisory)), owner);
   }
+});
+
+test("build-optimizer hook command matches exactly the two Xcode project file names when TOOL_INPUT_FILE_PATH is set", () => {
+  const { command } = CURSOR_AGENT_ADVISORIES["build-optimizer"];
+  const warns = (path: string) =>
+    execFileSync("/bin/sh", ["-c", command], {
+      env: { ...process.env, TOOL_INPUT_FILE_PATH: path },
+      encoding: "utf8",
+    }).includes("Modifying Xcode project file");
+  const expected = {
+    "App.xcodeproj/project.pbxproj": true,
+    "App.xcodeproj/project.xcproj": true,
+    "App.xcodeproj/project.pbxproj.orig": false,
+    "App.xcodeproj/Sources/myxcproj": false,
+    "App/ContentView.swift": false,
+  };
+  assert.deepEqual(Object.fromEntries(Object.keys(expected).map((path) => [path, warns(path)])), expected);
 });
 
 test("fails closed when a mapped per-agent hook drifts or an unmapped owner gains hooks", () => {

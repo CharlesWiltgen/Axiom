@@ -5,7 +5,8 @@
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "axiom-mcp": "./dist/index.js"
+    "axiom-mcp": "./dist/index.js",
+    "xcproject": "./dist/bin/xcproject"
   },
   "files": [
     "dist",

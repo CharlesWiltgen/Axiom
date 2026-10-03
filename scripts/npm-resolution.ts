@@ -69,17 +69,20 @@ export function classifyNpmFailure(
   // would hide a real defect behind a skip.
   const printed = npmErrorCode(output);
   if (printed) {
-    if ((NETWORK_CODES as readonly string[]).includes(printed))
+    if ((NETWORK_CODES as readonly string[]).includes(printed)) {
       return "network";
-    if ((ENVIRONMENT_CODES as readonly string[]).includes(printed))
+    }
+    if ((ENVIRONMENT_CODES as readonly string[]).includes(printed)) {
       return "environment";
+    }
     return "resolution";
   }
   // npm itself missing from PATH is an environment problem, not a manifest one.
   // `test`/`test:full` run as bare `node scripts/pre-deploy.ts`, so a shell
   // without the mise shim lands here with a 127 and this message.
-  if (/(?:^|\n|:\s)[^\n]*npm: command not found/.test(output))
+  if (/(?:^|\n|:\s)[^\n]*npm: command not found/.test(output)) {
     return "environment";
+  }
   // Nothing to go on: a killed call is inconclusive, anything else is a failure.
   if (opts.timedOut) return "network";
   return NETWORK_CODES.some((code) => output.includes(code))
@@ -99,20 +102,28 @@ type NpmDryRunCleanupError = Error & {
   readonly __brand: "NpmDryRunCleanupError";
 };
 
+export function npmInstallEnvironment(
+  source: NodeJS.ProcessEnv,
+): NodeJS.ProcessEnv {
+  const env = { ...source };
+  // npm run exports this one-off option, which project installs reject. Keep
+  // project allowScripts and strict policy intact, matching a direct npm call.
+  delete env.npm_config_allow_scripts;
+  delete env.NPM_CONFIG_ALLOW_SCRIPTS;
+  return env;
+}
+
 export async function runNpmDryRun(
   cwd: string,
   opts: { timeoutMs?: number; env?: NodeJS.ProcessEnv } = {},
 ): Promise<NpmDryRunResult> {
   const timeoutMs = opts.timeoutMs ?? 120_000;
-  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0)
+  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
     throw new RangeError(
       `npm dry-run in ${cwd}: timeout must be positive and finite`,
     );
-  const env = { ...(opts.env ?? process.env) };
-  // npm run exports this one-off option, which project installs reject. Keep
-  // project allowScripts and strict policy intact, matching a direct npm call.
-  delete env.npm_config_allow_scripts;
-  delete env.NPM_CONFIG_ALLOW_SCRIPTS;
+  }
+  const env = npmInstallEnvironment(opts.env ?? process.env);
   return new Promise((resolve, reject) => {
     const child = spawn("npm", ["install", "--omit=dev", "--dry-run"], {
       cwd,
@@ -142,7 +153,9 @@ export async function runNpmDryRun(
         settled = true;
         const failure: NpmDryRunCleanupError = Object.assign(
           new Error(
-            `npm dry-run: cannot stop owned process group ${child.pid} (${code ?? "unknown"})`,
+            `npm dry-run: cannot stop owned process group ${child.pid} (${
+              code ?? "unknown"
+            })`,
           ),
           { __brand: "NpmDryRunCleanupError" as const },
         );

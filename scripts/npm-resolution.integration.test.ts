@@ -1,10 +1,58 @@
 import { describe, it } from "node:test";
+import { spawnSync } from "node:child_process";
 import assert from "node:assert/strict";
-import { mkdtemp, writeFile, chmod, rm } from "node:fs/promises";
+import { chmod, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
-import { runNpmDryRun } from "./npm-resolution.ts";
+import { npmInstallEnvironment, runNpmDryRun } from "./npm-resolution.ts";
+
+describe("npmInstallEnvironment", () => {
+  it("allows a real fresh npm ci under an inherited npm run environment", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "axiom npm fresh install "));
+    const manifest = {
+      name: "axiom-npm-environment-fixture",
+      version: "1.0.0",
+      private: true,
+    };
+    try {
+      await writeFile(
+        join(directory, "package.json"),
+        JSON.stringify(manifest),
+      );
+      await writeFile(
+        join(directory, "package-lock.json"),
+        JSON.stringify({
+          name: manifest.name,
+          version: manifest.version,
+          lockfileVersion: 3,
+          packages: { "": manifest },
+        }),
+      );
+      const result = spawnSync("npm", [
+        "ci",
+        "--ignore-scripts",
+        "--dry-run",
+        "--no-audit",
+        "--no-fund",
+      ], {
+        cwd: directory,
+        timeout: 10_000,
+        encoding: "utf8",
+        env: npmInstallEnvironment({
+          ...process.env,
+          npm_config_allow_scripts: "*",
+          NPM_CONFIG_ALLOW_SCRIPTS: "*",
+          npm_config_strict_allow_scripts: "true",
+          npm_config_cache: join(directory, "cache"),
+        }),
+      });
+      assert.equal(result.status, 0, result.stderr);
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+});
 
 describe("runNpmDryRun", () => {
   it("stops a TERM-resistant npm process and its descendant at the deadline", async () => {
@@ -179,7 +227,9 @@ describe("runNpmDryRun", () => {
       const executable = join(directory, "npm");
       await writeFile(
         executable,
-        `#!${process.execPath}\nprocess.stdout.write('x'.repeat(${outputLimit * 2}));setInterval(()=>{},100);\n`,
+        `#!${process.execPath}\nprocess.stdout.write('x'.repeat(${
+          outputLimit * 2
+        }));setInterval(()=>{},100);\n`,
       );
       await chmod(executable, 0o755);
       const result = await runNpmDryRun(directory, {

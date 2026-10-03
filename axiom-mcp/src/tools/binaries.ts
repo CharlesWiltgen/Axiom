@@ -15,3 +15,8 @@
 export const MCP_TOOL_BINARIES = ['xcprof', 'xclog', 'xcsym'] as const;
 
 export type McpToolBinary = (typeof MCP_TOOL_BINARIES)[number];
+
+
+/** Read-only CLI used by distributed project-inspection workflows; no MCP wrapper. */
+export const MCP_WORKFLOW_BINARIES = ['xcproject'] as const;
+export const MCP_PACKAGED_BINARIES = [...MCP_TOOL_BINARIES, ...MCP_WORKFLOW_BINARIES] as const;

@@ -1,0 +1,149 @@
+{
+  "default-configuration": "Release",
+  "configurations": [
+    { "name": "Debug", "file": "Config/Debug.xcconfig" },
+    { "name": "Release", "file": "Config/Release.xcconfig" },
+  ],
+  "localizations": {
+    "development": "en",
+    "supported": [
+      "Base",
+    ],
+  },
+  "packages": [
+    {
+      "kind": "remote",
+      "repository": "https://example.invalid/Remote",
+      "version": {
+        "up-to-next-major-version": "1.0.0",
+      },
+    }, {
+      "kind": "local",
+      "path": "Packages/Local",
+    },
+  ],
+  "files": [
+    {
+      "kind": "group",
+      "path": "Config",
+      "children": [
+        { "path": "Base.xcconfig" },
+        { "path": "Debug.xcconfig" },
+        { "path": "Release.xcconfig" },
+      ],
+    }, {
+      "kind": "folder",
+      "path": "Sources",
+      "target-membership": [
+        "Extension",
+        "Primary",
+        "Support",
+      ],
+      "membership-exceptions": [
+        {
+          "target": "Extension",
+          "exclusions": [
+            "Excluded.swift",
+          ],
+        },
+      ],
+    },
+    { "path": "Shared.swift", "target-membership": [ "Primary/compile-sources" ] },
+    {
+      "kind": "group",
+      "name": "Products",
+      "children": [
+        { "path": "<PRODUCTS>/Primary.app", "id": "FFFFFFFFFFFFFFFFFFFFFFF1", "type": "wrapper.application", "index": false },
+        { "path": "<PRODUCTS>/Extension.appex", "id": "FFFFFFFFFFFFFFFFFFFFFFF2", "type": "wrapper.app-extension", "index": false },
+        { "path": "<PRODUCTS>/Support.framework", "id": "FFFFFFFFFFFFFFFFFFFFFFF3", "type": "wrapper.framework", "index": false },
+      ],
+    },
+  ],
+  "targets": [
+    {
+      "name": "Primary",
+      "id": "AAAAAAAAAAAAAAAAAAAAAAA1",
+      "product": "Products/Primary.app",
+      "product-type": "application",
+      "build-phases": [
+        "compile-sources",
+        "frameworks",
+        "resources",
+        {
+          "kind": "script",
+          "name": "OneLine",
+          "log-environment-variables": true,
+          "shell": "/bin/sh",
+          "script": "echo fixture",
+        }, {
+          "kind": "script",
+          "name": "MultiLine",
+          "log-environment-variables": true,
+          "shell": "/bin/sh",
+          "script": [
+            "echo first",
+            "echo second",
+          ],
+        },
+      ],
+      "package-product-members": [
+        {
+          "package": "Local",
+          "product-name": "LocalProduct",
+          "build-phase": { "build-phase": "frameworks" },
+        }, {
+          "package": "Remote",
+          "product-name": "RemoteProduct",
+          "build-phase": { "build-phase": "frameworks" },
+        },
+      ],
+      "build-settings": {
+        "IPHONEOS_DEPLOYMENT_TARGET": "26.5",
+        "PRODUCT_BUNDLE_IDENTIFIER": "org.example.Primary",
+      },
+    }, {
+      "name": "Extension",
+      "id": "AAAAAAAAAAAAAAAAAAAAAAA2",
+      "product": "Products/Extension.appex",
+      "product-type": "app-extension",
+      "build-phases": [
+        "compile-sources",
+        "frameworks",
+        "resources",
+      ],
+      "build-settings": {
+        "IPHONEOS_DEPLOYMENT_TARGET[config=Debug]": "26.2",
+        "IPHONEOS_DEPLOYMENT_TARGET[config=Debug][sdk=iphonesimulator*]": "26.4",
+        "IPHONEOS_DEPLOYMENT_TARGET[config=Release]": "26.3",
+        "OTHER_SWIFT_FLAGS[config=Debug][arch=arm64]": "$(inherited) -DARM64",
+        "PRODUCT_BUNDLE_IDENTIFIER": "org.example.Extension",
+      },
+    }, {
+      "name": "Support",
+      "id": "AAAAAAAAAAAAAAAAAAAAAAA3",
+      "product": "Products/Support.framework",
+      "product-type": "framework",
+      "build-phases": [
+        "compile-sources",
+        "frameworks",
+        "resources",
+      ],
+      "build-settings": {
+        "PRODUCT_BUNDLE_IDENTIFIER": "org.example.Support",
+      },
+    },
+  ],
+  "build-settings": {
+    "DEBUG_INFORMATION_FORMAT[config=Debug]": "dwarf",
+    "GCC_PREPROCESSOR_DEFINITIONS[config=Debug]": [
+      "$(inherited)",
+      "DEBUG=1",
+    ],
+    "ONLY_ACTIVE_ARCH[config=Debug]": "YES",
+    "PRODUCT_NAME": "$(TARGET_NAME)",
+    "SDKROOT": "iphoneos",
+    "SWIFT_COMPILATION_MODE[config=Debug]": "singlefile",
+    "SWIFT_COMPILATION_MODE[config=Release]": "wholemodule",
+    "SWIFT_VERSION": "6.0",
+  },
+}

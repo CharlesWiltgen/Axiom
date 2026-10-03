@@ -38,9 +38,10 @@ type cpThread struct {
 }
 
 type cpBacktrace struct {
-	ID     string    `xml:"id,attr"`
-	Ref    string    `xml:"ref,attr"`
-	Frames []cpFrame `xml:"backtrace>frame"`
+	ID           string    `xml:"id,attr"`
+	Ref          string    `xml:"ref,attr"`
+	Frames       []cpFrame `xml:"backtrace>frame"`
+	DirectFrames []cpFrame `xml:"frame"`
 }
 
 type cpFrame struct {
@@ -154,8 +155,12 @@ func (r *resolver) backtrace(bt cpBacktrace) []Frame {
 	if bt.Ref != "" {
 		return r.backtraces[bt.Ref]
 	}
-	frames := make([]Frame, 0, len(bt.Frames))
-	for _, f := range bt.Frames {
+	input := bt.Frames
+	if len(bt.DirectFrames) > 0 {
+		input = bt.DirectFrames
+	}
+	frames := make([]Frame, 0, len(input))
+	for _, f := range input {
 		frames = append(frames, r.frame(f))
 	}
 	if bt.ID != "" {

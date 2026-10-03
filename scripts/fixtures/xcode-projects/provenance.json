@@ -1,0 +1,23 @@
+{
+  "origin": "New disposable project; pbxproj input constructed from synthetic values and saved to xcproj by Xcode. No private project content.",
+  "xcode": "27.2 beta 2 (27B5028f)",
+  "conversion": [
+    "xcrun",
+    "xcodebuild",
+    "-project",
+    "Example.xcodeproj",
+    "-convert-project",
+    "Xcode Project"
+  ],
+  "conversion_exit": 0,
+  "apple_revision": "296395785f7544f27ef929006b79af57e67092d3",
+  "sha256": {
+    "pbxproj": "c592bb25458919c0c0366ddbada9bf361bf86202c155cfa2be9d38c3c1376f65",
+    "xcproj": "7218e40387e2704f03bd5a4949af50305f177f3bdabd20e57e14621cf89e4483"
+  },
+  "limits": [
+    "Parser/inspection fixtures; synthetic remote URL is intentionally unresolvable.",
+    "No app build, package resolution, or runtime acceptance.",
+    "Effective-setting checks require a package-free disposable derivative."
+  ]
+}

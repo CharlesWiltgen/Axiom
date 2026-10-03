@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "inputs": {
+    "scripts/swift-tool.ts": "d12d95e0d424f1627b7c24d27a044d497a548a696ba9414bbe4758065fb9a74b",
+    "tools/xcproject/Makefile": "193e8de205d99696768ebd25e651f78c8a98aca320981a19613fed6865884a29",
+    "tools/xcproject/Package.resolved": "e043b1140f24ff190cfb0310083fd5f1a063e74ec591eb71bf7abcd194a0c890",
+    "tools/xcproject/Package.swift": "62ed4319a173e8405e8aa1bc62a57d455ae0e86791be90e3e795ce1ff527d6d1",
+    "tools/xcproject/Sources/xcproject/main.swift": "589a46b8f6f3c55b011dc25a87cf2bb1d9b122267f1b107cdf6ca3e87857aad8",
+    "tools/xcproject/THIRD_PARTY_LICENSE.txt": "b849838656e86e5852a546e55b10b941633ac7790eb39371f7989e55d39d40f6"
+  },
+  "binary": "26757a8a9f440a5782a742d6cc4d326e2bc8879d3bfe619a26d0799ef04c8e8e",
+  "license": "b849838656e86e5852a546e55b10b941633ac7790eb39371f7989e55d39d40f6"
+}

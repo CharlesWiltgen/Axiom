@@ -26,29 +26,37 @@ Comprehensive build performance optimization with Build Timeline analysis, type 
 
 ## What This Skill Provides
 
+### Project Formats and Effective Settings
+
+Inspect both OpenStep `project.pbxproj` and JSON5 `project.xcproj` with explicit project, target, configuration and SDK selection. `xcproject` preserves structured declarations and verifies captured `xcodebuild -showBuildSettings -json` values. When unavailable, read both-format declarations and xcconfig include chains directly and label unresolved values.
+
+Xcode evaluates inherited settings, conditional keys and defaults. A query can resolve packages or write state, so it requires authorized scope and a fresh capture. Scripts retain scalar or array bodies, and file/folder membership includes synchronized-folder exceptions. General settings output does not establish architecture-conditioned compiler flags; verify those against the actual compiler invocation.
+
 ### Build Timeline Analysis
+
 - **Critical Path Optimization** – Identify and shorten the longest chain of dependent tasks
 - **Timeline Visualization** – Interpret empty vertical space (idle cores), long horizontal bars (slow tasks)
 - **Parallelization Gaps** – Detect targets waiting unnecessarily
 
 ### 10 Optimization Patterns
 
-| Pattern | What It Does | Impact |
-|---------|--------------|--------|
-| 1. Type Checking | Identify slow functions with `-warn-long-function-bodies` | 10-30% |
-| 2. Build Phase Scripts | Conditional execution, sandboxing, parallel scripts | 5-10s saved |
-| 3. Compilation Mode | Incremental (Debug) vs Whole Module (Release) | 40-60% |
-| 4. Build Active Architecture | Only build for current device in Debug | 40-50% |
-| 5. Debug Information | DWARF (Debug) vs DWARF with dSYM (Release) | 3-5s saved |
-| 6. Target Parallelization | Enable parallel builds in scheme | ~2x faster |
-| 7. Emit Module | Xcode 14+ automatic optimization | 20-40% |
-| 8. Eager Linking | Xcode 14+ automatic optimization | — |
-| 9. Compilation Caching | Xcode 26 cache across clean builds | 20-40% |
-| 10. Explicitly Built Modules | Three-phase build, reduce module variants | 10-30% |
+| Pattern                      | What It Does                                              | Impact      |
+| ---------------------------- | --------------------------------------------------------- | ----------- |
+| 1. Type Checking             | Identify slow functions with `-warn-long-function-bodies` | 10-30%      |
+| 2. Build Phase Scripts       | Conditional execution, sandboxing, parallel scripts       | 5-10s saved |
+| 3. Compilation Mode          | Incremental (Debug) vs Whole Module (Release)             | 40-60%      |
+| 4. Build Active Architecture | Only build for current device in Debug                    | 40-50%      |
+| 5. Debug Information         | DWARF (Debug) vs DWARF with dSYM (Release)                | 3-5s saved  |
+| 6. Target Parallelization    | Enable parallel builds in scheme                          | ~2x faster  |
+| 7. Emit Module               | Xcode 14+ automatic optimization                          | 20-40%      |
+| 8. Eager Linking             | Xcode 14+ automatic optimization                          | —           |
+| 9. Compilation Caching       | Xcode 26 cache across clean builds                        | 20-40%      |
+| 10. Explicitly Built Modules | Three-phase build, reduce module variants                 | 10-30%      |
 
 ### Xcode 26 Features
 
 **Compilation Caching** — Reuse compiled artifacts across clean builds:
+
 ```
 Build Settings → COMPILATION_CACHE_ENABLE_CACHING → YES
 ```
