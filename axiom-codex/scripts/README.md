@@ -2,13 +2,16 @@
 
 Run `node "<installed-axiom-root>/scripts/doctor.mjs"` from any working directory.
 Node.js 18 or later is required. The check reads this package and runs only the
-four bundled helpers' help commands, with a three-second limit per helper.
+bundled helpers' help commands, with a three-second limit per helper.
 It never launches or installs MCP servers, reads credentials or Codex settings,
 or changes hooks, trust, configuration, or the installed cache. Helper output is discarded.
 
 The JSON report separates local package integrity from live capabilities.
-`mcp.configuredVersion` is the exact startup pin, derived from Axiom's MCP
-package version; `observedVersion` is unknown without live host evidence.
+MCP startup is unpinned: `npx -y axiom-mcp` resolves the latest published
+release, so `mcp.status` is `unpinned` and `configuredVersion` is null. A
+configuration hand-edited to an exact version reports `pinned` with that version;
+other forms report `invalid`. `observedVersion` is unknown without live host
+evidence, and `versionMatch` compares it only against an exact pin.
 Hook files do not prove host compatibility or trust. Xcode integration is optional.
 Host trust, server connection, and Xcode availability remain `unknown` unless
 the caller explicitly exports sanitized, structured host metadata and supplies
@@ -20,7 +23,7 @@ Optional metadata (maximum 64 KiB):
 {
   "runtimeVersion": "0.154.0-alpha.6.2",
   "hookTrust": "trusted",
-  "mcp": { "status": "connected", "version": "27.1.3" },
+  "mcp": { "status": "connected", "version": "27.2.0" },
   "xcode": { "status": "unknown", "version": null }
 }
 ```

@@ -114,7 +114,6 @@ Choose execution mode from actual host capabilities and delegation policy:
 Auditor-to-skill mapping:
 
 - `accessibility-auditor` → `axiom-audit-accessibility` (`../axiom-audit-accessibility/SKILL.md`)
-- `build-fixer` → `axiom-fix-build` (`../axiom-fix-build/SKILL.md`)
 - `camera-auditor` → `axiom-audit-camera` (`../axiom-audit-camera/SKILL.md`)
 - `codable-auditor` → `axiom-audit-codable` (`../axiom-audit-codable/SKILL.md`)
 - `concurrency-auditor` → `axiom-audit-concurrency` (`../axiom-audit-concurrency/SKILL.md`)
@@ -138,7 +137,6 @@ Auditor-to-skill mapping:
 - `swiftui-layout-auditor` → `axiom-audit-swiftui-layout` (`../axiom-audit-swiftui-layout/SKILL.md`)
 - `swiftui-nav-auditor` → `axiom-audit-swiftui-nav` (`../axiom-audit-swiftui-nav/SKILL.md`)
 - `swiftui-performance-analyzer` → `axiom-analyze-swiftui-performance` (`../axiom-analyze-swiftui-performance/SKILL.md`)
-- `test-failure-analyzer` → `axiom-analyze-test-failures` (`../axiom-analyze-test-failures/SKILL.md`)
 - `testing-auditor` → `axiom-audit-testing` (`../axiom-audit-testing/SKILL.md`)
 - `textkit-auditor` → `axiom-audit-textkit` (`../axiom-audit-textkit/SKILL.md`)
 - `ux-flow-auditor` → `axiom-audit-ux-flow` (`../axiom-audit-ux-flow/SKILL.md`)

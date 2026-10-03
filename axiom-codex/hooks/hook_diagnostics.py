@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import atexit
-import fcntl
 import json
 import os
 import secrets
@@ -88,6 +87,10 @@ def _write(phase):
             or stat.S_IMODE(file.st_mode) != 0o600
         ):
             raise ValueError("private owned regular file required")
+        # Imported only for an enabled journal: fcntl does not exist on Windows, and
+        # an ImportError here is caught below like any other unavailable destination.
+        import fcntl
+
         deadline = time.monotonic() + 0.025
         while True:
             try:

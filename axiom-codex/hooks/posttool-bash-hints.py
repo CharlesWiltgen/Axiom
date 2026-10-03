@@ -51,7 +51,25 @@ import os
 import re
 import sys
 
-import hook_diagnostics
+try:
+    import hook_diagnostics
+except ImportError:  # Diagnostics are optional; a missing module must not break the hook.
+    import os as _os
+    from types import SimpleNamespace
+
+    def _diagnostics_unavailable(*_):
+        # Requested but unavailable: the same fixed notice as an unwritable journal.
+        if _os.environ.get("AXIOM_HOOK_DIAGNOSTICS_DIR"):
+            try:
+                _os.write(2, b"Axiom hook diagnostics unavailable.\n")
+            except OSError:
+                pass
+
+    hook_diagnostics = SimpleNamespace(
+        begin=_diagnostics_unavailable,
+        record_exception=lambda *_: None,
+        record_exit=lambda *_: None,
+    )
 
 # Pattern hints. Each entry is (compiled_regex, hint_text). Hints are
 # kept short — one line, names the skill or command to invoke. Order
@@ -201,6 +219,9 @@ _BUILD_FAILURE_RE = re.compile(
 #   Test:  5min — common test suites finish in <2min; >5min usually
 #          indicates parallelization opportunity.
 _SLOW_BUILD_MS = 60_000
+
+# Codex ships no /axiom:* commands; build-codex.ts maps each to the skill it emits.
+_CODEX_COMMANDS = {"/axiom:fix-build": "skill axiom-fix-build"}
 _SLOW_TEST_MS = 300_000
 
 
@@ -265,9 +286,12 @@ def main() -> int:
     hints = match_patterns(output) + duration_hints(command, output, duration_ms)
     if codex:
         if hints:
+            context = "\n".join(hints)
+            for command, skill in _CODEX_COMMANDS.items():
+                context = context.replace(command, skill)
             print(json.dumps({"hookSpecificOutput": {
                 "hookEventName": "PostToolUse",
-                "additionalContext": "\n".join(hints),
+                "additionalContext": context,
             }}, ensure_ascii=False))
     else:
         for hint in hints:

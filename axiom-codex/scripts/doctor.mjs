@@ -5,11 +5,14 @@ import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const VERSION = /^\d+\.\d+\.\d+(?:-[a-zA-Z0-9]+(?:\.[a-zA-Z0-9]+)*)?$/;
-const HELPERS = {
+// One non-mutating help probe per helper in the plugin's bin/; a test keeps the
+// keys equal to that directory, so a new helper cannot go unchecked.
+export const HELPERS = {
   xclog: ["list", "--help"],
   xcsym: ["--help"],
   xcui: ["--help"],
   xcprof: ["--help"],
+  xcproject: ["--help"],
 };
 const EVENTS = new Set([
   "SessionStart",
@@ -408,7 +411,7 @@ if (
         report.package.status !== "ok" ||
         report.skills.status !== "ok" ||
         report.hooks.status !== "ok" ||
-        report.mcp.status !== "pinned" ||
+        !["pinned", "unpinned"].includes(report.mcp.status) ||
         report.host.status === "invalid" ||
         Object.values(report.helpers).some(
           (helper) =>

@@ -6,7 +6,25 @@ import sys
 import os
 from datetime import datetime
 
-import hook_diagnostics
+try:
+    import hook_diagnostics
+except ImportError:  # Diagnostics are optional; a missing module must not break the hook.
+    import os as _os
+    from types import SimpleNamespace
+
+    def _diagnostics_unavailable(*_):
+        # Requested but unavailable: the same fixed notice as an unwritable journal.
+        if _os.environ.get("AXIOM_HOOK_DIAGNOSTICS_DIR"):
+            try:
+                _os.write(2, b"Axiom hook diagnostics unavailable.\n")
+            except OSError:
+                pass
+
+    hook_diagnostics = SimpleNamespace(
+        begin=_diagnostics_unavailable,
+        record_exception=lambda *_: None,
+        record_exit=lambda *_: None,
+    )
 
 hook_diagnostics.begin("session-start")
 
@@ -28,6 +46,13 @@ if not resolve_context_decision(os.getcwd(), os.environ.get("AXIOM_SESSION_CONTE
     sys.exit(0)
 
 if os.environ.get("AXIOM_HARNESS") == "codex":
+    # Name what this install actually ships, so a new helper is never left out.
+    try:
+        helpers = ", ".join(
+            sorted(n for n in os.listdir(os.path.join(plugin_root, "bin")) if not n.startswith("."))
+        )
+    except OSError:
+        helpers = "none found"
     context = f"""<EXTREMELY_IMPORTANT>
 Axiom provides Apple-platform development guidance. For any iOS/Swift task, read
 all applicable Axiom routers BEFORE responding or acting, including clarifications.
@@ -49,7 +74,7 @@ that supports that target. Do not present newer APIs as universally deployable.
 Use only capabilities exposed by this session. Load auditor procedures as skills;
 execute them sequentially when collaboration is unavailable. If collaboration tools
 are present, respect their documented concurrency limits and the requested model.
-Resolve helper paths under `{plugin_root}/bin/` (xclog, xcsym, xcui, xcprof), checking
+Resolve helper paths under `{plugin_root}/bin/` ({helpers}), checking
 existence, executable permission and a non-mutating help/version probe before use.
 Do not assume helpers are on PATH. Optional Xcode/MCP capabilities need detection.
 </EXTREMELY_IMPORTANT>"""
