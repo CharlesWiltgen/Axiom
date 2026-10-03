@@ -78,12 +78,14 @@ export default function axiomPi(pi: ExtensionAPI): void {
   // --- Pre-read hook: route crash-file Reads to xcsym ----------------------
   // Fires before the Read executes (advisory, never blocks) so the agent is
   // told to symbolicate with xcsym before relying on the raw, unsymbolicated file.
+  // Project detection is a synchronous filesystem scan, so it runs only once a
+  // hint exists — never on the tool calls that produce nothing.
   pi.on("tool_call", (event: ToolCallEvent, ctx) => {
-    if (!resolveContextDecision(ctx.cwd, process.env.AXIOM_SESSION_CONTEXT)) return;
     if (event.toolName !== "read") return;
     const p = inputPath(event.input);
     const hint = p ? crashFileHint(p) : null;
-    if (hint) pi.sendMessage({ customType: "axiom-crash-hint", content: hint, display: true });
+    if (!hint || !resolveContextDecision(ctx.cwd, process.env.AXIOM_SESSION_CONTEXT)) return;
+    pi.sendMessage({ customType: "axiom-crash-hint", content: hint, display: true });
   });
 
   // --- Post-tool hooks: Swift guardrails + Bash skill hints ----------------
@@ -92,8 +94,8 @@ export default function axiomPi(pi: ExtensionAPI): void {
   // agentically hazardous (a silent reformat desyncs the file from the model's
   // in-memory view and breaks its follow-up edits).
   pi.on("tool_result", (event: ToolResultEvent, ctx) => {
-    if (!resolveContextDecision(ctx.cwd, process.env.AXIOM_SESSION_CONTEXT)) return;
     const hint = toolResultHint(event, (p) => fs.readFileSync(p, "utf8"));
-    if (hint) return { content: [...event.content, { type: "text", text: hint }] };
+    if (!hint || !resolveContextDecision(ctx.cwd, process.env.AXIOM_SESSION_CONTEXT)) return;
+    return { content: [...event.content, { type: "text", text: hint }] };
   });
 }
