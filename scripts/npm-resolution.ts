@@ -17,8 +17,14 @@
  */
 
 import { spawn } from "node:child_process";
+import { setTimeout as delay } from "node:timers/promises";
 
-/** npm's error codes for "the registry could not be reached". */
+/**
+ * npm's error codes for "the registry could not be reached": npm's own network
+ * group (lib/utils/error-message.js), other socket failures, and registry-side
+ * HTTP failures, which npm-registry-fetch prints as `E${status}`. E404 is absent
+ * on purpose: a missing package is a manifest defect.
+ */
 const NETWORK_CODES = [
   "ENOTFOUND",
   "ECONNREFUSED",
@@ -26,13 +32,25 @@ const NETWORK_CODES = [
   "ENETUNREACH",
   "EAI_AGAIN",
   "ERR_SOCKET_TIMEOUT",
+  "ECONNRESET",
+  "EAI_FAIL",
+  "EHOSTUNREACH",
+  "ECONNABORTED",
+  "EPIPE",
+  "E429",
+  "E500",
+  "E502",
+  "E503",
+  "E504",
 ] as const;
 
 /**
  * Codes for a broken local environment rather than a broken dependency graph —
  * measured: an unwritable npm cache (the root-owned `~/.npm` classic) reports
  * EACCES, and a full disk reports ENOSPC. Reporting either as "your manifest
- * does not resolve" sends the reader to the wrong file.
+ * does not resolve" sends the reader to the wrong file. Node's TLS codes appear
+ * behind an intercepting proxy. ENOBUFS (runNpmDryRun's own output cap) is NOT
+ * here: npm prints its code last, so an overflow can hide a real ERESOLVE.
  */
 const ENVIRONMENT_CODES = [
   "EACCES",
@@ -40,6 +58,11 @@ const ENVIRONMENT_CODES = [
   "ENOSPC",
   "EMFILE",
   "EROFS",
+  "SELF_SIGNED_CERT_IN_CHAIN",
+  "UNABLE_TO_GET_ISSUER_CERT_LOCALLY",
+  "UNABLE_TO_VERIFY_LEAF_SIGNATURE",
+  "DEPTH_ZERO_SELF_SIGNED_CERT",
+  "CERT_HAS_EXPIRED",
 ] as const;
 
 export type NpmFailureKind = "network" | "environment" | "resolution";
@@ -85,7 +108,8 @@ export function classifyNpmFailure(
   }
   // Nothing to go on: a killed call is inconclusive, anything else is a failure.
   if (opts.timedOut) return "network";
-  return NETWORK_CODES.some((code) => output.includes(code))
+  // Whole codes only: short ones such as E500 or EPIPE occur inside unrelated text.
+  return NETWORK_CODES.some((code) => new RegExp(`\\b${code}\\b`).test(output))
     ? "network"
     : "resolution";
 }
@@ -138,28 +162,46 @@ export async function runNpmDryRun(
     let timedOut = false;
     let errorCode: string | undefined;
     let settled = false;
+    let finishing = false;
     let leaderStatus: number | null | undefined;
-    const stop = () => {
-      if (!child.pid) return;
-      try {
-        process.kill(-child.pid, "SIGKILL");
-      } catch (error) {
-        const code = (error as NodeJS.ErrnoException).code;
-        if (code === "ESRCH") return;
-        clearTimeout(timer);
-        child.stdout.destroy();
-        child.stderr.destroy();
-        child.unref();
-        settled = true;
-        const failure: NpmDryRunCleanupError = Object.assign(
-          new Error(
-            `npm dry-run: cannot stop owned process group ${child.pid} (${
-              code ?? "unknown"
-            })`,
-          ),
-          { __brand: "NpmDryRunCleanupError" as const },
-        );
-        reject(failure);
+    const fail = (code: string | undefined) => {
+      clearTimeout(timer);
+      child.stdout.destroy();
+      child.stderr.destroy();
+      child.unref();
+      settled = true;
+      const failure: NpmDryRunCleanupError = Object.assign(
+        new Error(
+          `npm dry-run: cannot stop owned process group ${child.pid} (${
+            code ?? "unknown"
+          })`,
+        ),
+        { __brand: "NpmDryRunCleanupError" as const },
+      );
+      reject(failure);
+    };
+    // Darwin's kill(-pgid) answers EPERM while every remaining member is an
+    // unreaped zombie, such as a descendant the previous SIGKILL ended before
+    // launchd reaped it. Retry until the group is gone or a signal lands; EPERM
+    // that outlasts the bound is a real failure.
+    const stop = async (): Promise<boolean> => {
+      if (!child.pid) return true;
+      const deadline = performance.now() + 1000;
+      for (;;) {
+        // The exit and close handlers can both be retrying; once either settles, stop.
+        if (settled) return false;
+        try {
+          process.kill(-child.pid, "SIGKILL");
+          return true;
+        } catch (error) {
+          const code = (error as NodeJS.ErrnoException).code;
+          if (code === "ESRCH") return true;
+          if (code !== "EPERM" || performance.now() >= deadline) {
+            if (!settled) fail(code);
+            return false;
+          }
+        }
+        await delay(10);
       }
     };
     const timer = setTimeout(() => {
@@ -182,22 +224,24 @@ export async function runNpmDryRun(
       }
     };
     const finish = (status: number | null, closeStreams = false) => {
-      if (settled) return;
+      if (settled || finishing) return;
+      finishing = true;
       clearTimeout(timer);
-      stop();
-      if (settled) return;
-      settled = true;
-      if (closeStreams) {
-        child.stdout.destroy();
-        child.stderr.destroy();
-        child.unref();
-      }
-      resolve({
-        stdout: Buffer.concat(stdout).toString("utf8"),
-        stderr: Buffer.concat(stderr).toString("utf8"),
-        status,
-        timedOut,
-        errorCode,
+      void stop().then((stopped) => {
+        if (!stopped || settled) return;
+        settled = true;
+        if (closeStreams) {
+          child.stdout.destroy();
+          child.stderr.destroy();
+          child.unref();
+        }
+        resolve({
+          stdout: Buffer.concat(stdout).toString("utf8"),
+          stderr: Buffer.concat(stderr).toString("utf8"),
+          status,
+          timedOut,
+          errorCode,
+        });
       });
     };
     child.stdout.on("data", (buffer: Buffer) => capture(stdout, buffer));
@@ -209,7 +253,7 @@ export async function runNpmDryRun(
     child.once("exit", (status) => {
       if (settled) return;
       leaderStatus = status;
-      stop();
+      void stop();
     });
     child.once("close", (status) => finish(status));
   });

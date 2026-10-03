@@ -1,7 +1,6 @@
 {
   "schema": 1,
   "inputs": {
-    "scripts/swift-tool.ts": "d12d95e0d424f1627b7c24d27a044d497a548a696ba9414bbe4758065fb9a74b",
     "tools/xcproject/Makefile": "193e8de205d99696768ebd25e651f78c8a98aca320981a19613fed6865884a29",
     "tools/xcproject/Package.resolved": "e043b1140f24ff190cfb0310083fd5f1a063e74ec591eb71bf7abcd194a0c890",
     "tools/xcproject/Package.swift": "62ed4319a173e8405e8aa1bc62a57d455ae0e86791be90e3e795ce1ff527d6d1",

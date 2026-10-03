@@ -41,6 +41,14 @@ function fixture() {
 }
 
 describe("Swift tool build provenance", () => {
+  it("records only the files that build xcproject, not the checker that reads the record", () => {
+    // Listing the checker made any edit to it demand a rebuild of an unchanged binary.
+    assert.deepEqual(
+      Object.keys(swiftToolInputs(process.cwd())).filter((file) => !file.startsWith("tools/xcproject/")),
+      [],
+    );
+  });
+
   for (
     const mutation of [
       "clean",
@@ -136,11 +144,13 @@ describe("checkCodexToolArtifacts", () => {
   for (
     const mutation of [
       "clean",
+      "finder-dotfile",
       "missing",
       "changed",
       "unstaged",
       "staged-mode",
       "staged-license",
+      "staged-binary",
       "both-staged-nonexec",
     ] as const
   ) {
@@ -201,8 +211,20 @@ describe("checkCodexToolArtifacts", () => {
             path.join(root, license),
           );
         }
+        if (mutation === "finder-dotfile") {
+          // Gitignored, so Finder can create it unseen; it is not a helper.
+          fs.writeFileSync(path.join(root, ".claude-plugin/plugins/axiom/bin/.DS_Store"), "finder");
+        }
+        if (mutation === "staged-binary") {
+          fs.appendFileSync(path.join(root, binary), "changed");
+          execFileSync("git", ["-C", root, "add", binary]);
+          fs.copyFileSync(
+            path.join(root, ".claude-plugin/plugins/axiom/bin/xcproject"),
+            path.join(root, binary),
+          );
+        }
         const problems = checkCodexToolArtifacts(root, true);
-        if (mutation === "clean") assert.deepEqual(problems, []);
+        if (mutation === "clean" || mutation === "finder-dotfile") assert.deepEqual(problems, []);
         else {assert.ok(
             problems.length > 0,
             `${mutation} must fail distribution validation`,

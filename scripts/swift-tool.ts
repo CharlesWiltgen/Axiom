@@ -9,12 +9,13 @@ const plugin = ".claude-plugin/plugins/axiom";
 const recordPath = `${plugin}/build-info/xcproject.json`;
 const binaryPath = `${plugin}/bin/xcproject`;
 const licensePath = `${plugin}/licenses/xcproject.txt`;
+// Files that determine the binary. This checker is deliberately absent: it never
+// reaches the binary, and listing it made every edit here demand a needless rebuild.
 const fixedInputs = [
   "tools/xcproject/Package.swift",
   "tools/xcproject/Package.resolved",
   "tools/xcproject/Makefile",
   "tools/xcproject/THIRD_PARTY_LICENSE.txt",
-  "scripts/swift-tool.ts",
 ];
 
 function sha256(data: Buffer): string {
@@ -142,9 +143,10 @@ export function checkCodexToolArtifacts(
   const problems: string[] = [];
   let files: string[];
   try {
-    files = fs.readdirSync(path.join(root, plugin, "bin")).map((name) =>
-      `bin/${name}`
-    );
+    // Same filter as build-codex.ts and session-start.py: dotfiles are not helpers.
+    files = fs.readdirSync(path.join(root, plugin, "bin"))
+      .filter((name) => !name.startsWith("."))
+      .map((name) => `bin/${name}`);
   } catch (err) {
     return [
       `Cannot enumerate canonical helper binaries: ${(err as Error).message}`,
@@ -181,7 +183,9 @@ export function checkCodexToolArtifacts(
           (file.startsWith("bin/") &&
             entries.some((entry) => entry.split(" ")[0] !== "100755")) ||
           entries[0].split(" ")[0] !== entries[1].split(" ")[0] ||
-          !readIndex(root, canonical).equals(readIndex(root, generated))
+          // Blob SHAs from the same ls-files call; equal SHAs mean equal bytes,
+          // without reading ~65 MB of binaries through git show.
+          entries[0].split(" ")[1] !== entries[1].split(" ")[1]
         ) problems.push(`${generated} differs from canonical in the Git index`);
       }
     } catch (err) {

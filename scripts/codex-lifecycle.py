@@ -51,6 +51,26 @@ OFFLOAD = (
 )
 
 
+def signal_group(pgid, signum, bound=1.0, reap=None):
+    # Darwin's killpg answers EPERM while every remaining member is an unreaped
+    # zombie. Retry until the group is gone or a signal lands; EPERM that
+    # outlasts the bound is a real failure. When that zombie may be the caller's
+    # own exited leader, only the caller can reap it, so pass reap (Popen.poll).
+    deadline = time.monotonic() + bound
+    while True:
+        try:
+            os.killpg(pgid, signum)
+            return
+        except ProcessLookupError:
+            return
+        except PermissionError:
+            if time.monotonic() >= deadline:
+                raise
+            if reap is not None:
+                reap()
+        time.sleep(0.01)
+
+
 def run_command(command, env, timeout):
     process = subprocess.Popen(
         command,
@@ -66,10 +86,7 @@ def run_command(command, env, timeout):
             raise subprocess.CalledProcessError(process.returncode, command)
         return subprocess.CompletedProcess(command, process.returncode, stdout, stderr)
     finally:
-        try:
-            os.killpg(process.pid, signal.SIGKILL)
-        except ProcessLookupError:
-            pass
+        signal_group(process.pid, signal.SIGKILL, reap=process.poll)
         process.wait(timeout=3)
         process.stdout.close()
         process.stderr.close()
@@ -223,22 +240,13 @@ class Runner:
         return response["result"]
 
     def close(self):
-        try:
-            os.killpg(self.process.pid, signal.SIGTERM)
-        except ProcessLookupError:
-            pass
+        signal_group(self.process.pid, signal.SIGTERM, reap=self.process.poll)
         try:
             self.process.wait(timeout=3)
         except subprocess.TimeoutExpired:
-            try:
-                os.killpg(self.process.pid, signal.SIGKILL)
-            except ProcessLookupError:
-                pass
+            signal_group(self.process.pid, signal.SIGKILL, reap=self.process.poll)
             self.process.wait(timeout=3)
-        try:
-            os.killpg(self.process.pid, signal.SIGKILL)
-        except ProcessLookupError:
-            pass
+        signal_group(self.process.pid, signal.SIGKILL, reap=self.process.poll)
         self.selector.close()
         self.process.stdin.close()
         self.process.stdout.close()

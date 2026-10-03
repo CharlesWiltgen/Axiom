@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import { spawnSync } from "node:child_process";
 import assert from "node:assert/strict";
-import { chmod, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { chmod, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
@@ -153,6 +153,89 @@ describe("runNpmDryRun", () => {
       }
     });
   }
+
+  // Darwin's kill(-pgid) answers EPERM while every remaining member is an unreaped
+  // zombie. The fake npm leaves exactly that: a helper forks a child that exits at
+  // once, moves itself to a new group and holds the zombie unreaped for holdSeconds.
+  const zombieHoldingNpm = async (directory: string, holdSeconds: number) => {
+    const python = spawnSync("python3", ["-c", "import sys; print(sys.executable)"], {
+      encoding: "utf8",
+    }).stdout.trim();
+    const ready = join(directory, "holder-pid");
+    const holder = [
+      "import os, sys, time",
+      "if os.fork() == 0:",
+      "    os._exit(0)",
+      "os.setpgid(0, 0)",
+      "open(sys.argv[1] + '.tmp', 'w').write(str(os.getpid()))",
+      "os.rename(sys.argv[1] + '.tmp', sys.argv[1])",
+      "time.sleep(float(sys.argv[2]))",
+    ].join("\n");
+    const executable = join(directory, "npm");
+    await writeFile(
+      executable,
+      `#!${process.execPath}\nconst {spawn}=require('node:child_process');const fs=require('node:fs');\nspawn(${JSON.stringify(python)},['-c',${JSON.stringify(holder)},${JSON.stringify(ready)},'${holdSeconds}'],{stdio:'ignore'});\nconst until=Date.now()+5000;while(!fs.existsSync(${JSON.stringify(ready)})&&Date.now()<until)Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,10);\nprocess.exit(0);\n`,
+    );
+    await chmod(executable, 0o755);
+    return ready;
+  };
+  const killHolder = async (ready: string) => {
+    try {
+      process.kill(Number(await readFile(ready, "utf8")), "SIGKILL");
+    } catch (error) {
+      const code = (error as NodeJS.ErrnoException).code;
+      if (code !== "ESRCH" && code !== "ENOENT") throw error;
+    }
+  };
+
+  it("finishes once a zombie-only process group is reaped", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "axiom npm zombie group "));
+    const ready = await zombieHoldingNpm(directory, 0.4);
+    try {
+      const result = await runNpmDryRun(directory, {
+        timeoutMs: 3000,
+        env: { ...process.env, PATH: directory },
+      });
+      assert.deepEqual(
+        {
+          status: result.status,
+          timedOut: result.timedOut,
+          errorCode: result.errorCode,
+        },
+        { status: 0, timedOut: false, errorCode: undefined },
+      );
+    } finally {
+      await killHolder(ready);
+      await rm(directory, { recursive: true });
+    }
+  });
+
+  it(
+    "rejects only after retrying a group that stays unsignalable",
+    { skip: process.platform !== "darwin" },
+    async () => {
+      const directory = await mkdtemp(join(tmpdir(), "axiom npm held zombie "));
+      const ready = await zombieHoldingNpm(directory, 5);
+      try {
+        await assert.rejects(
+          runNpmDryRun(directory, {
+            timeoutMs: 3000,
+            env: { ...process.env, PATH: directory },
+          }),
+          { __brand: "NpmDryRunCleanupError", message: /EPERM/ },
+        );
+        // Measured from the zombie's creation, so slow process startup cannot
+        // stand in for the retry window.
+        assert.ok(
+          Date.now() - (await stat(ready)).mtimeMs >= 900,
+          "EPERM was not retried",
+        );
+      } finally {
+        await killHolder(ready);
+        await rm(directory, { recursive: true });
+      }
+    },
+  );
 
   it("executes the documented dry-run arguments directly from the requested directory", async () => {
     const directory = await mkdtemp(join(tmpdir(), "axiom npm args "));

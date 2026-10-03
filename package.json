@@ -31,7 +31,7 @@
     "test:cursor": "node --test 'scripts/cursor/**/*.test.ts'",
     "test:full": "node scripts/pre-deploy.ts",
     "test:routing": "node scripts/test-routing.ts",
-    "test:unit": "node --test 'scripts/**/*.test.ts'"
+    "test:unit": "node --test 'scripts/**/*.test.ts' 'tools/*/*.test.ts'"
   },
   "devDependencies": {
     "gray-matter": "^4.0.3",

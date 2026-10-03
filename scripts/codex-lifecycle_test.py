@@ -1,9 +1,11 @@
 import importlib.util
 import json
 import os
+import signal
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 import unittest
 from pathlib import Path
@@ -317,6 +319,68 @@ class LifecycleTests(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 2)
         self.assertIn(b"--run", result.stderr)
+
+    def zombie_only_group(self):
+        pid = os.fork()
+        if pid == 0:
+            os.setpgid(0, 0)
+            os._exit(0)
+        try:
+            os.setpgid(pid, pid)
+        except OSError:
+            pass
+        time.sleep(0.1)
+        try:
+            with self.assertRaises(PermissionError):
+                os.killpg(pid, 0)
+        except BaseException:
+            os.waitpid(pid, 0)
+            raise
+        return pid
+
+    @unittest.skipUnless(
+        sys.platform == "darwin", "Darwin answers EPERM for zombie-only groups"
+    )
+    def test_signal_group_waits_for_a_zombie_only_group_to_be_reaped(self):
+        pid = self.zombie_only_group()
+        reaper = threading.Timer(0.2, os.waitpid, (pid, 0))
+        reaper.start()
+        start = time.monotonic()
+        try:
+            lifecycle.signal_group(pid, signal.SIGKILL)
+        finally:
+            reaper.join()
+        self.assertGreaterEqual(time.monotonic() - start, 0.15)
+        with self.assertRaises(ProcessLookupError):
+            os.killpg(pid, 0)
+
+    @unittest.skipUnless(
+        sys.platform == "darwin", "Darwin answers EPERM for zombie-only groups"
+    )
+    def test_signal_group_reaps_its_own_exited_leader(self):
+        pid = self.zombie_only_group()
+        try:
+            lifecycle.signal_group(
+                pid, signal.SIGKILL, bound=0.3, reap=lambda: os.waitpid(pid, os.WNOHANG)
+            )
+        except BaseException:
+            os.waitpid(pid, 0)
+            raise
+        with self.assertRaises(ProcessLookupError):
+            os.killpg(pid, 0)
+
+    @unittest.skipUnless(
+        sys.platform == "darwin", "Darwin answers EPERM for zombie-only groups"
+    )
+    def test_signal_group_raises_when_eperm_outlasts_the_bound(self):
+        pid = self.zombie_only_group()
+        try:
+            start = time.monotonic()
+            with self.assertRaises(PermissionError):
+                lifecycle.signal_group(pid, signal.SIGKILL, bound=0.2)
+            self.assertGreaterEqual(time.monotonic() - start, 0.2)
+        finally:
+            os.waitpid(pid, 0)
 
     def test_retains_launch_failure(self):
         with tempfile.TemporaryDirectory() as root:

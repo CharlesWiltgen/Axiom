@@ -40,7 +40,14 @@ describe("classifyNpmFailure", () => {
   });
 
   it("treats a genuinely unreachable registry as network", () => {
-    for (const code of ["ENOTFOUND", "ECONNREFUSED", "ETIMEDOUT", "ENETUNREACH", "EAI_AGAIN"]) {
+    // npm's own network group (lib/utils/error-message.js: ECONNRESET, ENOTFOUND,
+    // ETIMEDOUT, ERR_SOCKET_TIMEOUT, EAI_FAIL), other socket failures, and registry
+    // server errors, which npm-registry-fetch reports as `E${status}`.
+    for (const code of [
+      "ENOTFOUND", "ECONNREFUSED", "ETIMEDOUT", "ENETUNREACH", "EAI_AGAIN", "ERR_SOCKET_TIMEOUT",
+      "ECONNRESET", "EAI_FAIL", "EHOSTUNREACH", "ECONNABORTED", "EPIPE",
+      "E429", "E500", "E502", "E503", "E504",
+    ]) {
       assert.equal(
         classifyNpmFailure(`npm error code ${code}\nnpm error network request to https://registry.npmjs.org failed`),
         "network",
@@ -75,6 +82,31 @@ describe("classifyNpmFailure", () => {
     assert.equal(classifyNpmFailure("npm error code EPERM"), "environment");
     assert.equal(classifyNpmFailure("npm error code ENOSPC"), "environment");
     assert.equal(classifyNpmFailure("/bin/sh: npm: command not found\n"), "environment");
+  });
+
+  it("calls proxy certificate failures environment", () => {
+    // Node's TLS codes reach npm's output unchanged behind an intercepting proxy.
+    for (const code of [
+      "SELF_SIGNED_CERT_IN_CHAIN", "UNABLE_TO_GET_ISSUER_CERT_LOCALLY", "UNABLE_TO_VERIFY_LEAF_SIGNATURE",
+      "DEPTH_ZERO_SELF_SIGNED_CERT", "CERT_HAS_EXPIRED",
+    ]) {
+      assert.equal(classifyNpmFailure(`npm error code ${code}`), "environment", `${code} is not a manifest defect`);
+    }
+  });
+
+  it("keeps the gate's own output overflow failing, since npm's real code may be cut off", () => {
+    // npm prints its error code last; past the 1 MiB capture cap an ERESOLVE line is
+    // lost and only ENOBUFS remains. Skipping on it could ship a broken manifest.
+    assert.equal(classifyNpmFailure("npm warn ...\nnpm error code ENOBUFS"), "resolution");
+  });
+
+  it("matches the no-code fallback on whole codes only", () => {
+    assert.equal(classifyNpmFailure("request failed: ECONNRESET while fetching"), "network");
+    assert.equal(classifyNpmFailure("integrity sha512-QE500xEPIPEz mismatch"), "resolution");
+  });
+
+  it("still treats a missing package as a resolution failure", () => {
+    assert.equal(classifyNpmFailure("npm error code E404\nnpm error 404 Not Found - GET https://registry.npmjs.org/nope"), "resolution");
   });
 
   it("fails closed on an unrecognized failure", () => {

@@ -2182,7 +2182,9 @@ heading("12k. Pi Install Manifest");
         } else {
           error(
             "pi-manifest",
-            `root dependency graph does not resolve: \`npm install --omit=dev\` failed${npmCode ? ` with ${npmCode}` : ""}, so \`pi install git:\` aborts before installing anything (GH #54). For a peer conflict use a narrow \`overrides\` entry — --legacy-peer-deps only hides it from this gate.`,
+            npmCode === "ENOBUFS"
+              ? "`npm install --omit=dev --dry-run` printed more than the 1 MiB this gate captures, so npm's own error code (printed last) may be lost; run it by hand to see whether the dependency graph resolves."
+              : `root dependency graph does not resolve: \`npm install --omit=dev\` failed${npmCode ? ` with ${npmCode}` : ""}, so \`pi install git:\` aborts before installing anything (GH #54). For a peer conflict use a narrow \`overrides\` entry — --legacy-peer-deps only hides it from this gate.`,
           );
         }
       }
@@ -3218,6 +3220,13 @@ try {
     if (manifest.version !== ccManifest.version) {
       error("codex-version", `Codex version ${manifest.version} != Claude Code version ${ccManifest.version}`);
     }
+  }
+
+  // Codex installs from the default branch, so a pinned version names an npm
+  // release that does not exist until publish (ADR-004). Same contract as Cursor.
+  const codexMcp = JSON.parse(fs.readFileSync(path.join(codexDir, ".mcp.json"), "utf8"));
+  if (codexMcp?.mcpServers?.axiom?.command !== "npx" || JSON.stringify(codexMcp?.mcpServers?.axiom?.args) !== JSON.stringify(["-y", "axiom-mcp"])) {
+    error("codex-mcp", "Codex MCP startup must be unpinned `npx -y axiom-mcp`; a pinned version breaks installs between push and npm publish");
   }
 
   // Validate skill count (source minus excluded routers)
