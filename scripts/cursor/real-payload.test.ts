@@ -21,11 +21,20 @@ const FIXTURE = JSON.parse(
 // adapter in the generated distribution, which is what a Cursor install actually runs.
 const ADAPTER = path.join(import.meta.dirname!, "..", "..", "axiom-cursor", "scripts", "cursor-hook-adapter.py");
 
-function invoke(mode: string, payload: unknown) {
+function withoutHarness(): NodeJS.ProcessEnv {
+  const env = { ...process.env };
+  delete env.AXIOM_HARNESS;
+  return env;
+}
+
+// The adapter must decide the harness marker itself, so a value inherited from the
+// test runner's own environment cannot make a test pass.
+function invoke(mode: string, payload: unknown, env: NodeJS.ProcessEnv = withoutHarness()) {
   const result = spawnSync("python3", [ADAPTER, mode], {
     input: JSON.stringify(payload),
     encoding: "utf8",
     timeout: 15_000,
+    env,
   });
   assert.equal(result.error, undefined, result.error?.message);
   assert.equal(result.status, 0, result.stderr);
@@ -77,6 +86,28 @@ test("live Cursor sends duration as a float — duration hints must still fire",
     /Long xcodebuild \(240s\) ended in failure/,
     "a fractional duration must still reach the hints child",
   );
+});
+
+test("Cursor terminal hints name Cursor's /axiom- command form", () => {
+  const payload = {
+    ...FIXTURE["post-shell"],
+    tool_input: { command: "xcodebuild -scheme Demo build" },
+    tool_output: JSON.stringify({ exitCode: 65, output: "** BUILD FAILED **\nerror: linker command failed" }),
+    duration: 240_000.5,
+  };
+  const context = (invoke("post-shell", payload).response as { additional_context?: string }).additional_context ?? "";
+  assert.match(context, /Try: \/axiom-fix-build/);
+  assert.doesNotMatch(context, /\/axiom:/);
+});
+
+test("Cursor terminal hints keep the Cursor protocol under an inherited Codex marker", () => {
+  const payload = {
+    ...FIXTURE["post-shell"],
+    tool_input: { command: "swift build" },
+    tool_output: JSON.stringify({ exitCode: 1, output: "error: linker command failed" }),
+  };
+  const context = (invoke("post-shell", payload, { ...process.env, AXIOM_HARNESS: "codex" }).response as { additional_context?: string }).additional_context ?? "";
+  assert.match(context, /Build configuration issue/);
 });
 
 test("live Cursor Shell tool_output is a JSON string keyed exitCode/output", () => {
@@ -203,6 +234,20 @@ test("subagentStart maps Cursor's subagent_type onto the canonical agent_type", 
       /skill/i,
       "a named Axiom agent must receive skill awareness",
     );
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test("subagentStart names only loading paths Cursor provides", () => {
+  // Cursor documents no Skill tool (cursor.com/docs/agent/tools), so the subagent text
+  // must point at the plugin's skill files instead.
+  const workspace = applePackage();
+  try {
+    const payload = { ...FIXTURE["subagent-start"], workspace_roots: [workspace] };
+    const context = (invoke("subagent-start", payload).response as { additional_context?: string }).additional_context ?? "";
+    assert.doesNotMatch(context, /\bSkill tool\b/);
+    assert.match(context, /axiom-cursor\/skills\/<router>\/SKILL\.md/);
   } finally {
     fs.rmSync(workspace, { recursive: true, force: true });
   }

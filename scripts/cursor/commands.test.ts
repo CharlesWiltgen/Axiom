@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import matter from "gray-matter";
 import { transformCommand } from "./commands.ts";
+import { assertNoUnsupportedClaudeTokens } from "./references.ts";
 import { loadCursorSource } from "./source.ts";
 import type { SourceCommand } from "./types.ts";
 
@@ -309,10 +310,17 @@ test("transforms every canonical command without Claude-only placeholders", () =
   const files = loadCursorSource(process.cwd()).commands.map(transformCommand);
   assert.deepEqual(files.map((file) => file.path), canonicalCommandFiles.map((filename) => `commands/axiom-${filename}`));
   for (const file of files) {
-    assert.doesNotMatch(file.content, /\/axiom:|TaskOutput|AskUserQuestion|CLAUDE_PLUGIN_ROOT|\$ARGUMENTS|(?<!\$)\{\{|<\/?Task>|subagent_type|run_in_background|^\s*prompt:|\bAgent calls?\b|delegated subagent result(?: tool)?|\b(?:agent|auditor)s?['’]s? launch\b|\b(?:automatically\s+)?launch(?:es|ed|ing)?\b(?=[^\n.]{0,120}\b(?:agent|subagent|auditor)s?\b)|Delegate to the `(?:that|each|appropriate|corresponding|specific)` subagent/im);
+    assert.doesNotMatch(file.content, /\/axiom:|TaskOutput|AskUserQuestion|\bSkill tool\b|CLAUDE_PLUGIN_ROOT|\$ARGUMENTS|(?<!\$)\{\{|<\/?Task>|subagent_type|run_in_background|^\s*prompt:|\bAgent calls?\b|delegated subagent result(?: tool)?|\b(?:agent|auditor)s?['’]s? launch\b|\b(?:automatically\s+)?launch(?:es|ed|ing)?\b(?=[^\n.]{0,120}\b(?:agent|subagent|auditor)s?\b)|Delegate to the `(?:that|each|appropriate|corresponding|specific)` subagent/im);
   }
 });
 
 function pathStem(filename: string): string {
   return filename.replace(/\.md$/, "");
 }
+
+test("rejects a Claude-only Skill tool instruction, since Cursor documents no Skill tool", () => {
+  assert.throws(
+    () => assertNoUnsupportedClaudeTokens("2. **Invoke matching skill** using the Skill tool"),
+    /unsupported Claude token: Skill tool/,
+  );
+});

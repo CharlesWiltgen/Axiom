@@ -29,12 +29,15 @@ export const CURSOR_INVOCATION_REWRITES: ReadonlyArray<[RegExp, string]> = [
   [/\blaunch ALL of them\b/g, "delegate to all of them"],
   [/\bauditors were launched\b/gi, "auditors were delegated to"],
   [/\bAskUserQuestion tool\b/g, "ask the user directly"],
+  // Cursor documents no Skill tool (cursor.com/docs/agent/tools); skills load by reading files.
+  [/\b(?:using|via|with) the Skill tool\b/g, "by reading its `SKILL.md`"],
 ];
 
 const UNSUPPORTED_TOKENS: ReadonlyArray<[RegExp, string]> = [
   [/\/axiom:/, "/axiom:"],
   [/\bTaskOutput\b/, "TaskOutput"],
   [/\bAskUserQuestion\b/, "AskUserQuestion"],
+  [/\bSkill tool\b/, "Skill tool"],
   [/CLAUDE_PLUGIN_ROOT/, "CLAUDE_PLUGIN_ROOT"],
   [/\$ARGUMENTS/, "$ARGUMENTS"],
   [/(?<!\$)\{\{/, "double-brace template marker"],
