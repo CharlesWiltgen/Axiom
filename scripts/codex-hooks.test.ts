@@ -131,27 +131,30 @@ describe("shouldCopyHookScript", () => {
 
 
 describe("generated Codex terminal hook", () => {
-  it("keeps terminal hints silent outside Apple projects and during documentation reads", () => {
+  it("keeps terminal hints silent outside Apple projects unless overridden", () => {
     const pluginRoot = path.resolve("axiom-codex");
     const manifest = JSON.parse(fs.readFileSync(path.join(pluginRoot, "hooks/hooks.json"), "utf8"));
     const command = manifest.hooks.PostToolUse.find(group => group.matcher === "Bash").hooks[0].command;
     const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "axiom-terminal-scope-"));
+    const hints = "💡 Database migration issue. Try: skill axiom-data\n💡 Memory issue detected. Try: skill axiom-performance";
     try {
       fs.mkdirSync(path.join(workspace, ".git"));
       for (const testCase of [
-        { apple: false, override: "", terminal: "swift build" },
-        { apple: true, override: "never", terminal: "swift build" },
-        { apple: true, override: "", terminal: "cat README.md" },
+        { apple: false, override: "", context: null },
+        { apple: false, override: "always", context: hints },
+        { apple: true, override: "never", context: null },
+        { apple: true, override: "", context: hints },
       ]) {
         if (testCase.apple) fs.writeFileSync(path.join(workspace, "Package.swift"), "// swift-tools-version: 6.0\n");
         const result = spawnSync("sh", ["-lc", command], {
           cwd: workspace, encoding: "utf8",
-          input: JSON.stringify({ tool_name: "Bash", tool_input: { command: testCase.terminal },
+          input: JSON.stringify({ tool_name: "Bash", tool_input: { command: "swift build" },
             tool_response: { output: "CoreData: error during migration\nLeaks: memory leak in MyClass", exit_code: 0 } }),
           env: { ...process.env, PLUGIN_ROOT: pluginRoot, AXIOM_SESSION_CONTEXT: testCase.override },
         });
-        assert.deepEqual({ status: result.status, stderr: result.stderr, stdout: result.stdout },
-          { status: 0, stderr: "", stdout: "" }, JSON.stringify(testCase));
+        const context = result.stdout ? JSON.parse(result.stdout).hookSpecificOutput.additionalContext : null;
+        assert.deepEqual({ status: result.status, stderr: result.stderr, context },
+          { status: 0, stderr: "", context: testCase.context }, JSON.stringify(testCase));
       }
     } finally {
       fs.rmSync(workspace, { recursive: true, force: true });

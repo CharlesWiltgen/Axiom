@@ -143,93 +143,10 @@ const BASH_PATTERN_RULES: { pattern: RegExp; hint: string }[] = [
   { pattern: /error:.*module.*not found|linker command failed/, hint: "💡 Build configuration issue — try /axiom-fix-build." },
 ];
 
-const ISSUE_TERMS = String.raw`(?:migration\s+(?:errors?|failures?|issues?|problems?)|memory leaks?|retain cycles?)\b`;
-const NEGATED_ISSUE = new RegExp(String.raw`\b(?:no|without)\s+${ISSUE_TERMS}(?:\s+(?:or|and)\s+${ISSUE_TERMS})*`, "gi");
-
-/** Every skill hint whose pattern matches diagnostic output, in rule order. */
+/** Every skill hint whose pattern matches the Bash output, in rule order. */
 export function bashOutputHints(output: string): string[] {
   if (!output) return [];
-  const diagnostics = output.split(/[;\n]|(?<=[.!?])\s+/)
-    .map((line) => line.replace(NEGATED_ISSUE, ""))
-    .filter((line) => /\b(?:error|warning|failed|failure|detected|unavailable)\b|never called|not available|Unable to simultaneously satisfy constraints|Leaks:|CKError\s*\d/i.test(line));
-  return BASH_PATTERN_RULES.filter((r) => diagnostics.some((line) => r.pattern.test(line))).map((r) => r.hint);
-}
-
-function isDocumentationCommand(command: string): boolean {
-  const tokens = command.match(/"(?:\\.|[^"\\])*"|'[^']*'|[;&|\n<>]+|[^\s;&|<>]+/g) ?? [];
-  const groups: { words: string[]; pipeline: boolean }[] = [];
-  let words: string[] = [];
-  let pipeline = false;
-  for (const token of [...tokens, ";"]) {
-    if (/^[;&|\n]+$/.test(token)) {
-      groups.push({ words, pipeline });
-      words = [];
-      pipeline = token === "|";
-    } else {
-      words.push(token.replace(/^(['"])([\s\S]*)\1$/, "$2"));
-    }
-  }
-  const readers = new Set(["cat", "head", "tail", "less", "more", "bat", "nl"]);
-  const searches = new Set(["rg", "grep", "sed", "awk"]);
-  const inspectors = new Set([...readers, ...searches, "curl", "wget"]);
-  const prefixes = new Set(["env", "sudo", "time", "command", "exec"]);
-  const optionArguments = new Set(["-u", "--unset", "-C", "--chdir", "-a", "-f", "-g"]);
-  let runtime = false;
-  let inspection = false;
-  for (const group of groups) {
-    const commandWords = [...group.words];
-    while (commandWords.length) {
-      if (/^[A-Za-z_][A-Za-z0-9_]*=/.test(commandWords[0])) commandWords.shift();
-      else if (prefixes.has(commandWords[0].split("/").at(-1) ?? "")) {
-        commandWords.shift();
-        while (commandWords[0]?.startsWith("-")) {
-          const option = commandWords.shift() ?? "";
-          if (optionArguments.has(option)) commandWords.shift();
-        }
-      } else break;
-    }
-    const program = commandWords[0]?.split("/").at(-1);
-    if (!program) continue;
-    if (["sh", "bash", "zsh"].includes(program)) {
-      runtime = true;
-      const index = commandWords.findIndex((word) => /^-[A-Za-z]*c[A-Za-z]*$/.test(word));
-      const nested = index >= 0 ? commandWords[index + 1] : undefined;
-      if (nested) {
-        if (isDocumentationCommand(nested)) return true;
-        runtime = true;
-      }
-      continue;
-    }
-    if (inspectors.has(program)) {
-      let operands: string[] = [];
-      let patternProvided = false;
-      const patternOptions = new Set(searches.has(program) ? ["-e", "--regexp", "-f", "--file", "--expression"] : []);
-      const pairedOptions = new Set([...patternOptions, "-A", "-B", "-C", "--context", "-g", "--glob"]);
-      if (["head", "tail"].includes(program)) { for (const option of ["-n", "-c", "--lines", "--bytes"]) pairedOptions.add(option); }
-      if (program === "awk") { pairedOptions.add("-F"); pairedOptions.add("-v"); }
-      for (let index = 1; index < commandWords.length; index++) {
-        const word = commandWords[index];
-        if (pairedOptions.has(word)) {
-          index++;
-          patternProvided ||= patternOptions.has(word);
-        } else if (word.startsWith("-")) {
-          patternProvided ||= [...patternOptions].some((option) => word.startsWith(`${option}=`));
-          patternProvided ||= searches.has(program) && /^-[ef][^-].*/.test(word);
-        } else if (!/^[<>]+$/.test(word)) operands.push(word);
-      }
-      if (searches.has(program) && !patternProvided) operands = operands.slice(1);
-      if (operands.length && operands.every((word) => /\.(log|crash|ips)$/.test(word)) && !commandWords.includes("-")) {
-        runtime = true;
-        continue;
-      }
-      if (group.pipeline && !operands.length) continue;
-      return true;
-    }
-    if (["echo", "printf"].includes(program) || (program === "git" && commandWords.slice(1).includes("status"))) inspection = true;
-    else if (program === "git") return true;
-    else if (!["cd", "pwd", "true", "false", ":", "export"].includes(program)) runtime = true;
-  }
-  return inspection && !runtime;
+  return BASH_PATTERN_RULES.filter((r) => r.pattern.test(output)).map((r) => r.hint);
 }
 
 /** A file path off a tool event's input, tolerating either `path` or `filePath`. */
@@ -286,10 +203,6 @@ export function toolResultHint(event: ToolResultLike, readFile: (p: string) => s
     }
   }
   if (event.toolName === "bash") {
-    if (typeof event.input === "object" && event.input !== null) {
-      const command = (event.input as Record<string, unknown>).command;
-      if (typeof command === "string" && isDocumentationCommand(command)) return null;
-    }
     const text = event.content.filter((c) => c.type === "text").map((c) => c.text ?? "").join("\n");
     const hints = bashOutputHints(text);
     return hints.length ? hints.join("\n") : null;
