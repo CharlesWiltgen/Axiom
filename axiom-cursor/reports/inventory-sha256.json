@@ -1158,13 +1158,13 @@
     },
     {
       "path": "skills/axiom-media/skills/camera-capture-ref.md",
-      "sha256": "cc3ab2e7caae271e4d98d500cd9ae2955c2c3f166f752a27724f46c30af23bdf",
-      "bytes": 51263
+      "sha256": "0313bcf6b3b49d0b66d79a7a1bf961c3217bc098ec8c934fcffa8e7f04ba5bd7",
+      "bytes": 51771
     },
     {
       "path": "skills/axiom-media/skills/camera-capture.md",
-      "sha256": "cf4bc39014982d8d797175e66d6d01a47441c4f448dd897dba14ba74b34f15d3",
-      "bytes": 40144
+      "sha256": "0f376f3b06e5b1d43c7b357f7e12c49b3dc06ba498b1925603002856c4ff9e52",
+      "bytes": 40254
     },
     {
       "path": "skills/axiom-media/skills/carplay-hig.md",
@@ -1618,8 +1618,8 @@
     },
     {
       "path": "skills/axiom-swiftui/skills/iphone-duo.md",
-      "sha256": "eb54736f266a2496bdbebb2b39286b1a2b9cb6a8ebdf72f0502f02cb4f94892e",
-      "bytes": 43435
+      "sha256": "91b9ffac45e83863c2e82bd407c051a202616d009d16e492aeecaf41073b2c40",
+      "bytes": 43640
     },
     {
       "path": "skills/axiom-swiftui/skills/layout-ref.md",
@@ -1713,8 +1713,8 @@
     },
     {
       "path": "skills/axiom-tools/skills/device-control-ref.md",
-      "sha256": "4e6df19e573b7ca17703ef13dc4c3ea8a1335edeb42074afe594cc47a709981b",
-      "bytes": 31793
+      "sha256": "22f790ef756f08072b2350511f5188ed8c676526353dbed94d6b6dd3d396e9d1",
+      "bytes": 31770
     },
     {
       "path": "skills/axiom-tools/skills/getting-started.md",
@@ -1728,8 +1728,8 @@
     },
     {
       "path": "skills/axiom-tools/skills/xcprof-ref.md",
-      "sha256": "34dd7d3cd2e893ec8f415659012e54518cebe6cf15d3e51259e1874e6b2cee0a",
-      "bytes": 13507
+      "sha256": "e0de42c2d879a6a674778bdf466717f41c0cd9d2d919a736ff0c48cb4219db9d",
+      "bytes": 14584
     },
     {
       "path": "skills/axiom-tools/skills/xcsym-ref.md",
@@ -1884,7 +1884,7 @@
   ],
   "totals": {
     "files": 376,
-    "bytes": 7636885
+    "bytes": 7638762
   },
   "excludedMirrors": 30,
   "classes": {

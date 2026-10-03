@@ -78,7 +78,7 @@ xcprof record --preset cpu --attach MyApp --dry-run                 # preview th
 
 ### Security gates (designed up front, not bolted on)
 
-- **Bounded by default.** `--max-duration` (default `60s`) is a hard ceiling; an unset `--time-limit` adopts it, so a recording is never unbounded. A `--time-limit` above the ceiling is refused — raise `--max-duration` to record longer.
+- **Bounded recording request.** `--max-duration` (default `60s`) caps the requested recording duration; an unset `--time-limit` adopts it. A `--time-limit` above the ceiling is refused — raise `--max-duration` to request a longer recording. It does not bound launched-process lifetime or guarantee cleanup (see below).
 - **`--allow-launch`** is required before `-- <cmd>` will execute anything.
 - **`--allow-all-processes`** is required before system-wide capture.
 - **Output sandbox.** `--output` must resolve under `XCPROF_TRACE_ROOT` (or cwd when unset); an outside path is refused unless `--allow-external-output` is passed.
@@ -87,6 +87,14 @@ xcprof record --preset cpu --attach MyApp --dry-run                 # preview th
 ### `record` honesty caveat
 
 A `--launch` recording terminated at the time limit makes `xctrace` exit non-zero (it returns the killed target's status) **while still saving a valid trace**. `record` trusts the saved bundle, not the exit code: it reports `ok: true` with a `notes` entry explaining the benign non-zero exit.
+
+### Native launch cleanup limitation
+
+With Xcode 27.2 beta 2 (`27B5028f`), native macOS CPU recordings can leave a stopped startup process after the recorder and sampled process exit. Direct `xctrace` reproduces this without xcprof or MCP. A saved trace and `ok: true` do not establish process cleanup; xcprof has no operation-specific cleanup policy for that survivor.
+
+The requested time limit bounds recording configuration, not total startup/export time or a suspended process's lifetime. In five captures requesting 10 seconds, CPU sample spans were 9.774–10.012 seconds and exported duration reached 15.483 seconds including startup. These observations do not establish behavior on other toolchains or platforms.
+
+Verify processes owned by the recording operation afterward. Preserve pre-existing and concurrent processes using the same executable; do not kill by executable name. If ownership cannot be established, report the survivor and the uncertainty rather than terminating it.
 
 ## Comparing traces (regression detection)
 

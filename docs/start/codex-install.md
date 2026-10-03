@@ -69,9 +69,11 @@ node "<plugin-root>/scripts/doctor.mjs"
 
 The report checks packaged skills, hooks and their dependencies, bundled helper availability, and configured MCP version. Host trust, server connectivity, and optional Xcode availability remain unknown unless you supply sanitized host metadata.
 
-The full plugin bundles `xclog`, `xcsym`, `xcui`, and `xcprof` under `<plugin-root>/bin/`. Use those absolute paths unless the helper is already on PATH. The `npx skills` installation contains skill content only.
+The full plugin bundles `xclog`, `xcsym`, `xcui`, `xcprof`, and `xcproject` under `<plugin-root>/bin/`. Use those absolute paths unless the helper is already on PATH. `xcproject` reads both `project.pbxproj` and JSON5 `project.xcproj`; it is also packaged as an npm CLI with the MCP server, without an MCP wrapper. The `npx skills` installation contains skill content only.
 
 Hook diagnostics are off by default. To investigate a hook failure, set `AXIOM_HOOK_DIAGNOSTICS_DIR` for the Codex process to a private directory you own. Diagnostics record bounded hook lifecycle metadata, excluding prompts, tool output, credentials, and exception messages. Execution labels identify each Axiom hook; a label alone does not establish a failure’s cause.
+
+The reported Codex warning “hook exited without a status code” remains unresolved. Its source has not been attributed to Axiom. Successful hook and runner checks establish the tested behavior, but do not prove that warning is fixed; an absent diagnostic end record alone does not identify its cause.
 
 ### Manual Marketplace (alternative)
 

@@ -8,9 +8,9 @@ iPhone Duo is Apple's first two-display iPhone: an outer display, and a larger i
 
 ## SDK Status — Read First
 
-Apple announced the Duo-specific APIs in six tech talks (111461–111466, September 2026). They shipped in the **iOS 27.1 SDK** (and are in the 27.2 SDK); every snippet below is compiled against it. Gate 27.1 calls at `@available(iOS 27.1, *)` and keep the pre-27.1 path compiling.
+Apple announced the Duo-specific APIs in six tech talks (111461–111466, September 2026). They shipped in the **iOS 27.1 SDK**; every snippet below is compiled against it. Gate 27.1 calls at `@available(iOS 27.1, *)` and keep the pre-27.1 path compiling.
 
-- **Check the installed SDK first** (`xcrun --sdk iphoneos --show-sdk-version`). Below 27.1 the 27.1 symbols don't exist — describe the API, name the talk, and give today's alternative. On 27.1 or later: grep the SDK's `.swiftinterface` and headers for the name; the SDK's spelling and signature win over this file; if it's missing, check for a rename before calling it dropped.
+- **Check the installed SDK first** (`xcrun --sdk iphoneos --show-sdk-version`). Below 27.1 the 27.1 symbols don't exist — describe the API, name the talk, and give today's alternative. On 27.1 or later: grep the SDK's `.swiftinterface` and headers for the name; the SDK's spelling and signature win over this file; if it's missing, check the Xcode build (`xcodebuild -version`), then for a rename, before calling it dropped. Xcode 27.2 beta 2 (`Build version 27B5028f`) lacks the camera-direction types (see axiom-media (skills/camera-capture-ref.md)), and its release notes send Duo work to Xcode 27.1 beta.
 - **Never call iPhone Duo or these APIs fictional or hallucinated.** They come from Apple's own tech talks and are in the shipped SDK.
 - **Never invent parameters, types, or cases** beyond what the snippets and the SDK give.
 

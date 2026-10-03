@@ -225,9 +225,8 @@ framebuffer black; `xcrun simctl shutdown <udid>` followed by `boot` restored re
 **`backlightState` is worth reading first — it just doesn't see this one.** It tracks a
 dark display accurately in the case you are far more likely to hit: on iPhone Duo the
 closed inner display reports `backlightState: off` and `active: false` while the outer
-reports `activeOn`, so one `device info displays` names the dark display outright. What
-the table above records is narrower than "the instruments lie": `simctl`'s `screenConfig`
-power state does not propagate to `devicectl`'s view of the display.
+reports `activeOn`, so one `device info displays` names the dark display outright.
+`simctl`'s `screenConfig` power state does not propagate to `devicectl`'s view of the display.
 
 So, in order, when a capture comes back black:
 
@@ -238,9 +237,9 @@ So, in order, when a capture comes back black:
    to attach or an accessibility-opaque view, so it narrows rather than concludes.
 3. **Only then suspect the app.**
 
-A *locked* device is the counter-case worth knowing: it does not go black at all — its
-lock screen stays lit (still lit 20 s after `axe button lock`), so a black frame is never
-simply "the device locked itself".
+In the tested iPhone 17 simulator, the lock screen stayed lit 20 s after `axe button lock`.
+Locking did not explain that simulator's black `screenConfig` capture. Check display
+and lock state on the selected device before attributing a black frame to its app.
 
 ### Display masks and multi-display devices
 

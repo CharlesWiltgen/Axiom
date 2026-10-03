@@ -5,6 +5,7 @@ from __future__ import annotations
 import fcntl
 import json
 import os
+import select
 import subprocess
 import sys
 import tempfile
@@ -249,30 +250,114 @@ class TestHookDiagnostics(unittest.TestCase):
             PYTHONPATH=str(HOOKS),
             AXIOM_HOOK_DIAGNOSTICS_DIR=str(self.destination),
         )
-        processes = [
-            subprocess.Popen(
-                [
-                    sys.executable,
-                    "-c",
-                    "import hook_diagnostics as d; d.begin('posttool-bash-hints')",
-                ],
-                env=env,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-            )
-            for _ in range(12)
-        ]
-        for process in processes:
-            out, err = process.communicate(timeout=3)
-            self.assertEqual((process.returncode, out, err), (0, b"", b""))
-        records = self.records()
-        correlations = {record["correlation"] for record in records}
-        self.assertEqual(len(correlations), 12)
-        for correlation in correlations:
-            self.assertEqual(
-                [r["phase"] for r in records if r["correlation"] == correlation],
-                ["start", "end"],
-            )
+        for contention in ("none", "start", "end"):
+            with self.subTest(contention=contention):
+                self.destination = self.root / contention
+                self.destination.mkdir(mode=0o700)
+                journal = self.destination / JOURNAL
+                journal.touch(mode=0o600)
+                env["AXIOM_HOOK_DIAGNOSTICS_DIR"] = str(self.destination)
+                with journal.open("a") as stream:
+                    if contention == "start":
+                        fcntl.flock(stream.fileno(), fcntl.LOCK_EX)
+                    processes = []
+                    correlations = []
+                    try:
+                        for _ in range(12):
+                            processes.append(
+                                subprocess.Popen(
+                                    [
+                                        sys.executable,
+                                        "-c",
+                                        (
+                                            "import hook_diagnostics as d\n"
+                                            "d.begin('posttool-bash-hints')\n"
+                                            "print(d._state['correlation'], flush=True)\n"
+                                            "input()\nprint('{}')\n"
+                                        ),
+                                    ],
+                                    env=env,
+                                    stdin=subprocess.PIPE,
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE,
+                                )
+                            )
+                            if contention == "end":
+                                process = processes[-1]
+                                self.assertTrue(
+                                    select.select([process.stdout], [], [], 3)[0]
+                                )
+                                correlations.append(
+                                    process.stdout.readline().decode().strip()
+                                )
+                        if contention != "end":
+                            for process in processes:
+                                self.assertTrue(
+                                    select.select([process.stdout], [], [], 3)[0]
+                                )
+                                correlation = process.stdout.readline().decode().strip()
+                                correlations.append(correlation)
+                        for correlation in correlations:
+                            self.assertRegex(correlation, r"^[0-9a-f]{32}$")
+                        self.assertEqual(len(set(correlations)), len(processes))
+                        if contention == "end":
+                            fcntl.flock(stream.fileno(), fcntl.LOCK_EX)
+                        for process in processes:
+                            process.stdin.write(b"\n")
+                            process.stdin.close()
+                            process.stdin = None
+                        results = [
+                            process.communicate(timeout=3) for process in processes
+                        ]
+                        records = self.records()
+                        self.assertLessEqual(
+                            {record["correlation"] for record in records},
+                            set(correlations),
+                        )
+                        for process, correlation, (out, err) in zip(
+                            processes, correlations, results
+                        ):
+                            self.assertEqual((process.returncode, out), (0, b"{}\n"))
+                            self.assertIn(err, (b"", NOTICE.encode()))
+                            phases = [
+                                record["phase"]
+                                for record in records
+                                if record["correlation"] == correlation
+                            ]
+                            if contention == "start":
+                                self.assertEqual((err, phases), (NOTICE.encode(), []))
+                            elif contention == "end":
+                                self.assertEqual(
+                                    (err, phases), (NOTICE.encode(), ["start"])
+                                )
+                            elif err:
+                                self.assertIn(phases, ([], ["start"]))
+                            else:
+                                self.assertEqual(phases, ["start", "end"])
+                        for record in records:
+                            self.assertEqual(
+                                (
+                                    record["schema_version"],
+                                    record["hook"],
+                                    record["event"],
+                                    record["outcome"],
+                                    record["exception_class"],
+                                ),
+                                (
+                                    1,
+                                    "posttool-bash-hints",
+                                    "PostToolUse",
+                                    "running"
+                                    if record["phase"] == "start"
+                                    else "success",
+                                    None,
+                                ),
+                            )
+                    finally:
+                        for process in processes:
+                            if process.poll() is None:
+                                process.kill()
+                            process.communicate(timeout=3)
 
     def test_signal_termination_has_start_but_no_fabricated_end(self):
         result = self.run_hook(

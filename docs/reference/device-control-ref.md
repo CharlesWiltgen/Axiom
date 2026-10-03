@@ -71,7 +71,7 @@ Use this reference when:
 - Codec, mask-policy, and `--duration` auto-stop options, and the `.png` / `.mp4` extension rules
 - Simulator-only fallbacks (`simctl io`, `axe`) and when to reach for them
 - `--mask alpha` / `ignored` / `black`, and which one shows what the user sees
-- Why a black or failed capture on a simulator says nothing about your app, and the order to check it in — display state first, accessibility tree second
+- Why a black or failed simulator capture can reflect display state, and what to check before attributing it to your app – display state first, accessibility tree second
 - Naming a display on a two-display device – simctl's port UUID vs devicectl's `uniqueId`, and which display you get by default
 
 ### Status bar for screenshots
