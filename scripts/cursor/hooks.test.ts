@@ -36,11 +36,18 @@ function withStagedAdapter(run: (adapter: string, outputRoot: string) => void): 
   }
 }
 
-function invoke(adapter: string, mode: string, input: string, timeout = 10_000) {
+function invoke(
+  adapter: string,
+  mode: string,
+  input: string,
+  timeout = 10_000,
+  options: { cwd?: string; env?: NodeJS.ProcessEnv } = {},
+) {
   const result = spawnSync("python3", [adapter, mode], {
     input,
     encoding: "utf8",
     timeout,
+    ...options,
   });
   assert.equal(result.error, undefined, result.error?.message);
   assert.equal(result.status, 0, result.stderr);
@@ -230,6 +237,51 @@ test("adapter relays Swift Write findings only as post-edit advisory context", (
     assert.equal(response.reason, undefined);
     assert.equal(response.permission, undefined);
     assert.equal(response.failClosed, undefined);
+  });
+});
+
+test("adapter gates Shell and Write children on the workspace, not its own cwd", () => {
+  withStagedAdapter((adapter, outputRoot) => {
+    const launch = path.join(outputRoot, "launch");
+    const apple = path.join(outputRoot, "apple");
+    const plain = path.join(outputRoot, "plain");
+    for (const directory of [launch, apple, plain]) fs.mkdirSync(path.join(directory, ".git"), { recursive: true });
+    fs.writeFileSync(path.join(apple, "Package.swift"), "// swift-tools-version: 6.0\n", "utf8");
+    fs.writeFileSync(path.join(apple, "View.swift"), "struct V {\n  @State var count = 0\n}\n", "utf8");
+    const options = {
+      cwd: launch,
+      env: Object.fromEntries(Object.entries(process.env).filter(([key]) => key !== "AXIOM_SESSION_CONTEXT")),
+    };
+    const shell = (workspace: string) => invoke(adapter, "post-shell", JSON.stringify({
+      tool_name: "Shell",
+      tool_input: { command: "swift build" },
+      tool_output: JSON.stringify({ stdout: "error: data race detected", stderr: "", output: "" }),
+      workspace_roots: [workspace],
+    }), 10_000, options).response;
+    const write = (roots: string[]) => invoke(adapter, "post-write", JSON.stringify({
+      tool_name: "Write",
+      tool_input: { file_path: path.join(apple, "View.swift") },
+      workspace_roots: roots,
+    }), 10_000, options).response;
+    const stateFinding = {
+      additional_context:
+        "AXIOM_SWIFT_STATE_ACCESS L2: Add an explicit access level to this @State property (usually @State private var).",
+    };
+
+    assert.deepEqual(
+      {
+        appleShell: shell(apple),
+        plainShell: shell(plain),
+        appleWrite: write([apple]),
+        appleSecondRootWrite: write([plain, apple]),
+      },
+      {
+        appleShell: { additional_context: "💡 Concurrency issue. Try: skill axiom-concurrency" },
+        plainShell: {},
+        appleWrite: stateFinding,
+        appleSecondRootWrite: stateFinding,
+      },
+    );
   });
 });
 
