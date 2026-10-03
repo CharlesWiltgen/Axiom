@@ -23,7 +23,7 @@ Optional metadata (maximum 64 KiB):
 {
   "runtimeVersion": "0.154.0-alpha.6.2",
   "hookTrust": "trusted",
-  "mcp": { "status": "connected", "version": "27.2.0" },
+  "mcp": { "status": "connected", "version": "27.2.1" },
   "xcode": { "status": "unknown", "version": null }
 }
 ```
