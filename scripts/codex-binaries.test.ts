@@ -3,14 +3,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { describe, it } from "node:test";
+import { HELPERS } from "./codex-doctor.mjs";
 
-const helpers = [
-  { name: "xclog", args: ["list", "--help"] },
-  { name: "xcsym", args: ["--help"] },
-  { name: "xcui", args: ["--help"] },
-  { name: "xcprof", args: ["--help"] },
-  { name: "xcproject", args: ["--help"] },
-];
+const helpers = Object.entries(HELPERS).map(([name, args]) => ({ name, args }));
 
 describe("generated Codex helpers", () => {
   it("ships executable canonical helpers and the xcproject license", () => {

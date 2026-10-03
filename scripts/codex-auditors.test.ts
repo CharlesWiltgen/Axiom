@@ -35,6 +35,25 @@ describe("adaptHealthCheckForCodex", () => {
       assert.ok(fs.existsSync(`axiom-codex/skills/${name}/SKILL.md`), `${name} procedure missing`);
     }
   });
+  it("maps exactly the auditors Phase 1 can select, never agents the canonical text merely mentions", () => {
+    const adapted = adaptHealthCheckForCodex(source, agents);
+    const mapped = [...adapted.matchAll(/^- `([a-z0-9-]+)` → `/gm)].map((match) => match[1]).sort();
+    const phase1 = source.slice(source.indexOf("## Phase 1:"), source.indexOf("\n## Phase 2:"));
+    const tokens = new Set(phase1.match(/[a-z0-9]+(?:-[a-z0-9]+)+/g));
+    const expected = agents.filter((name) => name !== "health-check" && tokens.has(name)).sort();
+    assert.ok(expected.length > 0, "Phase 1 names no auditors");
+    assert.deepEqual(
+      { mapped, footnoteAgents: ["build-fixer", "test-failure-analyzer"].filter((name) => mapped.includes(name)) },
+      { mapped: expected, footnoteAgents: [] },
+    );
+  });
+  it("fails generation when Phase 1 names no auditor", () => {
+    const phase1 = source.slice(source.indexOf("## Phase 1:"), source.indexOf("\n## Phase 2:"));
+    assert.throws(
+      () => adaptHealthCheckForCodex(source.replace(phase1, "## Phase 1: Detect Which Auditors to Run\n\nNone listed.\n"), agents),
+      /Phase 1 names no auditor/,
+    );
+  });
   it("fails generation when canonical orchestration drifts", () => {
     assert.throws(() => adaptHealthCheckForCodex(source.replace("Use TaskOutput", "Collect output"), agents), /health-check.*drift/i);
   });

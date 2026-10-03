@@ -5,9 +5,9 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { describe, it } from "node:test";
 import type { TestContext } from "node:test";
-import { inspectInstallation } from "./codex-doctor.mjs";
+import { HELPERS, inspectInstallation } from "./codex-doctor.mjs";
 
-const helpers = ["xclog", "xcsym", "xcui", "xcprof"];
+const helpers = Object.keys(HELPERS);
 const version = "27.1.2";
 const healthyHelper = "#!/bin/sh\nprintf 'Usage: helper\\n'\n";
 
@@ -80,6 +80,13 @@ async function fixture(t: TestContext) {
 }
 
 describe("inspectInstallation", () => {
+  it("should probe exactly the helpers the plugin ships", async () => {
+    assert.deepEqual(
+      Object.keys(HELPERS).sort(),
+      (await fs.readdir(".claude-plugin/plugins/axiom/bin")).filter((name) => !name.startsWith(".")).sort(),
+    );
+  });
+
   it(
     "should reject a metadata pipe without blocking",
     { skip: process.platform === "win32" },
@@ -340,14 +347,36 @@ describe("inspectInstallation", () => {
       );
   });
 
-  it("should configure generated MCP startup with the MCP package version pin", async () => {
-    const pkg = JSON.parse(await fs.readFile("axiom-mcp/package.json", "utf8"));
+  for (const [configuration, mcpFile, exitStatus] of [
+    ["unpinned", { mcpServers: { axiom: { command: "npx", args: ["-y", "axiom-mcp"] } } }, 0],
+    ["pinned", { mcpServers: { axiom: { command: "npx", args: ["-y", `axiom-mcp@${version}`] } } }, 0],
+    ["invalid", { mcpServers: null }, 1],
+    ["missing", null, 1],
+  ] as const) {
+    it(`should exit ${exitStatus} for an otherwise healthy package with ${configuration} MCP startup`, async (t) => {
+      const root = await fixture(t);
+      const target = path.join(root, ".mcp.json");
+      if (mcpFile === null) await fs.unlink(target);
+      else await fs.writeFile(target, JSON.stringify(mcpFile));
+      const result = spawnSync(
+        process.execPath,
+        [path.resolve("scripts/codex-doctor.mjs"), "--package-root", root],
+        { encoding: "utf8", timeout: 20000 },
+      );
+      assert.deepEqual(
+        [result.status, JSON.parse(result.stdout).mcp.status],
+        [exitStatus, configuration],
+      );
+    });
+  }
+
+  it("should configure generated MCP startup unpinned so it resolves the latest published server", async () => {
     const manifest = JSON.parse(
       await fs.readFile("axiom-codex/.mcp.json", "utf8"),
     );
     assert.deepEqual(manifest.mcpServers.axiom, {
       command: "npx",
-      args: ["-y", `axiom-mcp@${pkg.version}`],
+      args: ["-y", "axiom-mcp"],
     });
   });
 });

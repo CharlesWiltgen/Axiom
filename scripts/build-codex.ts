@@ -32,9 +32,6 @@ const ccManifest = JSON.parse(
   fs.readFileSync(path.join(root, '.claude-plugin/plugins/axiom/claude-code.json'), 'utf8')
 );
 const version = ccManifest.version;
-const mcpVersion = JSON.parse(
-  fs.readFileSync(path.join(root, 'axiom-mcp/package.json'), 'utf8')
-).version;
 
 // Clean and recreate output
 if (fs.existsSync(OUTPUT_DIR)) {
@@ -45,8 +42,10 @@ fs.mkdirSync(OUTPUT_MANIFEST, { recursive: true });
 
 const outputBin = path.join(OUTPUT_DIR, 'bin');
 fs.mkdirSync(outputBin, { recursive: true });
-for (const helper of ['xclog', 'xcsym', 'xcui', 'xcprof', 'xcproject']) {
-  const source = path.join(root, '.claude-plugin/plugins/axiom/bin', helper);
+// Every helper the plugin ships; pre-deploy's codex-tool-distribution check reads the same directory.
+const pluginBin = path.join(root, '.claude-plugin/plugins/axiom/bin');
+for (const helper of fs.readdirSync(pluginBin).filter((name) => !name.startsWith('.'))) {
+  const source = path.join(pluginBin, helper);
   const destination = path.join(outputBin, helper);
   fs.copyFileSync(source, destination);
   fs.chmodSync(destination, fs.statSync(source).mode);
@@ -381,11 +380,14 @@ fs.writeFileSync(
 // maps onto Codex's McpServerConfig (same shape as ~/.codex/config.toml's
 // [mcp_servers.NAME] section). Lives at the plugin root so the
 // pluginManifest.mcpServers path ('./.mcp.json') resolves correctly.
+// Deliberately unpinned (ADR-004). Codex installs from the default branch, so a
+// pin derived from the working version names an npm release that does not exist
+// until publish. A semver range would skip prereleases, which ship on `latest`.
 const mcpFile = {
   mcpServers: {
     axiom: {
       command: 'npx',
-      args: ['-y', `axiom-mcp@${mcpVersion}`],
+      args: ['-y', 'axiom-mcp'],
     },
   },
 };
@@ -400,13 +402,16 @@ fs.writeFileSync(path.join(OUTPUT_DIR, 'scripts/README.md'), `# Installation che
 
 Run \`node "<installed-axiom-root>/scripts/doctor.mjs"\` from any working directory.
 Node.js 18 or later is required. The check reads this package and runs only the
-four bundled helpers' help commands, with a three-second limit per helper.
+bundled helpers' help commands, with a three-second limit per helper.
 It never launches or installs MCP servers, reads credentials or Codex settings,
 or changes hooks, trust, configuration, or the installed cache. Helper output is discarded.
 
 The JSON report separates local package integrity from live capabilities.
-\`mcp.configuredVersion\` is the exact startup pin, derived from Axiom's MCP
-package version; \`observedVersion\` is unknown without live host evidence.
+MCP startup is unpinned: \`npx -y axiom-mcp\` resolves the latest published
+release, so \`mcp.status\` is \`unpinned\` and \`configuredVersion\` is null. A
+configuration hand-edited to an exact version reports \`pinned\` with that version;
+other forms report \`invalid\`. \`observedVersion\` is unknown without live host
+evidence, and \`versionMatch\` compares it only against an exact pin.
 Hook files do not prove host compatibility or trust. Xcode integration is optional.
 Host trust, server connection, and Xcode availability remain \`unknown\` unless
 the caller explicitly exports sanitized, structured host metadata and supplies
@@ -418,7 +423,7 @@ Optional metadata (maximum 64 KiB):
 {
   "runtimeVersion": "0.154.0-alpha.6.2",
   "hookTrust": "trusted",
-  "mcp": { "status": "connected", "version": "${mcpVersion}" },
+  "mcp": { "status": "connected", "version": "${version}" },
   "xcode": { "status": "unknown", "version": null }
 }
 \`\`\`

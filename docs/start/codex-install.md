@@ -61,19 +61,19 @@ On first run after enabling, Codex asks you to trust the plugin's hooks (they sh
 
 ### Check the native plugin installation
 
-Axiom’s startup guidance identifies the plugin root, the directory containing `.codex-plugin/plugin.json`. Run the read-only installation check from any working directory:
+The plugin root is the installed directory that contains `.codex-plugin/plugin.json`. With hooks enabled, Codex is given this path when a session starts, so you can ask Codex where Axiom is installed. Run the read-only installation check from any working directory:
 
 ```bash
 node "<plugin-root>/scripts/doctor.mjs"
 ```
 
-The report checks packaged skills, hooks and their dependencies, bundled helper availability, and configured MCP version. Host trust, server connectivity, and optional Xcode availability remain unknown unless you supply sanitized host metadata.
+The report checks packaged skills, hooks and their dependencies, bundled helper availability, and the MCP startup configuration. The plugin starts the latest published `axiom-mcp`, the same as every other MCP install path, so the report shows it as `unpinned`. Host trust, server connectivity, and optional Xcode availability show as unknown unless you pass an optional `--host-metadata` file, described in the plugin's `scripts/README.md`.
 
 The full plugin bundles `xclog`, `xcsym`, `xcui`, `xcprof`, and `xcproject` under `<plugin-root>/bin/`. Use those absolute paths unless the helper is already on PATH. `xcproject` reads both `project.pbxproj` and JSON5 `project.xcproj`; it is also packaged as an npm CLI with the MCP server, without an MCP wrapper. The `npx skills` installation contains skill content only.
 
-Hook diagnostics are off by default. To investigate a hook failure, set `AXIOM_HOOK_DIAGNOSTICS_DIR` for the Codex process to a private directory you own. Diagnostics record bounded hook lifecycle metadata, excluding prompts, tool output, credentials, and exception messages. Execution labels identify each Axiom hook; a label alone does not establish a failure’s cause.
+Hook diagnostics are off by default. To investigate a hook failure, set `AXIOM_HOOK_DIAGNOSTICS_DIR` for the Codex process to a private directory you own. Diagnostics record which Axiom hook ran, how long it took, and whether it finished, never your prompts, tool output, credentials, or error messages.
 
-The reported Codex warning “hook exited without a status code” remains unresolved. Its source has not been attributed to Axiom. Successful hook and runner checks establish the tested behavior, but do not prove that warning is fixed; an absent diagnostic end record alone does not identify its cause.
+**Known issue** Codex sometimes reports "hook exited without a status code". Its cause has not been found, and Axiom has not been identified as the source. If you see it, turn on diagnostics as described above and include the resulting journal when you [report it](https://github.com/CharlesWiltgen/Axiom/issues).
 
 ### Manual Marketplace (alternative)
 
@@ -132,12 +132,24 @@ Skills activate automatically based on your questions. Just ask:
 npx skills update
 ```
 
-If using the manual marketplace method, run `cd ~/Axiom && git pull` instead.
+If you installed the native plugin, refresh its marketplace:
+
+```bash
+codex plugin marketplace upgrade axiom-marketplace
+```
+
+If Codex still runs the older version afterwards, remove the plugin and add it again. If using the manual marketplace method, run `cd ~/Axiom && git pull` instead.
 
 ## Removing
 
 ```bash
 npx skills remove -a codex -g
+```
+
+To remove the native plugin instead:
+
+```bash
+codex plugin remove axiom@axiom-marketplace
 ```
 
 ## Differences from Claude Code
