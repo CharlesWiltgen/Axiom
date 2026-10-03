@@ -78,6 +78,14 @@ class TestCodexStartup(unittest.TestCase):
         self.assertNotIn("use the 'Skill' tool", context)
         self.assertNotIn("Below is the full content", context)
 
+    def test_codex_context_names_every_bundled_helper(self):
+        # The list comes from the installed bin/, so a new helper cannot be left out.
+        with tempfile.TemporaryDirectory() as d:
+            payload = run_in(d, {"AXIOM_SESSION_CONTEXT": "always", "AXIOM_HARNESS": "codex"})
+        context = payload["hookSpecificOutput"]["additionalContext"]
+        helpers = sorted(n for n in os.listdir(os.path.join(PLUGIN_ROOT, "bin")) if not n.startswith("."))
+        self.assertEqual([name for name in helpers if name not in context], [])
+
     def test_codex_respects_the_non_apple_project_gate(self):
         with tempfile.TemporaryDirectory() as d:
             os.mkdir(os.path.join(d, ".git"))

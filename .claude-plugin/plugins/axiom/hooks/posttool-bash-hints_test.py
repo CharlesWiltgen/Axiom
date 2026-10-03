@@ -417,6 +417,18 @@ class TestMatchPatternsUnit(unittest.TestCase):
 
 
 class TestCodexProtocol(unittest.TestCase):
+    def test_every_command_a_hint_names_has_a_codex_skill(self):
+        # Codex ships no /axiom:* commands, so each one a hint names needs a mapping.
+        import importlib.util
+        import re
+
+        spec = importlib.util.spec_from_file_location("posttool_bash_hints", HOOK)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        with open(HOOK, encoding="utf-8") as source:
+            named = set(re.findall(r"/axiom:[a-z0-9-]+", source.read()))
+        self.assertEqual(named - set(mod._CODEX_COMMANDS), set())
+
     def test_stdin_output_produces_one_structured_context_in_rule_order(self):
         payload = bash_payload()
         payload["tool_response"] = "data race detected\nlinker command failed"
@@ -425,7 +437,7 @@ class TestCodexProtocol(unittest.TestCase):
             "hookSpecificOutput": {
                 "hookEventName": "PostToolUse",
                 "additionalContext": "💡 Concurrency issue. Try: skill axiom-concurrency\n"
-                    "💡 Build configuration issue. Try: /axiom:fix-build",
+                    "💡 Build configuration issue. Try: skill axiom-fix-build",
             },
         }, ensure_ascii=False) + "\n", 0))
 

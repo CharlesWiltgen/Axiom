@@ -93,16 +93,18 @@ class TestSubagentStartInjection(unittest.TestCase):
 
 class TestCodexSubagentGuidance(unittest.TestCase):
     def test_codex_preserves_roster_and_uses_available_loading_paths(self):
+        # Cursor documents no Skill tool either, so its adapter selects the same text.
         payload = {"agent_type": "general-purpose"}
         canonical = run_hook_in(payload, env_override={"AXIOM_SESSION_CONTEXT": "always"})["hookSpecificOutput"]["additionalContext"]
-        codex = run_hook_in(payload, env_override={"AXIOM_SESSION_CONTEXT": "always", "AXIOM_HARNESS": "codex"})["hookSpecificOutput"]["additionalContext"]
-        self.assertEqual([line for line in codex.splitlines() if line.startswith('- `')], [line for line in canonical.splitlines() if line.startswith('- `')])
         self.assertIn("Skill tool", canonical)
-        self.assertNotIn("Skill tool", codex)
-        self.assertIn(os.path.dirname(os.path.dirname(HOOK)) + "/skills/<router>/SKILL.md", codex)
-        for requirement in ("BEFORE responding or acting", "MCP", "deployment target", "#available", "fallback"):
-            with self.subTest(requirement=requirement):
-                self.assertIn(requirement, codex)
+        for harness in ("codex", "cursor"):
+            adapted = run_hook_in(payload, env_override={"AXIOM_SESSION_CONTEXT": "always", "AXIOM_HARNESS": harness})["hookSpecificOutput"]["additionalContext"]
+            with self.subTest(harness=harness):
+                self.assertEqual([line for line in adapted.splitlines() if line.startswith('- `')], [line for line in canonical.splitlines() if line.startswith('- `')])
+                self.assertNotIn("Skill tool", adapted)
+                self.assertIn(os.path.dirname(os.path.dirname(HOOK)) + "/skills/<router>/SKILL.md", adapted)
+                for requirement in ("BEFORE responding or acting", "MCP", "deployment target", "#available", "fallback"):
+                    self.assertIn(requirement, adapted)
 
     def test_codex_preserves_project_and_agent_skip_gates(self):
         env = {"AXIOM_SESSION_CONTEXT": "always", "AXIOM_HARNESS": "codex"}

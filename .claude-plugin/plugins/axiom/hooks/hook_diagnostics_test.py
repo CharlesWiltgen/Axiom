@@ -454,5 +454,125 @@ class TestHookDiagnostics(unittest.TestCase):
                 )
 
 
+class TestDiagnosticsAreOptional(unittest.TestCase):
+    """Diagnostics are opt-in; their absence must never break a hook."""
+
+    ENTRY_POINTS = (
+        "session-start.py",
+        "user-prompt-submit.py",
+        "subagent-start.py",
+        "posttool-bash-hints.py",
+        "swift-guardrails.py",
+        "pretool-crash-route.py",
+    )
+
+    def test_module_loads_without_fcntl_and_degrades_to_the_notice(self):
+        # fcntl does not exist on Windows; only an enabled journal needs it.
+        for enabled, expected_stderr in ((False, ""), (True, NOTICE)):
+            with self.subTest(enabled=enabled), tempfile.TemporaryDirectory() as root:
+                env = dict(os.environ, PYTHONPATH=str(HOOKS))
+                env.pop("AXIOM_HOOK_DIAGNOSTICS_DIR", None)
+                if enabled:
+                    env["AXIOM_HOOK_DIAGNOSTICS_DIR"] = str(Path(root) / "diagnostics")
+                result = subprocess.run(
+                    [
+                        sys.executable,
+                        "-c",
+                        (
+                            "import sys\nsys.modules['fcntl'] = None\n"
+                            "import hook_diagnostics as d\nd.begin('session-start')\nprint('{}')\n"
+                        ),
+                    ],
+                    env=env,
+                    text=True,
+                    capture_output=True,
+                    check=False,
+                    timeout=3,
+                )
+                self.assertEqual(
+                    (result.returncode, result.stdout, result.stderr),
+                    (0, "{}\n", expected_stderr),
+                )
+
+    def _stripped_hooks(self, root):
+        stripped = Path(root) / "hooks"
+        stripped.mkdir()
+        for source in HOOKS.glob("*.py"):
+            if source.name != "hook_diagnostics.py" and not source.name.endswith("_test.py"):
+                (stripped / source.name).write_bytes(source.read_bytes())
+        return stripped
+
+    def _run(self, directory, script, **overrides):
+        # PYTHONPATH is removed so an inherited value cannot supply the real module.
+        env = dict(os.environ)
+        for name in ("AXIOM_HOOK_DIAGNOSTICS_DIR", "AXIOM_HARNESS", "PYTHONPATH"):
+            env.pop(name, None)
+        env.update(overrides)
+        return subprocess.run(
+            [sys.executable, str(Path(directory) / script), str(HOOKS.parent)],
+            input="{}",
+            env=env,
+            text=True,
+            capture_output=True,
+            check=False,
+            timeout=10,
+        )
+
+    def test_entry_points_behave_identically_without_the_module(self):
+        with tempfile.TemporaryDirectory() as root:
+            stripped = self._stripped_hooks(root)
+            for context in ("never", "always"):
+                for script in self.ENTRY_POINTS:
+                    with self.subTest(context=context, script=script):
+                        normal = self._run(HOOKS, script, AXIOM_SESSION_CONTEXT=context)
+                        without = self._run(stripped, script, AXIOM_SESSION_CONTEXT=context)
+                        self.assertNotIn("Traceback", without.stderr)
+                        self.assertEqual(
+                            (without.returncode, without.stdout),
+                            (normal.returncode, normal.stdout),
+                        )
+
+    def test_missing_module_reports_requested_diagnostics(self):
+        # Same contract as an unwritable destination: one fixed notice, protocol unchanged.
+        with tempfile.TemporaryDirectory() as root:
+            stripped = self._stripped_hooks(root)
+            for script in self.ENTRY_POINTS:
+                with self.subTest(script=script):
+                    result = self._run(
+                        stripped,
+                        script,
+                        AXIOM_SESSION_CONTEXT="never",
+                        AXIOM_HOOK_DIAGNOSTICS_DIR=str(Path(root) / "diagnostics"),
+                    )
+                    self.assertEqual(result.stderr.count(NOTICE), 1, result.stderr)
+                    self.assertNotIn("Traceback", result.stderr)
+
+    def test_every_fallback_is_identical_and_covers_the_public_api(self):
+        import ast
+
+        import hook_diagnostics
+
+        fallbacks = set()
+        for script in self.ENTRY_POINTS:
+            source = (HOOKS / script).read_text()
+            start = source.index("try:\n    import hook_diagnostics\n")
+            end = source.index("\n    )\n", start) + len("\n    )\n")
+            fallbacks.add(source[start:end])
+        self.assertEqual(len(fallbacks), 1, "the six fallbacks must stay identical")
+        tree = ast.parse(fallbacks.pop())
+        provided = {
+            keyword.arg
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Call) and getattr(node.func, "id", "") == "SimpleNamespace"
+            for keyword in node.keywords
+        }
+        public = {
+            name
+            for name, value in vars(hook_diagnostics).items()
+            if callable(value) and not name.startswith("_") and value.__module__ == "hook_diagnostics"
+        }
+        self.assertEqual(provided, public)
+
+
 if __name__ == "__main__":
     unittest.main()
