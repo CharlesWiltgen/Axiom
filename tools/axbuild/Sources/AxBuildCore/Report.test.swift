@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import os
 
 @testable import AxBuildCore
 
@@ -13,6 +14,28 @@ import Testing
       contentsOf: #require(
         Bundle.module.url(
           forResource: name, withExtension: suffix, subdirectory: "Fixtures/\(folder)")))
+  }
+
+  @Test(arguments: [1, 3]) func deadlinePreservesPreviouslyDecodedRecords(stopAt: Int) {
+    let calls = OSAllocatedUnfairLock(initialState: 0)
+    let stopped = ReaderContext(
+      cwd: "/fixture", effectiveCwd: "/fixture", source: .log,
+      shouldStop: {
+        calls.withLock {
+          $0 += 1
+          return $0 >= stopAt
+        }
+      })
+    let records = ["first", "second", "third"].map { message in
+      Diagnostic(
+        id: .init("pending"), kind: .compiler, severity: .error, message: message, sources: [.log])
+    }
+    let batches = records.map { ReadBatch(diagnostics: [$0], completedSources: [.log]) }
+    let result = reconcileDiagnostics(batches: batches, context: stopped)
+    #expect(result.diagnostics.map(\.message) == ["first", "second", "third"])
+    #expect(result.diagnostics.map(\.id.rawValue) == ["d1", "d2", "d3"])
+    #expect(result.failedTests == nil)
+    #expect(result.issues.contains { $0.kind == .timedOut })
   }
 
   @Test(arguments: [false, true]) func reconcilesTwoSavedFailuresWithRichEvidence(xcode: Bool)
@@ -196,6 +219,25 @@ import Testing
     #expect(merged.diagnostics.map(\.message) == ["XCTAssertEqual failed"])
     #expect(merged.failedTests == 1)
     #expect(merged.diagnostics.first?.sources == [.log, .testResults])
+  }
+
+  @Test func conflictingMultilineResultValuesAreNotMerged() {
+    var log = Diagnostic(
+      id: .init("log"), kind: .test, severity: .error, message: "Expectation failed: value == 2",
+      sources: [.log], file: "/fixture/T.swift", line: 1,
+      test: .init(id: "test()", isFailure: true, framework: .swiftTesting, messages: ["value → 3"]))
+    log.testName = "test()"
+    var result = log
+    result.sources = [.testResults]
+    result.message += "\nvalue → 4"
+    result.test?.messages = nil
+    let merged = reconcileDiagnostics(
+      batches: [.init(diagnostics: [log]), .init(diagnostics: [result])], context: context)
+    #expect(
+      merged.diagnostics.map(\.message) == [
+        "Expectation failed: value == 2", "Expectation failed: value == 2\nvalue → 4",
+      ])
+    #expect(merged.issues.contains { $0.kind == .ambiguousCorrelation })
   }
 
   @Test func conflictingDisplayedValuesCannotEnrichTheSameHeadline() {

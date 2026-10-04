@@ -1,0 +1,612 @@
+import assert from "node:assert/strict";
+import { spawn, spawnSync } from "node:child_process";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { describe, it } from "node:test";
+
+const binary = process.env.AXIOM_AXBUILD ??
+  path.join(import.meta.dirname, ".build/debug/axbuild");
+const fixture = path.join(import.meta.dirname, "fixtures/process-child.py");
+function temporary<T>(action: (root: string, env: NodeJS.ProcessEnv) => T): T {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "axbuild-test-"));
+  const bin = path.join(root, "bin");
+  fs.mkdirSync(bin);
+  for (const name of ["swift", "xcodebuild", "xcresulttool", "xcrun"]) {
+    fs.copyFileSync(fixture, path.join(bin, name));
+    fs.chmodSync(path.join(bin, name), 0o755);
+  }
+  const env = { ...process.env, PATH: bin + ":/usr/bin:/bin", TMPDIR: root };
+  const result = action(root, env);
+  if (result instanceof Promise) {
+    return result.finally(() =>
+      fs.rmSync(root, { recursive: true, force: true })
+    ) as T;
+  }
+  fs.rmSync(root, { recursive: true, force: true });
+  return result;
+}
+function run(args: string[], root: string, env: NodeJS.ProcessEnv) {
+  const r = spawnSync(binary, args, { cwd: root, env, timeout: 12_000 });
+  assert.equal(r.error, undefined);
+  return {
+    exit: r.status,
+    stderr: r.stderr.toString(),
+    bytes: r.stdout,
+    report: JSON.parse(r.stdout.toString()),
+  };
+}
+function saved(report: any) {
+  assert.equal(typeof report.artifacts.run, "string");
+  return JSON.parse(
+    fs.readFileSync(
+      path.join(report.artifacts.run, report.artifacts.report),
+      "utf8",
+    ),
+  );
+}
+async function readiness(file: string, child: ReturnType<typeof spawn>) {
+  const deadline = Date.now() + 8000;
+  while (!fs.existsSync(file)) {
+    assert.equal(child.exitCode, null, "process exited before readiness");
+    assert.ok(Date.now() < deadline, "readiness deadline");
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  }
+}
+function completed(child: ReturnType<typeof spawn>, timeout = 12_000) {
+  let stdout = "", stderr = "";
+  child.stdout!.on("data", (d) => stdout += d);
+  child.stderr!.on("data", (d) => stderr += d);
+  return new Promise<
+    {
+      exit: number | null;
+      signal: string | null;
+      stdout: string;
+      stderr: string;
+    }
+  >((resolve, reject) => {
+    const timer = setTimeout(() => {
+      child.kill("SIGKILL");
+      reject(new Error("wrapper deadline"));
+    }, timeout);
+    child.on("error", reject);
+    child.on("close", (exit, signal) => {
+      clearTimeout(timer);
+      resolve({ exit, signal, stdout, stderr });
+    });
+  });
+}
+function alive(pid: number) {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+describe("axbuild process integration", () => {
+  it("refuses unsupported invocations without launching", () =>
+    temporary((root, env) => {
+      const r = run(["python3", "-c", "print(1)"], root, env);
+      assert.equal(r.exit, 64);
+      assert.equal(r.report.command.status, "not-started");
+      assert.equal(r.report.collection.issues[0].kind, "invalid-invocation");
+      assert.deepEqual(r.report.artifacts, {
+        run: null,
+        log: null,
+        report: null,
+      });
+    }));
+  it("preserves argv environment cwd native exit and exact raw bytes", () =>
+    temporary((root, env) => {
+      const record = path.join(root, "record.json");
+      const args = [
+        "swift",
+        "build",
+        "--package-path",
+        ".",
+        "-Xswiftc",
+        "literal $HOME; echo x",
+      ];
+      const r = run(args, root, {
+        ...env,
+        FIXTURE_RECORD: record,
+        FIXTURE_VALUE: "kept",
+      });
+      assert.equal(r.exit, 65);
+      assert.ok(r.bytes.length <= 8000);
+      const actual = JSON.parse(fs.readFileSync(record, "utf8"));
+      assert.deepEqual(actual.args, [
+        ...args.slice(1),
+        "--no-color-diagnostics",
+      ]);
+      assert.equal(actual.cwd, fs.realpathSync(root));
+      assert.equal(actual.value, "kept");
+      const full = saved(r.report);
+      assert.deepEqual(full.invocation.originalArgs, args);
+      assert.deepEqual(full.invocation.executedArgs, actual.args);
+      assert.deepEqual(
+        fs.readFileSync(
+          path.join(r.report.artifacts.run, r.report.artifacts.log),
+        ),
+        Buffer.concat([
+          Buffer.from("A.swift:3:7: error: fixture error\r\nraw stderr "),
+          Buffer.from([255, 10]),
+        ]),
+      );
+      assert.equal(r.report.command.exitCode, 65);
+      assert.equal(r.report.counts.errors, 1);
+      assert.ok(
+        r.report.collection.issues.some((i: any) => i.kind === "parse-failed"),
+      );
+    }));
+  it("passes native help through unchanged", () =>
+    temporary((root, env) => {
+      const r = spawnSync(binary, ["swift", "build", "--help"], {
+        cwd: root,
+        env,
+        encoding: "utf8",
+      });
+      assert.deepEqual({ exit: r.status, stdout: r.stdout, stderr: r.stderr }, {
+        exit: 12,
+        stdout: "native informational stdout\n",
+        stderr: "native informational stderr\n",
+      });
+    }));
+  it("emits startup paths and isolates concurrent runs", async () =>
+    temporary(async (root, env) => {
+      const results = await Promise.all(
+        [1, 2].map(() =>
+          completed(spawn(binary, ["swift", "build"], { cwd: root, env }))
+        ),
+      );
+      const paths = results.map((r) => {
+        assert.ok(r.stderr.trim(), r.stdout);
+        return JSON.parse(r.stderr.trim()).path;
+      });
+      assert.notEqual(paths[0], paths[1]);
+      results.forEach((r, i) => {
+        assert.equal(JSON.parse(r.stdout).artifacts.run, paths[i]);
+        assert.ok(fs.existsSync(path.join(paths[i], "report.json")));
+      });
+    }));
+  it("adds absent Xcode defaults and preserves explicit settings", () =>
+    temporary((root, env) => {
+      const first = run(["xcodebuild", "-scheme", "App"], root, {
+        ...env,
+        FIXTURE_RESULT: "create",
+      });
+      const full = saved(first.report);
+      assert.deepEqual(full.invocation.defaults, [
+        "-resultBundlePath",
+        full.artifacts.resultBundle,
+        "-IDEBuildingContinueBuildingAfterErrors=YES",
+      ]);
+      const explicit = path.join(root, "caller.xcresult");
+      const args = [
+        "xcodebuild",
+        "build",
+        "-resultBundlePath",
+        explicit,
+        "-IDEBuildingContinueBuildingAfterErrors=NO",
+      ];
+      const second = saved(run(args, root, env).report);
+      assert.deepEqual(second.invocation.executedArgs, args.slice(1));
+      assert.deepEqual(second.invocation.defaults, []);
+    }));
+  it("does not ingest stale caller result artifacts", () =>
+    temporary((root, env) => {
+      const result = path.join(root, "caller.xcresult");
+      fs.mkdirSync(result);
+      fs.writeFileSync(path.join(result, "sentinel"), "unchanged");
+      const r = run(
+        ["xcodebuild", "test", "-resultBundlePath", result],
+        root,
+        env,
+      );
+      assert.equal(r.exit, 65);
+      assert.ok(
+        r.report.collection.issues.some((i: any) =>
+          i.kind === "missing-artifact" && /unchanged|stale/.test(i.message)
+        ),
+      );
+      assert.ok(!r.report.collection.sources.includes("test-results"));
+      assert.equal(
+        fs.readFileSync(path.join(result, "sentinel"), "utf8"),
+        "unchanged",
+      );
+    }));
+  for (
+    const [name, number] of [["SIGINT", 2], ["SIGTERM", 15], [
+      "SIGHUP",
+      1,
+    ]] as const
+  ) {
+    it(`forwards ${name} and cleans owned descendants without killing a sentinel`, async () =>
+      temporary(async (root, env) => {
+        const sentinel = spawn("/usr/bin/python3", [
+          "-c",
+          "import time; time.sleep(60)",
+        ]);
+        const ready = path.join(root, "ready.json");
+        const child = spawn(binary, ["swift", "build"], {
+          cwd: root,
+          env: {
+            ...env,
+            FIXTURE_MODE: "hang",
+            FIXTURE_READY: ready,
+            FIXTURE_SIGNAL_EXIT: "1",
+          },
+        });
+        const finish = completed(child);
+        try {
+          await readiness(ready, child);
+          const owned = JSON.parse(fs.readFileSync(ready, "utf8"));
+          child.kill(name);
+          const r = await finish;
+          assert.equal(r.exit, 128 + number);
+          assert.equal(r.signal, null);
+          const report = JSON.parse(r.stdout);
+          assert.equal(report.command.interruptionSignal, number);
+          assert.equal(report.command.exitCode, 7);
+          assert.equal(report.command.status, "interrupted");
+          assert.equal(report.counts.errors, 1);
+          assert.equal(alive(owned.pid), false);
+          assert.equal(alive(owned.grandchild), false);
+          assert.equal(alive(sentinel.pid!), true);
+          assert.ok(
+            fs.readFileSync(
+              path.join(report.artifacts.run, report.artifacts.log),
+              "utf8",
+            ).includes("partial output"),
+          );
+        } finally {
+          sentinel.kill("SIGKILL");
+          child.kill("SIGKILL");
+        }
+      }));
+  }
+  it("distinguishes unavailable executables from unavailable capture", () =>
+    temporary((root, env) => {
+      const missing = run(["/missing/swift", "build"], root, env);
+      assert.equal(missing.exit, 69);
+      assert.equal(
+        missing.report.collection.issues[0].kind,
+        "tool-unavailable",
+      );
+      const capture = run(["swift", "build"], root, {
+        ...env,
+        TMPDIR: "/does-not-exist/axbuild-fixture",
+      });
+      assert.equal(capture.exit, 74);
+      assert.equal(
+        capture.report.collection.issues[0].kind,
+        "capture-unavailable",
+      );
+    }));
+});
+
+describe("axbuild evidence and teardown regressions", () => {
+  it("bounds a TERM-ignoring auxiliary with the production reader limit", {
+    timeout: 45_000,
+  }, async () =>
+    temporary(async (root, env) => {
+      const ready = path.join(root, "aux-ready");
+      const child = spawn(binary, ["xcodebuild", "test"], {
+        cwd: root,
+        env: {
+          ...env,
+          FIXTURE_RESULT: "create",
+          FIXTURE_EXIT: "0",
+          FIXTURE_AUX_HANG: "1",
+          FIXTURE_AUX_READY: ready,
+        },
+      });
+      const finish = completed(child, 43_000);
+      await readiness(ready, child);
+      const start = Date.now();
+      const pid = Number(fs.readFileSync(ready, "utf8"));
+      const result = await finish;
+      const elapsed = Date.now() - start;
+      assert.ok(
+        elapsed >= 29_000 && elapsed < 38_000,
+        `reader timeout ${elapsed}ms`,
+      );
+      assert.equal(result.exit, 0);
+      const report = JSON.parse(result.stdout);
+      assert.equal(report.command.exitCode, 0);
+      assert.equal(report.collection.status, "partial");
+      assert.ok(
+        report.collection.issues.some((i: any) => i.kind === "timed-out"),
+      );
+      assert.ok(!report.collection.sources.includes("test-results"));
+      assert.equal(alive(pid), false);
+    }));
+  it("retains completed report when stdout receiver closes", async () =>
+    temporary(async (root, env) => {
+      const child = spawn(binary, ["swift", "build"], {
+        cwd: root,
+        env: { ...env, FIXTURE_EXIT: "0" },
+      });
+      const finish = completed(child);
+      child.stdout!.destroy();
+      const result = await finish;
+      assert.equal(result.exit, 0);
+      const startup = JSON.parse(result.stderr.trim());
+      const full = JSON.parse(
+        fs.readFileSync(path.join(startup.path, "report.json"), "utf8"),
+      );
+      assert.equal(full.command.exitCode, 0);
+      assert.ok(
+        full.collection.issues.some((i: any) =>
+          i.kind === "write-failed" && i.operation === "deliver stdout report"
+        ),
+      );
+    }));
+  it("collects changed caller artifacts using the explicitly selected Xcode reader", () =>
+    temporary((root, env) => {
+      const aux = path.join(root, "aux-record");
+      const result = path.join(root, "caller.xcresult");
+      const results = fs.readFileSync(
+        path.join(
+          import.meta.dirname,
+          "Sources/AxBuildCore/Fixtures/tests/test-results.json",
+        ),
+        "utf8",
+      );
+      const executable = path.join(root, "bin/xcodebuild");
+      const r = run([executable, "test", "-resultBundlePath", result], root, {
+        ...env,
+        FIXTURE_RESULT: "create",
+        FIXTURE_AUX_RECORD: aux,
+        FIXTURE_RESULTS: results,
+        FIXTURE_VALUE: "selected-toolchain",
+      });
+      assert.equal(r.report.counts.failedTests, 2);
+      assert.ok(r.report.collection.sources.includes("test-results"));
+      assert.deepEqual(JSON.parse(fs.readFileSync(aux, "utf8")), {
+        args: ["get", "test-results", "tests", "--path", result, "--compact"],
+        value: "selected-toolchain",
+      });
+    }));
+  it("retains selectors without replaying a mutating cache switch during probes", () =>
+    temporary((root, env) => {
+      const record = path.join(root, "xcrun-record");
+      const r = run(
+        [
+          "xcrun",
+          "--sdk",
+          "fixture-sdk",
+          "--toolchain",
+          "fixture-toolchain",
+          "--kill-cache",
+          "swift",
+          "build",
+        ],
+        root,
+        { ...env, FIXTURE_XCRUN_RECORD: record },
+      );
+      assert.equal(r.exit, 65);
+      const calls = fs.readFileSync(record, "utf8").trim().split("\n").map(
+        (line) => JSON.parse(line),
+      );
+      assert.deepEqual(calls[0], [
+        "--sdk",
+        "fixture-sdk",
+        "--toolchain",
+        "fixture-toolchain",
+        "swift",
+        "build",
+        "--help-hidden",
+      ]);
+      assert.deepEqual(calls[1], [
+        "--sdk",
+        "fixture-sdk",
+        "--toolchain",
+        "fixture-toolchain",
+        "--kill-cache",
+        "swift",
+        "build",
+        "--no-color-diagnostics",
+      ]);
+    }));
+  it("retains supported event semantics and reports malformed streams", () =>
+    temporary((root, env) => {
+      const events = fs.readFileSync(
+        path.join(
+          import.meta.dirname,
+          "Sources/AxBuildCore/Fixtures/tests/semantics-6.3.jsonl",
+        ),
+        "utf8",
+      );
+      const r = run(["swift", "test"], root, {
+        ...env,
+        FIXTURE_EVENTS: events,
+      });
+      assert.ok(r.report.collection.sources.includes("events"));
+      const full = saved(r.report);
+      const tests = full.diagnostics.flatMap((group: any) => group.items)
+        .filter((item: any) => item.kind === "test");
+      assert.equal(
+        tests.filter((t: any) => t.test.isFailure === true).length,
+        4,
+      );
+      assert.equal(
+        tests.filter((t: any) =>
+          t.test.isKnown === true && t.test.isFailure === false
+        ).length,
+        1,
+      );
+      assert.equal(
+        tests.filter((t: any) =>
+          t.test.issueSeverity === "warning" && t.test.isFailure === false
+        ).length,
+        1,
+      );
+      const malformed = run(["swift", "test"], root, {
+        ...env,
+        FIXTURE_EVENTS: events + "{",
+      });
+      assert.ok(
+        malformed.report.collection.issues.some((i: any) =>
+          i.kind === "parse-failed"
+        ),
+      );
+      assert.ok(!malformed.report.collection.sources.includes("events"));
+    }));
+  it("marks unknown mappings partial and respects explicit Swift Testing disablement", () =>
+    temporary((root, env) => {
+      const unknown = run(["swift", "test"], root, {
+        ...env,
+        FIXTURE_VERSION: "Swift unknown",
+      });
+      assert.ok(
+        unknown.report.collection.issues.some((i: any) =>
+          i.kind === "unsupported-source"
+        ),
+      );
+      assert.ok(
+        !saved(unknown.report).invocation.defaults.includes(
+          "--event-stream-version",
+        ),
+      );
+      const disabled = run(
+        ["swift", "test", "--disable-swift-testing"],
+        root,
+        env,
+      );
+      assert.ok(
+        !disabled.report.collection.issues.some((i: any) =>
+          i.kind === "unsupported-source" || i.kind === "missing-artifact"
+        ),
+      );
+      assert.ok(
+        !saved(disabled.report).invocation.defaults.includes(
+          "--event-stream-output-path",
+        ),
+      );
+    }));
+  it("reports native signal termination independently of wrapper interruption", () =>
+    temporary((root, env) => {
+      const r = run(["swift", "build"], root, {
+        ...env,
+        FIXTURE_SELF_SIGNAL: "15",
+      });
+      assert.equal(r.exit, 143);
+      assert.equal(r.report.command.signal, 15);
+      assert.equal(r.report.command.interruptionSignal, null);
+      assert.equal(r.report.command.exitCode, null);
+    }));
+  it("escalates a TERM-ignoring build and preserves the first interruption", async () =>
+    temporary(async (root, env) => {
+      const ready = path.join(root, "ready");
+      const child = spawn(binary, ["swift", "build"], {
+        cwd: root,
+        env: {
+          ...env,
+          FIXTURE_MODE: "hang",
+          FIXTURE_READY: ready,
+          FIXTURE_IGNORE_TERM: "1",
+        },
+      });
+      const finish = completed(child);
+      await readiness(ready, child);
+      child.kill("SIGTERM");
+      await new Promise((resolve) => setTimeout(resolve, 40));
+      child.kill("SIGHUP");
+      const r = await finish;
+      const report = JSON.parse(r.stdout);
+      assert.equal(r.exit, 143);
+      assert.equal(report.command.interruptionSignal, 15);
+      assert.equal(report.command.signal, 9);
+      const owned = JSON.parse(fs.readFileSync(ready, "utf8"));
+      assert.equal(alive(owned.pid), false);
+      assert.equal(alive(owned.grandchild), false);
+    }));
+  it("does not advertise missing artifacts as retained evidence", () =>
+    temporary((root, env) => {
+      const full = saved(run(["xcodebuild", "test"], root, env).report);
+      assert.equal(full.artifacts.resultBundle, undefined);
+    }));
+});
+
+it("refuses a symlinked shared capture directory", () =>
+  temporary((root, env) => {
+    const target = path.join(root, "redirect");
+    fs.mkdirSync(target);
+    fs.symlinkSync(target, path.join(root, "axbuild"));
+    const r = run(["swift", "build"], root, env);
+    assert.equal(r.exit, 74);
+    assert.deepEqual(fs.readdirSync(target), []);
+  }));
+
+it("uses the explicitly selected Xcode inside an xcrun invocation for its reader", () =>
+  temporary((root, env) => {
+    const selected = path.join(root, "selected-Xcode/usr/bin");
+    fs.mkdirSync(selected, { recursive: true });
+    for (const name of ["xcodebuild", "xcresulttool"]) {
+      fs.copyFileSync(fixture, path.join(selected, name));
+      fs.chmodSync(path.join(selected, name), 0o755);
+    }
+    fs.writeFileSync(
+      path.join(root, "bin/xcresulttool"),
+      "#!/bin/sh\necho incorrect-reader\n",
+    );
+    const results = fs.readFileSync(
+      path.join(
+        import.meta.dirname,
+        "Sources/AxBuildCore/Fixtures/tests/test-results.json",
+      ),
+      "utf8",
+    );
+    const r = run(["xcrun", path.join(selected, "xcodebuild"), "test"], root, {
+      ...env,
+      FIXTURE_RESULT: "create",
+      FIXTURE_RESULTS: results,
+    });
+    assert.ok(r.report.collection.sources.includes("test-results"));
+    assert.equal(r.report.counts.failedTests, 2);
+  }));
+
+it("keeps completed child success when collection is interrupted", async () =>
+  temporary(async (root, env) => {
+    const ready = path.join(root, "aux-ready");
+    const child = spawn(binary, ["xcodebuild", "test"], {
+      cwd: root,
+      env: {
+        ...env,
+        FIXTURE_RESULT: "create",
+        FIXTURE_EXIT: "0",
+        FIXTURE_AUX_HANG: "1",
+        FIXTURE_AUX_READY: ready,
+      },
+    });
+    const finish = completed(child);
+    await readiness(ready, child);
+    const pid = Number(fs.readFileSync(ready, "utf8"));
+    child.kill("SIGTERM");
+    const r = await finish;
+    const report = JSON.parse(r.stdout);
+    assert.equal(r.exit, 143);
+    assert.equal(report.command.status, "succeeded");
+    assert.equal(report.command.exitCode, 0);
+    assert.equal(report.command.interruptionSignal, 15);
+    assert.equal(report.collection.status, "partial");
+    assert.equal(alive(pid), false);
+    assert.ok(
+      report.collection.issues.some((i: any) =>
+        /read test-results/.test(i.operation)
+      ),
+    );
+  }));
+
+it("does not advertise a missing build-only result bundle", () =>
+  temporary((root, env) => {
+    const r = run(["xcodebuild", "build"], root, env);
+    const full = saved(r.report);
+    assert.equal(full.artifacts.resultBundle, undefined);
+    assert.ok(
+      full.collection.issues.some((i: any) => i.kind === "missing-artifact"),
+    );
+  }));

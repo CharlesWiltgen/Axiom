@@ -37,7 +37,7 @@ func readLog(data: Data, context: ReaderContext) -> ReadBatch {
     )
     let tool = try NSRegularExpression(
       pattern: "^(?:([^|]+?): )?(error|warning|note|remark): (.+)$")
-    let detail = try NSRegularExpression(pattern: "^\\S+\\s+(.*(?:→|AXBUILD_|ST_MARKER).*)$")
+    let detail = try NSRegularExpression(pattern: "^(?:↳|􀄵)\\s+(.*)$")
     var block: Int?
     var testDetails: Int?
     let text = String(decoding: data, as: UTF8.self).replacingOccurrences(of: "\r\n", with: "\n")
@@ -62,6 +62,12 @@ func readLog(data: Data, context: ReaderContext) -> ReadBatch {
         let file = diagnosticPath(found[0], context: context)
         let row = Int(found[1]).flatMap { $0 > 0 ? $0 : nil }
         let column = Int(found[2]).flatMap { $0 > 0 ? $0 : nil }
+        if row == nil || (!found[2].isEmpty && column == nil) {
+          batch.issues.append(
+            .init(
+              kind: .parseFailed, operation: "validate log location",
+              message: "Nonpositive or invalid location: \(found[1]):\(found[2])", path: file))
+        }
         if severity == .note, let last = batch.diagnostics.indices.last,
           batch.diagnostics[last].kind == .compiler,
           batch.diagnostics[last].severity == .error, batch.diagnostics[last].file == file
@@ -89,13 +95,21 @@ func readLog(data: Data, context: ReaderContext) -> ReadBatch {
         block = nil
         let known = found[1] == "a known issue"
         let warning = found[1] == "a warning"
+        let row = Int(found[3]).flatMap { $0 > 0 ? $0 : nil }
+        let column = Int(found[4]).flatMap { $0 > 0 ? $0 : nil }
+        if row == nil || column == nil {
+          batch.issues.append(
+            .init(
+              kind: .parseFailed, operation: "validate Swift Testing text location",
+              message: "Nonpositive or invalid location: \(found[3]):\(found[4])", path: found[2]))
+        }
         batch.diagnostics.append(
           .init(
             id: .init("d\(batch.diagnostics.count + 1)"), kind: .test,
             severity: known ? .note : warning ? .warning : .error,
             message: found[5], sources: [.log],
             file: diagnosticPath(found[2], context: context, basenameOnly: true),
-            line: Int(found[3]), column: Int(found[4]),
+            line: row, column: column,
             test: .init(id: found[0], isFailure: !known && !warning, framework: .swiftTesting)))
         testDetails = batch.diagnostics.count - 1
       } else if let index = testDetails, let found = captures(detail, in: line) {

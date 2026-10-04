@@ -45,6 +45,7 @@ private struct EventIssue: Decodable {
   var sourceLocation: EventLocation?
   var _expression: EventExpression?
 }
+private struct EventCase: Decodable { var id: String? }
 private struct TestEvent: Decodable {
   var kind: String
   var testID: String?
@@ -52,6 +53,7 @@ private struct TestEvent: Decodable {
   var messages: [EventMessage]?
   var iteration: Int?
   var _sourceLocation: EventLocation?
+  var _testCase: EventCase?
 }
 
 func readEvents(data: Data, context: ReaderContext) -> ReadBatch {
@@ -141,7 +143,8 @@ func readEvents(data: Data, context: ReaderContext) -> ReadBatch {
           id: event.testID, isFailure: failure, framework: .swiftTesting,
           messages: remaining.isEmpty ? nil : remaining, isKnown: issue.isKnown,
           evaluatedValues: values?.isEmpty == false ? values : nil,
-          aliases: aliases, issueSeverity: issue.severity, iteration: event.iteration)
+          aliases: aliases, issueSeverity: issue.severity, caseID: event._testCase?.id,
+          iteration: event.iteration)
         batch.diagnostics.append(
           .init(
             id: .init("d\(batch.diagnostics.count + 1)"), kind: .test,

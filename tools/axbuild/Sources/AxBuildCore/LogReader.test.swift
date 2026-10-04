@@ -4,6 +4,23 @@ import Testing
 @testable import AxBuildCore
 
 @Suite struct LogReaderTests {
+  @Test(arguments: ["↳", "􀄵"]) func retainsArbitrarySwiftTestingComments(symbol: String) {
+    let data = Data(
+      "✘ Test example() recorded an issue at Test.swift:1:1: bad\n\(symbol)  User-supplied explanation\n"
+        .utf8)
+    let result = readLog(data: data, context: context)
+    #expect(result.diagnostics.map { $0.test?.messages } == [["User-supplied explanation"]])
+  }
+
+  @Test func nonpositiveTextLocationsAreOmittedAndReported() {
+    let context = ReaderContext(cwd: "/fixture", effectiveCwd: "/fixture", source: .log)
+    let data = Data("✘ Test example() recorded an issue at Test.swift:0:0: bad\n".utf8)
+    let result = readLog(data: data, context: context)
+    #expect(result.diagnostics.map(\.line) == [nil])
+    #expect(result.diagnostics.map(\.column) == [nil])
+    #expect(result.issues.contains { $0.kind == .parseFailed })
+  }
+
   let context = ReaderContext(cwd: "/project", effectiveCwd: "/project", source: .log)
 
   @Test func excludesSnippetEchoesAndAttachesOnlyKnownNotes() {

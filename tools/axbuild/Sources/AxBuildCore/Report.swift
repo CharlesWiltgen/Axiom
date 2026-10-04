@@ -71,6 +71,7 @@ struct CapturedRun: Sendable {
   var issues: [CollectionIssue] = []
   var logTail: String?
   var invocation: InvocationRecord?
+  var execution: ExecutionContext?
 }
 struct LogExcerpt: Codable, Sendable {
   var text: String
@@ -162,12 +163,26 @@ private func executionEvidence(_ actual: Diagnostic, summary: Diagnostic) -> Dia
   }
   return merged
 }
-private func displayedValues(_ diagnostic: Diagnostic) -> [String: String] {
-  var result: [String: String] = [:]
-  for message in diagnostic.test?.messages ?? [] {
+private func displayedValues(_ diagnostic: Diagnostic, counterpart: Diagnostic) -> [String: Set<
+  String
+>] {
+  var result: [String: Set<String>] = [:]
+  let details =
+    (diagnostic.test?.messages ?? []) + diagnostic.message.components(separatedBy: "\n").dropFirst()
+  for message in details.flatMap({ $0.components(separatedBy: "\n") }) {
     if let separator = message.range(of: " → ") {
-      result[String(message[..<separator.lowerBound]).trimmingCharacters(in: .whitespaces)] =
-        String(message[separator.upperBound...]).trimmingCharacters(in: .whitespaces)
+      let key = String(message[..<separator.lowerBound]).trimmingCharacters(in: .whitespaces)
+      var value = String(message[separator.upperBound...]).trimmingCharacters(in: .whitespaces)
+      if diagnostic.sources.contains(.testResults) {
+        let comments = (counterpart.test?.messages ?? []).filter {
+          !$0.contains(" → ") && !$0.isEmpty
+        }
+        for comment in comments where value.hasSuffix(": " + comment) {
+          value = String(value.dropLast(comment.count + 2))
+          break
+        }
+      }
+      result[key, default: []].insert(value)
     }
   }
   return result
@@ -201,8 +216,8 @@ private func compatibleRecords(_ left: Diagnostic, _ right: Diagnostic) -> Bool 
     if let a = left.test?.evaluatedValues, let b = right.test?.evaluatedValues, a != b {
       return false
     }
-    let leftValues = displayedValues(left)
-    let rightValues = displayedValues(right)
+    let leftValues = displayedValues(left, counterpart: right)
+    let rightValues = displayedValues(right, counterpart: left)
     for (key, value) in leftValues {
       if let other = rightValues[key], value != other { return false }
     }
@@ -225,13 +240,18 @@ private func compatibleRecords(_ left: Diagnostic, _ right: Diagnostic) -> Bool 
 
 func reconcileDiagnostics(batches: [ReadBatch], context: ReaderContext) -> ReconciledDiagnostics {
   var result = ReconciledDiagnostics()
-  for batch in batches {
+  for (batchIndex, batch) in batches.enumerated() {
     if context.shouldStop() {
       result.issues.append(
         .init(
           kind: .timedOut, operation: "reconcile diagnostics",
           message: "Collection deadline stopped cross-source matching"))
-      break
+      result.diagnostics += batches.dropFirst(batchIndex).flatMap(\.diagnostics)
+      result.failedTests = nil
+      for index in result.diagnostics.indices {
+        result.diagnostics[index].id = .init("d\(index + 1)")
+      }
+      return result
     }
     var incomingRecords = batch.diagnostics
     for summary in result.diagnostics.filter({ $0.synthetic }) {
@@ -274,6 +294,8 @@ func reconcileDiagnostics(batches: [ReadBatch], context: ReaderContext) -> Recon
             .init(
               kind: .timedOut, operation: "match diagnostics",
               message: "Collection deadline stopped candidate matching"))
+          result.diagnostics +=
+            incomingRecords + batches.dropFirst(batchIndex + 1).flatMap(\.diagnostics)
           result.failedTests = nil
           for index in result.diagnostics.indices {
             result.diagnostics[index].id = .init("d\(index + 1)")

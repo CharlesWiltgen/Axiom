@@ -14,6 +14,7 @@ import Testing
     (["xcodebuild", "test-without-building"], .test, false),
     (["xcodebuild", "-help", "build"], .build, true),
     (["xcodebuild", "-unknown", "build"], .nativeValidation, false),
+    (["xcodebuild", "-unknown=value"], .nativeValidation, false),
     (["xcrun", "--sdk", "macosx", "--toolchain", "swift", "xcodebuild", "test"], .test, true),
     (["/tools/swift", "build", "--package-path", "Some Folder"], .build, true),
     (["swift", "test", "--help"], .informational, false),

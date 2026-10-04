@@ -29,6 +29,12 @@ struct PreparedInvocation: Sendable {
 }
 
 func parseInvocation(args: [String], cwd: URL) -> Result<Invocation, CollectionIssue> {
+  guard !args.contains(where: { $0.utf8.contains(0) }) else {
+    return .failure(
+      .init(
+        kind: .invalidInvocation, operation: "validate native arguments",
+        message: "Embedded NUL cannot be passed to native argv"))
+  }
   var index = 0
   var format = RenderFormat.compact
   if args.first == "--format" {
@@ -168,7 +174,9 @@ func parseInvocation(args: [String], cwd: URL) -> Result<Invocation, CollectionI
         "analyze", "clean",
       ].contains(arg) {
         actions.append(arg)
-      } else if flags.contains(arg) || arg.contains("=") {
+      } else if flags.contains(arg) || (!arg.hasPrefix("-") && arg.contains("="))
+        || arg.hasPrefix("-IDEBuildingContinueBuildingAfterErrors=")
+      {
       } else {
         ambiguous = true
       }
