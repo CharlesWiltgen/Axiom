@@ -1,78 +1,30 @@
 # build-fixer
 
-Automatically diagnoses and fixes Xcode build failures using environment-first diagnostics.
-
-## How to Use This Agent
-
-**Natural language (automatic triggering):**
-- "My build is failing"
-- "BUILD FAILED but no error details"
-- "Xcode says 'No such module'"
-- "Tests passed yesterday but now they're failing"
-- "Getting 'Unable to boot simulator' error"
-
-**Explicit command:**
-```bash
-/axiom:fix-build
-```
+Diagnoses Xcode build failures with environment checks and retained build evidence. It verifies the project, process ownership, caches and simulator state before choosing a fix.
 
 ## What It Does
 
-### Environment Diagnostics (Mandatory)
-1. **Zombie xcodebuild processes** – 10+ processes = stuck builds
-2. **Derived Data size** – >10GB = stale cache
-3. **Simulator state** – Stuck in Booting/Shutting Down
+- Discovers the actual project, scheme and destination
+- Investigates existing build activity; process age and count alone do not prove a zombie
+- Captures necessary builds with axbuild, preserving compiler logs and test artifacts
+- Separates native command failure from incomplete diagnostic collection
+- Reads omitted records from the saved report before considering another build
+- Scopes cleanup to confirmed causes and requests authorization for destructive actions
 
-### Common Issues Fixed
-- Zombie processes → `killall xcodebuild`
-- Stale Derived Data → Clean and rebuild
-- Stuck simulators → `xcrun simctl shutdown all`
-- "No such module" → SPM cache reset
-- Old code executing → Force clean rebuild
+Claude Code and the full Codex plugin bundle axbuild. Pi discovers an installed helper on PATH. Cursor and MCP clients retain a saved-log fallback; they do not bundle axbuild or expose an axbuild MCP tool.
 
-## How It Works
+## How to Use
 
-**Core Principle**: 80% of "mysterious" Xcode issues are environment problems, not code bugs.
+Ask your assistant:
 
-**Workflow**:
-1. Run 3 mandatory diagnostic checks (30 seconds)
-2. Identify specific issue type
-3. Apply appropriate fix automatically
-4. Verify fix worked
-5. Report results
+- "My build failed. Find the cause from the saved report before rebuilding."
+- "The output was truncated. Show the actionable error and its source location."
+- "Check whether the build failed or diagnostic collection was incomplete."
 
-## Example Output
-
-```markdown
-## Build Failure Diagnosis Complete
-
-### Environment Check Results
-- Xcodebuild processes: 23 found (problem - should be 0-2)
-- Derived Data size: 15.2 GB (stale - should be <10GB)
-- Simulator state: 1 stuck in "Booting" (problem)
-
-### Issue Identified
-Multiple issues: Zombie processes + stale Derived Data + stuck simulator
-
-### Fix Applied
-1. Killed 23 zombie xcodebuild processes
-2. Cleaned Derived Data (freed 15.2 GB)
-3. Shutdown stuck simulator
-4. Performed clean rebuild
-
-### Verification
-✅ Build succeeded after fixes
-
-### Time Saved
-Estimated 30-45 minutes of manual debugging avoided
-```
-
-## Saves Time
-
-- **Without agent**: 30-120 minutes debugging environment issues
-- **With agent**: 2-5 minutes automated diagnosis and fixes
+In Claude Code, run `/axiom:fix-build` for the autonomous agent.
 
 ## Related
 
-For detailed understanding of environment-first debugging:
-- **xcode-debugging** skill — Step-by-step diagnostic workflows
+- [xcode-debugging](/skills/debugging/xcode-debugging) – Environment checks and recovery procedures
+- [Build debugging](/skills/debugging/build-debugging) – Dependency and build configuration issues
+- [Tools](/tools/) – axbuild availability and report handling

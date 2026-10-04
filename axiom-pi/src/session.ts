@@ -53,8 +53,9 @@ about your training data.`;
 
 export type AxiomTool = { name: string; blurb: string };
 
-/** The four command-line tools Axiom ships. Detected on PATH at runtime. */
+/** Optional native helpers discovered on PATH at runtime. */
 export const AXIOM_TOOLS: readonly AxiomTool[] = [
+  { name: "axbuild", blurb: "build/test diagnostics — probe `axbuild --help`, then prefix `xcodebuild` or `swift build/test`; inspect `command`, `collection`, `omissions`, and the saved report" },
   { name: "xclog", blurb: "simulator console capture — `xclog list`, `xclog launch <bundle-id> --timeout 30s`" },
   { name: "xcsym", blurb: "crash symbolication — `xcsym crash <file>`, `xcsym verify <file>`" },
   { name: "xcui", blurb: "scriptable sim UI & accessibility — `xcui doctor`, `xcui assert`, `xcui voiceover`" },

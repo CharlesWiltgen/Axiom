@@ -1,3 +1,3 @@
 interface:
   display_name: "Tools"
-  short_description: "Asking how to use Axiom or what skills exist, capturing console with xclog, symbolicating .ips/MetricKit/.crash crash..."
+  short_description: "Asking about Axiom skills or axbuild build/test capture, xclog console, xcsym .ips/MetricKit/.crash symbolication, xc..."

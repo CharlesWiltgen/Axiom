@@ -16,6 +16,37 @@ import os
           forResource: name, withExtension: suffix, subdirectory: "Fixtures/\(folder)")))
   }
 
+  @Test func countsOneTestAcrossProvenAliasesWithoutDroppingUnmergedIssues() {
+    let log = readLog(
+      data: Data(
+        "T.swift:3:7: error: -[CalcTests.Case testOne] : failure A\nT.swift:4:7: error: -[CalcTests.Case testOne] : failure B\n"
+          .utf8), context: context)
+    let record = Diagnostic(
+      id: .init("pending"), kind: .test, severity: .error, message: "failure A",
+      sources: [.testResults], file: "/fixture/T.swift", line: 3,
+      test: .init(id: "test://fixture/CalcTests/Case/testOne", isFailure: true, framework: .xctest),
+      target: "CalcTests", testName: "Case/testOne()")
+    let result = reconcileDiagnostics(
+      batches: [log, .init(diagnostics: [record])], context: context)
+    #expect(result.diagnostics.map(\.message) == ["failure A", "failure B"])
+    #expect(result.failedTests == 1)
+    #expect(result.issues == [])
+  }
+
+  @Test func reportsStructuredPassContradictingRetainedFailures() {
+    let log = readLog(
+      data: Data("T.swift:3:7: error: -[CalcTests.Case testOne] : failure A\n".utf8),
+      context: context)
+    let execution = TestExecution(
+      id: "test://fixture/CalcTests/Case/testOne", name: "Case/testOne()", target: "CalcTests",
+      source: .testResults, failed: false)
+    let result = reconcileDiagnostics(
+      batches: [log, .init(executions: [execution])], context: context)
+    #expect(result.diagnostics.map(\.message) == ["failure A"])
+    #expect(result.failedTests == nil)
+    #expect(result.issues.contains { $0.kind == .ambiguousCorrelation })
+  }
+
   @Test(arguments: [1, 3]) func deadlinePreservesPreviouslyDecodedRecords(stopAt: Int) {
     let calls = OSAllocatedUnfairLock(initialState: 0)
     let stopped = ReaderContext(
@@ -36,6 +67,28 @@ import os
     #expect(result.diagnostics.map(\.id.rawValue) == ["d1", "d2", "d3"])
     #expect(result.failedTests == nil)
     #expect(result.issues.contains { $0.kind == .timedOut })
+  }
+
+  @Test func deadlineStopsFailedTestFinalizationWithoutDroppingRecords() {
+    let calls = OSAllocatedUnfairLock(initialState: 0)
+    let stopped = ReaderContext(
+      cwd: "/fixture", effectiveCwd: "/fixture", source: .log,
+      shouldStop: {
+        calls.withLock {
+          $0 += 1
+          return $0 >= 2
+        }
+      })
+    let records = ["first", "second", "third"].map { name in
+      Diagnostic(
+        id: .init("pending"), kind: .test, severity: .error, message: name,
+        sources: [.events], test: .init(id: name, isFailure: true))
+    }
+    let result = reconcileDiagnostics(batches: [.init(diagnostics: records)], context: stopped)
+    #expect(result.diagnostics.map(\.message) == ["first", "second", "third"])
+    #expect(result.diagnostics.map(\.id.rawValue) == ["d1", "d2", "d3"])
+    #expect(result.failedTests == nil)
+    #expect(result.issues.map(\.kind) == [.timedOut])
   }
 
   @Test(arguments: [false, true]) func reconcilesTwoSavedFailuresWithRichEvidence(xcode: Bool)

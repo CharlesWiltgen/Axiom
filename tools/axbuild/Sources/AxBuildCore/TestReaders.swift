@@ -200,13 +200,15 @@ func readTestResults(data: Data, context: ReaderContext) -> ReadBatch {
   do {
     let tree = try JSONDecoder().decode(ResultTree.self, from: data)
     var pending = tree.testNodes.reversed().map { ($0, Optional<TestExecution>.none) }
+    var failureIDs: Set<String> = []
+    var failureNames: [String: Set<String?>] = [:]
     while let (decoded, inherited) = pending.popLast() {
       if context.shouldStop() {
         batch.issues.append(
           .init(
             kind: .timedOut, operation: "decode test results",
             message: "Collection deadline stopped result traversal"))
-        return batch
+        break
       }
       guard case .node(let node) = decoded else {
         if case .invalid(let error) = decoded {
@@ -227,19 +229,7 @@ func readTestResults(data: Data, context: ReaderContext) -> ReadBatch {
           target: inherited?.target, source: .testResults,
           failed: node.result == "Failed" ? true : node.result == "Passed" ? false : nil)
         if let execution { batch.executions.append(execution) }
-        if node.result == "Failed"
-          && !(node.children ?? []).contains(where: {
-            if case .node(let child) = $0 { return child.nodeType == "Failure Message" }
-            return false
-          })
-        {
-          batch.diagnostics.append(
-            .init(
-              id: .init("d\(batch.diagnostics.count + 1)"), kind: .test, severity: .error,
-              message: "Test failed without a detailed failure message", sources: [.testResults],
-              test: .init(id: execution?.id, isFailure: true),
-              target: execution?.target, testName: execution?.name, synthetic: true))
-        }
+
       }
       if node.nodeType == "Failure Message" {
         guard let name = node.name else {
@@ -259,6 +249,8 @@ func readTestResults(data: Data, context: ReaderContext) -> ReadBatch {
         let file = node.sourceLocation?.filePath.map {
           diagnosticPath($0, context: context, basenameOnly: true)
         }
+        if let id = execution?.id { failureIDs.insert(id) }
+        if let name = execution?.name { failureNames[name, default: []].insert(execution?.target) }
         batch.diagnostics.append(
           .init(
             id: .init("d\(batch.diagnostics.count + 1)"), kind: .test, severity: .error,
@@ -269,6 +261,27 @@ func readTestResults(data: Data, context: ReaderContext) -> ReadBatch {
             target: execution?.target, testName: execution?.name))
       }
       for child in (node.children ?? []).reversed() { pending.append((child, execution)) }
+    }
+    for execution in batch.executions where execution.failed == true {
+      if batch.issues.contains(where: { $0.kind == .timedOut }) { break }
+      if context.shouldStop() {
+        batch.issues.append(
+          .init(
+            kind: .timedOut, operation: "finalize test results",
+            message: "Collection deadline stopped failure fallback"))
+        break
+      }
+      let hasFailure =
+        execution.id.map { failureIDs.contains($0) }
+        ?? execution.name.map { failureNames[$0]?.contains(execution.target) == true } ?? false
+      if !hasFailure {
+        batch.diagnostics.append(
+          .init(
+            id: .init("d\(batch.diagnostics.count + 1)"), kind: .test, severity: .error,
+            message: "Test failed without a detailed failure message", sources: [.testResults],
+            test: .init(id: execution.id, isFailure: true), target: execution.target,
+            testName: execution.name, synthetic: true))
+      }
     }
     if batch.issues.isEmpty { batch.completedSources = [.testResults] }
   } catch {

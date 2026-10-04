@@ -562,6 +562,14 @@ func execute(
       readerArgs = ["xcresulttool"]
     }
   }
+  if invocation.kind == .xcodebuild, run.command.interruptionSignal != nil {
+    run.issues.append(
+      .init(
+        kind: .cleanupIncomplete, operation: "verify detached Xcode jobs",
+        message:
+          "Xcode may launch jobs outside the wrapper's owned process group; detached-job ownership and cleanup cannot be verified safely"
+      ))
+  }
   run.execution = .init(
     invocation: invocation, environment: environment, interruption: interruption,
     deadline: now() + limits.collection, snapshots: snapshots, resultReader: reader,
@@ -591,7 +599,10 @@ func collect(run: CapturedRun, limits: CollectionLimits = .production) async -> 
   }
   var context = ReaderContext(
     cwd: state.invocation.cwd.path, effectiveCwd: state.invocation.effectiveCwd.path, source: .log,
-    canonicalPath: { URL(fileURLWithPath: $0).resolvingSymlinksInPath().path }, shouldStop: stop)
+    canonicalPath: {
+      guard FileManager.default.fileExists(atPath: $0) else { return nil }
+      return URL(fileURLWithPath: $0).resolvingSymlinksInPath().path
+    }, shouldStop: stop)
   var batches: [ReadBatch] = []
   do {
     let data = try Data(

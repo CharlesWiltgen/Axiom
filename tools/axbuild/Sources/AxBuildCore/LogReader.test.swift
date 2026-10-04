@@ -4,6 +4,29 @@ import Testing
 @testable import AxBuildCore
 
 @Suite struct LogReaderTests {
+  @Test(arguments: [false, true]) func resolvesCompilerBasenameOnlyWhenIdentified(identified: Bool)
+  {
+    let context = ReaderContext(
+      cwd: "/fixture", effectiveCwd: "/fixture", source: .log,
+      canonicalPath: { identified ? $0 : nil })
+    let result = readLog(
+      data: Data("gs.swift:23:10: warning: observed warning\n".utf8), context: context)
+    #expect(result.diagnostics.map(\.file) == [identified ? "/fixture/gs.swift" : "gs.swift"])
+    #expect(result.issues.map(\.kind) == (identified ? [] : [.parseFailed]))
+  }
+
+  @Test func retainsStandaloneNativeLinkerFailure() {
+    let result = readLog(
+      data: Data(
+        "ld: library 'AXBUILD_MISSING_LIBRARY' not found\nclang: error: linker command failed with exit code 1\n"
+          .utf8), context: context)
+    #expect(
+      result.diagnostics.map(\.message) == [
+        "ld: library 'AXBUILD_MISSING_LIBRARY' not found", "linker command failed with exit code 1",
+      ])
+    #expect(result.diagnostics.map(\.kind) == [.linker, .tool])
+  }
+
   @Test(arguments: ["↳", "􀄵"]) func retainsArbitrarySwiftTestingComments(symbol: String) {
     let data = Data(
       "✘ Test example() recorded an issue at Test.swift:1:1: bad\n\(symbol)  User-supplied explanation\n"

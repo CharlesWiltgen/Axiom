@@ -40,6 +40,8 @@ Output:
     from stdin ``tool_response`` (string or explicit ``output`` field) and
     emit one PostToolUse ``hookSpecificOutput.additionalContext`` object.
     Unknown response fields are not scanned; no hints produce no output.
+    Claude/Codex completion status is unverified, so truncated-build recovery
+    stays silent for those adapters. Error text cannot establish failure.
 
 Exit code: always 0.
 """
@@ -49,8 +51,11 @@ from __future__ import annotations
 import json
 import os
 import re
+import shlex
 import sys
+from typing import NamedTuple, Literal
 
+# fmt: off
 try:
     import hook_diagnostics
 except ImportError:  # Diagnostics are optional; a missing module must not break the hook.
@@ -70,6 +75,7 @@ except ImportError:  # Diagnostics are optional; a missing module must not break
         record_exception=lambda *_: None,
         record_exit=lambda *_: None,
     )
+# fmt: on
 
 # Pattern hints. Each entry is (compiled_regex, hint_text). Hints are
 # kept short — one line, names the skill or command to invoke. Order
@@ -249,11 +255,148 @@ def duration_hints(command: str, output: str, duration_ms: int | None) -> list[s
         and _BUILD_FAILURE_RE.search(output or "")
     ):
         hints.append(
-            f"💡 Long xcodebuild ({seconds}s) ended in failure. Check for "
-            "zombie processes: `pgrep -x xcodebuild | wc -l`. "
+            f"💡 Long xcodebuild ({seconds}s) produced error-like output. Check "
+            "active processes: `pgrep -x xcodebuild | wc -l`. "
             "Try: /axiom:fix-build"
         )
     return hints
+
+
+class BuildCompletion(NamedTuple):
+    command: str
+    output: str
+    outcome: Literal["succeeded", "failed", "unknown"]
+
+
+def normalize_build_completion(
+    data: dict, codex: bool, environment_output: str
+) -> BuildCompletion | None:
+    tool_input = data.get("tool_input")
+    command = tool_input.get("command", "") if isinstance(tool_input, dict) else ""
+    if not isinstance(command, str):
+        command = ""
+    if codex:
+        response = data.get("tool_response")
+        output = response.get("output") if isinstance(response, dict) else response
+        if not isinstance(output, str):
+            return None
+    else:
+        output = environment_output
+    # Neither adapter has a verified native completion-status contract.
+    return BuildCompletion(command, output, "unknown")
+
+
+def _is_unwrapped_build(command: str) -> bool:
+    try:
+        lexer = shlex.shlex(command, posix=True, punctuation_chars=";&|()")
+        lexer.whitespace_split = True
+        tokens = list(lexer)
+    except ValueError:
+        return False
+    if not tokens or any(re.fullmatch(r"[;&|()]+", token) for token in tokens):
+        return False
+    while tokens and (
+        tokens[0] in {"env", "command", "exec", "time", "sudo"}
+        or re.match(r"^[A-Za-z_][A-Za-z0-9_]*=", tokens[0])
+    ):
+        tokens.pop(0)
+    if not tokens:
+        return False
+    program = tokens.pop(0).rsplit("/", 1)[-1]
+    if program == "xcrun":
+        while tokens and tokens[0].startswith("-"):
+            option = tokens.pop(0)
+            if option in {"--sdk", "--toolchain"}:
+                if not tokens or tokens[0].startswith("-"):
+                    return False
+                tokens.pop(0)
+            elif option not in {
+                "-v",
+                "--verbose",
+                "-l",
+                "--log",
+                "-r",
+                "--run",
+                "-n",
+                "--no-cache",
+                "-k",
+                "--kill-cache",
+            }:
+                return False
+        if not tokens:
+            return False
+        program = tokens.pop(0).rsplit("/", 1)[-1]
+    if program == "swift":
+        return bool(
+            tokens
+            and tokens[0] in {"build", "test"}
+            and not any(
+                t in {"--help", "-h", "--help-hidden", "--version"} for t in tokens
+            )
+        )
+    if program != "xcodebuild":
+        return False
+    actions = []
+    values = {
+        "-scheme",
+        "-project",
+        "-workspace",
+        "-target",
+        "-configuration",
+        "-sdk",
+        "-destination",
+        "-derivedDataPath",
+        "-resultBundlePath",
+        "-testPlan",
+    }
+    i = 0
+    while i < len(tokens):
+        token = tokens[i]
+        if token in values:
+            if i + 1 == len(tokens):
+                return False
+            i += 2
+            continue
+        if token in {
+            "-help",
+            "-list",
+            "-version",
+            "-showsdks",
+            "-showBuildSettings",
+            "-showdestinations",
+            "-showTestPlans",
+        }:
+            return False
+        if token in {
+            "build",
+            "test",
+            "build-for-testing",
+            "test-without-building",
+            "archive",
+            "install",
+            "analyze",
+            "clean",
+        }:
+            actions.append(token)
+        i += 1
+    return not actions or any(action != "clean" for action in actions)
+
+
+def truncated_build_hints(command: str, output: str, outcome: str) -> list[str]:
+    if outcome != "failed" or not _is_unwrapped_build(command):
+        return []
+    observed = (
+        re.search(r"\[(?:[0-9]+ (?:characters|lines|tokens) )?truncated\]", output)
+        is not None
+    )
+    if not observed and len(output) < 30000:
+        return []
+    evidence = (
+        "was truncated" if observed else "may be truncated (output-length heuristic)"
+    )
+    return [
+        f"💡 Build output {evidence}. Read the retained log if available; use axbuild for the next necessary build/test."
+    ]
 
 
 def main() -> int:
@@ -270,37 +413,45 @@ def main() -> int:
     try:
         from project_detect import resolve_context_decision
 
-        if not resolve_context_decision(os.getcwd(), os.environ.get("AXIOM_SESSION_CONTEXT")):
+        if not resolve_context_decision(
+            os.getcwd(), os.environ.get("AXIOM_SESSION_CONTEXT")
+        ):
             return 0
     except Exception as error:
         hook_diagnostics.record_exception(error)
 
     codex = os.environ.get("AXIOM_HARNESS") == "codex"
-    if codex:
-        response = data.get("tool_response")
-        output = response.get("output") if isinstance(response, dict) else response
-        if not isinstance(output, str):
-            return 0
-    else:
-        output = os.environ.get("CLAUDE_TOOL_OUTPUT", "")
-    tool_input = data.get("tool_input") or {}
-    command = tool_input.get("command", "") if isinstance(tool_input, dict) else ""
-    if not isinstance(command, str):
-        command = ""
+    completion = normalize_build_completion(
+        data, codex, os.environ.get("CLAUDE_TOOL_OUTPUT", "")
+    )
+    if completion is None:
+        return 0
+    command, output, outcome = completion
     duration_ms = data.get("duration_ms")
     if not isinstance(duration_ms, int):
         duration_ms = None
 
-    hints = match_patterns(output) + duration_hints(command, output, duration_ms)
+    hints = (
+        match_patterns(output)
+        + duration_hints(command, output, duration_ms)
+        + truncated_build_hints(command, output, outcome)
+    )
     if codex:
         if hints:
             context = "\n".join(hints)
             for command, skill in _CODEX_COMMANDS.items():
                 context = context.replace(command, skill)
-            print(json.dumps({"hookSpecificOutput": {
-                "hookEventName": "PostToolUse",
-                "additionalContext": context,
-            }}, ensure_ascii=False))
+            print(
+                json.dumps(
+                    {
+                        "hookSpecificOutput": {
+                            "hookEventName": "PostToolUse",
+                            "additionalContext": context,
+                        }
+                    },
+                    ensure_ascii=False,
+                )
+            )
     else:
         for hint in hints:
             print(hint)

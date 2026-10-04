@@ -84,14 +84,16 @@ It adds:
 - **Session guardrail** – injects the iOS/Xcode version ground truth (so the agent never claims iOS 26 "doesn't exist") and lists which Axiom tools are on your PATH. Gated to Apple projects; override with `AXIOM_SESSION_CONTEXT=always|never`.
 - **Tool hooks** – flags `@State` without an access level on Swift writes, routes crash-file reads to `xcsym`, and surfaces skill hints from command output. Also gated to Apple projects, with the same override.
 
-## Built-in Tools (xclog, xcsym, xcui, xcprof)
+## Command-Line Helpers
 
-Axiom ships four command-line tools — `xclog` (console capture), `xcsym` (crash symbolication), `xcui` (simulator UI/accessibility), and `xcprof` (performance traces). They're prebuilt binaries, and no install method puts them on your `PATH` automatically. Clone the repo and symlink them:
+Optional command-line helpers include axbuild (build/test diagnostics), xcproject (project inspection), `xclog` (console capture), `xcsym` (crash symbolication), `xcui` (simulator UI/accessibility), and `xcprof` (performance traces). They are prebuilt binaries, and no install method puts them on your `PATH` automatically. Clone the repo and symlink them:
 
 ```bash
 cd ~ && git clone https://github.com/CharlesWiltgen/Axiom.git
 ln -sf ~/Axiom/.claude-plugin/plugins/axiom/bin/* /usr/local/bin/
 ```
+
+Pi discovers axbuild only when an executable is on PATH; the extension does not bundle it. Probe its resolved path with `--help` before use, inspect collection issues and omissions, and read the saved report before rebuilding. See [Tools](/tools/) for compatibility and fallback guidance.
 
 With the binaries available, ask Pi to "capture the simulator console" or "symbolicate this crash" and the `axiom-tools` skill (plus the extension's session hook) will drive them.
 

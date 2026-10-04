@@ -23,6 +23,10 @@ Use this skill when:
 - "Show me all available Axiom skills"
 - "I need to optimize my app's performance. Where do I start?"
 
+## Build Diagnostic Capture
+
+For a necessary build or test, axbuild returns bounded JSON and retains the complete report and compiler log. Inspect native `command` status, `collection` issues and `omissions`; read saved evidence before rebuilding. Ask: "Use axbuild for the next necessary build and find the error from the retained report." See [Tools](/tools/) for installation and harness availability.
+
 ## What This Skill Provides
 
 ### Personalized Recommendations

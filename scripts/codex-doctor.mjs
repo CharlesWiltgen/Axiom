@@ -8,6 +8,7 @@ const VERSION = /^\d+\.\d+\.\d+(?:-[a-zA-Z0-9]+(?:\.[a-zA-Z0-9]+)*)?$/;
 // One non-mutating help probe per helper in the plugin's bin/; a test keeps the
 // keys equal to that directory, so a new helper cannot go unchecked.
 export const HELPERS = {
+  axbuild: ["--help"],
   xclog: ["list", "--help"],
   xcsym: ["--help"],
   xcui: ["--help"],

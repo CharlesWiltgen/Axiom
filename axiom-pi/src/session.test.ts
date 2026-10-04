@@ -4,6 +4,7 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import {
+  AXIOM_TOOLS,
   formatDate,
   iosGroundTruth,
   findOnPath,
@@ -523,4 +524,16 @@ describe("project detection parity with project_detect.py", () => {
       fs.rmSync(big, { recursive: true, force: true });
     }
   }, 30_000);
+});
+
+describe("axbuild discovery", () => {
+  it("lists only an executable axbuild discovered on PATH and provides a help probe", () => {
+    const tool = AXIOM_TOOLS.find(tool => tool.name === "axbuild");
+    expect(tool).toBeDefined();
+    const context = toolContextBlock([{ name: "axbuild", blurb: tool?.blurb ?? "", resolvedPath: "/observed/bin/axbuild" }]);
+    expect(context).toContain("/observed/bin/axbuild");
+    expect(context).toContain("--help");
+    expect(context).toContain("collection");
+    expect(findOnPath("axbuild", { PATH: "/missing" }, () => false)).toBeNull();
+  });
 });

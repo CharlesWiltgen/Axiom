@@ -134,7 +134,7 @@ describe("generated Codex terminal hook", () => {
   it("keeps terminal hints silent outside Apple projects unless overridden", () => {
     const pluginRoot = path.resolve("axiom-codex");
     const manifest = JSON.parse(fs.readFileSync(path.join(pluginRoot, "hooks/hooks.json"), "utf8"));
-    const command = manifest.hooks.PostToolUse.find(group => group.matcher === "Bash").hooks[0].command;
+    const command = manifest.hooks.PostToolUse.find((group: { matcher: string }) => group.matcher === "Bash").hooks[0].command;
     const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "axiom-terminal-scope-"));
     const hints = "💡 Database migration issue. Try: skill axiom-data\n💡 Memory issue detected. Try: skill axiom-performance";
     try {
@@ -163,7 +163,7 @@ describe("generated Codex terminal hook", () => {
   it("delivers stdin hints through the generated command from root and nested cwd", () => {
     const pluginRoot = path.resolve("axiom-codex");
     const manifest = JSON.parse(fs.readFileSync(path.join(pluginRoot, "hooks/hooks.json"), "utf8"));
-    const command = manifest.hooks.PostToolUse.find(group => group.matcher === "Bash").hooks[0].command;
+    const command = manifest.hooks.PostToolUse.find((group: { matcher: string }) => group.matcher === "Bash").hooks[0].command;
     const payload = { tool_name: "Bash", tool_input: { command: "swift build" }, tool_response: "data race detected" };
     for (const cwd of [process.cwd(), path.resolve("docs")]) {
       const result = spawnSync("sh", ["-lc", command], {
@@ -246,4 +246,33 @@ describe("generated Codex hook diagnostics", () => {
       fs.rmSync(fixture, { recursive: true, force: true });
     }
   });
+});
+
+
+describe("axbuild workflow fidelity", () => {
+  it("preserves discovered package paths, report limits and saved-log fallback in Codex", () => {
+    for (const relative of ["skills/axiom-build/SKILL.md", "skills/axiom-build/skills/build-debugging.md", "skills/axiom-fix-build/SKILL.md", "skills/axiom-run-tests/SKILL.md"]) {
+      const text = fs.readFileSync(path.join("axiom-codex", relative), "utf8");
+      assert.match(text, /actual loaded package/);
+      assert.match(text, /--help/);
+      assert.match(text, /command.*collection/s);
+      assert.match(text, /omissions/);
+      assert.match(text, /saved.log fallback/i);
+      assert.doesNotMatch(text, /CLAUDE_PLUGIN_ROOT/);
+    }
+  });
+  it("leaves generated terminal recovery silent for unverified completion fields", () => {
+    const result = spawnSync("python3", ["axiom-codex/hooks/posttool-bash-hints.py"], {
+      encoding: "utf8", env: { ...process.env, AXIOM_HARNESS: "codex", AXIOM_SESSION_CONTEXT: "always" },
+      input: JSON.stringify({ tool_name: "Bash", tool_input: { command: "swift build" }, tool_response: { output: "[30000 characters truncated]", exit_code: 1 } }),
+    });
+    assert.deepEqual({ status: result.status, stdout: result.stdout, stderr: result.stderr }, { status: 0, stdout: "", stderr: "" });
+  });
+});
+
+it("routes axbuild through a shipped Codex build suite rather than withheld onboarding", () => {
+  const text = fs.readFileSync("axiom-codex/skills/axiom-tools/SKILL.md", "utf8");
+  assert.match(text, /axbuild/);
+  assert.doesNotMatch(text, /skills\/getting-started\.md/);
+  assert.match(text, /axiom-build/);
 });

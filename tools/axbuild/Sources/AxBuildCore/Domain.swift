@@ -161,7 +161,7 @@ struct ReadBatch: Equatable, Sendable {
   var executions: [TestExecution] = []
 }
 
-struct TestAlias: Codable, Equatable, Sendable {
+struct TestAlias: Codable, Hashable, Sendable {
   var source: Source
   var id: String
 }

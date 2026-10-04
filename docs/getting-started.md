@@ -14,7 +14,7 @@ Axiom provides skills, agents, and tools that enhance coding harnesses like Clau
 - **Skills** – Domain knowledge Claude uses to help you
 - **Agents** – Autonomous tools that scan and analyze code
 - **Commands** – Explicit actions you can invoke
-- **Bundled tools** – `xclog` (simulator console capture), `xcsym` (crash symbolication), `xcui` (simulator UI & accessibility testing), and `xcprof` (CPU/performance profile analysis) ship as native binaries and are used automatically when the task calls for them
+- **Bundled tools** – `axbuild` (bounded build/test diagnostics with retained reports), `xcproject` (project inspection), `xclog` (simulator console capture), `xcsym` (crash symbolication), `xcui` (simulator UI & accessibility testing), and `xcprof` (CPU/performance profile analysis) ship with the full Claude Code and Codex plugins; Pi discovers separately installed helpers on PATH. Cursor/MCP use a saved-log fallback for axbuild
 
 **You don't need to memorize anything.** Just describe your problem — Claude will use the right skill automatically.
 

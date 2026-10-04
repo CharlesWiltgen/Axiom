@@ -37,13 +37,9 @@ echo "CI env: ${CI:-not set}, GitHub Actions: ${GITHUB_ACTIONS:-not set}"
 ls -la | grep -E "\.xcodeproj|\.xcworkspace"
 # If nothing shows, you're in wrong directory
 
-# 1. Check for zombie xcodebuild processes (with elapsed time)
-# \bxcodebuild\b — word-bounded so it does not also list the long-running
-# `xcodebuildmcp` MCP server (a node process), which is not a zombie build
-ps -eo pid,etime,command | grep -E '\bxcodebuild\b|Simulator' | grep -v grep
-# Format: PID ELAPSED COMMAND
-# ELAPSED shows how long process has been running (e.g., 1:23:45 = 1 hour 23 min 45 sec)
-# Processes running > 30 minutes are likely zombies
+# 1. Inventory exact-name build processes; verify this works before launching Xcode
+pgrep -x xcodebuild | wc -l
+# Investigate ownership and state of existing PIDs. Age alone proves nothing.
 
 # 2. Check Derived Data size (>10GB = stale)
 du -sh ~/Library/Developer/Xcode/DerivedData
@@ -56,13 +52,13 @@ xcrun simctl list devices -j | jq '.devices | to_entries[] | .value[] | select(.
 
 **Clean environment** (probably a code issue):
 - Project/workspace file found in current directory
-- 0-2 xcodebuild processes (all < 10 minutes old)
+- No conflicting build activity after ownership/state inspection
 - Derived Data < 10GB
 - No simulators stuck in Booting/Shutting Down
 
 **Environment problem** (apply fixes below):
 - No project/workspace file found (wrong directory!)
-- 10+ xcodebuild processes OR any process > 30 minutes old (zombies)
+- Confirmed task-owned abandoned build activity; investigate before termination
 - Derived Data > 10GB (stale cache)
 - Simulators stuck in Booting state
 - Any intermittent failures
@@ -77,33 +73,26 @@ If user mentions ANY of these, it's definitely an environment issue:
 - "Simulator stuck at splash screen"
 - "Unable to install app"
 
-## Running Builds: Capture Structured Errors
+## Capture Build and Test Diagnostics
 
-Whenever you run a build or test — to reproduce the failure or to verify a fix — **build to a result bundle and read the structured diagnostics**, not the raw `xcodebuild` output. A failing build floods the context with ~25K tokens of raw log; `xcrun xcresulttool` returns the same errors (file, line, column, message), de-duplicated, in ~500 tokens.
+Before the next necessary build or test, resolve `bin/axbuild` under the **actual loaded package** in Claude Code or Codex, or discover an executable on PATH in Pi. Check executable permission and run its absolute path with `--help`; assign that observed path to `AXBUILD`. Never infer an installation path from an example.
+
+Cursor and MCP distributions do not bundle axbuild and expose no axbuild MCP wrapper. Use the **saved-log fallback** below when a verified shell helper is unavailable.
+
+Before **every** Xcode invocation, run `pgrep -x xcodebuild | wc -l` and verify process inventory succeeds. Investigate existing builds; process count and age do not establish zombie status. Never terminate unrelated processes. Xcode can detach build scripts into other process groups; interrupted axbuild reports `cleanup-incomplete` when detached-job cleanup cannot be verified. Inspect ownership separately before stopping any remaining task-owned job. Discover the actual scheme and destination before executing:
 
 ```bash
-# Stamp the bundle AND its log together, so a later verify-build doesn't overwrite them.
-STAMP=$(date +%s)
-RESULT="/tmp/fix-build-$STAMP.xcresult"
-LOG="/tmp/fix-build-$STAMP.log"
-
-# Redirect to a file — never pipe xcodebuild (a pipe orphans the build if interrupted;
-# see iOS-9). Let the build finish, then read the bundle whether it SUCCEEDED or FAILED —
-# a failed build still writes its diagnostics to the bundle.
-xcodebuild build -scheme <ACTUAL_SCHEME_NAME> \
-  -destination 'platform=iOS Simulator,name=iPhone 16' \
-  -resultBundlePath "$RESULT" \
-  > "$LOG" 2>&1
-
-# Read the distilled errors (each compiler error once, with its source location):
-xcrun xcresulttool get build-results --compact --path "$RESULT"
+"$AXBUILD" xcodebuild -scheme "$SCHEME" -destination "$DESTINATION" build
+"$AXBUILD" swift test --package-path "$PACKAGE"
 ```
 
-For `xcodebuild test` runs, read failures from the bundle with `xcrun xcresulttool get test-results summary --path "$RESULT"` — `test-results` takes a sub-command (`summary`, `tests`, …) and has no `--compact`; the `test-runner` agent has the full recipe.
+Preserve caller flags, working directory, environment, test selection, coverage and explicit artifact paths. The wrapper adds absent diagnostic defaults; it never cleans caches or automatically rebuilds. Do not pipe a build through another command.
 
-**Fallback**: if the bundle is missing/malformed (or `xcrun xcresulttool get build-results` errors — it needs Xcode 16+, which is below Axiom's supported floor, so it should always be present), read the redirected log `"$LOG"` and grep it for `error:` lines. Grepping the saved file is safe; piping `xcodebuild` itself is not.
+Inspect `command` (native outcome) and `collection` (evidence completeness) separately. Native success can accompany partial collection. The default JSON is bounded to 8,000 UTF-8 bytes; inspect `omissions` and read `artifacts.report` relative to the absolute `artifacts.run` directory for complete records and evaluated values. The startup stderr JSON identifies the run directory before completion. Use diagnostic locations and values rather than rebuilding to redisplay output.
 
-Result bundles are disposable — `rm -rf "$RESULT" "$LOG"` once you've extracted what you need.
+The retained log is the primary compiler source; test results and validated Swift Testing events supplement it. A null failed-test count means uncertainty, not zero. Preserve result bundles for attachment export, coverage, console logs and deeper inspection. Native informational commands pass their output through.
+
+**Saved-log fallback:** redirect the necessary native command's stdout/stderr to a unique file, let it finish, record its exit status and inspect that saved file. An xcresult build summary is not equivalent to the compiler log. Read an existing log before considering another build. Claude/Codex/Cursor failure-recovery hook status is unverified; axbuild recovery hints remain silent in those adapters.
 
 ## CI/CD Environment Detection
 
@@ -144,11 +133,11 @@ rm -rf ~/Library/Caches/org.swift.swiftpm/
 xcodebuild -resolvePackageDependencies -scheme <ACTUAL_SCHEME_NAME>
 
 # For CI/CD build failures (capture to a result bundle; read errors per "Running Builds")
-xcodebuild clean build -scheme <ACTUAL_SCHEME_NAME> \
+"$AXBUILD" xcodebuild clean build -scheme <ACTUAL_SCHEME_NAME> \
   -destination 'platform=iOS Simulator,name=iPhone 16' \
   -allowProvisioningUpdates \
   -resultBundlePath /tmp/ci-build.xcresult > /tmp/ci-build.log 2>&1
-xcrun xcresulttool get build-results --compact --path /tmp/ci-build.xcresult
+# Read the axbuild report and retained compiler log; keep the bundle for deeper inspection
 ```
 
 **Downloading Simulator Runtimes (CI/CD Setup):**
@@ -204,28 +193,11 @@ If running in CI/CD, mention this in your diagnosis:
 
 ## Fix Workflows
 
-Each workflow below ends with a rebuild or retest. The `xcodebuild` lines show the *fix* command in bare form for brevity — when you actually run one, capture it to a result bundle and read the errors with `xcresulttool` per **Running Builds** above (§2 shows the full form). Never let raw build output flood the context.
+The workflows below require evidence for the specific cause before cleanup. Scope deletion and simulator changes to the affected project/device and obtain authorization for destructive actions. Large cache size alone does not prove corruption. Capture every rebuild or retest with axbuild as above; use an existing saved report first.
 
-### 1. For Zombie Processes
+### 1. For Confirmed Abandoned Processes
 
-If you see 10+ xcodebuild processes OR any processes with elapsed time > 30 minutes:
-
-```bash
-# First, review process ages from the check above
-# Look for ELAPSED times like 35:12 (35 min) or 1:23:45 (1 hr 23 min) - these are zombies
-
-# Kill all xcodebuild processes
-killall -9 xcodebuild
-
-# Verify they're gone (with elapsed time). -w xcodebuild ignores `xcodebuildmcp`.
-ps -eo pid,etime,command | grep -w xcodebuild | grep -v grep
-
-# Also kill the stuck simulator GUI if needed.
-# Xcode 27 replaced Simulator.app with DeviceHub.app — name both, or this is a
-# silent no-op on a 27-only Mac.
-killall -9 Simulator DeviceHub
-pgrep -l Simulator DeviceHub   # must print nothing — killall exits 0 if EITHER matched
-```
+Inspect exact-name PIDs, parent ownership and process state. A long-running build may still be active. Only stop confirmed task-owned abandoned processes, with authorization for destructive termination; start with TERM and verify cleanup before escalating. Never use blanket `killall xcodebuild`, Simulator or DeviceHub termination.
 
 ### 2. For Stale Derived Data / "No such module" Errors
 
@@ -247,13 +219,8 @@ xcodebuild clean -scheme <ACTUAL_SCHEME_NAME>
 rm -rf ~/Library/Developer/Xcode/DerivedData/*
 rm -rf .build/ build/
 
-# Rebuild to a result bundle and read structured errors (see "Running Builds")
-STAMP=$(date +%s)
-xcodebuild build -scheme <ACTUAL_SCHEME_NAME> \
-  -destination 'platform=iOS Simulator,name=iPhone 16' \
-  -resultBundlePath "/tmp/fix-build-$STAMP.xcresult" \
-  > "/tmp/fix-build-$STAMP.log" 2>&1
-xcrun xcresulttool get build-results --compact --path "/tmp/fix-build-$STAMP.xcresult"
+# Preserve the discovered scheme and destination
+"$AXBUILD" xcodebuild build -scheme "$SCHEME" -destination "$DESTINATION"
 ```
 
 **CRITICAL**:
@@ -277,7 +244,7 @@ xcodebuild -resolvePackageDependencies -scheme <ACTUAL_SCHEME_NAME>
 xcodebuild -list
 
 # Rebuild
-xcodebuild build -scheme <ACTUAL_SCHEME_NAME> \
+"$AXBUILD" xcodebuild build -scheme <ACTUAL_SCHEME_NAME> \
   -destination 'platform=iOS Simulator,name=iPhone 16'
 ```
 
@@ -316,8 +283,7 @@ xcrun simctl list devices -j | jq -r '.devices | to_entries[] | .value[] | selec
   xcrun simctl erase "$UDID"
 done
 
-# Nuclear option if nothing works (Xcode 26 = Simulator, Xcode 27 = DeviceHub)
-killall -9 Simulator DeviceHub
+# Stop only an authorized, confirmed task-owned stuck device process
 ```
 
 ### 5. For Test Failures (No Code Changes)
@@ -329,7 +295,7 @@ If tests are failing but user hasn't changed code:
 rm -rf ~/Library/Developer/Xcode/DerivedData/*
 
 # Run tests again
-xcodebuild test -scheme <ACTUAL_SCHEME_NAME> \
+"$AXBUILD" xcodebuild test -scheme <ACTUAL_SCHEME_NAME> \
   -destination 'platform=iOS Simulator,name=iPhone 16'
 ```
 
@@ -342,7 +308,7 @@ If build succeeds but old code runs:
 rm -rf ~/Library/Developer/Xcode/DerivedData/*
 
 # Force clean rebuild
-xcodebuild clean build -scheme <ACTUAL_SCHEME_NAME>
+"$AXBUILD" xcodebuild clean build -scheme <ACTUAL_SCHEME_NAME>
 ```
 
 ## Decision Tree
@@ -358,7 +324,7 @@ Identify issue:
 ├─ No project/workspace file → Report "wrong directory" to user
 ├─ (following checks apply if directory verified)
 ↓
-├─ 10+ xcodebuild processes OR any process > 30min → Kill zombie processes (§1)
+├─ Confirmed task-owned abandoned activity → Scoped, authorized cleanup (§1)
 ├─ Derived Data > 10GB → Clean Derived Data + rebuild (§2)
 ├─ "No such module" (SPM) → Clean SPM cache + resolve packages (§3)
 ├─ "No such module" (local) → Clean Derived Data + rebuild (§2)
@@ -383,7 +349,7 @@ Provide a clear, structured report:
 
 ### Environment Check Results
 - Project directory: [verified/not found]
-- Xcodebuild processes: [count] (oldest: [elapsed time]) (clean/zombie)
+- Xcodebuild processes: [count] (oldest: [elapsed time]) (ownership/state verified or unresolved)
 - Derived Data size: [size] (clean/stale)
 - Simulator state: [status] (clean/stuck) (skip if CI/CD)
 
@@ -406,12 +372,12 @@ Provide a clear, structured report:
 
 1. **ALWAYS run the 4 mandatory checks first** - never skip (directory, processes, Derived Data, simulators)
 2. **Detect CI/CD context** - check for CI environment variables and adjust diagnostics
-3. **Check process elapsed time** - processes > 30 minutes are zombies, kill them
+3. **Check process ownership and state** - age/count alone never justify termination
 4. **Use actual scheme names** from `xcodebuild -list` - never use placeholders
 5. **Handle xcodebuild -list failures** - verify directory and provide recovery steps
 6. **Show command output** - don't just say "I ran X", show the result
 7. **Verify fixes worked** - run the build/test again to confirm
-8. **Capture errors structured** - build/test to `-resultBundlePath`, then read `xcrun xcresulttool get build-results --compact` (see "Running Builds") - never dump the raw log into context
+8. **Capture diagnostics with axbuild** - inspect native status, collection issues, omissions and the retained report/log
 9. **If fix doesn't work** - escalate to user with specific next steps
 
 ## When to Stop and Report

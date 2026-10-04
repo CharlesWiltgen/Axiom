@@ -33,3 +33,9 @@ Claude Code carries `bin/axbuild` in the canonical plugin; Codex carries the sam
 Build with Swift 6.4 or newer. `make install` builds arm64 and x86_64 for macOS 14 and records source and installed-binary hashes in `build-info/axbuild.json`. Axiom's supported runtime policy is macOS 26 or newer. Compilation target, supported runtime policy, and tested child toolchains are separate properties. The package has no third-party dependencies or license placeholder.
 
 Pure Swift tests live beside source; controlled subprocess tests use `AXIOM_AXBUILD` to select a fresh executable. Real Xcode/CPU acceptance runs separately from the default unit suite.
+
+Xcode can interleave progress output inside diagnostic headers. Unidentified compiler basenames remain literal and make collection partial; the wrapper does not reconstruct filenames from separated fragments. Native acceptance preserves such input-framing gaps separately from reader correctness.
+
+Failure-recovery hints remain silent in Claude/Codex/Cursor because a trustworthy native completed-failure envelope has not been verified. Pure matcher tests do not establish native adapter coverage.
+
+On the tested Xcode 27.2 beta, cancellation can leave build scripts in detached process groups. axbuild tears down its safely owned group and reports `cleanup-incomplete` for unverifiable detached jobs. Verify and stop only independently identified task-owned jobs; the wrapper does not claim to clean every Xcode descendant.

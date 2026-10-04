@@ -1,15 +1,54 @@
 import Foundation
 import Testing
+import os
 
 @testable import AxBuildCore
 
 @Suite struct TestReadersTests {
   let context = ReaderContext(cwd: "/fixture", effectiveCwd: "/fixture", source: .events)
+
+  @Test func deadlineStopsFailureFallbackWithoutDroppingDecodedExecutions() {
+    let calls = OSAllocatedUnfairLock(initialState: 0)
+    let stopped = ReaderContext(
+      cwd: "/fixture", effectiveCwd: "/fixture", source: .testResults,
+      shouldStop: {
+        calls.withLock {
+          $0 += 1
+          return $0 >= 2
+        }
+      })
+    let data = Data(
+      #"{"testNodes":[{"nodeType":"Test Case","nodeIdentifier":"Case/testOne","result":"Failed"}]}"#
+        .utf8)
+    let batch = readTestResults(data: data, context: stopped)
+    #expect(batch.executions.map(\.id) == ["Case/testOne"])
+    #expect(batch.diagnostics == [])
+    #expect(batch.issues.map(\.kind) == [.timedOut])
+    #expect(batch.completedSources == [])
+  }
   func fixture(_ name: String, extension suffix: String) throws -> Data {
     try Data(
       contentsOf: #require(
         Bundle.module.url(forResource: name, withExtension: suffix, subdirectory: "Fixtures/tests"))
     )
+  }
+
+  @Test(arguments: [false, true]) func retainsProvenFailureWhenDetailIsMalformedOrNested(
+    nested: Bool
+  ) {
+    let children =
+      nested
+      ? "[{\"nodeType\":\"Group\",\"children\":[{\"nodeType\":\"Failure Message\",\"name\":\"nested failure\"}]}]"
+      : "[{\"nodeType\":\"Failure Message\"}]"
+    let json =
+      "{\"testNodes\":[{\"nodeType\":\"Test Case\",\"nodeIdentifierURL\":\"test://fixture/Case/testOne\",\"result\":\"Failed\",\"children\":\(children)}]}"
+    let batch = readTestResults(data: Data(json.utf8), context: context)
+    #expect(
+      batch.diagnostics.map(\.message) == [
+        nested ? "nested failure" : "Test failed without a detailed failure message"
+      ])
+    #expect(batch.diagnostics.map { $0.test?.isFailure } == [true])
+    #expect(batch.issues.contains { $0.kind == .parseFailed } == !nested)
   }
 
   @Test func preservesAvailableParameterizedCaseIDs() throws {

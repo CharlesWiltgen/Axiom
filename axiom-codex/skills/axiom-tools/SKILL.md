@@ -1,6 +1,6 @@
 ---
 name: axiom-tools
-description: Use when asking how to use Axiom or what skills exist, capturing console with xclog, symbolicating .ips/MetricKit/.crash crashes with xcsym, driving/validating simulator UI & accessibility with xcui, or analyzing xctrace/CPU profiles with xcprof.
+description: Use when asking about Axiom skills or axbuild build/test capture, xclog console, xcsym .ips/MetricKit/.crash symbolication, xcui simulator UI/accessibility, or xcprof xctrace/CPU profiles.
 license: MIT
 ---
 
@@ -16,6 +16,10 @@ This suite covers Axiom itself — how to use it, what's available, and the tool
 >
 > The ones that shell out — builds, tests, simulators, crash symbolication — need shell access to run.
 <!-- AXIOM_AUDITOR_INLINE_END -->
+
+## Build and Test Capture
+
+For axbuild installation, report handling and saved-log fallback, read `axiom-build` before a build or test.
 
 ## Routing
 
@@ -134,4 +138,4 @@ For the full tool map (Device Hub / devicectl / simctl / xcui vs mcpbridge, and 
 
 **Skills**: axiom-swiftui, axiom-concurrency, axiom-data, axiom-build, axiom-performance
 
-**Axiom tools**: `xclog` (simulator console capture, `skills/xclog-ref.md`), `xcsym` (crash symbolication for `.ips`, MetricKit, legacy `.crash` text files, and Xcode Organizer `.xccrashpoint` bundles, `skills/xcsym-ref.md`), `xcui` (scriptable sim UI & accessibility testing, `skills/xcui-ref.md`), `xcprof` (structured xctrace CPU & network profile analysis, `skills/xcprof-ref.md`)
+**Axiom tools**: `axbuild` (build/test diagnostics, `axiom-build`), `xclog` (simulator console capture, `skills/xclog-ref.md`), `xcsym` (crash symbolication for `.ips`, MetricKit, legacy `.crash` text files, and Xcode Organizer `.xccrashpoint` bundles, `skills/xcsym-ref.md`), `xcui` (scriptable sim UI & accessibility testing, `skills/xcui-ref.md`), `xcprof` (structured xctrace CPU & network profile analysis, `skills/xcprof-ref.md`)

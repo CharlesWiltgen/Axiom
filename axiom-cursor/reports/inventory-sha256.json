@@ -18,8 +18,8 @@
     },
     {
       "path": "agents/build-fixer.md",
-      "sha256": "0ddceea47fe481a895843de8f0ee9399d293c68b1dc2193929b7dfe8994c9fa0",
-      "bytes": 18941
+      "sha256": "be840e243356e4cd6e175b327776a10bdb8234f046493200842e992972be9375",
+      "bytes": 18861
     },
     {
       "path": "agents/build-optimizer.md",
@@ -198,8 +198,8 @@
     },
     {
       "path": "agents/test-runner.md",
-      "sha256": "00a164ab928b76a6130c4c80b6a87aa58e271a77880bf6899df84853bd07d2ee",
-      "bytes": 9630
+      "sha256": "cfda6e712405d22cf0f20c6d56c5cdda21f1ac39c2ec3b6f146f98eb13e59c7d",
+      "bytes": 12390
     },
     {
       "path": "agents/testing-auditor.md",
@@ -338,8 +338,8 @@
     },
     {
       "path": "scripts/posttool-bash-hints.py",
-      "sha256": "3726e3a5d09315027712a4ba7cb5b406f817fea88ae99ba39b4bd0e1fbe9f0e2",
-      "bytes": 11363
+      "sha256": "75bc5f4ce4a5841fe1aa5fea7b8dae851c2429845dc386d5408a70141bbc3abe",
+      "bytes": 15701
     },
     {
       "path": "scripts/pretool-crash-route.py",
@@ -488,13 +488,13 @@
     },
     {
       "path": "skills/axiom-build/SKILL.md",
-      "sha256": "1441f9333961b988970344db4b797d70cf10405a695d9ef19a4b374e944b74f1",
-      "bytes": 17044
+      "sha256": "7dec5215d3e808a18a43848cd29b6f164ed0c21002a56372ee8f62b07ee62241",
+      "bytes": 19684
     },
     {
       "path": "skills/axiom-build/skills/build-debugging.md",
-      "sha256": "3af51c88c74bbb364a98eec2a1d9dbe08370fb835f94231cc91bd23a303b1d55",
-      "bytes": 15753
+      "sha256": "d675e3af71a86698e1bb8747d005e0243a0fcd120c8826218ccdb010aa657f08",
+      "bytes": 18393
     },
     {
       "path": "skills/axiom-build/skills/build-performance.md",
@@ -1708,8 +1708,8 @@
     },
     {
       "path": "skills/axiom-tools/SKILL.md",
-      "sha256": "6740ecfb850d4f850c299a2ff2f7054c069a4282c29161660f12af107e99a67e",
-      "bytes": 9667
+      "sha256": "c6e50241e085b301b7e94ad5a082db899007932915d76b590eee9e4df4ea1d32",
+      "bytes": 9797
     },
     {
       "path": "skills/axiom-tools/skills/device-control-ref.md",
@@ -1718,8 +1718,8 @@
     },
     {
       "path": "skills/axiom-tools/skills/getting-started.md",
-      "sha256": "32d9af147be63605aae3686f9e3f04897f8791bd61fe927afbac040438ee2295",
-      "bytes": 11846
+      "sha256": "605c3f5318778b916aa78bab81c4dd6ead79e1b0f632eec0ebaf2a90e5348e84",
+      "bytes": 14486
     },
     {
       "path": "skills/axiom-tools/skills/xclog-ref.md",
@@ -1884,7 +1884,7 @@
   ],
   "totals": {
     "files": 376,
-    "bytes": 7644076
+    "bytes": 7659144
   },
   "excludedMirrors": 30,
   "classes": {

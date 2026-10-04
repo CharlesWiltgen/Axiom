@@ -3,13 +3,13 @@
   "inputs": {
     "tools/axbuild/Makefile": "312f12f2c4823470e08eb54cb010cc052de6a90c85632f67f47588e92f4f89dc",
     "tools/axbuild/Package.swift": "5dae40dfacdbfdb5973562c1203fd1bdf6343664ec1dcbc78da8526605b2420b",
-    "tools/axbuild/Sources/AxBuildCore/Domain.swift": "10977a63256f57653dfbb9fef9fa917690bc0aa1eeea956d05cd9b2e175a5ad8",
-    "tools/axbuild/Sources/AxBuildCore/Invocation.swift": "8b2379241d918adcdce57120de988adcdb3686a0c0625ada60f86485f3961352",
-    "tools/axbuild/Sources/AxBuildCore/LogReader.swift": "c8247cfa725efc4fcca57651e686575d5ca0d59288a8414615fc212dbbb4857a",
-    "tools/axbuild/Sources/AxBuildCore/Report.swift": "47eab412cebe1082a9b460b3e8a01c3df48e89ac055ab237f1f3968e1c081c51",
-    "tools/axbuild/Sources/AxBuildCore/Runner.swift": "f78a6db771febd50c42848625de4faa9a4d78f5776b4c68d07d50315e7dfd867",
-    "tools/axbuild/Sources/AxBuildCore/TestReaders.swift": "6b7718634a6ad51a9a3b0d2c2d1e6e4ed90b6aa024dd2755ee99d2ec25cbd26f",
+    "tools/axbuild/Sources/AxBuildCore/Domain.swift": "940ecd5a55c3ce7b115a041f3a521cbdbfe68983708f9deb38d1f03781f4ec38",
+    "tools/axbuild/Sources/AxBuildCore/Invocation.swift": "f2e77c6f817a503aee96cb0e754a2264f43dd308ccd7ddc67b0eb53b79c42ec5",
+    "tools/axbuild/Sources/AxBuildCore/LogReader.swift": "837a969de4d2bb205fcc3cfefef3294ee4a0a597ebd477327ad8563254d323bc",
+    "tools/axbuild/Sources/AxBuildCore/Report.swift": "56d9c34f2e2accd80c3bfaadc2b6aae27df7e1245854d8d48d2c082aea437b3a",
+    "tools/axbuild/Sources/AxBuildCore/Runner.swift": "a99aa16a8a768b08705653e40d5a86a38c3d10561ebb2b51076a14b9464951b1",
+    "tools/axbuild/Sources/AxBuildCore/TestReaders.swift": "65d9ec052c5f635fbaba3ef452f9af0c399419313752ccd1f65d3154191686b7",
     "tools/axbuild/Sources/axbuild/main.swift": "921ed4e6198d785a98ad353ef0c23fd03dc1e9462c62d67388c3610bf6e63af3"
   },
-  "binary": "80f070a1c8174cc53512e0756e8c74fc1977fb5324ae7d61281a0b13fe89cd10"
+  "binary": "54a9512ebfd3e2840831b80cd1327334d200c9b92213b5e2ec3b52ec5e4ca2ea"
 }

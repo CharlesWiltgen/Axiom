@@ -29,7 +29,7 @@ argument completions.
 
 - **Session ground truth** (`before_agent_start`) — injects the iOS/Xcode
   version behavioral rules (so the agent never claims iOS 26 "doesn't exist")
-  and lists which Axiom command-line tools (`xclog`, `xcsym`, `xcui`, `xcprof`)
+  and lists which Axiom command-line tools (`axbuild`, `xclog`, `xcsym`, `xcui`, `xcprof`)
   are on your `PATH`. Gated to Apple projects; override with
   `AXIOM_SESSION_CONTEXT=always|never`.
 - **Swift write guardrail** (`tool_result`) — flags `@State` declarations in
@@ -75,3 +75,5 @@ npm test
 The command table, session context, and guardrail logic are pure functions in
 `src/{commands,session,guardrails}.ts` with colocated tests; `src/index.ts` is
 the thin Pi wiring. Pi loads TypeScript directly — no build step.
+
+Pi discovers axbuild on PATH; it does not bundle the executable. Install the canonical plugin binary separately, check its absolute path with `--help`, and prefix the next necessary Xcode or SwiftPM build/test. Inspect native command status, collection issues, omissions and the saved full report. Use a saved native log when no helper is available. Axiom supports macOS 26 and newer.

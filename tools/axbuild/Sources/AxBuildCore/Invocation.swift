@@ -108,7 +108,7 @@ func parseInvocation(args: [String], cwd: URL) -> Result<Invocation, CollectionI
       action = subcommand == "build" ? .build : .test
       producesBuild = !toolArgs.contains("--skip-build")
       if toolArgs.contains("--help") || toolArgs.contains("-h")
-        || toolArgs.contains("--help-hidden")
+        || toolArgs.contains("--help-hidden") || toolArgs.contains("--version")
       {
         action = .informational
         producesBuild = false
@@ -174,6 +174,9 @@ func parseInvocation(args: [String], cwd: URL) -> Result<Invocation, CollectionI
         "analyze", "clean",
       ].contains(arg) {
         actions.append(arg)
+      } else if ["-only-testing:", "-skip-testing:"].contains(where: {
+        arg.hasPrefix($0) && arg.count > $0.count
+      }) {
       } else if flags.contains(arg) || (!arg.hasPrefix("-") && arg.contains("="))
         || arg.hasPrefix("-IDEBuildingContinueBuildingAfterErrors=")
       {

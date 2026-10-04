@@ -83,7 +83,7 @@ test("live Cursor sends duration as a float — duration hints must still fire",
   const { response } = invoke("post-shell", payload);
   assert.match(
     (response as { additional_context?: string }).additional_context ?? "",
-    /Long xcodebuild \(240s\) ended in failure/,
+    /Long xcodebuild \(240s\) produced error-like output/,
     "a fractional duration must still reach the hints child",
   );
 });
@@ -224,7 +224,7 @@ test("subagentStart maps Cursor's subagent_type onto the canonical agent_type", 
   // payload even on a plan that then refuses to start the subagent.
   const workspace = applePackage();
   try {
-    const payload = { ...FIXTURE["subagent-start"], workspace_roots: [workspace] };
+    const payload: Record<string, unknown> = { ...FIXTURE["subagent-start"], workspace_roots: [workspace] };
     assert.equal(payload.subagent_type, "memory-auditor");
     assert.ok(!("agent_type" in payload), "Cursor names the field subagent_type");
     const { response, stderr } = invoke("subagent-start", payload);
@@ -244,7 +244,7 @@ test("subagentStart names only loading paths Cursor provides", () => {
   // must point at the plugin's skill files instead.
   const workspace = applePackage();
   try {
-    const payload = { ...FIXTURE["subagent-start"], workspace_roots: [workspace] };
+    const payload: Record<string, unknown> = { ...FIXTURE["subagent-start"], workspace_roots: [workspace] };
     const context = (invoke("subagent-start", payload).response as { additional_context?: string }).additional_context ?? "";
     assert.doesNotMatch(context, /\bSkill tool\b/);
     assert.match(context, /axiom-cursor\/skills\/<router>\/SKILL\.md/);

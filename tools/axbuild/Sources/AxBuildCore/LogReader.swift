@@ -15,7 +15,8 @@ func diagnosticPath(_ path: String, context: ReaderContext, basenameOnly: Bool =
   let absolute = URL(
     fileURLWithPath: path, relativeTo: URL(fileURLWithPath: context.effectiveCwd, isDirectory: true)
   ).standardizedFileURL.path
-  return context.canonicalPath(absolute) ?? absolute
+  let identified = context.canonicalPath(absolute)
+  return identified ?? (path.contains("/") ? absolute : path)
 }
 
 func readLog(data: Data, context: ReaderContext) -> ReadBatch {
@@ -60,6 +61,14 @@ func readLog(data: Data, context: ReaderContext) -> ReadBatch {
         block = nil
         testDetails = nil
         let file = diagnosticPath(found[0], context: context)
+        if !found[0].contains("/"), file == found[0], !file.hasPrefix("<"), !file.hasPrefix("@") {
+          batch.issues.append(
+            .init(
+              kind: .parseFailed, operation: "identify compiler source",
+              message:
+                "Cannot identify compiler source from basename \(file); retained location is literal",
+              path: file))
+        }
         let row = Int(found[1]).flatMap { $0 > 0 ? $0 : nil }
         let column = Int(found[2]).flatMap { $0 > 0 ? $0 : nil }
         if row == nil || (!found[2].isEmpty && column == nil) {
@@ -132,6 +141,15 @@ func readLog(data: Data, context: ReaderContext) -> ReadBatch {
         line.hasPrefix(" ") || line.hasPrefix("ld:") || line.hasPrefix("(")
       {
         batch.diagnostics[index].message += "\n" + line
+      } else if line.hasPrefix("ld: ") && !line.hasPrefix("ld: warning: ")
+        && !line.hasPrefix("ld: note: ")
+      {
+        block = nil
+        testDetails = nil
+        batch.diagnostics.append(
+          .init(
+            id: .init("d\(batch.diagnostics.count + 1)"), kind: .linker, severity: .error,
+            message: line, sources: [.log]))
       } else if let found = captures(tool, in: line), !line.contains(" | "),
         let severity = Severity(rawValue: found[1])
       {

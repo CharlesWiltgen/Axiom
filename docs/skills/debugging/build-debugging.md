@@ -6,119 +6,47 @@ version: 1.1.0
 
 # Build Debugging
 
-Dependency resolution and build configuration debugging for iOS projects. Covers CocoaPods, Swift Package Manager, and framework version conflicts.
+Guidance for dependency resolution and build configuration failures. The skill helps your assistant distinguish package, framework and project settings problems before choosing a fix.
 
-## When to Use This Skill
+## When to Use
 
-Use this skill when you're:
-- Getting "No such module" after adding a Swift Package
-- Seeing "Multiple commands produce" the same output file
-- Build works on one machine but fails on another
-- CocoaPods install succeeds but build still fails
-- SPM resolution hangs or times out
-- Framework version conflicts in error logs
-- After upgrading to Xcode 27: a `-ld_classic` warning in the build log, or dependency scanning failing on duplicate Clang module names
+Use this skill when:
 
-**Core principle:** Check dependencies BEFORE blaming code. 80% of persistent build failures are dependency resolution issues, not code bugs.
+- A newly added package produces a "No such module" error
+- Several targets produce the same output file
+- CocoaPods installs successfully but the project still fails to build
+- Package resolution hangs, or frameworks have conflicting versions
+- A build works locally but fails in CI
+- Xcode 27 ignores `-ld_classic`, or dependency scanning reports duplicate Clang module names
 
 ## Example Prompts
 
-Questions you can ask Claude that will draw from this skill:
-
-- "I added a Swift Package but I'm getting 'No such module' errors."
-- "The build is failing with 'Multiple commands produce' the same output file."
-- "CocoaPods installed dependencies but the build still fails."
-- "My build works on my Mac but fails on CI."
-- "I'm getting framework version conflicts."
-- "My build log says '-ld_classic is no longer supported and will be ignored' — does that matter?"
+- "I added a Swift package and now the compiler cannot find its module."
+- "Why do two targets produce the same file?"
+- "Find the actionable error in my saved build report before rebuilding."
+- "Use axbuild for the next necessary test and explain incomplete collection."
 
 ## What This Skill Provides
 
-### Swift Package Manager Issues
-- "No such module" after adding package
-- SPM resolution hangs or times out
-- Package cache clearing (DerivedData + SPM cache)
-- FRAMEWORK_SEARCH_PATHS diagnostics
+- Dependency and framework search-path checks
+- CocoaPods lockfile and installation diagnostics
+- Package version and resolution troubleshooting
+- Duplicate target-output investigation
+- Build configuration comparisons across environments
+- Xcode 27 linker and dependency-scanning guidance
+- Retained build evidence through axbuild, with a saved-log fallback
 
-### CocoaPods Issues
-- Podfile.lock conflicts
-- Post-install build failures
-- Linking errors
-- Version constraint debugging
+## Build Diagnostic Capture
 
-### Build Configuration Issues
-- "Multiple commands produce" (duplicate target membership)
-- Framework search path issues
-- Environment-specific paths
-- CI vs local differences
-
-### Xcode 27 Toolchain Changes
-- `-ld_classic` accepted with a warning and ignored now that the classic linker is gone, so whatever the flag was masking resurfaces
-- Dependency scanning that requires unique Clang module names
-
-### Resolution Strategies
-- Dependency graph analysis
-- Version constraint resolution
-- Reproducible build strategies
-
-## Key Pattern
-
-### Decision Tree
-
-```mermaid
-flowchart TD
-    A[Build failing?] --> B{"No such module XYZ"?}
-    A --> C{"Multiple commands produce"?}
-    A --> D{SPM resolution hangs?}
-    A --> E{Version conflicts?}
-
-    B -->|After adding SPM package| F[Clean build folder +<br/>reset package caches]
-    B -->|After pod install| G[Check Podfile.lock conflicts]
-    B -->|Framework not found| H[Check FRAMEWORK_SEARCH_PATHS]
-
-    C --> I[Duplicate files in<br/>target membership]
-    D --> J[Clear package caches +<br/>derived data]
-    E --> K[Use dependency<br/>resolution strategies]
-
-    style F fill:#d4edda
-    style G fill:#d4edda
-    style H fill:#d4edda
-    style I fill:#d4edda
-    style J fill:#d4edda
-    style K fill:#d4edda
-```
-
-### SPM Package Not Found Fix
-
-```bash
-# Reset package caches
-rm -rf ~/Library/Developer/Xcode/DerivedData
-rm -rf ~/Library/Caches/org.swift.swiftpm
-
-# Then in Xcode: File → Packages → Reset Package Caches
-# Build again
-```
-
-### "Multiple Commands Produce" Fix
-
-1. Find the file mentioned in error
-2. Select file in Xcode project navigator
-3. Open File Inspector (right panel)
-4. Under "Target Membership", uncheck duplicate targets
+For a necessary build or test, axbuild returns bounded JSON and retains the complete report and compiler log. Inspect native `command` status, `collection` issues and `omissions`; read saved evidence before rebuilding. Cleanup must follow a confirmed cause and appropriate authorization. See [Tools](/tools/) for installation and harness availability.
 
 ## Documentation Scope
 
-This page documents the `axiom-build` skill — dependency and build configuration debugging patterns Claude uses when you encounter persistent build failures.
-
-**For environment issues:** See [xcode-debugging](/skills/debugging/xcode-debugging) for Derived Data, simulator, and zombie process diagnostics.
+This page introduces the build-debugging guidance in the `axiom-build` suite. Detailed diagnostic procedures live in the skill loaded by your assistant.
 
 ## Related
 
-- [xcode-debugging](/skills/debugging/xcode-debugging) – Environment-first diagnostics for Xcode issues
-- [swift-concurrency](/skills/concurrency/swift-concurrency) – Swift 6 build settings that can cause failures
-
-## Resources
-
-**WWDC**: 2022-110371 (Swift Package Manager), 2023-10164 (Xcode debugging)
-
-**Docs**: /xcode/swift-packages, /xcode/build-system
+- [xcode-debugging](/skills/debugging/xcode-debugging) – Environment checks for Xcode and simulator problems
+- [swift-concurrency](/skills/concurrency/swift-concurrency) – Swift 6 isolation and concurrency build errors
+- [build-fixer](/agents/build-fixer) – Autonomous diagnosis using retained build evidence
+- [Tools](/tools/) – axbuild installation, report handling and compatibility limits

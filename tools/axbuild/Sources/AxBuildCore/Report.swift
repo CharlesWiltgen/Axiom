@@ -388,13 +388,26 @@ func reconcileDiagnostics(batches: [ReadBatch], context: ReaderContext) -> Recon
       }
     }
   }
-  var identities = Set<String>()
+  var identityGroups: [Set<TestAlias>] = []
   var uncertain = result.issues.contains {
     $0.kind == .ambiguousCorrelation || $0.kind == .timedOut
   }
+  let passedExecutions = batches.flatMap(\.executions).filter { $0.failed == false }
+  var finalizationStopped = false
+  func stopFinalization() -> Bool {
+    guard context.shouldStop() else { return false }
+    finalizationStopped = true
+    result.issues.append(
+      .init(
+        kind: .timedOut, operation: "finalize test identities",
+        message: "Collection deadline stopped failed-test counting"))
+    return true
+  }
   for index in result.diagnostics.indices {
     result.diagnostics[index].id = .init("d\(index + 1)")
-    let diagnostic = result.diagnostics[index]
+  }
+  finalization: for diagnostic in result.diagnostics {
+    if stopFinalization() { break }
     guard diagnostic.kind == .test else { continue }
     if diagnostic.test?.isFailure == nil { uncertain = true }
     guard diagnostic.test?.isFailure == true else { continue }
@@ -402,7 +415,35 @@ func reconcileDiagnostics(batches: [ReadBatch], context: ReaderContext) -> Recon
       diagnostic.sources.contains(.events) || diagnostic.sources.contains(.testResults)
         || id.hasPrefix("-[")
     {
-      identities.insert(id)
+      var aliases = Set(diagnostic.test?.aliases ?? [])
+      for source in diagnostic.sources
+      where !(diagnostic.test?.aliases?.contains { $0.source == source } ?? false) {
+        aliases.insert(.init(source: source, id: id))
+      }
+      var connected: [Int] = []
+      for index in identityGroups.indices {
+        if stopFinalization() { break finalization }
+        if !identityGroups[index].isDisjoint(with: aliases) { connected.append(index) }
+      }
+      for index in connected { aliases.formUnion(identityGroups[index]) }
+      for index in connected.reversed() { identityGroups.remove(at: index) }
+      identityGroups.append(aliases)
+      for execution in passedExecutions {
+        if stopFinalization() { break finalization }
+        let summary = Diagnostic(
+          id: .init("execution"), kind: .test, severity: .note, message: "",
+          sources: [execution.source], test: .init(id: execution.id, isFailure: false),
+          target: execution.target, testName: execution.name)
+        if sameTestExecution(diagnostic, summary)
+          || execution.id.map({ aliases.contains(.init(source: execution.source, id: $0)) }) == true
+        {
+          uncertain = true
+          result.issues.append(
+            .init(
+              kind: .ambiguousCorrelation, operation: "reconcile test execution",
+              message: "Structured pass contradicts retained failure for \(id)"))
+        }
+      }
     } else {
       uncertain = true
       result.issues.append(
@@ -411,7 +452,7 @@ func reconcileDiagnostics(batches: [ReadBatch], context: ReaderContext) -> Recon
           message: "Unqualified or absent test identity for \(diagnostic.id.rawValue)"))
     }
   }
-  result.failedTests = uncertain ? nil : identities.count
+  result.failedTests = uncertain || finalizationStopped ? nil : identityGroups.count
   return result
 }
 

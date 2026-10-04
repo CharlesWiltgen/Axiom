@@ -19,12 +19,29 @@ import Testing
     (["/tools/swift", "build", "--package-path", "Some Folder"], .build, true),
     (["swift", "test", "--help"], .informational, false),
     (["swift", "--version"], .informational, false),
+    (["swift", "build", "--version"], .informational, false),
+    (["xcrun", "swift", "test", "--version"], .informational, false),
     (["--format", "json", "--", "swift", "test"], .test, true),
   ]) func classifiesArguments(example: ([String], InvocationAction, Bool)) throws {
     let invocation = try parseInvocation(args: example.0, cwd: cwd).get()
     #expect(invocation.action == example.1)
     #expect(invocation.producesBuild == example.2)
     #expect(invocation.originalArgs == example.0)
+  }
+
+  @Test(arguments: [
+    "-only-testing:Tests/testFailureST", "-skip-testing:Tests/NativeTests/testPass",
+  ]) func retainsNativeColonTestSelection(selector: String) throws {
+    let args = ["xcodebuild", "test", "-scheme", "build", selector]
+    let invocation = try parseInvocation(args: args, cwd: cwd).get()
+    #expect(invocation.action == .test)
+    let prepared = applyDiagnosticDefaults(
+      invocation: invocation, artifacts: .init(run: "/run"), capabilities: .init())
+    #expect(Array(prepared.childArgs.prefix(invocation.childArgs.count)) == invocation.childArgs)
+    #expect(
+      prepared.defaults == [
+        "-resultBundlePath", "/run/result.xcresult", "-IDEBuildingContinueBuildingAfterErrors=YES",
+      ])
   }
 
   @Test(arguments: [

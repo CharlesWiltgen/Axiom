@@ -18,7 +18,9 @@ import unittest
 HOOK = os.path.join(os.path.dirname(__file__), "posttool-bash-hints.py")
 
 
-def run_hook(payload: dict, output: str = "", env_override: dict | None = None) -> tuple[str, int]:
+def run_hook(
+    payload: dict, output: str = "", env_override: dict | None = None
+) -> tuple[str, int]:
     """Invoke the hook with the given stdin payload + tool output env var."""
     env = dict(os.environ, AXIOM_SESSION_CONTEXT="always", AXIOM_HARNESS="claude")
     env["CLAUDE_TOOL_OUTPUT"] = output
@@ -69,13 +71,18 @@ class TestPatternMatching(unittest.TestCase):
         )
 
     def test_concurrency_sendable(self):
-        self.assert_hint("warning: capture of 'self' with non-Sendable type", "axiom-concurrency")
+        self.assert_hint(
+            "warning: capture of 'self' with non-Sendable type", "axiom-concurrency"
+        )
 
     def test_concurrency_data_race(self):
         self.assert_hint("data race detected", "axiom-concurrency")
 
     def test_concurrency_main_actor(self):
-        self.assert_hint("error: call to @MainActor-isolated function in a synchronous nonisolated context", "axiom-concurrency")
+        self.assert_hint(
+            "error: call to @MainActor-isolated function in a synchronous nonisolated context",
+            "axiom-concurrency",
+        )
 
     def test_database_no_such_column(self):
         self.assert_hint("SQLite error: no such column: createdAt", "axiom-data")
@@ -93,7 +100,9 @@ class TestPatternMatching(unittest.TestCase):
         self.assert_hint("Leaks: memory leak in MyClass", "axiom-performance")
 
     def test_memory_deinit_never_called(self):
-        self.assert_hint("Warning: deinit of MyClass was never called", "axiom-performance")
+        self.assert_hint(
+            "Warning: deinit of MyClass was never called", "axiom-performance"
+        )
 
     def test_cloudkit_error(self):
         self.assert_hint("CKError 11: zone not found", "axiom-data")
@@ -132,7 +141,9 @@ class TestPatternMatching(unittest.TestCase):
         self.assert_hint("error: no such module 'Foo' not found", "/axiom:fix-build")
 
     def test_linker_command_failed(self):
-        self.assert_hint("ld: linker command failed with exit code 1", "/axiom:fix-build")
+        self.assert_hint(
+            "ld: linker command failed with exit code 1", "/axiom:fix-build"
+        )
 
 
 class TestMultiHint(unittest.TestCase):
@@ -216,14 +227,16 @@ class TestSlowXcodebuildHint(unittest.TestCase):
             output="error: linker command failed with exit code 1\n** BUILD FAILED **",
         )
         self.assertIn("Long xcodebuild", out)
-        self.assertIn("zombie processes", out)
+        self.assertIn("active processes", out)
         self.assertIn("/axiom:fix-build", out)
         # Duration formatted as seconds.
         self.assertIn("70s", out)
 
     def test_slow_failed_xcodebuild_with_env_prefix(self):
         out, _ = run_hook(
-            bash_payload("env DEVELOPER_DIR=/foo xcodebuild build", duration_ms=120_000),
+            bash_payload(
+                "env DEVELOPER_DIR=/foo xcodebuild build", duration_ms=120_000
+            ),
             output="error: something\n** BUILD FAILED **",
         )
         self.assertIn("Long xcodebuild", out)
@@ -331,7 +344,7 @@ class TestSlowTestHint(unittest.TestCase):
             output="warning: data race detected\n",
         )
         self.assertIn("axiom-concurrency", out)  # pattern
-        self.assertIn("Slow test run", out)      # duration
+        self.assertIn("Slow test run", out)  # duration
 
 
 class TestCommandHelpers(unittest.TestCase):
@@ -372,7 +385,9 @@ class TestCommandHelpers(unittest.TestCase):
 
     def test_test_subcommand(self):
         self.assertTrue(self.is_xcb_test("xcodebuild test"))
-        self.assertTrue(self.is_xcb_test("xcodebuild -scheme Foo test -destination ..."))
+        self.assertTrue(
+            self.is_xcb_test("xcodebuild -scheme Foo test -destination ...")
+        )
         self.assertTrue(self.is_xcb_test("xcodebuild test-without-building"))
 
     def test_build_subcommand_not_test(self):
@@ -408,8 +423,7 @@ class TestMatchPatternsUnit(unittest.TestCase):
     def test_multiple_matches_preserve_rule_order(self):
         # Auto Layout rule is first in _PATTERN_RULES, linker is last.
         hints = self.match(
-            "Unable to simultaneously satisfy constraints\n"
-            "ld: linker command failed"
+            "Unable to simultaneously satisfy constraints\n" "ld: linker command failed"
         )
         self.assertEqual(len(hints), 2)
         self.assertIn("axiom-uikit", hints[0])
@@ -433,61 +447,198 @@ class TestCodexProtocol(unittest.TestCase):
         payload = bash_payload()
         payload["tool_response"] = "data race detected\nlinker command failed"
         out, code = run_hook(payload, env_override={"AXIOM_HARNESS": "codex"})
-        self.assertEqual((out, code), (json.dumps({
-            "hookSpecificOutput": {
-                "hookEventName": "PostToolUse",
-                "additionalContext": "💡 Concurrency issue. Try: skill axiom-concurrency\n"
-                    "💡 Build configuration issue. Try: skill axiom-fix-build",
-            },
-        }, ensure_ascii=False) + "\n", 0))
+        self.assertEqual(
+            (out, code),
+            (
+                json.dumps(
+                    {
+                        "hookSpecificOutput": {
+                            "hookEventName": "PostToolUse",
+                            "additionalContext": "💡 Concurrency issue. Try: skill axiom-concurrency\n"
+                            "💡 Build configuration issue. Try: skill axiom-fix-build",
+                        },
+                    },
+                    ensure_ascii=False,
+                )
+                + "\n",
+                0,
+            ),
+        )
 
     def test_codex_does_not_read_claude_environment_output(self):
         payload = bash_payload()
         payload["tool_response"] = "Build succeeded"
-        self.assertEqual(run_hook(payload, output="data race", env_override={"AXIOM_HARNESS": "codex"}), ("", 0))
+        self.assertEqual(
+            run_hook(
+                payload, output="data race", env_override={"AXIOM_HARNESS": "codex"}
+            ),
+            ("", 0),
+        )
 
     def test_claude_retains_plain_text_environment_output(self):
         payload = bash_payload()
         payload["tool_response"] = "linker command failed"
-        self.assertEqual(run_hook(payload, output="data race", env_override={"AXIOM_HARNESS": "claude"}),
-            ("💡 Concurrency issue. Try: skill axiom-concurrency\n", 0))
+        self.assertEqual(
+            run_hook(
+                payload, output="data race", env_override={"AXIOM_HARNESS": "claude"}
+            ),
+            ("💡 Concurrency issue. Try: skill axiom-concurrency\n", 0),
+        )
 
     def test_codex_output_object_reads_only_output_text(self):
         payload = bash_payload()
-        payload["tool_response"] = {"output": "data race", "metadata": "linker command failed"}
+        payload["tool_response"] = {
+            "output": "data race",
+            "metadata": "linker command failed",
+        }
         out, code = run_hook(payload, env_override={"AXIOM_HARNESS": "codex"})
-        self.assertEqual((json.loads(out), code), ({"hookSpecificOutput": {
-            "hookEventName": "PostToolUse", "additionalContext": "💡 Concurrency issue. Try: skill axiom-concurrency",
-        }}, 0))
+        self.assertEqual(
+            (json.loads(out), code),
+            (
+                {
+                    "hookSpecificOutput": {
+                        "hookEventName": "PostToolUse",
+                        "additionalContext": "💡 Concurrency issue. Try: skill axiom-concurrency",
+                    }
+                },
+                0,
+            ),
+        )
 
     def test_codex_missing_or_malformed_output_is_a_no_op(self):
         for response in (None, {}, [], 123, {"output": 123}, {"metadata": "data race"}):
             with self.subTest(response=response):
                 payload = bash_payload("xcodebuild test", duration_ms=300_001)
                 payload["tool_response"] = response
-                self.assertEqual(run_hook(payload, env_override={"AXIOM_HARNESS": "codex"}), ("", 0))
+                self.assertEqual(
+                    run_hook(payload, env_override={"AXIOM_HARNESS": "codex"}), ("", 0)
+                )
 
     def test_codex_malformed_command_does_not_crash(self):
         payload = bash_payload(duration_ms=300_001)
         payload["tool_input"] = {"command": 123}
         payload["tool_response"] = "Build succeeded"
-        self.assertEqual(run_hook(payload, env_override={"AXIOM_HARNESS": "codex"}), ("", 0))
+        self.assertEqual(
+            run_hook(payload, env_override={"AXIOM_HARNESS": "codex"}), ("", 0)
+        )
 
     def test_codex_non_terminal_tools_are_a_no_op(self):
         for name in ("apply_patch", "mcp__example__read", "spawn_agent"):
             with self.subTest(name=name):
                 payload = bash_payload()
                 payload.update(tool_name=name, tool_response="data race")
-                self.assertEqual(run_hook(payload, env_override={"AXIOM_HARNESS": "codex"}), ("", 0))
+                self.assertEqual(
+                    run_hook(payload, env_override={"AXIOM_HARNESS": "codex"}), ("", 0)
+                )
 
     def test_codex_preserves_slow_test_threshold(self):
-        for duration, expected in ((300_000, ""), (300_001, "💡 Slow test run (300s). Try: skill axiom-testing for parallelization, simulator reuse, .serialized traits")):
+        for duration, expected in (
+            (300_000, ""),
+            (
+                300_001,
+                "💡 Slow test run (300s). Try: skill axiom-testing for parallelization, simulator reuse, .serialized traits",
+            ),
+        ):
             with self.subTest(duration=duration):
                 payload = bash_payload("xcodebuild test", duration_ms=duration)
                 payload["tool_response"] = "Test passed"
                 out, code = run_hook(payload, env_override={"AXIOM_HARNESS": "codex"})
-                want = json.dumps({"hookSpecificOutput": {"hookEventName": "PostToolUse", "additionalContext": expected}}, ensure_ascii=False) + "\n" if expected else ""
+                want = (
+                    json.dumps(
+                        {
+                            "hookSpecificOutput": {
+                                "hookEventName": "PostToolUse",
+                                "additionalContext": expected,
+                            }
+                        },
+                        ensure_ascii=False,
+                    )
+                    + "\n"
+                    if expected
+                    else ""
+                )
                 self.assertEqual((out, code), (want, 0))
+
+
+class TestTruncatedBuildRecovery(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location("axiom_bash_hints", HOOK)
+        cls.module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(cls.module)
+
+    def test_known_failure_success_and_unknown_have_distinct_results(self):
+        output = "error: expected test output\n** BUILD FAILED **\n[20013 characters truncated]"
+        expected = {"failed": 1, "succeeded": 0, "unknown": 0}
+        for outcome, count in expected.items():
+            with self.subTest(outcome=outcome):
+                hints = self.module.truncated_build_hints(
+                    "xcodebuild build", output, outcome
+                )
+                self.assertEqual(len(hints), count)
+                if count:
+                    self.assertIn("was truncated", hints[0])
+                    self.assertIn("next necessary", hints[0])
+                    self.assertIn("axbuild", hints[0])
+
+    def test_length_heuristic_is_distinct_and_short_failures_are_silent(self):
+        long = self.module.truncated_build_hints("swift test", "x" * 30000, "failed")
+        self.assertEqual(len(long), 1)
+        self.assertIn("may be truncated", long[0])
+        self.assertEqual(
+            self.module.truncated_build_hints("swift test", "error: short", "failed"),
+            [],
+        )
+
+    def test_only_unwrapped_build_commands_are_eligible(self):
+        allowed = [
+            "xcodebuild -scheme App",
+            "swift build",
+            "swift test",
+            "xcrun --sdk macosx xcodebuild test",
+            "env VALUE=literal xcrun --toolchain swift swift test",
+        ]
+        refused = [
+            'echo "xcodebuild build"',
+            "axbuild xcodebuild build",
+            '"/plugin/bin/axbuild" swift test',
+            "xcodebuild build; echo done",
+            "xcodebuild build && echo done",
+            "xcodebuild build || true",
+            "xcodebuild build &",
+            "swift run",
+            "swift test --help",
+            "xcodebuild clean",
+            "xcodebuild -list",
+            "xcrun --find xcodebuild",
+        ]
+        output = "x" * 30000
+        for command in allowed + refused:
+            with self.subTest(command=command):
+                self.assertEqual(
+                    len(self.module.truncated_build_hints(command, output, "failed")),
+                    int(command in allowed),
+                )
+
+    def test_unverified_native_status_fields_never_establish_failure(self):
+        output = "error: fixture\n** BUILD FAILED **\n[20013 characters truncated]"
+        for response in [
+            {"exit_code": 65},
+            {"exitCode": 65},
+            {"status": "failed"},
+            {"status": "running"},
+            {"output": output, "exit_code": 65},
+            {"stdout": output, "success": False},
+        ]:
+            for harness in ["claude", "codex"]:
+                with self.subTest(response=response, harness=harness):
+                    payload = bash_payload("xcodebuild build")
+                    payload["tool_response"] = response
+                    out, code = run_hook(payload, output, {"AXIOM_HARNESS": harness})
+                    self.assertEqual(code, 0)
+                    self.assertNotIn("axbuild", out)
 
 
 if __name__ == "__main__":

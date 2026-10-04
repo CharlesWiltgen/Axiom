@@ -369,3 +369,16 @@ test("rolls back both generated roots when marketplace promotion fails", (contex
     fs.rmSync(destination, { recursive: true, force: true });
   }
 });
+
+
+test("preserves axbuild saved-log fallback without inventing a Cursor MCP tool", () => {
+  const files = filesByPath(renderCursorDistribution(root, { profile: "full" }));
+  for (const relative of ["skills/axiom-build/SKILL.md", "agents/build-fixer.md", "agents/test-runner.md"]) {
+    const text = files.get(relative)!.content;
+    assert.match(text, /Cursor.*MCP.*do not bundle axbuild/s);
+    assert.match(text, /saved.log fallback/i);
+    assert.match(text, /command.*collection/s);
+    assert.doesNotMatch(text, /axiom_axbuild/);
+  }
+  assert.equal([...files.keys()].some(file => file === "bin/axbuild"), false);
+});

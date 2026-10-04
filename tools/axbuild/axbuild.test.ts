@@ -89,6 +89,16 @@ function alive(pid: number) {
 }
 
 describe("axbuild process integration", () => {
+  it("retains an unidentified compiler basename and reports partial collection", () =>
+    temporary((root, env) => {
+      const result = run(["swift", "build"], root, env);
+      assert.equal(result.exit, 65);
+      assert.equal(result.report.collection.status, "partial");
+      assert.ok(result.report.collection.issues.some((issue: any) =>
+        issue.kind === "parse-failed" && issue.operation === "identify compiler source"
+      ));
+      assert.deepEqual(result.report.diagnostics.map((group: any) => group.file), ["A.swift"]);
+    }));
   it("refuses unsupported invocations without launching", () =>
     temporary((root, env) => {
       const r = run(["python3", "-c", "print(1)"], root, env);
@@ -635,4 +645,33 @@ it("does not advertise an inapplicable disabled event stream", () =>
         i.kind === "missing-artifact" || i.kind === "unsupported-source"
       ),
     );
+  }));
+
+it("reports unverifiable detached Xcode jobs after cleaning the owned native group", async () =>
+  temporary(async (root, env) => {
+    const ready = path.join(root, "xcode-ready.json");
+    const child = spawn(binary, ["xcodebuild", "build"], {
+      cwd: root,
+      env: { ...env, FIXTURE_MODE: "hang", FIXTURE_READY: ready },
+    });
+    const finish = completed(child);
+    try {
+      await readiness(ready, child);
+      child.kill("SIGTERM");
+      const output = await finish;
+      assert.equal(output.exit, 143);
+      const report = JSON.parse(output.stdout);
+      assert.equal(report.command.status, "interrupted");
+      assert.equal(report.collection.status, "partial");
+      assert.ok(
+        report.collection.issues.some((
+          issue: { kind: string; operation: string },
+        ) =>
+          issue.kind === "cleanup-incomplete" &&
+          issue.operation === "verify detached Xcode jobs"
+        ),
+      );
+    } finally {
+      if (child.exitCode === null) child.kill("SIGTERM");
+    }
   }));
