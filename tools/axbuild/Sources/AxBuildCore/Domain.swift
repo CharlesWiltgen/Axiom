@@ -25,6 +25,8 @@ struct DiagnosticID: Codable, Hashable, Sendable {
 enum IssueKind: String, Codable, Sendable {
   case invalidInvocation = "invalid-invocation"
   case parseFailed = "parse-failed"
+  case unsupportedSource = "unsupported-source"
+  case unclassifiedTestIssue = "unclassified-test-issue"
   case timedOut = "timed-out"
 }
 struct CollectionIssue: Error, Codable, Equatable, Sendable {
@@ -67,13 +69,30 @@ struct TestMetadata: Codable, Equatable, Sendable {
   var isFailure: Bool?
   var framework: TestFramework?
   var messages: [String]?
-  enum CodingKeys: String, CodingKey { case id, isFailure, framework, messages }
+  var isKnown: Bool?
+  var evaluatedValues: [String]?
+  var aliases: [TestAlias]?
+  var issueSeverity: String?
+  var caseID: String?
+  var iteration: Int?
+  var executionID: String?
+  enum CodingKeys: String, CodingKey {
+    case id, isFailure, framework, messages, isKnown, evaluatedValues, aliases, issueSeverity,
+      caseID, iteration, executionID
+  }
   func encode(to encoder: any Encoder) throws {
     var c = encoder.container(keyedBy: CodingKeys.self)
     try c.encode(id, forKey: .id)
     try c.encode(isFailure, forKey: .isFailure)
     try c.encodeIfPresent(framework, forKey: .framework)
     try c.encodeIfPresent(messages, forKey: .messages)
+    try c.encodeIfPresent(isKnown, forKey: .isKnown)
+    try c.encodeIfPresent(evaluatedValues, forKey: .evaluatedValues)
+    try c.encodeIfPresent(aliases, forKey: .aliases)
+    try c.encodeIfPresent(issueSeverity, forKey: .issueSeverity)
+    try c.encodeIfPresent(caseID, forKey: .caseID)
+    try c.encodeIfPresent(iteration, forKey: .iteration)
+    try c.encodeIfPresent(executionID, forKey: .executionID)
   }
 }
 
@@ -106,8 +125,11 @@ struct Diagnostic: Codable, Equatable, Sendable {
   var column: Int?
   var notes: [Note]?
   var test: TestMetadata?
+  var target: String?
+  var testName: String? = nil
+  var synthetic = false
   enum CodingKeys: String, CodingKey {
-    case id, kind, severity, message, sources, line, column, notes, test
+    case id, kind, severity, message, sources, line, column, notes, test, target
   }
 }
 struct ReaderContext: Sendable {
@@ -122,4 +144,17 @@ struct ReadBatch: Equatable, Sendable {
   var issues: [CollectionIssue] = []
   var completedSources: [Source] = []
   var stoppedEarly = false
+  var executions: [TestExecution] = []
+}
+
+struct TestAlias: Codable, Equatable, Sendable {
+  var source: Source
+  var id: String
+}
+struct TestExecution: Equatable, Sendable {
+  var id: String?
+  var name: String?
+  var target: String?
+  var source: Source
+  var failed: Bool?
 }
