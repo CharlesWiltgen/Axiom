@@ -126,7 +126,7 @@ func readEvents(data: Data, context: ReaderContext) -> ReadBatch {
         }
         let location = issue.sourceLocation ?? event._sourceLocation
         if let location,
-          location.line.map { $0 <= 0 } == true || location.column.map { $0 <= 0 } == true
+          location.line.map({ $0 <= 0 }) == true || location.column.map({ $0 <= 0 }) == true
         {
           batch.issues.append(
             .init(

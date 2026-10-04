@@ -5,77 +5,47 @@ import { execFileSync } from "node:child_process";
 import { isDeepStrictEqual } from "node:util";
 import { fileURLToPath } from "node:url";
 
+export const swiftToolNames = ["xcproject", "axbuild"] as const;
+export type SwiftToolName = typeof swiftToolNames[number];
+type SwiftToolBuildError = Error & { readonly domain: "swift-tool-build" };
 const plugin = ".claude-plugin/plugins/axiom";
-const recordPath = `${plugin}/build-info/xcproject.json`;
-const binaryPath = `${plugin}/bin/xcproject`;
-const licensePath = `${plugin}/licenses/xcproject.txt`;
-// Files that determine the binary. This checker is deliberately absent: it never
-// reaches the binary, and listing it made every edit here demand a needless rebuild.
-const fixedInputs = [
-  "tools/xcproject/Package.swift",
-  "tools/xcproject/Package.resolved",
-  "tools/xcproject/Makefile",
-  "tools/xcproject/THIRD_PARTY_LICENSE.txt",
-];
 
+function buildError(message: string): SwiftToolBuildError {
+  return Object.assign(new Error(message), {
+    domain: "swift-tool-build" as const,
+  });
+}
+function definition(tool: SwiftToolName) {
+  if (!swiftToolNames.includes(tool)) {
+    throw buildError(`Unknown Swift tool: ${tool}`);
+  }
+  const sourceRoot = `tools/${tool}`;
+  return {
+    sourceRoot,
+    fixedInputs: [
+      `${sourceRoot}/Package.swift`,
+      `${sourceRoot}/Makefile`,
+      ...(tool === "xcproject"
+        ? [
+          `${sourceRoot}/Package.resolved`,
+          `${sourceRoot}/THIRD_PARTY_LICENSE.txt`,
+        ]
+        : []),
+    ],
+    recordPath: `${plugin}/build-info/${tool}.json`,
+    binaryPath: `${plugin}/bin/${tool}`,
+    licensePath: tool === "xcproject"
+      ? `${plugin}/licenses/xcproject.txt`
+      : undefined,
+  };
+}
 function sha256(data: Buffer): string {
   return createHash("sha256").update(data).digest("hex");
 }
-
-export function swiftToolInputs(root: string): Record<string, string> {
-  const manifest = fs.readFileSync(path.join(root, fixedInputs[0]), "utf8");
-  if (!/\.executableTarget\s*\(/.test(manifest)) {
-    throw new Error("xcproject Package.swift has no executable target");
-  }
-  const files = [...fixedInputs];
-  const walk = (dir: string) => {
-    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-      const full = path.join(dir, entry.name);
-      if (entry.isDirectory()) walk(full);
-      else if (entry.name.endsWith(".swift")) {
-        files.push(path.relative(root, full));
-      }
-    }
-  };
-  walk(path.join(root, "tools/xcproject/Sources"));
-  return Object.fromEntries(
-    files.sort().map(
-      (file) => [file, sha256(fs.readFileSync(path.join(root, file)))],
-    ),
-  );
+function productionSource(file: string): boolean {
+  return file.endsWith(".swift") && !file.endsWith(".test.swift") &&
+    !file.endsWith(".spec.swift") && !file.split("/").includes("Fixtures");
 }
-
-export function recordSwiftToolBuild(
-  root: string,
-  snapshot: Record<string, string>,
-): void {
-  if (!isDeepStrictEqual(snapshot, swiftToolInputs(root))) {
-    throw new Error(
-      "xcproject build inputs changed during build; rebuild from a fresh snapshot",
-    );
-  }
-  const license = fs.readFileSync(path.join(root, licensePath));
-  if (
-    !license.length ||
-    !license.equals(
-      fs.readFileSync(
-        path.join(root, "tools/xcproject/THIRD_PARTY_LICENSE.txt"),
-      ),
-    )
-  ) throw new Error("xcproject installed license differs from source");
-  const record = {
-    schema: 1,
-    inputs: snapshot,
-    binary: sha256(fs.readFileSync(path.join(root, binaryPath))),
-    license: sha256(license),
-  };
-  fs.mkdirSync(path.dirname(path.join(root, recordPath)), { recursive: true });
-  fs.writeFileSync(
-    path.join(root, recordPath),
-    JSON.stringify(record, null, 2) + "\n",
-  );
-}
-
 function readIndex(root: string, file: string): Buffer {
   return execFileSync("git", ["show", `:${file}`], {
     cwd: root,
@@ -83,52 +53,141 @@ function readIndex(root: string, file: string): Buffer {
     maxBuffer: 64 * 1024 * 1024,
   });
 }
-
-export function checkSwiftToolBuild(root: string, index = false): string[] {
+function buildInputs(
+  root: string,
+  tool: SwiftToolName,
+  index: boolean,
+): Record<string, string> {
+  const spec = definition(tool);
+  const read = (file: string) =>
+    index ? readIndex(root, file) : fs.readFileSync(path.join(root, file));
+  if (
+    !/\.executableTarget\s*\(/.test(read(spec.fixedInputs[0]).toString("utf8"))
+  ) throw buildError(`${tool} Package.swift has no executable target`);
+  const files = [...spec.fixedInputs];
+  if (index) {
+    files.push(
+      ...execFileSync("git", [
+        "ls-files",
+        "-z",
+        "--",
+        `${spec.sourceRoot}/Sources`,
+      ], { cwd: root, encoding: "utf8" }).split("\0").filter(productionSource),
+    );
+  } else {
+    const walk = (dir: string) => {
+      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        const full = path.join(dir, entry.name);
+        if (entry.isDirectory() && entry.name !== "Fixtures") walk(full);
+        else if (entry.isFile() && productionSource(full)) {
+          files.push(path.relative(root, full));
+        }
+      }
+    };
+    walk(path.join(root, spec.sourceRoot, "Sources"));
+  }
+  return Object.fromEntries(
+    files.sort().map((file) => [file, sha256(read(file))]),
+  );
+}
+export function swiftToolInputs(
+  root: string,
+  tool: SwiftToolName = "xcproject",
+): Record<string, string> {
+  return buildInputs(root, tool, false);
+}
+export function recordSwiftToolBuild(
+  root: string,
+  snapshot: Record<string, string>,
+  tool: SwiftToolName = "xcproject",
+): void {
+  const spec = definition(tool);
+  if (!isDeepStrictEqual(snapshot, swiftToolInputs(root, tool))) {
+    throw buildError(
+      `${tool} build inputs changed during build; rebuild from a fresh snapshot`,
+    );
+  }
+  if (!(fs.statSync(path.join(root, spec.binaryPath)).mode & 0o111)) {
+    throw buildError(`${tool} installed binary is not executable`);
+  }
+  let license: string | undefined;
+  if (spec.licensePath) {
+    const installed = fs.readFileSync(path.join(root, spec.licensePath));
+    if (
+      !installed.length ||
+      !installed.equals(
+        fs.readFileSync(
+          path.join(root, spec.sourceRoot, "THIRD_PARTY_LICENSE.txt"),
+        ),
+      )
+    ) throw buildError(`${tool} installed license differs from source`);
+    license = sha256(installed);
+  }
+  const record = {
+    schema: 1,
+    inputs: snapshot,
+    binary: sha256(fs.readFileSync(path.join(root, spec.binaryPath))),
+    ...(license ? { license } : {}),
+  };
+  fs.mkdirSync(path.dirname(path.join(root, spec.recordPath)), {
+    recursive: true,
+  });
+  fs.writeFileSync(
+    path.join(root, spec.recordPath),
+    JSON.stringify(record, null, 2) + "\n",
+  );
+}
+export function checkSwiftToolBuild(
+  root: string,
+  index = false,
+  tool: SwiftToolName = "xcproject",
+): string[] {
   const problems: string[] = [];
   try {
-    const inputs = swiftToolInputs(root);
+    const spec = definition(tool);
     const read = (file: string) =>
       index ? readIndex(root, file) : fs.readFileSync(path.join(root, file));
-    const raw: unknown = JSON.parse(read(recordPath).toString("utf8"));
+    const raw: unknown = JSON.parse(read(spec.recordPath).toString("utf8"));
     if (
       !raw || typeof raw !== "object" || !("schema" in raw) ||
       raw.schema !== 1 || !("inputs" in raw) || !("binary" in raw) ||
-      !("license" in raw)
-    ) throw new Error("invalid xcproject build record");
-    let expected = inputs;
-    if (index) {
-      const sourceFiles = execFileSync("git", [
-        "ls-files",
-        "--",
-        "tools/xcproject/Sources",
-      ], { cwd: root, encoding: "utf8" }).trim().split("\n").filter((p) =>
-        p.endsWith(".swift")
-      );
-      expected = Object.fromEntries(
-        [...fixedInputs, ...sourceFiles].sort().map(
-          (file) => [file, sha256(read(file))],
-        ),
-      );
+      typeof raw.binary !== "string" ||
+      (spec.licensePath && !("license" in raw))
+    ) throw buildError(`invalid ${tool} build record`);
+    if (!isDeepStrictEqual(raw.inputs, buildInputs(root, tool, index))) {
+      problems.push(`${tool} build inputs differ from the recorded build`);
     }
-    if (!isDeepStrictEqual(raw.inputs, expected)) {
-      problems.push("xcproject build inputs differ from the recorded build");
+    if (raw.binary !== sha256(read(spec.binaryPath))) {
+      problems.push(`${tool} binary differs from the recorded build`);
     }
-    if (raw.binary !== sha256(read(binaryPath))) {
-      problems.push("xcproject binary differs from the recorded build");
-    }
-    const license = read(licensePath);
-    if (
-      !license.length || raw.license !== sha256(license) ||
-      !license.equals(read("tools/xcproject/THIRD_PARTY_LICENSE.txt"))
-    ) {
+    const executable = index
+      ? execFileSync("git", ["ls-files", "--stage", "--", spec.binaryPath], {
+        cwd: root,
+        encoding: "utf8",
+      }).startsWith("100755 ")
+      : !!(fs.statSync(path.join(root, spec.binaryPath)).mode & 0o111);
+    if (!executable) {
       problems.push(
-        "xcproject license differs from the recorded build or source",
+        `${tool} binary is not executable in the ${
+          index ? "index" : "working tree"
+        }`,
       );
+    }
+    if (spec.licensePath) {
+      const license = read(spec.licensePath);
+      if (
+        !license.length || !("license" in raw) ||
+        raw.license !== sha256(license) ||
+        !license.equals(read(`${spec.sourceRoot}/THIRD_PARTY_LICENSE.txt`))
+      ) {
+        problems.push(
+          `${tool} license differs from the recorded build or source`,
+        );
+      }
     }
   } catch (err) {
     problems.push(
-      `Cannot verify xcproject ${index ? "index" : "working tree"} build: ${
+      `Cannot verify ${tool} ${index ? "index" : "working tree"} build: ${
         (err as Error).message
       }`,
     );
@@ -195,16 +254,26 @@ export function checkCodexToolArtifacts(
   return problems;
 }
 
+function parseTool(value: string | undefined): SwiftToolName {
+  const selected = value ?? "xcproject";
+  if (selected === "xcproject" || selected === "axbuild") return selected;
+  throw buildError(`Unknown Swift tool: ${selected}`);
+}
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const root = path.resolve(import.meta.dirname, "..");
-  if (process.argv[2] === "snapshot") {
-    process.stdout.write(JSON.stringify(swiftToolInputs(root)) + "\n");
-  } else if (process.argv[2] === "record" && process.argv[3]) {
+  if (process.argv[2] === "snapshot" && process.argv.length <= 4) {
+    process.stdout.write(
+      JSON.stringify(swiftToolInputs(root, parseTool(process.argv[3]))) + "\n",
+    );
+  } else if (
+    process.argv[2] === "record" && process.argv[3] && process.argv.length <= 5
+  ) {
     recordSwiftToolBuild(
       root,
       JSON.parse(fs.readFileSync(process.argv[3], "utf8")),
+      parseTool(process.argv[4]),
     );
-  } else {throw new Error(
-      "Usage: swift-tool.ts snapshot | record <pre-build-snapshot.json>",
+  } else {throw buildError(
+      "Usage: swift-tool.ts snapshot [tool] | record <pre-build-snapshot.json> [tool]",
     );}
 }

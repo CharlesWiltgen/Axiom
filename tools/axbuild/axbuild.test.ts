@@ -6,7 +6,10 @@ import path from "node:path";
 import { describe, it } from "node:test";
 
 const binary = process.env.AXIOM_AXBUILD ??
-  path.join(import.meta.dirname, ".build/debug/axbuild");
+  path.resolve(
+    import.meta.dirname,
+    "../../.claude-plugin/plugins/axiom/bin/axbuild",
+  );
 const fixture = path.join(import.meta.dirname, "fixtures/process-child.py");
 function temporary<T>(action: (root: string, env: NodeJS.ProcessEnv) => T): T {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "axbuild-test-"));
@@ -608,5 +611,28 @@ it("does not advertise a missing build-only result bundle", () =>
     assert.equal(full.artifacts.resultBundle, undefined);
     assert.ok(
       full.collection.issues.some((i: any) => i.kind === "missing-artifact"),
+    );
+  }));
+
+it("does not advertise an inapplicable disabled event stream", () =>
+  temporary((root, env) => {
+    const stream = path.join(root, "caller.events");
+    const r = run(
+      [
+        "swift",
+        "test",
+        "--disable-swift-testing",
+        "--event-stream-output-path",
+        stream,
+      ],
+      root,
+      env,
+    );
+    const full = saved(r.report);
+    assert.equal(full.artifacts.eventStream, undefined);
+    assert.ok(
+      !full.collection.issues.some((i: any) =>
+        i.kind === "missing-artifact" || i.kind === "unsupported-source"
+      ),
     );
   }));

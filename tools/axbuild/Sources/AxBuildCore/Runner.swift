@@ -489,7 +489,7 @@ func execute(
     invocation.kind == .xcodebuild
     ? optionPath("-resultBundlePath", args: prepared.childArgs, cwd: invocation.cwd) : nil
   let events =
-    invocation.kind == .swiftTest
+    invocation.kind == .swiftTest && !invocation.childArgs.contains("--disable-swift-testing")
     ? optionPath(
       "--event-stream-output-path", args: prepared.childArgs, cwd: invocation.effectiveCwd) : nil
   var snapshots: [String: ArtifactSnapshot] = [:]

@@ -49,7 +49,7 @@ import {
   extractDocStats,
   checkMarkerSpec,
 } from "./doc-stats.js";
-import { checkSwiftToolBuild, checkCodexToolArtifacts } from "./swift-tool.ts";
+import { checkSwiftToolBuild, checkCodexToolArtifacts, swiftToolNames } from "./swift-tool.ts";
 import { scanReferencedToolBinaries } from "../axiom-mcp/src/scripts/binary-coverage.ts";
 import { MCP_TOOL_BINARIES, MCP_PACKAGED_BINARIES } from "../axiom-mcp/src/tools/binaries.ts";
 import {
@@ -1911,12 +1911,11 @@ if (fs.existsSync(goToolsRoot) && fs.statSync(goToolsRoot).isDirectory()) {
   warn("go-binary-staleness", "no tools/ directory — skipping Go binary staleness check");
 }
 
-const swiftProblems = [
-  ...checkSwiftToolBuild(root),
-  ...(stagedPaths.size ? checkSwiftToolBuild(root, true) : []),
-];
-for (const problem of swiftProblems) error("swift-binary-staleness", `${problem}; run cd tools/xcproject && make install and stage source, binary, license and build-info together`);
-if (!swiftProblems.length) console.log("  ✓ xcproject source, binary and license hashes match the recorded build");
+for (const tool of swiftToolNames) {
+  const swiftProblems = [...checkSwiftToolBuild(root, false, tool), ...(stagedPaths.size ? checkSwiftToolBuild(root, true, tool) : [])];
+  for (const problem of swiftProblems) error("swift-binary-staleness", `${problem}; run cd tools/${tool} && make install and stage source, binary${tool === "xcproject" ? ", license" : ""} and build-info together`);
+  if (!swiftProblems.length) console.log(`  ✓ ${tool} source, binary${tool === "xcproject" ? " and license" : ""} hashes match the recorded build`);
+}
 for (const problem of checkCodexToolArtifacts(root, stagedPaths.size > 0)) error("codex-tool-distribution", `${problem}; run npm run build:codex and stage generated artifacts`);
 
 // ── 12h. MCP Tool Binary Coverage ──
