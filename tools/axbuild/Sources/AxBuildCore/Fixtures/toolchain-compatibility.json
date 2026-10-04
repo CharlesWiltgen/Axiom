@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "toolchains": [
+    {
+      "xcode": "27.2",
+      "build": "27B5028f",
+      "swift": "6.4.0.34.1",
+      "eventCLI": "6.3",
+      "eventSchema": "6.3.0",
+      "fallbackCLI": "0",
+      "fallbackSchema": 0,
+      "v0WarningEventObserved": false
+    }
+  ],
+  "unavailable": [
+    "Xcode 26"
+  ]
+}

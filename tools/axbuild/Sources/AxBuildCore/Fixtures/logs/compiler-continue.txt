@@ -1,0 +1,553 @@
+Command line invocation:
+    /Applications/Xcode-beta.app/Contents/Developer/usr/bin/xcodebuild -scheme Fixture -destination platform=macOS,arch=arm64 -derivedDataPath /fixture/artifacts/dd-cont -IDEBuildingContinueBuildingAfterErrors=YES build
+
+Resolve Package Graph
+2026-10-03 14:26:04.033 xcodebuild[61566:55672884] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+
+
+Resolved source packages:
+  Fixture: /fixture
+
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:macOS, arch:arm64, id:FIXTURE-DEVICE, name:My Mac }
+{ platform:macOS, arch:arm64, variant:Mac Catalyst, id:FIXTURE-DEVICE, name:My Mac }
+{ platform:macOS, arch:arm64, variant:DriverKit, id:FIXTURE-DEVICE, name:My Mac }
+{ platform:macOS, arch:arm64, variant:Designed for [iPad,iPhone], id:FIXTURE-DEVICE, name:My Mac }
+ComputePackagePrebuildTargetDependencyGraph
+
+Prepare packages
+
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+note: Target dependency graph (2 targets)
+    Target 'Fixture-product' in project 'Fixture'
+        ➜ Explicit dependency on target 'Fixture' in project 'Fixture'
+    Target 'Fixture' in project 'Fixture' (no dependencies)
+
+GatherProvisioningInputs
+
+CreateBuildDescription
+
+ExecuteExternalTool /Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -isysroot /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk -x c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc --version
+
+ExecuteExternalTool /Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld -version_details
+
+Build description signature: 856df1b9c3ba7ec6871cd5493b7836be
+Build description path: /fixture/artifacts/dd-cont/Build/Intermediates.noindex/XCBuildData/856df1b9c3ba7ec6871cd5493b7836be.xcbuilddata
+CreateBuildDirectory /fixture/artifacts/dd-cont/ModuleCache.noindex
+    cd /fixture/.swiftpm/xcode
+    builtin-create-build-directory /fixture/artifacts/dd-cont/ModuleCache.noindex
+
+CreateBuildDirectory /fixture/artifacts/dd-cont/SDKExplicitPrecompiledModules
+    cd /fixture/.swiftpm/xcode
+    builtin-create-build-directory /fixture/artifacts/dd-cont/SDKExplicitPrecompiledModules
+
+CreateBuildDirectory /fixture/artifacts/dd-cont/CompilationCache.noindex
+    cd /fixture/.swiftpm/xcode
+    builtin-create-build-directory /fixture/artifacts/dd-cont/CompilationCache.noindex
+
+CreateBuildDirectory /fixture/artifacts/dd-cont/Build/Products
+    cd /fixture/.swiftpm/xcode
+    builtin-create-build-directory /fixture/artifacts/dd-cont/Build/Products
+
+CreateBuildDirectory /fixture/artifacts/dd-cont/Build/Intermediates.noindex
+    cd /fixture/.swiftpm/xcode
+    builtin-create-build-directory /fixture/artifacts/dd-cont/Build/Intermediates.noindex
+
+ClangStatCache /Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk /fixture/artifacts/dd-cont/SDKStatCaches.noindex/macosx27.2-26B5091g-936d994821f2573df77d61bfb008e3d7509bd1de19af626cc1159d5e562dbbe5.sdkstatcache
+    cd /fixture/.swiftpm/xcode
+    /Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk -o /fixture/artifacts/dd-cont/SDKStatCaches.noindex/macosx27.2-26B5091g-936d994821f2573df77d61bfb008e3d7509bd1de19af626cc1159d5e562dbbe5.sdkstatcache
+
+CreateBuildDirectory /fixture/artifacts/dd-cont/Build/Products/Debug
+    cd /fixture/.swiftpm/xcode
+    builtin-create-build-directory /fixture/artifacts/dd-cont/Build/Products/Debug
+
+CreateBuildDirectory /fixture/artifacts/dd-cont/Build/Intermediates.noindex/PrecompiledHeaders
+    cd /fixture/.swiftpm/xcode
+    builtin-create-build-directory /fixture/artifacts/dd-cont/Build/Intermediates.noindex/PrecompiledHeaders
+
+CreateBuildDirectory /fixture/artifacts/dd-cont/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules
+    cd /fixture/.swiftpm/xcode
+    builtin-create-build-directory /fixture/artifacts/dd-cont/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules
+
+CreateBuildDirectory /fixture/artifacts/dd-cont/Build/Intermediates.noindex/ExplicitPrecompiledModules
+    cd /fixture/.swiftpm/xcode
+    builtin-create-build-directory /fixture/artifacts/dd-cont/Build/Intermediates.noindex/ExplicitPrecompiledModules
+
+CreateBuildDirectory /fixture/artifacts/dd-cont/Build/Intermediates.noindex/EagerLinkingTBDs/Debug
+    cd /fixture/.swiftpm/xcode
+    builtin-create-build-directory /fixture/artifacts/dd-cont/Build/Intermediates.noindex/EagerLinkingTBDs/Debug
+
+CreateBuildDirectory /fixture/artifacts/dd-cont/Build/Products/Debug/PackageFrameworks
+    cd /fixture/.swiftpm/xcode
+    builtin-create-build-directory /fixture/artifacts/dd-cont/Build/Products/Debug/PackageFrameworks
+
+WriteAuxiliaryFile /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Fixture.modulemap (in target 'Fixture' from project 'Fixture')
+    cd /fixture
+    write-file /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Fixture.modulemap
+
+WriteAuxiliaryFile /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Fixture.DependencyStaticMetadataFileList (in target 'Fixture' from project 'Fixture')
+    cd /fixture
+    write-file /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Fixture.DependencyStaticMetadataFileList
+
+WriteAuxiliaryFile /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Fixture.DependencyMetadataFileList (in target 'Fixture' from project 'Fixture')
+    cd /fixture
+    write-file /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Fixture.DependencyMetadataFileList
+
+WriteAuxiliaryFile /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/Fixture_const_extract_protocols.json (in target 'Fixture' from project 'Fixture')
+    cd /fixture
+    write-file /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/Fixture_const_extract_protocols.json
+
+WriteAuxiliaryFile /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/Fixture.SwiftFileList (in target 'Fixture' from project 'Fixture')
+    cd /fixture
+    write-file /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/Fixture.SwiftFileList
+
+WriteAuxiliaryFile /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/Fixture.LinkFileList (in target 'Fixture' from project 'Fixture')
+    cd /fixture
+    write-file /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/Fixture.LinkFileList
+
+WriteAuxiliaryFile /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/Fixture-OutputFileMap.json (in target 'Fixture' from project 'Fixture')
+    cd /fixture
+    write-file /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/Fixture-OutputFileMap.json
+
+WriteAuxiliaryFile /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/Fixture.SwiftConstValuesFileList (in target 'Fixture' from project 'Fixture')
+    cd /fixture
+    write-file /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/Fixture.SwiftConstValuesFileList
+
+Copy /fixture/artifacts/dd-cont/Build/Intermediates.noindex/GeneratedModuleMaps/Fixture.modulemap /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Fixture.modulemap (in target 'Fixture' from project 'Fixture')
+    cd /fixture
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Fixture.modulemap /fixture/artifacts/dd-cont/Build/Intermediates.noindex/GeneratedModuleMaps
+
+SwiftDriver Fixture normal arm64 com.apple.xcode.tools.swift.compiler (in target 'Fixture' from project 'Fixture')
+    cd /fixture/.swiftpm/xcode
+    builtin-SwiftDriver -- /Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -parse-as-library -module-name Fixture -Onone @/fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/Fixture.SwiftFileList -DSWIFT_PACKAGE -DDEBUG -DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE -DXcode -plugin-path /Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk -target arm64-apple-macos15.0 -g -module-cache-path /fixture/artifacts/dd-cont/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /fixture/artifacts/dd-cont/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 6 -I /fixture/artifacts/dd-cont/Build/Products/Debug -Isystem /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib -F /fixture/artifacts/dd-cont/Build/Products/Debug -F /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -c -j10 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /fixture/artifacts/dd-cont/SDKStatCaches.noindex/macosx27.2-26B5091g-936d994821f2573df77d61bfb008e3d7509bd1de19af626cc1159d5e562dbbe5.sdkstatcache -output-file-map /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/Fixture-OutputFileMap.json -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /fixture/artifacts/dd-cont/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /fixture/artifacts/dd-cont/ModuleCache.noindex -sdk-module-cache-path /fixture/artifacts/dd-cont/SDKExplicitPrecompiledModules -emit-dependencies -emit-module -emit-module-path /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/Fixture.swiftmodule -serialize-diagnostics -dependency-scan-serialize-diagnostics-path /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/Fixture-dependency-scan.dia -validate-clang-modules-once -clang-build-session-file /fixture/artifacts/dd-cont/ModuleCache.noindex/Session.modulevalidation -Xcc -fmodules-prune-interval\=86400 -Xcc -fmodules-prune-after\=345600 -package-name fixture -emit-const-values -const-gather-protocols-list /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/Fixture_const_extract_protocols.json -Xcc -I/fixture/artifacts/dd-cont/Build/Products/Debug/include -Xcc -I/fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/DerivedSources-normal/arm64 -Xcc -I/fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/DerivedSources/arm64 -Xcc -I/fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/DerivedSources -Xcc -DSWIFT_PACKAGE -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/Fixture-Swift.h -working-directory /fixture/.swiftpm/xcode -experimental-emit-module-separately -disable-cmo
+
+SwiftExplicitDependencyGeneratePcm arm64 /fixture/artifacts/dd-cont/SDKExplicitPrecompiledModules/SwiftShims-8BJQ7OID8TEV0F6DZ4MEWG2EN.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /fixture/artifacts/dd-cont/SDKExplicitPrecompiledModules/_SwiftConcurrencyShims-C69UIZ0E556WXEA3HQVWB0BUS.pcm
+
+SwiftCompile normal arm64 Compiling\ C.swift /fixture/Sources/Fixture/C.swift (in target 'Fixture' from project 'Fixture')
+
+SwiftCompile normal arm64 /fixture/Sources/Fixture/C.swift (in target 'Fixture' from project 'Fixture')
+    cd /fixture/.swiftpm/xcode
+    builtin-SwiftPerFileCompile C.swift
+
+/fixture/Sources/Fixture/C.swift:2:36: error: cannot convert value of type 'String' to expected argument type 'Int'
+1 | public func gamma(_ x: Int) -> Int { x }
+2 | public func delta() -> Int { gamma("ERR_THREE") }
+  |                                    `- error: cannot convert value of type 'String' to expected argument type 'Int'
+3 | 
+Failed frontend command:
+/Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swift-frontend -frontend -c /fixture/Sources/Fixture/A.swift /fixture/Sources/Fixture/B.swift -primary-file /fixture/Sources/Fixture/C.swift /fixture/Sources/Fixture/D.swift /fixture/Sources/Fixture/E.swift -emit-dependencies-path /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/C.d -emit-const-values-path /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/C.swiftconstvalues -emit-reference-dependencies-path /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/C.swiftdeps -serialize-diagnostics-path /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/C.dia -target arm64-apple-macos15.0 -disable-cross-import-overlay-search -load-resolved-plugin /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib/swift/host/plugins/libSwiftMacros.dylib\#/Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/bin/swift-plugin-server\#SwiftMacros -disable-implicit-swift-modules -Xcc -fno-implicit-modules -Xcc -fno-implicit-module-maps -explicit-swift-module-map-file /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/Fixture-dependencies-1.json -Xllvm -aarch64-use-tbi -enable-objc-interop -stack-check -sdk /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk -I /fixture/artifacts/dd-cont/Build/Products/Debug -Isystem /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib -F /fixture/artifacts/dd-cont/Build/Products/Debug -F /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -module-cache-path /fixture/artifacts/dd-cont/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -no-color-diagnostics -Xcc -fno-color-diagnostics -enable-testing -g -debug-info-format\=dwarf -dwarf-version\=5 -swift-version 6 -Onone -D SWIFT_PACKAGE -D DEBUG -D SWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE -D Xcode -serialize-debugging-options -enable-experimental-feature DebugDescriptionMacro -empty-abi-descriptor -validate-clang-modules-once -clang-build-session-file /fixture/artifacts/dd-cont/ModuleCache.noindex/Session.modulevalidation -Xcc -working-directory -Xcc /fixture/.swiftpm/xcode -enable-anonymous-context-mangled-names -file-compilation-dir /fixture/.swiftpm/xcode -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -Xcc -ivfsstatcache -Xcc /fixture/artifacts/dd-cont/SDKStatCaches.noindex/macosx27.2-26B5091g-936d994821f2573df77d61bfb008e3d7509bd1de19af626cc1159d5e562dbbe5.sdkstatcache -Xcc -fmodules-prune-interval\=86400 -Xcc -fmodules-prune-after\=345600 -Xcc -I/fixture/artifacts/dd-cont/Build/Products/Debug/include -Xcc -I/fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/DerivedSources-normal/arm64 -Xcc -I/fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/DerivedSources/arm64 -Xcc -I/fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/DerivedSources -Xcc -DSWIFT_PACKAGE -Xcc -DDEBUG\=1 -no-auto-bridging-header-chaining -module-name Fixture -package-name fixture -const-gather-protocols-file /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/Fixture_const_extract_protocols.json -disable-clang-spi -clang-target arm64-apple-macos27.2 -target-sdk-version 27.2 -target-sdk-name macosx27.2 -in-process-plugin-server-path /Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/libSwiftInProcPluginServer.dylib -parse-as-library -o /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/C.o -debug-module-path /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/Fixture.swiftmodule -index-unit-output-path /Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/C.o -index-store-path /fixture/artifacts/dd-cont/Index.noindex/DataStore -index-system-modules
+SwiftEmitModule normal arm64 Emitting\ module\ for\ Fixture (in target 'Fixture' from project 'Fixture')
+
+SwiftCompile normal arm64 (in target 'Fixture' from project 'Fixture')
+    cd /fixture/.swiftpm/xcode
+    
+
+SwiftCompile normal arm64 Compiling\ A.swift /fixture/Sources/Fixture/A.swift (in target 'Fixture' from project 'Fixture')
+
+SwiftCompile normal arm64 /fixture/Sources/Fixture/A.swift (in target 'Fixture' from project 'Fixture')
+    cd /fixture/.swiftpm/xcode
+    builtin-SwiftPerFileCompile A.swift
+
+/fixture/Sources/Fixture/A.swift:1:37: error: cannot convert return expression of type 'String' to return type 'Int'
+1 | public func alpha() -> Int { return "ERR_ONE_STRING" }
+  |                                     `- error: cannot convert return expression of type 'String' to return type 'Int'
+2 | 
+Failed frontend command:
+/Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swift-frontend -frontend -c -primary-file /fixture/Sources/Fixture/A.swift /fixture/Sources/Fixture/B.swift /fixture/Sources/Fixture/C.swift /fixture/Sources/Fixture/D.swift /fixture/Sources/Fixture/E.swift -emit-dependencies-path /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/A.d -emit-const-values-path /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/A.swiftconstvalues -emit-reference-dependencies-path /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/A.swiftdeps -serialize-diagnostics-path /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/A.dia -target arm64-apple-macos15.0 -disable-cross-import-overlay-search -load-resolved-plugin /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib/swift/host/plugins/libSwiftMacros.dylib\#/Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/bin/swift-plugin-server\#SwiftMacros -disable-implicit-swift-modules -Xcc -fno-implicit-modules -Xcc -fno-implicit-module-maps -explicit-swift-module-map-file /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/Fixture-dependencies-1.json -Xllvm -aarch64-use-tbi -enable-objc-interop -stack-check -sdk /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk -I /fixture/artifacts/dd-cont/Build/Products/Debug -Isystem /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib -F /fixture/artifacts/dd-cont/Build/Products/Debug -F /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -module-cache-path /fixture/artifacts/dd-cont/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -no-color-diagnostics -Xcc -fno-color-diagnostics -enable-testing -g -debug-info-format\=dwarf -dwarf-version\=5 -swift-version 6 -Onone -D SWIFT_PACKAGE -D DEBUG -D SWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE -D Xcode -serialize-debugging-options -enable-experimental-feature DebugDescriptionMacro -empty-abi-descriptor -validate-clang-modules-once -clang-build-session-file /fixture/artifacts/dd-cont/ModuleCache.noindex/Session.modulevalidation -Xcc -working-directory -Xcc /fixture/.swiftpm/xcode -enable-anonymous-context-mangled-names -file-compilation-dir /fixture/.swiftpm/xcode -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -Xcc -ivfsstatcache -Xcc /fixture/artifacts/dd-cont/SDKStatCaches.noindex/macosx27.2-26B5091g-936d994821f2573df77d61bfb008e3d7509bd1de19af626cc1159d5e562dbbe5.sdkstatcache -Xcc -fmodules-prune-interval\=86400 -Xcc -fmodules-prune-after\=345600 -Xcc -I/fixture/artifacts/dd-cont/Build/Products/Debug/include -Xcc -I/fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/DerivedSources-normal/arm64 -Xcc -I/fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/DerivedSources/arm64 -Xcc -I/fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/DerivedSources -Xcc -DSWIFT_PACKAGE -Xcc -DDEBUG\=1 -no-auto-bridging-header-chaining -module-name Fixture -package-name fixture -const-gather-protocols-file /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/Fixture_const_extract_protocols.json -disable-clang-spi -clang-target arm64-apple-macos27.2 -target-sdk-version 27.2 -target-sdk-name macosx27.2 -in-process-plugin-server-path /Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/libSwiftInProcPluginServer.dylib -parse-as-library -o /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/A.o -debug-module-path /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/Fixture.swiftmodule -index-unit-output-path /Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/A.o -index-store-path /fixture/artifacts/dd-cont/Index.noindex/DataStore -index-system-modules
+SwiftCompile normal arm64 Compiling\ E.swift /fixture/Sources/Fixture/E.swift (in target 'Fixture' from project 'Fixture')
+/fixture/Sources/Fixture/E.swift:1:21: warning: initialization of immutable value 'unusedE0' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+ 1 | func warnE0() { let unusedE0 = 0 }
+   |                     `- warning: initialization of immutable value 'unusedE0' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+ 2 | func warnE1() { let unusedE1 = 1 }
+ 3 | func warnE2() { let unusedE2 = 2 }
+
+/fixture/Sources/Fixture/E.swift:2:21: warning: initialization of immutable value 'unusedE1' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+ 1 | func warnE0() { let unusedE0 = 0 }
+ 2 | func warnE1() { let unusedE1 = 1 }
+   |                     `- warning: initialization of immutable value 'unusedE1' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+ 3 | func warnE2() { let unusedE2 = 2 }
+ 4 | func warnE3() { let unusedE3 = 3 }
+
+/fixture/Sources/Fixture/E.swift:3:21: warning: initialization of immutable value 'unusedE2' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+ 1 | func warnE0() { let unusedE0 = 0 }
+ 2 | func warnE1() { let unusedE1 = 1 }
+ 3 | func warnE2() { let unusedE2 = 2 }
+   |                     `- warning: initialization of immutable value 'unusedE2' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+ 4 | func warnE3() { let unusedE3 = 3 }
+ 5 | func warnE4() { let unusedE4 = 4 }
+
+/fixture/Sources/Fixture/E.swift:4:21: warning: initialization of immutable value 'unusedE3' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+ 2 | func warnE1() { let unusedE1 = 1 }
+ 3 | func warnE2() { let unusedE2 = 2 }
+ 4 | func warnE3() { let unusedE3 = 3 }
+   |                     `- warning: initialization of immutable value 'unusedE3' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+ 5 | func warnE4() { let unusedE4 = 4 }
+ 6 | func warnE5() { let unusedE5 = 5 }
+
+/fixture/Sources/Fixture/E.swift:5:21: warning: initialization of immutable value 'unusedE4' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+ 3 | func warnE2() { let unusedE2 = 2 }
+ 4 | func warnE3() { let unusedE3 = 3 }
+ 5 | func warnE4() { let unusedE4 = 4 }
+   |                     `- warning: initialization of immutable value 'unusedE4' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+ 6 | func warnE5() { let unusedE5 = 5 }
+ 7 | func warnE6() { let unusedE6 = 6 }
+
+/fixture/Sources/Fixture/E.swift:6:21: warning: initialization of immutable value 'unusedE5' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+ 4 | func warnE3() { let unusedE3 = 3 }
+ 5 | func warnE4() { let unusedE4 = 4 }
+ 6 | func warnE5() { let unusedE5 = 5 }
+   |                     `- warning: initialization of immutable value 'unusedE5' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+ 7 | func warnE6() { let unusedE6 = 6 }
+ 8 | func warnE7() { let unusedE7 = 7 }
+
+/fixture/Sources/Fixture/E.swift:7:21: warning: initialization of immutable value 'unusedE6' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+ 5 | func warnE4() { let unusedE4 = 4 }
+ 6 | func warnE5() { let unusedE5 = 5 }
+ 7 | func warnE6() { let unusedE6 = 6 }
+   |                     `- warning: initialization of immutable value 'unusedE6' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+ 8 | func warnE7() { let unusedE7 = 7 }
+ 9 | func warnE8() { let unusedE8 = 8 }
+
+/fixture/Sources/Fixture/E.swift:8:21: warning: initialization of immutable value 'unusedE7' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+ 6 | func warnE5() { let unusedE5 = 5 }
+ 7 | func warnE6() { let unusedE6 = 6 }
+ 8 | func warnE7() { let unusedE7 = 7 }
+   |                     `- warning: initialization of immutable value 'unusedE7' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+ 9 | func warnE8() { let unusedE8 = 8 }
+10 | func warnE9() { let unusedE9 = 9 }
+
+/fixture/Sources/Fixture/E.swift:9:21: warning: initialization of immutable value 'unusedE8' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+ 7 | func warnE6() { let unusedE6 = 6 }
+ 8 | func warnE7() { let unusedE7 = 7 }
+ 9 | func warnE8() { let unusedE8 = 8 }
+   |                     `- warning: initialization of immutable value 'unusedE8' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+10 | func warnE9() { let unusedE9 = 9 }
+11 | func warnE10() { let unusedE10 = 10 }
+
+/fixture/Sources/Fixture/E.swift:10:21: warning: initialization of immutable value 'unusedE9' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+ 8 | func warnE7() { let unusedE7 = 7 }
+ 9 | func warnE8() { let unusedE8 = 8 }
+10 | func warnE9() { let unusedE9 = 9 }
+   |                     `- warning: initialization of immutable value 'unusedE9' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+11 | func warnE10() { let unusedE10 = 10 }
+12 | func warnE11() { let unusedE11 = 11 }
+
+/fixture/Sources/Fixture/E.swift:11:22: warning: initialization of immutable value 'unusedE10' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+ 9 | func warnE8() { let unusedE8 = 8 }
+10 | func warnE9() { let unusedE9 = 9 }
+11 | func warnE10() { let unusedE10 = 10 }
+   |                      `- warning: initialization of immutable value 'unusedE10' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+12 | func warnE11() { let unusedE11 = 11 }
+13 | func warnE12() { let unusedE12 = 12 }
+
+/fixture/Sources/Fixture/E.swift:12:22: warning: initialization of immutable value 'unusedE11' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+10 | func warnE9() { let unusedE9 = 9 }
+11 | func warnE10() { let unusedE10 = 10 }
+12 | func warnE11() { let unusedE11 = 11 }
+   |                      `- warning: initialization of immutable value 'unusedE11' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+13 | func warnE12() { let unusedE12 = 12 }
+14 | func warnE13() { let unusedE13 = 13 }
+
+/fixture/Sources/Fixture/E.swift:13:22: warning: initialization of immutable value 'unusedE12' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+11 | func warnE10() { let unusedE10 = 10 }
+12 | func warnE11() { let unusedE11 = 11 }
+13 | func warnE12() { let unusedE12 = 12 }
+   |                      `- warning: initialization of immutable value 'unusedE12' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+14 | func warnE13() { let unusedE13 = 13 }
+15 | func warnE14() { let unusedE14 = 14 }
+
+/fixture/Sources/Fixture/E.swift:14:22: warning: initialization of immutable value 'unusedE13' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+12 | func warnE11() { let unusedE11 = 11 }
+13 | func warnE12() { let unusedE12 = 12 }
+14 | func warnE13() { let unusedE13 = 13 }
+   |                      `- warning: initialization of immutable value 'unusedE13' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+15 | func warnE14() { let unusedE14 = 14 }
+16 | func warnE15() { let unusedE15 = 15 }
+
+/fixture/Sources/Fixture/E.swift:15:22: warning: initialization of immutable value 'unusedE14' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+13 | func warnE12() { let unusedE12 = 12 }
+14 | func warnE13() { let unusedE13 = 13 }
+15 | func warnE14() { let unusedE14 = 14 }
+   |                      `- warning: initialization of immutable value 'unusedE14' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+16 | func warnE15() { let unusedE15 = 15 }
+17 | func warnE16() { let unusedE16 = 16 }
+
+
+SwiftCompile normal arm64 /fixture/Sources/Fixture/E.swift (in target 'Fixture' from project 'Fixture')
+    cd /fixture/.swiftpm/xcode
+    builtin-SwiftPerFileCompile E.swift
+
+/fixture/Sources/Fixture/E.swift:16:22: warning: initialization of immutable value 'unusedE15' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+14 | func warnE13() { let unusedE13 = 13 }
+15 | func warnE14() { let unusedE14 = 14 }
+16 | func warnE15() { let unusedE15 = 15 }
+   |                      `- warning: initialization of immutable value 'unusedE15' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+17 | func warnE16() { let unusedE16 = 16 }
+18 | func warnE17() { let unusedE17 = 17 }
+
+/fixture/Sources/Fixture/E.swift:17:22: warning: initialization of immutable value 'unusedE16' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+15 | func warnE14() { let unusedE14 = 14 }
+16 | func warnE15() { let unusedE15 = 15 }
+17 | func warnE16() { let unusedE16 = 16 }
+   |                      `- warning: initialization of immutable value 'unusedE16' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+18 | func warnE17() { let unusedE17 = 17 }
+19 | func warnE18() { let unusedE18 = 18 }
+
+/fixture/Sources/Fixture/E.swift:18:22: warning: initialization of immutable value 'unusedE17' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+16 | func warnE15() { let unusedE15 = 15 }
+17 | func warnE16() { let unusedE16 = 16 }
+18 | func warnE17() { let unusedE17 = 17 }
+   |                      `- warning: initialization of immutable value 'unusedE17' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+19 | func warnE18() { let unusedE18 = 18 }
+20 | func warnE19() { let unusedE19 = 19 }
+
+/fixture/Sources/Fixture/E.swift:19:22: warning: initialization of immutable value 'unusedE18' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+17 | func warnE16() { let unusedE16 = 16 }
+18 | func warnE17() { let unusedE17 = 17 }
+19 | func warnE18() { let unusedE18 = 18 }
+   |                      `- warning: initialization of immutable value 'unusedE18' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+20 | func warnE19() { let unusedE19 = 19 }
+21 | 
+
+/fixture/Sources/Fixture/E.swift:20:22: warning: initialization of immutable value 'unusedE19' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+18 | func warnE17() { let unusedE17 = 17 }
+19 | func warnE18() { let unusedE18 = 18 }
+20 | func warnE19() { let unusedE19 = 19 }
+   |                      `- warning: initialization of immutable value 'unusedE19' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+21 | 
+
+[#NoUsage]: <https://docs.swift.org/compiler/documentation/diagnostics/no-usage>
+SwiftCompile normal arm64 Compiling\ B.swift /fixture/Sources/Fixture/B.swift (in target 'Fixture' from project 'Fixture')
+/fixture/Sources/Fixture/B.swift:1:36: error: cannot find 'undefinedSymbolErrTwo' in scope
+1 | public func beta() -> Int { return undefinedSymbolErrTwo }
+  |                                    `- error: cannot find 'undefinedSymbolErrTwo' in scope
+2 | 
+Failed frontend command:
+/Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swift-frontend -frontend -c /fixture/Sources/Fixture/A.swift -primary-file /fixture/Sources/Fixture/B.swift /fixture/Sources/Fixture/C.swift /fixture/Sources/Fixture/D.swift /fixture/Sources/Fixture/E.swift -emit-dependencies-path /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/B.d -emit-const-values-path /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/B.swiftconstvalues -emit-reference-dependencies-path /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/B.swiftdeps -serialize-diagnostics-path /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/B.dia -target arm64-apple-macos15.0 -disable-cross-import-overlay-search -load-resolved-plugin /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib/swift/host/plugins/libSwiftMacros.dylib\#/Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/bin/swift-plugin-server\#SwiftMacros -disable-implicit-swift-modules -Xcc -fno-implicit-modules -Xcc -fno-implicit-module-maps -explicit-swift-module-map-file /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/Fixture-dependencies-1.json -Xllvm -aarch64-use-tbi -enable-objc-interop -stack-check -sdk /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk -I /fixture/artifacts/dd-cont/Build/Products/Debug -Isystem /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib -F /fixture/artifacts/dd-cont/Build/Products/Debug -F /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -module-cache-path /fixture/artifacts/dd-cont/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -no-color-diagnostics -Xcc -fno-color-diagnostics -enable-testing -g -debug-info-format\=dwarf -dwarf-version\=5 -swift-version 6 -Onone -D SWIFT_PACKAGE -D DEBUG -D SWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE -D Xcode -serialize-debugging-options -enable-experimental-feature DebugDescriptionMacro -empty-abi-descriptor -validate-clang-modules-once -clang-build-session-file /fixture/artifacts/dd-cont/ModuleCache.noindex/Session.modulevalidation -Xcc -working-directory -Xcc /fixture/.swiftpm/xcode -enable-anonymous-context-mangled-names -file-compilation-dir /fixture/.swiftpm/xcode -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -Xcc -ivfsstatcache -Xcc /fixture/artifacts/dd-cont/SDKStatCaches.noindex/macosx27.2-26B5091g-936d994821f2573df77d61bfb008e3d7509bd1de19af626cc1159d5e562dbbe5.sdkstatcache -Xcc -fmodules-prune-interval\=86400 -Xcc -fmodules-prune-after\=345600 -Xcc -I/fixture/artifacts/dd-cont/Build/Products/Debug/include -Xcc -I/fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/DerivedSources-normal/arm64 -Xcc -I/fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/DerivedSources/arm64 -Xcc -I/fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/DerivedSources -Xcc -DSWIFT_PACKAGE -Xcc -DDEBUG\=1 -no-auto-bridging-header-chaining -module-name Fixture -package-name fixture -const-gather-protocols-file /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/Fixture_const_extract_protocols.json -disable-clang-spi -clang-target arm64-apple-macos27.2 -target-sdk-version 27.2 -target-sdk-name macosx27.2 -in-process-plugin-server-path /Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/libSwiftInProcPluginServer.dylib -parse-as-library -o /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/B.o -debug-module-path /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/Fixture.swiftmodule -index-unit-output-path /Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/B.o -index-store-path /fixture/artifacts/dd-cont/Index.noindex/DataStore -index-system-modules
+
+SwiftCompile normal arm64 /fixture/Sources/Fixture/B.swift (in target 'Fixture' from project 'Fixture')
+    cd /fixture/.swiftpm/xcode
+    builtin-SwiftPerFileCompile B.swift
+
+SwiftCompile normal arm64 Compiling\ D.swift /fixture/Sources/Fixture/D.swift (in target 'Fixture' from project 'Fixture')
+/fixture/Sources/Fixture/D.swift:1:21: warning: initialization of immutable value 'unusedD0' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+ 1 | func warnD0() { let unusedD0 = 0 }
+   |                     `- warning: initialization of immutable value 'unusedD0' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+ 2 | func warnD1() { let unusedD1 = 1 }
+ 3 | func warnD2() { let unusedD2 = 2 }
+
+/fixture/Sources/Fixture/D.swift:2:21: warning: initialization of immutable value 'unusedD1' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+ 1 | func warnD0() { let unusedD0 = 0 }
+ 2 | func warnD1() { let unusedD1 = 1 }
+   |                     `- warning: initialization of immutable value 'unusedD1' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+ 3 | func warnD2() { let unusedD2 = 2 }
+ 4 | func warnD3() { let unusedD3 = 3 }
+
+/fixture/Sources/Fixture/D.swift:3:21: warning: initialization of immutable value 'unusedD2' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+ 1 | func warnD0() { let unusedD0 = 0 }
+ 2 | func warnD1() { let unusedD1 = 1 }
+ 3 | func warnD2() { let unusedD2 = 2 }
+   |                     `- warning: initialization of immutable value 'unusedD2' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+ 4 | func warnD3() { let unusedD3 = 3 }
+ 5 | func warnD4() { let unusedD4 = 4 }
+
+/fixture/Sources/Fixture/D.swift:4:21: warning: initialization of immutable value 'unusedD3' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+ 2 | func warnD1() { let unusedD1 = 1 }
+ 3 | func warnD2() { let unusedD2 = 2 }
+ 4 | func warnD3() { let unusedD3 = 3 }
+   |                     `- warning: initialization of immutable value 'unusedD3' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+ 5 | func warnD4() { let unusedD4 = 4 }
+ 6 | func warnD5() { let unusedD5 = 5 }
+
+/fixture/Sources/Fixture/D.swift:5:21: warning: initialization of immutable value 'unusedD4' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+ 3 | func warnD2() { let unusedD2 = 2 }
+ 4 | func warnD3() { let unusedD3 = 3 }
+ 5 | func warnD4() { let unusedD4 = 4 }
+   |                     `- warning: initialization of immutable value 'unusedD4' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+ 6 | func warnD5() { let unusedD5 = 5 }
+ 7 | func warnD6() { let unusedD6 = 6 }
+
+/fixture/Sources/Fixture/D.swift:6:21: warning: initialization of immutable value 'unusedD5' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+ 4 | func warnD3() { let unusedD3 = 3 }
+ 5 | func warnD4() { let unusedD4 = 4 }
+ 6 | func warnD5() { let unusedD5 = 5 }
+   |                     `- warning: initialization of immutable value 'unusedD5' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+ 7 | func warnD6() { let unusedD6 = 6 }
+ 8 | func warnD7() { let unusedD7 = 7 }
+
+/fixture/Sources/Fixture/D.swift:7:21: warning: initialization of immutable value 'unusedD6' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+ 5 | func warnD4() { let unusedD4 = 4 }
+ 6 | func warnD5() { let unusedD5 = 5 }
+ 7 | func warnD6() { let unusedD6 = 6 }
+   |                     `- warning: initialization of immutable value 'unusedD6' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+ 8 | func warnD7() { let unusedD7 = 7 }
+ 9 | func warnD8() { let unusedD8 = 8 }
+
+/fixture/Sources/Fixture/D.swift:8:21: warning: initialization of immutable value 'unusedD7' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+ 6 | func warnD5() { let unusedD5 = 5 }
+ 7 | func warnD6() { let unusedD6 = 6 }
+ 8 | func warnD7() { let unusedD7 = 7 }
+   |                     `- warning: initialization of immutable value 'unusedD7' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+ 9 | func warnD8() { let unusedD8 = 8 }
+10 | func warnD9() { let unusedD9 = 9 }
+
+/fixture/Sources/Fixture/D.swift:9:21: warning: initialization of immutable value 'unusedD8' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+ 7 | func warnD6() { let unusedD6 = 6 }
+ 8 | func warnD7() { let unusedD7 = 7 }
+ 9 | func warnD8() { let unusedD8 = 8 }
+   |                     `- warning: initialization of immutable value 'unusedD8' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+10 | func warnD9() { let unusedD9 = 9 }
+11 | func warnD10() { let unusedD10 = 10 }
+
+/fixture/Sources/Fixture/D.swift:10:21: warning: initialization of immutable value 'unusedD9' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+ 8 | func warnD7() { let unusedD7 = 7 }
+ 9 | func warnD8() { let unusedD8 = 8 }
+10 | func warnD9() { let unusedD9 = 9 }
+   |                     `- warning: initialization of immutable value 'unusedD9' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+11 | func warnD10() { let unusedD10 = 10 }
+12 | func warnD11() { let unusedD11 = 11 }
+
+/fixture/Sources/Fixture/D.swift:11:22: warning: initialization of immutable value 'unusedD10' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+ 9 | func warnD8() { let unusedD8 = 8 }
+10 | func warnD9() { let unusedD9 = 9 }
+11 | func warnD10() { let unusedD10 = 10 }
+   |                      `- warning: initialization of immutable value 'unusedD10' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+12 | func warnD11() { let unusedD11 = 11 }
+13 | func warnD12() { let unusedD12 = 12 }
+
+/fixture/Sources/Fixture/D.swift:12:22: warning: initialization of immutable value 'unusedD11' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+10 | func warnD9() { let unusedD9 = 9 }
+11 | func warnD10() { let unusedD10 = 10 }
+12 | func warnD11() { let unusedD11 = 11 }
+   |                      `- warning: initialization of immutable value 'unusedD11' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+13 | func warnD12() { let unusedD12 = 12 }
+14 | func warnD13() { let unusedD13 = 13 }
+
+/fixture/Sources/Fixture/D.swift:13:22: warning: initialization of immutable value 'unusedD12' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+11 | func warnD10() { let unusedD10 = 10 }
+12 | func warnD11() { let unusedD11 = 11 }
+13 | func warnD12() { let unusedD12 = 12 }
+   |                      `- warning: initialization of immutable value 'unusedD12' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+14 | func warnD13() { let unusedD13 = 13 }
+15 | func warnD14() { let unusedD14 = 14 }
+
+/fixture/Sources/Fixture/D.swift:14:22: warning: initialization of immutable value 'unusedD13' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+12 | func warnD11() { let unusedD11 = 11 }
+13 | func warnD12() { let unusedD12 = 12 }
+14 | func warnD13() { let unusedD13 = 13 }
+   |                      `- warning: initialization of immutable value 'unusedD13' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+15 | func warnD14() { let unusedD14 = 14 }
+16 | func warnD15() { let unusedD15 = 15 }
+
+/fixture/Sources/Fixture/D.swift:15:22: warning: initialization of immutable value 'unusedD14' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+13 | func warnD12() { let unusedD12 = 12 }
+14 | func warnD13() { let unusedD13 = 13 }
+15 | func warnD14() { let unusedD14 = 14 }
+   |                      `- warning: initialization of immutable value 'unusedD14' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+16 | func warnD15() { let unusedD15 = 15 }
+17 | func warnD16() { let unusedD16 = 16 }
+
+/fixture/Sources/Fixture/D.swift:16:22: warning: initialization of immutable value 'unusedD15' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+14 | func warnD13() { let unusedD13 = 13 }
+15 | func warnD14() { let unusedD14 = 14 }
+16 | func warnD15() { let unusedD15 = 15 }
+   |                      `- warning: initialization of immutable value 'unusedD15' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+17 | func warnD16() { let unusedD16 = 16 }
+18 | func warnD17() { let unusedD17 = 17 }
+
+/fixture/Sources/Fixture/D.swift:17:22: warning: initialization of immutable value 'unusedD16' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+15 | func warnD14() { let unusedD14 = 14 }
+16 | func warnD15() { let unusedD15 = 15 }
+17 | func warnD16() { let unusedD16 = 16 }
+   |                      `- warning: initialization of immutable value 'unusedD16' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+18 | func warnD17() { let unusedD17 = 17 }
+19 | func warnD18() { let unusedD18 = 18 }
+
+/fixture/Sources/Fixture/D.swift:18:22: warning: initialization of immutable value 'unusedD17' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+16 | func warnD15() { let unusedD15 = 15 }
+17 | func warnD16() { let unusedD16 = 16 }
+18 | func warnD17() { let unusedD17 = 17 }
+   |                      `- warning: initialization of immutable value 'unusedD17' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+19 | func warnD18() { let unusedD18 = 18 }
+20 | func warnD19() { let unusedD19 = 19 }
+
+/fixture/Sources/Fixture/D.swift:19:22: warning: initialization of immutable value 'unusedD18' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+17 | func warnD16() { let unusedD16 = 16 }
+18 | func warnD17() { let unusedD17 = 17 }
+19 | func warnD18() { let unusedD18 = 18 }
+   |                      `- warning: initialization of immutable value 'unusedD18' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+20 | func warnD19() { let unusedD19 = 19 }
+21 | 
+
+/fixture/Sources/Fixture/D.swift:20:22: warning: initialization of immutable value 'unusedD19' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+18 | func warnD17() { let unusedD17 = 17 }
+19 | func warnD18() { let unusedD18 = 18 }
+20 | func warnD19() { let unusedD19 = 19 }
+   |                      `- warning: initialization of immutable value 'unusedD19' was never used; consider replacing with assignment to '_' or removing it [#NoUsage]
+21 | 
+
+[#NoUsage]: <https://docs.swift.org/compiler/documentation/diagnostics/no-usage>
+
+SwiftCompile normal arm64 /fixture/Sources/Fixture/D.swift (in target 'Fixture' from project 'Fixture')
+    cd /fixture/.swiftpm/xcode
+    builtin-SwiftPerFileCompile D.swift
+
+SwiftDriverJobDiscovery normal arm64 Emitting module for Fixture (in target 'Fixture' from project 'Fixture')
+
+SwiftDriver\ Compilation\ Requirements Fixture normal arm64 com.apple.xcode.tools.swift.compiler (in target 'Fixture' from project 'Fixture')
+    cd /fixture/.swiftpm/xcode
+    builtin-Swift-Compilation-Requirements -- /Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -parse-as-library -module-name Fixture -Onone @/fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/Fixture.SwiftFileList -DSWIFT_PACKAGE -DDEBUG -DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE -DXcode -plugin-path /Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk -target arm64-apple-macos15.0 -g -module-cache-path /fixture/artifacts/dd-cont/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /fixture/artifacts/dd-cont/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 6 -I /fixture/artifacts/dd-cont/Build/Products/Debug -Isystem /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib -F /fixture/artifacts/dd-cont/Build/Products/Debug -F /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -c -j10 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /fixture/artifacts/dd-cont/SDKStatCaches.noindex/macosx27.2-26B5091g-936d994821f2573df77d61bfb008e3d7509bd1de19af626cc1159d5e562dbbe5.sdkstatcache -output-file-map /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/Fixture-OutputFileMap.json -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /fixture/artifacts/dd-cont/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /fixture/artifacts/dd-cont/ModuleCache.noindex -sdk-module-cache-path /fixture/artifacts/dd-cont/SDKExplicitPrecompiledModules -emit-dependencies -emit-module -emit-module-path /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/Fixture.swiftmodule -serialize-diagnostics -dependency-scan-serialize-diagnostics-path /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/Fixture-dependency-scan.dia -validate-clang-modules-once -clang-build-session-file /fixture/artifacts/dd-cont/ModuleCache.noindex/Session.modulevalidation -Xcc -fmodules-prune-interval\=86400 -Xcc -fmodules-prune-after\=345600 -package-name fixture -emit-const-values -const-gather-protocols-list /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/Fixture_const_extract_protocols.json -Xcc -I/fixture/artifacts/dd-cont/Build/Products/Debug/include -Xcc -I/fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/DerivedSources-normal/arm64 -Xcc -I/fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/DerivedSources/arm64 -Xcc -I/fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/DerivedSources -Xcc -DSWIFT_PACKAGE -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/Fixture-Swift.h -working-directory /fixture/.swiftpm/xcode -experimental-emit-module-separately -disable-cmo
+
+SwiftMergeGeneratedHeaders /fixture/artifacts/dd-cont/Build/Intermediates.noindex/GeneratedModuleMaps/Fixture-Swift.h /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/Fixture-Swift.h (in target 'Fixture' from project 'Fixture')
+    cd /fixture
+    builtin-swiftHeaderTool -arch arm64 /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/Fixture-Swift.h -o /fixture/artifacts/dd-cont/Build/Intermediates.noindex/GeneratedModuleMaps/Fixture-Swift.h
+
+Copy /fixture/artifacts/dd-cont/Build/Products/Debug/Fixture.swiftmodule/arm64-apple-macos.swiftdoc /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/Fixture.swiftdoc (in target 'Fixture' from project 'Fixture')
+    cd /fixture
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/Fixture.swiftdoc /fixture/artifacts/dd-cont/Build/Products/Debug/Fixture.swiftmodule/arm64-apple-macos.swiftdoc
+
+Copy /fixture/artifacts/dd-cont/Build/Products/Debug/Fixture.swiftmodule/arm64-apple-macos.abi.json /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/Fixture.abi.json (in target 'Fixture' from project 'Fixture')
+    cd /fixture
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/Fixture.abi.json /fixture/artifacts/dd-cont/Build/Products/Debug/Fixture.swiftmodule/arm64-apple-macos.abi.json
+
+Copy /fixture/artifacts/dd-cont/Build/Products/Debug/Fixture.swiftmodule/arm64-apple-macos.swiftmodule /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/Fixture.swiftmodule (in target 'Fixture' from project 'Fixture')
+    cd /fixture
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/Fixture.swiftmodule /fixture/artifacts/dd-cont/Build/Products/Debug/Fixture.swiftmodule/arm64-apple-macos.swiftmodule
+
+Copy /fixture/artifacts/dd-cont/Build/Products/Debug/Fixture.swiftmodule/Project/arm64-apple-macos.swiftsourceinfo /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/Fixture.swiftsourceinfo (in target 'Fixture' from project 'Fixture')
+    cd /fixture
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/Fixture.swiftsourceinfo /fixture/artifacts/dd-cont/Build/Products/Debug/Fixture.swiftmodule/Project/arm64-apple-macos.swiftsourceinfo
+
+SwiftDriver\ Compilation Fixture normal arm64 com.apple.xcode.tools.swift.compiler (in target 'Fixture' from project 'Fixture')
+    cd /fixture/.swiftpm/xcode
+    builtin-Swift-Compilation -- /Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -parse-as-library -module-name Fixture -Onone @/fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/Fixture.SwiftFileList -DSWIFT_PACKAGE -DDEBUG -DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE -DXcode -plugin-path /Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk -target arm64-apple-macos15.0 -g -module-cache-path /fixture/artifacts/dd-cont/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /fixture/artifacts/dd-cont/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 6 -I /fixture/artifacts/dd-cont/Build/Products/Debug -Isystem /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib -F /fixture/artifacts/dd-cont/Build/Products/Debug -F /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -c -j10 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /fixture/artifacts/dd-cont/SDKStatCaches.noindex/macosx27.2-26B5091g-936d994821f2573df77d61bfb008e3d7509bd1de19af626cc1159d5e562dbbe5.sdkstatcache -output-file-map /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/Fixture-OutputFileMap.json -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /fixture/artifacts/dd-cont/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /fixture/artifacts/dd-cont/ModuleCache.noindex -sdk-module-cache-path /fixture/artifacts/dd-cont/SDKExplicitPrecompiledModules -emit-dependencies -emit-module -emit-module-path /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/Fixture.swiftmodule -serialize-diagnostics -dependency-scan-serialize-diagnostics-path /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/Fixture-dependency-scan.dia -validate-clang-modules-once -clang-build-session-file /fixture/artifacts/dd-cont/ModuleCache.noindex/Session.modulevalidation -Xcc -fmodules-prune-interval\=86400 -Xcc -fmodules-prune-after\=345600 -package-name fixture -emit-const-values -const-gather-protocols-list /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/Fixture_const_extract_protocols.json -Xcc -I/fixture/artifacts/dd-cont/Build/Products/Debug/include -Xcc -I/fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/DerivedSources-normal/arm64 -Xcc -I/fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/DerivedSources/arm64 -Xcc -I/fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/DerivedSources -Xcc -DSWIFT_PACKAGE -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /fixture/artifacts/dd-cont/Build/Intermediates.noindex/Fixture.build/Debug/Fixture-t.build/Objects-normal/arm64/Fixture-Swift.h -working-directory /fixture/.swiftpm/xcode -experimental-emit-module-separately -disable-cmo
+
+PruneExplicitPrecompiledModules /fixture/artifacts/dd-cont/Build/Intermediates.noindex/ExplicitPrecompiledModules
+
+PruneExplicitPrecompiledModules /fixture/artifacts/dd-cont/SDKExplicitPrecompiledModules
+
+PruneExplicitPrecompiledModules /fixture/artifacts/dd-cont/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules
+
+** BUILD FAILED **
+
+
+The following build commands failed:
+	SwiftCompile normal arm64 /fixture/Sources/Fixture/C.swift (in target 'Fixture' from project 'Fixture')
+	SwiftCompile normal arm64 Compiling\ C.swift /fixture/Sources/Fixture/C.swift (in target 'Fixture' from project 'Fixture')
+	SwiftCompile normal arm64 /fixture/Sources/Fixture/A.swift (in target 'Fixture' from project 'Fixture')
+	SwiftCompile normal arm64 Compiling\ A.swift /fixture/Sources/Fixture/A.swift (in target 'Fixture' from project 'Fixture')
+	SwiftCompile normal arm64 Compiling\ B.swift /fixture/Sources/Fixture/B.swift (in target 'Fixture' from project 'Fixture')
+	SwiftCompile normal arm64 /fixture/Sources/Fixture/B.swift (in target 'Fixture' from project 'Fixture')
+	Building workspace Fixture with scheme Fixture
+(7 failures)

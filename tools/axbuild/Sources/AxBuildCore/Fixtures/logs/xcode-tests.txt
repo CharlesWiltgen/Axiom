@@ -1,0 +1,157 @@
+Command line invocation:
+    /Applications/Xcode-beta.app/Contents/Developer/usr/bin/xcodebuild test -scheme Calc -destination platform=macOS,arch=arm64 -derivedDataPath /fixture/artifacts/dd-t -resultBundlePath /fixture/artifacts/t.xcresult
+
+Resolve Package Graph
+2026-10-03 14:16:20.973 xcodebuild[49469:55624992] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+
+
+Resolved source packages:
+  Calc: /fixture
+
+Writing result bundle at path:
+	/fixture/artifacts/t.xcresult
+
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:macOS, arch:arm64, id:FIXTURE-DEVICE, name:My Mac }
+{ platform:macOS, arch:arm64, variant:Mac Catalyst, id:FIXTURE-DEVICE, name:My Mac }
+{ platform:macOS, arch:arm64, variant:DriverKit, id:FIXTURE-DEVICE, name:My Mac }
+{ platform:macOS, arch:arm64, variant:Designed for [iPad,iPhone], id:FIXTURE-DEVICE, name:My Mac }
+ComputePackagePrebuildTargetDependencyGraph
+
+Prepare packages
+
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+note: Target dependency graph (3 targets)
+    Target 'Calc-product' in project 'Calc'
+        ➜ Explicit dependency on target 'Calc' in project 'Calc'
+    Target 'CalcTests-product' in project 'Calc'
+        ➜ Explicit dependency on target 'Calc' in project 'Calc'
+    Target 'Calc' in project 'Calc' (no dependencies)
+
+GatherProvisioningInputs
+
+CreateBuildDescription
+
+ClangStatCache /Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk /fixture/artifacts/dd-t/SDKStatCaches.noindex/macosx27.2-26B5091g-936d994821f2573df77d61bfb008e3d7509bd1de19af626cc1159d5e562dbbe5.sdkstatcache
+    cd /fixture/.swiftpm/xcode
+    /Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk -o /fixture/artifacts/dd-t/SDKStatCaches.noindex/macosx27.2-26B5091g-936d994821f2573df77d61bfb008e3d7509bd1de19af626cc1159d5e562dbbe5.sdkstatcache
+
+SwiftDriver CalcTests normal arm64 com.apple.xcode.tools.swift.compiler (in target 'CalcTests-product' from project 'Calc')
+    cd /fixture/.swiftpm/xcode
+    builtin-SwiftDriver -- /Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -parse-as-library -module-name CalcTests -Onone @/fixture/artifacts/dd-t/Build/Intermediates.noindex/Calc.build/Debug/CalcTests-p.build/Objects-normal/arm64/CalcTests.SwiftFileList -DSWIFT_PACKAGE -DDEBUG -DXcode -plugin-path /Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk -target arm64-apple-macos15.0 -g -module-cache-path /fixture/artifacts/dd-t/ModuleCache.noindex -Xfrontend -serialize-debugging-options -profile-coverage-mapping -profile-generate -enable-testing -index-store-path /fixture/artifacts/dd-t/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 6 -I /fixture/artifacts/dd-t/Build/Products/Debug -Isystem /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib -F /fixture/artifacts/dd-t/Build/Products/Debug/PackageFrameworks -F /fixture/artifacts/dd-t/Build/Products/Debug -F /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -c -j10 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /fixture/artifacts/dd-t/SDKStatCaches.noindex/macosx27.2-26B5091g-936d994821f2573df77d61bfb008e3d7509bd1de19af626cc1159d5e562dbbe5.sdkstatcache -output-file-map /fixture/artifacts/dd-t/Build/Intermediates.noindex/Calc.build/Debug/CalcTests-p.build/Objects-normal/arm64/CalcTests-OutputFileMap.json -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /fixture/artifacts/dd-t/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /fixture/artifacts/dd-t/ModuleCache.noindex -sdk-module-cache-path /fixture/artifacts/dd-t/SDKExplicitPrecompiledModules -emit-dependencies -emit-module -emit-module-path /fixture/artifacts/dd-t/Build/Intermediates.noindex/Calc.build/Debug/CalcTests-p.build/Objects-normal/arm64/CalcTests.swiftmodule -serialize-diagnostics -dependency-scan-serialize-diagnostics-path /fixture/artifacts/dd-t/Build/Intermediates.noindex/Calc.build/Debug/CalcTests-p.build/Objects-normal/arm64/CalcTests-dependency-scan.dia -validate-clang-modules-once -clang-build-session-file /fixture/artifacts/dd-t/ModuleCache.noindex/Session.modulevalidation -Xcc -fmodules-prune-interval\=86400 -Xcc -fmodules-prune-after\=345600 -package-name tfix -emit-const-values -const-gather-protocols-list /fixture/artifacts/dd-t/Build/Intermediates.noindex/Calc.build/Debug/CalcTests-p.build/Objects-normal/arm64/CalcTests_const_extract_protocols.json -Xcc -I/fixture/artifacts/dd-t/Build/Products/Debug/include -Xcc -I/fixture/artifacts/dd-t/Build/Intermediates.noindex/Calc.build/Debug/CalcTests-p.build/DerivedSources-normal/arm64 -Xcc -I/fixture/artifacts/dd-t/Build/Intermediates.noindex/Calc.build/Debug/CalcTests-p.build/DerivedSources/arm64 -Xcc -I/fixture/artifacts/dd-t/Build/Intermediates.noindex/Calc.build/Debug/CalcTests-p.build/DerivedSources -Xcc -DSWIFT_PACKAGE -Xcc -DDEBUG\=1 -working-directory /fixture/.swiftpm/xcode -experimental-emit-module-separately -disable-cmo
+
+SwiftEmitModule normal arm64 Emitting\ module\ for\ CalcTests (in target 'CalcTests-product' from project 'Calc')
+
+SwiftCompile normal arm64 (in target 'CalcTests-product' from project 'Calc')
+    cd /fixture/.swiftpm/xcode
+    
+
+SwiftCompile normal arm64 Compiling\ XCTestCases.swift /fixture/Tests/CalcTests/XCTestCases.swift (in target 'CalcTests-product' from project 'Calc')
+
+SwiftCompile normal arm64 /fixture/Tests/CalcTests/XCTestCases.swift (in target 'CalcTests-product' from project 'Calc')
+    cd /fixture/.swiftpm/xcode
+    builtin-SwiftPerFileCompile XCTestCases.swift
+
+SwiftDriverJobDiscovery normal arm64 Emitting module for CalcTests (in target 'CalcTests-product' from project 'Calc')
+
+SwiftDriver\ Compilation\ Requirements CalcTests normal arm64 com.apple.xcode.tools.swift.compiler (in target 'CalcTests-product' from project 'Calc')
+    cd /fixture/.swiftpm/xcode
+    builtin-Swift-Compilation-Requirements -- /Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -parse-as-library -module-name CalcTests -Onone @/fixture/artifacts/dd-t/Build/Intermediates.noindex/Calc.build/Debug/CalcTests-p.build/Objects-normal/arm64/CalcTests.SwiftFileList -DSWIFT_PACKAGE -DDEBUG -DXcode -plugin-path /Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk -target arm64-apple-macos15.0 -g -module-cache-path /fixture/artifacts/dd-t/ModuleCache.noindex -Xfrontend -serialize-debugging-options -profile-coverage-mapping -profile-generate -enable-testing -index-store-path /fixture/artifacts/dd-t/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 6 -I /fixture/artifacts/dd-t/Build/Products/Debug -Isystem /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib -F /fixture/artifacts/dd-t/Build/Products/Debug/PackageFrameworks -F /fixture/artifacts/dd-t/Build/Products/Debug -F /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -c -j10 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /fixture/artifacts/dd-t/SDKStatCaches.noindex/macosx27.2-26B5091g-936d994821f2573df77d61bfb008e3d7509bd1de19af626cc1159d5e562dbbe5.sdkstatcache -output-file-map /fixture/artifacts/dd-t/Build/Intermediates.noindex/Calc.build/Debug/CalcTests-p.build/Objects-normal/arm64/CalcTests-OutputFileMap.json -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /fixture/artifacts/dd-t/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /fixture/artifacts/dd-t/ModuleCache.noindex -sdk-module-cache-path /fixture/artifacts/dd-t/SDKExplicitPrecompiledModules -emit-dependencies -emit-module -emit-module-path /fixture/artifacts/dd-t/Build/Intermediates.noindex/Calc.build/Debug/CalcTests-p.build/Objects-normal/arm64/CalcTests.swiftmodule -serialize-diagnostics -dependency-scan-serialize-diagnostics-path /fixture/artifacts/dd-t/Build/Intermediates.noindex/Calc.build/Debug/CalcTests-p.build/Objects-normal/arm64/CalcTests-dependency-scan.dia -validate-clang-modules-once -clang-build-session-file /fixture/artifacts/dd-t/ModuleCache.noindex/Session.modulevalidation -Xcc -fmodules-prune-interval\=86400 -Xcc -fmodules-prune-after\=345600 -package-name tfix -emit-const-values -const-gather-protocols-list /fixture/artifacts/dd-t/Build/Intermediates.noindex/Calc.build/Debug/CalcTests-p.build/Objects-normal/arm64/CalcTests_const_extract_protocols.json -Xcc -I/fixture/artifacts/dd-t/Build/Products/Debug/include -Xcc -I/fixture/artifacts/dd-t/Build/Intermediates.noindex/Calc.build/Debug/CalcTests-p.build/DerivedSources-normal/arm64 -Xcc -I/fixture/artifacts/dd-t/Build/Intermediates.noindex/Calc.build/Debug/CalcTests-p.build/DerivedSources/arm64 -Xcc -I/fixture/artifacts/dd-t/Build/Intermediates.noindex/Calc.build/Debug/CalcTests-p.build/DerivedSources -Xcc -DSWIFT_PACKAGE -Xcc -DDEBUG\=1 -working-directory /fixture/.swiftpm/xcode -experimental-emit-module-separately -disable-cmo
+
+Copy /fixture/artifacts/dd-t/Build/Products/Debug/CalcTests.swiftmodule/arm64-apple-macos.abi.json /fixture/artifacts/dd-t/Build/Intermediates.noindex/Calc.build/Debug/CalcTests-p.build/Objects-normal/arm64/CalcTests.abi.json (in target 'CalcTests-product' from project 'Calc')
+    cd /fixture
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /fixture/artifacts/dd-t/Build/Intermediates.noindex/Calc.build/Debug/CalcTests-p.build/Objects-normal/arm64/CalcTests.abi.json /fixture/artifacts/dd-t/Build/Products/Debug/CalcTests.swiftmodule/arm64-apple-macos.abi.json
+
+Copy /fixture/artifacts/dd-t/Build/Products/Debug/CalcTests.swiftmodule/Project/arm64-apple-macos.swiftsourceinfo /fixture/artifacts/dd-t/Build/Intermediates.noindex/Calc.build/Debug/CalcTests-p.build/Objects-normal/arm64/CalcTests.swiftsourceinfo (in target 'CalcTests-product' from project 'Calc')
+    cd /fixture
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /fixture/artifacts/dd-t/Build/Intermediates.noindex/Calc.build/Debug/CalcTests-p.build/Objects-normal/arm64/CalcTests.swiftsourceinfo /fixture/artifacts/dd-t/Build/Products/Debug/CalcTests.swiftmodule/Project/arm64-apple-macos.swiftsourceinfo
+
+SwiftDriverJobDiscovery normal arm64 Compiling XCTestCases.swift (in target 'CalcTests-product' from project 'Calc')
+
+SwiftDriver\ Compilation CalcTests normal arm64 com.apple.xcode.tools.swift.compiler (in target 'CalcTests-product' from project 'Calc')
+    cd /fixture/.swiftpm/xcode
+    builtin-Swift-Compilation -- /Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -parse-as-library -module-name CalcTests -Onone @/fixture/artifacts/dd-t/Build/Intermediates.noindex/Calc.build/Debug/CalcTests-p.build/Objects-normal/arm64/CalcTests.SwiftFileList -DSWIFT_PACKAGE -DDEBUG -DXcode -plugin-path /Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk -target arm64-apple-macos15.0 -g -module-cache-path /fixture/artifacts/dd-t/ModuleCache.noindex -Xfrontend -serialize-debugging-options -profile-coverage-mapping -profile-generate -enable-testing -index-store-path /fixture/artifacts/dd-t/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 6 -I /fixture/artifacts/dd-t/Build/Products/Debug -Isystem /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib -F /fixture/artifacts/dd-t/Build/Products/Debug/PackageFrameworks -F /fixture/artifacts/dd-t/Build/Products/Debug -F /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks -c -j10 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /fixture/artifacts/dd-t/SDKStatCaches.noindex/macosx27.2-26B5091g-936d994821f2573df77d61bfb008e3d7509bd1de19af626cc1159d5e562dbbe5.sdkstatcache -output-file-map /fixture/artifacts/dd-t/Build/Intermediates.noindex/Calc.build/Debug/CalcTests-p.build/Objects-normal/arm64/CalcTests-OutputFileMap.json -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /fixture/artifacts/dd-t/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /fixture/artifacts/dd-t/ModuleCache.noindex -sdk-module-cache-path /fixture/artifacts/dd-t/SDKExplicitPrecompiledModules -emit-dependencies -emit-module -emit-module-path /fixture/artifacts/dd-t/Build/Intermediates.noindex/Calc.build/Debug/CalcTests-p.build/Objects-normal/arm64/CalcTests.swiftmodule -serialize-diagnostics -dependency-scan-serialize-diagnostics-path /fixture/artifacts/dd-t/Build/Intermediates.noindex/Calc.build/Debug/CalcTests-p.build/Objects-normal/arm64/CalcTests-dependency-scan.dia -validate-clang-modules-once -clang-build-session-file /fixture/artifacts/dd-t/ModuleCache.noindex/Session.modulevalidation -Xcc -fmodules-prune-interval\=86400 -Xcc -fmodules-prune-after\=345600 -package-name tfix -emit-const-values -const-gather-protocols-list /fixture/artifacts/dd-t/Build/Intermediates.noindex/Calc.build/Debug/CalcTests-p.build/Objects-normal/arm64/CalcTests_const_extract_protocols.json -Xcc -I/fixture/artifacts/dd-t/Build/Products/Debug/include -Xcc -I/fixture/artifacts/dd-t/Build/Intermediates.noindex/Calc.build/Debug/CalcTests-p.build/DerivedSources-normal/arm64 -Xcc -I/fixture/artifacts/dd-t/Build/Intermediates.noindex/Calc.build/Debug/CalcTests-p.build/DerivedSources/arm64 -Xcc -I/fixture/artifacts/dd-t/Build/Intermediates.noindex/Calc.build/Debug/CalcTests-p.build/DerivedSources -Xcc -DSWIFT_PACKAGE -Xcc -DDEBUG\=1 -working-directory /fixture/.swiftpm/xcode -experimental-emit-module-separately -disable-cmo
+
+Ld /fixture/artifacts/dd-t/Build/Products/Debug/CalcTests.xctest/Contents/MacOS/CalcTests normal (in target 'CalcTests-product' from project 'Calc')
+    cd /fixture
+    /Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -Xlinker -reproducible -target arm64-apple-macos15.0 -Xlinker -bundle -sdk /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk -Xlinker -no_warn_duplicate_libraries -L/fixture/artifacts/dd-t/Build/Intermediates.noindex/EagerLinkingTBDs/Debug -L/fixture/artifacts/dd-t/Build/Products/Debug -L/Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib -F/fixture/artifacts/dd-t/Build/Intermediates.noindex/EagerLinkingTBDs/Debug -F/fixture/artifacts/dd-t/Build/Products/Debug/PackageFrameworks -F/fixture/artifacts/dd-t/Build/Products/Debug -Fsystem /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks @/fixture/artifacts/dd-t/Build/Intermediates.noindex/Calc.build/Debug/CalcTests-p.build/Objects-normal/arm64/CalcTests.LinkFileList -Xlinker -rpath -Xlinker /usr/lib/swift -Xlinker -rpath -Xlinker @loader_path -Xlinker -rpath -Xlinker /fixture/artifacts/dd-t/Build/Products/Debug/PackageFrameworks -Xlinker -rpath -Xlinker @loader_path/../../.. -Xlinker -rpath -Xlinker @loader_path/Frameworks -Xlinker -rpath -Xlinker @loader_path/../Frameworks -Xlinker -object_path_lto -Xlinker /fixture/artifacts/dd-t/Build/Intermediates.noindex/Calc.build/Debug/CalcTests-p.build/Objects-normal/arm64/CalcTests_lto.o -Xclang-linker -rdynamic -Xlinker -no_deduplicate -Xlinker -debug_variant -Xlinker -dependency_info -Xlinker /fixture/artifacts/dd-t/Build/Intermediates.noindex/Calc.build/Debug/CalcTests-p.build/Objects-normal/arm64/CalcTests_dependency_info.dat -link-objc-runtime -profile-generate -L/Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx -L/usr/lib/swift -Xlinker -add_ast_path -Xlinker /fixture/artifacts/dd-t/Build/Intermediates.noindex/Calc.build/Debug/CalcTests-p.build/Objects-normal/arm64/CalcTests.swiftmodule -Xlinker -needed_framework -Xlinker XCTest -framework XCTest -Xlinker -needed-lXCTestSwiftSupport -lXCTestSwiftSupport -o /fixture/artifacts/dd-t/Build/Products/Debug/CalcTests.xctest/Contents/MacOS/CalcTests -no-stdlib-rpath
+
+CopySwiftLibs /fixture/artifacts/dd-t/Build/Products/Debug/CalcTests.xctest (in target 'CalcTests-product' from project 'Calc')
+    cd /fixture
+    builtin-swiftStdLibTool --copy --verbose --scan-executable /fixture/artifacts/dd-t/Build/Products/Debug/CalcTests.xctest/Contents/MacOS/CalcTests --scan-folder /fixture/artifacts/dd-t/Build/Products/Debug/CalcTests.xctest/Contents/Frameworks --scan-folder /fixture/artifacts/dd-t/Build/Products/Debug/CalcTests.xctest/Contents/PlugIns --scan-folder /fixture/artifacts/dd-t/Build/Products/Debug/CalcTests.xctest/Contents/Library/SystemExtensions --scan-folder /fixture/artifacts/dd-t/Build/Products/Debug/CalcTests.xctest/Contents/Extensions --platform macosx --toolchain /var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v27.2.5028.5.3FFPNo/Metal.xctoolchain --toolchain /Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --destination /fixture/artifacts/dd-t/Build/Products/Debug/CalcTests.xctest/Contents/Frameworks --strip-bitcode --scan-executable /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib/libXCTestSwiftSupport.dylib --strip-bitcode-tool /Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/bitcode_strip --emit-dependency-info /fixture/artifacts/dd-t/Build/Intermediates.noindex/Calc.build/Debug/CalcTests-p.build/SwiftStdLibToolInputDependencies.dep --filter-for-swift-os --back-deploy-swift-span
+Ignoring --strip-bitcode because --sign was not passed
+
+ExtractAppIntentsMetadata (in target 'CalcTests-product' from project 'Calc')
+    cd /fixture
+    /Applications/Xcode-beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsmetadataprocessor --toolchain-dir /var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v27.2.5028.5.3FFPNo/Metal.xctoolchain --module-name CalcTests --sdk-root /Applications/Xcode-beta.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk --xcode-version 27B5028f --platform-family macOS --deployment-target 15.0 --bundle-identifier tfix.CalcTests --output /fixture/artifacts/dd-t/Build/Products/Debug/CalcTests.xctest/Contents/Resources --target-triple arm64-apple-macos15.0 --binary-file /fixture/artifacts/dd-t/Build/Products/Debug/CalcTests.xctest/Contents/MacOS/CalcTests --dependency-file /fixture/artifacts/dd-t/Build/Intermediates.noindex/Calc.build/Debug/CalcTests-p.build/Objects-normal/arm64/CalcTests_dependency_info.dat --stringsdata-file /fixture/artifacts/dd-t/Build/Intermediates.noindex/Calc.build/Debug/CalcTests-p.build/Objects-normal/arm64/ExtractedAppShortcutsMetadata.stringsdata --source-file-list /fixture/artifacts/dd-t/Build/Intermediates.noindex/Calc.build/Debug/CalcTests-p.build/Objects-normal/arm64/CalcTests.SwiftFileList --metadata-file-list /fixture/artifacts/dd-t/Build/Intermediates.noindex/Calc.build/Debug/CalcTests-p.build/CalcTests.DependencyMetadataFileList --static-metadata-file-list /fixture/artifacts/dd-t/Build/Intermediates.noindex/Calc.build/Debug/CalcTests-p.build/CalcTests.DependencyStaticMetadataFileList --swift-const-vals-list /fixture/artifacts/dd-t/Build/Intermediates.noindex/Calc.build/Debug/CalcTests-p.build/Objects-normal/arm64/CalcTests.SwiftConstValuesFileList --compile-time-extraction --deployment-aware-processing --no-app-shortcuts-localization
+2026-10-03 14:16:22.599 appintentsmetadataprocessor[49549:55625227] Starting metadata extraction
+2026-10-03 14:16:22.600 appintentsmetadataprocessor[49549:55625227] Starting appintentsmetadataprocessor export
+2026-10-03 14:16:22.601 appintentsmetadataprocessor[49549:55625227] warning: Metadata extraction skipped, no AppIntents.framework dependency found
+
+RegisterExecutionPolicyException /fixture/artifacts/dd-t/Build/Products/Debug/CalcTests.xctest (in target 'CalcTests-product' from project 'Calc')
+    cd /fixture
+    builtin-RegisterExecutionPolicyException /fixture/artifacts/dd-t/Build/Products/Debug/CalcTests.xctest
+
+Touch /fixture/artifacts/dd-t/Build/Products/Debug/CalcTests.xctest (in target 'CalcTests-product' from project 'Calc')
+    cd /fixture
+    /usr/bin/touch -c /fixture/artifacts/dd-t/Build/Products/Debug/CalcTests.xctest
+
+PruneExplicitPrecompiledModules /fixture/artifacts/dd-t/Build/Intermediates.noindex/ExplicitPrecompiledModules
+
+PruneExplicitPrecompiledModules /fixture/artifacts/dd-t/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules
+
+PruneExplicitPrecompiledModules /fixture/artifacts/dd-t/SDKExplicitPrecompiledModules
+
+2026-10-03 14:16:22.707 xcodebuild[49469:55625059]  DVTAssertions: Warning in IDEFrameworks/IDEFoundation/Execution/LaunchSystem/IDELaunchSession.m:395
+Details:  setRunnablePIDWithDiagnostics:logSection:andCompletionHandler: called without a completion handler - blocking until diagnostics setup completes. Callers should migrate to using a completion handler for better performance.
+Object:   <IDELaunchSession: 0x74a12f6a00>
+Method:   -setRunnablePIDWithDiagnostics:logSection:andCompletionHandler:
+Thread:   <NSThread: 0x74a3388c00>{number = 10, name = (null)}
+Please file a bug at https://feedbackassistant.apple.com with this warning message and any useful information you can provide.
+Test Suite 'All tests' started at 2026-10-03 14:16:23.918.
+Test Suite 'CalcTests.xctest' started at 2026-10-03 14:16:23.920.
+Test Suite 'XCTestCases' started at 2026-10-03 14:16:23.920.
+Test Case '-[CalcTests.XCTestCases testAddFailsXC]' started.
+/fixture/Tests/CalcTests/XCTestCases.swift:4: error: -[CalcTests.XCTestCases testAddFailsXC] : XCTAssertEqual failed: ("5") is not equal to ("4") - XC_MARKER sum wrong
+Test Case '-[CalcTests.XCTestCases testAddFailsXC]' failed (1.379 seconds).
+Test Case '-[CalcTests.XCTestCases testPassesXC]' started.
+Test Case '-[CalcTests.XCTestCases testPassesXC]' passed (0.001 seconds).
+Test Suite 'XCTestCases' failed at 2026-10-03 14:16:25.303.
+	 Executed 2 tests, with 1 failure (0 unexpected) in 1.380 (1.383) seconds
+Test Suite 'CalcTests.xctest' failed at 2026-10-03 14:16:25.304.
+	 Executed 2 tests, with 1 failure (0 unexpected) in 1.380 (1.384) seconds
+Test Suite 'All tests' failed at 2026-10-03 14:16:25.304.
+	 Executed 2 tests, with 1 failure (0 unexpected) in 1.380 (1.386) seconds
+􀟈 Test run started.
+􀄵 Testing Library Version: 2401
+􀄵 Target Platform: arm64e-apple-macos14.0
+􀟈 Test passesST() started.
+􀟈 Test addFailsST() started.
+􁁛 Test passesST() passed after 0.001 seconds.
+􀢄 Test addFailsST() recorded an issue at SwiftTestingCases.swift:3:27: Expectation failed: add(1, 1) == 2
+􀄵 ST_MARKER sum wrong
+􀄵 add(1, 1) == 2 → false
+􀄵   add(1, 1) → 3
+􀢄 Test addFailsST() failed after 0.001 seconds with 1 issue.
+􀢄 Test run with 2 tests in 0 suites failed after 0.002 seconds with 1 issue.
+2026-10-03 14:16:33.622 xcodebuild[49469:55624992] [MT] IDETestOperationsObserverDebug: 10.959 elapsed -- Testing started completed.
+2026-10-03 14:16:33.623 xcodebuild[49469:55624992] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-03 14:16:33.623 xcodebuild[49469:55624992] [MT] IDETestOperationsObserverDebug: 10.959 sec, +10.959 sec -- end
+
+Test session results, code coverage, and logs:
+	/fixture/artifacts/t.xcresult
+
+Failing tests:
+	XCTestCases.testAddFailsXC()
+	addFailsST()
+
+** TEST FAILED **
+
+Testing started

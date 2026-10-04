@@ -1,0 +1,35 @@
+Building for debugging...
+[1 / 21]
+[2 / 13] CalcTests-product
+[4 / 15] CalcTests-product
+[9 / 13] CalcTests-product
+Build complete! (1.12 sec)
+Test Suite 'All tests' started at 2026-10-03 14:16:37.611.
+Test Suite 'CalcTests.xctest' started at 2026-10-03 14:16:37.612.
+Test Suite 'XCTestCases' started at 2026-10-03 14:16:37.612.
+Test Case '-[CalcTests.XCTestCases testAddFailsXC]' started.
+/fixture/Tests/CalcTests/XCTestCases.swift:4: error: -[CalcTests.XCTestCases testAddFailsXC] : XCTAssertEqual failed: ("5") is not equal to ("4") - XC_MARKER sum wrong
+Test Case '-[CalcTests.XCTestCases testAddFailsXC]' failed (0.714 seconds).
+Test Case '-[CalcTests.XCTestCases testPassesXC]' started.
+Test Case '-[CalcTests.XCTestCases testPassesXC]' passed (0.000 seconds).
+Test Suite 'XCTestCases' failed at 2026-10-03 14:16:38.327.
+	 Executed 2 tests, with 1 failure (0 unexpected) in 0.714 (0.715) seconds
+Test Suite 'CalcTests.xctest' failed at 2026-10-03 14:16:38.327.
+	 Executed 2 tests, with 1 failure (0 unexpected) in 0.714 (0.715) seconds
+Test Suite 'All tests' failed at 2026-10-03 14:16:38.327.
+	 Executed 2 tests, with 1 failure (0 unexpected) in 0.714 (0.716) seconds
+􀟈  Test run started.
+􀄵  Testing Library Version: 2401
+􀄵  Target Platform: arm64e-apple-macos14.0
+􀟈  Test addFailsST() started.
+􀟈  Test passesST() started.
+􁁛  Test passesST() passed after 0.001 seconds.
+􀢄  Test addFailsST() recorded an issue at SwiftTestingCases.swift:3:27: Expectation failed: add(1, 1) == 2
+􀄵  ST_MARKER sum wrong
+􀄵  add(1, 1) == 2 → false
+􀄵    add(1, 1) → 3
+􀢄  Test addFailsST() failed after 0.001 seconds with 1 issue.
+􀢄  Test run with 2 tests in 0 suites failed after 0.001 seconds with 1 issue.
+Note: Some test targets reported failures:
+  - CalcTests (XCTest)
+  - CalcTests (Swift Testing)

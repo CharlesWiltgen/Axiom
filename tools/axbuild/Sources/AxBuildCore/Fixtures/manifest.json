@@ -1,0 +1,6 @@
+{
+  "source": "Xcode 27.2 beta 27B5028f / Swift 6.4",
+  "compilerAnswerKey": "Fixture A.swift:1:37 return String instead of Int; B.swift:1:36 undefinedSymbolErrTwo; C.swift:2:36 String argument instead of Int; D/E each 20 unused-variable warnings derived from source",
+  "testAnswerKey": "XCTestCases.swift:4 XCTAssertEqual 5 != 4; SwiftTestingCases.swift:3:27 add(1,1) == 2 but actual 3",
+  "sanitization": "Private scratch/project paths replaced by /fixture; raw originals retained privately"
+}

@@ -1,0 +1,100 @@
+{
+  "devices" : [
+    {
+      "architecture" : "arm64",
+      "deviceId" : "FIXTURE-DEVICE",
+      "deviceName" : "My Mac",
+      "modelName" : "Mac Studio",
+      "osBuildNumber" : "26B5091g",
+      "osVersion" : "27.2",
+      "platform" : "macOS"
+    }
+  ],
+  "testNodes" : [
+    {
+      "children" : [
+        {
+          "children" : [
+            {
+              "duration" : "0.00026s",
+              "durationInSeconds" : 0.0002613067626953125,
+              "name" : "passesST()",
+              "nodeIdentifier" : "passesST()",
+              "nodeIdentifierURL" : "test://com.apple.xcode/Calc/CalcTests/passesST()",
+              "nodeType" : "Test Case",
+              "result" : "Passed"
+            },
+            {
+              "children" : [
+                {
+                  "name" : "Expectation failed: add(1, 1) == 2\nadd(1, 1) → 3: ST_MARKER sum wrong",
+                  "nodeType" : "Failure Message",
+                  "sourceLocation" : {
+                    "filePath" : "/fixture/Tests/CalcTests/SwiftTestingCases.swift",
+                    "lineNumber" : 3
+                  }
+                }
+              ],
+              "duration" : "0.00086s",
+              "durationInSeconds" : 0.0008571147918701172,
+              "name" : "addFailsST()",
+              "nodeIdentifier" : "addFailsST()",
+              "nodeIdentifierURL" : "test://com.apple.xcode/Calc/CalcTests/addFailsST()",
+              "nodeType" : "Test Case",
+              "result" : "Failed"
+            },
+            {
+              "children" : [
+                {
+                  "children" : [
+                    {
+                      "name" : "XCTAssertEqual failed: (\"5\") is not equal to (\"4\") - XC_MARKER sum wrong",
+                      "nodeType" : "Failure Message",
+                      "sourceLocation" : {
+                        "filePath" : "/fixture/Tests/CalcTests/XCTestCases.swift",
+                        "lineNumber" : 4
+                      }
+                    }
+                  ],
+                  "duration" : "1s",
+                  "durationInSeconds" : 1.3787320852279663,
+                  "name" : "testAddFailsXC()",
+                  "nodeIdentifier" : "XCTestCases/testAddFailsXC()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/Calc/CalcTests/XCTestCases/testAddFailsXC",
+                  "nodeType" : "Test Case",
+                  "result" : "Failed"
+                },
+                {
+                  "duration" : "0.0012s",
+                  "durationInSeconds" : 0.0011709928512573242,
+                  "name" : "testPassesXC()",
+                  "nodeIdentifier" : "XCTestCases/testPassesXC()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/Calc/CalcTests/XCTestCases/testPassesXC",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                }
+              ],
+              "name" : "XCTestCases",
+              "nodeIdentifierURL" : "test://com.apple.xcode/Calc/CalcTests/XCTestCases",
+              "nodeType" : "Test Suite",
+              "result" : "Failed"
+            }
+          ],
+          "name" : "CalcTests",
+          "nodeIdentifierURL" : "test://com.apple.xcode/Calc/CalcTests",
+          "nodeType" : "Unit test bundle",
+          "result" : "Failed"
+        }
+      ],
+      "name" : "Calc",
+      "nodeType" : "Test Plan",
+      "result" : "Failed"
+    }
+  ],
+  "testPlanConfigurations" : [
+    {
+      "configurationId" : "1",
+      "configurationName" : "Test Scheme Action"
+    }
+  ]
+}

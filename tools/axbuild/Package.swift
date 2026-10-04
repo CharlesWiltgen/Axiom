@@ -7,10 +7,11 @@ let package = Package(
   targets: [
     .target(
       name: "AxBuildCore", path: "Sources/AxBuildCore",
-      exclude: ["Domain.test.swift", "Invocation.test.swift"],
-      sources: ["Domain.swift", "Invocation.swift"]),
+      exclude: ["Fixtures", "Domain.test.swift", "Invocation.test.swift", "LogReader.test.swift"],
+      sources: ["Domain.swift", "Invocation.swift", "LogReader.swift"]),
     .testTarget(
       name: "AxBuildCoreTests", dependencies: ["AxBuildCore"], path: "Sources/AxBuildCore",
-      exclude: ["Domain.swift", "Invocation.swift"],
-      sources: ["Domain.test.swift", "Invocation.test.swift"]),
+      exclude: ["Domain.swift", "Invocation.swift", "LogReader.swift"],
+      sources: ["Domain.test.swift", "Invocation.test.swift", "LogReader.test.swift"],
+      resources: [.copy("Fixtures")]),
   ], swiftLanguageModes: [.v6])
