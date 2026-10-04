@@ -28,6 +28,16 @@ enum IssueKind: String, Codable, Sendable {
   case unsupportedSource = "unsupported-source"
   case unclassifiedTestIssue = "unclassified-test-issue"
   case timedOut = "timed-out"
+  case ambiguousTestIdentity = "ambiguous-test-identity"
+  case ambiguousCorrelation = "ambiguous-correlation"
+  case unrecognizedFailure = "unrecognized-failure"
+  case writeFailed = "write-failed"
+  case toolUnavailable = "tool-unavailable"
+  case captureUnavailable = "capture-unavailable"
+  case internalFailure = "internal-failure"
+  case readFailed = "read-failed"
+  case missingArtifact = "missing-artifact"
+  case cleanupIncomplete = "cleanup-incomplete"
 }
 struct CollectionIssue: Error, Codable, Equatable, Sendable {
   var kind: IssueKind
@@ -128,8 +138,12 @@ struct Diagnostic: Codable, Equatable, Sendable {
   var target: String?
   var testName: String? = nil
   var synthetic = false
+  var preview: Preview?
+  var alternateMessages: [AlternateMessage]?
+  var fixIts: [FixIt]?
   enum CodingKeys: String, CodingKey {
-    case id, kind, severity, message, sources, line, column, notes, test, target
+    case id, kind, severity, message, sources, line, column, notes, test, target, preview,
+      alternateMessages, fixIts
   }
 }
 struct ReaderContext: Sendable {
@@ -157,4 +171,28 @@ struct TestExecution: Equatable, Sendable {
   var target: String?
   var source: Source
   var failed: Bool?
+}
+
+struct Location: Codable, Equatable, Sendable {
+  var file: String
+  var line: Int?
+  var column: Int?
+}
+struct FixIt: Codable, Equatable, Sendable {
+  var replacement: String
+  var location: Location
+  var end: Location?
+}
+struct AlternateMessage: Codable, Equatable, Sendable {
+  var source: Source
+  var message: String
+}
+struct DetailChange: Codable, Equatable, Sendable {
+  var path: String
+  var kind: String
+  var count: Int
+}
+struct Preview: Codable, Equatable, Sendable {
+  var messageTruncated: Bool = false
+  var changes: [DetailChange] = []
 }

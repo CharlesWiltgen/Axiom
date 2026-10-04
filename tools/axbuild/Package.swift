@@ -9,15 +9,19 @@ let package = Package(
       name: "AxBuildCore", path: "Sources/AxBuildCore",
       exclude: [
         "Fixtures", "Domain.test.swift", "Invocation.test.swift", "LogReader.test.swift",
-        "TestReaders.test.swift",
+        "TestReaders.test.swift", "Report.test.swift",
       ],
-      sources: ["Domain.swift", "Invocation.swift", "LogReader.swift", "TestReaders.swift"]),
+      sources: [
+        "Domain.swift", "Invocation.swift", "LogReader.swift", "TestReaders.swift", "Report.swift",
+      ]),
     .testTarget(
       name: "AxBuildCoreTests", dependencies: ["AxBuildCore"], path: "Sources/AxBuildCore",
-      exclude: ["Domain.swift", "Invocation.swift", "LogReader.swift", "TestReaders.swift"],
+      exclude: [
+        "Domain.swift", "Invocation.swift", "LogReader.swift", "TestReaders.swift", "Report.swift",
+      ],
       sources: [
         "Domain.test.swift", "Invocation.test.swift", "LogReader.test.swift",
-        "TestReaders.test.swift",
+        "TestReaders.test.swift", "Report.test.swift",
       ],
       resources: [.copy("Fixtures")]),
   ], swiftLanguageModes: [.v6])
