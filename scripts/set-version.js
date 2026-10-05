@@ -388,7 +388,7 @@ try {
   // rather than silently shipping a stale variant.
   //
   // Codex was previously omitted here. Nothing caught it: pre-deploy's Codex
-  // staleness gate (12f) compares skill/agent mtimes against the manifest, and a
+  // staleness gate (12f) then compared skill/agent mtimes against the manifest, and a
   // pure version bump touches neither — so `axiom-codex/.codex-plugin/plugin.json`
   // sat at the OLD version through a fully green `npm test`. Verified 2026-09-05 by
   // reverting the manifest to the prior version and watching Phase 1 pass.

@@ -1,4 +1,4 @@
-// Which repository paths the Codex build owns.
+// Which repository paths the Codex build owns, and whether they match the build.
 //
 // `build-codex.ts` writes exactly one root: the `axiom-codex/` plugin tree. It
 // does NOT touch `.agents/plugins/marketplace.json` (the Codex marketplace
@@ -12,6 +12,18 @@
 // Deliberately narrow. The preflight's job is refusing to tag a dirty tree, so
 // this absolves only paths the script itself regenerates — never a stray sibling
 // like `axiom-codex-notes.md`.
+//
+// `checkCodexOutput` renders the tree into a temporary directory and compares it
+// with what would ship: the working tree (what you are about to stage) and every
+// staged change (what a commit ships). Codex installs from the git checkout, so a
+// hand edit to a generated file reaches users (Axiom-fe9f). Pre-deploy 12f, the
+// unit suite and `build-codex.ts --check` all call it.
+
+import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 
 const CODEX_PLUGIN_ROOT = 'axiom-codex/';
 
@@ -27,3 +39,210 @@ export function isCodexGeneratedPath(relativePath) {
 }
 
 export { CODEX_PLUGIN_ROOT };
+
+/**
+ * True for a file in a source suite's `skills/` directory that the Codex build
+ * copies: Markdown sub-skills only, never an editor swap file, backup or `.DS_Store`.
+ *
+ * @param {string} name
+ * @returns {boolean}
+ */
+export function isShippedSubSkillFile(name) {
+  return name.endsWith('.md') && !name.startsWith('.');
+}
+
+/**
+ * @typedef {{ sha256: string, blob: string, mode: '100644' | '100755' | '120000' }} TreeEntry
+ */
+
+/** @param {Buffer | string} bytes */
+const gitBlobHash = (bytes) => {
+  const content = Buffer.from(bytes);
+  return createHash('sha1')
+    .update(`blob ${content.length}\0`)
+    .update(content)
+    .digest('hex');
+};
+
+/**
+ * Every file under `dir`, keyed by POSIX relative path. Modes are git's: only the
+ * executable bit counts, since git tracks nothing else and a umask difference must
+ * not read as a change. A symlink is recorded by its target. `keep` limits the
+ * files read, for example to what git would ship.
+ *
+ * @param {string} dir
+ * @param {(relativePath: string) => boolean} [keep]
+ * @returns {Map<string, TreeEntry>}
+ */
+export function readTree(dir, keep = () => true) {
+  /** @type {Map<string, TreeEntry>} */
+  const files = new Map();
+  /** @param {string} current @param {string} prefix */
+  const walk = (current, prefix) => {
+    for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
+      const absolute = path.join(current, entry.name);
+      const relative = prefix ? `${prefix}/${entry.name}` : entry.name;
+      const stat = fs.lstatSync(absolute);
+      if (stat.isDirectory()) walk(absolute, relative);
+      else if (!keep(relative)) continue;
+      else if (stat.isSymbolicLink()) {
+        const target = fs.readlinkSync(absolute);
+        files.set(relative, { sha256: `symlink:${target}`, blob: gitBlobHash(target), mode: '120000' });
+      } else {
+        const bytes = fs.readFileSync(absolute);
+        files.set(relative, {
+          sha256: createHash('sha256').update(bytes).digest('hex'),
+          blob: gitBlobHash(bytes),
+          mode: (stat.mode & 0o100) !== 0 ? '100755' : '100644',
+        });
+      }
+    }
+  };
+  walk(dir, '');
+  return files;
+}
+
+/**
+ * Compare a fresh render with the committed tree. `added` is committed but not
+ * rendered, `removed` is rendered but not committed, `changed` differs in content
+ * or executable bit. Each list is sorted.
+ *
+ * @param {Map<string, TreeEntry>} expected the fresh render
+ * @param {Map<string, TreeEntry>} actual the committed tree
+ * @returns {{ added: string[], removed: string[], changed: string[] }}
+ */
+export function diffTrees(expected, actual) {
+  /** @param {Iterable<string>} paths */
+  const sorted = (paths) => [...paths].sort();
+  return {
+    added: sorted([...actual.keys()].filter((file) => !expected.has(file))),
+    removed: sorted([...expected.keys()].filter((file) => !actual.has(file))),
+    changed: sorted(
+      [...expected]
+        .filter(([file, rendered]) => {
+          const committed = actual.get(file);
+          return committed !== undefined &&
+            (committed.sha256 !== rendered.sha256 || committed.mode !== rendered.mode);
+        })
+        .map(([file]) => file),
+    ),
+  };
+}
+
+/**
+ * Paths under `dir` that a commit would include: tracked files plus untracked
+ * files git does not ignore, relative to `dir`. Ignored local artifacts, such as
+ * the `__pycache__/` that running the Codex hooks writes, never ship, so they are
+ * not differences. `undefined` outside a git work tree.
+ *
+ * @param {string} dir
+ * @returns {Set<string> | undefined}
+ */
+export function gitVisiblePaths(dir) {
+  const result = spawnSync(
+    'git',
+    ['ls-files', '-z', '--cached', '--others', '--exclude-standard', '--', '.'],
+    { cwd: dir, encoding: 'utf8' },
+  );
+  if (result.status !== 0) return undefined;
+  return new Set(result.stdout.split('\0').filter(Boolean));
+}
+
+/**
+ * Staged changes under `subdir` that do not match the render. A commit ships the
+ * index, not the working tree, so a hand edit staged and then undone on disk, a
+ * staged deletion, a staged stray file or a staged executable bit all ship while
+ * the working tree looks right. Sorted.
+ *
+ * @param {string} repoRoot
+ * @param {string} subdir repository-relative, POSIX separators
+ * @param {Map<string, TreeEntry>} rendered
+ * @returns {string[]}
+ */
+export function stagedDifferences(repoRoot, subdir, rendered) {
+  /** @param {string[]} args */
+  const git = (args) => spawnSync('git', args, { cwd: repoRoot, encoding: 'utf8' });
+  const staged = git(['diff', '--cached', '--no-renames', '--name-status', '-z', '--', subdir]);
+  const index = git(['ls-files', '-s', '-z', '--', subdir]);
+  if (staged.status !== 0 || index.status !== 0) {
+    return [`could not read staged changes under ${subdir}: ${(staged.stderr || index.stderr).trim()}`];
+  }
+  /** @type {Map<string, { mode: string, blob: string }>} */
+  const entries = new Map();
+  for (const record of index.stdout.split('\0').filter(Boolean)) {
+    const [meta, file] = record.split('\t');
+    const [mode, blob] = meta.split(' ');
+    entries.set(file, { mode, blob });
+  }
+  const differences = [];
+  const fields = staged.stdout.split('\0').filter(Boolean);
+  for (let i = 0; i + 1 < fields.length; i += 2) {
+    const [status, file] = [fields[i], fields[i + 1]];
+    const relative = file.slice(subdir.length + 1);
+    const built = rendered.get(relative);
+    const inIndex = entries.get(file);
+    if (status === 'D' || !inIndex) {
+      if (built) differences.push(`staged deletion of a generated file: ${relative}`);
+    } else if (!built) {
+      differences.push(`staged file the build does not produce: ${relative}`);
+    } else if (inIndex.blob !== built.blob || inIndex.mode !== built.mode) {
+      differences.push(`staged change differs from the build: ${relative}`);
+    }
+  }
+  return differences.sort();
+}
+
+/**
+ * Compare a rendered tree with `subdir` of the repository: every git-visible file
+ * in the working tree (content and executable bit) and every staged change.
+ *
+ * @param {string} repoRoot
+ * @param {string} subdir repository-relative, POSIX separators
+ * @param {Map<string, TreeEntry>} rendered
+ * @returns {string[]}
+ */
+export function compareWithRender(repoRoot, subdir, rendered) {
+  const committed = path.join(repoRoot, subdir);
+  if (!fs.existsSync(committed)) return [`${subdir}/ not found`];
+  const visible = gitVisiblePaths(committed);
+  if (!visible) return [`${subdir}/ is not in a git work tree, so what ships cannot be checked`];
+  const { added, removed, changed } = diffTrees(
+    rendered,
+    readTree(committed, (file) => visible.has(file)),
+  );
+  return [
+    ...changed.map((file) => `changed: ${file}`),
+    ...added.map((file) => `only committed: ${file}`),
+    ...removed.map((file) => `only rendered: ${file}`),
+    ...stagedDifferences(repoRoot, subdir, rendered),
+  ];
+}
+
+/**
+ * Render the Codex variant into a temporary directory and compare it with the
+ * committed `axiom-codex/` (see `compareWithRender`). An empty `differences` means
+ * what ships is what the build makes.
+ *
+ * @param {string} root repository root
+ * @returns {{ files: number, differences: string[] }}
+ */
+export function checkCodexOutput(root) {
+  const rendered = fs.mkdtempSync(path.join(os.tmpdir(), 'axiom-codex-render-'));
+  try {
+    const result = spawnSync(
+      process.execPath,
+      [path.join(root, 'scripts/build-codex.ts'), '--output', rendered],
+      { cwd: root, encoding: 'utf8' },
+    );
+    if (result.status !== 0) {
+      return {
+        files: 0,
+        differences: [`could not render the Codex variant (exit ${result.status}): ${(result.stderr || result.stdout).trim()}`],
+      };
+    }
+    const renderedTree = readTree(rendered);
+    return { files: renderedTree.size, differences: compareWithRender(root, 'axiom-codex', renderedTree) };
+  } finally {
+    fs.rmSync(rendered, { recursive: true, force: true });
+  }
+}

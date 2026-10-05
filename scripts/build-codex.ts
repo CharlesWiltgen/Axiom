@@ -13,12 +13,42 @@ import {
 import { translateHooksToCodex, shouldCopyHookScript } from './codex-hooks.js';
 import { adaptHealthCheckForCodex } from './codex-auditors.js';
 import { isGeneratedSubSkill, parseAgentTools } from './inline-auditors.ts';
+import { checkCodexOutput, isShippedSubSkillFile } from './codex-output.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const root = path.dirname(path.dirname(__filename));
 
 const SOURCE_SKILLS = path.join(root, '.claude-plugin/plugins/axiom/skills');
-const OUTPUT_DIR = path.join(root, 'axiom-codex');
+// `--output <absolute dir>` renders somewhere other than axiom-codex/, so a fresh
+// render can be compared with the committed tree; it must be new or empty. `--check`
+// does that comparison (codex-output.js) and exits 1 on any difference.
+function usage(message: string): never {
+  console.error(`${message}\nUsage: node scripts/build-codex.ts [--check | --output /absolute/new-or-empty-directory]`);
+  process.exit(2);
+}
+const DEFAULT_OUTPUT = path.join(root, 'axiom-codex');
+function outputDir(args: string[]): string {
+  if (args.length === 0) return DEFAULT_OUTPUT;
+  if (args.length === 1 && args[0] === '--check') {
+    const { files, differences } = checkCodexOutput(root);
+    if (differences.length > 0) {
+      for (const difference of differences) console.error(`  ✗ ${difference}`);
+      console.error('✗ axiom-codex/ does not match the build. Edit the canonical source, run npm run build:codex, then stage axiom-codex/');
+      process.exit(1);
+    }
+    console.log(`✓ axiom-codex/ matches a fresh render (${files} files), including staged changes`);
+    process.exit(0);
+  }
+  const [flag, value, ...rest] = args;
+  if (flag !== '--output' || rest.length > 0) usage(`unknown arguments: ${args.join(' ')}`);
+  if (!value || !path.isAbsolute(value)) usage('--output needs an absolute directory');
+  if (fs.existsSync(value)) {
+    if (!fs.statSync(value).isDirectory()) usage(`--output ${value} is not a directory`);
+    if (fs.readdirSync(value).length > 0) usage(`--output ${value} is not empty; refusing to delete it`);
+  }
+  return value;
+}
+const OUTPUT_DIR = outputDir(process.argv.slice(2));
 const OUTPUT_SKILLS = path.join(OUTPUT_DIR, 'skills');
 const OUTPUT_MANIFEST = path.join(OUTPUT_DIR, '.codex-plugin');
 
@@ -33,8 +63,9 @@ const ccManifest = JSON.parse(
 );
 const version = ccManifest.version;
 
-// Clean and recreate output
-if (fs.existsSync(OUTPUT_DIR)) {
+// Clean and recreate output. A custom --output was verified new or empty above, so it
+// is never deleted: removing it here would reopen the gap between check and delete.
+if (OUTPUT_DIR === DEFAULT_OUTPUT && fs.existsSync(OUTPUT_DIR)) {
   fs.rmSync(OUTPUT_DIR, { recursive: true });
 }
 fs.mkdirSync(OUTPUT_SKILLS, { recursive: true });
@@ -301,6 +332,7 @@ for (const skill of skillEntries) {
     const destRefs = path.join(destDir, 'skills');
     fs.mkdirSync(destRefs, { recursive: true });
     for (const ref of fs.readdirSync(refsDir)) {
+      if (!isShippedSubSkillFile(ref)) continue;
       const refPath = path.join(refsDir, ref);
       if (isGeneratedSubSkill(fs.readFileSync(refPath, 'utf8'))) continue;
       if (isExcludedSubSkill(skill.name, ref)) continue;

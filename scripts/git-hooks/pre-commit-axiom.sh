@@ -32,10 +32,16 @@ fi
 # docs-only commit previously skipped validation entirely, which is how six
 # docs-dash violations shipped past the very gate meant to catch them.
 # tools/ is IN SCOPE because two rounds of the private-data class lived there.
-_axiom_staged=$(git diff --cached --name-only -- '.claude-plugin/' 'docs/' 'README.md' 'scripts/' 'tools/' 2>/dev/null)
+# axiom-codex/, axiom-cursor/, the Cursor and Codex marketplace manifests and the
+# root package.json are IN SCOPE because they ship from this checkout and have
+# gates of their own: a hand edit committed on its own skipped validation (Axiom-fe9f).
+# Pre-deploy itself writes only to the temp directory, where check 12f renders the
+# Codex variant; the render it spawns runs with full permissions under --allow-run.
+# TMP and TEMP are the fallbacks os.tmpdir() uses when TMPDIR is unset.
+_axiom_staged=$(git diff --cached --name-only -- '.claude-plugin/' 'docs/' 'README.md' 'scripts/' 'tools/' 'axiom-codex/' 'axiom-cursor/' '.cursor-plugin/' '.agents/' 'package.json' 2>/dev/null)
 if [ -n "$_axiom_staged" ]; then
   echo "axiom: plugin/docs files staged — running validation..."
-  if ! deno run --allow-read --allow-run --allow-env scripts/pre-deploy.ts --static 2>&1; then
+  if ! deno run --allow-read --allow-run --allow-env --allow-write="${TMPDIR:-${TMP:-${TEMP:-/tmp}}}" scripts/pre-deploy.ts --static 2>&1; then
     echo >&2 "axiom: pre-deploy validation FAILED — fix before committing"
     exit 1
   fi

@@ -1,9 +1,10 @@
 /**
  * Derived-artifact staleness — pure decision logic.
  *
- * pre-deploy.ts guards two derived artifacts (the MCP bundle, §12b; the Codex
- * variant, §12f) against being shipped out of sync with the skill/agent/command
- * sources. The cheap signal is mtime: if any source `.md` is newer than the
+ * pre-deploy.ts guards the MCP bundle (§12b) against being shipped out of sync
+ * with the skill/agent/command sources; the Go helper binaries (§12t) use the same
+ * rule. (The Codex variant, §12f, now compares content with a fresh render
+ * instead.) The cheap signal is mtime: if any source `.md` is newer than the
  * built artifact, the artifact *might* be stale.
  *
  * But mtime is a leaky proxy for "content changed". `git checkout`, stash,

@@ -27,6 +27,7 @@ import {
   measureFootprints,
 } from "./always-on-footprint.ts";
 import { SHARED_SECTIONS, checkSharedSections } from "./shared-sections.ts";
+import { checkCodexOutput } from "./codex-output.js";
 import {
   NPM_PACKAGE,
   classifyReleaseSync,
@@ -125,7 +126,7 @@ function heading(title: string): void {
 }
 
 // One `git status --porcelain` for the whole repo, parsed into the set of
-// dirty/untracked paths. Shared by the hybrid staleness checks (12b/12f) to
+// dirty/untracked paths. Shared by the hybrid staleness checks (12b/12t) to
 // confirm whether a source file that's newer-by-mtime than a derived artifact
 // has ACTUALLY changed, vs. merely been rewritten by a git checkout/stash/
 // rebase. Returns gitAvailable=false (e.g. no .git) so callers fall back to the
@@ -139,7 +140,7 @@ function gitDirtySet(cwd: string): { gitAvailable: boolean; dirty: Set<string> }
     // green. Paths with spaces are still quoted — parsePorcelain unquotes those.
     // `-uall` lists untracked FILES individually. At git's default (-unormal) a new
     // untracked directory collapses to one "dir/" entry, so a brand-new source file
-    // inside it never matches a walked path and the staleness gates (12b/12f/12t)
+    // inside it never matches a walked path and the staleness gates (12b/12t)
     // read it as "nothing changed" — a new skill directory or Go package would be
     // invisible to the very checks meant to see it. Ignored files stay excluded.
     const out = execSync("git -c core.quotepath=false status --porcelain -uall", {
@@ -691,7 +692,7 @@ if (fs.existsSync(mcpPkgPath)) {
 // Every generated variant manifest that CARRIES a version must be listed here.
 //
 // Codex was missing until 2026-09-05 and the omission was invisible: gate 12f
-// (Codex staleness) compares skill/agent mtimes against the manifest, and a pure
+// (Codex staleness) then compared skill/agent mtimes against the manifest, and a pure
 // version bump touches neither, so the Codex manifest could sit at the PREVIOUS
 // version through a fully green Phase 1. Confirmed by reverting it and watching
 // the suite pass. Root package.json had the identical hole — it is written by
@@ -1123,7 +1124,7 @@ if (staleRefCount === 0) {
 
 heading("12b. MCP Bundle Staleness");
 
-// Shared content-confirmation state for the hybrid staleness checks (12b/12f):
+// Shared content-confirmation state for the hybrid staleness checks (12b/12t):
 // one git call, reused. mtime is a fast pre-filter, but git checkout/stash/
 // rebase rewrite files identically with fresh mtimes — so a source that's
 // "newer" than the artifact is only really stale if git also sees it changed.
@@ -1268,8 +1269,8 @@ if (!fs.existsSync(auditCmdPath)) {
   // GENERATED from scripts/audit-areas.json, so they cannot disagree with
   // each other by construction — the old A↔B↔C set-parity and grouped-parity
   // checks are replaced by a single staleness check against the registry.
-  // Same "generate in memory, diff against committed" pattern as the
-  // inlined auditors (12d-bis) and the Codex variant (12f).
+  // Same "generate, then diff against committed" pattern as the inlined
+  // auditors (12d-bis) and the Codex variant (12f).
   const registryPath = path.join(root, "scripts/audit-areas.json");
   let auditRegistry: AuditRegistry | undefined;
   const parityErrors: string[] = [];
@@ -1681,57 +1682,32 @@ if (!fs.existsSync(statsPath)) {
   }
 }
 
-// ── 12f. Codex Variant Staleness ──
+// ── 12f. Codex Variant Content ──
+//
+// Render the Codex variant into a temporary directory and compare it with what
+// ships: every git-visible file in axiom-codex/ (content and executable bit) and
+// every staged change under it. The previous check compared modification times, so
+// a hand edit inside axiom-codex/ shipped with every gate green (Axiom-fe9f:
+// reversing a safety rule in a generated build-debugging copy passed). The logic
+// lives in scripts/codex-output.js, shared with the unit suite (so CI gates it too)
+// and with `npm run check:codex`. A render takes under a second.
 
-heading("12f. Codex Variant Staleness");
-
-const codexManifest = path.join(root, "axiom-codex/.codex-plugin/plugin.json");
-if (fs.existsSync(codexManifest)) {
-  const codexMtime = fs.statSync(codexManifest).mtimeMs;
-
-  // The Codex variant is rebuilt from skills + agents (npm run build:codex).
-  // Same hybrid as 12b: collect sources newer-by-mtime, then confirm via git
-  // (reusing the shared gitStatus) before declaring real staleness.
-  const newerFiles: string[] = [];
-  const codexSourceDirs = [
-    path.join(pluginDir, "skills"),
-    path.join(pluginDir, "agents"),
-  ];
-  for (const dir of codexSourceDirs) {
-    if (!fs.existsSync(dir)) continue;
-    const walk = (d: string) => {
-      for (const entry of fs.readdirSync(d, { withFileTypes: true })) {
-        const full = path.join(d, entry.name);
-        if (entry.isDirectory()) walk(full);
-        else if (entry.name.endsWith(".md") && fs.statSync(full).mtimeMs > codexMtime) {
-          newerFiles.push(path.relative(root, full));
-        }
-      }
-    };
-    walk(dir);
-  }
-
-  const dirtyFiles = newerFiles.filter((f) => gitStatus.dirty.has(f));
-  const verdict = resolveStaleness({
-    newerFiles,
-    dirtyFiles,
-    gitAvailable: gitStatus.gitAvailable,
-  });
-  if (verdict.stale) {
+heading("12f. Codex Variant Content");
+try {
+  const { files, differences } = checkCodexOutput(root);
+  if (differences.length > 0) {
+    const shown = differences.slice(0, 10).join("; ") +
+      (differences.length > 10 ? `; and ${differences.length - 10} more` : "");
     error(
       "codex-staleness",
-      `Codex variant is stale — ${verdict.reason}. Run: npm run build:codex`,
+      `axiom-codex/ does not match a fresh render (${shown}). A hand edit there is overwritten by the build: ` +
+        "edit the canonical source, run npm run build:codex, then stage axiom-codex/. Check with: npm run check:codex",
     );
   } else {
-    console.log(
-      `  ✓ Codex variant is up-to-date with source files${newerFiles.length ? ` (${verdict.reason})` : ""}`,
-    );
+    console.log(`  ✓ axiom-codex/ matches a fresh render (${files} files), including staged changes`);
   }
-} else {
-  warn(
-    "codex-staleness",
-    "Codex variant manifest not found at axiom-codex/.codex-plugin/plugin.json — build with: npm run build:codex",
-  );
+} catch (e: unknown) {
+  error("codex-staleness", `could not check axiom-codex/ against a fresh render: ${(e as Error).message}`);
 }
 
 // ── 12g. Go Tool args.go Parity ──
@@ -1813,7 +1789,7 @@ heading("12t. Tool Binary Staleness");
 // runs `go test` against the SOURCE. None of them compares source to binary.
 //
 // Found 2026-09-19: a session rewrote tools/xcui tap handling and rebuilt bin/xcui by
-// hand; nothing would have caught skipping that step. Same hybrid rule as 12b/12f —
+// hand; nothing would have caught skipping that step. Same hybrid rule as 12b —
 // mtime pre-filters, git dirtiness confirms — so a fresh clone is not flagged.
 const goToolsRoot = path.join(root, "tools");
 const goBinDir = path.join(pluginDir, "bin");
@@ -2220,8 +2196,9 @@ heading("12k. Pi Install Manifest");
 // ── 12l. Codex Hooks Fidelity ──
 
 // The Codex variant ports Axiom's Claude Code lifecycle hooks (bd axiom-25ll).
-// 12f only checks mtime staleness against skills/agents *.md, so it can't catch a
-// hooks regression. This gate independently re-derives what the Codex hooks.json
+// 12f checks that axiom-codex/ matches a fresh render, which proves the hooks were
+// copied as the build copies them but not that the build is right. This gate
+// independently re-derives what the Codex hooks.json
 // MUST contain — event coverage from the source manifest minus the documented
 // exclusions, plus schema/portability invariants — and verifies the copied scripts
 // are byte-identical to source. Sibling to 12f/g/h.

@@ -14,9 +14,9 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
  * fully green under the whole gate suite while desynced:
  *
  *   - `axiom-codex/.codex-plugin/plugin.json` — written only by build-codex.ts,
- *     which set-version.js did not run. Gate 12f (Codex staleness) compares
- *     skill/agent mtimes against the manifest and a version bump touches
- *     neither, so it could not fire.
+ *     which set-version.js did not run. Gate 12f (Codex staleness) then
+ *     compared skill/agent mtimes against the manifest and a version bump
+ *     touched neither, so it could not fire. (12f now compares content.)
  *   - `package.json` (root) — written by set-version.js, but pre-deploy read it
  *     only for the `pi` manifest block, never into the version-parity map.
  *     `pi install git:github.com/CharlesWiltgen/Axiom` resolves against it.
