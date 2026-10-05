@@ -248,8 +248,10 @@ A notification tap is a launch entry path that arrives with a deep-link/action p
 # Headless launch profile
 xctrace record --template 'App Launch' --launch -- /path/to/Your.app
 
-# Clean-boot a simulator for consistent dev-time measurement (real device for real numbers)
-xcrun simctl shutdown <device-udid> && xcrun simctl erase <device-udid> && xcrun simctl boot <device-udid>
+# Clean-boot a dedicated simulator for consistent dev-time measurement (real device for real numbers);
+# erase deletes every app and its data on that device
+# `;` not `&&`: shutdown exits non-zero on an already-shut-down device; erase still refuses a booted one
+xcrun simctl shutdown <device-udid>; xcrun simctl erase <device-udid> && xcrun simctl boot <device-udid>
 
 # Send a test push to a booted simulator (notification-launch testing)
 xcrun simctl push <device-udid> com.example.app payload.apns
