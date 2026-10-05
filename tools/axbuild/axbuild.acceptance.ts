@@ -148,14 +148,17 @@ export function scoreCompilerEvidence(
     "Retained compiler evidence differs from independently checked native diagnostics",
   );
   assert.ok(emitted.length > 0);
-  for (const warning of expected.compilerWarnings) {
+  for (const key of keys) {
     assert.ok(
-      emitted.some((record) =>
-        JSON.parse(record).message === warning.message ||
-        JSON.parse(record).message ===
-          `${warning.message} (in target '${warning.target}' from project '${warning.project}')`
-      ),
-      warning.message,
+      emitted.some((record) => {
+        const observed = JSON.parse(record);
+        return observed.file === key.file && observed.line === key.line &&
+          observed.column === key.column && observed.severity === key.severity &&
+          (observed.message === key.message ||
+            observed.message ===
+              `${key.message} (in target '${key.target}' from project '${key.project}')`);
+      }),
+      `${key.file}:${key.line}:${key.column}: ${key.message}`,
     );
   }
 }
@@ -313,7 +316,7 @@ async function acceptance(manifestPath: string): Promise<void> {
           gaps: [
             "Xcode 26 is unavailable",
             "Xcode can detach script process groups; wrapper cleans only safely owned groups and reports unverifiable detached jobs",
-            "Claude/Codex/Pi/Cursor native adoption evaluation requires separately authorized external model execution",
+            "Agent adoption is measured only with direct-file guidance in Claude Code safe mode and Codex; plugin auto-discovery, Pi and Cursor remain unmeasured (Axiom-9ur1.10)",
           ],
         },
         null,
@@ -399,8 +402,9 @@ async function acceptance(manifestPath: string): Promise<void> {
         assert.ok(
           records.some((item) =>
             item.test?.framework === "swift-testing" &&
-            (item.test.evaluatedValues ||
-              item.test.messages?.some((message) => message.includes("3")))
+            ((Array.isArray(item.test.evaluatedValues) &&
+              item.test.evaluatedValues.includes("3")) ||
+              item.test.messages?.includes("actual → 3"))
           ),
         );
         assert.ok(r.full.artifacts.resultBundle || framework === "swiftpm");
@@ -461,6 +465,27 @@ async function acceptance(manifestPath: string): Promise<void> {
       );
     });
   }
+  await check("xcode-test-compile-failure", () => {
+    const r = captured("xcode-test-compile-failure", [
+      ...xcode.map((arg, i) => i > 0 && xcode[i - 1] === "-scheme" ? "Tests" : arg),
+      "-derivedDataPath",
+      path.join(root, "test-compile-dd"),
+      "SWIFT_ACTIVE_COMPILATION_CONDITIONS=AXBUILD_TEST_FAULTS",
+      "test",
+    ], 65);
+    assert.equal(r.full.counts.failedTests, 0);
+    assert.ok(
+      r.full.diagnostics.some((group) =>
+        group.file?.endsWith("/Tests/XCTestCases.swift") &&
+        group.items.some((item) => item.kind === "compiler" && item.severity === "error")
+      ),
+    );
+    assert.ok(
+      !r.full.collection.issues.some((issue) =>
+        (issue as { operation?: string }).operation === "count failed tests"
+      ),
+    );
+  });
   await check("script-failure", () => {
     const r = captured("script-failure", [
       ...xcode,

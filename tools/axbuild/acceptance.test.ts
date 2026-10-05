@@ -54,4 +54,59 @@ describe("scoreCompilerEvidence", () => {
       );
     }
   });
+
+  it("requires each expected key at its own location", () => {
+    const expected = {
+      compilerErrors: [2, 5].map((line) => ({
+        file: "A.swift",
+        line,
+        column: 3,
+        message: "cannot find missingName in scope",
+      })),
+      compilerWarnings: [],
+    };
+    const log = "/fixture/A.swift:2:3: error: cannot find missingName in scope\n";
+    const report = {
+      diagnostics: [{
+        file: "/fixture/A.swift",
+        items: [{
+          kind: "compiler",
+          severity: "error",
+          line: 2,
+          column: 3,
+          message: "cannot find missingName in scope",
+        }],
+      }],
+    } as Parameters<typeof scoreCompilerEvidence>[0];
+    assert.throws(() => scoreCompilerEvidence(report, log, "/fixture", expected));
+  });
+
+  it("rejects a native log that is missing an expected error", () => {
+    const expected = {
+      compilerErrors: ["A", "B"].map((name) => ({
+        file: `${name}.swift`,
+        line: 2,
+        column: 3,
+        message: `cannot find missing${name} in scope`,
+      })),
+      compilerWarnings: [],
+    };
+    const log = "/fixture/A.swift:2:3: error: cannot find missingA in scope\n";
+    const report = {
+      diagnostics: [{
+        file: "/fixture/A.swift",
+        items: [{
+          kind: "compiler",
+          severity: "error",
+          line: 2,
+          column: 3,
+          message: "cannot find missingA in scope",
+        }],
+      }],
+    } as Parameters<typeof scoreCompilerEvidence>[0];
+    assert.throws(
+      () => scoreCompilerEvidence(report, log, "/fixture", expected),
+      /cannot find missingB in scope/,
+    );
+  });
 });
