@@ -159,6 +159,9 @@ struct ReadBatch: Equatable, Sendable {
   var completedSources: [Source] = []
   var stoppedEarly = false
   var executions: [TestExecution] = []
+  var expectedSources: [Source] = []
+  var testsStarted = false
+  var crashed = false
 }
 
 struct TestAlias: Codable, Hashable, Sendable {

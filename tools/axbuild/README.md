@@ -6,7 +6,7 @@ Capture `xcodebuild`, `swift build`, or `swift test` and return diagnostics as v
 make test
 make install
 axbuild --help
-pgrep -x xcodebuild | wc -l
+pgrep -lx xcodebuild; echo "pgrep exit=$?"
 axbuild xcodebuild -scheme App -destination 'platform=macOS' build
 axbuild swift test --package-path ./Package
 axbuild --format json -- swift build
@@ -18,7 +18,7 @@ Investigate existing builds before launching another. The wrapper owns its child
 
 Inspect `command` and `collection` separately. A native exit of zero can accompany partial collection. The wrapper preserves the native exit code after reader or report failures. INT, TERM, and HUP return 128 plus the first signal while retaining the child's actual exit or terminating signal. Informational native commands pass their output and status through.
 
-The raw log is the primary compiler source. Xcode test results and validated Swift Testing events supplement it. Known issues and warnings do not establish failed tests; ambiguous identities or classifications yield a nullable failed-test count. Cross-source matches require unique compatible evidence. Repeated issues from one source remain distinct.
+The raw log is the primary compiler source. Xcode test results and validated Swift Testing events supplement it. Known issues and warnings do not establish failed tests. When tests started or the run did not fail, the failed-test count is null if identities or classifications are ambiguous, an expected test-results or event source was not read, the run was interrupted, a `swift test` run failed with a signal exit (`exited with unexpected signal code`), or the run failed without an identified failing test. A failure before any test started, such as a compiler error or an unresolved package, leaves the count at 0. Runtime trap lines (`Fatal error`, `Precondition failed`, `Assertion failed`) are retained as located diagnostics, as notes when the command succeeded. Cross-source matches require unique compatible evidence. Repeated issues from one source remain distinct.
 
 `omissions` describes bounded output. Read `artifacts.report` for complete diagnostics and evaluated values; artifact paths resolve relative to the absolute `artifacts.run` directory. Caller-owned result paths are preserved and checked for freshness before ingestion. Temporary storage is available for follow-up until the operating system clears it.
 
@@ -34,7 +34,7 @@ Build with Swift 6.4 or newer. `make install` builds arm64 and x86_64 for macOS 
 
 Pure Swift tests live beside source; controlled subprocess tests use `AXIOM_AXBUILD` to select a fresh executable. Real Xcode/CPU acceptance runs separately from the default unit suite.
 
-Xcode can interleave progress output inside diagnostic headers. Unidentified compiler basenames remain literal and make collection partial; the wrapper does not reconstruct filenames from separated fragments. Native acceptance preserves such input-framing gaps separately from reader correctness.
+Progress output can appear inside a diagnostic header in the captured log. A compiler location whose file cannot be identified remains literal and makes collection partial; the wrapper does not reconstruct filenames from separated fragments. Native acceptance preserves such input-framing gaps separately from reader correctness.
 
 Failure-recovery hints remain silent in Claude/Codex/Cursor because a trustworthy native completed-failure envelope has not been verified. Pure matcher tests do not establish native adapter coverage.
 

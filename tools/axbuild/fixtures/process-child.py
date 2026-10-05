@@ -68,8 +68,31 @@ if os.environ.get("FIXTURE_EVENTS") and "--event-stream-output-path" in args:
         f.write(os.environ["FIXTURE_EVENTS"])
 if os.environ.get("FIXTURE_SELF_SIGNAL"):
     os.kill(os.getpid(), int(os.environ["FIXTURE_SELF_SIGNAL"]))
+if os.environ.get("FIXTURE_MODE") == "trap":
+    os.write(
+        1,
+        b"Test Suite 'All tests' started at 2026-10-04 16:05:06.095.\nCalc.swift:5: Fatal error: boom\n",
+    )
+    sys.exit(65)
+if os.environ.get("FIXTURE_MODE") == "linger":
+    child = subprocess.Popen(
+        ["/usr/bin/python3", "-c", "import time; time.sleep(300)"],
+        preexec_fn=lambda: signal.signal(signal.SIGTERM, signal.SIG_IGN),
+    )
+    os.write(1, b"A.swift:3:7: error: fixture error\n")
+    with open(os.environ["FIXTURE_READY"] + ".tmp", "w") as f:
+        json.dump({"pid": os.getpid(), "grandchild": child.pid}, f)
+    os.replace(os.environ["FIXTURE_READY"] + ".tmp", os.environ["FIXTURE_READY"])
+    sys.exit(65)
 if os.environ.get("FIXTURE_MODE") == "hang":
-    child = subprocess.Popen(["/usr/bin/python3", "-c", "import time; time.sleep(300)"])
+    child = subprocess.Popen(
+        ["/usr/bin/python3", "-c", "import time; time.sleep(300)"],
+        preexec_fn=(
+            (lambda: signal.signal(signal.SIGTERM, signal.SIG_IGN))
+            if os.environ.get("FIXTURE_GRANDCHILD_IGNORE_TERM")
+            else None
+        ),
+    )
     if os.environ.get("FIXTURE_IGNORE_TERM"):
         signal.signal(signal.SIGTERM, signal.SIG_IGN)
     if os.environ.get("FIXTURE_SIGNAL_EXIT"):

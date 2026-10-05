@@ -33,6 +33,184 @@ import os
     #expect(result.issues == [])
   }
 
+  @Test func countsDistinctSwiftTestingTestsThatShareAFunctionName() {
+    let log = readLog(
+      data: Data(
+        """
+        ✘ Test succeeds() recorded an issue at LoginTests.swift:3:5: Expectation failed: a
+        ✘ Test succeeds() recorded an issue at SignupTests.swift:7:5: Expectation failed: b
+        """.utf8), context: context)
+    let events = [("LoginTests", 3, "a"), ("SignupTests", 7, "b")].map { suite, line, message in
+      Diagnostic(
+        id: .init("pending"), kind: .test, severity: .error,
+        message: "Expectation failed: \(message)", sources: [.events],
+        file: "/fixture/\(suite).swift", line: line, column: 5,
+        test: .init(
+          id: "CalcTests.\(suite)/succeeds()", isFailure: true, framework: .swiftTesting),
+        testName: "\(suite)/succeeds()")
+    }
+    let result = reconcileDiagnostics(batches: [log, .init(diagnostics: events)], context: context)
+    #expect(result.diagnostics.map(\.sources) == [[.log, .events], [.log, .events]])
+    #expect(result.failedTests == 2)
+  }
+
+  @Test(arguments: [false, true]) func expectedStructuredSourceGatesTheFailedTestCount(
+    completed: Bool
+  ) {
+    let log = readLog(
+      data: Data("T.swift:3:7: error: -[CalcTests.Case testOne] : failure A\n".utf8),
+      context: context)
+    let structured = ReadBatch(
+      issues: completed
+        ? [] : [.init(kind: .readFailed, operation: "read test-results", message: "exit=1")],
+      completedSources: completed ? [.testResults] : [], expectedSources: [.testResults])
+    let report = makeReport(run: run, batches: [log, structured], context: context)
+    #expect(report.counts.failedTests == (completed ? 1 : nil))
+  }
+
+  @Test func recognizedFailureBeforeTestsStartKeepsZeroCount() {
+    let log = readLog(
+      data: Data("error: Dependencies could not be resolved because of a conflict\n".utf8),
+      context: context)
+    let report = makeReport(run: run, batches: [log], context: context)
+    #expect(report.counts.failedTests == 0)
+    #expect(report.collection.issues == [])
+  }
+
+  @Test func failureBeforeTestsStartKeepsZeroCountWhenEventsAreMissing() {
+    let log = readLog(
+      data: Data("error: Dependencies could not be resolved because of a conflict\n".utf8),
+      context: context)
+    let structured = ReadBatch(
+      issues: [
+        .init(
+          kind: .missingArtifact, operation: "verify current events evidence", message: "missing")
+      ], expectedSources: [.events])
+    #expect(
+      makeReport(run: run, batches: [log, structured], context: context).counts.failedTests == 0)
+  }
+
+  @Test func passingSwiftTestRunThatPrintsATrapKeepsItsCount() {
+    var passing = run
+    passing.command = .init(kind: .swiftTest, status: .succeeded, exitCode: 0)
+    let log = readLog(
+      data: Data(
+        "Test Suite 'All tests' started at 2026-10-04 16:05:06.095.\nChild.swift:9: Fatal error: expected exit\n"
+          .utf8), context: context)
+    let report = makeReport(run: passing, batches: [log], context: context)
+    #expect(report.counts.failedTests == 0)
+    #expect(report.counts.errors == 0)
+    #expect(report.collection.issues == [])
+  }
+
+  @Test func trapLineWithoutSignalExitDoesNotHideAnIdentifiedCount() {
+    let log = readLog(
+      data: Data(
+        "Test Suite 'All tests' started at 2026-10-04 16:05:06.095.\nT.swift:3:7: error: -[CalcTests.Case testOne] : failure A\nChild.swift:9: Fatal error: printed by an exit-test child\n"
+          .utf8), context: context)
+    #expect(makeReport(run: run, batches: [log], context: context).counts.failedTests == 1)
+  }
+
+  @Test func signalExitWithoutTrapLeavesCountUnknown() {
+    let log = readLog(
+      data: Data(
+        "Test Suite 'All tests' started at 2026-10-04 16:05:06.095.\nT.swift:3:7: error: -[CalcTests.Case testOne] : failure A\nerror: Process '/x/LibTests.xctest/Contents/MacOS/LibTests' exited with unexpected signal code 11\n"
+          .utf8), context: context)
+    #expect(makeReport(run: run, batches: [log], context: context).counts.failedTests == nil)
+  }
+
+  @Test func compilerStyleTestOutputDoesNotHideAnUnidentifiedFailure() {
+    let log = readLog(
+      data: Data(
+        "Test Suite 'All tests' started at 2026-10-04 16:05:06.095.\nInput.swift:1:1: error: printed by a test\n"
+          .utf8), context: context)
+    #expect(makeReport(run: run, batches: [log], context: context).counts.failedTests == nil)
+  }
+
+  @Test func compileFailureKeepsZeroCountWhenStructuredSourceIsMissing() {
+    let log = readLog(data: Data("A.swift:1:1: error: bad source\n".utf8), context: context)
+    let structured = ReadBatch(
+      issues: [
+        .init(
+          kind: .missingArtifact, operation: "verify current events evidence", message: "missing")
+      ], expectedSources: [.events])
+    let report = makeReport(run: run, batches: [log, structured], context: context)
+    #expect(report.counts.failedTests == 0)
+  }
+
+  @Test func interruptedTestRunLeavesCountUnknown() {
+    var interrupted = run
+    interrupted.command = .init(kind: .swiftTest, status: .interrupted, interruptionSignal: 2)
+    let log = readLog(
+      data: Data("T.swift:3:7: error: -[CalcTests.Case testOne] : failure A\n".utf8),
+      context: context)
+    #expect(
+      makeReport(run: interrupted, batches: [log], context: context).counts.failedTests == nil)
+  }
+
+  @Test func crashedSwiftTestRunLeavesCountUnknownEvenWithIdentifiedFailures() {
+    let log = readLog(
+      data: Data(
+        "Test Suite 'All tests' started at 2026-10-04 16:05:06.095.\nT.swift:3:7: error: -[CalcTests.Case testOne] : failure A\nCalc.swift:5: Fatal error: Index out of range\nerror: Process '/x/LibTests' exited with unexpected signal code 5\n"
+          .utf8), context: context)
+    #expect(makeReport(run: run, batches: [log], context: context).counts.failedTests == nil)
+  }
+
+  @Test func failedTestRunWithNoIdentifiedFailureLeavesCountUnknown() {
+    let crash = readLog(
+      data: Data(
+        "Test Suite 'All tests' started at 2026-10-04 16:05:06.095.\nCalc.swift:5: Fatal error: Index out of range\nerror: Exited with unexpected signal code 5\n"
+          .utf8), context: context)
+    let report = makeReport(run: run, batches: [crash], context: context)
+    #expect(report.counts.failedTests == nil)
+    #expect(report.collection.issues.map(\.kind) == [.unrecognizedFailure])
+  }
+
+  @Test func mergesXCTestFailureAcrossHyphenatedTargetSpelling() {
+    let log = readLog(
+      data: Data("T.swift:3:7: error: -[Calc_Tests.Case testOne] : failure A\n".utf8),
+      context: context)
+    let record = Diagnostic(
+      id: .init("pending"), kind: .test, severity: .error, message: "failure A",
+      sources: [.testResults], file: "/fixture/T.swift", line: 3,
+      test: .init(
+        id: "test://fixture/Calc-Tests/Case/testOne", isFailure: true, framework: .xctest),
+      target: "Calc-Tests", testName: "Case/testOne()")
+    let result = reconcileDiagnostics(
+      batches: [log, .init(diagnostics: [record])], context: context)
+    #expect(result.diagnostics.map(\.sources) == [[.log, .testResults]])
+    #expect(result.failedTests == 1)
+  }
+
+  @Test func findsANameOnlyContradictionAmongManyPassesQuickly() {
+    let failures = (0..<500).map { index in
+      Diagnostic(
+        id: .init("pending"), kind: .test, severity: .error, message: "failure \(index)",
+        sources: [.testResults], file: "/fixture/T\(index).swift", line: 1,
+        test: .init(
+          id: "test://fixture/Tests/Case/fail\(index)", isFailure: true, framework: .xctest),
+        target: "Tests", testName: "Case/fail\(index)()")
+    }
+    let passed =
+      (0..<10_000).map { index in
+        TestExecution(
+          id: "test://fixture/Tests/Case/pass\(index)", name: "Case/pass\(index)()",
+          target: "Tests", source: .testResults, failed: false)
+      } + [
+        TestExecution(
+          id: nil, name: "Case/fail7()", target: "Tests", source: .testResults, failed: false)
+      ]
+    let start = Date()
+    let result = reconcileDiagnostics(
+      batches: [.init(diagnostics: failures, executions: passed)], context: context)
+    #expect(Date().timeIntervalSince(start) < 5)
+    #expect(result.failedTests == nil)
+    #expect(
+      result.issues.map(\.message) == [
+        "Structured pass contradicts retained failure for test://fixture/Tests/Case/fail7"
+      ])
+  }
+
   @Test func reportsStructuredPassContradictingRetainedFailures() {
     let log = readLog(
       data: Data("T.swift:3:7: error: -[CalcTests.Case testOne] : failure A\n".utf8),
@@ -201,6 +379,25 @@ import os
     }
     #expect(decoded.omissions.details == details)
     #expect(decoded.omissions.details == 2)
+  }
+
+  @Test(arguments: [RenderFormat.compact, .pretty])
+  func oversizedFailureMessageKeepsTestIdentityWhenItFits(format: RenderFormat) throws {
+    let diagnostic = Diagnostic(
+      id: .init("stable"), kind: .test, severity: .error,
+      message: String(repeating: "m", count: 16000), sources: [.events],
+      file: "/fixture/T.swift", line: 1,
+      test: .init(id: "CalcTests.payload()", isFailure: true, framework: .swiftTesting),
+      testName: "payload()")
+    let report = makeReport(
+      run: run, batches: [.init(diagnostics: [diagnostic], completedSources: [.events])],
+      context: context)
+    let rendered = try renderReport(report: report, format: format, byteLimit: 8000).get()
+    let shown = try JSONDecoder().decode(Report.self, from: rendered.data).diagnostics
+      .flatMap(\.items)
+    #expect(shown.map { $0.test?.id } == ["CalcTests.payload()"])
+    #expect(shown.map { $0.test?.isFailure } == [true])
+    #expect(shown.map { $0.preview?.messageTruncated } == [true])
   }
 
   @Test(arguments: [RenderFormat.compact, .pretty]) func warningFloodFitsAndReconcilesCounts(

@@ -15,6 +15,102 @@ import Testing
     #expect(result.issues.map(\.kind) == (identified ? [] : [.parseFailed]))
   }
 
+  @Test(arguments: ["gs.swift", "orpus/Warnings.swift", "/Charles/Projects/Warnings.swift"])
+  func retainsUnidentifiedSourcePathLiterally(path: String) {
+    let context = ReaderContext(
+      cwd: "/fixture", effectiveCwd: "/fixture", source: .log, canonicalPath: { _ in nil })
+    let result = readLog(
+      data: Data("\(path):23:10: warning: observed warning\n".utf8), context: context)
+    #expect(result.diagnostics.map(\.file) == [path])
+    #expect(result.issues.map(\.operation) == ["identify compiler source"])
+  }
+
+  @Test func retainsTabIndentedFailedCommands() {
+    let log =
+      "The following build commands failed:\n\tPhaseScriptExecution Controlled\\ script /p/s.sh (in target 'App' from project 'App')\n\tBuilding project App with scheme App and configuration Debug\n(2 failures)\n"
+    #expect(
+      readLog(data: Data(log.utf8), context: context).diagnostics.map(\.message) == [
+        "The following build commands failed:\n\tPhaseScriptExecution Controlled\\ script /p/s.sh (in target 'App' from project 'App')\n\tBuilding project App with scheme App and configuration Debug\n(2 failures)"
+      ])
+  }
+
+  @Test(arguments: [
+    (
+      "/p/App.xcodeproj: error: Signing for \"App\" requires a development team.",
+      "/p/App.xcodeproj", "Signing for \"App\" requires a development team."
+    ),
+    (
+      "/p/App.xcodeproj: Tool: clang: error: linker command failed with exit code 1",
+      "/p/App.xcodeproj", "linker command failed with exit code 1"
+    ),
+    (
+      "clang: error: linker command failed with exit code 1", nil,
+      "linker command failed with exit code 1"
+    ),
+    ("Fetching from https://github.com/a/b.git: error: unreachable", nil, "unreachable"),
+  ])
+  func keepsToolDiagnosticPathPrefix(line: String, file: String?, message: String) {
+    let result = readLog(data: Data(line.utf8), context: context)
+    #expect(result.diagnostics.map(\.file) == [file])
+    #expect(result.diagnostics.map(\.message) == [message])
+  }
+
+  @Test func locatesSwiftTestingIssueWhoseMessageContainsALocation() {
+    let line =
+      "✘ Test parse() recorded an issue at P.swift:12:5: Expectation failed: (out → \"x.swift:3:4: error: bad\")"
+    let result = readLog(data: Data(line.utf8), context: context)
+    #expect(result.diagnostics.map(\.file) == ["P.swift"])
+    #expect(result.diagnostics.map(\.line) == [12])
+    #expect(
+      result.diagnostics.map(\.message) == [
+        "Expectation failed: (out → \"x.swift:3:4: error: bad\")"
+      ])
+    #expect(result.diagnostics.map(\.kind) == [.test])
+  }
+
+  @Test func acceptsUnlocatedVirtualSourceWithoutParseIssue() {
+    let result = readLog(
+      data: Data("<unknown>:0: error: unable to load standard library\n".utf8), context: context)
+    #expect(result.diagnostics.map(\.file) == ["<unknown>"])
+    #expect(result.diagnostics.map(\.line) == [nil])
+    #expect(result.issues == [])
+  }
+
+  @Test(arguments: [
+    "Build cancelled because of other errors", "xcodebuild: error: Build cancelled",
+    "note: Build cancelled",
+  ])
+  func recognizesBuildCancellation(line: String) {
+    #expect(readLog(data: Data(line.utf8), context: context).stoppedEarly)
+  }
+
+  @Test(arguments: [
+    ("Test Suite 'All tests' started at 2026-10-04 16:05:06.095.", true),
+    ("Testing started", true),
+    ("\u{1007C8}  Test run started.", true),
+    ("Test Suite 'All tests' passed at 2026-10-04 16:05:06.095.", false),
+  ])
+  func recordsThatTestsStarted(line: String, started: Bool) {
+    #expect(readLog(data: Data(line.utf8), context: context).testsStarted == started)
+  }
+
+  @Test func doesNotTreatATestNameAsBuildCancellation() {
+    let line = "✔ Test buildCancelledFlow() passed after 0.001 seconds."
+    #expect(!readLog(data: Data(line.utf8), context: context).stoppedEarly)
+  }
+
+  @Test(arguments: [
+    "Fatal error: Index out of range", "Precondition failed: count > 0", "Assertion failed",
+  ])
+  func retainsSwiftRuntimeTrapLocation(message: String) {
+    let result = readLog(data: Data("Calc.swift:5: \(message)\n".utf8), context: context)
+    #expect(result.diagnostics.map(\.file) == ["/project/Calc.swift"])
+    #expect(result.diagnostics.map(\.line) == [5])
+    #expect(result.diagnostics.map(\.severity) == [.error])
+    #expect(result.diagnostics.map(\.message) == [message])
+    #expect(!result.crashed)
+  }
+
   @Test func retainsStandaloneNativeLinkerFailure() {
     let result = readLog(
       data: Data(

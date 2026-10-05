@@ -19,4 +19,14 @@ import Testing
     }
     #expect(issue.kind == .invalidInvocation)
   }
+
+  @Test func launchFailureExitIgnoresEarlierAdvisoryIssues() {
+    let run = CapturedRun(
+      command: .init(kind: .xcodebuild), artifacts: .init(),
+      issues: [
+        .init(kind: .unsupportedSource, operation: "classify xcodebuild arguments", message: "x"),
+        .init(kind: .toolUnavailable, operation: "launch", message: "y"),
+      ])
+    #expect(wrapperExit(run) == 69)
+  }
 }

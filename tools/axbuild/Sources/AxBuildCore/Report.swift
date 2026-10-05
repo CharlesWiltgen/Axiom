@@ -104,13 +104,17 @@ private struct TestName {
   var suite: String?
   var method: String?
 }
+private func moduleName(_ target: String?) -> String? {
+  target.map { String($0.map { $0.isLetter || $0.isNumber || $0 == "_" ? $0 : "_" }) }
+}
 private func testName(_ diagnostic: Diagnostic) -> TestName {
   if let id = diagnostic.test?.id, id.hasPrefix("-["), id.hasSuffix("]") {
     let parts = id.dropFirst(2).dropLast().split(separator: " ", maxSplits: 1)
     if parts.count == 2 {
       let type = parts[0].split(separator: ".")
       return .init(
-        target: type.count > 1 ? String(type.dropLast().joined(separator: ".")) : diagnostic.target,
+        target: moduleName(
+          type.count > 1 ? String(type.dropLast().joined(separator: ".")) : diagnostic.target),
         suite: type.last.map(String.init), method: String(parts[1]))
     }
   }
@@ -118,7 +122,7 @@ private func testName(_ diagnostic: Diagnostic) -> TestName {
   let parts = name?.split(separator: "/").map(String.init) ?? []
   let method = parts.last.map { $0.hasSuffix("()") ? String($0.dropLast(2)) : $0 }
   return .init(
-    target: diagnostic.target,
+    target: moduleName(diagnostic.target),
     suite: parts.count > 1 ? parts.dropLast().joined(separator: "/") : nil, method: method)
 }
 private func normalizedMessage(_ message: String, test: Bool) -> String {
@@ -191,7 +195,9 @@ private func compatibleRecords(_ left: Diagnostic, _ right: Diagnostic) -> Bool 
   guard left.kind == right.kind, left.severity == right.severity,
     Set(left.sources).isDisjoint(with: right.sources)
   else { return false }
-  if let target = left.target, let other = right.target, target != other { return false }
+  if let target = moduleName(left.target), let other = moduleName(right.target), target != other {
+    return false
+  }
   if let a = left.line, let b = right.line, a != b { return false }
   if let a = left.column, let b = right.column, a != b { return false }
   var sameFile = left.file == right.file
@@ -392,7 +398,31 @@ func reconcileDiagnostics(batches: [ReadBatch], context: ReaderContext) -> Recon
   var uncertain = result.issues.contains {
     $0.kind == .ambiguousCorrelation || $0.kind == .timedOut
   }
-  let passedExecutions = batches.flatMap(\.executions).filter { $0.failed == false }
+  struct NameKey: Hashable {
+    var target: String
+    var suite: String
+    var method: String
+  }
+  func nameKey(_ name: TestName) -> NameKey? {
+    guard let target = name.target, let suite = name.suite, let method = name.method else {
+      return nil
+    }
+    return .init(target: target, suite: suite, method: method)
+  }
+  var passedIDs = Set<String>()
+  var passedAliases = Set<TestAlias>()
+  var passedNames = Set<NameKey>()
+  for execution in batches.flatMap(\.executions) where execution.failed == false {
+    if let id = execution.id {
+      passedIDs.insert(id)
+      passedAliases.insert(.init(source: execution.source, id: id))
+    }
+    let summary = Diagnostic(
+      id: .init("execution"), kind: .test, severity: .note, message: "",
+      sources: [execution.source], test: .init(id: execution.id, isFailure: false),
+      target: execution.target, testName: execution.name)
+    if let key = nameKey(testName(summary)) { passedNames.insert(key) }
+  }
   var finalizationStopped = false
   func stopFinalization() -> Bool {
     guard context.shouldStop() else { return false }
@@ -415,7 +445,8 @@ func reconcileDiagnostics(batches: [ReadBatch], context: ReaderContext) -> Recon
       diagnostic.sources.contains(.events) || diagnostic.sources.contains(.testResults)
         || id.hasPrefix("-[")
     {
-      var aliases = Set(diagnostic.test?.aliases ?? [])
+      var aliases = Set(
+        (diagnostic.test?.aliases ?? []).filter { $0.source != .log || $0.id.hasPrefix("-[") })
       for source in diagnostic.sources
       where !(diagnostic.test?.aliases?.contains { $0.source == source } ?? false) {
         aliases.insert(.init(source: source, id: id))
@@ -428,21 +459,14 @@ func reconcileDiagnostics(batches: [ReadBatch], context: ReaderContext) -> Recon
       for index in connected { aliases.formUnion(identityGroups[index]) }
       for index in connected.reversed() { identityGroups.remove(at: index) }
       identityGroups.append(aliases)
-      for execution in passedExecutions {
-        if stopFinalization() { break finalization }
-        let summary = Diagnostic(
-          id: .init("execution"), kind: .test, severity: .note, message: "",
-          sources: [execution.source], test: .init(id: execution.id, isFailure: false),
-          target: execution.target, testName: execution.name)
-        if sameTestExecution(diagnostic, summary)
-          || execution.id.map({ aliases.contains(.init(source: execution.source, id: $0)) }) == true
-        {
-          uncertain = true
-          result.issues.append(
-            .init(
-              kind: .ambiguousCorrelation, operation: "reconcile test execution",
-              message: "Structured pass contradicts retained failure for \(id)"))
-        }
+      if passedIDs.contains(id) || nameKey(testName(diagnostic)).map(passedNames.contains) == true
+        || !aliases.isDisjoint(with: passedAliases)
+      {
+        uncertain = true
+        result.issues.append(
+          .init(
+            kind: .ambiguousCorrelation, operation: "reconcile test execution",
+            message: "Structured pass contradicts retained failure for \(id)"))
       }
     } else {
       uncertain = true
@@ -481,7 +505,19 @@ private func groupedDiagnostics(_ diagnostics: [Diagnostic], warningCounts: [Str
 }
 
 func makeReport(run: CapturedRun, batches: [ReadBatch], context: ReaderContext) -> Report {
-  let reconciled = reconcileDiagnostics(batches: batches, context: context)
+  var reconciled = reconcileDiagnostics(batches: batches, context: context)
+  if run.command.status == .succeeded {
+    for index in reconciled.diagnostics.indices {
+      let diagnostic = reconciled.diagnostics[index]
+      if diagnostic.kind == .tool, diagnostic.severity == .error, diagnostic.line != nil,
+        ["Fatal error", "Precondition failed", "Assertion failed"].contains(where: {
+          diagnostic.message.hasPrefix($0)
+        })
+      {
+        reconciled.diagnostics[index].severity = .note
+      }
+    }
+  }
   var issues = run.issues + batches.flatMap(\.issues) + reconciled.issues
   var sources: [Source] = []
   for source in batches.flatMap(\.completedSources) {
@@ -495,6 +531,39 @@ func makeReport(run: CapturedRun, batches: [ReadBatch], context: ReaderContext) 
         message: "Native command failed but no diagnostic was recognized", path: run.artifacts.log))
     if let tail = run.logTail { excerpt = .init(text: tail) }
   }
+  let expected = Set(batches.flatMap(\.expectedSources))
+  let structuredIncomplete = !expected.isSubset(of: Set(sources))
+  let testRun =
+    run.command.kind == .swiftTest || expected.contains(.testResults)
+    || run.execution?.invocation.requestsTests == true
+  let testsStarted =
+    batches.contains { $0.testsStarted || !$0.executions.isEmpty }
+    || reconciled.diagnostics.contains { $0.kind == .test }
+  let buildFailed =
+    !testsStarted
+    && reconciled.diagnostics.contains {
+      ($0.kind == .compiler || $0.kind == .linker) && $0.severity == .error
+    }
+  let ranTests = testsStarted || run.command.status != .failed
+  let unidentifiedFailure =
+    testRun && run.command.status == .failed && reconciled.failedTests == 0 && testsStarted
+  let swiftTestCrash =
+    run.command.kind == .swiftTest && run.command.status == .failed && testsStarted
+    && batches.contains(where: \.crashed)
+  if unidentifiedFailure || swiftTestCrash,
+    !issues.contains(where: { $0.kind == .unrecognizedFailure })
+  {
+    issues.append(
+      .init(
+        kind: .unrecognizedFailure, operation: "count failed tests",
+        message: swiftTestCrash
+          ? "Test process crashed; tests after the crash did not report"
+          : "Test command failed but no failed test was identified", path: run.artifacts.log))
+  }
+  let countUnknown =
+    testRun && !buildFailed && ranTests
+    && (structuredIncomplete || unidentifiedFailure || swiftTestCrash
+      || run.command.status == .interrupted)
   let available = !sources.isEmpty || !reconciled.diagnostics.isEmpty
   let counts =
     available
@@ -503,7 +572,8 @@ func makeReport(run: CapturedRun, batches: [ReadBatch], context: ReaderContext) 
       warnings: reconciled.diagnostics.filter { $0.severity == .warning }.count,
       notes: reconciled.diagnostics.filter { $0.severity == .note }.count,
       remarks: reconciled.diagnostics.filter { $0.severity == .remark }.count,
-      failedTests: reconciled.failedTests) : .init()
+      failedTests: countUnknown ? nil : reconciled.failedTests)
+    : .init()
   return .init(
     command: run.command,
     collection: .init(
@@ -628,19 +698,24 @@ func renderReport(report: Report, format: RenderFormat, byteLimit: Int = 8000) -
         selected = trial
         continue
       }
-      if preview.test != nil {
-        preview.test = nil
-        changes.removeAll { $0.path.hasPrefix("/test/") }
-        changes.append(.init(path: "/test", kind: "omitted", count: 1))
-      }
-      for length in [1024, 512, 128, 32] {
-        preview.message = String(original.message.prefix(length))
-        preview.preview = .init(
-          messageTruncated: preview.message != original.message, changes: changes)
-        trial = addingDiagnostic(preview, to: selected, full: report)
-        if try reportData(trial, format: format).count <= byteLimit {
-          selected = trial
-          break
+      var fitted = false
+      for keepTest in [true, false] where !fitted {
+        if !keepTest {
+          guard preview.test != nil else { break }
+          preview.test = nil
+          changes.removeAll { $0.path.hasPrefix("/test/") }
+          changes.append(.init(path: "/test", kind: "omitted", count: 1))
+        }
+        for length in [1024, 512, 128, 32] {
+          preview.message = String(original.message.prefix(length))
+          preview.preview = .init(
+            messageTruncated: preview.message != original.message, changes: changes)
+          trial = addingDiagnostic(preview, to: selected, full: report)
+          if try reportData(trial, format: format).count <= byteLimit {
+            selected = trial
+            fitted = true
+            break
+          }
         }
       }
     }

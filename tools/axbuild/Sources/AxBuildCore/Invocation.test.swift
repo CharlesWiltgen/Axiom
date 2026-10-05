@@ -22,11 +22,35 @@ import Testing
     (["swift", "build", "--version"], .informational, false),
     (["xcrun", "swift", "test", "--version"], .informational, false),
     (["--format", "json", "--", "swift", "test"], .test, true),
+    (
+      [
+        "xcodebuild", "test", "-test-iterations", "2", "-retry-tests-on-failure",
+        "-run-tests-until-failure", "-test-repetition-relaunch-enabled", "YES",
+        "-collect-test-diagnostics", "never", "-enableThreadSanitizer", "YES",
+        "-enableAddressSanitizer", "NO", "-enableUndefinedBehaviorSanitizer", "NO",
+        "-testLanguage", "en", "-testRegion", "US", "-parallelizeTargets",
+        "-showBuildTimingSummary", "-IDEPackageSupportUseBuiltinSCM=YES",
+      ], .test, true
+    ),
+    (
+      [
+        "xcodebuild", "test-without-building", "-xctestrun", "x.xctestrun",
+        "-testProductsPath", "p.xctestproducts", "-only-test-configuration", "A",
+        "-skip-test-configuration", "B",
+      ], .test, false
+    ),
   ]) func classifiesArguments(example: ([String], InvocationAction, Bool)) throws {
     let invocation = try parseInvocation(args: example.0, cwd: cwd).get()
     #expect(invocation.action == example.1)
     #expect(invocation.producesBuild == example.2)
     #expect(invocation.originalArgs == example.0)
+  }
+
+  @Test func recordsUnrecognizedXcodebuildArguments() throws {
+    let args = ["xcodebuild", "test", "-futureOption", "-scheme", "App"]
+    let invocation = try parseInvocation(args: args, cwd: cwd).get()
+    #expect(invocation.action == .nativeValidation)
+    #expect(invocation.unrecognized == ["-futureOption"])
   }
 
   @Test(arguments: [

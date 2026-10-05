@@ -26,6 +26,14 @@ import os
     #expect(batch.issues.map(\.kind) == [.timedOut])
     #expect(batch.completedSources == [])
   }
+  @Test(arguments: ["Unit test bundle", "UI test bundle"])
+  func recordsTargetForEveryTestBundleType(bundle: String) {
+    let json =
+      #"{"testNodes":[{"nodeType":"\#(bundle)","name":"AppTests","children":[{"nodeType":"Test Case","nodeIdentifierURL":"test://fixture/AppTests/Case/testOne","nodeIdentifier":"Case/testOne()","result":"Passed"}]}]}"#
+    let batch = readTestResults(data: Data(json.utf8), context: context)
+    #expect(batch.executions.map(\.target) == ["AppTests"])
+  }
+
   func fixture(_ name: String, extension suffix: String) throws -> Data {
     try Data(
       contentsOf: #require(

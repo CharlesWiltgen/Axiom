@@ -40,6 +40,7 @@ private struct ProcessOutcome {
   var exitCode: Int?
   var signal: Int?
   var interruptionSignal: Int?
+  var interruptedRunning = false
   var durationMs: Int?
   var issues: [CollectionIssue] = []
   var started = false
@@ -90,7 +91,7 @@ private func spawnOwned(
   defer { posix_spawnattr_destroy(&attributes) }
   var defaults = sigset_t()
   sigemptyset(&defaults)
-  for s in [SIGINT, SIGTERM, SIGHUP] { sigaddset(&defaults, s) }
+  for s in [SIGINT, SIGTERM, SIGHUP, SIGPIPE] { sigaddset(&defaults, s) }
   var mask = sigset_t()
   sigemptyset(&mask)
   let chdirStatus: Int32
@@ -188,6 +189,8 @@ private func ownedProcess(
   var killed = false
   var forwarded: Int32 = 0
   while true {
+    let received = interruption.signal
+    let wasRunning = !completed
     if !completed {
       info = siginfo_t()
       let result = waitid(P_PID, UInt32(pid), &info, WEXITED | WNOHANG | WNOWAIT)
@@ -207,10 +210,10 @@ private func ownedProcess(
         break
       }
     }
-    let received = interruption.signal
     if received != 0, forwarded == 0 {
       forwarded = received
       outcome.interruptionSignal = Int(received)
+      outcome.interruptedRunning = wasRunning || outcome.signal == Int(received)
       cleanupStart = now()
       if groupOwned { _ = kill(-pid, received) } else if !completed { _ = kill(pid, received) }
     }
@@ -512,6 +515,14 @@ func execute(
   }
   run.artifacts.resultBundle = result
   run.artifacts.eventStream = events
+  if !invocation.unrecognized.isEmpty {
+    run.issues.append(
+      .init(
+        kind: .unsupportedSource, operation: "classify xcodebuild arguments",
+        message:
+          "Unrecognized or incomplete argument(s) \(invocation.unrecognized.joined(separator: " ")); ran as native validation: no diagnostic defaults were added and test results were not read"
+      ))
+  }
   run.invocation = .init(
     originalArgs: invocation.originalArgs, executedArgs: prepared.childArgs, executable: executable,
     cwd: invocation.cwd.path, effectiveCwd: invocation.effectiveCwd.path,
@@ -562,7 +573,7 @@ func execute(
       readerArgs = ["xcresulttool"]
     }
   }
-  if invocation.kind == .xcodebuild, run.command.interruptionSignal != nil {
+  if invocation.kind == .xcodebuild, run.command.status == .interrupted {
     run.issues.append(
       .init(
         kind: .cleanupIncomplete, operation: "verify detached Xcode jobs",
@@ -585,7 +596,7 @@ private func commandOutcome(_ outcome: ProcessOutcome, kind: CommandKind?) -> Co
     kind: kind,
     status: !outcome.started
       ? .notStarted
-      : outcome.interruptionSignal != nil
+      : outcome.interruptedRunning
         ? .interrupted : outcome.exitCode == 0 ? .succeeded : .failed, exitCode: outcome.exitCode,
     signal: outcome.signal, interruptionSignal: outcome.interruptionSignal,
     durationMs: outcome.durationMs)
@@ -622,6 +633,7 @@ func collect(run: CapturedRun, limits: CollectionLimits = .production) async -> 
   ]
   for (source, path, shouldRead) in sources {
     guard let path else { continue }
+    if shouldRead { batches.append(.init(expectedSources: [source])) }
     if state.unverifiedArtifacts.contains(path) {
       batches.append(
         .init(issues: [
@@ -777,6 +789,7 @@ private func storeReport(_ report: Report, path: String) throws {
 
 @concurrent
 public func runCLI() async -> Int32 {
+  signal(SIGPIPE, SIG_IGN)
   let args = Array(CommandLine.arguments.dropFirst())
   if args == ["--help"] || args == ["-h"] {
     print(
@@ -853,7 +866,6 @@ public func runCLI() async -> Int32 {
       report.collection.status = report.collection.sources.isEmpty ? .unavailable : .partial
     }
   }
-  signal(SIGPIPE, SIG_IGN)
   do {
     let rendered = try renderReport(report: report, format: format).get()
     try FileHandle.standardOutput.write(contentsOf: rendered.data)
@@ -873,14 +885,13 @@ public func runCLI() async -> Int32 {
   return wrapperExit(run)
 }
 
-private func wrapperExit(_ run: CapturedRun) -> Int32 {
+func wrapperExit(_ run: CapturedRun) -> Int32 {
   if let signal = run.command.interruptionSignal { return Int32(128 + signal) }
   if let code = run.command.exitCode { return Int32(code) }
   if let signal = run.command.signal { return Int32(128 + signal) }
-  switch run.issues.first?.kind {
-  case .invalidInvocation: return 64
-  case .toolUnavailable: return 69
-  case .captureUnavailable: return 74
-  default: return 70
-  }
+  let kinds = Set(run.issues.map(\.kind))
+  if kinds.contains(.invalidInvocation) { return 64 }
+  if kinds.contains(.toolUnavailable) { return 69 }
+  if kinds.contains(.captureUnavailable) { return 74 }
+  return 70
 }

@@ -17,6 +17,8 @@ struct Invocation: Sendable {
   var effectiveCwd: URL
   var informational: Bool
   var toolIndex: Int = 0
+  var unrecognized: [String] = []
+  var requestsTests = false
 }
 struct RunArtifacts: Sendable { var run: String }
 struct ToolCapabilities: Sendable {
@@ -92,6 +94,8 @@ func parseInvocation(args: [String], cwd: URL) -> Result<Invocation, CollectionI
   let toolArgs = Array(childArgs.dropFirst(toolIndex))
   var effectiveCwd = cwd
   var action = InvocationAction.nativeValidation
+  var unrecognized: [String] = []
+  var requestsTests = false
   var kind: CommandKind?
   var producesBuild = false
   if name == "swift" {
@@ -142,6 +146,10 @@ func parseInvocation(args: [String], cwd: URL) -> Result<Invocation, CollectionI
       "-maximum-concurrent-test-simulator-destinations",
       "-maximum-concurrent-test-device-destinations", "-enableCodeCoverage", "-archivePath",
       "-exportPath", "-exportOptionsPlist", "-clonedSourcePackagesDirPath", "-packageCachePath",
+      "-test-iterations", "-test-repetition-relaunch-enabled", "-collect-test-diagnostics",
+      "-enableAddressSanitizer", "-enableThreadSanitizer", "-enableUndefinedBehaviorSanitizer",
+      "-testLanguage", "-testRegion", "-xctestrun", "-testProductsPath", "-only-test-configuration",
+      "-skip-test-configuration",
     ]
     let info: Set<String> = [
       "-help", "-list", "-showBuildSettings", "-version", "-showsdks", "-showdestinations",
@@ -152,16 +160,20 @@ func parseInvocation(args: [String], cwd: URL) -> Result<Invocation, CollectionI
       "-allowProvisioningDeviceRegistration", "-disableAutomaticPackageResolution",
       "-onlyUsePackageVersionsFromResolvedFile", "-skipPackageUpdates",
       "-skipPackagePluginValidation", "-skipMacroValidation", "-hideShellScriptEnvironment",
+      "-retry-tests-on-failure", "-run-tests-until-failure", "-parallelizeTargets",
+      "-showBuildTimingSummary",
     ]
     var actions: [String] = []
     var information = false
     var ambiguous = false
     var position = 0
+    var unknown: [String] = []
     while position < toolArgs.count {
       let arg = toolArgs[position]
       if values.contains(arg) {
         if position + 1 >= toolArgs.count {
           ambiguous = true
+          unknown.append(arg)
           break
         }
         position += 2
@@ -178,13 +190,16 @@ func parseInvocation(args: [String], cwd: URL) -> Result<Invocation, CollectionI
         arg.hasPrefix($0) && arg.count > $0.count
       }) {
       } else if flags.contains(arg) || (!arg.hasPrefix("-") && arg.contains("="))
-        || arg.hasPrefix("-IDEBuildingContinueBuildingAfterErrors=")
+        || (arg.hasPrefix("-IDE") && arg.contains("="))
       {
       } else {
         ambiguous = true
+        unknown.append(arg)
       }
       position += 1
     }
+    unrecognized = unknown
+    requestsTests = actions.contains("test") || actions.contains("test-without-building")
     if !ambiguous {
       if actions.isEmpty && information {
         action = .informational
@@ -212,7 +227,8 @@ func parseInvocation(args: [String], cwd: URL) -> Result<Invocation, CollectionI
     .init(
       originalArgs: args, childArgs: childArgs, executable: executable, kind: kind, action: action,
       producesBuild: producesBuild, format: format, cwd: cwd, effectiveCwd: effectiveCwd,
-      informational: action == .informational, toolIndex: toolIndex))
+      informational: action == .informational, toolIndex: toolIndex, unrecognized: unrecognized,
+      requestsTests: requestsTests))
 }
 
 func applyDiagnosticDefaults(

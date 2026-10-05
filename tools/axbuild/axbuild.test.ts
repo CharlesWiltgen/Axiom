@@ -87,6 +87,16 @@ function alive(pid: number) {
     return false;
   }
 }
+function reap(ready: string) {
+  if (!fs.existsSync(ready)) return;
+  const owned = JSON.parse(fs.readFileSync(ready, "utf8"));
+  try {
+    process.kill(-owned.pid, "SIGKILL");
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException).code;
+    if (code !== "ESRCH" && code !== "EPERM") throw error;
+  }
+}
 
 describe("axbuild process integration", () => {
   it("retains an unidentified compiler basename and reports partial collection", () =>
@@ -277,6 +287,7 @@ describe("axbuild process integration", () => {
         } finally {
           sentinel.kill("SIGKILL");
           child.kill("SIGKILL");
+          reap(ready);
         }
       }));
   }
@@ -524,18 +535,23 @@ describe("axbuild evidence and teardown regressions", () => {
         },
       });
       const finish = completed(child);
-      await readiness(ready, child);
-      child.kill("SIGTERM");
-      await new Promise((resolve) => setTimeout(resolve, 40));
-      child.kill("SIGHUP");
-      const r = await finish;
-      const report = JSON.parse(r.stdout);
-      assert.equal(r.exit, 143);
-      assert.equal(report.command.interruptionSignal, 15);
-      assert.equal(report.command.signal, 9);
-      const owned = JSON.parse(fs.readFileSync(ready, "utf8"));
-      assert.equal(alive(owned.pid), false);
-      assert.equal(alive(owned.grandchild), false);
+      try {
+        await readiness(ready, child);
+        child.kill("SIGTERM");
+        await new Promise((resolve) => setTimeout(resolve, 40));
+        child.kill("SIGHUP");
+        const r = await finish;
+        const report = JSON.parse(r.stdout);
+        assert.equal(r.exit, 143);
+        assert.equal(report.command.interruptionSignal, 15);
+        assert.equal(report.command.signal, 9);
+        const owned = JSON.parse(fs.readFileSync(ready, "utf8"));
+        assert.equal(alive(owned.pid), false);
+        assert.equal(alive(owned.grandchild), false);
+      } finally {
+        if (child.exitCode === null) child.kill("SIGKILL");
+        reap(ready);
+      }
     }));
   it("does not advertise missing artifacts as retained evidence", () =>
     temporary((root, env) => {
@@ -647,6 +663,150 @@ it("does not advertise an inapplicable disabled event stream", () =>
     );
   }));
 
+it("names unrecognized xcodebuild arguments that skip structured collection", () =>
+  temporary((root, env) => {
+    const r = run(["xcodebuild", "test", "-futureOption", "-scheme", "App"], root, env);
+    const issue = r.report.collection.issues.find((i: { operation: string }) =>
+      i.operation === "classify xcodebuild arguments"
+    );
+    assert.ok(issue, JSON.stringify(r.report.collection.issues));
+    assert.ok(issue.message.includes("-futureOption"));
+    assert.equal(r.report.collection.status, "partial");
+  }));
+
+it("launches the native command with default SIGPIPE handling", () =>
+  temporary((root, env) => {
+    const status = path.join(root, "pipe-status");
+    fs.writeFileSync(
+      path.join(root, "bin", "swift"),
+      `#!/bin/bash\nyes | head -n 1 > /dev/null\necho "\${PIPESTATUS[0]}" > "${status}"\nexit 65\n`,
+      { mode: 0o755 },
+    );
+    run(["swift", "build"], root, env);
+    assert.equal(fs.readFileSync(status, "utf8").trim(), "141");
+  }));
+
+it("survives a closed stderr reader before launch", () =>
+  temporary((root, env) => {
+    const script = [
+      "import os, subprocess, sys",
+      "r, w = os.pipe()",
+      "os.close(r)",
+      "p = subprocess.run([sys.argv[1], 'swift', 'build'], stdout=subprocess.DEVNULL, stderr=w)",
+      "print(p.returncode)",
+    ].join("\n");
+    const r = spawnSync("/usr/bin/python3", ["-c", script, binary], {
+      cwd: root,
+      env,
+      timeout: 12_000,
+    });
+    assert.equal(r.stdout.toString().trim(), "65", r.stderr.toString());
+  }));
+
+it("keeps the tool-unavailable exit when arguments are also unrecognized", () =>
+  temporary((root, env) => {
+    const r = spawnSync(binary, ["/nonexistent/xcodebuild", "test", "-futureOption"], {
+      cwd: root,
+      env,
+      timeout: 12_000,
+    });
+    assert.equal(r.status, 69, r.stdout.toString());
+  }));
+
+it("reports interruption when the signal and the child's death coincide", async () =>
+  temporary(async (root, env) => {
+    const ready = path.join(root, "coincide-ready.json");
+    const child = spawn(binary, ["xcodebuild", "build"], {
+      cwd: root,
+      env: { ...env, FIXTURE_MODE: "hang", FIXTURE_READY: ready },
+    });
+    const finish = completed(child);
+    try {
+      await readiness(ready, child);
+      const owned = JSON.parse(fs.readFileSync(ready, "utf8"));
+      child.kill("SIGTERM");
+      process.kill(owned.pid, "SIGKILL");
+      const output = await finish;
+      const report = JSON.parse(output.stdout);
+      assert.equal(report.command.status, "interrupted");
+      assert.ok(
+        report.collection.issues.some((issue: { operation: string }) =>
+          issue.operation === "verify detached Xcode jobs"
+        ),
+      );
+    } finally {
+      if (child.exitCode === null) child.kill("SIGKILL");
+      reap(ready);
+    }
+  }));
+
+it("reports interruption when the child dies from the signal the wrapper then receives", async () =>
+  temporary(async (root, env) => {
+    const ready = path.join(root, "same-signal-ready.json");
+    const child = spawn(binary, ["xcodebuild", "build"], {
+      cwd: root,
+      env: {
+        ...env,
+        FIXTURE_MODE: "hang",
+        FIXTURE_READY: ready,
+        FIXTURE_GRANDCHILD_IGNORE_TERM: "1",
+      },
+    });
+    const finish = completed(child);
+    try {
+      await readiness(ready, child);
+      const owned = JSON.parse(fs.readFileSync(ready, "utf8"));
+      process.kill(owned.pid, "SIGTERM");
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      child.kill("SIGTERM");
+      const output = await finish;
+      const report = JSON.parse(output.stdout);
+      assert.equal(report.command.signal, 15);
+      assert.equal(report.command.status, "interrupted");
+    } finally {
+      if (child.exitCode === null) child.kill("SIGKILL");
+      reap(ready);
+    }
+  }));
+
+it("does not report zero failed tests for a crashed test run with unrecognized arguments", () =>
+  temporary((root, env) => {
+    const r = run(["xcodebuild", "test", "-futureOption"], root, {
+      ...env,
+      FIXTURE_MODE: "trap",
+    });
+    assert.equal(r.report.counts.failedTests, null);
+  }));
+
+it("keeps the finished native status when interrupted during group cleanup", async () =>
+  temporary(async (root, env) => {
+    const ready = path.join(root, "linger-ready.json");
+    const child = spawn(binary, ["xcodebuild", "build"], {
+      cwd: root,
+      env: { ...env, FIXTURE_MODE: "linger", FIXTURE_READY: ready },
+    });
+    const finish = completed(child);
+    try {
+      await readiness(ready, child);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      child.kill("SIGINT");
+      const output = await finish;
+      assert.equal(output.exit, 130);
+      const report = JSON.parse(output.stdout);
+      assert.equal(report.command.status, "failed");
+      assert.equal(report.command.exitCode, 65);
+      assert.equal(report.command.interruptionSignal, 2);
+      assert.ok(
+        !report.collection.issues.some((issue: { operation: string }) =>
+          issue.operation === "verify detached Xcode jobs"
+        ),
+      );
+    } finally {
+      if (child.exitCode === null) child.kill("SIGKILL");
+      reap(ready);
+    }
+  }));
+
 it("reports unverifiable detached Xcode jobs after cleaning the owned native group", async () =>
   temporary(async (root, env) => {
     const ready = path.join(root, "xcode-ready.json");
@@ -673,5 +833,6 @@ it("reports unverifiable detached Xcode jobs after cleaning the owned native gro
       );
     } finally {
       if (child.exitCode === null) child.kill("SIGTERM");
+      reap(ready);
     }
   }));

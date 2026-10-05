@@ -134,7 +134,7 @@ func readEvents(data: Data, context: ReaderContext) -> ReadBatch {
               message: "Nonpositive location for \(event.testID ?? "unknown test")"))
         }
         let rawPath = location?.filePath ?? location?._filePath
-        let file = rawPath.map { diagnosticPath($0, context: context, basenameOnly: true) }
+        let file = rawPath.map { diagnosticPath($0, context: context, basenameOnly: true) ?? $0 }
         let descriptor = event.testID.flatMap { descriptors[$0] }
         let remaining = messages.dropFirst().map(\.text)
         let values = issue._expression?.children?.flatMap(\.values)
@@ -220,7 +220,7 @@ func readTestResults(data: Data, context: ReaderContext) -> ReadBatch {
         continue
       }
       var execution = inherited
-      if node.nodeType == "Unit test bundle" {
+      if node.nodeType == "Unit test bundle" || node.nodeType == "UI test bundle" {
         execution = .init(name: node.name, target: node.name, source: .testResults)
       }
       if node.nodeType == "Test Case" {
@@ -247,7 +247,7 @@ func readTestResults(data: Data, context: ReaderContext) -> ReadBatch {
         }
         let alias = execution?.id.map { [TestAlias(source: .testResults, id: $0)] }
         let file = node.sourceLocation?.filePath.map {
-          diagnosticPath($0, context: context, basenameOnly: true)
+          diagnosticPath($0, context: context, basenameOnly: true) ?? $0
         }
         if let id = execution?.id { failureIDs.insert(id) }
         if let name = execution?.name { failureNames[name, default: []].insert(execution?.target) }
