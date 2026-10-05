@@ -674,8 +674,8 @@ security cms -D -i embedded.mobileprovision 2>/dev/null | head -20
 # Xcode: Product → Archive → Distribute App → Validate App
 # Catches ~80% of binary rejection causes
 
-# Clean build if signing issues
-rm -rf ~/Library/Developer/Xcode/DerivedData
+# Clean build if signing issues: delete only this project's DerivedData folder
+# (scoped script: axiom-build build-debugging, Issue 1)
 # Re-download provisioning profiles in Xcode Preferences → Accounts
 ```
 

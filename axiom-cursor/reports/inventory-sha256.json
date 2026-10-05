@@ -133,8 +133,8 @@
     },
     {
       "path": "agents/simulator-tester.md",
-      "sha256": "483a9c71738c1d194f7fa012a9d52f3f9a1a6f2455612a60efdc01b0ec308462",
-      "bytes": 21879
+      "sha256": "f11a08399066cb8f715c7e7e7693d0d8c77a547f968a0698cdac93633961de9c",
+      "bytes": 22042
     },
     {
       "path": "agents/spm-conflict-resolver.md",
@@ -1358,8 +1358,8 @@
     },
     {
       "path": "skills/axiom-performance/skills/app-launch.md",
-      "sha256": "fde5e94e4b955f6cfee621296f75988c90aea55a9502e890520b556b04cc81c3",
-      "bytes": 23919
+      "sha256": "eabe6599fdd61496fcdfa134a443bf1a506cb342a14c9b69e3a8c2349d0495d3",
+      "bytes": 23929
     },
     {
       "path": "skills/axiom-performance/skills/energy-diag.md",
@@ -1508,8 +1508,8 @@
     },
     {
       "path": "skills/axiom-shipping/skills/app-store-diag.md",
-      "sha256": "5f6ea9dedfe71397bdbcf23f19b32fc2a972bfb7764e06db93da6ea9b0b2cc37",
-      "bytes": 52548
+      "sha256": "4025d0f481ac96a89bca43582639d6d4d65de4d52064e3d5c92234acca33c2c9",
+      "bytes": 52606
     },
     {
       "path": "skills/axiom-shipping/skills/app-store-ref.md",
@@ -1598,13 +1598,13 @@
     },
     {
       "path": "skills/axiom-swiftui/skills/debugging-diag.md",
-      "sha256": "d4c8c2e4dc3a468a2832616f8cebeb5f21fe8eeccfda3a56a3c921fd0affc1a2",
-      "bytes": 25164
+      "sha256": "9d789f29bdd34e8f693e5e065bfe62898cf3f9c4a104e5d716c3357c43739bb7",
+      "bytes": 25276
     },
     {
       "path": "skills/axiom-swiftui/skills/debugging.md",
-      "sha256": "18d31a94148843e80c339e740ee9230477119518236f021e24c31e326ba8f8a6",
-      "bytes": 44679
+      "sha256": "bfc4dcc08acd04658b61e743fddf2ab0ed42d7cf4f656c25a54f2e1bf6b54ec8",
+      "bytes": 44925
     },
     {
       "path": "skills/axiom-swiftui/skills/gestures.md",
@@ -1653,8 +1653,8 @@
     },
     {
       "path": "skills/axiom-swiftui/skills/previews-ref.md",
-      "sha256": "80d285184df56ea80086ca6229327dd3d0c5c28fbe64254355b3373875b69e55",
-      "bytes": 23648
+      "sha256": "81ab0053ceaf783d1b68559d54305f436d554a41481e364507891f3c40d1207d",
+      "bytes": 23715
     },
     {
       "path": "skills/axiom-swiftui/skills/previews.md",
@@ -1884,7 +1884,7 @@
   ],
   "totals": {
     "files": 376,
-    "bytes": 7664744
+    "bytes": 7665400
   },
   "excludedMirrors": 30,
   "classes": {

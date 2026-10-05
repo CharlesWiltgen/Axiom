@@ -549,7 +549,7 @@ struct DetailView: View {
 **Fix it** (in order):
 1. Refresh Canvas: `Cmd+Option+P`
 2. Restart Xcode completely (File → Close Window, then reopen project)
-3. Nuke derived data: `rm -rf ~/Library/Developer/Xcode/DerivedData`
+3. Clear this project's derived data: delete only this project's DerivedData folder, not all of DerivedData (scoped script: axiom-build `build-debugging`, Issue 1)
 4. Rebuild: `Cmd+B`
 
 If still broken after all four steps: It's not cache, see Error Types 1 to 3.
@@ -922,7 +922,7 @@ When you're under deadline pressure, you'll be tempted to shortcuts that hide pr
 **What to do instead** (5-minute protocol, total):
 1. Refresh Canvas: `Cmd+Option+P` (30 seconds)
 2. Restart Xcode (2 minutes)
-3. Nuke derived data: `rm -rf ~/Library/Developer/Xcode/DerivedData` (30 seconds)
+3. Clear this project's derived data: delete only this project's DerivedData folder, not all of DerivedData (scoped script: axiom-build `build-debugging`, Issue 1) (30 seconds)
 4. Rebuild: `Cmd+B` (2 minutes)
 5. Still broken? Use the dependency or initialization decision trees above
 
@@ -1067,8 +1067,8 @@ View().opacity(isVisible ? 1 : 0)  // Not: if isVisible { View() }
 // Fix 2: Safe defaults
 @State var index = 0  // Not 10, if array has 3 items
 
-// Fix 3: Nuke cache
-// Terminal: rm -rf ~/Library/Developer/Xcode/DerivedData
+// Fix 3: Clear this project's cache
+// Terminal: delete only this project's DerivedData folder (axiom-build build-debugging, Issue 1)
 ```
 
 ### Common Layout Fixes

@@ -87,7 +87,7 @@ else
 fi
 ```
 
-**Common fix**: "Unable to boot" → `xcrun simctl shutdown all && killall -9 Simulator DeviceHub` (Xcode 27 replaced Simulator.app with DeviceHub.app — naming only `Simulator` is a silent no-op there)
+**Common fix**: "Unable to boot" → `xcrun simctl shutdown <UDID>` for the affected device, then boot it again. Quit the simulator app only as a last resort when no other session uses simulators: `killall -9 Simulator DeviceHub` (Xcode 27 replaced Simulator.app with DeviceHub.app — naming only `Simulator` is a silent no-op there)
 
 ## Capabilities
 
@@ -455,7 +455,7 @@ xcrun simctl diagnose -X --all-logs
 | Symptom | Fix |
 |---------|-----|
 | Screenshot is black | `sleep 5` then retry |
-| "Unable to boot" | `xcrun simctl shutdown all && killall -9 Simulator DeviceHub` (26 = Simulator, 27 = DeviceHub) |
+| "Unable to boot" | `xcrun simctl shutdown <UDID>`, then boot again; quit `Simulator`/`DeviceHub` (26/27) only if no other session uses simulators |
 | "Device not found" | `xcrun simctl list devices` to see available |
 | Deep link doesn't work | Check URL scheme in Info.plist |
 | Push fails | Validate JSON: `python -m json.tool < push.json` |

@@ -47,8 +47,8 @@ xcodebuild -version  # Must be Xcode 26+ for SwiftUI Instrument
 # 2. Build in Release mode for profiling
 xcodebuild build -scheme YourScheme -configuration Release
 
-# 3. Clear derived data if investigating preview issues
-rm -rf ~/Library/Developer/Xcode/DerivedData
+# 3. Clear derived data if investigating preview issues: delete only this project's
+#    DerivedData folder (scoped script: axiom-build build-debugging, Issue 1)
 ```
 
 **Time cost**: 5 minutes
@@ -784,8 +784,8 @@ open -a Instruments
 # Build in Release mode (required for accurate profiling)
 xcodebuild build -scheme YourScheme -configuration Release
 
-# Clean derived data if needed
-rm -rf ~/Library/Developer/Xcode/DerivedData
+# Clean derived data if needed: only this project's DerivedData folder
+# (scoped script: axiom-build build-debugging, Issue 1)
 ```
 
 ### Self._printChanges() Debug Pattern

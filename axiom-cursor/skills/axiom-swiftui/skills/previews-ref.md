@@ -502,7 +502,7 @@ Apple addressed similar previews-failed-to-launch issues across Xcode 26.x point
 
 ### Cache corruption
 
-If a preview was working and now refuses to load with no clear error: cache corruption is the most likely cause. The fix sequence — Refresh Canvas (⌥⌘P) → Restart Xcode → `rm -rf ~/Library/Developer/Xcode/DerivedData` → rebuild — is the same as for any preview crash. Full diagnostic decision tree lives in `skills/debugging.md` Preview Crashes section.
+If a preview was working and now refuses to load with no clear error: cache corruption is the most likely cause. The fix sequence — Refresh Canvas (⌥⌘P) → Restart Xcode → delete this project's DerivedData folder (not all of DerivedData; scoped script in axiom-build `build-debugging`) → rebuild — is the same as for any preview crash. Full diagnostic decision tree lives in `skills/debugging.md` Preview Crashes section.
 
 ### `@Previewable` outside `#Preview` is a compile error
 
