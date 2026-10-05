@@ -18,13 +18,13 @@
     },
     {
       "path": "agents/build-fixer.md",
-      "sha256": "be840e243356e4cd6e175b327776a10bdb8234f046493200842e992972be9375",
-      "bytes": 18861
+      "sha256": "9a060bb1f2ebd93c654eb374a39cd769eeeb3d832ad58c643867613e726a2343",
+      "bytes": 20069
     },
     {
       "path": "agents/build-optimizer.md",
-      "sha256": "b33966fd3e274982cfa49cfbfb2d7779d2a077651cf29b3539a541f56b685214",
-      "bytes": 9565
+      "sha256": "6430e41d974325fa3e00a0fe6414380ce3365ca5982c8c9e1dd29a2ea4e1cd21",
+      "bytes": 9666
     },
     {
       "path": "agents/camera-auditor.md",
@@ -188,8 +188,8 @@
     },
     {
       "path": "agents/test-debugger.md",
-      "sha256": "fca2ad0fee3d34f245fa35c9debcf4bd3a5287ea1463cd17f16f6aa521f3ee87",
-      "bytes": 13176
+      "sha256": "d0fe4ee5da78737a31e36efde0548a674ef8334562674fbbe42c899a3e0a999e",
+      "bytes": 13772
     },
     {
       "path": "agents/test-failure-analyzer.md",
@@ -198,8 +198,8 @@
     },
     {
       "path": "agents/test-runner.md",
-      "sha256": "cfda6e712405d22cf0f20c6d56c5cdda21f1ac39c2ec3b6f146f98eb13e59c7d",
-      "bytes": 12390
+      "sha256": "02b4e831c0e04666da1a8199b436bda067f725787c57b2bd68fe80ae111d5b7b",
+      "bytes": 13050
     },
     {
       "path": "agents/testing-auditor.md",
@@ -258,8 +258,8 @@
     },
     {
       "path": "commands/axiom-health-check.md",
-      "sha256": "fb1d0888520cfac4954434df08983fb5173604dbb5a38a04195014c5622202e7",
-      "bytes": 5755
+      "sha256": "e35d0368b26b72c2fdc257691d48871c85ec3a34c172cbead5065d9a76351008",
+      "bytes": 5865
     },
     {
       "path": "commands/axiom-modernize.md",
@@ -293,8 +293,8 @@
     },
     {
       "path": "commands/axiom-status.md",
-      "sha256": "f5448149460c2e72d766964f5b7b6412a077ad68b2e8ec723c1bb23199ecdece",
-      "bytes": 3602
+      "sha256": "ee149fe98309df9c2fe343e7e5d6f85618988413ba83a490ac1f568e5e6bc09d",
+      "bytes": 3715
     },
     {
       "path": "commands/axiom-test-simulator.md",
@@ -338,8 +338,8 @@
     },
     {
       "path": "scripts/posttool-bash-hints.py",
-      "sha256": "75bc5f4ce4a5841fe1aa5fea7b8dae851c2429845dc386d5408a70141bbc3abe",
-      "bytes": 15701
+      "sha256": "64faa11b30fa0e2dd56d61beba6e56346a7b5dbc3cc1bbb282bc1ae61a93465f",
+      "bytes": 15714
     },
     {
       "path": "scripts/pretool-crash-route.py",
@@ -488,18 +488,18 @@
     },
     {
       "path": "skills/axiom-build/SKILL.md",
-      "sha256": "7dec5215d3e808a18a43848cd29b6f164ed0c21002a56372ee8f62b07ee62241",
-      "bytes": 19684
+      "sha256": "9506052bc8f85090d0c433743ee181a210c80f28083dcd075f636f7dcf74d4d4",
+      "bytes": 19753
     },
     {
       "path": "skills/axiom-build/skills/build-debugging.md",
-      "sha256": "d675e3af71a86698e1bb8747d005e0243a0fcd120c8826218ccdb010aa657f08",
-      "bytes": 18393
+      "sha256": "f68490a9d04861133ec110a86af366d6c14c5761c156281585bbccd9e1935f8e",
+      "bytes": 19434
     },
     {
       "path": "skills/axiom-build/skills/build-performance.md",
-      "sha256": "fcf9c5b34bfebf62311bc8b40984c91d621b85ae70062d8dc681539a116ad6c8",
-      "bytes": 29783
+      "sha256": "0887d2a63a52293f74c3642f2878132e445911338add7b5dc26e273b551c4368",
+      "bytes": 29852
     },
     {
       "path": "skills/axiom-build/skills/lldb-ref.md",
@@ -513,8 +513,8 @@
     },
     {
       "path": "skills/axiom-build/skills/xcode-debugging.md",
-      "sha256": "29f9c65b5392afadf0ac596a6ea248d804fa25d2db06ef9551545006d88c27cf",
-      "bytes": 12092
+      "sha256": "c2d04c20496a5176e786817a0bd4e9864f56e730383db249f15b1025ec8c8e90",
+      "bytes": 13643
     },
     {
       "path": "skills/axiom-concurrency/SKILL.md",
@@ -1718,8 +1718,8 @@
     },
     {
       "path": "skills/axiom-tools/skills/getting-started.md",
-      "sha256": "605c3f5318778b916aa78bab81c4dd6ead79e1b0f632eec0ebaf2a90e5348e84",
-      "bytes": 14486
+      "sha256": "bb77fbd4852f635370b0b9867fe558536b2004af55a6fc619d105ccb52f44580",
+      "bytes": 14555
     },
     {
       "path": "skills/axiom-tools/skills/xclog-ref.md",
@@ -1884,7 +1884,7 @@
   ],
   "totals": {
     "files": 376,
-    "bytes": 7659144
+    "bytes": 7664744
   },
   "excludedMirrors": 30,
   "classes": {

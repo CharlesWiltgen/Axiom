@@ -50,11 +50,11 @@ echo "CI env: ${CI:-not set}, GitHub Actions: ${GITHUB_ACTIONS:-not set}"
 ls -la | grep -E "\.xcodeproj|\.xcworkspace"
 # If nothing shows, you're in wrong directory
 
-# 1. Inventory exact-name build processes; verify this works before launching Xcode
-pgrep -x xcodebuild | wc -l
+# 1. Inventory exact-name build processes (exit 1 = none, 0 = listed, other = inventory failed)
+pgrep -lx xcodebuild; echo "pgrep exit=$?"
 # Investigate ownership and state of existing PIDs. Age alone proves nothing.
 
-# 2. Check Derived Data size (>10GB = stale)
+# 2. Check Derived Data size (size alone does not prove it is stale)
 du -sh ~/Library/Developer/Xcode/DerivedData
 
 # 3. Check simulator states (stuck Booting?) - JSON for reliable parsing
@@ -92,7 +92,7 @@ Before the next necessary build or test, resolve `bin/axbuild` under the **actua
 
 Cursor and MCP distributions do not bundle axbuild and expose no axbuild MCP wrapper. Use the **saved-log fallback** below when a verified shell helper is unavailable.
 
-Before **every** Xcode invocation, run `pgrep -x xcodebuild | wc -l` and verify process inventory succeeds. Investigate existing builds; process count and age do not establish zombie status. Never terminate unrelated processes. Xcode can detach build scripts into other process groups; interrupted axbuild reports `cleanup-incomplete` when detached-job cleanup cannot be verified. Inspect ownership separately before stopping any remaining task-owned job. Discover the actual scheme and destination before executing:
+Before **every** Xcode invocation, run `pgrep -lx xcodebuild; echo "pgrep exit=$?"`: exit 1 means none are running, 0 lists them, and any other exit means the inventory failed. Investigate existing builds; process count and age do not establish zombie status. Never terminate unrelated processes. Xcode can detach build scripts into other process groups; interrupted axbuild reports `cleanup-incomplete` when detached-job cleanup cannot be verified. Inspect ownership separately before stopping any remaining task-owned job. Discover the actual scheme and destination before executing:
 
 ```bash
 "$AXBUILD" xcodebuild -scheme "$SCHEME" -destination "$DESTINATION" build
@@ -140,17 +140,20 @@ fi
 **CI/CD-Specific Fixes:**
 
 ```bash
-# For CI/CD package resolution issues
+# For CI/CD package resolution issues: retry after clearing the shared SwiftPM cache only on failure
 rm -rf .build/
-rm -rf ~/Library/Caches/org.swift.swiftpm/
-xcodebuild -resolvePackageDependencies -scheme <ACTUAL_SCHEME_NAME>
+if ! xcodebuild -resolvePackageDependencies -scheme <ACTUAL_SCHEME_NAME>; then
+  rm -rf ~/Library/Caches/org.swift.swiftpm/
+  xcodebuild -resolvePackageDependencies -scheme <ACTUAL_SCHEME_NAME>
+fi
 
-# For CI/CD build failures (capture to a result bundle; read errors per "Running Builds")
+# For CI/CD build failures (capture to a unique result bundle; read errors per "Running Builds")
+OUT=$(mktemp -d "${TMPDIR:-/tmp}/axiom-ci-build.XXXXXX")
 "$AXBUILD" xcodebuild clean build -scheme <ACTUAL_SCHEME_NAME> \
-  -destination 'platform=iOS Simulator,name=iPhone 16' \
+  -destination "<ACTUAL_DESTINATION>" \
   -allowProvisioningUpdates \
-  -resultBundlePath /tmp/ci-build.xcresult > /tmp/ci-build.log 2>&1
-# Read the axbuild report and retained compiler log; keep the bundle for deeper inspection
+  -resultBundlePath "$OUT/ci-build.xcresult" > "$OUT/report.json" 2> "$OUT/axbuild.stderr"
+# Read $OUT/report.json and the retained compiler log it names; keep the bundle for deeper inspection
 ```
 
 **Downloading Simulator Runtimes (CI/CD Setup):**
@@ -208,9 +211,23 @@ If running in CI/CD, mention this in your diagnosis:
 
 The workflows below require evidence for the specific cause before cleanup. Scope deletion and simulator changes to the affected project/device and obtain authorization for destructive actions. Large cache size alone does not prove corruption. Capture every rebuild or retest with axbuild as above; use an existing saved report first.
 
+**Scoped DerivedData removal** — never `rm -rf ~/Library/Developer/Xcode/DerivedData/*`:
+
+```bash
+# Remove only THIS project's DerivedData folder; other projects and running builds use the rest
+DD_SETTINGS=$(mktemp "${TMPDIR:-/tmp}/axiom-settings.XXXXXX")
+# Pass the same -workspace or -project as the build (a CocoaPods folder has both)
+xcodebuild -showBuildSettings <WORKSPACE_OR_PROJECT_ARGS> -scheme <ACTUAL_SCHEME_NAME> > "$DD_SETTINGS"
+PROJECT_DD=$(sed -n 's/^ *BUILD_DIR = \(.*\)\/Build\/Products$/\1/p' "$DD_SETTINGS" | head -1)
+case "$PROJECT_DD" in
+  "$HOME/Library/Developer/Xcode/DerivedData/"?*) rm -rf "$PROJECT_DD" ;;
+  *) echo "Not under the default DerivedData: '$PROJECT_DD'; inspect before deleting" ;;
+esac
+```
+
 ### 1. For Confirmed Abandoned Processes
 
-Inspect exact-name PIDs, parent ownership and process state. A long-running build may still be active. Only stop confirmed task-owned abandoned processes, with authorization for destructive termination; start with TERM and verify cleanup before escalating. Never use blanket `killall xcodebuild`, Simulator or DeviceHub termination.
+Inspect exact-name PIDs, parent ownership and process state. A long-running build may still be active. Only stop confirmed task-owned abandoned processes, with authorization for destructive termination; start with TERM and verify cleanup before escalating. Never use blanket `killall xcodebuild`. Quit Simulator or DeviceHub only as a last resort, with authorization, when no other session or person is using simulators on this Mac (see xcode-debugging).
 
 ### 2. For Stale Derived Data / "No such module" Errors
 
@@ -227,9 +244,9 @@ xcodebuild -list
 # 4. If .xcworkspace exists, use: xcodebuild -list -workspace YourApp.xcworkspace
 # 5. If .xcodeproj exists, use: xcodebuild -list -project YourApp.xcodeproj
 
-# Clean everything (use the actual scheme name from above)
+# Clean this project (use the actual scheme name from above)
 xcodebuild clean -scheme <ACTUAL_SCHEME_NAME>
-rm -rf ~/Library/Developer/Xcode/DerivedData/*
+# Remove only this project's DerivedData folder ("Scoped DerivedData removal" above)
 rm -rf .build/ build/
 
 # Preserve the discovered scheme and destination
@@ -245,20 +262,21 @@ rm -rf .build/ build/
 If user reports "No such module" with Swift Package Manager dependencies OR packages won't resolve:
 
 ```bash
-# Clean SPM cache (this fixes 90% of SPM issues)
-rm -rf ~/Library/Caches/org.swift.swiftpm/
-rm -rf ~/Library/Developer/Xcode/DerivedData/*
+# Remove only this project's DerivedData folder ("Scoped DerivedData removal" above)
 rm -rf .build/
 
-# Reset package resolution
-xcodebuild -resolvePackageDependencies -scheme <ACTUAL_SCHEME_NAME>
+# Reset package resolution; clear the SwiftPM cache (shared by every project) only if it still fails
+if ! xcodebuild -resolvePackageDependencies -scheme <ACTUAL_SCHEME_NAME>; then
+  rm -rf ~/Library/Caches/org.swift.swiftpm/
+  xcodebuild -resolvePackageDependencies -scheme <ACTUAL_SCHEME_NAME>
+fi
 
 # Verify packages resolved
 xcodebuild -list
 
 # Rebuild
-"$AXBUILD" xcodebuild build -scheme <ACTUAL_SCHEME_NAME> \
-  -destination 'platform=iOS Simulator,name=iPhone 16'
+"$AXBUILD" xcodebuild build <WORKSPACE_OR_PROJECT_ARGS> -scheme <ACTUAL_SCHEME_NAME> \
+  -destination "<ACTUAL_DESTINATION>"
 ```
 
 **When to use this**:
@@ -272,29 +290,18 @@ xcodebuild -list
 If user reports "Unable to boot simulator" or simulators stuck:
 
 ```bash
-# Shutdown all simulators
-xcrun simctl shutdown all
+# Shut down only the affected simulator; other sessions may be using the rest
+xcrun simctl shutdown <AFFECTED_UDID>
 
 # List devices with JSON for reliable parsing
 xcrun simctl list devices -j | jq '.devices | to_entries[] | .value[] | select(.isAvailable == true) | {name, udid, state}'
 
-# Get UUID for a specific device (e.g., iPhone 16) using JSON
-UDID=$(xcrun simctl list devices -j | jq -r '.devices | to_entries[] | .value[] | select(.name | contains("iPhone 16")) | select(.isAvailable == true) | .udid' | head -1)
+# Erase only the stuck simulator this task uses, identified by UDID from the list above,
+# after authorization (erase deletes that device's data; never pick a device by name match)
+xcrun simctl erase <AFFECTED_UDID>
 
-if [ -z "$UDID" ]; then
-  echo "No iPhone 16 simulator found. Available simulators:"
-  xcrun simctl list devices -j | jq '.devices | to_entries[] | .value[] | select(.isAvailable == true) | {name, udid}'
-else
-  echo "iPhone 16 UUID: $UDID"
-  # Erase the stuck simulator using the extracted UUID
-  xcrun simctl erase "$UDID"
-fi
-
-# Find and erase all simulators stuck in Booting state
-xcrun simctl list devices -j | jq -r '.devices | to_entries[] | .value[] | select(.state == "Booting") | .udid' | while read UDID; do
-  echo "Erasing stuck simulator: $UDID"
-  xcrun simctl erase "$UDID"
-done
+# List simulators stuck in Booting state; erase only the one this task uses, after authorization
+xcrun simctl list devices -j | jq -r '.devices | to_entries[] | .value[] | select(.state == "Booting") | {name, udid}'
 
 # Stop only an authorized, confirmed task-owned stuck device process
 ```
@@ -304,12 +311,12 @@ done
 If tests are failing but user hasn't changed code:
 
 ```bash
-# Clean Derived Data first
-rm -rf ~/Library/Developer/Xcode/DerivedData/*
+# Clean this project's Derived Data first
+# Remove only this project's DerivedData folder ("Scoped DerivedData removal" above)
 
 # Run tests again
-"$AXBUILD" xcodebuild test -scheme <ACTUAL_SCHEME_NAME> \
-  -destination 'platform=iOS Simulator,name=iPhone 16'
+"$AXBUILD" xcodebuild test <WORKSPACE_OR_PROJECT_ARGS> -scheme <ACTUAL_SCHEME_NAME> \
+  -destination "<ACTUAL_DESTINATION>"
 ```
 
 ### 6. For Old Code Executing
@@ -318,10 +325,10 @@ If build succeeds but old code runs:
 
 ```bash
 # This is ALWAYS a Derived Data issue
-rm -rf ~/Library/Developer/Xcode/DerivedData/*
+# Remove only this project's DerivedData folder ("Scoped DerivedData removal" above)
 
 # Force clean rebuild
-"$AXBUILD" xcodebuild clean build -scheme <ACTUAL_SCHEME_NAME>
+"$AXBUILD" xcodebuild clean build <WORKSPACE_OR_PROJECT_ARGS> -scheme <ACTUAL_SCHEME_NAME>
 ```
 
 ## Decision Tree

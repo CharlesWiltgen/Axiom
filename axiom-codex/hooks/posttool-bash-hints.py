@@ -256,7 +256,7 @@ def duration_hints(command: str, output: str, duration_ms: int | None) -> list[s
     ):
         hints.append(
             f"💡 Long xcodebuild ({seconds}s) produced error-like output. Check "
-            "active processes: `pgrep -x xcodebuild | wc -l`. "
+            "active processes: `pgrep -lx xcodebuild` (exit 1 means none). "
             "Try: /axiom:fix-build"
         )
     return hints

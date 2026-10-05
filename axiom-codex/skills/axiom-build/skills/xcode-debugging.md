@@ -41,11 +41,12 @@ If you see ANY of these, suspect environment not code:
 **ALWAYS run these commands FIRST** (before reading code):
 
 ```bash
-# 1. Check processes (zombie xcodebuild?)
-# \bxcodebuild\b is word-bounded so it skips the `xcodebuildmcp` MCP server
-ps aux | grep -E '\bxcodebuild\b|Simulator' | grep -v grep
+# 1. Check processes (exit 1 = none, 0 = listed, 2/3 = inventory failed).
+#    -x matches exact names, so the `xcodebuildmcp` MCP server and CoreSimulator services are skipped
+pgrep -lx xcodebuild; echo "pgrep exit=$?"
+pgrep -lx 'Simulator|DeviceHub'; echo "pgrep exit=$?"
 
-# 2. Check Derived Data size (>10GB = stale)
+# 2. Check Derived Data size (size alone does not prove it is stale)
 du -sh ~/Library/Developer/Xcode/DerivedData
 
 # 3. Check simulator states (stuck Booting?)
@@ -54,8 +55,8 @@ xcrun simctl list devices | grep -E "Booted|Booting|Shutting Down"
 
 #### What these tell you
 - **0 processes + small Derived Data + no booted sims** → Environment clean, investigate code
-- **10+ processes OR >10GB Derived Data OR simulators stuck** → Environment problem, clean first
-- **Stale code executing OR intermittent failures** → Clean Derived Data regardless of size
+- **Unaccounted-for xcodebuild processes OR simulators stuck** → Environment problem; investigate, then clean only what is confirmed
+- **Stale code executing OR intermittent failures** → Clean this project's Derived Data regardless of size
 
 #### Why environment first
 - Environment cleanup: 2-5 minutes → problem solved
@@ -73,52 +74,66 @@ xcodebuild -list
 
 ### For Stale Builds / "No such module" Errors
 ```bash
-# Clean everything
+# Clean this project
 xcodebuild clean -scheme YourScheme
-rm -rf ~/Library/Developer/Xcode/DerivedData/*
+# Remove only THIS project's DerivedData folder; other projects and running builds use the rest
+DD_SETTINGS=$(mktemp "${TMPDIR:-/tmp}/axiom-settings.XXXXXX")
+# Pass the same -workspace or -project as the build (a CocoaPods folder has both)
+xcodebuild -showBuildSettings -workspace YourApp.xcworkspace -scheme YourScheme > "$DD_SETTINGS"
+PROJECT_DD=$(sed -n 's/^ *BUILD_DIR = \(.*\)\/Build\/Products$/\1/p' "$DD_SETTINGS" | head -1)
+case "$PROJECT_DD" in
+  "$HOME/Library/Developer/Xcode/DerivedData/"?*) rm -rf "$PROJECT_DD" ;;
+  *) echo "Not under the default DerivedData: '$PROJECT_DD'; inspect before deleting" ;;
+esac
 rm -rf .build/ build/
 
-# Rebuild
-xcodebuild build -scheme YourScheme \
-  -destination 'platform=iOS Simulator,name=iPhone 16'
+# Rebuild, captured with axbuild (see axiom-build "Capture Build and Test Diagnostics")
+"$AXBUILD" xcodebuild build -workspace YourApp.xcworkspace -scheme YourScheme \
+  -destination "<ACTUAL_DESTINATION>"
 ```
 
 ### For Simulator Issues
 ```bash
-# Shutdown all simulators
-xcrun simctl shutdown all
+# Shut down only the affected simulator; other sessions may be using the rest
+xcrun simctl shutdown <device-uuid>
 
-# If simctl command fails, shutdown and retry
-xcrun simctl shutdown all
+# If simctl command fails, retry and check its state
+xcrun simctl shutdown <device-uuid>
 xcrun simctl list devices
 
 # If still stuck, erase specific simulator
 xcrun simctl erase <device-uuid>
 
-# Nuclear option: force-quit the simulator GUI.
+# Nuclear option, only when no other session or person is using simulators on this Mac:
+# force-quit the simulator GUI.
 # Xcode 26 ships Simulator.app; Xcode 27 ships DeviceHub.app instead and has no
 # Simulator.app at all — name both or this silently does nothing on 27.
 killall -9 Simulator DeviceHub
 
 # Verify against the PROCESS, not $?. killall exits 0 when EITHER name matched, so
 # with both Xcodes installed a 0 can mean "killed Simulator, DeviceHub still running".
-pgrep -l Simulator DeviceHub    # must print nothing
+pgrep -lx 'Simulator|DeviceHub'    # exact names; must print nothing (exit 1)
 ```
 
-### For Zombie Processes
+### For Suspected Zombie Processes
 ```bash
-# Kill all xcodebuild (use cautiously)
-killall -9 xcodebuild
+# Inventory first: exit 1 = none, 0 = listed, 2/3 = inventory failed
+pgrep -lx xcodebuild; echo "pgrep exit=$?"
 
-# Check they're gone (-w skips the `xcodebuildmcp` MCP server)
-ps aux | grep -w xcodebuild | grep -v grep
+# Inspect each PID: owner, parent, state, start time and CPU time. Age alone proves nothing.
+ps -ww -o pid,ppid,user,stat,lstart,etime,time,command -p <PID>
+
+# Stop only a confirmed abandoned build this task started; TERM first, then verify
+kill -TERM <PID>
+pgrep -lx xcodebuild
 ```
+Never `killall xcodebuild`: other sessions, CI jobs and archives on the same Mac are killed with it.
 
 ### For Test Failures
 ```bash
 # Isolate failing test
-xcodebuild test -scheme YourScheme \
-  -destination 'platform=iOS Simulator,name=iPhone 16' \
+"$AXBUILD" xcodebuild test -workspace YourApp.xcworkspace -scheme YourScheme \
+  -destination "<ACTUAL_DESTINATION>" \
   -only-testing:YourTests/SpecificTestClass
 ```
 
@@ -133,7 +148,7 @@ After applying fixes, verify in simulator with visual confirmation.
 xcrun simctl boot "iPhone 16 Pro"
 
 # 2. Build and install app
-xcodebuild build -scheme YourScheme \
+"$AXBUILD" xcodebuild build -workspace YourApp.xcworkspace -scheme YourScheme \
   -destination 'platform=iOS Simulator,name=iPhone 16 Pro'
 
 # 3. Launch app
@@ -178,15 +193,15 @@ xcrun simctl io booted screenshot /tmp/fix-verification.png
 ```
 Test/build failing?
 ├─ BUILD FAILED with no details?
-│  └─ Clean Derived Data → rebuild
+│  └─ Delete this project's Derived Data → rebuild
 ├─ Build intermittent (sometimes succeeds/fails)?
-│  └─ Clean Derived Data → rebuild
+│  └─ Delete this project's Derived Data → rebuild
 ├─ Build succeeds but old code executes?
-│  └─ Delete Derived Data → rebuild (2-5 min fix)
+│  └─ Delete this project's Derived Data → rebuild (2-5 min fix)
 ├─ "Unable to boot simulator"?
-│  └─ xcrun simctl shutdown all → erase simulator
+│  └─ xcrun simctl shutdown <device-uuid> → erase that simulator
 ├─ "No such module PackageName"?
-│  └─ Clean + delete Derived Data → rebuild
+│  └─ Clean + delete this project's Derived Data → rebuild
 ├─ Tests hang indefinitely?
 │  └─ Check simctl list → reboot simulator
 ├─ Tests crash?
@@ -199,11 +214,11 @@ Test/build failing?
 
 | Error | Fix |
 |-------|-----|
-| `BUILD FAILED` (no details) | Delete Derived Data |
+| `BUILD FAILED` (no details) | Delete this project's Derived Data |
 | `Unable to boot simulator` | `xcrun simctl erase <uuid>` |
-| `No such module` | Clean + delete Derived Data |
+| `No such module` | Clean + delete this project's Derived Data |
 | Tests hang | Check simctl list, reboot simulator |
-| Stale code executing | Delete Derived Data |
+| Stale code executing | Delete this project's Derived Data |
 
 **Predicted vs. built issues (OS27)**: Xcode 27 surfaces *predicted* issues inline **before** you build, rendered with a subtle, theme-blended style. They firm up into full-color warnings/errors when you build — or vanish if already resolved. A predicted issue is not yet a confirmed build failure: build (or check the build log) before treating an inline marker as real, so environment-first triage stays honest.
 

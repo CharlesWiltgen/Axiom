@@ -35,11 +35,17 @@ RUN → CAPTURE → ANALYZE → SUGGEST → FIX → VERIFY → REPORT
 ## Phase 1: Run Tests
 
 ```bash
-# Get booted simulator
-BOOTED_UDID=$(xcrun simctl list devices -j | jq -r '.devices | to_entries[] | .value[] | select(.state == "Booted") | .udid' | head -1)
+# Inventory running builds first (exit 1 = none, 0 = listed, 2/3 = inventory failed)
+pgrep -lx xcodebuild; echo "pgrep exit=$?"
 
-# Create result bundle
-RESULT_PATH="/tmp/debug-test-$(date +%s).xcresult"
+# Get booted simulator; print it, because shell variables do not persist between tool calls
+BOOTED_UDID=$(xcrun simctl list devices -j | jq -r '.devices | to_entries[] | .value[] | select(.state == "Booted") | .udid' | head -1)
+echo "BOOTED_UDID=$BOOTED_UDID"
+
+# Fresh run directory: xcodebuild refuses an existing result bundle, and concurrent runs must
+# not share files. Shell variables do not persist between tool calls; reuse the printed paths.
+RUN_DIR=$(mktemp -d "${TMPDIR:-/tmp}/axiom-debug.XXXXXX")
+RESULT_PATH="$RUN_DIR/result.xcresult"
 
 # Run specific failing tests
 xcodebuild test \
@@ -47,19 +53,18 @@ xcodebuild test \
   -destination "platform=iOS Simulator,id=$BOOTED_UDID" \
   -resultBundlePath "$RESULT_PATH" \
   -only-testing:"<TARGET>/<TestClass>/<testMethod>" \
-  > /tmp/xcodebuild-debug.log 2>&1
+  > "$RUN_DIR/xcodebuild.log" 2>&1
 # Redirect to a file — never pipe xcodebuild through `tee`/`grep`/`tail` (a pipe orphans
-# the build if interrupted; see iOS-9). Structured results come from $RESULT_PATH below.
+# the build if interrupted). Structured results come from $RESULT_PATH below.
 
-echo "Results: $RESULT_PATH"
+echo "Log: $RUN_DIR/xcodebuild.log  Results: $RESULT_PATH"
 ```
 
 ## Phase 2: Capture Evidence
 
 ```bash
 # Export failure attachments
-ATTACHMENTS_DIR="/tmp/debug-failures-$(date +%s)"
-mkdir -p "$ATTACHMENTS_DIR"
+ATTACHMENTS_DIR=$(mktemp -d "${TMPDIR:-/tmp}/axiom-debug-failures.XXXXXX")
 
 xcrun xcresulttool export attachments \
   --path "$RESULT_PATH" \
@@ -122,10 +127,10 @@ If xcsym returns exit 2/3 ("main dSYM missing / UUID mismatch"), the crash came 
 # Confirm: does the expected element appear in the UI?
 
 # 2. Check error message
-grep -A5 "Failure:" /tmp/xcodebuild-debug.log
+grep -A5 "Failure:" "$RUN_DIR/xcodebuild.log"
 
 # 3. Find file and line
-grep -E "\.swift:[0-9]+" /tmp/xcodebuild-debug.log
+grep -E "\.swift:[0-9]+" "$RUN_DIR/xcodebuild.log"
 
 # 4. Read the test code
 # (Use Read tool on the file:line from above)
@@ -227,15 +232,17 @@ Shall I apply this fix?
 ## Phase 6: Verify Fix
 
 ```bash
-# Re-run ONLY the failing test
+# Re-run ONLY the failing test into a new result bundle
+VERIFY_PATH="$(mktemp -d "${TMPDIR:-/tmp}/axiom-verify.XXXXXX")/result.xcresult"
 xcodebuild test \
   -scheme "<SCHEME_NAME>UITests" \
   -destination "platform=iOS Simulator,id=$BOOTED_UDID" \
-  -resultBundlePath "/tmp/verify-$(date +%s).xcresult" \
-  -only-testing:"<TARGET>/<TestClass>/<testMethod>"
+  -resultBundlePath "$VERIFY_PATH" \
+  -only-testing:"<TARGET>/<TestClass>/<testMethod>" \
+  > "${VERIFY_PATH%/result.xcresult}/xcodebuild.log" 2>&1
 
 # Check result
-xcrun xcresulttool get test-results summary --path /tmp/verify-*.xcresult
+xcrun xcresulttool get test-results summary --path "$VERIFY_PATH"
 ```
 
 ## Phase 7: Report

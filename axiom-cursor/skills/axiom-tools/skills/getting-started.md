@@ -8,7 +8,7 @@ Before the next necessary build or test, resolve `bin/axbuild` under the **actua
 
 Cursor and MCP distributions do not bundle axbuild and expose no axbuild MCP wrapper. Use the **saved-log fallback** below when a verified shell helper is unavailable.
 
-Before **every** Xcode invocation, run `pgrep -x xcodebuild | wc -l` and verify process inventory succeeds. Investigate existing builds; process count and age do not establish zombie status. Never terminate unrelated processes. Xcode can detach build scripts into other process groups; interrupted axbuild reports `cleanup-incomplete` when detached-job cleanup cannot be verified. Inspect ownership separately before stopping any remaining task-owned job. Discover the actual scheme and destination before executing:
+Before **every** Xcode invocation, run `pgrep -lx xcodebuild; echo "pgrep exit=$?"`: exit 1 means none are running, 0 lists them, and any other exit means the inventory failed. Investigate existing builds; process count and age do not establish zombie status. Never terminate unrelated processes. Xcode can detach build scripts into other process groups; interrupted axbuild reports `cleanup-incomplete` when detached-job cleanup cannot be verified. Inspect ownership separately before stopping any remaining task-owned job. Discover the actual scheme and destination before executing:
 
 ```bash
 "$AXBUILD" xcodebuild -scheme "$SCHEME" -destination "$DESTINATION" build

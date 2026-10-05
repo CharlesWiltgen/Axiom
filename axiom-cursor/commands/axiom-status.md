@@ -12,9 +12,10 @@ Run these checks and format as a dashboard:
 
 ### Environment Health
 ```bash
-# Zombie xcodebuild processes (-x = exact process name; -f would also count
-# the long-running `xcodebuildmcp` MCP server, which is not a zombie build)
-pgrep -x xcodebuild | wc -l
+# Running xcodebuild processes (-x = exact process name; -f would also match the
+# long-running `xcodebuildmcp` MCP server). Exit 1 = none, 0 = listed, 2/3 = inventory
+# failed. A listed process is not a zombie until its owner and state are checked.
+pgrep -lx xcodebuild; echo "pgrep exit=$?"
 
 # Derived Data size
 du -sh ~/Library/Developer/Xcode/DerivedData 2>/dev/null

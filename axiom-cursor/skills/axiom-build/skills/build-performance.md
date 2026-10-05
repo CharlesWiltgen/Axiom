@@ -40,8 +40,9 @@ Select an actual project, target, configuration and SDK before comparing setting
 For effective values, use a fresh matching `xcodebuild -showBuildSettings -json` capture. Obtain authorization for this query: Xcode may resolve packages or write build-system state even though it does not build or launch the app. File-read-only scope permits structural inspection. In that scope, label values "declared; effective value unverified" and report the selected target/configuration plus all applicable project/target/xcconfig conditions instead of choosing a first match.
 
 ```bash
-# Check existing processes and investigate active builds before starting a query.
-pgrep -x xcodebuild | wc -l
+# Check existing processes and investigate active builds before starting a query
+# (exit 1 = none, 0 = listed, 2/3 = inventory failed).
+pgrep -lx xcodebuild; echo "pgrep exit=$?"
 # Set PROJECT, TARGET, CONFIGURATION, SDK and SETTINGS_JSON explicitly.
 # SETTINGS_JSON must be a task-owned output file; capture Xcode's exit status.
 if xcrun xcodebuild -project "$PROJECT" -target "$TARGET" -configuration "$CONFIGURATION" -sdk "$SDK" -showBuildSettings -json > "$SETTINGS_JSON"; then

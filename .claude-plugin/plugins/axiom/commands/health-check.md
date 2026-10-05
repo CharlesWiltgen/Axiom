@@ -51,7 +51,7 @@ If `diff` is present, compute the file scope yourself before launching the agent
 
 If `compiler` is present, produce real compiler diagnostics before launching the agent. Auditors have no Bash tool, so this runs here, exactly once per health-check — never once per auditor.
 
-1. **Check for existing builds.** Run `pgrep -x xcodebuild | wc -l`. If non-zero, do not start a build. Skip the lane and note it; a concurrent `xcodebuild` spawns 50-100+ child processes that persist if interrupted.
+1. **Check for existing builds.** Run `pgrep -lx xcodebuild; echo "pgrep exit=$?"`. Start a build only on exit 1 (none running); if it lists builds (exit 0) or the inventory fails (exit 2/3), do not start a build. Skip the lane and note it; a concurrent `xcodebuild` spawns 50-100+ child processes that persist if interrupted.
 
 2. **Find a scheme.** Run `xcodebuild -list -json` in the project root. Take the first entry of `.workspace.schemes` or `.project.schemes`. If the command fails or lists no schemes, skip the lane.
 

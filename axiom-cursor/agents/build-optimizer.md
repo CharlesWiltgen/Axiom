@@ -98,7 +98,8 @@ Recommend adding:
 **How to find slow files**:
 ```bash
 # After build authorization, set BUILD_LOG to a task-owned file.
-pgrep -x xcodebuild | wc -l
+# Inventory running builds first (exit 1 = none, 0 = listed, 2/3 = inventory failed).
+pgrep -lx xcodebuild; echo "pgrep exit=$?"
 if xcodebuild -workspace YourApp.xcworkspace \
   -scheme YourScheme \
   build \

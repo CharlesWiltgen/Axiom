@@ -7,7 +7,7 @@ Before the next necessary build or test, resolve `bin/axbuild` under the **actua
 
 Cursor and MCP distributions do not bundle axbuild and expose no axbuild MCP wrapper. Use the **saved-log fallback** below when a verified shell helper is unavailable.
 
-Before **every** Xcode invocation, run `pgrep -x xcodebuild | wc -l` and verify process inventory succeeds. Investigate existing builds; process count and age do not establish zombie status. Never terminate unrelated processes. Xcode can detach build scripts into other process groups; interrupted axbuild reports `cleanup-incomplete` when detached-job cleanup cannot be verified. Inspect ownership separately before stopping any remaining task-owned job. Discover the actual scheme and destination before executing:
+Before **every** Xcode invocation, run `pgrep -lx xcodebuild; echo "pgrep exit=$?"`: exit 1 means none are running, 0 lists them, and any other exit means the inventory failed. Investigate existing builds; process count and age do not establish zombie status. Never terminate unrelated processes. Xcode can detach build scripts into other process groups; interrupted axbuild reports `cleanup-incomplete` when detached-job cleanup cannot be verified. Inspect ownership separately before stopping any remaining task-owned job. Discover the actual scheme and destination before executing:
 
 ```bash
 "$AXBUILD" xcodebuild -scheme "$SCHEME" -destination "$DESTINATION" build
@@ -89,17 +89,27 @@ Build failing?
 xcodebuild build
 ```
 
-**✅ CORRECT**:
+**✅ CORRECT** (after confirming a package-resolution cause):
 ```bash
-# Reset package caches first
-rm -rf ~/Library/Developer/Xcode/DerivedData
-rm -rf ~/Library/Caches/org.swift.swiftpm
+# Remove only THIS project's DerivedData folder; other projects and running builds use the rest
+DD_SETTINGS=$(mktemp "${TMPDIR:-/tmp}/axiom-settings.XXXXXX")
+# Pass the same -workspace or -project as the build (a CocoaPods folder has both)
+xcodebuild -showBuildSettings -workspace YourApp.xcworkspace -scheme YourScheme > "$DD_SETTINGS"
+PROJECT_DD=$(sed -n 's/^ *BUILD_DIR = \(.*\)\/Build\/Products$/\1/p' "$DD_SETTINGS" | head -1)
+case "$PROJECT_DD" in
+  "$HOME/Library/Developer/Xcode/DerivedData/"?*) rm -rf "$PROJECT_DD" ;;
+  *) echo "Not under the default DerivedData: '$PROJECT_DD'; inspect before deleting" ;;
+esac
 
-# Reset packages in project
-xcodebuild -resolvePackageDependencies
+# Reset packages; clear the SwiftPM cache (shared by every project) only if resolution still fails
+if ! xcodebuild -resolvePackageDependencies -workspace YourApp.xcworkspace -scheme YourScheme; then
+  rm -rf ~/Library/Caches/org.swift.swiftpm
+  xcodebuild -resolvePackageDependencies -workspace YourApp.xcworkspace -scheme YourScheme
+fi
 
-# Clean build
-xcodebuild clean build -scheme YourScheme
+# Clean build, captured with axbuild ("Capture Build and Test Diagnostics" above)
+"$AXBUILD" xcodebuild clean build -workspace YourApp.xcworkspace -scheme YourScheme \
+  -destination "<ACTUAL_DESTINATION>"
 ```
 
 ### Issue 2: CocoaPods Conflicts

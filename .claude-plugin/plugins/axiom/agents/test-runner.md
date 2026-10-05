@@ -29,7 +29,7 @@ Before the next necessary build or test, resolve `bin/axbuild` under the **actua
 
 Cursor and MCP distributions do not bundle axbuild and expose no axbuild MCP wrapper. Use the **saved-log fallback** below when a verified shell helper is unavailable.
 
-Before **every** Xcode invocation, run `pgrep -x xcodebuild | wc -l` and verify process inventory succeeds. Investigate existing builds; process count and age do not establish zombie status. Never terminate unrelated processes. Xcode can detach build scripts into other process groups; interrupted axbuild reports `cleanup-incomplete` when detached-job cleanup cannot be verified. Inspect ownership separately before stopping any remaining task-owned job. Discover the actual scheme and destination before executing:
+Before **every** Xcode invocation, run `pgrep -lx xcodebuild; echo "pgrep exit=$?"`: exit 1 means none are running, 0 lists them, and any other exit means the inventory failed. Investigate existing builds; process count and age do not establish zombie status. Never terminate unrelated processes. Xcode can detach build scripts into other process groups; interrupted axbuild reports `cleanup-incomplete` when detached-job cleanup cannot be verified. Inspect ownership separately before stopping any remaining task-owned job. Discover the actual scheme and destination before executing:
 
 ```bash
 "$AXBUILD" xcodebuild -scheme "$SCHEME" -destination "$DESTINATION" build
@@ -62,9 +62,10 @@ The retained log is the primary compiler source; test results and validated Swif
 ls -la | grep -E "\.xcodeproj|\.xcworkspace"
 
 # 2. Discover schemes and test targets (JSON for reliable parsing)
-pgrep -x xcodebuild | wc -l
-xcodebuild -list -json > /tmp/axiom-schemes.json
-jq '{schemes: .project.schemes, targets: .project.targets}' /tmp/axiom-schemes.json
+pgrep -lx xcodebuild; echo "pgrep exit=$?"
+SCHEMES=$(mktemp "${TMPDIR:-/tmp}/axiom-schemes.XXXXXX")
+xcodebuild -list -json > "$SCHEMES"
+jq '{schemes: .project.schemes, targets: .project.targets}' "$SCHEMES"
 
 # 3. Check for booted simulator
 BOOTED_UDID=$(xcrun simctl list devices -j | jq -r '.devices | to_entries[] | .value[] | select(.state == "Booted") | .udid' | head -1)
@@ -83,9 +84,13 @@ fi
 ```bash
 # Get the booted simulator UDID
 BOOTED_UDID=$(xcrun simctl list devices -j | jq -r '.devices | to_entries[] | .value[] | select(.state == "Booted") | .udid' | head -1)
+echo "BOOTED_UDID=$BOOTED_UDID"   # reuse this value in later calls
 
-# Create timestamped result bundle path
-RESULT_PATH="/tmp/test-$(date +%s).xcresult"
+# Fresh run directory for EVERY test run: xcodebuild refuses an existing result bundle,
+# and concurrent runs must not share files. Shell variables do not persist between
+# separate tool calls, so reuse the printed paths in later commands.
+RUN_DIR=$(mktemp -d "${TMPDIR:-/tmp}/axiom-tests.XXXXXX")
+RESULT_PATH="$RUN_DIR/result.xcresult"
 
 # Run tests with result bundle
 "$AXBUILD" xcodebuild test \
@@ -93,35 +98,39 @@ RESULT_PATH="/tmp/test-$(date +%s).xcresult"
   -destination "platform=iOS Simulator,id=$BOOTED_UDID" \
   -resultBundlePath "$RESULT_PATH" \
   -enableCodeCoverage YES \
-  > /tmp/axbuild-test-report.json
-# Redirect to a file — never pipe xcodebuild through `tee`/`grep`/`tail` (a pipe orphans
-# the build if interrupted; see iOS-9). Structured results come from $RESULT_PATH below.
+  > "$RUN_DIR/report.json" 2> "$RUN_DIR/axbuild.stderr"
+# Redirect to files — never pipe xcodebuild through `tee`/`grep`/`tail` (a pipe orphans
+# the build if interrupted). Structured results come from $RESULT_PATH below.
 
-echo "Results saved to: $RESULT_PATH"
+echo "Report: $RUN_DIR/report.json  Results: $RESULT_PATH"
 ```
 
 ### Running Specific Tests
 
+Each run below writes its own result bundle inside a fresh `RUN_DIR`; never reuse a result bundle path.
+
 ```bash
+RUN_DIR=$(mktemp -d "${TMPDIR:-/tmp}/axiom-tests.XXXXXX")
+
 # Run a single test class
 "$AXBUILD" xcodebuild test \
   -scheme "<SCHEME_NAME>UITests" \
   -destination "platform=iOS Simulator,id=$BOOTED_UDID" \
-  -resultBundlePath "$RESULT_PATH" \
+  -resultBundlePath "$RUN_DIR/class.xcresult" \
   -only-testing:"<TARGET>/LoginTests"
 
 # Run a single test method
 "$AXBUILD" xcodebuild test \
   -scheme "<SCHEME_NAME>UITests" \
   -destination "platform=iOS Simulator,id=$BOOTED_UDID" \
-  -resultBundlePath "$RESULT_PATH" \
+  -resultBundlePath "$RUN_DIR/method.xcresult" \
   -only-testing:"<TARGET>/LoginTests/testLoginWithValidCredentials"
 
 # Skip specific tests
 "$AXBUILD" xcodebuild test \
   -scheme "<SCHEME_NAME>UITests" \
   -destination "platform=iOS Simulator,id=$BOOTED_UDID" \
-  -resultBundlePath "$RESULT_PATH" \
+  -resultBundlePath "$RUN_DIR/skip.xcresult" \
   -skip-testing:"<TARGET>/SlowTests"
 ```
 
@@ -168,8 +177,7 @@ xcrun xcresulttool get test-results test-details \
 
 ```bash
 # Create output directory
-ATTACHMENTS_DIR="/tmp/test-failures-$(date +%s)"
-mkdir -p "$ATTACHMENTS_DIR"
+ATTACHMENTS_DIR=$(mktemp -d "${TMPDIR:-/tmp}/axiom-test-failures.XXXXXX")
 
 # Export only failure attachments (screenshots, videos)
 xcrun xcresulttool export attachments \
@@ -195,8 +203,7 @@ xcrun xcresulttool export attachments \
 ### Export Code Coverage
 
 ```bash
-COVERAGE_DIR="/tmp/coverage-$(date +%s)"
-mkdir -p "$COVERAGE_DIR"
+COVERAGE_DIR=$(mktemp -d "${TMPDIR:-/tmp}/axiom-coverage.XXXXXX")
 
 xcrun xcresulttool export coverage \
   --path "$RESULT_PATH" \
