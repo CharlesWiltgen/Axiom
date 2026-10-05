@@ -175,7 +175,7 @@ describe.runIf(onMac)('XcsymTools.callTool results', () => {
   });
 
   it('surfaces the JSON report when crash exits non-zero for missing dSYMs', async () => {
-    // exit 2 means "report produced, some dSYMs missing" — not a failure.
+    // exit 2 means "report produced, main-binary dSYM missing" — not a failure.
     const { exec } = recorder({ code: 2, stdout: '{"report":{"symbolicated":false}}' });
     const res = await toolsWith(exec).callTool('axiom_xcsym_crash', { file: 'crash.ips' });
     expect(res.content[0].text).toContain('{"report":{"symbolicated":false}}');

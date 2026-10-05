@@ -91,7 +91,7 @@ export class XcsymTools implements BinaryToolProvider {
     return [
       {
         name: 'axiom_xcsym_crash',
-        description: 'Symbolicate and categorize one crash file end-to-end: parse, discover dSYMs, run atos, classify the cause. Accepts .ips (v1/v2), MetricKit MXCrashDiagnostic JSON, legacy .crash, and .xccrashpoint bundles (auto-detected). Returns a JSON report. A non-zero exit signals dSYM-match completeness (2=some dSYMs missing, 3=UUID mismatch, 4=arch mismatch, 7=mixed), not failure — the report is still returned. macOS + Xcode only.',
+        description: 'Symbolicate and categorize one crash file end-to-end: parse, discover dSYMs, run atos, classify the cause. Accepts .ips (v1/v2), MetricKit MXCrashDiagnostic JSON, legacy .crash, and .xccrashpoint bundles (auto-detected). Returns a JSON report. A non-zero exit reports dSYM matching, not failure (2=input not found or main-binary dSYM missing, 3=UUID mismatch, 4=arch mismatch, 7=main binary matched but other images missing or mismatched); when a report was written it is still returned, followed by the exit code. macOS + Xcode only.',
         inputSchema: {
           type: 'object',
           properties: {
