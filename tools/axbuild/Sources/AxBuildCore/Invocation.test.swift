@@ -63,10 +63,7 @@ import Testing
     let prepared = applyDiagnosticDefaults(
       invocation: invocation, artifacts: .init(run: "/run"), capabilities: .init())
     #expect(Array(prepared.childArgs.prefix(invocation.childArgs.count)) == invocation.childArgs)
-    #expect(
-      prepared.defaults == [
-        "-resultBundlePath", "/run/result.xcresult", "-IDEBuildingContinueBuildingAfterErrors=YES",
-      ])
+    #expect(prepared.defaults == ["-resultBundlePath", "/run/result.xcresult"])
   }
 
   @Test(arguments: [
@@ -83,27 +80,47 @@ import Testing
     #expect(!issue.operation.isEmpty && !issue.message.isEmpty)
   }
 
-  @Test func retainsExplicitArtifactsAndDisablement() throws {
+  @Test func retainsExplicitArtifactsAndBuildSettings() throws {
     let args = [
       "xcodebuild", "test", "-resultBundlePath", "my results.xcresult",
-      "-IDEBuildingContinueBuildingAfterErrors=NO",
+      "-IDEBuildingContinueBuildingAfterErrors=YES",
     ]
     let invocation = try parseInvocation(args: args, cwd: cwd).get()
+    #expect(invocation.action == .test)
     let prepared = applyDiagnosticDefaults(
       invocation: invocation, artifacts: .init(run: "/run"), capabilities: .init())
     #expect(prepared.childArgs == invocation.childArgs)
     #expect(prepared.defaults == [])
   }
 
-  @Test func addsDefaultsToImplicitBuildWithoutAnActionToken() throws {
-    let invocation = try parseInvocation(args: ["xcodebuild", "-scheme", "App"], cwd: cwd).get()
+  @Test(arguments: [
+    [], ["build"], ["build-for-testing"], ["archive"], ["install"], ["analyze"],
+    ["clean", "build"],
+  ]) func addsOnlyAResultBundleToXcodeBuilds(actions: [String]) throws {
+    let invocation = try parseInvocation(
+      args: ["xcodebuild"] + actions + ["-scheme", "App"], cwd: cwd
+    ).get()
+    #expect(invocation.action == .build)
     let prepared = applyDiagnosticDefaults(
       invocation: invocation, artifacts: .init(run: "/run"), capabilities: .init())
     #expect(
-      prepared.childArgs == [
+      prepared.childArgs == actions + [
         "-scheme", "App", "-resultBundlePath", "/run/result.xcresult",
-        "-IDEBuildingContinueBuildingAfterErrors=YES",
       ])
+  }
+
+  @Test(arguments: [
+    (["swift", "build"], [String]()),
+    (
+      ["swift", "test"],
+      ["--event-stream-output-path", "/run/events.jsonl", "--event-stream-version", "6.3"]
+    ),
+  ]) func addsOnlyRecordingDefaultsToSwiftPM(example: ([String], [String])) throws {
+    let invocation = try parseInvocation(args: example.0, cwd: cwd).get()
+    let prepared = applyDiagnosticDefaults(
+      invocation: invocation, artifacts: .init(run: "/run"),
+      capabilities: .init(eventVersion: "6.3"))
+    #expect(prepared.defaults == example.1)
   }
 
   @Test func resolvesPackageDirectoryAndPreservesCallerStream() throws {
@@ -115,7 +132,7 @@ import Testing
     #expect(invocation.effectiveCwd.path == "/project/Some Folder")
     let prepared = applyDiagnosticDefaults(
       invocation: invocation, artifacts: .init(run: "/run"),
-      capabilities: .init(eventVersion: "6.3", noColor: true))
+      capabilities: .init(eventVersion: "6.3"))
     #expect(prepared.childArgs == invocation.childArgs)
   }
 }

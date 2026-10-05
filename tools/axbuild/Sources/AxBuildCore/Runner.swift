@@ -626,36 +626,32 @@ func execute(
     ? Array(invocation.childArgs.prefix(invocation.toolIndex)).filter {
       $0 != "-k" && $0 != "--kill-cache"
     } : []
-  if invocation.kind == .swiftBuild || invocation.kind == .swiftTest {
+  if invocation.kind == .swiftTest, !invocation.childArgs.contains("--disable-swift-testing") {
     let help = probe(
-      executable: executable,
-      args: prefix + [invocation.kind == .swiftTest ? "test" : "build", "--help-hidden"],
-      invocation: invocation, environment: environment, run: folder, name: "help",
-      interruption: interruption, limits: limits)
+      executable: executable, args: prefix + ["test", "--help-hidden"], invocation: invocation,
+      environment: environment, run: folder, name: "help", interruption: interruption,
+      limits: limits)
     run.issues += help.1
-    capabilities.noColor = help.0?.contains("--no-color-diagnostics") == true
-    if invocation.kind == .swiftTest, !invocation.childArgs.contains("--disable-swift-testing") {
-      let version = probe(
-        executable: executable, args: prefix + ["--version"], invocation: invocation,
-        environment: environment, run: folder, name: "version", interruption: interruption,
-        limits: limits)
-      run.issues += version.1
-      if version.0?.contains("swiftlang-6.4.0.34.1 clang-2100.3.34.1") == true,
-        help.0?.contains("--event-stream-output-path") == true,
-        help.0?.contains("--event-stream-version") == true
-      {
-        capabilities.eventVersion = "6.3"
-      } else if optionPath(
-        "--event-stream-output-path", args: invocation.childArgs, cwd: invocation.effectiveCwd)
-        == nil
-      {
-        run.issues.append(
-          .init(
-            kind: .unsupportedSource, operation: "select Swift Testing stream",
-            message:
-              "Selected toolchain has no validated event stream mapping; retained log remains available"
-          ))
-      }
+    let version = probe(
+      executable: executable, args: prefix + ["--version"], invocation: invocation,
+      environment: environment, run: folder, name: "version", interruption: interruption,
+      limits: limits)
+    run.issues += version.1
+    if version.0?.contains("swiftlang-6.4.0.34.1 clang-2100.3.34.1") == true,
+      help.0?.contains("--event-stream-output-path") == true,
+      help.0?.contains("--event-stream-version") == true
+    {
+      capabilities.eventVersion = "6.3"
+    } else if optionPath(
+      "--event-stream-output-path", args: invocation.childArgs, cwd: invocation.effectiveCwd)
+      == nil
+    {
+      run.issues.append(
+        .init(
+          kind: .unsupportedSource, operation: "select Swift Testing stream",
+          message:
+            "Selected toolchain has no validated event stream mapping; retained log remains available"
+        ))
     }
   }
   let prepared = applyDiagnosticDefaults(
@@ -718,6 +714,21 @@ func execute(
       .init(
         kind: .writeFailed, operation: "close raw capture", message: "errno \(errno)",
         path: folder + "/build.log"))
+  }
+  do {
+    let captured = try Data(
+      contentsOf: URL(fileURLWithPath: folder + "/build.log"), options: .mappedIfSafe)
+    let clean = removingControlSequences(captured)
+    if clean.count != captured.count {
+      try storeFile(clean, path: folder + "/build.clean.log", name: "clean log")
+      run.artifacts.log = "build.clean.log"
+    }
+  } catch {
+    run.issues.append(
+      (error as? CollectionIssue)
+        ?? .init(
+          kind: .readFailed, operation: "read raw capture", message: "\(error)",
+          path: folder + "/build.log"))
   }
   var reader: String?
   var readerArgs: [String] = []
@@ -910,12 +921,15 @@ func collect(run: CapturedRun, limits: CollectionLimits = .production) async -> 
 }
 
 private func storeReport(_ report: Report, path: String) throws {
-  let data = try encodeFullReport(report: report).get()
+  try storeFile(encodeFullReport(report: report).get(), path: path, name: "retained report")
+}
+
+private func storeFile(_ data: Data, path: String, name: String) throws {
   let temporary = path + "." + UUID().uuidString + ".tmp"
   let fd = open(temporary, O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC, 0o600)
   guard fd >= 0 else {
     throw CollectionIssue(
-      kind: .writeFailed, operation: "create retained report", message: "errno \(errno)", path: path
+      kind: .writeFailed, operation: "create \(name)", message: "errno \(errno)", path: path
     )
   }
   do {
@@ -926,7 +940,7 @@ private func storeReport(_ report: Report, path: String) throws {
         if n < 0 && errno == EINTR { continue }
         guard n > 0 else {
           throw CollectionIssue(
-            kind: .writeFailed, operation: "write retained report", message: "errno \(errno)",
+            kind: .writeFailed, operation: "write \(name)", message: "errno \(errno)",
             path: path)
         }
         offset += n
@@ -934,7 +948,7 @@ private func storeReport(_ report: Report, path: String) throws {
     }
     guard fsync(fd) == 0 else {
       throw CollectionIssue(
-        kind: .writeFailed, operation: "sync retained report", message: "errno \(errno)", path: path
+        kind: .writeFailed, operation: "sync \(name)", message: "errno \(errno)", path: path
       )
     }
   } catch {
@@ -946,7 +960,7 @@ private func storeReport(_ report: Report, path: String) throws {
     let code = errno
     _ = unlink(temporary)
     throw CollectionIssue(
-      kind: .writeFailed, operation: "publish retained report", message: "errno \(code)", path: path
+      kind: .writeFailed, operation: "publish \(name)", message: "errno \(code)", path: path
     )
   }
 }
@@ -1006,15 +1020,16 @@ public func runCLI() async -> Int32 {
     source: .log,
     shouldStop: { collectionDeadline <= now() || interruption.signal != collectionInterruption })
   if let folder = run.artifacts.run {
+    let name = run.artifacts.log ?? "build.log"
+    let path = folder + "/" + name
     do {
-      let data = try Data(
-        contentsOf: URL(fileURLWithPath: folder + "/build.log"), options: .mappedIfSafe)
-      run.logTail = String(decoding: data.suffix(2048), as: UTF8.self)
+      let tail = try Data(contentsOf: URL(fileURLWithPath: path), options: .mappedIfSafe)
+        .suffix(2048)
+      run.logTail = String(
+        decoding: name == "build.log" ? removingControlSequences(tail) : tail, as: UTF8.self)
     } catch {
       run.issues.append(
-        .init(
-          kind: .readFailed, operation: "read log tail", message: "\(error)",
-          path: folder + "/build.log"))
+        .init(kind: .readFailed, operation: "read log tail", message: "\(error)", path: path))
     }
   }
   var report = makeReport(run: run, batches: batches, context: context)

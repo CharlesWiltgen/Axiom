@@ -23,7 +23,6 @@ struct Invocation: Sendable {
 struct RunArtifacts: Sendable { var run: String }
 struct ToolCapabilities: Sendable {
   var eventVersion: String?
-  var noColor: Bool = false
 }
 struct PreparedInvocation: Sendable {
   var childArgs: [String]
@@ -244,36 +243,21 @@ func applyDiagnosticDefaults(
       args += addition
       defaults += addition
     }
-    if invocation.producesBuild
-      && !args.contains(where: { $0.hasPrefix("-IDEBuildingContinueBuildingAfterErrors=") })
-    {
-      let setting = "-IDEBuildingContinueBuildingAfterErrors=YES"
-      args.append(setting)
-      defaults.append(setting)
+  } else if invocation.kind == .swiftTest, !args.contains("--disable-swift-testing"),
+    let version = capabilities.eventVersion
+  {
+    if !args.contains(where: {
+      $0 == "--event-stream-output-path" || $0.hasPrefix("--event-stream-output-path=")
+    }) {
+      let addition = ["--event-stream-output-path", artifacts.run + "/events.jsonl"]
+      args += addition
+      defaults += addition
     }
-  } else if invocation.kind == .swiftBuild || invocation.kind == .swiftTest {
-    if capabilities.noColor && !args.contains("--color-diagnostics")
-      && !args.contains("--no-color-diagnostics")
-    {
-      args.append("--no-color-diagnostics")
-      defaults.append("--no-color-diagnostics")
-    }
-    if invocation.kind == .swiftTest, !args.contains("--disable-swift-testing"),
-      let version = capabilities.eventVersion
-    {
-      if !args.contains(where: {
-        $0 == "--event-stream-output-path" || $0.hasPrefix("--event-stream-output-path=")
-      }) {
-        let addition = ["--event-stream-output-path", artifacts.run + "/events.jsonl"]
-        args += addition
-        defaults += addition
-      }
-      if !args.contains(where: {
-        $0 == "--event-stream-version" || $0.hasPrefix("--event-stream-version=")
-      }) {
-        args += ["--event-stream-version", version]
-        defaults += ["--event-stream-version", version]
-      }
+    if !args.contains(where: {
+      $0 == "--event-stream-version" || $0.hasPrefix("--event-stream-version=")
+    }) {
+      args += ["--event-stream-version", version]
+      defaults += ["--event-stream-version", version]
     }
   }
   return .init(childArgs: args, defaults: defaults)

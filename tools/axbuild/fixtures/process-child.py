@@ -74,6 +74,21 @@ if os.environ.get("FIXTURE_MODE") == "trap":
         b"Test Suite 'All tests' started at 2026-10-04 16:05:06.095.\nCalc.swift:5: Fatal error: boom\n",
     )
     sys.exit(65)
+if os.environ.get("FIXTURE_MODE") == "color":
+    os.write(
+        1,
+        b"\x1b[2K\r[1/2] Calc\nA.swift:3:7: \x1b[1;31merror: \x1b[1;39mfixture error\x1b[0m\n",
+    )
+    os.write(2, b"raw stderr \xff\n")
+    sys.exit(65)
+if os.environ.get("FIXTURE_MODE") == "clean-blocked":
+    events = args[args.index("--event-stream-output-path") + 1]
+    os.mkdir(os.path.join(os.path.dirname(events), "build.clean.log"))
+    os.write(1, b"plain failure \x1b[31mred\x1b[0m\n")
+    sys.exit(65)
+if os.environ.get("FIXTURE_MODE") == "color-tail":
+    os.write(1, b"plain failure \x1b[\x1b[31mA\n")
+    sys.exit(65)
 if os.environ.get("FIXTURE_MODE") == "linger":
     child = subprocess.Popen(
         ["/usr/bin/python3", "-c", "import time; time.sleep(300)"],

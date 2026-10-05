@@ -18,6 +18,34 @@ func diagnosticPath(_ path: String, context: ReaderContext, basenameOnly: Bool =
   return context.canonicalPath(absolute)
 }
 
+func removingControlSequences(_ data: Data) -> Data {
+  guard data.contains(0x1B) else { return data }
+  return data.withUnsafeBytes { raw in
+    let bytes = raw.bindMemory(to: UInt8.self)
+    var kept = Data(capacity: bytes.count)
+    var start = 0
+    var index = 0
+    while index < bytes.count {
+      guard bytes[index] == 0x1B, index + 1 < bytes.count, bytes[index + 1] == 0x5B else {
+        index += 1
+        continue
+      }
+      var end = index + 2
+      while end < bytes.count, (0x30...0x3F).contains(bytes[end]) { end += 1 }
+      while end < bytes.count, (0x20...0x2F).contains(bytes[end]) { end += 1 }
+      guard end < bytes.count, (0x40...0x7E).contains(bytes[end]) else {
+        index += 1
+        continue
+      }
+      kept.append(UnsafeBufferPointer(rebasing: bytes[start..<index]))
+      index = end + 1
+      start = index
+    }
+    kept.append(UnsafeBufferPointer(rebasing: bytes[start..<bytes.count]))
+    return kept
+  }
+}
+
 func readLog(data: Data, context: ReaderContext) -> ReadBatch {
   var batch = ReadBatch()
   if String(data: data, encoding: .utf8) == nil {
@@ -27,7 +55,6 @@ func readLog(data: Data, context: ReaderContext) -> ReadBatch {
         message: "Invalid UTF-8; readable diagnostics retained using replacement characters"))
   }
   do {
-    let ansi = try NSRegularExpression(pattern: "\\u001B\\[[0-?]*[ -/]*[@-~]")
     let located = try NSRegularExpression(
       pattern: "^(.+?):([0-9]+)(?::([0-9]+))?: (fatal error|error|warning|note|remark): (.*)$")
     let xctest = try NSRegularExpression(pattern: "^(-\\[.+?\\]) : (.*)$")
@@ -42,8 +69,9 @@ func readLog(data: Data, context: ReaderContext) -> ReadBatch {
       pattern: "^(.+?):([0-9]+): ((?:Fatal error|Precondition failed|Assertion failed)(?:: .*)?)$")
     var block: Int?
     var testDetails: Int?
-    let text = String(decoding: data, as: UTF8.self).replacingOccurrences(of: "\r\n", with: "\n")
-    for raw in text.components(separatedBy: "\n") {
+    let text = String(decoding: removingControlSequences(data), as: UTF8.self)
+      .replacingOccurrences(of: "\r\n", with: "\n")
+    for line in text.components(separatedBy: "\n") {
       if context.shouldStop() {
         batch.issues.append(
           .init(
@@ -51,8 +79,6 @@ func readLog(data: Data, context: ReaderContext) -> ReadBatch {
             message: "Collection deadline or cancellation stopped log parsing"))
         return batch
       }
-      let line = ansi.stringByReplacingMatches(
-        in: raw, range: NSRange(raw.startIndex..<raw.endIndex, in: raw), withTemplate: "")
       if line.range(
         of: "^(?:[A-Za-z][\\w-]*: )*build cancelled",
         options: [.regularExpression, .caseInsensitive]

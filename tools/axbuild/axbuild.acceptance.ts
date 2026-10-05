@@ -12,6 +12,7 @@ type NativeReport = {
     status: string;
     interruptionSignal: number | null;
   };
+  invocation?: { defaults: string[] };
   collection: { status: string; issues: unknown[] };
   counts: { failedTests: number | null };
   omissions: { diagnostics: number; details: number };
@@ -346,8 +347,13 @@ async function acceptance(manifestPath: string): Promise<void> {
         "-derivedDataPath",
         path.join(root, "faults-dd"),
         "AXBUILD_SWIFT_CONDITIONS=AXBUILD_FAULTS",
+        "-IDEBuildingContinueBuildingAfterErrors=YES",
         "build",
       ], 65);
+      assert.deepEqual(r.full.invocation?.defaults, [
+        "-resultBundlePath",
+        path.join(r.full.artifacts.run, "result.xcresult"),
+      ]);
       scoreCompilerEvidence(r.full, r.log, projectRoot, expected);
       assert.ok(
         r.compact.omissions.diagnostics > 0 || r.compact.omissions.details > 0,
@@ -423,6 +429,109 @@ async function acceptance(manifestPath: string): Promise<void> {
       ], 0);
     });
   }
+  await check("swiftpm-colored-error", () => {
+    const pkg = path.join(root, "colored-package");
+    fs.mkdirSync(path.join(pkg, "Sources", "Bad"), { recursive: true });
+    fs.writeFileSync(
+      path.join(pkg, "Package.swift"),
+      '// swift-tools-version: 6.0\nimport PackageDescription\nlet package = Package(name: "Bad", targets: [.target(name: "Bad")])\n',
+    );
+    fs.writeFileSync(
+      path.join(pkg, "Sources", "Bad", "Bad.swift"),
+      'func f() -> Int { "x" }\n',
+    );
+    const control = spawnSync("swift", [
+      "build",
+      "--package-path",
+      pkg,
+      "--scratch-path",
+      path.join(root, "colored-control-dd"),
+    ], { env, encoding: "utf8" });
+    assert.equal(control.error, undefined);
+    assert.equal(control.status, 1, control.stderr);
+    assert.ok(
+      (control.stdout + control.stderr).includes("\u001b["),
+      "Control: SwiftPM wrote no color codes, so this case cannot show they were removed",
+    );
+    const r = captured("swiftpm-colored-error", [
+      "swift",
+      "build",
+      "--package-path",
+      pkg,
+      "--scratch-path",
+      path.join(root, "colored-dd"),
+    ], 1);
+    assert.deepEqual(r.full.invocation?.defaults, []);
+    assert.ok(!r.log.includes("\u001b"), "Reported log still contains escape sequences");
+    assert.ok(
+      fs.readFileSync(path.join(r.full.artifacts.run, "build.log"), "utf8").includes("\u001b["),
+      "Exact capture lost its color codes",
+    );
+    assert.deepEqual(
+      r.full.diagnostics.flatMap((group) =>
+        group.items.filter((item) =>
+          item.kind === "compiler" && item.severity === "error"
+        ).map((item) => [
+          path.basename(group.file ?? ""),
+          item.line,
+          item.column,
+          item.message,
+        ])
+      ),
+      [[
+        "Bad.swift",
+        1,
+        19,
+        "cannot convert return expression of type 'String' to return type 'Int'",
+      ]],
+    );
+  });
+  await check("swiftpm-shares-plain-build", () => {
+    const pkg = path.join(projectRoot, "Package");
+    const compiled = (scratch: string) =>
+      new Map(
+        (fs.readdirSync(scratch, { recursive: true }) as string[])
+          .filter((name) => name.endsWith(".o") || name.endsWith(".swiftmodule"))
+          .map((name) => [name, fs.statSync(path.join(scratch, name)).mtimeMs]),
+      );
+    const recompiledAfterPlainBuild = (name: string, extra: string[]) => {
+      const scratch = path.join(root, name + "-dd");
+      const plain = spawnSync("swift", [
+        "build",
+        "--package-path",
+        pkg,
+        "--scratch-path",
+        scratch,
+      ], { env, encoding: "utf8" });
+      assert.equal(plain.error, undefined);
+      assert.equal(plain.status, 0, plain.stderr);
+      const before = compiled(scratch);
+      assert.ok(before.size > 0, "Plain build left no compiled outputs to compare");
+      captured(name, [
+        "swift",
+        "build",
+        "--package-path",
+        pkg,
+        "--scratch-path",
+        scratch,
+        ...extra,
+      ], 0);
+      return [...compiled(scratch)].filter(([file, mtime]) =>
+        before.get(file) !== mtime
+      ).map(([file]) => file);
+    };
+    assert.ok(
+      recompiledAfterPlainBuild("swiftpm-flag-recompiles", [
+        "--no-color-diagnostics",
+      ]).length > 0,
+      "Control: a changed build flag recompiled nothing, so this check cannot detect a recompile",
+    );
+    assert.deepEqual(
+      recompiledAfterPlainBuild("swiftpm-shares-plain-build", []),
+      [],
+      "axbuild recompiled a package a plain swift build had just built",
+    );
+  });
   for (const framework of ["xcode", "swiftpm"]) {
     await check(`${framework}-large-test-evidence`, () => {
       const args = framework === "xcode"

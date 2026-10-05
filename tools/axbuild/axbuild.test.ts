@@ -142,10 +142,7 @@ describe("axbuild process integration", () => {
       assert.equal(r.exit, 65);
       assert.ok(r.bytes.length <= 8000);
       const actual = JSON.parse(fs.readFileSync(record, "utf8"));
-      assert.deepEqual(actual.args, [
-        ...args.slice(1),
-        "--no-color-diagnostics",
-      ]);
+      assert.deepEqual(actual.args, args.slice(1));
       assert.equal(actual.cwd, fs.realpathSync(root));
       assert.equal(actual.value, "kept");
       const full = saved(r.report);
@@ -165,6 +162,78 @@ describe("axbuild process integration", () => {
       assert.ok(
         r.report.collection.issues.some((i: any) => i.kind === "parse-failed"),
       );
+    }));
+  it("reports a copy without terminal control sequences and keeps the exact capture", () =>
+    temporary((root, env) => {
+      const r = run(["swift", "build"], root, { ...env, FIXTURE_MODE: "color" });
+      assert.equal(r.exit, 65);
+      const folder = r.report.artifacts.run;
+      assert.equal(r.report.artifacts.log, "build.clean.log");
+      assert.deepEqual(
+        fs.readFileSync(path.join(folder, "build.log")),
+        Buffer.concat([
+          Buffer.from(
+            "\u001b[2K\r[1/2] Calc\nA.swift:3:7: \u001b[1;31merror: \u001b[1;39mfixture error\u001b[0m\nraw stderr ",
+          ),
+          Buffer.from([255, 10]),
+        ]),
+      );
+      assert.deepEqual(
+        fs.readFileSync(path.join(folder, "build.clean.log")),
+        Buffer.concat([
+          Buffer.from("\r[1/2] Calc\nA.swift:3:7: error: fixture error\nraw stderr "),
+          Buffer.from([255, 10]),
+        ]),
+      );
+      assert.equal(
+        fs.statSync(path.join(folder, "build.clean.log")).mode & 0o777,
+        0o600,
+      );
+      assert.deepEqual(
+        fs.readdirSync(folder).filter((name) => name.endsWith(".tmp")),
+        [],
+      );
+      assert.deepEqual(
+        saved(r.report).diagnostics.flatMap((group: any) =>
+          group.items.map((item: any) => item.message)
+        ),
+        ["fixture error"],
+      );
+    }));
+  it("quotes the clean copy in the failure excerpt without stripping it twice", () =>
+    temporary((root, env) => {
+      const r = run(["swift", "build"], root, {
+        ...env,
+        FIXTURE_MODE: "color-tail",
+      });
+      assert.equal(r.exit, 65);
+      const clean = fs.readFileSync(
+        path.join(r.report.artifacts.run, "build.clean.log"),
+        "utf8",
+      );
+      assert.equal(clean, "plain failure \u001b[A\n");
+      assert.equal(saved(r.report).logExcerpt.text, clean);
+    }));
+  it("keeps reporting the exact capture when the clean copy cannot be written", () =>
+    temporary((root, env) => {
+      const r = run(["swift", "test"], root, {
+        ...env,
+        FIXTURE_MODE: "clean-blocked",
+      });
+      assert.equal(r.exit, 65);
+      const folder = r.report.artifacts.run;
+      assert.equal(r.report.artifacts.log, "build.log");
+      const full = saved(r.report);
+      assert.ok(
+        full.collection.issues.some((i: any) =>
+          i.kind === "write-failed" && i.operation === "publish clean log"
+        ),
+      );
+      assert.deepEqual(
+        fs.readdirSync(folder).filter((name) => name.endsWith(".tmp")),
+        [],
+      );
+      assert.equal(full.logExcerpt.text, "plain failure red\n");
     }));
   it("passes native help through unchanged", () =>
     temporary((root, env) => {
@@ -206,7 +275,6 @@ describe("axbuild process integration", () => {
       assert.deepEqual(full.invocation.defaults, [
         "-resultBundlePath",
         full.artifacts.resultBundle,
-        "-IDEBuildingContinueBuildingAfterErrors=YES",
       ]);
       const explicit = path.join(root, "caller.xcresult");
       const args = [
@@ -214,7 +282,7 @@ describe("axbuild process integration", () => {
         "build",
         "-resultBundlePath",
         explicit,
-        "-IDEBuildingContinueBuildingAfterErrors=NO",
+        "-IDEBuildingContinueBuildingAfterErrors=YES",
       ];
       const second = saved(run(args, root, env).report);
       assert.deepEqual(second.invocation.executedArgs, args.slice(1));
@@ -398,44 +466,35 @@ describe("axbuild evidence and teardown regressions", () => {
     }));
   it("retains selectors without replaying a mutating cache switch during probes", () =>
     temporary((root, env) => {
-      const record = path.join(root, "xcrun-record");
-      const r = run(
-        [
-          "xcrun",
-          "--sdk",
-          "fixture-sdk",
-          "--toolchain",
-          "fixture-toolchain",
-          "--kill-cache",
-          "swift",
-          "build",
-        ],
-        root,
-        { ...env, FIXTURE_XCRUN_RECORD: record },
-      );
-      assert.equal(r.exit, 65);
-      const calls = fs.readFileSync(record, "utf8").trim().split("\n").map(
-        (line) => JSON.parse(line),
-      );
-      assert.deepEqual(calls[0], [
-        "--sdk",
-        "fixture-sdk",
-        "--toolchain",
-        "fixture-toolchain",
-        "swift",
-        "build",
-        "--help-hidden",
+      const selectors = ["--sdk", "fixture-sdk", "--toolchain", "fixture-toolchain"];
+      const calls = (action: string) => {
+        const record = path.join(root, `xcrun-${action}`);
+        const r = run(
+          ["xcrun", ...selectors, "--kill-cache", "swift", action],
+          root,
+          { ...env, FIXTURE_XCRUN_RECORD: record },
+        );
+        assert.equal(r.exit, 65);
+        return fs.readFileSync(record, "utf8").trim().split("\n").map(
+          (line) => JSON.parse(line),
+        );
+      };
+      assert.deepEqual(calls("build"), [
+        [...selectors, "--kill-cache", "swift", "build"],
       ]);
-      assert.deepEqual(calls[1], [
-        "--sdk",
-        "fixture-sdk",
-        "--toolchain",
-        "fixture-toolchain",
+      const test = calls("test");
+      assert.deepEqual(test.slice(0, 2), [
+        [...selectors, "swift", "test", "--help-hidden"],
+        [...selectors, "swift", "--version"],
+      ]);
+      assert.deepEqual(test[2].slice(0, 7), [
+        ...selectors,
         "--kill-cache",
         "swift",
-        "build",
-        "--no-color-diagnostics",
+        "test",
       ]);
+      assert.ok(!test[2].includes("--no-color-diagnostics"));
+      assert.equal(test.length, 3);
     }));
   it("retains supported event semantics and reports malformed streams", () =>
     temporary((root, env) => {

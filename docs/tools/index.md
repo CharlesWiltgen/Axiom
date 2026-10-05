@@ -28,7 +28,7 @@ pgrep -lx xcodebuild; echo "pgrep exit=$?"
 
 By default axbuild prints compact JSON of at most 8,000 bytes; `--format json` indents it. Check `command` (did the build or test succeed?) and `collection` (did axbuild gather every detail?) separately, because a successful build can still have incomplete collection. `omissions` lists what the summary left out. The complete report is `artifacts.report` inside the `artifacts.run` directory, whose path axbuild prints when it starts. Commands that only print information, such as `xcodebuild -list` or `swift --version`, pass through unchanged.
 
-The saved compiler log is the main source of errors; test results and Swift Testing events add to it. Keep the result bundle for attachments, coverage and deeper inspection. If axbuild can't tell exactly how many tests failed, the count is `null`, meaning unknown, not zero. Read an existing saved log or report before rebuilding.
+The saved compiler log is the main source of errors; test results and Swift Testing events add to it. If the command printed terminal color codes, as SwiftPM does even into a file, `artifacts.log` in the report names a copy without them; the exact output stays beside it as `build.log`. Keep the result bundle for attachments, coverage and deeper inspection. If axbuild can't tell exactly how many tests failed, the count is `null`, meaning unknown, not zero. Read an existing saved log or report before rebuilding.
 
 ### Availability
 

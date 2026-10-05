@@ -1,6 +1,6 @@
 # axbuild
 
-Capture `xcodebuild`, `swift build`, or `swift test` and return diagnostics as valid JSON within 8,000 UTF-8 bytes, including the final newline. The full report and original output remain in a unique temporary run directory. A startup JSON record on stderr gives its path before the command starts.
+Capture `xcodebuild`, `swift build`, or `swift test` and return diagnostics as valid JSON within 8,000 UTF-8 bytes, including the final newline. The full report and original output (`build.log`) remain in a unique temporary run directory; a startup JSON record on stderr gives its path before the command starts. When the output contains `ESC [` terminal sequences, such as SwiftPM's color codes, axbuild writes a copy without them (`build.clean.log`) after the command exits and names it in `artifacts.log`.
 
 ```sh
 make test
@@ -24,7 +24,7 @@ The raw log is the primary compiler source. Xcode test results and validated Swi
 
 Missing optional stream support produces a collection issue and retains log diagnostics. Version 0 and 6.3.0 event schemas have decoders; automatic event flags require an exact validated toolchain mapping. Xcode 27.2 beta build 27B5028f / Swift 6.4 build 6.4.0.34.1 is currently validated. Xcode 26 remains an untested compatibility gap.
 
-Capability probes have five-second limits, result readers 30 seconds, and post-command collection a shared 60 seconds. Teardown allows five seconds before KILL and one further second to reap owned children. These limits apply to collection; build/test duration is unrestricted.
+Capability probes have five-second limits, result readers 30 seconds, and post-command collection a shared 60 seconds; writing the clean copy precedes that limit. Teardown allows five seconds before KILL and one further second to reap owned children. These limits apply to collection; build/test duration is unrestricted.
 
 ## Distribution and building
 

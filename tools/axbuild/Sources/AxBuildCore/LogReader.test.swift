@@ -242,6 +242,45 @@ import Testing
     #expect(batch.issues.map(\.kind) == [.parseFailed])
   }
 
+  @Test(arguments: [
+    (
+      "Bad.swift:1:19: \u{1B}[1;31merror: \u{1B}[1;39mcannot convert\u{1B}[0m\n",
+      "Bad.swift:1:19: error: cannot convert\n"
+    ),
+    ("\u{1B}[2K\r[1/5] Calc\n", "\r[1/5] Calc\n"),
+    ("no color here\n", "no color here\n"),
+    ("incomplete \u{1B}[", "incomplete \u{1B}["),
+    ("\u{1B}[\u{1B}[1mbold", "\u{1B}[bold"),
+    ("\u{1B}[ 1m", "\u{1B}[ 1m"),
+    ("\u{1B}[1@x\u{1B}[1~y", "xy"),
+    ("\u{1B}[1\u{7F}", "\u{1B}[1\u{7F}"),
+    ("lone \u{1B} escape", "lone \u{1B} escape"),
+  ]) func removingControlSequencesDropsOnlyCSISequences(example: (String, String)) {
+    #expect(removingControlSequences(Data(example.0.utf8)) == Data(example.1.utf8))
+  }
+
+  @Test func removingControlSequencesKeepsInvalidBytes() {
+    #expect(
+      removingControlSequences(Data([0x1B, 0x5B, 0x31, 0x6D, 0xFF, 0x0A])) == Data([0xFF, 0x0A]))
+  }
+
+  @Test func removingControlSequencesMatchesTheRegularExpression() throws {
+    let regex = try NSRegularExpression(pattern: "\\u001B\\[[0-?]*[ -/]*[@-~]")
+    let alphabet = ["\u{1B}", "[", "0", "?", " ", "/", "@", "~", "\u{7F}", "m", "\n"]
+    var inputs = [""]
+    var layer = [""]
+    for _ in 1...5 {
+      layer = layer.flatMap { prefix in alphabet.map { prefix + $0 } }
+      inputs += layer
+    }
+    let mismatches = inputs.filter { input in
+      let expected = regex.stringByReplacingMatches(
+        in: input, range: NSRange(input.startIndex..<input.endIndex, in: input), withTemplate: "")
+      return removingControlSequences(Data(input.utf8)) != Data(expected.utf8)
+    }
+    #expect(mismatches == [])
+  }
+
   @Test func preservesVirtualLocationsAndCanonicalizesThroughResolver() {
     let context = ReaderContext(
       cwd: "/project", effectiveCwd: "/project", source: .log,
