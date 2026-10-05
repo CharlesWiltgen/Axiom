@@ -86,16 +86,16 @@ It adds:
 
 ## Command-Line Helpers
 
-Optional command-line helpers include axbuild (build/test diagnostics), xcproject (project inspection), `xclog` (console capture), `xcsym` (crash symbolication), `xcui` (simulator UI/accessibility), and `xcprof` (performance traces). They are prebuilt binaries, and no install method puts them on your `PATH` automatically. Clone the repo and symlink them:
+Optional command-line helpers include `axbuild` (build/test diagnostics), `xcproject` (project inspection), `xclog` (console capture), `xcsym` (crash symbolication), `xcui` (simulator UI/accessibility), and `xcprof` (performance traces). They are prebuilt binaries, and no install method puts them on your `PATH` automatically. Clone the repo and symlink them:
 
 ```bash
 cd ~ && git clone https://github.com/CharlesWiltgen/Axiom.git
 ln -sf ~/Axiom/.claude-plugin/plugins/axiom/bin/* /usr/local/bin/
 ```
 
-Pi discovers axbuild only when an executable is on PATH; the extension does not bundle it. Probe its resolved path with `--help` before use, inspect collection issues and omissions, and read the saved report before rebuilding. See [Tools](/tools/) for compatibility and fallback guidance.
+Once `axbuild` is on your PATH, Axiom's Pi extension lists it at session start and Axiom runs builds and tests through it, so the full log and report are saved. Without it, the assistant saves build output to a log file instead. See [Tools](/tools/).
 
-With the binaries available, ask Pi to "capture the simulator console" or "symbolicate this crash" and the `axiom-tools` skill (plus the extension's session hook) will drive them.
+With the binaries available, ask Pi to "capture the simulator console" or "symbolicate this crash" (the `axiom-tools` skill), or "build the app and show me the first error" (the `axiom-build` skill), and the skill plus the extension's session hook will drive them.
 
 ## Usage
 

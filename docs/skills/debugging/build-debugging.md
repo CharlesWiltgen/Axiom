@@ -23,8 +23,8 @@ Use this skill when:
 
 - "I added a Swift package and now the compiler cannot find its module."
 - "Why do two targets produce the same file?"
-- "Find the actionable error in my saved build report before rebuilding."
-- "Use axbuild for the next necessary test and explain incomplete collection."
+- "My build log says '-ld_classic is no longer supported and will be ignored' — does that matter?"
+- "The build failed but the error scrolled away. Can you find it without rebuilding?"
 
 ## What This Skill Provides
 
@@ -34,11 +34,11 @@ Use this skill when:
 - Duplicate target-output investigation
 - Build configuration comparisons across environments
 - Xcode 27 linker and dependency-scanning guidance
-- Retained build evidence through axbuild, with a saved-log fallback
+- Build and test output saved through axbuild, or a plain log file where axbuild isn't available
 
 ## Build Diagnostic Capture
 
-For a necessary build or test, axbuild returns bounded JSON and retains the complete report and compiler log. Inspect native `command` status, `collection` issues and `omissions`; read saved evidence before rebuilding. Cleanup must follow a confirmed cause and appropriate authorization. See [Tools](/tools/) for installation and harness availability.
+When your assistant runs a build or test, Axiom has it use axbuild where available. axbuild returns a short summary and saves the full report and compiler log, so the assistant can find the real error without rebuilding. The [build-fixer](/agents/build-fixer) agent asks before deleting caches or stopping processes. See [Tools](/tools/) for which setups include axbuild and what happens without it.
 
 ## Documentation Scope
 

@@ -1,27 +1,32 @@
 # build-fixer
 
-Diagnoses Xcode build failures with environment checks and retained build evidence. It verifies the project, process ownership, caches and simulator state before choosing a fix.
+Diagnoses Xcode build failures by checking your environment first and reading the saved build log, so it finds the real error without guessing or rebuilding. It checks the project, running build processes, caches and simulator state before choosing a fix.
 
 ## What It Does
 
 - Discovers the actual project, scheme and destination
-- Investigates existing build activity; process age and count alone do not prove a zombie
-- Captures necessary builds with axbuild, preserving compiler logs and test artifacts
-- Separates native command failure from incomplete diagnostic collection
-- Reads omitted records from the saved report before considering another build
-- Scopes cleanup to confirmed causes and requests authorization for destructive actions
+- Checks for build processes that are already running and investigates them instead of assuming they're stuck
+- Runs necessary builds through axbuild, which saves the full compiler log and test results
+- Tells you whether the build itself failed or axbuild just couldn't collect every detail
+- Reads details left out of the summary from the saved report instead of rebuilding
+- Cleans caches or stops processes only for a confirmed cause, and asks before anything destructive
 
-Claude Code and the full Codex plugin bundle axbuild. Pi discovers an installed helper on PATH. Cursor and MCP clients retain a saved-log fallback; they do not bundle axbuild or expose an axbuild MCP tool.
+axbuild is included with the Claude Code and Codex plugins. In Pi, put it on your PATH ([Pi setup](/start/pi-install#command-line-helpers)). Cursor and MCP setups don't include it, so the agent saves build output to a log file instead.
 
-## How to Use
+## How to Use This Agent
 
-Ask your assistant:
+**Natural language (automatic triggering):**
+- "My build is failing with 'No such module'"
+- "BUILD FAILED but the error scrolled away"
+- "Tests passed yesterday but the build fails today with no code changes"
+- "Getting 'Unable to boot simulator' error"
 
-- "My build failed. Find the cause from the saved report before rebuilding."
-- "The output was truncated. Show the actionable error and its source location."
-- "Check whether the build failed or diagnostic collection was incomplete."
+**Explicit command:**
+```bash
+/axiom:fix-build
+```
 
-In Claude Code, run `/axiom:fix-build` for the autonomous agent.
+In Pi, use `/axiom-fix-build`.
 
 ## Related
 

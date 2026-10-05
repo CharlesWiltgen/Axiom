@@ -66,23 +66,24 @@ Questions you can ask Claude that will draw from this skill:
 ### The Environment-First Checklist
 
 ```bash
-# 1. Check for zombie processes (10+ or older than 30 min = problem)
-# \bxcodebuild\b is word-bounded so it skips the long-running `xcodebuildmcp` MCP server
-ps aux | grep -E '\bxcodebuild\b|Simulator|DeviceHub' | grep -v grep
+# 1. Check for running builds (exit 1 = none, 0 = listed, 2/3 = the check itself failed)
+pgrep -lx xcodebuild; echo "pgrep exit=$?"
+# Inspect a listed build before stopping anything; count and age don't prove it's stuck
+ps -ww -o pid,ppid,user,stat,lstart,etime,command -p <PID>
 
-# 2. Kill zombies if found
-# Xcode 26 ships Simulator.app; Xcode 27 replaced it with DeviceHub.app, so name both
-killall xcodebuild 2>/dev/null
-killall Simulator DeviceHub 2>/dev/null
+# 2. Stop only a confirmed abandoned build you started
+#    (never killall: it also kills other people's builds, CI jobs and archives)
+kill -TERM <PID>
 
-# 3. Clean Derived Data
-rm -rf ~/Library/Developer/Xcode/DerivedData
+# 3. Clean this project's Derived Data folder, not all of DerivedData
+#    (the build-debugging skill includes a script that finds the right folder)
 
-# 4. Reset simulators if needed
-xcrun simctl shutdown all
-xcrun simctl erase all  # Nuclear option - erases all simulator data
+# 4. Reset only the stuck simulator
+xcrun simctl shutdown <device-uuid>
+xcrun simctl erase <device-uuid>   # erases that simulator's data
 
-# 5. Clean SPM cache if module errors persist
+# 5. Clear the SwiftPM cache (shared by every project) only if package
+#    resolution still fails after resolving again
 rm -rf ~/Library/Caches/org.swift.swiftpm
 ```
 
@@ -90,11 +91,11 @@ rm -rf ~/Library/Caches/org.swift.swiftpm
 
 | Symptom | Fix | Time |
 |---------|-----|------|
-| Stale builds, old code runs | Delete Derived Data | 2 min |
-| "No such module" | Delete Derived Data + SPM cache | 3 min |
-| Simulator stuck | simctl shutdown + reboot | 2 min |
-| Zombie processes | killall | 1 min |
-| All of the above | Full reset + reboot | 10 min |
+| Stale builds, old code runs | Delete this project's Derived Data | 2 min |
+| "No such module" | Delete this project's Derived Data; SPM cache only if still failing | 3 min |
+| Simulator stuck | Shut down and reboot that simulator | 2 min |
+| Abandoned build process | Inspect it, then stop that one PID | 1 min |
+| All of the above | Each step above for this project and device, then reboot | 10 min |
 
 ## Documentation Scope
 

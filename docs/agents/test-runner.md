@@ -18,15 +18,16 @@ Runs selected tests with axbuild and analyzes retained logs and structured test 
 ## What It Does
 
 1. **Discover test schemes** – Finds available test targets in the project
-2. **Run tests** – Discovers the actual scheme/destination and captures xcodebuild test with axbuild
-3. **Parse results** – Combines compiler logs and structured test evidence, checking collection issues and omissions
+2. **Run tests** – Runs `xcodebuild test` through axbuild on the right simulator, keeping the full log and result bundle
+3. **Parse results** – Combines the build log with structured test results and flags anything axbuild couldn't collect or left out of the summary
 4. **Report failures** – Shows failure messages, file:line locations, and screenshots
-5. **Export evidence** – Keeps result bundles for screenshots, coverage, console logs and deeper inspection
+5. **Export attachments** – Saves failure screenshots and logs, and keeps the result bundle for coverage and deeper inspection
 
-The full report retains omitted details; a null failed-test count means uncertainty. Read saved evidence before rebuilding. If the helper is unavailable, capture the necessary native run to a unique log and inspect it after completion.
+axbuild saves the full report even when failure details don't fit in the chat, and the agent reads it before re-running anything. If the report can't tell how many tests failed, the agent says so instead of reporting zero. Where axbuild isn't available (Cursor, MCP, or Pi without it on PATH), the agent saves test output to a log file instead.
 
 ## Related
 
 - [swift-testing](/skills/testing/swift-testing) – Modern Swift Testing framework patterns
 - [ui-testing](/skills/ui-design/ui-testing) – XCUITest patterns and condition-based waiting
 - [test-debugger](/agents/test-debugger) – Closed-loop debugging that fixes failing tests
+- [Tools](/tools/) – Where axbuild is available and what its report contains
