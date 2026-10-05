@@ -79,9 +79,21 @@ if os.environ.get("FIXTURE_MODE") == "linger":
         ["/usr/bin/python3", "-c", "import time; time.sleep(300)"],
         preexec_fn=lambda: signal.signal(signal.SIGTERM, signal.SIG_IGN),
     )
+    detached = None
+    if os.environ.get("FIXTURE_DETACH"):
+        detached = subprocess.Popen(
+            ["/usr/bin/python3", "-c", "import time; time.sleep(300)"], start_new_session=True
+        )
     os.write(1, b"A.swift:3:7: error: fixture error\n")
     with open(os.environ["FIXTURE_READY"] + ".tmp", "w") as f:
-        json.dump({"pid": os.getpid(), "grandchild": child.pid}, f)
+        json.dump(
+            {
+                "pid": os.getpid(),
+                "grandchild": child.pid,
+                "detached": detached.pid if detached else None,
+            },
+            f,
+        )
     os.replace(os.environ["FIXTURE_READY"] + ".tmp", os.environ["FIXTURE_READY"])
     sys.exit(65)
 if os.environ.get("FIXTURE_MODE") == "hang":
@@ -93,6 +105,17 @@ if os.environ.get("FIXTURE_MODE") == "hang":
             else None
         ),
     )
+    detached = None
+    if os.environ.get("FIXTURE_DETACH"):
+        detached = subprocess.Popen(
+            ["/usr/bin/python3", "-c", "import time; time.sleep(300)"],
+            start_new_session=True,
+            preexec_fn=(
+                (lambda: signal.signal(signal.SIGTERM, signal.SIG_IGN))
+                if os.environ.get("FIXTURE_DETACH_IGNORE_TERM")
+                else None
+            ),
+        )
     if os.environ.get("FIXTURE_IGNORE_TERM"):
         signal.signal(signal.SIGTERM, signal.SIG_IGN)
     if os.environ.get("FIXTURE_SIGNAL_EXIT"):
@@ -103,7 +126,14 @@ if os.environ.get("FIXTURE_MODE") == "hang":
         b"A.swift:3:7: error: emitted before interruption\npartial output before interruption\n",
     )
     with open(os.environ["FIXTURE_READY"] + ".tmp", "w") as f:
-        json.dump({"pid": os.getpid(), "grandchild": child.pid}, f)
+        json.dump(
+            {
+                "pid": os.getpid(),
+                "grandchild": child.pid,
+                "detached": detached.pid if detached else None,
+            },
+            f,
+        )
     os.replace(os.environ["FIXTURE_READY"] + ".tmp", os.environ["FIXTURE_READY"])
     while True:
         time.sleep(0.1)

@@ -136,6 +136,114 @@ private func spawnOwned(
   return pid
 }
 
+struct ProcessRecord: Equatable, Sendable {
+  var ppid: pid_t
+  var pgid: pid_t
+  var start: UInt64?
+  var zombie = false
+  var traced = false
+}
+
+struct DetachedPass: Equatable, Sendable {
+  var tracked: [pid_t: UInt64]
+  var targets: [pid_t]
+  var held: [pid_t]
+  var unreadable: Bool
+}
+
+/// One cleanup pass over the owned child's lineage. Debugged processes and processes whose identity
+/// cannot be verified (another user's) are held back and reported, never signaled.
+func detachedPass(
+  root: pid_t, table: [pid_t: ProcessRecord]?, tracked: [pid_t: UInt64], previous: [pid_t],
+  excludedGroups: Set<pid_t>, selfPID: pid_t
+) -> DetachedPass {
+  guard let table else {
+    return .init(tracked: tracked, targets: previous, held: [], unreadable: true)
+  }
+  let current = lineage(root: root, table: table, known: tracked)
+  let held = current.keys.filter { pid in
+    guard pid != root, pid != selfPID, let record = table[pid], !record.zombie,
+      !excludedGroups.contains(record.pgid)
+    else { return false }
+    return record.start == nil || (record.traced && record.start == current[pid])
+      || current[pid] == .max
+  }.sorted()
+  return .init(
+    tracked: current,
+    targets: detachedTargets(
+      tracked: current, table: table, excludedGroups: excludedGroups, selfPID: selfPID
+    ).filter { $0 != root }, held: held, unreadable: false)
+}
+
+/// Descendants of `root` across process groups. A child links to a tracked parent only while that
+/// parent still has its recorded start time and the child started after it, so a reused PID never
+/// adopts another process's children.
+func lineage(root: pid_t, table: [pid_t: ProcessRecord], known: [pid_t: UInt64]) -> [pid_t: UInt64]
+{
+  var tracked = known
+  if tracked[root] == nil, let record = table[root] { tracked[root] = record.start }
+  var changed = true
+  while changed {
+    changed = false
+    for (pid, record) in table where tracked[pid] == nil {
+      guard let parentStart = tracked[record.ppid], table[record.ppid]?.start == parentStart
+      else { continue }
+      if let start = record.start {
+        guard start >= parentStart else { continue }
+        // A debugger becomes its target's parent, so a debugged process's children may not be ours.
+        tracked[pid] = table[record.ppid]?.traced == true ? .max : start
+      } else {
+        tracked[pid] = .max
+      }
+      changed = true
+    }
+  }
+  return tracked
+}
+
+func detachedTargets(
+  tracked: [pid_t: UInt64], table: [pid_t: ProcessRecord], excludedGroups: Set<pid_t>,
+  selfPID: pid_t
+) -> [pid_t] {
+  tracked.compactMap { pid, start in
+    guard pid > 1, pid != selfPID, let record = table[pid], record.start == start, !record.zombie,
+      !record.traced, !excludedGroups.contains(record.pgid)
+    else { return nil }
+    return pid
+  }.sorted()
+}
+
+private func processTable() -> [pid_t: ProcessRecord]? {
+  let estimate = proc_listallpids(nil, 0)
+  guard estimate > 0 else { return nil }
+  var pids = [pid_t](repeating: 0, count: Int(estimate) + 256)
+  let count = pids.withUnsafeMutableBytes { proc_listallpids($0.baseAddress, Int32($0.count)) }
+  guard count > 0, Int(count) < pids.count else { return nil }
+  var table: [pid_t: ProcessRecord] = [:]
+  for pid in pids.prefix(Int(count)) where pid > 0 {
+    var info = proc_bsdinfo()
+    let size = MemoryLayout<proc_bsdinfo>.size
+    if proc_pidinfo(pid, PROC_PIDTBSDINFO, 0, &info, Int32(size)) == Int32(size) {
+      table[pid] = .init(
+        ppid: pid_t(info.pbi_ppid), pgid: pid_t(info.pbi_pgid),
+        start: info.pbi_start_tvsec * 1_000_000 + info.pbi_start_tvusec,
+        zombie: info.pbi_status == UInt32(SZOMB),
+        traced: info.pbi_flags & UInt32(PROC_FLAG_TRACED) != 0)
+      continue
+    }
+    // Another user's process: parentage is readable, its start time is not.
+    var short = proc_bsdshortinfo()
+    let shortSize = MemoryLayout<proc_bsdshortinfo>.size
+    guard proc_pidinfo(pid, PROC_PIDT_SHORTBSDINFO, 0, &short, Int32(shortSize)) == Int32(shortSize)
+    else { continue }
+    table[pid] = .init(
+      ppid: pid_t(short.pbsi_ppid), pgid: pid_t(short.pbsi_pgid), start: nil,
+      zombie: short.pbsi_status == UInt32(SZOMB),
+      traced: short.pbsi_flags & UInt32(PROC_FLAG_TRACED) != 0)
+  }
+  return table
+}
+
 private func groupMembers(_ pid: pid_t) -> [pid_t]? {
   var capacity = 64
   while capacity <= 65536 {
@@ -188,6 +296,25 @@ private func ownedProcess(
   var cleanupStart: Double?
   var killed = false
   var forwarded: Int32 = 0
+  var tracked: [pid_t: UInt64]?
+  var detachedSignals: [pid_t: Int32] = [:]
+  var detached: [pid_t] = []
+  var held: [pid_t] = []
+  var tableUnreadable = false
+  let excludedGroups: Set<pid_t> = groupOwned ? [pid] : []
+  func trackDescendants() {
+    guard tracked == nil else { return }
+    guard let table = processTable() else {
+      tracked = [:]
+      outcome.issues.append(
+        .init(
+          kind: .cleanupIncomplete, operation: "find detached descendants",
+          message: "Process enumeration failed; detached descendants of \(pid) cannot be verified",
+          path: executable))
+      return
+    }
+    tracked = lineage(root: pid, table: table, known: [:])
+  }
   while true {
     let received = interruption.signal
     let wasRunning = !completed
@@ -214,7 +341,8 @@ private func ownedProcess(
       forwarded = received
       outcome.interruptionSignal = Int(received)
       outcome.interruptedRunning = wasRunning || outcome.signal == Int(received)
-      cleanupStart = now()
+      cleanupStart = cleanupStart ?? now()
+      trackDescendants()
       if groupOwned { _ = kill(-pid, received) } else if !completed { _ = kill(pid, received) }
     }
     if let deadline, now() >= deadline, cleanupStart == nil {
@@ -223,11 +351,28 @@ private func ownedProcess(
           kind: .timedOut, operation: operation, message: "Monotonic subprocess deadline reached",
           path: executable))
       cleanupStart = now()
+      trackDescendants()
       if groupOwned { _ = kill(-pid, SIGTERM) } else if !completed { _ = kill(pid, SIGTERM) }
     }
     let survivors: [pid_t]?
     if groupOwned { survivors = groupMembers(pid)?.filter { $0 != pid } } else { survivors = [] }
-    if completed && survivors?.isEmpty == true { break }
+    if let known = tracked, !known.isEmpty {
+      let pass = detachedPass(
+        root: pid, table: processTable(), tracked: known, previous: detached,
+        excludedGroups: excludedGroups, selfPID: getpid())
+      tracked = pass.tracked
+      detached = pass.targets
+      tableUnreadable = pass.unreadable
+      if !pass.unreadable {
+        held = pass.held
+        let signal = killed ? SIGKILL : (forwarded != 0 ? forwarded : SIGTERM)
+        for target in detached where detachedSignals[target] != signal {
+          _ = kill(target, signal)
+          detachedSignals[target] = signal
+        }
+      }
+    }
+    if completed && survivors?.isEmpty == true && detached.isEmpty && !tableUnreadable { break }
     if completed && cleanupStart == nil {
       cleanupStart = now()
       if groupOwned { _ = kill(-pid, SIGTERM) }
@@ -238,15 +383,42 @@ private func ownedProcess(
         if groupOwned { _ = kill(-pid, SIGKILL) } else if !completed { _ = kill(pid, SIGKILL) }
       }
       if now() >= limits.cleanupDeadline(start: cleanupStart) {
-        outcome.issues.append(
-          .init(
-            kind: .cleanupIncomplete, operation: operation,
-            message: "Owned child/group \(pid) did not finish within the shared cleanup allowance",
-            path: executable))
+        if !(completed && survivors?.isEmpty == true) {
+          outcome.issues.append(
+            .init(
+              kind: .cleanupIncomplete, operation: operation,
+              message:
+                "Owned child/group \(pid) did not finish within the shared cleanup allowance",
+              path: executable))
+        }
+        if tableUnreadable {
+          outcome.issues.append(
+            .init(
+              kind: .cleanupIncomplete, operation: "find detached descendants",
+              message:
+                "Process enumeration failed during cleanup; detached descendants of \(pid) cannot be verified",
+              path: executable))
+        }
+        if !detached.isEmpty, !tableUnreadable {
+          outcome.issues.append(
+            .init(
+              kind: .cleanupIncomplete, operation: "stop detached descendants",
+              message:
+                "Detached descendants of \(pid) survived the cleanup allowance: \(detached.map(String.init).joined(separator: " "))",
+              path: executable))
+        }
         break
       }
     }
     usleep(20_000)
+  }
+  if !held.isEmpty {
+    outcome.issues.append(
+      .init(
+        kind: .cleanupIncomplete, operation: "stop detached descendants",
+        message:
+          "Detached descendants of \(pid) were not stopped because they could not be verified (another user's or unreadable) or are being debugged: \(held.map(String.init).joined(separator: " "))",
+        path: executable))
   }
   var status: Int32 = 0
   let reaped = waitpid(pid, &status, WNOHANG)
@@ -572,14 +744,6 @@ func execute(
       reader = resolvedExecutable("xcrun", cwd: invocation.cwd.path, environment: environment)
       readerArgs = ["xcresulttool"]
     }
-  }
-  if invocation.kind == .xcodebuild, run.command.status == .interrupted {
-    run.issues.append(
-      .init(
-        kind: .cleanupIncomplete, operation: "verify detached Xcode jobs",
-        message:
-          "Xcode may launch jobs outside the wrapper's owned process group; detached-job ownership and cleanup cannot be verified safely"
-      ))
   }
   run.execution = .init(
     invocation: invocation, environment: environment, interruption: interruption,

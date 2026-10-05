@@ -90,11 +90,13 @@ function alive(pid: number) {
 function reap(ready: string) {
   if (!fs.existsSync(ready)) return;
   const owned = JSON.parse(fs.readFileSync(ready, "utf8"));
-  try {
-    process.kill(-owned.pid, "SIGKILL");
-  } catch (error) {
-    const code = (error as NodeJS.ErrnoException).code;
-    if (code !== "ESRCH" && code !== "EPERM") throw error;
+  for (const group of [owned.pid, owned.detached].filter(Boolean)) {
+    try {
+      process.kill(-group, "SIGKILL");
+    } catch (error) {
+      const code = (error as NodeJS.ErrnoException).code;
+      if (code !== "ESRCH" && code !== "EPERM") throw error;
+    }
   }
 }
 
@@ -729,11 +731,6 @@ it("reports interruption when the signal and the child's death coincide", async 
       const output = await finish;
       const report = JSON.parse(output.stdout);
       assert.equal(report.command.status, "interrupted");
-      assert.ok(
-        report.collection.issues.some((issue: { operation: string }) =>
-          issue.operation === "verify detached Xcode jobs"
-        ),
-      );
     } finally {
       if (child.exitCode === null) child.kill("SIGKILL");
       reap(ready);
@@ -778,6 +775,24 @@ it("does not report zero failed tests for a crashed test run with unrecognized a
     assert.equal(r.report.counts.failedTests, null);
   }));
 
+it("leaves detached processes alone when the build completes normally", async () =>
+  temporary(async (root, env) => {
+    const ready = path.join(root, "normal-detach-ready.json");
+    try {
+      const r = run(["xcodebuild", "build"], root, {
+        ...env,
+        FIXTURE_MODE: "linger",
+        FIXTURE_READY: ready,
+        FIXTURE_DETACH: "1",
+      });
+      assert.equal(r.exit, 65);
+      const owned = JSON.parse(fs.readFileSync(ready, "utf8"));
+      assert.equal(alive(owned.detached), true);
+    } finally {
+      reap(ready);
+    }
+  }));
+
 it("keeps the finished native status when interrupted during group cleanup", async () =>
   temporary(async (root, env) => {
     const ready = path.join(root, "linger-ready.json");
@@ -797,8 +812,8 @@ it("keeps the finished native status when interrupted during group cleanup", asy
       assert.equal(report.command.exitCode, 65);
       assert.equal(report.command.interruptionSignal, 2);
       assert.ok(
-        !report.collection.issues.some((issue: { operation: string }) =>
-          issue.operation === "verify detached Xcode jobs"
+        !report.collection.issues.some((issue: { kind: string }) =>
+          issue.kind === "cleanup-incomplete"
         ),
       );
     } finally {
@@ -807,32 +822,50 @@ it("keeps the finished native status when interrupted during group cleanup", asy
     }
   }));
 
-it("reports unverifiable detached Xcode jobs after cleaning the owned native group", async () =>
-  temporary(async (root, env) => {
-    const ready = path.join(root, "xcode-ready.json");
-    const child = spawn(binary, ["xcodebuild", "build"], {
-      cwd: root,
-      env: { ...env, FIXTURE_MODE: "hang", FIXTURE_READY: ready },
-    });
-    const finish = completed(child);
-    try {
-      await readiness(ready, child);
-      child.kill("SIGTERM");
-      const output = await finish;
-      assert.equal(output.exit, 143);
-      const report = JSON.parse(output.stdout);
-      assert.equal(report.command.status, "interrupted");
-      assert.equal(report.collection.status, "partial");
-      assert.ok(
-        report.collection.issues.some((
-          issue: { kind: string; operation: string },
-        ) =>
-          issue.kind === "cleanup-incomplete" &&
-          issue.operation === "verify detached Xcode jobs"
-        ),
-      );
-    } finally {
-      if (child.exitCode === null) child.kill("SIGTERM");
-      reap(ready);
-    }
-  }));
+for (const ignoreTerm of [false, true]) {
+  it(`stops detached descendants of an interrupted build (ignores TERM: ${ignoreTerm})`, async () =>
+    temporary(async (root, env) => {
+      const sentinel = spawn("/usr/bin/python3", ["-c", "import time; time.sleep(60)"], {
+        detached: true,
+      });
+      const ready = path.join(root, "detach-ready.json");
+      const child = spawn(binary, ["xcodebuild", "build"], {
+        cwd: root,
+        env: {
+          ...env,
+          FIXTURE_MODE: "hang",
+          FIXTURE_READY: ready,
+          FIXTURE_DETACH: "1",
+          ...(ignoreTerm ? { FIXTURE_DETACH_IGNORE_TERM: "1" } : {}),
+        },
+      });
+      const finish = completed(child);
+      try {
+        await readiness(ready, child);
+        const owned = JSON.parse(fs.readFileSync(ready, "utf8"));
+        assert.ok(alive(owned.detached));
+        const lateSentinel = spawn("/usr/bin/python3", ["-c", "import time; time.sleep(60)"], {
+          detached: true,
+        });
+        child.kill("SIGTERM");
+        const output = await finish;
+        assert.equal(output.exit, 143);
+        const report = JSON.parse(output.stdout);
+        assert.equal(report.command.status, "interrupted");
+        assert.equal(alive(owned.detached), false);
+        assert.equal(alive(sentinel.pid!), true);
+        assert.equal(alive(lateSentinel.pid!), true);
+        lateSentinel.kill("SIGKILL");
+        assert.ok(
+          !report.collection.issues.some((issue: { kind: string }) =>
+            issue.kind === "cleanup-incomplete"
+          ),
+          JSON.stringify(report.collection.issues),
+        );
+      } finally {
+        if (child.exitCode === null) child.kill("SIGKILL");
+        sentinel.kill("SIGKILL");
+        reap(ready);
+      }
+    }));
+}

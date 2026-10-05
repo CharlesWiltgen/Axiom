@@ -12,7 +12,7 @@ axbuild swift test --package-path ./Package
 axbuild --format json -- swift build
 ```
 
-Investigate existing builds before launching another. The wrapper owns its child process group and never terminates another build. Builds can execute scripts, plugins, macros, and tests; the executable allowlist is an interface constraint.
+Investigate existing builds before launching another. The wrapper never terminates another build: it signals only its child's process group and processes descended from that child. A long-lived server the build itself started (for example a compiler-cache daemon) counts as a descendant while it remains in the build's process tree, so such a server is stopped on interruption even if another build has attached to it. Builds can execute scripts, plugins, macros, and tests; the executable allowlist is an interface constraint.
 
 ## Reports and exits
 
@@ -38,4 +38,4 @@ Progress output can appear inside a diagnostic header in the captured log. A com
 
 Failure-recovery hints remain silent in Claude/Codex/Cursor because a trustworthy native completed-failure envelope has not been verified. Pure matcher tests do not establish native adapter coverage.
 
-On the tested Xcode 27.2 beta, cancellation can leave build scripts in detached process groups. axbuild tears down its safely owned group and reports `cleanup-incomplete` for unverifiable detached jobs. Verify and stop only independently identified task-owned jobs; the wrapper does not claim to clean every Xcode descendant.
+Xcode runs build scripts in process groups of their own (on Xcode 27.2 beta, under SWBBuildService), so a group signal alone leaves them running after an interruption. When interrupted or timed out, axbuild reads the process table before signaling, records its child's descendants by parent process ID and start time, adds their children on each cleanup pass, sends the same signal and then KILL after the grace period, and waits for them to exit. Outside the child's own process group it signals descendants individually, and never signals PID 1, itself, a process whose start time changed, a process being debugged or that process's children, or a process it cannot verify (such as another user's); those are reported instead. For detached descendants, `cleanup-incomplete` means one survived the cleanup allowance, could not be verified, or the process table could not be read. Processes that had already left the child's process tree before the interruption was observed (a daemon that double-forked, a launchd-started tool, or descendants of a child that exited at the same instant) are neither stopped nor reported.

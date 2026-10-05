@@ -7,9 +7,9 @@
     "tools/axbuild/Sources/AxBuildCore/Invocation.swift": "a158d5dd6e8d27e077458df161591ba2293b0bf2864eb4b6cde329916ef72ba7",
     "tools/axbuild/Sources/AxBuildCore/LogReader.swift": "7965dc109c6e9b6caf70aba1fd0a7f53ff9371878c75a6e0c01044a590338e88",
     "tools/axbuild/Sources/AxBuildCore/Report.swift": "76a1f9c8a275428ce285e75702700c89b9cae4eb26f94a18bc177445886b9d60",
-    "tools/axbuild/Sources/AxBuildCore/Runner.swift": "bdc65e34af137209029cb05a6b70da8285c1a44130111a22a6fdc1d7cf770cf7",
+    "tools/axbuild/Sources/AxBuildCore/Runner.swift": "01392970b4fa5fdd52864070e596a884132e9c21c170859ffbe9d787164c8ce0",
     "tools/axbuild/Sources/AxBuildCore/TestReaders.swift": "11b8889a4ead7d0f6422971c8d94edce72cb8734572f95717475a0b0e9161d79",
     "tools/axbuild/Sources/axbuild/main.swift": "921ed4e6198d785a98ad353ef0c23fd03dc1e9462c62d67388c3610bf6e63af3"
   },
-  "binary": "6ea5359ba01e8ed6008698a72fea4d3879711caa74dc655034815d1759939d64"
+  "binary": "467aff0d886728132345e6dee67195c4f950b420f2ddfc9b1d3aff4cab8fcc20"
 }

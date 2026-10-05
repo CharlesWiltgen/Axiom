@@ -315,7 +315,7 @@ async function acceptance(manifestPath: string): Promise<void> {
           detachedJobs,
           gaps: [
             "Xcode 26 is unavailable",
-            "Xcode can detach script process groups; wrapper cleans only safely owned groups and reports unverifiable detached jobs",
+            "Detached descendants are found by parentage captured at interruption; jobs Xcode starts outside that lineage are not stopped",
             "Agent adoption is measured only with direct-file guidance in Claude Code safe mode and Codex; plugin auto-discovery, Pi and Cursor remain unmeasured (Axiom-9ur1.10)",
           ],
         },
@@ -613,11 +613,11 @@ async function acceptance(manifestPath: string): Promise<void> {
         const report: NativeReport = JSON.parse(stdout);
         assert.equal(report.command.status, "interrupted");
         assert.ok(
-          report.collection.issues.some((issue) =>
+          !report.collection.issues.some((issue) =>
             typeof issue === "object" && issue !== null && "kind" in issue &&
-            issue.kind === "cleanup-incomplete" && "operation" in issue &&
-            issue.operation === "verify detached Xcode jobs"
+            issue.kind === "cleanup-incomplete"
           ),
+          JSON.stringify(report.collection.issues),
         );
         for (const pid of children) {
           const remaining = spawnSync("pgrep", ["-g", pid], {
@@ -641,6 +641,11 @@ async function acceptance(manifestPath: string): Promise<void> {
         assert.ok(
           !fixtureJobAlive(),
           "Confirmed fixture detached job did not stop after harness cleanup",
+        );
+        assert.equal(
+          observedSurvivor,
+          false,
+          "axbuild left the detached Xcode build script running",
         );
         fs.writeFileSync(path.join(root, signal + ".stdout"), stdout);
         fs.writeFileSync(path.join(root, signal + ".stderr"), stderr);
