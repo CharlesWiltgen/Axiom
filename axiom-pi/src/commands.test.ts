@@ -19,6 +19,15 @@ describe("AXIOM_COMMANDS", () => {
   });
 });
 
+describe("axiom-fix-build prompt", () => {
+  const fixBuild = AXIOM_COMMANDS.find((c) => c.name === "axiom-fix-build")!;
+
+  it("asks before anything destructive instead of applying fixes outright", () => {
+    expect(fixBuild.prompt("")).toContain("asking before anything destructive");
+    expect(fixBuild.prompt("")).not.toContain("apply the fix");
+  });
+});
+
 describe("axiom-audit prompt", () => {
   const audit = AXIOM_COMMANDS.find((c) => c.name === "axiom-audit")!;
 

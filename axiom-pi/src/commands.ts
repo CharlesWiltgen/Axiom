@@ -36,7 +36,8 @@ export const AXIOM_COMMANDS: readonly AxiomCommand[] = [
       "My Xcode build is failing. Use the axiom-build skill to diagnose it " +
       "environment-first — check running xcodebuild processes " +
       "(`pgrep -lx xcodebuild`; investigate before stopping any), Derived Data, the SPM cache, and simulator " +
-      "state before touching code — then apply the fix and verify it builds.",
+      "state before touching code — then fix the confirmed cause, asking before anything " +
+      "destructive, and verify it builds.",
   },
   {
     name: "axiom-audit",

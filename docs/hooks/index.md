@@ -6,7 +6,7 @@ Axiom ships **event-driven hooks** — small scripts that fire automatically at 
 
 Unlike skills (which Claude reads when relevant) and commands (which you invoke explicitly), hooks run on their own in response to events:
 
-- **Session start** – inject iOS/Xcode version ground-truth and check the environment
+- **Session start** – inject iOS/Xcode version ground-truth and report available helpers
 - **Your prompt** – route the request to the right Axiom skill
 - **After a command** – suggest a skill based on error output
 - **After a file edit** – flag risky Swift patterns
@@ -22,7 +22,7 @@ The same intent runs on each harness, but the surface differs — Codex has no `
 | Hook (event) | Claude Code | Codex | Pi |
 |---|:---:|:---:|:---:|
 | Skill routing (per prompt) | ✓ | ✓ | session-context instead |
-| Session ground-truth + environment | ✓ | ✓ | ✓ |
+| Session ground-truth + helpers | ✓ | ✓ | ✓ |
 | Subagent skill injection | ✓ | ✓ | — |
 | Bash error → skill hint | ✓ | ✓ | ✓ |
 | Crash-file → `xcsym` routing | ✓ | — (no `Read` tool) | ✓ |
@@ -48,11 +48,11 @@ Hook injects: "Axiom: this matches axiom-swiftui. Invoke it before responding."
 
 On Pi there is no per-prompt hook; Axiom instead injects a compact skill menu into the session context at start.
 
-### Session ground-truth + environment
+### Session ground-truth + helpers
 
 **Event** – session start (all harnesses)
 
-Injects the current iOS/Xcode version ground-truth (so the model never insists a newer OS "doesn't exist") and surfaces environment issues — zombie `xcodebuild` processes, oversized Derived Data, whether Xcode and the `xclog`/`xcsym` tools are available.
+Injects the current iOS/Xcode version ground-truth (so the model never insists a newer OS "doesn't exist") and reports which of Axiom's bundled helpers, such as `xclog`, `xcsym` and `xcui`, are available.
 
 ### Subagent skill injection
 

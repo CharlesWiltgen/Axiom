@@ -9,7 +9,7 @@ Diagnoses Xcode build failures by checking your environment first and reading th
 - Runs necessary builds through axbuild, which saves the full compiler log and test results
 - Tells you whether the build itself failed or axbuild just couldn't collect every detail
 - Reads details left out of the summary from the saved report instead of rebuilding
-- Cleans caches or stops processes only for a confirmed cause, and asks before anything destructive
+- Cleans caches or stops processes only for a confirmed cause, and stops for your approval before anything destructive
 
 axbuild is included with the Claude Code and Codex plugins. In Pi, put it on your PATH ([Pi setup](/start/pi-install#command-line-helpers)). Cursor and MCP setups don't include it, so the agent saves build output to a log file instead.
 

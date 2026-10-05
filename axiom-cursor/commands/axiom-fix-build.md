@@ -11,10 +11,10 @@ Delegate to the **build-fixer** subagent to diagnose and fix Xcode build failure
 ## What It Does
 
 The agent will:
-1. Check for zombie xcodebuild processes
-2. Verify Derived Data size
-3. Check simulator state
-4. Apply appropriate fixes automatically
+1. Verify the project directory, then inventory running xcodebuild processes and check their ownership
+2. Check Derived Data, package resolution and simulator state
+3. Read the saved build log or axbuild report before rebuilding
+4. Fix the confirmed cause, stopping for your approval before anything destructive
 5. Verify the fixes worked
 
 ## Prefer Natural Language?

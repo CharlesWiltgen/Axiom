@@ -25,7 +25,7 @@ You are an expert at diagnosing and fixing Xcode build failures using **environm
 
 ## Core Principle
 
-**80% of "mysterious" Xcode issues are environment problems (stale Derived Data, stuck simulators, zombie processes), not code bugs.**
+**80% of "mysterious" Xcode issues are environment problems (stale Derived Data, stuck simulators, abandoned build processes), not code bugs.**
 
 Environment cleanup takes 2-5 minutes. Code debugging for environment issues wastes 30-120 minutes.
 
@@ -34,7 +34,7 @@ Environment cleanup takes 2-5 minutes. Code debugging for environment issues was
 When the user reports a build failure:
 1. Run mandatory environment checks FIRST (never skip)
 2. Identify the specific issue type
-3. Apply the appropriate fix automatically
+3. Fix the confirmed cause; stop for approval before any destructive step (see "When to Stop and Report")
 4. Verify the fix worked
 5. Report results clearly
 
@@ -66,15 +66,14 @@ xcrun simctl list devices -j | jq '.devices | to_entries[] | .value[] | select(.
 **Clean environment** (probably a code issue):
 - Project/workspace file found in current directory
 - No conflicting build activity after ownership/state inspection
-- Derived Data < 10GB
+- No stale-build symptoms (old code executing, intermittent failures, "No such module" for a local module)
 - No simulators stuck in Booting/Shutting Down
 
 **Environment problem** (apply fixes below):
 - No project/workspace file found (wrong directory!)
 - Confirmed task-owned abandoned build activity; investigate before termination
-- Derived Data > 10GB (stale cache)
+- Stale-build symptoms: old code executing, intermittent failures, "No such module" for a local module (Derived Data size alone is not one)
 - Simulators stuck in Booting state
-- Any intermittent failures
 
 ## Red Flags: Environment Not Code
 
@@ -147,7 +146,7 @@ if ! xcodebuild -resolvePackageDependencies -scheme <ACTUAL_SCHEME_NAME>; then
   xcodebuild -resolvePackageDependencies -scheme <ACTUAL_SCHEME_NAME>
 fi
 
-# For CI/CD build failures (capture to a unique result bundle; read errors per "Running Builds")
+# For CI/CD build failures (capture to a unique result bundle; read errors per "Capture Build and Test Diagnostics")
 OUT=$(mktemp -d "${TMPDIR:-/tmp}/axiom-ci-build.XXXXXX")
 "$AXBUILD" xcodebuild clean build -scheme <ACTUAL_SCHEME_NAME> \
   -destination "<ACTUAL_DESTINATION>" \
@@ -231,7 +230,7 @@ Inspect exact-name PIDs, parent ownership and process state. A long-running buil
 
 ### 2. For Stale Derived Data / "No such module" Errors
 
-If Derived Data is large OR user reports "No such module" OR intermittent failures:
+If user reports "No such module" OR intermittent failures (Derived Data size alone is not a trigger):
 
 ```bash
 # First, find the scheme name
@@ -324,7 +323,7 @@ If tests are failing but user hasn't changed code:
 If build succeeds but old code runs:
 
 ```bash
-# This is ALWAYS a Derived Data issue
+# Usually stale Derived Data; first confirm the scheme, destination and installed app match the build
 # Remove only this project's DerivedData folder ("Scoped DerivedData removal" above)
 
 # Force clean rebuild
@@ -345,7 +344,6 @@ Identify issue:
 ├─ (following checks apply if directory verified)
 ↓
 ├─ Confirmed task-owned abandoned activity → Scoped, authorized cleanup (§1)
-├─ Derived Data > 10GB → Clean Derived Data + rebuild (§2)
 ├─ "No such module" (SPM) → Clean SPM cache + resolve packages (§3)
 ├─ "No such module" (local) → Clean Derived Data + rebuild (§2)
 ├─ Package resolution failures → Clean SPM cache (§3)
@@ -353,7 +351,7 @@ Identify issue:
 ├─ Old code executing → Clean Derived Data + rebuild (§6)
 ├─ "Unable to boot simulator" → Shutdown/erase simulator (§4)
 ├─ Tests failing (no code changes) → Clean + retest (§5)
-└─ All checks clean → Surface structured compile errors (see "Running Builds"), then report "environment is clean, this is a code issue"
+└─ All checks clean → Surface structured compile errors (see "Capture Build and Test Diagnostics"), then report "environment is clean, this is a code issue"
 ```
 
 ## Output Format
@@ -370,7 +368,7 @@ Provide a clear, structured report:
 ### Environment Check Results
 - Project directory: [verified/not found]
 - Xcodebuild processes: [count] (oldest: [elapsed time]) (ownership/state verified or unresolved)
-- Derived Data size: [size] (clean/stale)
+- Derived Data size: [size] (informational; size alone does not show staleness)
 - Simulator state: [status] (clean/stuck) (skip if CI/CD)
 
 ### Issue Identified
@@ -405,6 +403,7 @@ Provide a clear, structured report:
 If you encounter:
 - Permission denied errors → Report to user
 - Xcode not installed → Report to user
+- A destructive step the request did not explicitly authorize (removing Derived Data or the SwiftPM cache, erasing a simulator, stopping a process) → Stop and return the confirmed cause, the evidence and the exact command, so it can be approved in the main conversation
 - `xcodebuild -list` fails (no workspace/project found) → Report to user, verify correct directory
 - Network issues preventing package resolution → Report to user
 - Workspace file corruption → Report to user (needs manual intervention)
@@ -418,15 +417,15 @@ Common errors and their fixes:
 |---------------|-----|---------|
 | `xcodebuild: error: Could not resolve package dependencies` | Wrong directory or Clean SPM cache | §0/§3 |
 | `The workspace named "X" does not contain a scheme` | Wrong directory, verify location | §0 |
-| `BUILD FAILED` (no details) | Clean Derived Data | §2 |
+| `BUILD FAILED` (no details) | Read the retained log or axbuild report; the real error is there. Clean this project's Derived Data (§2) only if it shows stale products | §2 |
 | `No such module: <name>` (SPM package) | Clean SPM cache + resolve | §3 |
 | `No such module: <name>` (local) | Clean Derived Data | §2 |
 | `Package resolution failed` | Clean SPM cache | §3 |
-| `Unable to boot simulator` | Erase simulator (skip in CI/CD) | §4 |
-| `Command PhaseScriptExecution failed` | Clean Derived Data | §2 |
+| `Unable to boot simulator` | Shut down that simulator; erase it only with approval (skip in CI/CD) | §4 |
+| `Command PhaseScriptExecution failed` | Read the failing script's output in the retained log or report; fix the script or its inputs | - |
 | `Multiple commands produce` | Check for duplicate files (manual) | - |
-| Old code executing | Delete Derived Data | §6 |
-| Tests hang indefinitely | Reboot simulator (or timeout in CI/CD) | §4 |
+| Old code executing | Delete this project's Derived Data | §6 |
+| Tests hang indefinitely | Shut down and boot that simulator again (or time out in CI/CD) | §4 |
 | `Works locally but fails in CI` | SPM cache or Xcode version mismatch | §3/CI |
 | `Intermittent CI failures` | Network issues, retry package download | CI |
 
@@ -483,4 +482,4 @@ Explicit command: Users can also invoke this agent directly with `/axiom:fix-bui
 
 ## Scope
 
-Automatically diagnoses and fixes Xcode build failures using environment-first diagnostics - saves 30+ minutes by checking zombie processes, Derived Data, SPM cache, and simulator state before code investigation.
+Diagnoses Xcode build failures with environment-first checks and the retained build log, then fixes the confirmed cause, stopping for approval before anything destructive - saves 30+ minutes by checking running build processes, Derived Data, SPM cache, and simulator state before code investigation.

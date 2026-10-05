@@ -76,4 +76,4 @@ The command table, session context, and guardrail logic are pure functions in
 `src/{commands,session,guardrails}.ts` with colocated tests; `src/index.ts` is
 the thin Pi wiring. Pi loads TypeScript directly — no build step.
 
-Pi discovers axbuild on PATH; it does not bundle the executable. Install the canonical plugin binary separately, check its absolute path with `--help`, and prefix the next necessary Xcode or SwiftPM build/test. Inspect native command status, collection issues, omissions and the saved full report. Use a saved native log when no helper is available. Axiom supports macOS 26 and newer.
+Pi discovers axbuild on PATH; it does not bundle the executable. Symlink the plugin's prebuilt `bin/axbuild` onto your PATH as the [Pi setup guide](https://charleswiltgen.github.io/Axiom/start/pi-install#command-line-helpers) shows, check its absolute path with `--help`, and prefix the next necessary Xcode or SwiftPM build/test. Inspect native command status, collection issues, omissions and the saved full report. Use a saved native log when no helper is available. Axiom supports macOS 26 and newer.

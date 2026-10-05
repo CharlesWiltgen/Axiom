@@ -12,7 +12,7 @@ Project health dashboard that shows environment status and potential issues at a
 
 ### Environment Health
 
-- **Xcodebuild processes**: Detects zombie processes that slow down builds
+- **Xcodebuild processes**: Lists running builds so you can check for abandoned ones (a listed build may still be in use)
 - **Derived Data**: Checks directory size (warns if > 10GB)
 - **Simulators**: Lists booted simulators that consume system resources
 
@@ -52,10 +52,10 @@ Xcode settings queries can resolve packages or write build-system state, so they
 ## When to Use
 
 - Before starting a debugging session
-- When your machine feels slow (check for zombie processes/simulators)
+- When your machine feels slow (check for leftover builds and booted simulators)
 - To get a quick overview of a new codebase
 
 ## Related
 
-- [/axiom:fix-build](../build/fix-build.md) – Fix environment issues automatically
+- [/axiom:fix-build](../build/fix-build.md) – Diagnose environment issues and fix the confirmed cause
 - [/axiom:audit](../utility/audit.md) – Run deep scans based on status findings

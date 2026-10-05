@@ -63,7 +63,7 @@ Axiom Project Status
 =====================
 
 Environment
-   Xcodebuild processes: [count] [warning if > 3]
+   Xcodebuild processes: [count] [list PIDs; flag one only after checking its owner and state]
    Derived Data: [size] [warning if > 10GB]
    Simulators running: [count]
    jq: [installed/NOT INSTALLED]
