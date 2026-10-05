@@ -7,9 +7,24 @@ xcsym symbolicates `.ips` (v1/v2), MetricKit (`MXCrashDiagnostic`), Apple's lega
 
 ## Invocation
 
-On **Claude Code**, `xcsym` is on PATH as a bare command (Claude Code 2.1.91+ resolves plugin `bin/` entries automatically). Just run `xcsym <subcommand>` — no prefix, no path lookup.
+xcsym has two front-ends over the same engine — the CLI and MCP tools; use whichever your harness provides:
 
-On **Codex plugin installs**, use `<plugin-root>/bin/xcsym`, where `<plugin-root>` is the directory containing `.codex-plugin/plugin.json` (also supplied in Axiom's startup context). The examples below use the bare command name; substitute this absolute path unless `command -v xcsym` confirms PATH availability. Check the file is executable and run `--help` before using it; report missing files, permission errors, or unsupported architecture as unavailable capabilities.
+- **Claude Code** — `xcsym` is on PATH as a bare command (Claude Code 2.1.91+ resolves plugin `bin/` automatically). Run `xcsym <subcommand>`; the examples below use this syntax.
+- **Codex** — run `<plugin-root>/bin/xcsym`, where `<plugin-root>` is the directory containing `.codex-plugin/plugin.json` (also in Axiom's startup context), unless `command -v xcsym` confirms PATH availability; substitute that path in the examples. Check it is executable and run `--help` first. Codex also loads the MCP tools: prefer the binary, use them only if that check fails, and report the capability unavailable if neither works.
+- **Pi** — the binaries ship in the Axiom clone but are not on PATH unless the user linked them; Axiom's Pi session context lists any that are. If `command -v xcsym` finds nothing, tell the user and point to the one-time setup at charleswiltgen.github.io/Axiom/start/pi-install#command-line-helpers rather than changing their PATH yourself.
+- **MCP clients** — the seven `axiom_xcsym_*` tools below; your client may list them with a server prefix, such as `mcp__axiom__axiom_xcsym_crash`. Map each example's subcommand and flags to the tool's inputs instead of running a bare `xcsym`.
+
+| CLI subcommand | MCP tool | Required input | Flags → params |
+|---|---|---|---|
+| `xcsym crash <file>` | `axiom_xcsym_crash` | `file` | `--format`→`format`, `--dsym`→`dsym`, `--dsym-paths`→`dsymPaths`, `--filter`→`filter`, `--no-symbolicate`→`noSymbolicate`, `--prefer-locally-symbolicated`→`preferLocallySymbolicated`, `--from-metrickit`→`fromMetrickit`, `--no-cache`→`noCache`, `--no-spotlight`→`noSpotlight`, `--no-defaults`→`noDefaults` |
+| `xcsym verify <file>` | `axiom_xcsym_verify` | `file` | `--dsym`→`dsym`, `--dsym-paths`→`dsymPaths`, `--no-cache`→`noCache`, `--no-spotlight`→`noSpotlight`, `--no-defaults`→`noDefaults` |
+| `xcsym find-dsym <uuid>` | `axiom_xcsym_find_dsym` | `uuid` | `--arch`→`arch`, `--dsym-paths`→`dsymPaths`, `--no-cache`→`noCache`, `--no-spotlight`→`noSpotlight`, `--no-defaults`→`noDefaults` |
+| `xcsym list-dsyms` | `axiom_xcsym_list_dsyms` | — | `--source`→`source`, `--dsym-paths`→`dsymPaths` |
+| `xcsym resolve --dsym <path> --load-addr <hex> <addr>...` | `axiom_xcsym_resolve` | `dsym`, `loadAddr`, `addresses` (array) | `--arch`→`arch` |
+| `xcsym triage <corpus.jsonl>` | `axiom_xcsym_triage` | `file` | `--latest-version`→`latestVersion`, `--os-floor`→`osFloor`, `--min-users`→`minUsers` |
+| `xcsym anonymize <file>` | `axiom_xcsym_anonymize` | `file` | `--output`→`output` |
+
+Over MCP, crash and corpus inputs are file paths: there is no stdin (`-`), so save pasted crash text to a file first (or ask the user to). Pass absolute paths: relative ones resolve against the MCP server's working directory, which is also the only place the Frameworks dSYM scan looks, so pass the folders that hold the project's dSYMs (such as `Carthage/Build`; a repo root is walked in full, without that scan's 500ms limit) as `dsymPaths` to `crash`, `verify`, `find-dsym` or `list-dsyms`, never through the `XCSYM_DSYM_PATHS` environment variable. The server stops any call at 120s; if `crash`, `verify` or `find-dsym` time out, retry with `noDefaults` plus `dsymPaths`; `crash` and `verify` also take `dsym`. `crash` has no `output`; its report comes back in the response. Reports are always JSON (no `--human`). When the CLI exits non-zero after writing a report, the response is the report followed by a `(xcsym exit N: …)` line; route on N as the exit-code tables below describe; with no report, the response is `xcsym failed (exit N): …` text.
 
 ## When to Use
 
@@ -301,7 +316,7 @@ Source: `tools/xcsym/dsym.go`. Sources are tried first-hit-wins in this exact or
 4. **Spotlight** — `mdfind kMDItemContentType == com.apple.xcode.dsym` (skip with `--no-spotlight`)
 5. **Archives** — `~/Library/Developer/Xcode/Archives/**` (most recent first)
 6. **DerivedData** — `~/Library/Developer/Xcode/DerivedData/**/Build/Products/**`
-7. **Frameworks (cwd scan)** — walks the current working directory plus caller-supplied roots for `*.xcframework`, `Carthage/Build`, and Pods layouts. Bounded by `XCSYM_FRAMEWORK_SCAN_TIMEOUT` (Go duration or integer seconds; default `500ms`) so an unrelated monorepo checkout can't stall discovery. An exhausted budget is swallowed as "no match" and the chain continues.
+7. **Frameworks (cwd scan)** — walks the current working directory (no flag adds roots to this scan) for `*.xcframework`, `Carthage/Build`, and Pods layouts. Bounded by `XCSYM_FRAMEWORK_SCAN_TIMEOUT` (Go duration or integer seconds; default `500ms`) so an unrelated monorepo checkout can't stall discovery. An exhausted budget is swallowed as "no match" and the chain continues.
 8. **Downloads** — `~/Downloads/**` (for drag-and-dropped `App.dSYM.zip` files)
 9. **Toolchain** — current Xcode toolchain (system Swift dylibs bundled with Xcode.app)
 10. **Env paths** — `XCSYM_DSYM_PATHS` (colon-separated, processed as a last-resort supplement to `--dsym-paths`)

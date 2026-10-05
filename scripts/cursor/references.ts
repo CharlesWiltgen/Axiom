@@ -96,9 +96,11 @@ interface HostClaimRewrite {
  */
 const HOST_CLAIM_REWRITES: ReadonlyArray<HostClaimRewrite> = [
   { id: "codex-bundled-helpers", pattern: /On \*\*Codex plugin installs\*\*[^\n]*\n\n/g, replacement: "" },
-  { id: "xclog-on-path", pattern: /(?:On \*\*Claude Code\*\*, )?`xclog` is on PATH as a bare command \(Claude Code[^\n]*\)\. Just run `xclog <subcommand>` — no prefix, no path lookup\./g, replacement: "In Cursor, the bare `xclog` binary is unavailable; map the reference examples below to the corresponding `axiom_xclog_*` MCP tools." },
-  { id: "xcsym-on-path", pattern: /(?:On \*\*Claude Code\*\*, )?`xcsym` is on PATH as a bare command \(Claude Code[^\n]*\)\. Just run `xcsym <subcommand>` — no prefix, no path lookup\./g, replacement: "In Cursor, the bare `xcsym` binary is unavailable; map the reference examples below to the corresponding `axiom_xcsym_*` MCP tools." },
-  { id: "xcprof-front-ends", pattern: /xcprof has two front-ends over the same engine — use whichever your harness provides:\n\n- \*\*Claude Code\*\*[^\n]*\n- \*\*MCP clients[^\n]*/g, replacement: "In Cursor, use the `axiom_xcprof_*` MCP tools. The plugin does not provide a bare `xcprof` executable on `PATH`." },
+  ...(["xclog", "xcsym", "xcprof"] as const).map((tool) => ({
+    id: `${tool}-front-ends`,
+    pattern: new RegExp(`${tool} has two front-ends over the same engine — the CLI and MCP tools; use whichever your harness provides:\\n\\n(?:- \\*\\*(?:Claude Code|Codex|Pi)\\*\\*[^\\n]*\\n)*- \\*\\*MCP clients\\*\\*[^\\n]*`, "g"),
+    replacement: `In Cursor, use the \`axiom_${tool}_*\` MCP tools. The plugin does not provide a bare \`${tool}\` executable on \`PATH\`.`,
+  })),
   { id: "xcui-on-path", pattern: /On \*\*Claude Code\*\*, `xcui` is already on PATH[^\n]*\n\nOn \*\*Pi and MCP-only installs there is no bundled binary\*\*:[^\n]*/g, replacement: "In Cursor, `xcui` is external and is not placed on `PATH` by the plugin. Check `command -v xcui` before following an `xcui` workflow." },
   { id: "xcui-check-first", pattern: /\*\*Check first: `command -v xcui`\.\*\* It is on PATH automatically only on Claude Code\.[^\n]*/g, replacement: "**Check first: `command -v xcui`.** In Cursor it is external. If absent, use AXe only for compatible input verbs; do not substitute AXe for xcui-only test-harness workflows." },
   { id: "xcui-bundled-semantics", pattern: /`xcui` \(bundled\) adds the test-harness semantics AXe lacks\./g, replacement: "When installed externally, `xcui` adds the test-harness semantics AXe lacks." },

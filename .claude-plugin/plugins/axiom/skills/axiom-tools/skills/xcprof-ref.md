@@ -4,23 +4,23 @@ xcprof turns an Instruments `.trace` into a structured, token-lean report for LL
 
 ## Invocation
 
-xcprof has two front-ends over the same engine — use whichever your harness provides:
+xcprof has two front-ends over the same engine — the CLI and MCP tools; use whichever your harness provides:
 
-- **Claude Code** — `xcprof` is on PATH as a bare command (plugin `bin/` is auto-resolved). Run `xcprof <subcommand>`. The examples below use this CLI syntax.
-- **MCP clients** — four profiling wrapper tools.
+- **Claude Code** — `xcprof` is on PATH as a bare command (Claude Code 2.1.91+ resolves plugin `bin/` automatically). Run `xcprof <subcommand>`; the examples below use this syntax.
+- **Codex** — run `<plugin-root>/bin/xcprof`, where `<plugin-root>` is the directory containing `.codex-plugin/plugin.json` (also in Axiom's startup context), unless `command -v xcprof` confirms PATH availability; substitute that path in the examples. Check it is executable and run `--help` first. Codex also loads the MCP tools: prefer the binary, use them only if that check fails, and report the capability unavailable if neither works.
+- **Pi** — the binaries ship in the Axiom clone but are not on PATH unless the user linked them; Axiom's Pi session context lists any that are. If `command -v xcprof` finds nothing, tell the user and point to the one-time setup at charleswiltgen.github.io/Axiom/start/pi-install#command-line-helpers rather than changing their PATH yourself.
+- **MCP clients** — the four `axiom_xcprof_*` tools below; your client may list them with a server prefix, such as `mcp__axiom__axiom_xcprof_record`. Map each example's subcommand and flags to the tool's inputs instead of running a bare `xcprof`.
 
-On **Codex plugin installs**, use `<plugin-root>/bin/xcprof`, where `<plugin-root>` is the directory containing `.codex-plugin/plugin.json` (also supplied in Axiom's startup context). The examples below use the bare command name; substitute this absolute path unless `command -v xcprof` confirms PATH availability. Check the file is executable and run `--help` before using it; report missing files, permission errors, or unsupported architecture as unavailable capabilities.
+| CLI subcommand | MCP tool | Required input | Flags → params |
+|---|---|---|---|
+| `xcprof doctor` | `axiom_xcprof_doctor` | — | — |
+| `xcprof analyze <trace>` | `axiom_xcprof_analyze` | `trace` | `--start-ms`→`startMs`, `--end-ms`→`endMs`, `--hang-threshold-ms`→`hangThresholdMs`, `--user-binary`→`userBinary`, `--dsym`→`dsym` |
+| `xcprof compare <baseline> <current>` | `axiom_xcprof_compare` | `baseline`, `current` | `--fail-on-regression`→`failOnRegression`, `--threshold-pct`→`thresholdPct`, `--dsym`→`dsym` |
+| `xcprof record` | `axiom_xcprof_record` | one target — `attach`, `launch`, or `allProcesses` | `--attach`→`attach`, `--all-processes`→`allProcesses`, `--allow-launch`→`allowLaunch`, `--allow-all-processes`→`allowAllProcesses`, `--preset`→`preset`, `--template`→`template`, `--instrument`→`instruments` (repeat the flag; pass one array), `--time-limit`→`timeLimit`, `--max-duration`→`maxDuration`, `--output`→`output`, `--device`→`device`, `--run-name`→`runName`, `--allow-external-output`→`allowExternalOutput`, `--dry-run`→`dryRun` |
 
-| CLI subcommand | MCP tool | Required input |
-|---|---|---|
-| `xcprof doctor` | `axiom_xcprof_doctor` | — |
-| `xcprof analyze <trace>` | `axiom_xcprof_analyze` | `trace` |
-| `xcprof compare <baseline> <current>` | `axiom_xcprof_compare` | `baseline`, `current` |
-| `xcprof record` | `axiom_xcprof_record` | one target — `attach`, `launch`, or `allProcesses` |
+The launch target `-- <cmd>` becomes a `launch: [...]` argv array, which also needs `allowLaunch: true`.
 
-CLI flags map to camelCase MCP params: `--start-ms`→`startMs`, `--end-ms`→`endMs`, `--hang-threshold-ms`→`hangThresholdMs`, `--user-binary`→`userBinary`, `--fail-on-regression`→`failOnRegression`, `--threshold-pct`→`thresholdPct`, `--allow-launch`→`allowLaunch`, `--all-processes`→`allProcesses`, `--time-limit`→`timeLimit`, `--dry-run`→`dryRun`. The launch target `-- <cmd>` becomes a `launch: [...]` argv array.
-
-The MCP surface is a deliberate subset: no output-format flags (`--json`/`--both`/`--human` — the tool returns the CLI's output as text), no `--open` (headless), no `--no-prompt` (always non-interactive). `compare`'s regression verdict is returned in the response body rather than as exit code `3`, and off-macOS the tools return a clear unavailability message instead of exit `2`.
+The MCP surface is a deliberate subset: no output-format flags (`--json`/`--both`/`--human`), because all four tools return compact JSON; no `--open` (headless); no `--no-prompt` (always non-interactive). With `compare`'s `failOnRegression`, a regression appears as a trailing `(xcprof exit 3: …)` line after the report, and off-macOS the tools return a clear unavailability message instead of exit `2`. A failure with no report comes back as `xcprof failed (exit N): …` text, and the server stops any call at 300s, so keep `record`'s `timeLimit` well under that to leave time for startup and export. Pass absolute paths: relative paths resolve against the MCP server's working directory. `record` saves into the server's trace sandbox (`XCPROF_TRACE_ROOT`, or its working directory when that is unset) and reports the saved path, so omit `output` unless the user wants the trace elsewhere; then pass an absolute `output`, and if `record` refuses it as outside the sandbox, ask the user before retrying with `allowExternalOutput: true`.
 
 ## Prerequisite: run `xcprof doctor`
 
@@ -86,7 +86,7 @@ xcprof record --preset cpu --attach MyApp --dry-run                 # preview th
 
 ### `record` honesty caveat
 
-A `--launch` recording terminated at the time limit makes `xctrace` exit non-zero (it returns the killed target's status) **while still saving a valid trace**. `record` trusts the saved bundle, not the exit code: it reports `ok: true` with a `notes` entry explaining the benign non-zero exit.
+A launched recording (`-- <cmd>`) terminated at the time limit makes `xctrace` exit non-zero (it returns the killed target's status) **while still saving a valid trace**. `record` trusts the saved bundle, not the exit code: it reports `ok: true` with a `notes` entry explaining the benign non-zero exit.
 
 ### Native launch cleanup limitation
 

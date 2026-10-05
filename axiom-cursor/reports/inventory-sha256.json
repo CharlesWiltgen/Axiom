@@ -1723,18 +1723,18 @@
     },
     {
       "path": "skills/axiom-tools/skills/xclog-ref.md",
-      "sha256": "01b8c506104d7a0c6dbc96f4003b012dd91c36d2b82a7520fb8fdfeb3ce30776",
-      "bytes": 11066
+      "sha256": "c42494f893311f9a619041d7ae37c95b62db345e112a79dc2bab28892f1d8e42",
+      "bytes": 12513
     },
     {
       "path": "skills/axiom-tools/skills/xcprof-ref.md",
-      "sha256": "e0de42c2d879a6a674778bdf466717f41c0cd9d2d919a736ff0c48cb4219db9d",
-      "bytes": 14584
+      "sha256": "5e771d486f740831fa7f99c0e85e26fef9aa5f0537f89b701185c123ef512002",
+      "bytes": 15664
     },
     {
       "path": "skills/axiom-tools/skills/xcsym-ref.md",
-      "sha256": "50fb0870b3b4958a76c74200476c78eaa20da8124b771e21492de33fb8446f3e",
-      "bytes": 24541
+      "sha256": "6a870daaf583264cc366df92eaac4f56b8c3e90ebd2b7d243c52992575041dbc",
+      "bytes": 26965
     },
     {
       "path": "skills/axiom-tools/skills/xcui-ref.md",
@@ -1884,7 +1884,7 @@
   ],
   "totals": {
     "files": 376,
-    "bytes": 7666042
+    "bytes": 7670993
   },
   "excludedMirrors": 30,
   "classes": {

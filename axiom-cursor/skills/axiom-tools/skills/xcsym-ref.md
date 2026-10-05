@@ -11,7 +11,19 @@ xcsym symbolicates `.ips` (v1/v2), MetricKit (`MXCrashDiagnostic`), Apple's lega
 
 ## Invocation
 
-In Cursor, the bare `xcsym` binary is unavailable; map the reference examples below to the corresponding `axiom_xcsym_*` MCP tools.
+In Cursor, use the `axiom_xcsym_*` MCP tools. The plugin does not provide a bare `xcsym` executable on `PATH`.
+
+| CLI subcommand | MCP tool | Required input | Flags → params |
+|---|---|---|---|
+| `xcsym crash <file>` | `axiom_xcsym_crash` | `file` | `--format`→`format`, `--dsym`→`dsym`, `--dsym-paths`→`dsymPaths`, `--filter`→`filter`, `--no-symbolicate`→`noSymbolicate`, `--prefer-locally-symbolicated`→`preferLocallySymbolicated`, `--from-metrickit`→`fromMetrickit`, `--no-cache`→`noCache`, `--no-spotlight`→`noSpotlight`, `--no-defaults`→`noDefaults` |
+| `xcsym verify <file>` | `axiom_xcsym_verify` | `file` | `--dsym`→`dsym`, `--dsym-paths`→`dsymPaths`, `--no-cache`→`noCache`, `--no-spotlight`→`noSpotlight`, `--no-defaults`→`noDefaults` |
+| `xcsym find-dsym <uuid>` | `axiom_xcsym_find_dsym` | `uuid` | `--arch`→`arch`, `--dsym-paths`→`dsymPaths`, `--no-cache`→`noCache`, `--no-spotlight`→`noSpotlight`, `--no-defaults`→`noDefaults` |
+| `xcsym list-dsyms` | `axiom_xcsym_list_dsyms` | — | `--source`→`source`, `--dsym-paths`→`dsymPaths` |
+| `xcsym resolve --dsym <path> --load-addr <hex> <addr>...` | `axiom_xcsym_resolve` | `dsym`, `loadAddr`, `addresses` (array) | `--arch`→`arch` |
+| `xcsym triage <corpus.jsonl>` | `axiom_xcsym_triage` | `file` | `--latest-version`→`latestVersion`, `--os-floor`→`osFloor`, `--min-users`→`minUsers` |
+| `xcsym anonymize <file>` | `axiom_xcsym_anonymize` | `file` | `--output`→`output` |
+
+Over MCP, crash and corpus inputs are file paths: there is no stdin (`-`), so save pasted crash text to a file first (or ask the user to). Pass absolute paths: relative ones resolve against the MCP server's working directory, which is also the only place the Frameworks dSYM scan looks, so pass the folders that hold the project's dSYMs (such as `Carthage/Build`; a repo root is walked in full, without that scan's 500ms limit) as `dsymPaths` to `crash`, `verify`, `find-dsym` or `list-dsyms`, never through the `XCSYM_DSYM_PATHS` environment variable. The server stops any call at 120s; if `crash`, `verify` or `find-dsym` time out, retry with `noDefaults` plus `dsymPaths`; `crash` and `verify` also take `dsym`. `crash` has no `output`; its report comes back in the response. Reports are always JSON (no `--human`). When the CLI exits non-zero after writing a report, the response is the report followed by a `(xcsym exit N: …)` line; route on N as the exit-code tables below describe; with no report, the response is `xcsym failed (exit N): …` text.
 
 ## When to Use
 
@@ -303,7 +315,7 @@ Source: `tools/xcsym/dsym.go`. Sources are tried first-hit-wins in this exact or
 4. **Spotlight** — `mdfind kMDItemContentType == com.apple.xcode.dsym` (skip with `--no-spotlight`)
 5. **Archives** — `~/Library/Developer/Xcode/Archives/**` (most recent first)
 6. **DerivedData** — `~/Library/Developer/Xcode/DerivedData/**/Build/Products/**`
-7. **Frameworks (cwd scan)** — walks the current working directory plus caller-supplied roots for `*.xcframework`, `Carthage/Build`, and Pods layouts. Bounded by `XCSYM_FRAMEWORK_SCAN_TIMEOUT` (Go duration or integer seconds; default `500ms`) so an unrelated monorepo checkout can't stall discovery. An exhausted budget is swallowed as "no match" and the chain continues.
+7. **Frameworks (cwd scan)** — walks the current working directory (no flag adds roots to this scan) for `*.xcframework`, `Carthage/Build`, and Pods layouts. Bounded by `XCSYM_FRAMEWORK_SCAN_TIMEOUT` (Go duration or integer seconds; default `500ms`) so an unrelated monorepo checkout can't stall discovery. An exhausted budget is swallowed as "no match" and the chain continues.
 8. **Downloads** — `~/Downloads/**` (for drag-and-dropped `App.dSYM.zip` files)
 9. **Toolchain** — current Xcode toolchain (system Swift dylibs bundled with Xcode.app)
 10. **Env paths** — `XCSYM_DSYM_PATHS` (colon-separated, processed as a last-resort supplement to `--dsym-paths`)

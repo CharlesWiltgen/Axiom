@@ -32,7 +32,7 @@ Use this reference when:
 
 ## What's Covered
 
-- **Invocation** – Claude Code resolves `xcsym` from the plugin’s `bin/` directory. Native Codex plugin installs use `<plugin-root>/bin/xcsym` unless `command -v xcsym` confirms PATH availability; `<plugin-root>` is the directory containing `.codex-plugin/plugin.json`.
+- **Invocation** – Claude Code resolves `xcsym` from the plugin’s `bin/` directory. Native Codex plugin installs use `<plugin-root>/bin/xcsym` unless `command -v xcsym` confirms PATH availability; `<plugin-root>` is the directory containing `.codex-plugin/plugin.json`. In Pi, `xcsym` isn't on your PATH until you add it ([Pi setup](/start/pi-install#command-line-helpers)). MCP clients use the seven `axiom_xcsym_*` tools (`crash`, `verify`, `find_dsym`, `list_dsyms`, `resolve`, `triage`, `anonymize`), with a table mapping each subcommand and flag to the tool's inputs.
 - **Output format** – compact JSON by default (single-line, token-lean for LLM consumers); every report subcommand (`crash`, `verify`, `resolve`, `find-dsym`, `list-dsyms`) takes `--human` for a terse prose rendering, and `… | jq .` gives indented JSON. `anonymize` is the exception — it reproduces the `.ips` wire format, not a report, so it has no `--human`
 - **`crash` subcommand** – full pipeline (parse → discover dSYMs → symbolicate → categorize → emit JSON); `--format`, `--human`, `--from-metrickit`, `--dsym`, `--dsym-paths`, `--no-symbolicate`, `--no-cache`, `--no-spotlight`, `--output`, stdin support, `.xccrashpoint` flags
 - **`verify` subcommand** – per-image UUID/arch match diagnostics, different exit-code semantics than `crash`

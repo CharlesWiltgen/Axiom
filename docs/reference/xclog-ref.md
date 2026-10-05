@@ -31,7 +31,7 @@ Use this reference when:
 
 ## What's Covered
 
-- **Invocation** – Claude Code resolves `xclog` from the plugin’s `bin/` directory. Native Codex plugin installs use `<plugin-root>/bin/xclog` unless `command -v xclog` confirms PATH availability; `<plugin-root>` is the directory containing `.codex-plugin/plugin.json`.
+- **Invocation** – Claude Code resolves `xclog` from the plugin’s `bin/` directory. Native Codex plugin installs use `<plugin-root>/bin/xclog` unless `command -v xclog` confirms PATH availability; `<plugin-root>` is the directory containing `.codex-plugin/plugin.json`. In Pi, `xclog` isn't on your PATH until you add it ([Pi setup](/start/pi-install#command-line-helpers)). MCP clients use `axiom_xclog_launch`, `axiom_xclog_attach`, `axiom_xclog_show`, and `axiom_xclog_list`, with a table mapping each subcommand and flag to the tool's inputs.
 - **`list` subcommand** – discover installed apps, JSON-lines output (`bundle_id`, `name`, `version`)
 - **`launch` subcommand** – full capture (print + debugPrint + NSLog + os_log + Logger), simulator only, terminates any running instance of the target app
 - **`attach` subcommand** – monitor an already-running process via os_log only, simulator only, preserves app state but no `print()` capture

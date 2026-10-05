@@ -3,6 +3,7 @@ import { test } from "node:test";
 import matter from "gray-matter";
 import { validateCursorReferences } from "./references.ts";
 import { transformSkill } from "./skills.ts";
+import { invocationSection } from "../../axiom-mcp/src/scripts/binary-coverage.ts";
 import { loadCursorSource } from "./source.ts";
 import type { SourceSkill } from "./types.ts";
 
@@ -164,6 +165,17 @@ test("translates every emitted skill resource away from Cursor-unavailable helpe
   assert.match(xcui, /AXe fallback is limited to compatible input verbs/);
   assert.match(xcui, /AXe cannot replace `wait`, `assert`, `a11y`, `dialog`, `voiceover`, `resize`, or `doctor`/);
   assert.doesNotMatch(xcui, /On \*\*Claude Code\*\*/);
+
+  const shape = (tool: string, content: string) => ({
+    cursorLine: invocationSection(content).includes(`In Cursor, use the \`axiom_${tool}_*\` MCP tools.`),
+    hostBullets: /^- \*\*[^*]+\*\* —/m.test(invocationSection(content)),
+    mappingTable: invocationSection(content).includes("| CLI subcommand | MCP tool | Required input |"),
+  });
+  const expected = { cursorLine: true, hostBullets: false, mappingTable: true };
+  assert.deepEqual(
+    { xclog: shape("xclog", xclog), xcsym: shape("xcsym", xcsym), xcprof: shape("xcprof", xcprof) },
+    { xclog: expected, xcsym: expected, xcprof: expected },
+  );
 });
 
 test("rewrites inline slash commands without conflating ordinary Swift words", () => {

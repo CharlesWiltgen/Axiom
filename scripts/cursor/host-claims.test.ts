@@ -21,7 +21,7 @@ for (const name of ["xclog", "xcsym", "xcui", "xcprof"]) {
   test(`Cursor ${name} guidance excludes Codex package paths and Claude PATH claims`, () => {
     const source = fs.readFileSync(`.claude-plugin/plugins/axiom/skills/axiom-tools/skills/${name}-ref.md`, "utf8");
     const rewritten = rewriteCursorSkillReferences(source);
-    assert.equal(/Codex plugin installs|<plugin-root>|On \*\*Claude Code\*\*/.test(rewritten), false, `${name} retained another harness invocation`);
+    assert.equal(/Codex plugin installs|<plugin-root>|\*\*(?:Claude Code|Codex|Pi)\*\*/.test(rewritten), false, `${name} retained another harness invocation`);
     assert.match(rewritten, /In Cursor,/);
   });
 }

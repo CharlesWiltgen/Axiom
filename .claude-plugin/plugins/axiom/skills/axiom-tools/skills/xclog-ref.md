@@ -5,9 +5,21 @@ xclog captures iOS simulator console output by combining `simctl launch --consol
 
 ## Invocation
 
-On **Claude Code**, `xclog` is on PATH as a bare command (Claude Code 2.1.91+ resolves plugin `bin/` entries automatically). Just run `xclog <subcommand>` — no prefix, no path lookup.
+xclog has two front-ends over the same engine — the CLI and MCP tools; use whichever your harness provides:
 
-On **Codex plugin installs**, use `<plugin-root>/bin/xclog`, where `<plugin-root>` is the directory containing `.codex-plugin/plugin.json` (also supplied in Axiom's startup context). The examples below use the bare command name; substitute this absolute path unless `command -v xclog` confirms PATH availability. Check the file is executable and run `list --help` before using it; report missing files, permission errors, or unsupported architecture as unavailable capabilities.
+- **Claude Code** — `xclog` is on PATH as a bare command (Claude Code 2.1.91+ resolves plugin `bin/` automatically). Run `xclog <subcommand>`; the examples below use this syntax.
+- **Codex** — run `<plugin-root>/bin/xclog`, where `<plugin-root>` is the directory containing `.codex-plugin/plugin.json` (also in Axiom's startup context), unless `command -v xclog` confirms PATH availability; substitute that path in the examples. Check it is executable and run `list --help` first. Codex also loads the MCP tools: prefer the binary, use them only if that check fails, and report the capability unavailable if neither works.
+- **Pi** — the binaries ship in the Axiom clone but are not on PATH unless the user linked them; Axiom's Pi session context lists any that are. If `command -v xclog` finds nothing, tell the user and point to the one-time setup at charleswiltgen.github.io/Axiom/start/pi-install#command-line-helpers rather than changing their PATH yourself.
+- **MCP clients** — the four `axiom_xclog_*` tools below; your client may list them with a server prefix, such as `mcp__axiom__axiom_xclog_launch`. Map each example's subcommand and flags to the tool's inputs instead of running a bare `xclog`.
+
+| CLI subcommand | MCP tool | Required input | Flags → params |
+|---|---|---|---|
+| `xclog launch <bundle-id>` | `axiom_xclog_launch` | `bundleId` | `--device`→`device`, `--timeout`→`timeout`, `--max-lines`→`maxLines`, `--filter`→`filter`, `--subsystem`→`subsystem`, `--output`→`output` |
+| `xclog attach <name-or-pid>` | `axiom_xclog_attach` | `target` | `--device`→`device`, `--timeout`→`timeout`, `--max-lines`→`maxLines`, `--filter`→`filter`, `--subsystem`→`subsystem` |
+| `xclog show <name-or-pid>` | `axiom_xclog_show` | `target` | `--device`→`device`, `--device-udid`→`deviceUdid`, `--last`→`last`, `--max-lines`→`maxLines`, `--filter`→`filter`, `--subsystem`→`subsystem` |
+| `xclog list` | `axiom_xclog_list` | — | `--device`→`device` |
+
+Over MCP each call blocks until it returns, so before calling `launch` or `attach`, tell the user to reproduce the issue during the capture. `launch` and `attach` stop at `timeout` or `maxLines`; with neither, the server adds a 30s timeout, and it ends any call at 120s, so keep `timeout` below that. Pass `output` to `launch` to keep the lines on disk; `attach` has no `output`. `show` reads the `last` window and takes no `timeout`. Results are JSON (no `--human` or `--no-color`); a failure comes back as `xclog failed (exit N): …` text. Pass absolute paths: relative ones resolve against the MCP server's working directory, not the project.
 
 ## When to Use
 
@@ -271,7 +283,7 @@ xclog launch com.example.MyApp --filter "(?i)error|failed"
 4. Read `/tmp/crash.log` and filter for errors: `jq 'select(.level == "error" or .level == "fault")' /tmp/crash.log`
 5. Check the last few lines before the stream ended (crash point)
 
-If the crash is intermittent, increase bounds: `--timeout 120s --max-lines 1000` and repeat.
+If the crash is intermittent, increase bounds: `--timeout 110s --max-lines 1000` (under the MCP server's 120s cap) and repeat.
 
 ### Workflow: Investigate Silent Failure
 

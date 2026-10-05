@@ -9,7 +9,16 @@ xclog captures iOS simulator console output by combining `simctl launch --consol
 
 ## Invocation
 
-In Cursor, the bare `xclog` binary is unavailable; map the reference examples below to the corresponding `axiom_xclog_*` MCP tools.
+In Cursor, use the `axiom_xclog_*` MCP tools. The plugin does not provide a bare `xclog` executable on `PATH`.
+
+| CLI subcommand | MCP tool | Required input | Flags → params |
+|---|---|---|---|
+| `xclog launch <bundle-id>` | `axiom_xclog_launch` | `bundleId` | `--device`→`device`, `--timeout`→`timeout`, `--max-lines`→`maxLines`, `--filter`→`filter`, `--subsystem`→`subsystem`, `--output`→`output` |
+| `xclog attach <name-or-pid>` | `axiom_xclog_attach` | `target` | `--device`→`device`, `--timeout`→`timeout`, `--max-lines`→`maxLines`, `--filter`→`filter`, `--subsystem`→`subsystem` |
+| `xclog show <name-or-pid>` | `axiom_xclog_show` | `target` | `--device`→`device`, `--device-udid`→`deviceUdid`, `--last`→`last`, `--max-lines`→`maxLines`, `--filter`→`filter`, `--subsystem`→`subsystem` |
+| `xclog list` | `axiom_xclog_list` | — | `--device`→`device` |
+
+Over MCP each call blocks until it returns, so before calling `launch` or `attach`, tell the user to reproduce the issue during the capture. `launch` and `attach` stop at `timeout` or `maxLines`; with neither, the server adds a 30s timeout, and it ends any call at 120s, so keep `timeout` below that. Pass `output` to `launch` to keep the lines on disk; `attach` has no `output`. `show` reads the `last` window and takes no `timeout`. Results are JSON (no `--human` or `--no-color`); a failure comes back as `xclog failed (exit N): …` text. Pass absolute paths: relative ones resolve against the MCP server's working directory, not the project.
 
 ## When to Use
 
@@ -273,7 +282,7 @@ xclog launch com.example.MyApp --filter "(?i)error|failed"
 4. Read `/tmp/crash.log` and filter for errors: `jq 'select(.level == "error" or .level == "fault")' /tmp/crash.log`
 5. Check the last few lines before the stream ended (crash point)
 
-If the crash is intermittent, increase bounds: `--timeout 120s --max-lines 1000` and repeat.
+If the crash is intermittent, increase bounds: `--timeout 110s --max-lines 1000` (under the MCP server's 120s cap) and repeat.
 
 ### Workflow: Investigate Silent Failure
 
