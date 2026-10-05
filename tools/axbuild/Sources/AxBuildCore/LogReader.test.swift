@@ -111,6 +111,20 @@ import Testing
     #expect(!result.crashed)
   }
 
+  @Test(arguments: [
+    (
+      "Support.m:3:9: fatal error: 'Foo.h' file not found", "/project/Support.m",
+      DiagnosticKind.compiler
+    ),
+    ("clang: fatal error: no input files", nil, DiagnosticKind.tool),
+  ])
+  func retainsFatalErrors(line: String, file: String?, kind: DiagnosticKind) {
+    let result = readLog(data: Data(line.utf8), context: context)
+    #expect(result.diagnostics.map(\.file) == [file])
+    #expect(result.diagnostics.map(\.severity) == [.error])
+    #expect(result.diagnostics.map(\.kind) == [kind])
+  }
+
   @Test func retainsStandaloneNativeLinkerFailure() {
     let result = readLog(
       data: Data(

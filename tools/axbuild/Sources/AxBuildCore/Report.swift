@@ -314,9 +314,21 @@ func reconcileDiagnostics(batches: [ReadBatch], context: ReaderContext) -> Recon
     }
     var reverse: [Int: Int] = [:]
     for indices in edges { for index in indices { reverse[index, default: 0] += 1 } }
+    var pairing: [Int: Int] = [:]
+    for (offset, indices) in edges.enumerated()
+    where indices.count == 1 && reverse[indices[0]] == 1 {
+      pairing[offset] = indices[0]
+    }
+    // Repeated identical records (test iterations) form a complete block: every incoming record
+    // is compatible with every candidate and with nothing else, so pairing in order is lossless.
+    let blocks = Dictionary(grouping: edges.indices.filter { edges[$0].count > 1 }) { edges[$0] }
+    for (indices, offsets) in blocks
+    where offsets.count == indices.count && indices.allSatisfy({ reverse[$0] == offsets.count }) {
+      for (offset, index) in zip(offsets, indices) { pairing[offset] = index }
+    }
     for (offset, incoming) in incomingRecords.enumerated() {
       let indices = edges[offset]
-      if indices.count == 1, let index = indices.first, reverse[index] == 1 {
+      if let index = pairing[offset] {
         var merged = result.diagnostics[index]
         if merged.message != incoming.message {
           merged.alternateMessages =

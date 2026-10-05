@@ -20,6 +20,7 @@ import Testing
     (["swift", "test", "--help"], .informational, false),
     (["swift", "--version"], .informational, false),
     (["swift", "build", "--version"], .informational, false),
+    (["swift", "build", "--show-bin-path"], .informational, false),
     (["xcrun", "swift", "test", "--version"], .informational, false),
     (["--format", "json", "--", "swift", "test"], .test, true),
     (

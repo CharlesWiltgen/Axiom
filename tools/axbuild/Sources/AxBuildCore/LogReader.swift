@@ -29,14 +29,14 @@ func readLog(data: Data, context: ReaderContext) -> ReadBatch {
   do {
     let ansi = try NSRegularExpression(pattern: "\\u001B\\[[0-?]*[ -/]*[@-~]")
     let located = try NSRegularExpression(
-      pattern: "^(.+?):([0-9]+)(?::([0-9]+))?: (error|warning|note|remark): (.*)$")
+      pattern: "^(.+?):([0-9]+)(?::([0-9]+))?: (fatal error|error|warning|note|remark): (.*)$")
     let xctest = try NSRegularExpression(pattern: "^(-\\[.+?\\]) : (.*)$")
     let swiftTest = try NSRegularExpression(
       pattern:
         "^\\S+\\s+Test (.+?) recorded (an issue|a known issue|a warning)(?:.*?) at (.+?):([0-9]+):([0-9]+): (.*)$"
     )
     let tool = try NSRegularExpression(
-      pattern: "^(?:([^|]+?): )?(error|warning|note|remark): (.+)$")
+      pattern: "^(?:([^|]+?): )?(fatal error|error|warning|note|remark): (.+)$")
     let detail = try NSRegularExpression(pattern: "^(?:↳|􀄵)\\s+(.*)$")
     let trap = try NSRegularExpression(
       pattern: "^(.+?):([0-9]+): ((?:Fatal error|Precondition failed|Assertion failed)(?:: .*)?)$")
@@ -92,7 +92,8 @@ func readLog(data: Data, context: ReaderContext) -> ReadBatch {
             line: row, column: column,
             test: .init(id: found[0], isFailure: !known && !warning, framework: .swiftTesting)))
         testDetails = batch.diagnostics.count - 1
-      } else if let found = captures(located, in: line), let severity = Severity(rawValue: found[3])
+      } else if let found = captures(located, in: line),
+        let severity = Severity(rawValue: found[3] == "fatal error" ? "error" : found[3])
       {
         block = nil
         testDetails = nil
@@ -177,7 +178,7 @@ func readLog(data: Data, context: ReaderContext) -> ReadBatch {
             file: diagnosticPath(found[0], context: context) ?? found[0],
             line: Int(found[1]).flatMap { $0 > 0 ? $0 : nil }))
       } else if let found = captures(tool, in: line), !line.contains(" | "),
-        let severity = Severity(rawValue: found[1])
+        let severity = Severity(rawValue: found[1] == "fatal error" ? "error" : found[1])
       {
         block = nil
         testDetails = nil

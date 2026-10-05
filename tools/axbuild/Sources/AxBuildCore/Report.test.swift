@@ -211,6 +211,27 @@ import os
       ])
   }
 
+  @Test func pairsIdenticalFailuresFromRepeatedIterations() {
+    let log = readLog(
+      data: Data(
+        "T.swift:3:7: error: -[CalcTests.Case testOne] : failure A\nT.swift:3:7: error: -[CalcTests.Case testOne] : failure A\n"
+          .utf8), context: context)
+    let records = (1...2).map { iteration in
+      Diagnostic(
+        id: .init("pending"), kind: .test, severity: .error, message: "failure A",
+        sources: [.testResults], file: "/fixture/T.swift", line: 3,
+        test: .init(
+          id: "test://fixture/CalcTests/Case/testOne", isFailure: true, framework: .xctest,
+          iteration: iteration),
+        target: "CalcTests", testName: "Case/testOne()")
+    }
+    let result = reconcileDiagnostics(
+      batches: [log, .init(diagnostics: records)], context: context)
+    #expect(result.diagnostics.map(\.sources) == [[.log, .testResults], [.log, .testResults]])
+    #expect(result.failedTests == 1)
+    #expect(result.issues == [])
+  }
+
   @Test func reportsStructuredPassContradictingRetainedFailures() {
     let log = readLog(
       data: Data("T.swift:3:7: error: -[CalcTests.Case testOne] : failure A\n".utf8),

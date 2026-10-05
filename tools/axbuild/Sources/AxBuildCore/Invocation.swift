@@ -113,6 +113,7 @@ func parseInvocation(args: [String], cwd: URL) -> Result<Invocation, CollectionI
       producesBuild = !toolArgs.contains("--skip-build")
       if toolArgs.contains("--help") || toolArgs.contains("-h")
         || toolArgs.contains("--help-hidden") || toolArgs.contains("--version")
+        || toolArgs.contains("--show-bin-path")
       {
         action = .informational
         producesBuild = false
