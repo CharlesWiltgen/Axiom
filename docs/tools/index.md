@@ -38,7 +38,7 @@ axbuild has been tested with Xcode 27.2 beta (27B5028f) and Swift 6.4 (6.4.0.34.
 
 ### Known limitations
 
-- If you cancel a build, scripts Xcode started separately can keep running. axbuild stops the processes it owns and reports `cleanup-incomplete` when it can't confirm the rest. Stop leftover jobs only after confirming they belong to that build.
+- If you cancel a build or it times out, axbuild also stops the build scripts Xcode started for it, including ones in separate process groups. Jobs that had already left the build, such as background daemons, keep running. If axbuild reports `cleanup-incomplete`, something it found could not be stopped or checked; confirm it belongs to the cancelled build before stopping it yourself.
 - Progress text occasionally ends up inside an error's file name in the saved log. axbuild then can't identify the file, marks collection as partial and leaves the text as printed. Check the saved raw log.
 
 Example prompt: "Run the tests and show me where the failing assertion is and what values it compared."
