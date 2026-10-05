@@ -18,8 +18,8 @@
     },
     {
       "path": "agents/build-fixer.md",
-      "sha256": "974aceb4734eb0bb2ddfeec20201fc3e4a5f6bb860c1217c0836b822e41f3a32",
-      "bytes": 20377
+      "sha256": "72e5d6ace5ba1ce8461cec86ab4a5bd35f02c1b3decf4f9bfa0e8e248a93eeba",
+      "bytes": 21500
     },
     {
       "path": "agents/build-optimizer.md",
@@ -198,8 +198,8 @@
     },
     {
       "path": "agents/test-runner.md",
-      "sha256": "3f9024ae6daeb5d0b319c98600facee19243b721f2a3474b2d991650a191396f",
-      "bytes": 13358
+      "sha256": "1e22db36676e6c8743ff7a3001a415df459903488c3a6650a04cf456f7e513b5",
+      "bytes": 13527
     },
     {
       "path": "agents/testing-auditor.md",
@@ -253,8 +253,8 @@
     },
     {
       "path": "commands/axiom-fix-build.md",
-      "sha256": "a434287ce4a9a2b33b30e2d22d2b3a71d26b7747626fd5717fc8fdd8d6cbcae4",
-      "bytes": 673
+      "sha256": "b49055cb039a97154e6143382d8f5560b5d78ef59459b72f2ed194ebf3417167",
+      "bytes": 850
     },
     {
       "path": "commands/axiom-health-check.md",
@@ -293,8 +293,8 @@
     },
     {
       "path": "commands/axiom-status.md",
-      "sha256": "ee149fe98309df9c2fe343e7e5d6f85618988413ba83a490ac1f568e5e6bc09d",
-      "bytes": 3715
+      "sha256": "7cb1dd9e80eff99ee748433d6909d6871415b587119620c0f4f8a4f299764c44",
+      "bytes": 3760
     },
     {
       "path": "commands/axiom-test-simulator.md",
@@ -488,13 +488,13 @@
     },
     {
       "path": "skills/axiom-build/SKILL.md",
-      "sha256": "b4de3014a7766f3a424b89af5a1fa05c707ce8bac33fd175571d92626f1bc6a7",
-      "bytes": 20061
+      "sha256": "3a7ae2f0a585f500b636b9ff975c70f490c53a95297eb407d873c84e517af22e",
+      "bytes": 20230
     },
     {
       "path": "skills/axiom-build/skills/build-debugging.md",
-      "sha256": "f2a552f8fc61730752373750c2aa0f5a6fb9ea9864a945f56e9c6e33137e6fcf",
-      "bytes": 19742
+      "sha256": "afbda83dacacc476e57fb95ce4a8e61b4a42294b72e993f79a68cc83f6cc1882",
+      "bytes": 19910
     },
     {
       "path": "skills/axiom-build/skills/build-performance.md",
@@ -1358,8 +1358,8 @@
     },
     {
       "path": "skills/axiom-performance/skills/app-launch.md",
-      "sha256": "eabe6599fdd61496fcdfa134a443bf1a506cb342a14c9b69e3a8c2349d0495d3",
-      "bytes": 23929
+      "sha256": "90280e956092142518cac5f5d3fab932aeb2804553f4aca221f0ef827c955efc",
+      "bytes": 24097
     },
     {
       "path": "skills/axiom-performance/skills/energy-diag.md",
@@ -1718,8 +1718,8 @@
     },
     {
       "path": "skills/axiom-tools/skills/getting-started.md",
-      "sha256": "e77507c86798421996e2a650fc47ef6f4110893390a4b39812025680b80d810b",
-      "bytes": 14863
+      "sha256": "d9cfeb391cff2a3fcdd1044c7175c3cc9f822f47663b1ec229e4e23b2b7c7f1d",
+      "bytes": 11946
     },
     {
       "path": "skills/axiom-tools/skills/xclog-ref.md",
@@ -1884,7 +1884,7 @@
   ],
   "totals": {
     "files": 376,
-    "bytes": 7666940
+    "bytes": 7666042
   },
   "excludedMirrors": 30,
   "classes": {

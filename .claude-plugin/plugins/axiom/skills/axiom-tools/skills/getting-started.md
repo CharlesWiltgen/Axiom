@@ -2,27 +2,7 @@
 
 Welcome! This skill helps new users discover the most relevant Axiom skills for their situation.
 
-## Capture Build and Test Diagnostics
-
-Before the next necessary build or test, resolve `bin/axbuild` under the **actual loaded package** in Claude Code or Codex, or discover an executable on PATH in Pi. Check executable permission and run its absolute path with `--help`; assign that observed path to `AXBUILD`. Never infer an installation path from an example.
-
-Cursor and MCP distributions do not bundle axbuild and expose no axbuild MCP wrapper. Use the **saved-log fallback** below when a verified shell helper is unavailable.
-
-Before **every** Xcode invocation, run `pgrep -lx xcodebuild; echo "pgrep exit=$?"`: exit 1 means none are running, 0 lists them, and any other exit means the inventory failed. Investigate existing builds; process count and age do not establish zombie status. Never terminate unrelated processes. When interrupted or timed out, axbuild also stops build scripts and other processes descended from its build that Xcode moved into separate process groups, found by parentage when cleanup begins and on each cleanup pass. It reports `cleanup-incomplete` for any such descendant it could not stop or verify (another user's, unreadable, or being debugged). Jobs that had already left the build's process tree, such as daemons or launchd-started tools, are neither stopped nor reported. Inspect ownership before stopping anything it lists. Discover the actual scheme and destination before executing:
-
-```bash
-"$AXBUILD" xcodebuild -scheme "$SCHEME" -destination "$DESTINATION" build
-"$AXBUILD" swift test --package-path "$PACKAGE"
-```
-
-Preserve caller flags, working directory, environment, test selection, coverage and explicit artifact paths. The wrapper adds absent diagnostic defaults; it never cleans caches or automatically rebuilds. Do not pipe a build through another command.
-
-Inspect `command` (native outcome) and `collection` (evidence completeness) separately. Native success can accompany partial collection. The default JSON is bounded to 8,000 UTF-8 bytes; inspect `omissions` and read `artifacts.report` relative to the absolute `artifacts.run` directory for complete records and evaluated values. The startup stderr JSON identifies the run directory before completion. Use diagnostic locations and values rather than rebuilding to redisplay output.
-
-The retained log is the primary compiler source; test results and validated Swift Testing events supplement it. A null failed-test count means uncertainty, not zero. Preserve result bundles for attachment export, coverage, console logs and deeper inspection. Native informational commands pass their output through.
-
-**Saved-log fallback:** redirect the necessary native command's stdout/stderr to a unique file, let it finish, record its exit status and inspect that saved file. An xcresult build summary is not equivalent to the compiler log. Read an existing log before considering another build. Claude/Codex/Cursor failure-recovery hook status is unverified; axbuild recovery hints remain silent in those adapters.
-
+Before running a build or test, read `axiom-build` for axbuild capture and the saved-log fallback.
 
 ## How This Skill Works
 

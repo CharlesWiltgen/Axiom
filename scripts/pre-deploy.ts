@@ -26,6 +26,7 @@ import {
   FOOTPRINT_CEILINGS,
   measureFootprints,
 } from "./always-on-footprint.ts";
+import { SHARED_SECTIONS, checkSharedSections } from "./shared-sections.ts";
 import {
   NPM_PACKAGE,
   classifyReleaseSync,
@@ -1574,6 +1575,29 @@ if (!fs.existsSync(inlineAgentsDir)) {
         `harness-awareness note (reachable on non-Claude-Code harnesses)`,
     );
   }
+}
+
+// ── 12d-ter. Shared Section Parity ──
+//
+// Some guidance must appear word-for-word in several plugin files, because not
+// every harness reaches the owning file on the same path. The axbuild capture
+// section once had five hand-maintained copies, no gate, and a defect copied
+// into all of them (Axiom-9fpp). Each shared section now has one source;
+// scripts/shared-sections.ts writes the copies and this check fails on a
+// hand-edited copy, a lost or malformed section, an unregistered file carrying
+// the heading or its text, or a child-skill copy that would become the skill's
+// MCP description. Tests: scripts/shared-sections.test.ts.
+
+heading("12d-ter. Shared Section Parity");
+
+const { errors: sharedSectionErrors, warnings: sharedSectionWarnings } = checkSharedSections(pluginDir);
+for (const msg of sharedSectionErrors) error("shared-section", msg);
+for (const msg of sharedSectionWarnings) warn("shared-section", msg);
+if (sharedSectionErrors.length === 0) {
+  const copies = SHARED_SECTIONS.reduce((n, spec) => n + spec.targets.length, 0);
+  console.log(
+    `  ✓ ${SHARED_SECTIONS.length} shared section(s), ${copies} generated copies, all matching their source`,
+  );
 }
 
 // ── 12e. README Stats-Block Parity ──
