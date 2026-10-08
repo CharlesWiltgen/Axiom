@@ -17,6 +17,8 @@ import subprocess
 import tempfile
 import unittest
 
+import xcode_path
+
 HOOKS_DIR = os.path.dirname(os.path.abspath(__file__))
 HOOK = os.path.join(HOOKS_DIR, "session-start.py")
 PLUGIN_ROOT = os.path.dirname(HOOKS_DIR)  # .../plugins/axiom
@@ -32,6 +34,8 @@ def run_in(cwd: str, env_override: dict | None = None, plugin_root: str = PLUGIN
     env = os.environ.copy()
     env.pop("AXIOM_SESSION_CONTEXT", None)
     env.pop("AXIOM_HARNESS", None)
+    env.pop("AXIOM_XCODE_PATH", None)
+    env.pop("DEVELOPER_DIR", None)
     if env_override:
         env.update(env_override)
     out = subprocess.run(
@@ -66,8 +70,8 @@ def padded_dir(root: str, length: int, leaf: str) -> str:
 
 
 def fake_install(root: str, skill_text: str | None = None) -> tuple[str, str]:
-    """A worst case for the hook's output size: a long plugin root with all four
-    bundled tools, and a long Xcode path with for-LLM docs and version plists.
+    """A worst case for the hook's output size: a long plugin root with every
+    bundled tool, and a long Xcode path with for-LLM docs and version plists.
     Returns (plugin_root, xcode_path)."""
     plugin_root = padded_dir(os.path.join(root, "plugins"), PLUGIN_ROOT_LEN, "axiom")
     skill_dir = os.path.join(plugin_root, "skills", "axiom-tools")
@@ -78,7 +82,7 @@ def fake_install(root: str, skill_text: str | None = None) -> tuple[str, str]:
         with open(os.path.join(skill_dir, "SKILL.md"), "w") as f:
             f.write(skill_text)
     os.makedirs(os.path.join(plugin_root, "bin"))
-    for tool in ("xclog", "xcsym", "xcui", "xcprof"):
+    for tool in ("xclog", "xcsym", "xcui", "xcprof", "axbuild", "xcproject"):
         path = os.path.join(plugin_root, "bin", tool)
         with open(path, "wb") as f:
             f.truncate(1_100_000)  # sparse; clears the hook's 1 MB truncation floor
@@ -168,6 +172,7 @@ class TestCodexStartup(unittest.TestCase):
         self.assertIn("Below is the always-on part", context)
         self.assertIn("Skill Priority for iOS Development", context)
         self.assertIn("DEPLOYMENT TARGET", context)
+        self.assertNotIn("Below is the full content", context)
 
 
 class _InApple(unittest.TestCase):
@@ -191,7 +196,7 @@ class TestSessionStartContextSize(_InApple):
     def test_worst_case_fits_claude_code_inline_limit(self):
         c = self.ctx()
         # Every optional block is present, so this is the largest the hook emits.
-        for block in ("**Apple for-LLM Documentation**", "**xclog**", "**xcsym**", "**xcui**", "**xcprof**"):
+        for block in ("**Apple for-LLM Documentation**", "**xclog**", "**xcsym**", "**xcui**", "**xcprof**", "**Bundled tools**"):
             self.assertIn(block, c)
         self.assertLess(len(c), CLAUDE_CODE_CONTEXT_LIMIT)
 
@@ -223,6 +228,17 @@ class TestSessionStartContextSize(_InApple):
         self.assertIn("## Routing", c)
         self.assertIn("## The Rule", c)
 
+    def test_whole_skill_injected_when_markers_are_misordered(self):
+        skill = (
+            "## Routing\n\nr\n\n"
+            "<!-- AXIOM_SESSION_START_END -->\n\n"
+            "## The Rule\n\nx\n\n"
+            "<!-- AXIOM_SESSION_START_BEGIN -->\n"
+        )
+        c = self.ctx(skill_text=skill)
+        self.assertIn("## Routing", c)
+        self.assertIn("## The Rule", c)
+
 
 class TestSessionStartVersionFacts(_InApple):
     def test_reports_the_installed_xcode_and_ios_sdk(self):
@@ -237,6 +253,95 @@ class TestSessionStartVersionFacts(_InApple):
         c = self.ctx(xcode=os.path.join(self.root, "no-xcode-here"))
         self.assertNotIn("Installed on this machine", c)
         self.assertIn("VERSION GROUND TRUTH", c)
+
+    def test_developer_dir_selects_the_active_toolchain(self):
+        # Without an explicit override, DEVELOPER_DIR names the toolchain the
+        # session would actually build with — for the version line and the
+        # Apple-docs paths alike.
+        plugin_root, fake_xcode = fake_install(self.root)
+        developer_dir = os.path.join(fake_xcode, "Contents", "Developer")
+        c = context(run_in(self.project, {"DEVELOPER_DIR": developer_dir}, plugin_root))
+        self.assertIn("Xcode 99.1", c)
+        self.assertIn("iOS 99.2 SDK", c)
+        self.assertIn(fake_xcode, c)
+
+
+class TestXcodePathResolution(unittest.TestCase):
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.root = tmp.name
+
+    def make_xcode(self, name: str) -> str:
+        """An Xcode.app with an Info.plist; returns its Developer dir."""
+        contents = os.path.join(self.root, name, "Contents")
+        os.makedirs(os.path.join(contents, "Developer"))
+        open(os.path.join(contents, "Info.plist"), "w").close()
+        return os.path.join(contents, "Developer")
+
+    def test_explicit_override_wins(self):
+        active = self.make_xcode("Active.app")
+        self.assertEqual(
+            xcode_path.resolve_xcode_path(
+                {"AXIOM_XCODE_PATH": "/explicit", "DEVELOPER_DIR": active}
+            ),
+            "/explicit",
+        )
+
+    def test_developer_dir_wins_over_the_select_link(self):
+        active = self.make_xcode("Active.app")
+        selected = self.make_xcode("Selected.app")
+        link = os.path.join(self.root, "select_link")
+        os.symlink(selected, link)
+        self.assertEqual(
+            xcode_path.resolve_xcode_path({"DEVELOPER_DIR": active}, select_link=link),
+            os.path.join(self.root, "Active.app"),
+        )
+
+    def test_select_link_used_when_env_is_absent(self):
+        selected = self.make_xcode("Selected.app")
+        link = os.path.join(self.root, "select_link")
+        os.symlink(selected, link)
+        self.assertEqual(
+            xcode_path.resolve_xcode_path({}, select_link=link),
+            os.path.join(self.root, "Selected.app"),
+        )
+
+    def test_developer_dir_without_xcode_falls_through(self):
+        # A Command Line Tools style root has no Xcode.app above it.
+        tools = os.path.join(self.root, "CommandLineTools")
+        os.makedirs(tools)
+        selected = self.make_xcode("Selected.app")
+        link = os.path.join(self.root, "select_link")
+        os.symlink(selected, link)
+        self.assertEqual(
+            xcode_path.resolve_xcode_path({"DEVELOPER_DIR": tools}, select_link=link),
+            os.path.join(self.root, "Selected.app"),
+        )
+
+    def test_default_when_nothing_resolves(self):
+        self.assertEqual(
+            xcode_path.resolve_xcode_path(
+                {}, select_link=os.path.join(self.root, "missing")
+            ),
+            xcode_path.DEFAULT_XCODE_PATH,
+        )
+
+
+class TestBundledToolRoster(_InApple):
+    def test_roster_names_every_binary_in_bin(self):
+        plugin_root, fake_xcode = fake_install(self.root)
+        open(os.path.join(plugin_root, "bin", "axprobe"), "w").close()
+        c = context(run_in(self.project, {"AXIOM_XCODE_PATH": fake_xcode}, plugin_root))
+        for name in ("axbuild", "xclog", "xcsym", "xcui", "xcprof", "xcproject", "axprobe"):
+            self.assertIn(name, c)
+
+    def test_roster_omitted_when_bin_is_empty(self):
+        plugin_root, fake_xcode = fake_install(self.root)
+        for name in os.listdir(os.path.join(plugin_root, "bin")):
+            os.remove(os.path.join(plugin_root, "bin", name))
+        c = context(run_in(self.project, {"AXIOM_XCODE_PATH": fake_xcode}, plugin_root))
+        self.assertNotIn("**Bundled tools**", c)
 
 
 if __name__ == "__main__":

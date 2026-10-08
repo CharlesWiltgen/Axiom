@@ -30,6 +30,7 @@ except ImportError:  # Diagnostics are optional; a missing module must not break
 hook_diagnostics.begin("session-start")
 
 from project_detect import resolve_context_decision
+from xcode_path import resolve_xcode_path
 
 if len(sys.argv) < 2:
     print(json.dumps({"error": "Usage: session-start.py <plugin_root>"}), file=sys.stderr)
@@ -126,7 +127,9 @@ def plist_string(path: str, key: str) -> str | None:
 
 
 # The installed toolchain, read from plists (no xcodebuild subprocess at startup).
-xcode_path = os.environ.get("AXIOM_XCODE_PATH", "/Applications/Xcode.app")
+# resolve_xcode_path prefers the active toolchain: an explicit override, then
+# DEVELOPER_DIR, then the xcode-select target, then the default app path.
+xcode_path = resolve_xcode_path(os.environ)
 xcode_version = plist_string(f"{xcode_path}/Contents/Info.plist", "CFBundleShortVersionString")
 ios_sdk_version = plist_string(
     f"{xcode_path}/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk/SDKSettings.plist",
@@ -214,7 +217,7 @@ try:
 
 ---
 
-**xclog** (simulator console capture as structured JSON): Available at `{xclog_path}`. Command: `/axiom:console`. Usage: `axiom-tools` (skills/xclog-ref.md)."""
+**xclog** (simulator console capture as structured JSON): Available at `{xclog_path}`. Use `xclog list` to find bundle IDs, `xclog launch <bundle-id> --timeout 30s --max-lines 200` for bounded capture. Command: `/axiom:console`. Usage: `axiom-tools` (skills/xclog-ref.md)."""
 except OSError as error:
     hook_diagnostics.record_exception(error)
     pass
@@ -250,7 +253,7 @@ try:
 
 ---
 
-**xcsym** (crash symbolication for .ips, MetricKit, .crash and .xccrashpoint): Available at `{xcsym_path}`. Command: `/axiom:analyze-crash`. Usage: `axiom-tools` (skills/xcsym-ref.md)."""
+**xcsym** (crash symbolication for .ips, MetricKit, .crash and .xccrashpoint): Available at `{xcsym_path}`. Use `xcsym crash <file>` for full triage (point at the bundle directory or the inner .crash), `xcsym verify <file>` for dSYM diagnostics. Command: `/axiom:analyze-crash`. Usage: `axiom-tools` (skills/xcsym-ref.md)."""
 except OSError as error:
     hook_diagnostics.record_exception(error)
     pass
@@ -303,6 +306,24 @@ except OSError as error:
     hook_diagnostics.record_exception(error)
     pass
 
+# Bundled tool roster, derived from bin/ at run time so a new tool cannot be
+# left out of the session facts. Names only — the lines above carry paths and
+# usage; the roster exists so the model knows every tool that ships.
+try:
+    bundled_tools = sorted(
+        n for n in os.listdir(os.path.join(plugin_root, "bin")) if not n.startswith(".")
+    )
+except OSError:
+    bundled_tools = []
+
+tool_roster_context = ""
+if bundled_tools:
+    tool_roster_context = f"""
+
+---
+
+**Bundled tools**: {", ".join(bundled_tools)} — run any with `--help`; see `axiom-tools` for usage."""
+
 # Build the context message. The facts only this hook knows (the platform rules,
 # installed toolchain and tool paths) come first. If a future change pushes the
 # total past Claude Code's inline limit, the preview then starts with them, not
@@ -310,7 +331,7 @@ except OSError as error:
 additional_context = f"""<EXTREMELY_IMPORTANT>
 You have Axiom iOS development skills.
 
-{platform_context}{apple_docs_context}{xclog_context}{xcsym_context}{xcui_context}{xcprof_context}
+{platform_context}{apple_docs_context}{xclog_context}{xcsym_context}{xcui_context}{xcprof_context}{tool_roster_context}
 
 ---
 
