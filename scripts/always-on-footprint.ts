@@ -4,7 +4,7 @@
  *
  * Why this exists separately from scripts/skill-listing.ts: the skill listing is
  * only about 10% of what Axiom costs on Claude Code. Agent descriptions are ~7x
- * larger, and the session-start hook injects a whole SKILL.md. Gating the
+ * larger, and the session-start hook injects the always-on span of a SKILL.md. Gating the
  * listing alone left the dominant cost unmeasured.
  *
  * Why it matters beyond Claude Code: Axiom targets harnesses running
@@ -139,8 +139,9 @@ export function sessionStartSpanChars(skillFile: string): number {
  * Upper bound on that span. Claude Code keeps a hook's additionalContext inline
  * only up to 10,000 chars (https://code.claude.com/docs/en/hooks), and the hook
  * adds up to ~4k of run-time facts, so the span must stay near 5.5k. The full
- * output test in hooks/session-start_test.py runs in predeploy, not in CI; this
- * bound is the part CI enforces.
+ * output test in hooks/session-start_test.py also runs in CI via
+ * `npm run test:hooks`; this bound is the static guard that catches span growth
+ * before that suite runs.
  */
 export const SESSION_START_SPAN_CEILING = 5_500;
 

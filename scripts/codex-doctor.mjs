@@ -269,7 +269,7 @@ export async function inspectInstallation({
               hooks.status = "not_executable";
             const dependencies =
               {
-                "session-start.sh": ["session-start.py", "project_detect.py", "hook_diagnostics.py"],
+                "session-start.sh": ["session-start.py", "project_detect.py", "hook_diagnostics.py", "xcode_path.py"],
                 "user-prompt-submit.py": ["project_detect.py", "hook_diagnostics.py"],
                 "subagent-start.py": ["project_detect.py", "hook_diagnostics.py"],
                 "posttool-bash-hints.py": ["hook_diagnostics.py"],

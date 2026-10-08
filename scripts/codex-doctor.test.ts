@@ -39,7 +39,7 @@ async function fixture(t: TestContext) {
   await fs.writeFile(path.join(root, "hooks/session-start.sh"), healthyHelper, {
     mode: 0o755,
   });
-  for (const dependency of ["session-start.py", "project_detect.py", "hook_diagnostics.py"]) {
+  for (const dependency of ["session-start.py", "project_detect.py", "hook_diagnostics.py", "xcode_path.py"]) {
     await fs.writeFile(
       path.join(root, "hooks", dependency),
       "# synthetic hook dependency\n",
@@ -109,7 +109,7 @@ describe("inspectInstallation", () => {
       assert.equal(JSON.parse(result.stdout).host.status, "invalid");
     },
   );
-  for (const dependency of ["session-start.py", "project_detect.py", "hook_diagnostics.py"]) {
+  for (const dependency of ["session-start.py", "project_detect.py", "hook_diagnostics.py", "xcode_path.py"]) {
     it(`should report missing SessionStart dependency ${dependency}`, async (t) => {
       const root = await fixture(t);
       await fs.unlink(path.join(root, "hooks", dependency));

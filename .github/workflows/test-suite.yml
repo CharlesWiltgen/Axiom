@@ -89,16 +89,20 @@ jobs:
       - run: npm ci
 
       # One definition, shared with a maintainer's machine: `npm run check:ci` is
-      # the unit suite plus the content gate. Before it existed the two gates were
-      # written twice and checked different things, so "green locally" was not
-      # evidence about CI — a manifest drift that this job caught took four red
-      # runs to surface, because the obvious local command was a strict subset.
+      # the unit suite, the Python hook suites, and the content gate. Before it
+      # existed the two gates were written twice and checked different things, so
+      # "green locally" was not evidence about CI — a manifest drift that this
+      # job caught took four red runs to surface, because the obvious local
+      # command was a strict subset.
       #
       # The unit suite carries the version-parity gate, the generated-marker
-      # rules, the docs conventions and the leak scanner's own rules. The content
-      # gate lives in a pre-commit hook and inside pre-deploy, so it does not run
-      # on a fresh clone or for anyone committing with --no-verify; this is the
-      # backstop for that. (leak-scan is TypeScript, stripped natively by Node 24.)
+      # rules, the docs conventions and the leak scanner's own rules. The hook
+      # suites run the plugin's Python unittest files through the same runner
+      # pre-deploy uses (`scripts/hook-suites.ts`), including session-start's
+      # worst-case hook-context size test. The content gate lives in a pre-commit
+      # hook and inside pre-deploy, so it does not run on a fresh clone or for
+      # anyone committing with --no-verify; this is the backstop for that.
+      # (leak-scan is TypeScript, stripped natively by Node 24.)
       #
       # Deliberately NOT `npm run test` (pre-deploy --static). Its first check
       # shells out to `claude plugin validate` and treats ANY failure — including
