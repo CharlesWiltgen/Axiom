@@ -14,6 +14,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { execSync } from "node:child_process";
 import { MIN_PLAUSIBLE_FILES, scanRepo, shippedFiles } from "./leak-scan.ts";
+import { runHookSuites } from "./hook-suites.ts";
 import { VERSION_CORE } from "./version-regex.js";
 import {
   MAX_ENTRY_CHARS,
@@ -973,40 +974,15 @@ for (const pyFile of pyHooks) {
 
 // Execute hook test suites (hooks/*_test.py). py_compile above only checks
 // syntax — this actually runs the unittest suites so routing/heredoc/manifest
-// regressions gate CI. Offline-only; safe under --static.
-const hookTestFiles = fs
-  .readdirSync(path.join(pluginDir, "hooks"))
-  .filter((f: string) => f.endsWith("_test.py"))
-  .sort();
-
-if (hookTestFiles.length === 0) {
+// regressions gate CI. The runner is shared with `npm run test:hooks` so CI
+// and a maintainer's machine execute the same suites. Offline-only; safe
+// under --static.
+const hookSuites = runHookSuites(pluginDir);
+if (hookSuites.runs.length === 0 && hookSuites.failures.length === 0) {
   warn("hooks", "no hooks/*_test.py suites found — expected routing/heredoc coverage");
 } else {
-  const hooksDir = path.join(pluginDir, "hooks");
-  for (const testFile of hookTestFiles) {
-    const moduleName = testFile.replace(/\.py$/, "");
-    try {
-      // unittest writes its dots + summary to stderr; merge it so we can
-      // report the test count on success.
-      const out = execSync(`python3 -m unittest "${moduleName}" 2>&1`, {
-        stdio: ["pipe", "pipe", "pipe"],
-        timeout: 60000,
-        cwd: hooksDir,
-      }).toString();
-      const ran = out.match(/Ran \d+ tests?/)?.[0] ?? "ran";
-      console.log(`  ✓ ${testFile} (${ran})`);
-    } catch (e: unknown) {
-      const err = e as { killed?: boolean; stdout?: Buffer; stderr?: Buffer };
-      if (err.killed) {
-        error("hooks", `${testFile} timed out`);
-      } else {
-        error(
-          "hooks",
-          `${testFile} FAILED:\n${err.stdout?.toString() || err.stderr?.toString()}`,
-        );
-      }
-    }
-  }
+  for (const run of hookSuites.runs) console.log(`  ✓ ${run.file} (${run.ran})`);
+  for (const failure of hookSuites.failures) error("hooks", failure.message);
 }
 
 // Functional validation: run session-start.sh and validate JSON output
