@@ -25,9 +25,10 @@ MAX_CHILD_OUTPUT_BYTES = 64 * 1024
 # Keep the post-write boundary deliberately small. Files above 1 MiB fail open
 # without a scan.
 MAX_POST_WRITE_FILE_BYTES = 1024 * 1024
-# The canonical router ignores prompts under 5 chars and caps its scan at 2000.
+# The canonical router ignores prompts under 5 chars and — after stripping
+# harness notice elements — caps its scan at 2000 chars (GH #56). Do not cap
+# here: truncating first would defeat the child's strip-then-cap ordering.
 MIN_ROUTED_PROMPT_CHARS = 5
-MAX_ROUTED_PROMPT_CHARS = 2000
 MAX_ROUTED_CONTEXT_CHARS = 2048
 # Skill-awareness guidance is legitimately multi-paragraph.
 MAX_SUBAGENT_CONTEXT_CHARS = 8192
@@ -320,8 +321,6 @@ def prompt_submit(payload: Dict[str, Any]) -> Dict[str, str]:
     prompt = payload.get("prompt")
     if not isinstance(prompt, str) or len(prompt) < MIN_ROUTED_PROMPT_CHARS:
         return {}
-    if len(prompt) > MAX_ROUTED_PROMPT_CHARS:
-        prompt = prompt[:MAX_ROUTED_PROMPT_CHARS]
     workspace = _workspace_root(payload)
     child_output = run_child("user-prompt-submit.py", {"prompt": prompt}, cwd=workspace)
     if not child_output.strip():

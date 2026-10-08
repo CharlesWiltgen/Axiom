@@ -1464,6 +1464,102 @@ class TestNegativeRouting(unittest.TestCase):
         self.assertNotIn("axiom-build", skills)
 
 
+class TestHarnessReminderStripping(unittest.TestCase):
+    """Harness-injected <system-reminder> blocks are not the user's words (GH #56).
+
+    Claude Code delivers its own notices (task-chip start/finish, etc.) inside the
+    same `prompt` payload, ahead of the user's text. Their boilerplate collides with
+    the routing vocabulary — the task-chip notice's literal "background task" hit the
+    Integration rule's `background\\s*task`, so a bare "push das" routed to
+    axiom-integration. The hook strips whole blocks before matching; these tests pin
+    both directions: wrapped harness prose stays quiet, and everything the user
+    wrote outside a notice-shaped element routes exactly as before.
+    """
+
+    TASK_CHIP_NOTICE = (
+        "<system-reminder>\n"
+        "The user started your suggested background task task_123 "
+        '("Fix stale registry entries") in a separate local session. '
+        "It is running independently. You will be notified here when it ends.\n"
+        "</system-reminder>"
+    )
+
+    TASK_NOTIFICATION = (
+        "<task-notification>\n"
+        '<summary>The background task "Fix SwiftUI layout" completed</summary>\n'
+        "<status>completed</status>\n"
+        "</task-notification>"
+    )
+
+    def test_task_chip_notice_wrapped_git_prompt_stays_quiet(self):
+        """The GH #56 repro: "push das" alone is quiet, and it must stay quiet when
+        the harness prepends a task-chip notice whose text says "background task"."""
+        self.assertEqual(routed_skills("push das"), set())
+        self.assertEqual(
+            routed_skills(f"{self.TASK_CHIP_NOTICE}\n\npush das"), set())
+
+    def test_reminder_only_payload_stays_quiet(self):
+        """A payload that is all harness notice has nothing of the user's to route,
+        however many notices it carries."""
+        self.assertEqual(routed_skills(self.TASK_CHIP_NOTICE), set())
+        self.assertEqual(
+            routed_skills(f"{self.TASK_CHIP_NOTICE}\n{self.TASK_CHIP_NOTICE}"),
+            set())
+
+    def test_reminder_ahead_of_a_genuine_prompt_does_not_contaminate_it(self):
+        """The reminder's vocabulary must not join the match: a NavigationStack
+        prompt routes axiom-swiftui and NOT axiom-integration (whose rule owns
+        "background task"), even with the notice ahead of it."""
+        skills = routed_skills(
+            f"{self.TASK_CHIP_NOTICE}\n"
+            "navigationstack path persistence across launches")
+        self.assertIn("axiom-swiftui", skills)
+        self.assertNotIn("axiom-integration", skills)
+
+    def test_task_notification_payload_stays_quiet(self):
+        """Machine-injected turns (task notifications) arrive in this same field
+        as bare <task-notification> elements; a summary naming routing vocabulary
+        must not route. The harness's own sanitizer treats the two tags alike."""
+        self.assertEqual(routed_skills(self.TASK_NOTIFICATION), set())
+
+    def test_unterminated_notice_still_strips_to_the_user_words(self):
+        """A truncated element runs to the end of the payload (the harness's own
+        sanitizer tolerates a missing closing tag): the words before it still
+        route, and the element's vocabulary does not join in."""
+        skills = routed_skills(
+            "navigationstack path persistence across launches\n"
+            "<task-notification>\n<summary>background task"
+        )
+        self.assertIn("axiom-swiftui", skills)
+        self.assertNotIn("axiom-integration", skills)
+
+    def test_user_typed_background_task_still_routes(self):
+        """The fix must not eat the user's own words: a user who types
+        "background task" themselves still gets the Integration router."""
+        self.assertIn("axiom-integration", routed_skills("background task"))
+
+    def test_non_string_prompt_fails_soft(self):
+        """The strip runs before the old falsy guard, so a null prompt could
+        have crashed a hook that must never exit non-zero — run_hook_in raises
+        on a non-zero exit, making this shape a direct contract check."""
+        self.assertEqual(
+            run_hook_in(None, env_override={"AXIOM_SESSION_CONTEXT": "always"}),
+            {})
+
+    def test_oversized_reminder_does_not_bury_the_prompt(self):
+        """Strip-before-cap: a notice longer than the 2000-char scan window used to
+        push the user's words out of the window entirely, silencing a real route."""
+        filler = (
+            "<system-reminder>\n"
+            + ("harness notice line\n" * 120)
+            + "</system-reminder>"
+        )
+        self.assertGreater(len(filler), 2000)
+        skills = routed_skills(
+            f"{filler}\nnavigationstack path persistence across launches")
+        self.assertIn("axiom-swiftui", skills)
+
+
 class TestMixedSignalRouting(unittest.TestCase):
     """Mixed iOS + non-iOS prompts must still route the iOS skill.
 

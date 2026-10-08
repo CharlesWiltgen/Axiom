@@ -328,8 +328,8 @@
     },
     {
       "path": "scripts/cursor-hook-adapter.py",
-      "sha256": "ac1525066c99c32fc04b03ffd001f5ffe3efa30074df58e3ea1eac019b024d2b",
-      "bytes": 27047
+      "sha256": "641d72276f69c99c5056eb1fef56d71bd6b6f603cdd01ae2b756f45e581ad270",
+      "bytes": 27071
     },
     {
       "path": "scripts/hook_diagnostics.py",
@@ -363,8 +363,8 @@
     },
     {
       "path": "scripts/user-prompt-submit.py",
-      "sha256": "1d41790f098b3b08cf5bba330f4589cdd3da43a91e83a633983df90324ff3c03",
-      "bytes": 47601
+      "sha256": "10ad3b04a8c93fb4b9c763cfc2a372418018ae50dc6be7f0e1f5c4c880a0d169",
+      "bytes": 49397
     },
     {
       "path": "skills/axiom-accessibility/SKILL.md",
@@ -1884,7 +1884,7 @@
   ],
   "totals": {
     "files": 376,
-    "bytes": 7671394
+    "bytes": 7673214
   },
   "excludedMirrors": 30,
   "classes": {

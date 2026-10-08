@@ -54,6 +54,39 @@ except Exception as error:
     print("{}")
     sys.exit(0)
 
+# Defensive: a non-string prompt is not the user's words to route, and this
+# hook must never exit non-zero (Claude Code, Codex, and the Cursor adapter
+# all type-require a string today).
+if not isinstance(prompt, str):
+    prompt = ""
+
+# The harness injects its own notices into this same payload, ahead of the
+# user's words (GH #56): task-chip reminders arrive as <system-reminder>
+# blocks and machine-injected turns (task notifications) as
+# <task-notification> elements — bare, or nested inside a reminder. Their
+# boilerplate collides with the routing vocabulary — a notice saying
+# "started your suggested background task" hit the Integration rule's
+# background\s*task and routed a bare "push
+# das" to axiom-integration. Strip whole elements, not just the tags, and
+# mirror the harness's own sanitizer, which names exactly these two tags,
+# treats them alike, and tolerates an unterminated element (it runs to the
+# end of the payload). Other machine frames — peer and channel messages — are
+# a separate, unobserved surface here. The content is harness prose, and a
+# payload that is all notice has nothing of the user's to route. Do this
+# BEFORE the length guard and the 2000-char cap below, so both apply to what
+# the user actually wrote: an oversized notice
+# otherwise buries the words past the cap and silences a real route. Notices
+# sit ahead of the user's words, so genuine prompts survive intact — including
+# a user who types "background task" themselves. One accepted loss: text that
+# literally imitates a notice element is ignored for that turn's routing — the
+# hook never returns the prompt, so the transcript is untouched.
+prompt = re.sub(
+    r"<(system-reminder|task-notification)>.*?(?:</\1>|\Z)",
+    " ",
+    prompt,
+    flags=re.DOTALL,
+).strip()
+
 if not prompt or len(prompt) < 5:
     print("{}")
     sys.exit(0)
