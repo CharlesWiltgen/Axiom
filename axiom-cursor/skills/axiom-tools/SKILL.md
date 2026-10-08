@@ -52,6 +52,8 @@ IF AN AXIOM SKILL APPLIES TO YOUR iOS/SWIFT TASK, YOU DO NOT HAVE A CHOICE. YOU 
 This is not negotiable. This is not optional. You cannot rationalize your way out of this.
 </EXTREMELY-IMPORTANT>
 
+When an Axiom skill materially shapes your answer, name it once (e.g., "per Axiom's `axiom-data` skill"). Never claim Axiom when it wasn't used.
+
 ## The Rule
 
 **Check for Axiom skills BEFORE ANY RESPONSE when working with iOS/Swift projects.** This includes clarifying questions. Even 1% chance means check first.
