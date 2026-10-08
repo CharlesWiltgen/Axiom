@@ -2,11 +2,12 @@ name: Test Suite
 
 # The paths filters below mirror what the three steps actually READ. That is wider
 # than it looks: `node scripts/leak-scan.ts` walks the scanner's SURFACES plus
-# ROOT_FILES in scripts/leak-scan.ts, the unit suite covers scripts/,
-# axiom-pi/ and axiom-mcp/, and the Python hook suites read the plugin's
-# hooks/. A filter listing only the plugin would start no CI for
-# a PR that adds a home path to README.md or a UUID to axiom-codex/ — which is
-# exactly the case this job exists to catch. A test in scripts/leak-scan.test.ts
+# ROOT_FILES in scripts/leak-scan.ts, the unit suite covers scripts/ and tools/,
+# the scanner's surfaces include axiom-pi/ and axiom-mcp/ (their own suites run
+# separately), and the Python hook suites read the plugin's hooks/. A filter
+# listing only the plugin would start no CI for a PR that adds a home path to
+# README.md or a UUID to axiom-codex/ — which is exactly the case this job
+# exists to catch. A test in scripts/leak-scan.test.ts
 # fails if the filter and the scanner's surfaces drift apart.
 #
 # Written out per event rather than shared with a YAML anchor: a workflow that
