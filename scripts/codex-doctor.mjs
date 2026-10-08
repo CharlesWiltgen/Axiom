@@ -21,13 +21,32 @@ const EVENTS = new Set([
   "SubagentStart",
   "PostToolUse",
 ]);
-const HANDLERS = new Set([
-  "session-start.sh",
-  "user-prompt-submit.py",
-  "subagent-start.py",
-  "posttool-bash-hints.py",
-  "swift-guardrails.py",
-]);
+export const HANDLERS = {
+  "session-start.sh": true,
+  "user-prompt-submit.py": true,
+  "subagent-start.py": true,
+  "posttool-bash-hints.py": true,
+  "swift-guardrails.py": true,
+};
+
+// Extra files a healthy install carries for each Codex hook — everything the
+// handler needs beyond its own file. A shell wrapper needs the .py payloads it
+// runs; a .py handler needs every sibling module it imports, whether top-level,
+// lazy, or guarded, because a healthy package ships them all.
+// scripts/codex-doctor.test.ts derives each handler's real closure from the
+// hooks' source and fails when this table drifts.
+export const HOOK_DEPENDENCIES = {
+  "session-start.sh": [
+    "session-start.py",
+    "project_detect.py",
+    "hook_diagnostics.py",
+    "xcode_path.py",
+  ],
+  "user-prompt-submit.py": ["project_detect.py", "hook_diagnostics.py"],
+  "subagent-start.py": ["project_detect.py", "hook_diagnostics.py"],
+  "posttool-bash-hints.py": ["project_detect.py", "hook_diagnostics.py"],
+  "swift-guardrails.py": ["project_detect.py", "hook_diagnostics.py"],
+};
 const LIMIT = 65536;
 
 function isObject(value) {
@@ -258,7 +277,7 @@ export async function inspectInstallation({
             if (
               handler?.type !== "command" ||
               !match ||
-              !HANDLERS.has(match[1])
+              !Object.hasOwn(HANDLERS, match[1])
             ) {
               hooks.status = "invalid";
               continue;
@@ -267,14 +286,7 @@ export async function inspectInstallation({
             if (!file.ok) hooks.status = "missing_handler";
             else if (match[1].endsWith(".sh") && !(file.stat.mode & 0o111))
               hooks.status = "not_executable";
-            const dependencies =
-              {
-                "session-start.sh": ["session-start.py", "project_detect.py", "hook_diagnostics.py", "xcode_path.py"],
-                "user-prompt-submit.py": ["project_detect.py", "hook_diagnostics.py"],
-                "subagent-start.py": ["project_detect.py", "hook_diagnostics.py"],
-                "posttool-bash-hints.py": ["hook_diagnostics.py"],
-                "swift-guardrails.py": ["hook_diagnostics.py"],
-              }[match[1]] ?? [];
+            const dependencies = HOOK_DEPENDENCIES[match[1]] ?? [];
             for (const dependency of dependencies) {
               if (!(await packageFile(root, `hooks/${dependency}`)).ok)
                 hooks.status = "missing_handler";

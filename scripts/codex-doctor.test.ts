@@ -5,7 +5,7 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { describe, it } from "node:test";
 import type { TestContext } from "node:test";
-import { HELPERS, inspectInstallation } from "./codex-doctor.mjs";
+import { HELPERS, HANDLERS, HOOK_DEPENDENCIES, inspectInstallation } from "./codex-doctor.mjs";
 
 const helpers = Object.keys(HELPERS);
 const version = "27.1.2";
@@ -39,7 +39,7 @@ async function fixture(t: TestContext) {
   await fs.writeFile(path.join(root, "hooks/session-start.sh"), healthyHelper, {
     mode: 0o755,
   });
-  for (const dependency of ["session-start.py", "project_detect.py", "hook_diagnostics.py", "xcode_path.py"]) {
+  for (const dependency of HOOK_DEPENDENCIES["session-start.sh"]) {
     await fs.writeFile(
       path.join(root, "hooks", dependency),
       "# synthetic hook dependency\n",
@@ -109,7 +109,7 @@ describe("inspectInstallation", () => {
       assert.equal(JSON.parse(result.stdout).host.status, "invalid");
     },
   );
-  for (const dependency of ["session-start.py", "project_detect.py", "hook_diagnostics.py", "xcode_path.py"]) {
+  for (const dependency of HOOK_DEPENDENCIES["session-start.sh"]) {
     it(`should report missing SessionStart dependency ${dependency}`, async (t) => {
       const root = await fixture(t);
       await fs.unlink(path.join(root, "hooks", dependency));
@@ -379,4 +379,87 @@ describe("inspectInstallation", () => {
       args: ["-y", "axiom-mcp"],
     });
   });
+});
+
+const hooksDirectory = ".claude-plugin/plugins/axiom/hooks";
+
+function fileExists(target: string) {
+  return fs.stat(target).then(
+    () => true,
+    () => false,
+  );
+}
+
+// Derive what a handler really needs from the hooks' own source: a shell
+// wrapper needs the .py payloads it runs, and a .py handler needs every
+// sibling module it imports — top-level, lazy, or guarded alike, because a
+// healthy package ships them all. The scan skips `"""` blocks, so docstring
+// prose cannot contribute an import, and counts an import as local exactly
+// when the sibling file exists — which drops stdlib and `__future__` names.
+async function derivedDependencies(handler: string): Promise<string[]> {
+  const queue = [handler];
+  const closure = new Set<string>();
+  while (queue.length) {
+    const current = queue.pop();
+    if (current === undefined || closure.has(current)) continue;
+    closure.add(current);
+    const source = await fs.readFile(path.join(hooksDirectory, current), "utf8");
+    if (current.endsWith(".sh")) {
+      for (const line of source.split("\n")) {
+        if (!/\bpython3?\b/.test(line)) continue;
+        for (const reference of line.matchAll(/[A-Za-z0-9_-]+\.py\b/g))
+          if (await fileExists(path.join(hooksDirectory, reference[0])))
+            queue.push(reference[0]);
+      }
+      continue;
+    }
+    let inDocstring = false;
+    for (const line of source.split("\n")) {
+      const delimiters = line.match(/"""/g)?.length ?? 0;
+      if (inDocstring) {
+        if (delimiters > 0) inDocstring = false;
+        continue;
+      }
+      if (line.trimStart().startsWith('"""')) {
+        if (delimiters < 2) inDocstring = true;
+        continue;
+      }
+      const from = line.match(/^\s*from\s+([A-Za-z_]\w*)\s+import\b/);
+      const plain = from === null ? line.match(/^\s*import\s+(.+)$/) : null;
+      const imports = from
+        ? [from[1]]
+        : (plain?.[1] ?? "")
+            .split(",")
+            .map((part) => part.replace(/\s*#.*$/, "").trim());
+      for (const imported of imports) {
+        const name = imported.match(
+          /^([A-Za-z_]\w*)(?:\.\w+)*(?:\s+as\s+\w+)?$/,
+        )?.[1];
+        if (name === undefined) continue;
+        const candidate = `${name}.py`;
+        if (await fileExists(path.join(hooksDirectory, candidate)))
+          queue.push(candidate);
+      }
+    }
+  }
+  return [...closure].filter((name) => name !== handler).sort();
+}
+
+describe("HOOK_DEPENDENCIES", () => {
+  it("should declare exactly the known handlers", () => {
+    assert.deepEqual(
+      Object.keys(HOOK_DEPENDENCIES).sort(),
+      Object.keys(HANDLERS).sort(),
+    );
+  });
+
+  for (const handler of Object.keys(HANDLERS).sort()) {
+    it(`should match the dependencies derived from ${handler}`, async () => {
+      assert.deepEqual(
+        [...HOOK_DEPENDENCIES[handler]].sort(),
+        await derivedDependencies(handler),
+        `${handler}: list every sibling file the hooks' imports need, and nothing else`,
+      );
+    });
+  }
 });
