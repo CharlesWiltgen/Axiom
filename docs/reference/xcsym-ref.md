@@ -14,7 +14,7 @@ Use this reference when:
 - Checking the JSON output schema emitted by `crash` (`tool`, `version`, `format`, `input`, `crash`, `images`, `images_summary`, `warnings`, `size_warning`)
 - Interpreting an exit code (0 / 1 usage / 2 input or main-dSYM missing / 3 UUID mismatch / 4 arch mismatch / 5 tool error / 6 timeout / 7 partial match / 8 output error)
 - Mapping a `pattern_tag` to its rule ID, confidence, and signal
-- Understanding the dSYM discovery order (explicit-by-UUID → explicit paths → cache → Spotlight → Archives → DerivedData → Frameworks → Downloads → Toolchain → env paths)
+- Understanding the dSYM discovery order (`--dsym` → cache → Spotlight → Archives → DerivedData → Frameworks → Downloads → Toolchain → `--dsym-paths` or `XCSYM_DSYM_PATHS`)
 - Handling `.xccrashpoint` bundles (`--filter`, `--prefer-locally-symbolicated`, `empty_bundle` vs `unsupported_format`)
 - Reading the routing JSON xcsym emits on hang input (`bug_type=298`) or unsupported formats
 - Configuring `--format=summary` / `standard` / `full` and the tier-aware size warnings
@@ -44,7 +44,7 @@ Use this reference when:
 - **Format tiers** – `summary` (~2 KB / warn 4 KB), `standard` (~12 KB / warn 50 KB), `full` (warn 100 KB)
 - **Exit codes** – shared codes (0/1/5/6/8) plus subcommand-specific symbolication codes (2/3/4/7), including the `crash` vs `verify` divergence on code 7
 - **Pattern tag catalog** – all 20 tags Apple has surfaced via xcsym (`swift_forced_unwrap`, `swift_concurrency_violation`, `swift_fatal_error`, `zombie_or_heap_corruption`, `stack_overflow`, `bad_memory_access`, `illegal_instruction`, `exc_guard`, `objc_exception`, `main_thread_checker_violation`, `abort`, `watchdog_termination`, `user_force_quit`, `background_task_expired`, `data_protection_violation`, `code_signing_killed`, `jetsam_oom`, `cpu_resource_fatal`, `swiftui_update_loop`, `unclassified`) with their rule IDs and confidence levels
-- **dSYM discovery order** – ten-step chain with the `XCSYM_FRAMEWORK_SCAN_TIMEOUT` and `XCSYM_DSYM_PATHS` environment-variable hooks
+- **dSYM discovery order** – nine-step chain with the `XCSYM_FRAMEWORK_SCAN_TIMEOUT` and `XCSYM_DSYM_PATHS` environment-variable hooks
 - **Hang and unsupported input routing** – JSON reject shapes (`hang_report`, `unsupported_format`, `empty_bundle`) so agents route on the error field instead of scraping stderr
 - **Troubleshooting table** – symptom → cause → fix for the common exit codes and bundle errors
 

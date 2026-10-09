@@ -91,13 +91,13 @@ export class XcsymTools implements BinaryToolProvider {
     return [
       {
         name: 'axiom_xcsym_crash',
-        description: 'Symbolicate and categorize one crash file end-to-end: parse, discover dSYMs, run atos, classify the cause. Accepts .ips (v1/v2), MetricKit MXCrashDiagnostic JSON, legacy .crash, and .xccrashpoint bundles (auto-detected). Returns a JSON report. A non-zero exit reports dSYM matching, not failure (2=input not found or main-binary dSYM missing, 3=UUID mismatch, 4=arch mismatch, 7=main binary matched but other images missing or mismatched); when a report was written it is still returned, followed by the exit code. macOS + Xcode only.',
+        description: 'Symbolicate and categorize one crash file end-to-end: parse, discover dSYMs, run atos, classify the cause. Accepts .ips (v1/v2), MetricKit MXCrashDiagnostic JSON, legacy .crash, and .xccrashpoint bundles (auto-detected). Returns a JSON report. A non-zero exit reports dSYM matching, not failure (2=input not found or main-binary dSYM missing, 3=UUID mismatch, 4=arch mismatch — on the main binary, or on another image when the main binary could not be checked — 7=other images missing, or mismatched while the main binary matched); when a report was written it is still returned, followed by the exit code. macOS + Xcode only.',
         inputSchema: {
           type: 'object',
           properties: {
             file: { type: 'string', description: 'Path to the crash file or .xccrashpoint bundle.' },
             format: { type: 'string', enum: FORMATS, description: 'Output tier (default standard).' },
-            dsym: { type: 'string', description: 'Explicit dSYM path override for the main app binary.' },
+            dsym: { type: 'string', description: 'Explicit dSYM path override. Applies to every image, so the others report a UUID mismatch instead of being searched.' },
             dsymPaths,
             filter: { type: 'string', description: 'For .xccrashpoint inputs: pick the Filter_* dir whose name contains this substring (default: most-recent mtime).' },
             preferLocallySymbolicated: { type: 'boolean', description: 'For .xccrashpoint inputs: prefer Logs/LocallySymbolicated/*.crash over the raw .crash.' },
@@ -105,7 +105,7 @@ export class XcsymTools implements BinaryToolProvider {
             noSymbolicate: { type: 'boolean', description: 'Skip atos; keep frames as parsed (works without dSYMs / off-device).' },
             noCache: { type: 'boolean', description: 'Skip the persistent UUID cache.' },
             noSpotlight: { type: 'boolean', description: 'Skip Spotlight (mdfind) dSYM lookups.' },
-            noDefaults: { type: 'boolean', description: 'Skip default dSYM search roots; only dsym/dsymPaths/$XCSYM_DSYM_PATHS apply.' },
+            noDefaults: { type: 'boolean', description: 'Skip default dSYM search roots (Archives, DerivedData, Downloads, toolchain, frameworks); dsym, the UUID cache, Spotlight and dsymPaths (else $XCSYM_DSYM_PATHS) still apply.' },
           },
           required: ['file'],
         },
@@ -152,7 +152,7 @@ export class XcsymTools implements BinaryToolProvider {
             dsymPaths,
             noCache: { type: 'boolean', description: 'Skip the persistent UUID cache.' },
             noSpotlight: { type: 'boolean', description: 'Skip Spotlight (mdfind) lookups.' },
-            noDefaults: { type: 'boolean', description: 'Skip default dSYM search roots; only dsymPaths/$XCSYM_DSYM_PATHS apply.' },
+            noDefaults: { type: 'boolean', description: 'Skip default dSYM search roots (Archives, DerivedData, Downloads, toolchain, frameworks); the UUID cache, Spotlight and dsymPaths (else $XCSYM_DSYM_PATHS) still apply.' },
           },
           required: ['uuid'],
         },
@@ -181,7 +181,7 @@ export class XcsymTools implements BinaryToolProvider {
             dsymPaths,
             noCache: { type: 'boolean', description: 'Skip the persistent UUID cache.' },
             noSpotlight: { type: 'boolean', description: 'Skip Spotlight (mdfind) lookups.' },
-            noDefaults: { type: 'boolean', description: 'Skip default dSYM search roots; only dsym/dsymPaths/$XCSYM_DSYM_PATHS apply.' },
+            noDefaults: { type: 'boolean', description: 'Skip default dSYM search roots (Archives, DerivedData, Downloads, toolchain, frameworks); dsym, the UUID cache, Spotlight and dsymPaths (else $XCSYM_DSYM_PATHS) still apply.' },
           },
           required: ['file'],
         },
