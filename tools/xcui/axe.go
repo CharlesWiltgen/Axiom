@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -37,12 +36,23 @@ func axeFrameworkPresent(developerDir string) bool {
 // by the time this is called we have direct evidence that running under the current
 // selection fails, which outranks any inference from the filesystem layout.
 func axeFallbackDeveloperDir(currentDeveloperDir string, candidates []string) (dir string, overridden bool) {
+	current := resolvedPath(currentDeveloperDir)
 	for _, c := range candidates {
-		if c != "" && c != currentDeveloperDir && axeFrameworkPresent(c) {
+		if c != "" && resolvedPath(c) != current && axeFrameworkPresent(c) {
 			return c, true
 		}
 	}
 	return "", false
+}
+
+// resolvedPath follows symlinks so a selection that names a link (often
+// /Applications/Xcode.app) compares equal to the real install the candidate
+// glob finds. A path that cannot be resolved is compared as written.
+func resolvedPath(path string) string {
+	if resolved, err := filepath.EvalSymlinks(path); err == nil {
+		return resolved
+	}
+	return path
 }
 
 // isSimulatorKitLoadError reports whether AXe stderr shows a SimulatorKit load
@@ -88,22 +98,39 @@ func axeDeveloperDirCandidates() []string {
 }
 
 // currentDeveloperDir reports the active toolchain using Apple's own precedence:
-// $DEVELOPER_DIR outranks the xcode-select selection for xcrun and friends. Reading
-// only `xcode-select -p` measured the wrong thing and left a caller who had exported
-// DEVELOPER_DIR unable to influence — or opt out of — xcui's decision.
+// $DEVELOPER_DIR outranks the xcode-select selection for xcrun and friends, so a
+// caller who exports it can influence — or opt out of — xcui's decision. The
+// result is normalized, because the candidates it is compared against are.
 func currentDeveloperDir() string {
 	if dir := strings.TrimSpace(os.Getenv("DEVELOPER_DIR")); dir != "" {
-		return dir
+		return normalizeDeveloperDir(dir)
 	}
-	p, err := exec.LookPath("xcode-select")
+	// Absolute, as in the hook and MCP ports: a project bin dir on PATH must not
+	// stand in for it.
+	res, err := ExecRun(context.Background(), 0, "/usr/bin/xcode-select", "-p")
 	if err != nil {
 		return ""
 	}
-	res, err := ExecRun(context.Background(), 0, p, "-p")
-	if err != nil {
-		return ""
+	if dir := strings.TrimSpace(string(res.Stdout)); dir != "" {
+		return normalizeDeveloperDir(dir)
 	}
-	return strings.TrimSpace(string(res.Stdout))
+	return ""
+}
+
+// normalizeDeveloperDir maps every form xcrun accepts — the Xcode .app itself, or
+// its Contents/Developer, with or without a trailing slash — to the cleaned
+// Contents/Developer path, as `xcode-select -p` reports it.
+func normalizeDeveloperDir(dir string) string {
+	dir = filepath.Clean(dir)
+	if developer := filepath.Join(dir, "Contents", "Developer"); isDir(developer) {
+		return developer
+	}
+	return dir
+}
+
+func isDir(path string) bool {
+	info, err := os.Stat(path)
+	return err == nil && info.IsDir()
 }
 
 // The DEVELOPER_DIR override AXe may need, decided REACTIVELY and memoized for the

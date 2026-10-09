@@ -37,11 +37,8 @@ func runDoctor(out io.Writer, args []string) int {
 
 	rep := DoctorReport{Tool: "xcui", Version: version}
 	rep.BrewPath, _ = exec.LookPath("brew")
-	if p, err := exec.LookPath("xcode-select"); err == nil {
-		if res, e := ExecRun(ctx, 0, p, "-p"); e == nil {
-			rep.XcodePath = strings.TrimSpace(string(res.Stdout))
-		}
-	}
+	// The toolchain axe.go acts on: DEVELOPER_DIR first, normalized.
+	rep.XcodePath = currentDeveloperDir()
 
 	axePath, _ := exec.LookPath("axe")
 	if axePath == "" && *install && rep.BrewPath != "" {

@@ -63,6 +63,20 @@ func TestAxeFallbackDeveloperDir(t *testing.T) {
 	}
 }
 
+func TestAxeFallbackTreatsASymlinkedCurrentDirAsItself(t *testing.T) {
+	// /Applications/Xcode.app is often a symlink to a versioned install; the
+	// candidate glob sees the real path, the selection may name the link.
+	real := mkXcode(t, true)
+	link := filepath.Join(t.TempDir(), "Xcode.app")
+	if err := os.Symlink(filepath.Dir(filepath.Dir(real)), link); err != nil {
+		t.Fatal(err)
+	}
+	viaLink := filepath.Join(link, "Contents", "Developer")
+	if dir, on := axeFallbackDeveloperDir(viaLink, []string{real}); on || dir != "" {
+		t.Errorf("the failing toolchain, reached through a symlink, was offered as its own fallback: (%q,%v)", dir, on)
+	}
+}
+
 func TestCurrentDeveloperDirHonoursEnv(t *testing.T) {
 	// Apple's precedence: DEVELOPER_DIR outranks the xcode-select selection. Without
 	// this, a caller exporting DEVELOPER_DIR could not influence or opt out of xcui's
@@ -77,6 +91,23 @@ func TestCurrentDeveloperDirHonoursEnv(t *testing.T) {
 	t.Setenv("DEVELOPER_DIR", "   ")
 	if got := currentDeveloperDir(); got == "   " {
 		t.Error("blank DEVELOPER_DIR must not be taken as a selection")
+	}
+}
+
+func TestCurrentDeveloperDirNormalizesEveryFormXcrunAccepts(t *testing.T) {
+	// xcrun takes the .app itself or its Contents/Developer, with or without a
+	// trailing slash. Returned raw, the .app form never equalled a candidate, so
+	// the fallback could retry the very toolchain that had just failed.
+	app := filepath.Join(t.TempDir(), "Xcode-beta.app")
+	dev := filepath.Join(app, "Contents", "Developer")
+	if err := os.MkdirAll(dev, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	for _, form := range []string{app, app + "/", dev + "/", dev + "/."} {
+		t.Setenv("DEVELOPER_DIR", form)
+		if got := currentDeveloperDir(); got != dev {
+			t.Errorf("DEVELOPER_DIR=%q: currentDeveloperDir() = %q, want %q", form, got, dev)
+		}
 	}
 }
 
