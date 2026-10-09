@@ -12,7 +12,7 @@ Complete reference for `xcprof`, the Axiom-bundled CLI that captures Instruments
 Use this reference when:
 - Looking up `xcprof doctor` / `record` / `analyze` / `compare` subcommand flags
 - Choosing a recording preset (`cpu` / `memory` / `network` / `energy` / `full` / `full-ios`) or recording a single `--template` / `--instrument`
-- Understanding the security gates — why `--launch` needs `--allow-launch`, `--all-processes` needs `--allow-all-processes`, and how `--max-duration` and `XCPROF_TRACE_ROOT` bound a capture
+- Understanding the security gates — why launching a command (`-- <cmd>`) needs `--allow-launch`, `--all-processes` needs `--allow-all-processes`, and how `--max-duration` and `XCPROF_TRACE_ROOT` bound a capture
 - Interpreting an exit code (0 ok / 2 environment-or-usage error / 3 regression found via `compare --fail-on-regression` / 8 output-write error)
 - Reading the support matrix (`available` / `partial` / `not_exportable` / `not_present`) and understanding why memory/energy read `not_exportable`
 - Symbolicating raw-address frames from a stripped/release build with `--dsym` (explicit path or UUID auto-discovery)
