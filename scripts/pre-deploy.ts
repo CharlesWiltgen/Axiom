@@ -14,7 +14,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { execSync } from "node:child_process";
 import { MIN_PLAUSIBLE_FILES, scanRepo, shippedFiles } from "./leak-scan.ts";
-import { runHookSuites } from "./hook-suites.ts";
+import { execSyncFailureOutput, isExecSyncTimeout, runHookSuites } from "./hook-suites.ts";
 import { VERSION_CORE } from "./version-regex.js";
 import {
   MAX_ENTRY_CHARS,
@@ -1017,8 +1017,8 @@ if (fs.existsSync(sessionStartSh)) {
       }
     }
   } catch (e: unknown) {
-    const err = e as { message?: string; stdout?: Buffer; stderr?: Buffer; killed?: boolean };
-    if (err.killed) {
+    const err = e as { message?: string; stdout?: Buffer; stderr?: Buffer };
+    if (isExecSyncTimeout(e)) {
       error("hooks", "session-start.sh timed out (possible heredoc deadlock)");
     } else {
       error(
@@ -1044,8 +1044,7 @@ try {
   });
   console.log("  ✓ Routing-accuracy harness passes");
 } catch (e: unknown) {
-  const err = e as { stdout?: Buffer; stderr?: Buffer };
-  const out = err.stdout?.toString() || err.stderr?.toString() || "";
+  const out = execSyncFailureOutput(e, 60000);
   // Surface the per-scenario failure detail so the operator can fix without re-running.
   const lines = out.split("\n");
   const detailStart = lines.findIndex((l: string) => l.includes("Failures detail:"));
@@ -3093,8 +3092,7 @@ try {
   });
   console.log("  ✓ MCP server tests pass");
 } catch (e: unknown) {
-  const err = e as { stdout?: Buffer; stderr?: Buffer };
-  const output = err.stdout?.toString() || err.stderr?.toString() || "";
+  const output = execSyncFailureOutput(e, 60000);
   const summary = output.match(/Tests\s+\d+.*|FAIL.*|✗.*/gm);
   error(
     "mcp-tests",
@@ -3310,8 +3308,7 @@ if (!goAvailable) {
       execSync("go vet ./...", { cwd: moduleDir, stdio: "pipe", timeout: 60000 });
       console.log(`  ✓ ${module}: go vet clean`);
     } catch (e: unknown) {
-      const err = e as { stdout?: Buffer; stderr?: Buffer };
-      const out = err.stdout?.toString() || err.stderr?.toString() || "";
+      const out = execSyncFailureOutput(e, 60000);
       error("go-vet", `${module} go vet failed: ${out.slice(0, 300)}`);
       console.log("\n✗ Phase 2 FAILED. Fix Go tool issues before deploying.");
       process.exit(1);
@@ -3326,8 +3323,7 @@ if (!goAvailable) {
       });
       console.log(`  ✓ ${module}: go test passes`);
     } catch (e: unknown) {
-      const err = e as { stdout?: Buffer; stderr?: Buffer };
-      const out = err.stdout?.toString() || err.stderr?.toString() || "";
+      const out = execSyncFailureOutput(e, 1000000);
       // Surface the test framework's own summary lines so the operator
       // sees which tests failed without having to re-run manually.
       const summary = out.match(/--- FAIL.*|FAIL\s+\S+.*|^\s*\S+\.go:\d+:.*$/gm);
@@ -3350,8 +3346,7 @@ try {
   });
   console.log("  ✓ VitePress build succeeds (dead links validated)");
 } catch (e: unknown) {
-  const err = e as { stdout?: Buffer; stderr?: Buffer };
-  const output = err.stdout?.toString() || err.stderr?.toString() || "";
+  const output = execSyncFailureOutput(e, 120000);
   const deadLinks = output.match(/dead link.*|404.*|DEAD_LINKS.*/gim);
   error(
     "vitepress",
@@ -3382,8 +3377,7 @@ heading("17. axiom-pi Extension Tests");
     try {
       execSync(cmd, { cwd: axiomPiDir, stdio: "pipe", timeout, env: npmInstallEnvironment(process.env) });
     } catch (e: unknown) {
-      const err = e as { stdout?: Buffer; stderr?: Buffer };
-      fail(check, label, err.stdout?.toString() || err.stderr?.toString() || "");
+      fail(check, label, execSyncFailureOutput(e, timeout));
     }
   };
   // Install deps when absent so a fresh CI checkout can run them (a dev tree

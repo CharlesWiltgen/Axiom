@@ -17,7 +17,21 @@ export interface HookSuiteFailure {
   message: string;
 }
 
-export function runHookSuites(pluginDir: string): {
+/** True when `execSync` gave up on its `timeout`. It never sets `killed` (only
+ * the async `exec`/`execFile` do); a timeout surfaces as code ETIMEDOUT. */
+export function isExecSyncTimeout(error: unknown): boolean {
+  return (error as { code?: unknown } | null)?.code === "ETIMEDOUT";
+}
+
+/** What a failed `execSync` left behind: its output, headed by a timeout notice
+ * when its `timeout` is why it stopped. */
+export function execSyncFailureOutput(error: unknown, timeoutMs: number): string {
+  const err = error as { stdout?: Buffer; stderr?: Buffer } | null;
+  const output = err?.stdout?.toString() || err?.stderr?.toString() || "";
+  return isExecSyncTimeout(error) ? `timed out after ${timeoutMs / 1000}s\n${output}` : output;
+}
+
+export function runHookSuites(pluginDir: string, timeoutMs = 60_000): {
   runs: HookSuiteRun[];
   failures: HookSuiteFailure[];
 } {
@@ -36,16 +50,16 @@ export function runHookSuites(pluginDir: string): {
       // report the test count on success.
       const out = execSync(`python3 -m unittest "${moduleName}" 2>&1`, {
         stdio: ["pipe", "pipe", "pipe"],
-        timeout: 60000,
+        timeout: timeoutMs,
         cwd: hooksDir,
       }).toString();
       runs.push({ file: testFile, ran: out.match(/Ran \d+ tests?/)?.[0] ?? "ran" });
     } catch (e: unknown) {
-      const err = e as { killed?: boolean; stdout?: Buffer; stderr?: Buffer };
+      const err = e as { stdout?: Buffer; stderr?: Buffer };
       failures.push({
         file: testFile,
-        message: err.killed
-          ? `${testFile} timed out`
+        message: isExecSyncTimeout(e)
+          ? `${testFile} timed out after ${timeoutMs / 1000}s`
           : `${testFile} FAILED:\n${err.stdout?.toString() || err.stderr?.toString() || ""}`,
       });
     }
