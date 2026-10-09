@@ -25,6 +25,7 @@ import {
   type ResolvedTool,
 } from "./session.ts";
 import { crashFileHint, inputPath, toolResultHint } from "./guardrails.ts";
+import { detectToolchain } from "./version-context.ts";
 
 export default function axiomPi(pi: ExtensionAPI): void {
   // --- Commands: /axiom-<name> → trigger the matching skill ----------------
@@ -47,30 +48,32 @@ export default function axiomPi(pi: ExtensionAPI): void {
   }
 
   // --- Session hook: version ground truth + tool availability --------------
-  // Computed once from the session's initial cwd (the gate + PATH probe are
-  // stable for a session) and chained onto the system prompt each turn. Pi
-  // passes the freshly-rebuilt BASE prompt to this event every turn
-  // (agent-session resets to base when no extension modifies it), so the
-  // append is idempotent — it never accumulates. `undefined` = not yet computed.
-  let cachedContext: string | null | undefined;
+  // Computed once from the session's initial cwd (the gate, PATH probe and
+  // active Xcode are stable for a session) and chained onto the system prompt
+  // each turn. Pi passes the freshly-rebuilt BASE prompt to this event every
+  // turn (agent-session resets to base when no extension modifies it), so the
+  // append is idempotent — it never accumulates. `undefined` = not yet started.
+  let cachedContext: Promise<string | null> | undefined;
 
-  function axiomContextForSession(cwd: string): string | null {
-    if (cachedContext !== undefined) return cachedContext;
-    if (!resolveContextDecision(cwd, process.env.AXIOM_SESSION_CONTEXT)) {
-      cachedContext = null;
-      return null;
-    }
+  async function computeAxiomContext(cwd: string): Promise<string | null> {
+    if (!resolveContextDecision(cwd, process.env.AXIOM_SESSION_CONTEXT)) return null;
     const availableTools: ResolvedTool[] = [];
     for (const t of AXIOM_TOOLS) {
       const resolvedPath = findOnPath(t.name);
       if (resolvedPath) availableTools.push({ ...t, resolvedPath });
     }
-    cachedContext = buildAxiomContext({ now: new Date(), availableTools });
-    return cachedContext;
+    // detectToolchain never rejects; if that changes, lose only the toolchain line.
+    const toolchain = await detectToolchain(process.env).catch(() => null);
+    return buildAxiomContext({ now: new Date(), toolchain, availableTools });
   }
 
-  pi.on("before_agent_start", (event: BeforeAgentStartEvent, ctx) => {
-    const context = axiomContextForSession(ctx.cwd);
+  pi.on("before_agent_start", async (event: BeforeAgentStartEvent, ctx) => {
+    // A rejected promise would stay cached and fail every turn; inject nothing instead.
+    cachedContext ??= computeAxiomContext(ctx.cwd).catch((err: unknown) => {
+      console.error("[axiom-pi] session context failed:", err);
+      return null;
+    });
+    const context = await cachedContext;
     if (!context) return;
     return { systemPrompt: `${event.systemPrompt}\n\n${context}` };
   });

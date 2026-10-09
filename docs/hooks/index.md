@@ -52,7 +52,7 @@ On Pi there is no per-prompt hook; Axiom instead injects a compact skill menu in
 
 **Event** – session start (all harnesses)
 
-Injects the current iOS/Xcode version ground-truth (so the model never insists a newer OS "doesn't exist") and reports which of Axiom's bundled helpers, such as `xclog`, `xcsym` and `xcui`, are available.
+Injects the iOS/Xcode version ground-truth, so the model never insists a newer OS "doesn't exist". It names the Xcode you've switched to (with `xcode-select`, or `DEVELOPER_DIR`) and its iOS SDK. Claude Code, Codex, Cursor and Pi receive the same text, and the MCP server includes it in its instructions. The hook also reports which of Axiom's bundled helpers, such as `xclog`, `xcsym` and `xcui`, are available.
 
 ### Subagent skill injection
 

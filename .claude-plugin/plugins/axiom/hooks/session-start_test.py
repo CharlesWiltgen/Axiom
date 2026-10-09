@@ -17,6 +17,7 @@ import subprocess
 import tempfile
 import unittest
 
+import version_context
 import xcode_path
 
 HOOKS_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -55,6 +56,17 @@ def context(payload: dict) -> str:
     return payload["hookSpecificOutput"]["additionalContext"]
 
 
+VERSION_BLOCK_HEADING = "## iOS / Xcode VERSION GROUND TRUTH"
+VERSION_BLOCK_LAST_LINE = version_context.version_ground_truth("any date", None).splitlines()[-1]
+
+
+def version_block(ctx: str) -> str:
+    """The rendered version ground truth inside a hook's context."""
+    start = ctx.index(VERSION_BLOCK_HEADING)
+    end = ctx.index(VERSION_BLOCK_LAST_LINE, start) + len(VERSION_BLOCK_LAST_LINE)
+    return ctx[start:end]
+
+
 # Tool and Xcode paths are printed in the context, so long paths make it bigger.
 # A default install's plugin root is ~60 chars (~/.claude/plugins/cache/...), and
 # Xcode is /Applications/Xcode.app; these lengths leave room for unusual setups.
@@ -69,9 +81,16 @@ def padded_dir(root: str, length: int, leaf: str) -> str:
     return os.path.join(root, "p" * pad, leaf)
 
 
-def fake_install(root: str, skill_text: str | None = None) -> tuple[str, str]:
+TRUNCATION_CHECKED_TOOLS = ("xclog", "xcsym", "xcui", "xcprof")
+
+
+def fake_install(
+    root: str, skill_text: str | None = None, truncated: bool = False
+) -> tuple[str, str]:
     """A worst case for the hook's output size: a long plugin root with every
     bundled tool, and a long Xcode path with for-LLM docs and version plists.
+    truncated=True leaves the size-checked tools below the hook's 1 MB floor,
+    whose warnings are longer than the normal tool lines.
     Returns (plugin_root, xcode_path)."""
     plugin_root = padded_dir(os.path.join(root, "plugins"), PLUGIN_ROOT_LEN, "axiom")
     skill_dir = os.path.join(plugin_root, "skills", "axiom-tools")
@@ -85,7 +104,8 @@ def fake_install(root: str, skill_text: str | None = None) -> tuple[str, str]:
     for tool in ("xclog", "xcsym", "xcui", "xcprof", "axbuild", "xcproject"):
         path = os.path.join(plugin_root, "bin", tool)
         with open(path, "wb") as f:
-            f.truncate(1_100_000)  # sparse; clears the hook's 1 MB truncation floor
+            # sparse; 1.1 MB clears the hook's 1 MB truncation floor
+            f.truncate(10 if truncated and tool in TRUNCATION_CHECKED_TOOLS else 1_100_000)
         os.chmod(path, 0o755)
 
     xcode = padded_dir(os.path.join(root, "Applications"), XCODE_PATH_LEN, "Xcode-beta.app")
@@ -136,14 +156,23 @@ class TestSessionStartGate(unittest.TestCase):
 
 class TestCodexStartup(unittest.TestCase):
     def test_codex_context_is_bounded_and_preserves_required_safeguards(self):
+        # Worst case: the long plugin root (printed twice) and Xcode path the
+        # Claude size test uses. The shared version ground truth (~1.7k) is most
+        # of this; the rest is Codex's own router-loading text.
         with tempfile.TemporaryDirectory() as d:
-            payload = run_in(d, {"AXIOM_SESSION_CONTEXT": "always", "AXIOM_HARNESS": "codex"})
+            plugin_root, fake_xcode = fake_install(d)
+            payload = run_in(
+                d,
+                {"AXIOM_SESSION_CONTEXT": "always", "AXIOM_HARNESS": "codex", "AXIOM_XCODE_PATH": fake_xcode},
+                plugin_root,
+            )
         context = payload["hookSpecificOutput"]["additionalContext"]
-        self.assertLessEqual(len(context.encode("utf-8")), 2500)
+        self.assertIn("Installed on this machine: Xcode 99.1", context)
+        self.assertLessEqual(len(context.encode("utf-8")), 4000)
         self.assertIn("SKILL.md", context)
-        self.assertIn("deployment target", context)
+        self.assertIn("DEPLOYMENT TARGET", context)
         self.assertIn("#available", context)
-        for safeguard in ("BEFORE responding or acting", "Multi-domain work needs", "Never reject an iOS/Xcode version", "Use only capabilities exposed"):
+        for safeguard in ("BEFORE responding or acting", "Multi-domain work needs", "VERSION GROUND TRUTH", "Use only capabilities exposed"):
             with self.subTest(safeguard=safeguard):
                 self.assertIn(safeguard, context)
         self.assertNotIn("use the 'Skill' tool", context)
@@ -198,6 +227,14 @@ class TestSessionStartContextSize(_InApple):
         # Every optional block is present, so this is the largest the hook emits.
         for block in ("**Apple for-LLM Documentation**", "**xclog**", "**xcsym**", "**xcui**", "**xcprof**", "**Bundled tools**"):
             self.assertIn(block, c)
+        self.assertLess(len(c), CLAUDE_CODE_CONTEXT_LIMIT)
+
+    def test_worst_case_with_truncated_binaries_fits_claude_code_inline_limit(self):
+        # A truncation warning is longer than the tool line it replaces.
+        plugin_root, fake_xcode = fake_install(self.root, truncated=True)
+        c = context(run_in(self.project, {"AXIOM_XCODE_PATH": fake_xcode}, plugin_root))
+        for tool in TRUNCATION_CHECKED_TOOLS:
+            self.assertIn(f"**{tool} binary appears truncated**", c)
         self.assertLess(len(c), CLAUDE_CODE_CONTEXT_LIMIT)
 
     def test_session_facts_come_before_the_skill_text(self):
@@ -265,67 +302,162 @@ class TestSessionStartVersionFacts(_InApple):
         self.assertIn("iOS 99.2 SDK", c)
         self.assertIn(fake_xcode, c)
 
+    def test_non_ascii_xcode_path_resolves_under_an_ascii_locale(self):
+        # The hook decoded xcode-select's output and SKILL.md with the locale's
+        # codec, so a US-ASCII locale lost the toolchain line and the span.
+        plugin_root, _ = fake_install(self.root)
+        app = os.path.join(self.root, "Xcode ß.app")
+        os.makedirs(os.path.join(app, "Contents", "Developer"))
+        with open(os.path.join(app, "Contents", "Info.plist"), "wb") as f:
+            plistlib.dump({"CFBundleShortVersionString": "99.3"}, f)
+        ascii_locale = {"LC_ALL": "en_US.US-ASCII", "LANG": "en_US.US-ASCII"}
+        c = context(run_in(self.project, {"DEVELOPER_DIR": app, **ascii_locale}, plugin_root))
+        self.assertEqual(
+            ("Installed on this machine: Xcode 99.3" in c, "## The Rule" in c), (True, True)
+        )
+
+    def test_app_form_developer_dir_selects_the_active_toolchain(self):
+        # xcrun accepts DEVELOPER_DIR=<Xcode>.app as readily as .../Contents/Developer.
+        plugin_root, fake_xcode = fake_install(self.root)
+        c = context(run_in(self.project, {"DEVELOPER_DIR": fake_xcode}, plugin_root))
+        self.assertIn(f"Installed on this machine: Xcode 99.1 with the iOS 99.2 SDK (`{fake_xcode}`)", c)
+
 
 class TestXcodePathResolution(unittest.TestCase):
+    """The hook describes the Xcode the user has switched to: what `xcode-select -p`
+    reports, which honors DEVELOPER_DIR and otherwise the `--switch` selection."""
+
     def setUp(self):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
         self.root = tmp.name
 
     def make_xcode(self, name: str) -> str:
-        """An Xcode.app with an Info.plist; returns its Developer dir."""
+        """An Xcode.app with an Info.plist; returns the app path."""
         contents = os.path.join(self.root, name, "Contents")
         os.makedirs(os.path.join(contents, "Developer"))
         open(os.path.join(contents, "Info.plist"), "w").close()
-        return os.path.join(contents, "Developer")
+        return os.path.join(self.root, name)
 
-    def test_explicit_override_wins(self):
-        active = self.make_xcode("Active.app")
-        self.assertEqual(
-            xcode_path.resolve_xcode_path(
-                {"AXIOM_XCODE_PATH": "/explicit", "DEVELOPER_DIR": active}
-            ),
-            "/explicit",
+    def fake_select(self, with_developer_dir: str | None, selected: str | None):
+        """An xcode-select stand-in: reports DEVELOPER_DIR when the env carries it,
+        else the selection. Records each env it was asked about."""
+        calls: list[dict] = []
+
+        def select(env):
+            calls.append(dict(env))
+            return with_developer_dir if env.get("DEVELOPER_DIR") else selected
+
+        return select, calls
+
+    def test_explicit_override_wins_without_asking_xcode_select(self):
+        select, calls = self.fake_select(self.make_xcode("Active.app"), None)
+        resolved = xcode_path.resolve_xcode_path(
+            {"AXIOM_XCODE_PATH": "/explicit", "DEVELOPER_DIR": "/x"}, xcode_select=select
         )
+        self.assertEqual((resolved, calls), ("/explicit", []))
 
-    def test_developer_dir_wins_over_the_select_link(self):
-        active = self.make_xcode("Active.app")
-        selected = self.make_xcode("Selected.app")
-        link = os.path.join(self.root, "select_link")
-        os.symlink(selected, link)
-        self.assertEqual(
-            xcode_path.resolve_xcode_path({"DEVELOPER_DIR": active}, select_link=link),
-            os.path.join(self.root, "Active.app"),
-        )
+    def test_reported_developer_dir_resolves_to_its_app(self):
+        app = self.make_xcode("Active.app")
+        select, _ = self.fake_select(None, os.path.join(app, "Contents", "Developer"))
+        self.assertEqual(xcode_path.resolve_xcode_path({}, xcode_select=select), app)
 
-    def test_select_link_used_when_env_is_absent(self):
-        selected = self.make_xcode("Selected.app")
-        link = os.path.join(self.root, "select_link")
-        os.symlink(selected, link)
-        self.assertEqual(
-            xcode_path.resolve_xcode_path({}, select_link=link),
-            os.path.join(self.root, "Selected.app"),
-        )
+    def test_reported_app_path_resolves_to_itself(self):
+        # xcode-select passes DEVELOPER_DIR through unchanged when the app has no
+        # Contents/Developer to append, so the app form must resolve on its own.
+        app = self.make_xcode("Beta.app")
+        for reported in (app, app + "/", os.path.join(app, "Contents", "Developer", ".")):
+            with self.subTest(reported=reported):
+                select, _ = self.fake_select(reported, None)
+                self.assertEqual(
+                    xcode_path.resolve_xcode_path({"DEVELOPER_DIR": reported}, xcode_select=select),
+                    app,
+                )
 
-    def test_developer_dir_without_xcode_falls_through(self):
-        # A Command Line Tools style root has no Xcode.app above it.
+    def test_developer_dir_naming_no_xcode_falls_back_to_the_selection(self):
         tools = os.path.join(self.root, "CommandLineTools")
         os.makedirs(tools)
         selected = self.make_xcode("Selected.app")
-        link = os.path.join(self.root, "select_link")
-        os.symlink(selected, link)
+        select, calls = self.fake_select(tools, os.path.join(selected, "Contents", "Developer"))
+        resolved = xcode_path.resolve_xcode_path({"DEVELOPER_DIR": tools}, xcode_select=select)
         self.assertEqual(
-            xcode_path.resolve_xcode_path({"DEVELOPER_DIR": tools}, select_link=link),
-            os.path.join(self.root, "Selected.app"),
+            (resolved, ["DEVELOPER_DIR" in env for env in calls]), (selected, [True, False])
         )
 
-    def test_default_when_nothing_resolves(self):
+    def test_default_when_xcode_select_reports_nothing(self):
+        select, _ = self.fake_select(None, None)
         self.assertEqual(
-            xcode_path.resolve_xcode_path(
-                {}, select_link=os.path.join(self.root, "missing")
-            ),
-            xcode_path.DEFAULT_XCODE_PATH,
+            xcode_path.resolve_xcode_path({}, xcode_select=select), xcode_path.DEFAULT_XCODE_PATH
         )
+
+    @unittest.skipUnless(shutil.which("xcode-select"), "needs macOS xcode-select")
+    def test_unspawnable_developer_dir_falls_back_to_the_selection(self):
+        # A NUL byte makes the spawn itself raise (ValueError), not fail.
+        self.assertEqual(
+            xcode_path.resolve_xcode_path({"DEVELOPER_DIR": "bad\0dir"}),
+            xcode_path.resolve_xcode_path({}),
+        )
+
+    @unittest.skipUnless(shutil.which("xcode-select"), "needs macOS xcode-select")
+    def test_real_xcode_select_resolves_an_app_form_developer_dir(self):
+        # The 2026-10-08 regression: DEVELOPER_DIR=/Applications/Xcode-beta.app made
+        # the hook describe /Applications/Xcode.app while xcrun used the beta.
+        app = self.make_xcode("Xcode Beta.app")
+        self.assertEqual(xcode_path.resolve_xcode_path({"DEVELOPER_DIR": app}), app)
+
+
+class TestVersionContextAlignment(_InApple):
+    """Claude Code and Codex render the same version ground truth from
+    version_context.py, and both carry the attribution sentence."""
+
+    def test_claude_and_codex_carry_the_same_version_block(self):
+        plugin_root, fake_xcode = fake_install(self.root)
+        env = {"AXIOM_XCODE_PATH": fake_xcode}
+        claude = context(run_in(self.project, env, plugin_root))
+        codex = context(run_in(self.project, {**env, "AXIOM_HARNESS": "codex"}, plugin_root))
+        self.assertEqual(version_block(codex), version_block(claude))
+        self.assertIn("Installed on this machine: Xcode 99.1", version_block(codex))
+
+    def test_both_harnesses_carry_the_attribution_sentence(self):
+        plugin_root, fake_xcode = fake_install(self.root)
+        env = {"AXIOM_XCODE_PATH": fake_xcode}
+        claude = context(run_in(self.project, env, plugin_root))
+        codex = context(run_in(self.project, {**env, "AXIOM_HARNESS": "codex"}, plugin_root))
+        self.assertEqual(
+            [version_context.ATTRIBUTION in c for c in (claude, codex)], [True, True]
+        )
+
+
+class TestMissingVersionModules(_InApple):
+    """A partial install without version_context.py / xcode_path.py loses only the
+    version block: the gate, the span and the tool lines still work."""
+
+    def run_partial(self, cwd: str) -> dict:
+        plugin_root, _ = fake_install(self.root)
+        hooks = os.path.join(self.root, "partial-hooks")
+        os.mkdir(hooks)
+        for name in ("session-start.py", "project_detect.py", "hook_diagnostics.py"):
+            shutil.copy(os.path.join(HOOKS_DIR, name), hooks)
+        env = {k: v for k, v in os.environ.items() if k not in ("AXIOM_SESSION_CONTEXT", "AXIOM_HARNESS")}
+        out = subprocess.run(
+            ["python3", os.path.join(hooks, "session-start.py"), plugin_root],
+            cwd=cwd, env=env, capture_output=True, text=True, timeout=15,
+        )
+        self.assertEqual(out.returncode, 0, out.stderr)
+        return json.loads(out.stdout or "{}")
+
+    def test_apple_project_keeps_everything_but_the_version_block(self):
+        c = context(self.run_partial(self.project))
+        self.assertEqual(
+            ("## The Rule" in c, "**Bundled tools**" in c, "VERSION GROUND TRUTH" in c),
+            (True, True, False),
+        )
+
+    def test_non_apple_project_still_gets_nothing(self):
+        plain = os.path.join(self.root, "plain")
+        os.makedirs(os.path.join(plain, ".git"))
+        open(os.path.join(plain, "index.js"), "w").close()
+        self.assertEqual(self.run_partial(plain), {})
 
 
 class TestBundledToolRoster(_InApple):
@@ -335,6 +467,15 @@ class TestBundledToolRoster(_InApple):
         c = context(run_in(self.project, {"AXIOM_XCODE_PATH": fake_xcode}, plugin_root))
         for name in ("axbuild", "xclog", "xcsym", "xcui", "xcprof", "xcproject", "axprobe"):
             self.assertIn(name, c)
+
+    def test_roster_leaves_out_binaries_flagged_as_truncated(self):
+        # The roster says to run each listed tool with --help, and the warning
+        # above says not to call a truncated one.
+        plugin_root, fake_xcode = fake_install(self.root, truncated=True)
+        c = context(run_in(self.project, {"AXIOM_XCODE_PATH": fake_xcode}, plugin_root))
+        roster = next(line for line in c.splitlines() if line.startswith("**Bundled tools**"))
+        listed = [name for name in ("axbuild", "xcproject", *TRUNCATION_CHECKED_TOOLS) if name in roster]
+        self.assertEqual(listed, ["axbuild", "xcproject"])
 
     def test_roster_omitted_when_bin_is_empty(self):
         plugin_root, fake_xcode = fake_install(self.root)

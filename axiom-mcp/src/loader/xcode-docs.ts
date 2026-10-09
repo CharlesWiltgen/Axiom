@@ -2,6 +2,7 @@ import { readdir, readFile, stat } from 'fs/promises';
 import { join } from 'path';
 import { parseAppleDoc, Skill } from './parser.js';
 import { Logger } from '../config.js';
+import { resolveXcodePath } from '../version-context.js';
 
 export interface XcodeDocsConfig {
   xcodePath: string;
@@ -9,7 +10,6 @@ export interface XcodeDocsConfig {
   diagnosticsPath: string | null;
 }
 
-const DEFAULT_XCODE_PATH = '/Applications/Xcode.app';
 const ADDITIONAL_DOCS_SUBPATH = 'Contents/PlugIns/IDEIntelligenceChat.framework/Versions/A/Resources/AdditionalDocumentation';
 const DIAGNOSTICS_SUBPATH = 'Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/share/doc/swift/diagnostics';
 
@@ -23,10 +23,15 @@ async function isDirectory(path: string): Promise<boolean> {
 
 /**
  * Detect Xcode installation and resolve paths to Apple's for-LLM documentation.
+ * Without an override, reads the Xcode the user has switched to — the same one
+ * every harness's session context names (version-context.ts).
  * Returns null if Xcode is not found or doc paths are missing.
  */
-export async function detectXcode(overridePath?: string): Promise<XcodeDocsConfig | null> {
-  const xcodePath = overridePath || DEFAULT_XCODE_PATH;
+export async function detectXcode(
+  overridePath?: string,
+  env: Record<string, string | undefined> = process.env,
+): Promise<XcodeDocsConfig | null> {
+  const xcodePath = overridePath || (await resolveXcodePath(env));
 
   if (!await isDirectory(xcodePath)) {
     return null;

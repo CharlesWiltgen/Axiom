@@ -35,7 +35,7 @@ For axbuild installation, report handling and saved-log fallback, read `axiom-bu
 | "Can I automate resize testing?" / "Does my layout hold across breakpoints?" | [skills/xcui-ref.md](skills/xcui-ref.md) (Resize sweeps) — `xcui resize sweep` |
 | "How do I drive `appResize` by hand?" | [skills/device-control-ref.md](skills/device-control-ref.md) (Resizable app sessions) |
 
-<!-- AXIOM_SESSION_START_BEGIN: hooks/session-start.py injects this span at every session start. Keep it small; hooks/session-start_test.py holds the whole injection under Claude Code's 10,000-char hook-context limit. -->
+<!-- AXIOM_SESSION_START_BEGIN -->
 ## Using Axiom Skills
 
 The content below is the core discipline for Axiom's routing system — it establishes the rule that Axiom skills must be checked before any iOS/Swift response.

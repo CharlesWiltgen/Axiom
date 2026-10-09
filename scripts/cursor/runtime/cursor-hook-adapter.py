@@ -13,6 +13,7 @@ import subprocess
 import sys
 import tempfile
 import time
+from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
 # Importing the sibling detector would otherwise write __pycache__ into the plugin
@@ -353,6 +354,11 @@ def session_start(payload: Dict[str, Any]) -> Dict[str, str]:
         from project_detect import resolve_context_decision
     except Exception as error:
         raise AdapterError("missing project detector") from error
+    try:
+        import version_context
+        from xcode_path import detect_toolchain
+    except Exception as error:
+        raise AdapterError("missing version context") from error
     cwd = _workspace_root(payload)
     if not resolve_context_decision(cwd, os.environ.get("AXIOM_SESSION_CONTEXT")):
         return {}
@@ -368,9 +374,13 @@ def session_start(payload: Dict[str, Any]) -> Dict[str, str]:
     context = (
         "Axiom Cursor session context v1 — {}. For Apple/Swift work, check the matching "
         "axiom-* router before responding. Route environment and build questions first; then "
-        "use architecture routers such as axiom-swiftui, axiom-data, and axiom-concurrency."
-    ).format(title)
-    return {"additional_context": context}
+        "use architecture routers such as axiom-swiftui, axiom-data, and axiom-concurrency. {}"
+    ).format(title, version_context.ATTRIBUTION)
+    # The same version ground truth every Axiom harness states (version_context.py).
+    ground_truth = version_context.version_ground_truth(
+        version_context.format_date(datetime.now()), detect_toolchain(os.environ)
+    )
+    return {"additional_context": f"{context}\n\n{ground_truth}"}
 
 
 def post_shell(payload: Dict[str, Any]) -> Dict[str, str]:

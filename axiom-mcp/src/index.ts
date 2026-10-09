@@ -21,6 +21,8 @@ import { DynamicToolsHandler } from './tools/handler.js';
 import { XcprofTools, resolveXcprofPath } from './tools/xcprof.js';
 import { XclogTools, resolveXclogPath } from './tools/xclog.js';
 import { XcsymTools, resolveXcsymPath } from './tools/xcsym.js';
+import { serverInstructions } from './instructions.js';
+import { detectToolchain } from './version-context.js';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { readFileSync } from 'fs';
@@ -84,12 +86,8 @@ async function main() {
         prompts: {},
         tools: { listChanged: config.mode === 'development' },
       },
-      instructions: [
-        'Axiom is a library of battle-tested skills, agents, and tools for modern Apple-platform development (iOS, iPadOS, macOS, watchOS, tvOS): SwiftUI, Swift concurrency, data, performance, accessibility, networking, Apple Intelligence, and more.',
-        'Recommended workflow: axiom_get_catalog (browse) → axiom_search_skills (find by keyword) → axiom_read_skill (read) → axiom_get_agent (autonomous agent instructions). All four are read-only lookups.',
-        'Read token-leanly: axiom_read_skill returns a large skill\'s section index by default — re-read with a sections filter (≈8× smaller) rather than full:true unless you need the whole skill.',
-        'The axiom_xcprof_*/xclog_*/xcsym_* tools wrap bundled macOS + Xcode CLIs (profiling, console capture, crash symbolication); each tool\'s own description carries its specifics.',
-      ].join(' '),
+      // detectToolchain never rejects; the catch keeps startup safe if that changes.
+      instructions: serverInstructions(new Date(), await detectToolchain(process.env).catch(() => null)),
     }
   );
   const server = mcpServer.server;

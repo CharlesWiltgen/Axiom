@@ -123,9 +123,11 @@ test("renders the native Cursor hook manifest and non-executable runtime copies"
     "scripts/subagent-start.py",
     "scripts/swift-guardrails.py",
     "scripts/user-prompt-submit.py",
+    "scripts/version_context.py",
+    "scripts/xcode_path.py",
   ]);
   for (const file of files) assert.equal(file.mode, 0o644);
-  for (const filename of ["posttool-bash-hints.py", "project_detect.py", "swift-guardrails.py", "hook_diagnostics.py"]) {
+  for (const filename of ["posttool-bash-hints.py", "project_detect.py", "swift-guardrails.py", "hook_diagnostics.py", "version_context.py", "xcode_path.py"]) {
     assert.equal(
       byPath.get(`scripts/${filename}`)!.content,
       fs.readFileSync(path.join(canonicalHooks, filename), "utf8"),
@@ -647,5 +649,8 @@ test("adapter injects compact context only when Apple project detection allows i
     assert.deepEqual(Object.keys(response), ["additional_context"]);
     assert.match(response.additional_context, /Axiom Cursor session context/);
     assert.match(response.additional_context, /Axiom Tools & Onboarding/);
+    // The same version ground truth and attribution sentence every harness gets.
+    assert.match(response.additional_context, /\n## iOS \/ Xcode VERSION GROUND TRUTH \(Current date: \w+, \d{4}-\d{2}-\d{2}\)\n/);
+    assert.ok(response.additional_context.includes("When an Axiom skill materially shapes your answer, name it once"));
   });
 });

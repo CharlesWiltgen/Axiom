@@ -5,8 +5,6 @@ import * as os from "node:os";
 import * as path from "node:path";
 import {
   AXIOM_TOOLS,
-  formatDate,
-  iosGroundTruth,
   findOnPath,
   toolContextBlock,
   buildAxiomContext,
@@ -15,19 +13,11 @@ import {
   resolveContextDecision,
   systemTempRoots,
 } from "./session.ts";
+import { ATTRIBUTION, formatDate, versionGroundTruth } from "./version-context.ts";
 
 describe("formatDate", () => {
   it("stamps weekday and ISO date in local time", () => {
     expect(formatDate(new Date(2026, 5, 14))).toBe("Sunday, 2026-06-14");
-  });
-});
-
-describe("iosGroundTruth", () => {
-  it("states the iOS 26 ground truth and no-denial rule, stamped with the date", () => {
-    const text = iosGroundTruth(new Date(2026, 5, 14));
-    expect(text).toContain("iOS 26 is the current major line");
-    expect(text).toContain('NEVER claim an iOS/Xcode version "doesn\'t exist"');
-    expect(text).toContain("Sunday, 2026-06-14");
   });
 });
 
@@ -57,14 +47,27 @@ describe("toolContextBlock", () => {
 });
 
 describe("buildAxiomContext", () => {
-  it("wraps ground truth and available tools in the importance marker", () => {
+  const toolchain = { path: "/Applications/Xcode-beta.app", xcodeVersion: "27.2", iosSdkVersion: "27.2" };
+
+  it("carries the shared version ground truth, the attribution sentence and available tools", () => {
     const ctx = buildAxiomContext({
-      now: new Date(2026, 5, 14),
+      now: new Date(2026, 9, 8),
+      toolchain,
       availableTools: [{ name: "xclog", blurb: "console", resolvedPath: "/bin/xclog" }],
     });
-    expect(ctx).toContain("<EXTREMELY_IMPORTANT>");
-    expect(ctx).toContain("iOS 26 is the current major line");
-    expect(ctx).toContain("/bin/xclog");
+    expect(
+      [
+        "<EXTREMELY_IMPORTANT>",
+        versionGroundTruth("Thursday, 2026-10-08", toolchain),
+        ATTRIBUTION,
+        "/bin/xclog",
+      ].filter((part) => !ctx.includes(part)),
+    ).toEqual([]);
+  });
+
+  it("no longer names a current major line", () => {
+    const ctx = buildAxiomContext({ now: new Date(2026, 9, 8), toolchain, availableTools: [] });
+    expect(ctx).not.toContain("current major line");
   });
 });
 

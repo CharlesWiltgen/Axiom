@@ -35,6 +35,8 @@ const RUNTIME_FILES = [
   "hooks/subagent-start.py",
   "hooks/swift-guardrails.py",
   "hooks/user-prompt-submit.py",
+  "hooks/version_context.py",
+  "hooks/xcode_path.py",
 ];
 
 function assertSafeRelativePath(relativePath: string): void {

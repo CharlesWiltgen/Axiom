@@ -53,7 +53,7 @@ Axiom's MCP server reads these files at runtime from the local Xcode installatio
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
-| `AXIOM_XCODE_PATH` | `/Applications/Xcode.app` | Custom Xcode path (e.g., Xcode-beta.app) |
+| `AXIOM_XCODE_PATH` | The Xcode `xcode-select` points to (honoring `DEVELOPER_DIR`) | Read a different Xcode's docs than the one you've switched to |
 | `AXIOM_APPLE_DOCS` | `true` | Set to `false` to disable Apple docs loading |
 
 ## Documentation Scope

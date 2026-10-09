@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import json
-import plistlib
 import sys
 import os
 from datetime import datetime
@@ -30,7 +29,6 @@ except ImportError:  # Diagnostics are optional; a missing module must not break
 hook_diagnostics.begin("session-start")
 
 from project_detect import resolve_context_decision
-from xcode_path import resolve_xcode_path
 
 if len(sys.argv) < 2:
     print(json.dumps({"error": "Usage: session-start.py <plugin_root>"}), file=sys.stderr)
@@ -46,6 +44,28 @@ plugin_root = sys.argv[1]
 if not resolve_context_decision(os.getcwd(), os.environ.get("AXIOM_SESSION_CONTEXT")):
     print(json.dumps({}))
     sys.exit(0)
+
+# The Xcode the user has switched to, and its versions, read from plists (no
+# xcodebuild subprocess at startup). Every harness states the same version ground
+# truth, rendered by version_context.py; see xcode_path.py for the precedence.
+# Imported after the gate and guarded: a partial install loses only this block,
+# never the gate or the rest of the context.
+xcode_path = "/Applications/Xcode.app"
+attribution = ""
+platform_context = ""
+try:
+    import version_context
+    from xcode_path import detect_toolchain
+
+    toolchain = detect_toolchain(os.environ)
+    xcode_path = toolchain.path
+    attribution = version_context.ATTRIBUTION
+    platform_context = version_context.version_ground_truth(
+        version_context.format_date(datetime.now()), toolchain
+    )
+except Exception as error:
+    hook_diagnostics.record_exception(error)
+    print(f"[WARN SessionStart] Version context unavailable: {error}", file=sys.stderr)
 
 if os.environ.get("AXIOM_HARNESS") == "codex":
     # Name what this install actually ships, so a new helper is never left out.
@@ -66,12 +86,7 @@ Never assume a tool named Skill or Read exists. Report unavailable guidance clea
 Start with environment/build guidance for build failures, architecture guidance for
 UI, data or concurrency work, then implementation guidance. Multi-domain work needs
 all relevant routers. Preserve the checks and safeguards in the loaded procedures.
-
-Never reject an iOS/Xcode version because it postdates training. Establish current
-versions from Axiom guidance or https://support.apple.com/en-us/123075, not training.
-Before OS-specific advice, establish the deployment target from the project or user.
-For newer APIs (including OS27), give @available/#available gates and a fallback
-that supports that target. Do not present newer APIs as universally deployable.
+{attribution}
 
 Use only capabilities exposed by this session. Load auditor procedures as skills;
 execute them sequentially when collaboration is unavailable. If collaboration tools
@@ -79,6 +94,8 @@ are present, respect their documented concurrency limits and the requested model
 Resolve helper paths under `{plugin_root}/bin/` ({helpers}), checking
 existence, executable permission and a non-mutating help/version probe before use.
 Do not assume helpers are on PATH. Optional Xcode/MCP capabilities need detection.
+
+{platform_context}
 </EXTREMELY_IMPORTANT>"""
     print(json.dumps({"hookSpecificOutput": {
         "hookEventName": "SessionStart", "additionalContext": context,
@@ -108,7 +125,7 @@ def session_start_span(skill_text: str) -> str:
 
 # Read the always-on part of axiom-tools
 try:
-    with open(f"{plugin_root}/skills/axiom-tools/SKILL.md", "r") as f:
+    with open(f"{plugin_root}/skills/axiom-tools/SKILL.md", "r", encoding="utf-8") as f:
         using_axiom_content = session_start_span(f.read())
 except Exception as e:
     hook_diagnostics.record_exception(e)
@@ -116,66 +133,7 @@ except Exception as e:
     using_axiom_content = f"Error reading axiom-tools skill: {e}"
 
 
-def plist_string(path: str, key: str) -> str | None:
-    """A string value from a plist, or None if the file or key is missing."""
-    try:
-        with open(path, "rb") as f:
-            value = plistlib.load(f).get(key)
-    except Exception:
-        return None
-    return value if isinstance(value, str) and value else None
-
-
-# The installed toolchain, read from plists (no xcodebuild subprocess at startup).
-# resolve_xcode_path prefers the active toolchain: an explicit override, then
-# DEVELOPER_DIR, then the xcode-select target, then the default app path.
-xcode_path = resolve_xcode_path(os.environ)
-xcode_version = plist_string(f"{xcode_path}/Contents/Info.plist", "CFBundleShortVersionString")
-ios_sdk_version = plist_string(
-    f"{xcode_path}/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk/SDKSettings.plist",
-    "Version",
-)
-installed_toolchain = ""
-if xcode_version:
-    sdk = f" with the iOS {ios_sdk_version} SDK" if ios_sdk_version else ""
-    installed_toolchain = f"""
-
-Installed on this machine: Xcode {xcode_version}{sdk} (`{xcode_path}`). That proves
-those versions exist; it does not prove nothing newer has shipped."""
-
-# Platform context - behavioral rules for handling iOS version uncertainty.
-# Deliberately does NOT assert the model's training cutoff or list the skipped
-# majors (19-25) as "might exist" — both age badly, and the latter actively
-# misinforms a model that already knows iOS 26. This is now the *only* place
-# Axiom states the iOS-version ground truth; the old reactive Stop hook
-# (stop-validation.sh) was retired — it false-blocked on prose that merely
-# discussed version-denial phrasings and added nothing a current model needs.
-# See GH #39 and axiom-nnue. It also no longer names a "current" major, which goes
-# stale every September; the installed Xcode, when there is one, is stated instead.
-current_date = datetime.now().strftime("%A, %Y-%m-%d")
-platform_context = f"""## iOS / Xcode VERSION GROUND TRUTH (Current date: {current_date})
-
-Apple went straight from iOS 18 to iOS 26 at WWDC 2025; the in-between majors
-(19-25) were never released. A new major ships every year, so 26 may no longer be
-the latest — don't assume it is.{installed_toolchain}
-
-BEHAVIORAL RULES:
-1. NEVER claim an iOS/Xcode version "doesn't exist" or is "wrong" because it
-   postdates your training — that includes iOS 26 and anything above it.
-2. NEVER state which iOS/Xcode version is "current" or "latest" from training
-   alone — defer to Axiom skills, or check https://support.apple.com/en-us/123075.
-3. For iOS-version or new-API questions, invoke the relevant Axiom skill first
-   (axiom-apple-docs, axiom-swiftui) — they carry WWDC 2025+ documentation.
-4. Before giving OS-version-specific advice, establish the user's DEPLOYMENT TARGET —
-   ask, or detect it (`/axiom:status` reads IPHONEOS_DEPLOYMENT_TARGET). Advice for a
-   newer OS than the target can name APIs the user cannot ship. For any API marked new
-   in a newer cycle (e.g. `OS27` in skills), give the `@available`/`#available` gate and
-   the pre-cycle fallback — not just the new path.
-
-This is a behavioral instruction grounded in Apple's release history, not a claim
-about your training data."""
-
-# Detect Apple for-LLM documentation in Xcode (xcode_path is set above)
+# Detect Apple for-LLM documentation in the resolved Xcode (set above)
 apple_docs_path = f"{xcode_path}/Contents/PlugIns/IDEIntelligenceChat.framework/Versions/A/Resources/AdditionalDocumentation"
 diagnostics_path = f"{xcode_path}/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/share/doc/swift/diagnostics"
 
@@ -201,12 +159,14 @@ if guide_count > 0 or diag_count > 0:
 # ~4 MB universal binary; 1 MB is well below any plausible legitimate
 # size and well above what truncation produces.
 xclog_path = f"{plugin_root}/bin/xclog"
+truncated_tools = set()  # flagged below; left out of the bundled-tool roster
 xclog_context = ""
 MIN_XCLOG_SIZE = 1_000_000
 try:
     if os.path.isfile(xclog_path):
         xclog_size = os.path.getsize(xclog_path)
         if xclog_size < MIN_XCLOG_SIZE:
+            truncated_tools.add("xclog")
             xclog_context = f"""
 
 ---
@@ -243,6 +203,7 @@ try:
     if os.path.isfile(xcsym_path):
         xcsym_size = os.path.getsize(xcsym_path)
         if xcsym_size < MIN_XCSYM_SIZE:
+            truncated_tools.add("xcsym")
             xcsym_context = f"""
 
 ---
@@ -268,6 +229,7 @@ try:
     if os.path.isfile(xcui_path):
         xcui_size = os.path.getsize(xcui_path)
         if xcui_size < MIN_XCUI_SIZE:
+            truncated_tools.add("xcui")
             xcui_context = f"""
 
 ---
@@ -291,6 +253,7 @@ try:
     if os.path.isfile(xcprof_path):
         xcprof_size = os.path.getsize(xcprof_path)
         if xcprof_size < MIN_XCPROF_SIZE:
+            truncated_tools.add("xcprof")
             xcprof_context = f"""
 
 ---
@@ -308,10 +271,12 @@ except OSError as error:
 
 # Bundled tool roster, derived from bin/ at run time so a new tool cannot be
 # left out of the session facts. Names only — the lines above carry paths and
-# usage; the roster exists so the model knows every tool that ships.
+# usage; the roster exists so the model knows every tool that ships. A tool
+# flagged as truncated above is left out: the roster says to run each with --help.
 try:
     bundled_tools = sorted(
-        n for n in os.listdir(os.path.join(plugin_root, "bin")) if not n.startswith(".")
+        n for n in os.listdir(os.path.join(plugin_root, "bin"))
+        if not n.startswith(".") and n not in truncated_tools
     )
 except OSError:
     bundled_tools = []

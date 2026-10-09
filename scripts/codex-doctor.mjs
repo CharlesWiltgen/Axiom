@@ -41,9 +41,15 @@ export const HOOK_DEPENDENCIES = {
     "project_detect.py",
     "hook_diagnostics.py",
     "xcode_path.py",
+    "version_context.py",
   ],
   "user-prompt-submit.py": ["project_detect.py", "hook_diagnostics.py"],
-  "subagent-start.py": ["project_detect.py", "hook_diagnostics.py"],
+  "subagent-start.py": [
+    "project_detect.py",
+    "hook_diagnostics.py",
+    "version_context.py",
+    "xcode_path.py",
+  ],
   "posttool-bash-hints.py": ["project_detect.py", "hook_diagnostics.py"],
   "swift-guardrails.py": ["project_detect.py", "hook_diagnostics.py"],
 };
