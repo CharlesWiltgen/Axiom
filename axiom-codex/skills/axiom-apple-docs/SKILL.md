@@ -6,7 +6,7 @@ license: MIT
 
 # Apple Documentation Router
 
-Apple bundles for-LLM markdown documentation inside Xcode. These are authoritative, up-to-date guides and diagnostics written by Apple engineers. Read them directly with Claude Code's native **`Read`** tool — no MCP server or special tool required.
+Apple bundles for-LLM markdown documentation inside Xcode. These are authoritative, up-to-date guides and diagnostics written by Apple engineers. Read them directly as files (in Claude Code, with the **`Read`** tool) — no MCP server or special tool required.
 
 ## When to Use
 
@@ -19,7 +19,7 @@ Apple bundles for-LLM markdown documentation inside Xcode. These are authoritati
 
 ## How to Read These Docs
 
-The session-start hook resolves Xcode's location and echoes the literal base directories into session context (look for "Apple for-LLM Documentation: Xcode detected at `<path>`"). Use the **`Read`** tool with `<that base>/<filename>`.
+Axiom's session context names the Xcode the user has switched to. In Claude Code it lists the literal base directories ("Apple for-LLM Documentation: Xcode detected at `<path>`"); other harnesses name the app ("Installed on this machine: Xcode … (`<path>`)") — substitute that `.app` for `/Applications/Xcode.app` in the table below. Read `<base>/<filename>` as a file (the **`Read`** tool in Claude Code).
 
 Default Xcode location (`/Applications/Xcode.app`) base directories:
 
@@ -34,7 +34,7 @@ Example invocation Claude should produce:
 Read /Applications/Xcode.app/Contents/PlugIns/IDEIntelligenceChat.framework/Versions/A/Resources/AdditionalDocumentation/SwiftUI-Implementing-Liquid-Glass-Design.md
 ```
 
-Xcode-beta users: the session-start hook respects `AXIOM_XCODE_PATH` and reports the resolved path in session context — use that path, not the default above.
+These paths assume the default install; use the path from session context instead. Without session context: use `AXIOM_XCODE_PATH` if it is set; otherwise run `xcode-select -p` (it honors `DEVELOPER_DIR`), which prints `<Xcode>.app/Contents/Developer` — drop `/Contents/Developer` and put that `.app` in place of `/Applications/Xcode.app` above. If it prints `/Library/Developer/CommandLineTools`, no Xcode is selected; try `/Applications/Xcode.app`.
 
 ## Guide Files (AdditionalDocumentation)
 
@@ -173,8 +173,10 @@ Xcode-beta users: the session-start hook respects `AXIOM_XCODE_PATH` and reports
 If a diagnostic you need isn't listed above, list the diagnostics directory first:
 
 ```
-ls $AXIOM_XCODE_PATH/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/share/doc/swift/diagnostics/
+ls "<Xcode>.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/share/doc/swift/diagnostics/"
 ```
+
+`<Xcode>.app` is the app session context names; without session context, derive it as above. Command Line Tools keep the same files at `/Library/Developer/CommandLineTools/usr/share/doc/swift/diagnostics/`.
 
 Filenames follow the diagnostic's short name (lowercase, hyphenated).
 
@@ -198,7 +200,7 @@ User question about Apple API/framework?
 
 ## Fallback When Xcode Is Unavailable
 
-If `AXIOM_XCODE_PATH` is unset, or the path doesn't exist, or the `IDEIntelligenceChat.framework` directory is missing (older Xcode), fall back to:
+If the resolved Xcode has no `IDEIntelligenceChat.framework` documentation directory (older Xcode, or only Command Line Tools installed), fall back to the list below. For a Swift diagnostic, first try the Command Line Tools copy at `/Library/Developer/CommandLineTools/usr/share/doc/swift/diagnostics/`.
 
 1. **sosumi.ai** (markdown mirror of developer.apple.com — see `skills/apple-docs-research.md`)
 2. **WebFetch** of the equivalent developer.apple.com URL
