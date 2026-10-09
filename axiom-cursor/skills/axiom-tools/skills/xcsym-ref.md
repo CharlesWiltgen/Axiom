@@ -57,7 +57,7 @@ xcsym crash --format=summary <file>             # small tier (~2KB target, warns
 xcsym crash --format=standard <file>            # default (~12KB target, warns past 50KB)
 xcsym crash --format=full <file>                # all threads (warns past 100KB)
 xcsym crash --from-metrickit <file>             # force MetricKit (skip auto-detect)
-xcsym crash --dsym <path> <file>                # explicit dSYM for the main app
+xcsym crash --dsym <path> <file>                # explicit dSYM (applies to every image)
 xcsym crash --dsym-paths <a>:<b> <file>         # extra dSYM search roots
 xcsym crash --no-symbolicate <file>             # skip atos; keep raw frames
 xcsym crash --no-cache <file>                   # bypass UUID cache
@@ -112,7 +112,7 @@ xcsym find-dsym <uuid> --no-cache
 xcsym find-dsym <uuid> --no-spotlight
 ```
 
-Walks the same discovery chain as `crash` minus the per-UUID explicit map (step 1) — see "dSYM Discovery Order" below for the authoritative order.
+Walks the same discovery chain as `crash` minus step 1 (`find-dsym` takes no `--dsym`) — see "dSYM Discovery Order" below for the authoritative order.
 
 ### list-dsyms — Inventory
 
@@ -248,9 +248,9 @@ Exit codes are subcommand-specific. Usage errors, tool errors, timeouts, and out
 |---|---|---|
 | 0 | All images matched | — |
 | 2 | Input not found / unreadable / unsupported format OR main app dSYM missing | Check path exists; otherwise download the dSYM for the main UUID |
-| 3 | Main app UUID mismatch | `xcsym find-dsym <uuid>` against the exact UUID from the crash |
-| 4 | Main app arch mismatch | User is on a different slice (arm64e vs arm64); use `find-dsym --arch` |
-| 7 | Main matched, some other images missing/mismatched | Partial success — frames in the main binary symbolicate, others won't |
+| 3 | Main app UUID mismatch (or, when the main image has no UUID to check, any image's) | `xcsym find-dsym <uuid>` against the exact UUID from the crash |
+| 4 | Main app arch mismatch (or, when the main image has no UUID, any image's arch mismatch if none has a UUID mismatch) | User is on a different slice (arm64e vs arm64); use `find-dsym --arch` |
+| 7 | Main matched and other images missing/mismatched, or main unchecked and others missing | Partial success — frames in images whose dSYMs matched symbolicate, the rest won't |
 
 **`verify` — per-image-centric (note the 7 vs crash difference):**
 
@@ -309,24 +309,23 @@ Every `pattern_tag` xcsym can emit, with the rule that fires it:
 
 Source: `tools/xcsym/dsym.go`. Sources are tried first-hit-wins in this exact order:
 
-1. **ExplicitByUUID** — per-image overrides the `crash` subcommand builds when the header lists a main-image UUID (before any other source, including cache)
-2. **Explicit paths** — `--dsym` direct override and `--dsym-paths` extra roots
-3. **UUID cache** — `~/Library/Caches/xcsym/uuid-index.json` (skip with `--no-cache`)
-4. **Spotlight** — `mdfind kMDItemContentType == com.apple.xcode.dsym` (skip with `--no-spotlight`)
-5. **Archives** — `~/Library/Developer/Xcode/Archives/**` (most recent first)
-6. **DerivedData** — `~/Library/Developer/Xcode/DerivedData/**/Build/Products/**`
-7. **Frameworks (cwd scan)** — walks the current working directory (no flag adds roots to this scan) for `*.xcframework`, `Carthage/Build`, and Pods layouts. Bounded by `XCSYM_FRAMEWORK_SCAN_TIMEOUT` (Go duration or integer seconds; default `500ms`) so an unrelated monorepo checkout can't stall discovery. An exhausted budget is swallowed as "no match" and the chain continues.
-8. **Downloads** — `~/Downloads/**` (for drag-and-dropped `App.dSYM.zip` files)
-9. **Toolchain** — current Xcode toolchain (system Swift dylibs bundled with Xcode.app)
-10. **Env paths** — `XCSYM_DSYM_PATHS` (colon-separated, processed as a last-resort supplement to `--dsym-paths`)
+1. **Explicit path** — `--dsym`; applies to every image, so with it the other images report a UUID mismatch instead of being searched
+2. **UUID cache** — `~/Library/Caches/xcsym/uuid-index.json` (skip with `--no-cache`)
+3. **Spotlight** — `mdfind kMDItemContentType == com.apple.xcode.dsym` (skip with `--no-spotlight`)
+4. **Archives** — `~/Library/Developer/Xcode/Archives/**` (most recent first)
+5. **DerivedData** — `~/Library/Developer/Xcode/DerivedData/**/Build/Products/**`
+6. **Frameworks (cwd scan)** — walks the current working directory (no flag adds roots to this scan) for `*.xcframework`, `Carthage/Build`, and Pods layouts. Bounded by `XCSYM_FRAMEWORK_SCAN_TIMEOUT` (Go duration or integer seconds; default `500ms`) so an unrelated monorepo checkout can't stall discovery. An exhausted budget is swallowed as "no match" and the chain continues.
+7. **Downloads** — `~/Downloads/**` (for drag-and-dropped `App.dSYM.zip` files)
+8. **Toolchain** — current Xcode toolchain (system Swift dylibs bundled with Xcode.app)
+9. **Extra roots** (source `env`) — `--dsym-paths` (colon-separated), searched last; without the flag, `XCSYM_DSYM_PATHS` instead. The flag replaces the variable rather than adding to it
 
-`find-dsym` follows the same chain minus step 1 (no per-UUID explicit map). `list-dsyms --source=<name>` restricts scanning to a single root by name.
+`find-dsym` follows the same chain minus step 1 (it takes no `--dsym`). `list-dsyms --source=<name>` restricts scanning to a single root by name.
 
 ## Troubleshooting
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
-| Exit 2, "main dSYM missing" | No archive for that UUID on this machine | Download the archive from App Store Connect; or set `XCSYM_DSYM_PATHS` to its location |
+| Exit 2, "main dSYM missing" | No archive for that UUID on this machine | Download the archive from App Store Connect; or pass its location in `--dsym-paths` (`XCSYM_DSYM_PATHS` applies only without that flag) |
 | Exit 3, main UUID mismatch | Crash came from a different build than the archive on disk | `xcsym find-dsym <uuid>` against the exact UUID from the crash |
 | Exit 4, main arch mismatch | arm64 vs arm64e slice mismatch | Pass `--arch` to `find-dsym`; verify the archive contains the slice |
 | Exit 7, "main matched, others missing" | Third-party frameworks shipped without dSYMs | Expected for stripped dependencies; main app frames symbolicate |
@@ -336,7 +335,7 @@ Source: `tools/xcsym/dsym.go`. Sources are tried first-hit-wins in this exact or
 | `pattern_tag="unclassified"` | No rule matched | Read `pattern_reason` for inspected fields; file a gap report |
 | `size_warning` in output | Tier exceeded its warn threshold (4 KB summary / 50 KB standard / 100 KB full) | Switch to the next smaller tier — the warning text names it |
 | `{"error":"hang_report"}` on stdout, exit 1 | `.ips` is a hang (`bug_type=298`), not a crash | Use hang-diagnostics skill; `crash` rejects hangs by design |
-| `crash`/`verify` takes minutes on a long-lived dev machine | Per-image walks of a huge `~/Library/Developer/Xcode/DerivedData/**` (the `--no-cache`/`--no-spotlight` flags don't skip these) | Add `--no-defaults` to bypass all default search roots (Archives/DerivedData/Downloads/Toolchain/Frameworks(cwd)) — symbolicates from `--dsym`/`--dsym-paths`/`XCSYM_DSYM_PATHS` only; images without those report Missing |
+| `crash`/`verify` takes minutes on a long-lived dev machine | Per-image walks of a huge `~/Library/Developer/Xcode/DerivedData/**` (the `--no-cache`/`--no-spotlight` flags don't skip these) | Add `--no-defaults` to bypass all default search roots (Archives/DerivedData/Downloads/Toolchain/Frameworks(cwd)) — symbolicates from `--dsym`, the UUID cache, Spotlight and `--dsym-paths` (or `XCSYM_DSYM_PATHS` without it) only; add `--no-cache`/`--no-spotlight` to narrow further. Images found nowhere report Missing |
 
 ## Resources
 

@@ -3,12 +3,12 @@
   "files": [
     {
       "path": ".cursor-plugin/plugin.json",
-      "sha256": "55d4b835acfe76b29c658f2bb3e82ea0520eb1f0305b1756b3a1d06aab7bf080",
+      "sha256": "2724f04823f8940668f5f45115ccedfb6dbe48125d9a56fb38d363cad71209eb",
       "bytes": 578
     },
     {
       "path": "README.md",
-      "sha256": "00e21682b8227e08216721495c6b6030e357633ebfe5f6f02984882b91ef5c7e",
+      "sha256": "5b921c071dbb5a067460120a565253ee228e421fe49a8ba3bdf753bc83686c43",
       "bytes": 3314
     },
     {
@@ -328,8 +328,8 @@
     },
     {
       "path": "scripts/cursor-hook-adapter.py",
-      "sha256": "641d72276f69c99c5056eb1fef56d71bd6b6f603cdd01ae2b756f45e581ad270",
-      "bytes": 27071
+      "sha256": "02a3bfa1e1acb9fdafc33b248c4c290e57e2a150297e24604128f3b8d9fa7631",
+      "bytes": 27570
     },
     {
       "path": "scripts/hook_diagnostics.py",
@@ -353,8 +353,8 @@
     },
     {
       "path": "scripts/subagent-start.py",
-      "sha256": "ba1e164914b7fc8dd204c92bf151d349ffe7da0e01633af0df502a23c7dfd7d1",
-      "bytes": 7809
+      "sha256": "4710688bcd2e83941ea795d8453f2eb431f67e7385f79638ad513cf9dc882d95",
+      "bytes": 8248
     },
     {
       "path": "scripts/swift-guardrails.py",
@@ -363,8 +363,18 @@
     },
     {
       "path": "scripts/user-prompt-submit.py",
-      "sha256": "10ad3b04a8c93fb4b9c763cfc2a372418018ae50dc6be7f0e1f5c4c880a0d169",
-      "bytes": 49397
+      "sha256": "d84a75227abb160dc9c8ad6c74428eccff14997f6a7789f2aad6c831ca6dda50",
+      "bytes": 50540
+    },
+    {
+      "path": "scripts/version_context.py",
+      "sha256": "5f8350f7d6b8055e3c8a078629f37d4e9116168e6159e5b66f0d7b8b7c9d255e",
+      "bytes": 3232
+    },
+    {
+      "path": "scripts/xcode_path.py",
+      "sha256": "402a855ca3aee7db12d536d5bad10e121fb0980cab8cb3da3c57c14be83a1363",
+      "bytes": 3763
     },
     {
       "path": "skills/axiom-accessibility/SKILL.md",
@@ -478,8 +488,8 @@
     },
     {
       "path": "skills/axiom-apple-docs/SKILL.md",
-      "sha256": "a0a3e5e666b563e3c902c20746b53c306e47e8f77f5b3a5996e2697511c5f0ac",
-      "bytes": 9777
+      "sha256": "96b01e153fb84ffddad5689c33ebe3aeca4b3d1fca4ed93ecbb8cf5c5d7bc17c",
+      "bytes": 10616
     },
     {
       "path": "skills/axiom-apple-docs/skills/apple-docs-research.md",
@@ -1708,8 +1718,8 @@
     },
     {
       "path": "skills/axiom-tools/SKILL.md",
-      "sha256": "b9cbc2166cfd70ca1a68efc327ac21b5b743d1db361341598b3df89dbeb0ed58",
-      "bytes": 10198
+      "sha256": "74fb9d9ba0c1b154feae67ee7c501a91183430fe243c18a46257f98338f6563f",
+      "bytes": 10011
     },
     {
       "path": "skills/axiom-tools/skills/device-control-ref.md",
@@ -1733,8 +1743,8 @@
     },
     {
       "path": "skills/axiom-tools/skills/xcsym-ref.md",
-      "sha256": "6a870daaf583264cc366df92eaac4f56b8c3e90ebd2b7d243c52992575041dbc",
-      "bytes": 26965
+      "sha256": "0c9a5fe5f428b1d43579b02d7e8916c03446a12afb4cd4d83b16d2b5bd8c6b60",
+      "bytes": 27292
     },
     {
       "path": "skills/axiom-tools/skills/xcui-ref.md",
@@ -1883,8 +1893,8 @@
     }
   ],
   "totals": {
-    "files": 376,
-    "bytes": 7673214
+    "files": 378,
+    "bytes": 7683269
   },
   "excludedMirrors": 30,
   "classes": {

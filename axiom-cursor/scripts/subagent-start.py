@@ -31,6 +31,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+from datetime import datetime
 
 try:
     import hook_diagnostics
@@ -139,9 +140,21 @@ clarifications. Load `{plugin_root}/skills/<router>/SKILL.md` with available fil
 terminal tools, then follow referenced child guidance. Available Axiom MCP retrieval
 is another loading path. Report unavailable guidance clearly:"""
     invocation = """Use only tools exposed by this session. Preserve the checks and safeguards in
-loaded guidance. Establish the deployment target before OS-specific advice; give
-@available/#available gates and a fallback for newer APIs, including OS27.
-Never reject an iOS/Xcode version because it postdates training."""
+loaded guidance."""
+
+# A subagent never sees the session context, so it gets the same attribution
+# sentence and version ground truth every harness's session does. A missing
+# module drops only this block, as a missing project detector drops only the gate.
+try:
+    import version_context
+    from xcode_path import detect_toolchain
+
+    shared_context = f" {version_context.ATTRIBUTION}\n\n" + version_context.version_ground_truth(
+        version_context.format_date(datetime.now()), detect_toolchain(os.environ)
+    )
+except Exception as error:
+    hook_diagnostics.record_exception(error)
+    shared_context = ""
 
 context = f"""{awareness}
 
@@ -163,7 +176,7 @@ context = f"""{awareness}
 - `axiom-uikit` — UIKit/SwiftUI bridging, Auto Layout, Combine, TextKit
 - `axiom-location` — Core Location, MapKit, geofencing, directions
 
-{invocation}"""
+{invocation}{shared_context}"""
 
 output = {
     "hookSpecificOutput": {
