@@ -64,28 +64,51 @@ if not isinstance(prompt, str):
 # user's words (GH #56): task-chip reminders arrive as <system-reminder>
 # blocks and machine-injected turns (task notifications) as
 # <task-notification> elements — bare, or nested inside a reminder. Their
-# boilerplate collides with the routing vocabulary — a notice saying
-# "started your suggested background task" hit the Integration rule's
-# background\s*task and routed a bare "push
-# das" to axiom-integration. Strip whole elements, not just the tags, and
-# mirror the harness's own sanitizer, which names exactly these two tags,
-# treats them alike, and tolerates an unterminated element (it runs to the
-# end of the payload). Other machine frames — peer and channel messages — are
-# a separate, unobserved surface here. The content is harness prose, and a
-# payload that is all notice has nothing of the user's to route. Do this
-# BEFORE the length guard and the 2000-char cap below, so both apply to what
-# the user actually wrote: an oversized notice
-# otherwise buries the words past the cap and silences a real route. Notices
-# sit ahead of the user's words, so genuine prompts survive intact — including
-# a user who types "background task" themselves. One accepted loss: text that
-# literally imitates a notice element is ignored for that turn's routing — the
-# hook never returns the prompt, so the transcript is untouched.
-prompt = re.sub(
-    r"<(system-reminder|task-notification)>.*?(?:</\1>|\Z)",
-    " ",
-    prompt,
-    flags=re.DOTALL,
-).strip()
+# boilerplate collides with the routing vocabulary — a notice saying "started
+# your suggested background task" hit the Integration rule's background\s*task
+# and routed a bare "push das" to axiom-integration. Strip whole elements, not
+# just the tags, and mirror the harness's own sanitizer, which names exactly
+# these two tags, treats them alike, and tolerates an unterminated element (it
+# runs to the end of the payload). The scan tracks the nesting the harness
+# produces — a <task-notification> inside a <system-reminder> — so the inner
+# closing tag cannot hand the outer element's tail to the router. An opening
+# tag whose name is already open is text: a notice quoting its own tag (a task
+# result about this hook) stays one element, and the stack never holds more
+# than the two names. A tag may carry quoted attributes and trailing
+# whitespace; a self-closing tag, or a tag name followed by prose, is the user
+# writing about notices and stays in the text. The pattern cannot run past the
+# next "<" or ">", and the stack is at most two deep, which keeps the scan
+# linear. Other machine frames — peer and channel messages — are a separate,
+# unobserved surface here. Do this BEFORE the length guard and the 2000-char
+# cap below, so both apply to what the user actually wrote: an oversized
+# notice otherwise buries the words past the cap and silences a real route.
+# Notices sit ahead of the user's words, so genuine prompts survive intact —
+# including a user who types "background task" themselves. Accepted loss: a
+# user who types an unclosed notice tag loses everything after it from that
+# turn's routing. The hook never returns the prompt, so the transcript is
+# untouched.
+NOTICE_TAG = re.compile(
+    r'<(/?)(system-reminder|task-notification)(?:\s+[\w:.-]+="[^"<>]*")*\s*(/?)>'
+)
+kept: list[str] = []
+open_notices: list[str] = []
+position = 0
+for tag in NOTICE_TAG.finditer(prompt):
+    if tag.group(3):
+        continue  # self-closing: text, not an element
+    if not open_notices:
+        kept.append(prompt[position:tag.start()])
+    closing, name = tag.group(1), tag.group(2)
+    if not closing:
+        if name not in open_notices:
+            open_notices.append(name)
+    elif name in open_notices:
+        while open_notices.pop() != name:
+            pass
+    position = tag.end()
+if not open_notices:
+    kept.append(prompt[position:])
+prompt = " ".join(kept).strip()
 
 if not prompt or len(prompt) < 5:
     print("{}")

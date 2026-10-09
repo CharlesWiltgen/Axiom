@@ -21,6 +21,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 
 HOOK = os.path.join(os.path.dirname(__file__), "user-prompt-submit.py")
@@ -1532,6 +1533,72 @@ class TestHarnessReminderStripping(unittest.TestCase):
         )
         self.assertIn("axiom-swiftui", skills)
         self.assertNotIn("axiom-integration", skills)
+
+    def test_notice_with_attributes_is_stripped(self):
+        """An opening tag carrying attributes is still a notice element."""
+        self.assertEqual(
+            routed_skills(
+                '<system-reminder kind="task-chip">\nbackground task\n</system-reminder>\n\npush das'
+            ),
+            set(),
+        )
+
+    def test_notice_quoting_its_own_tag_keeps_the_user_words(self):
+        """A notice whose body mentions its own opening tag (a task result about
+        this very hook) is still one element: the quoted tag is text, so the first
+        closing tag ends it and the user's words after it route."""
+        for tag in ("task-notification", "system-reminder"):
+            with self.subTest(tag=tag):
+                skills = routed_skills(
+                    f"<{tag}>The hook strips each <{tag}> element.</{tag}>\n"
+                    "navigationstack path persistence across launches"
+                )
+                self.assertIn("axiom-swiftui", skills)
+
+    def test_notification_nested_in_a_reminder_leaks_nothing(self):
+        """Different-name nesting, which the harness does produce: the inner
+        closing tag must not end the outer element."""
+        self.assertEqual(
+            routed_skills(
+                "<system-reminder>outer <task-notification>inner</task-notification> "
+                "background task</system-reminder>\n\npush das"
+            ),
+            set(),
+        )
+
+    def test_closing_tag_with_whitespace_ends_the_element(self):
+        """`</system-reminder >` closes the element; read as unterminated, it swallowed
+        the user's words that follow it."""
+        skills = routed_skills(
+            "<system-reminder>notice</system-reminder >\n"
+            "navigationstack path persistence across launches"
+        )
+        self.assertIn("axiom-swiftui", skills)
+
+    def test_tag_names_in_prose_are_not_elements(self):
+        """A self-closing tag, or a tag name followed by prose, is the user talking
+        about notices; it must not swallow the words after it."""
+        for prose in (
+            "explain <system-reminder /> handling then",
+            "the <system-reminder is what the harness adds> part, then",
+        ):
+            with self.subTest(prose=prose):
+                self.assertIn(
+                    "axiom-swiftui",
+                    routed_skills(f"{prose} navigationstack path persistence across launches"),
+                )
+
+    def test_unclosed_openers_scan_in_linear_time(self):
+        """An opener whose attribute pattern ran to the end of the prompt made the
+        scan quadratic: 136 KB of them took 4.7 s."""
+        for payload in (
+            "<system-reminder " * 8000 + "navigationstack",
+            # Deep same-name openers then closers that match none of them.
+            "<system-reminder>" * 20000 + "</task-notification>" * 20000,
+        ):
+            started = time.monotonic()
+            run_hook(payload)
+            self.assertLess(time.monotonic() - started, 2.0)
 
     def test_user_typed_background_task_still_routes(self):
         """The fix must not eat the user's own words: a user who types
