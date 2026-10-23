@@ -97,7 +97,7 @@ These paths assume the default install; use the path from session context instea
 
 ## Swift Compiler Diagnostics
 
-46 files in the diagnostics directory. Read with the path pattern `{diagnostics base}/{filename}`.
+The diagnostics directory ships more files than are listed here (the count varies by Xcode version); the most relevant are below. Read with the path pattern `{diagnostics base}/{filename}`.
 
 ### Concurrency Diagnostics
 
