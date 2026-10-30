@@ -83,6 +83,7 @@ export const AUDITOR_HOMES: Record<string, string> = {
   "test-failure-analyzer": "axiom-testing",
   "testing-auditor": "axiom-testing",
   "textkit-auditor": "axiom-swiftui",
+  "touch-auditor": "axiom-macos",
   "ux-flow-auditor": "axiom-swiftui",
 };
 

@@ -1,6 +1,6 @@
 # Axiom
 
-Apple-platform development expertise for your coding assistant: <!--ax:routers-->27<!--/ax--> skill routers over <!--ax:skills-->285<!--/ax--> skills, <!--ax:agents-->42<!--/ax--> agents, <!--ax:commands-->17<!--/ax--> commands, and its command-line tools. It works in Claude Code and the Claude app, and in Codex, Cursor, Pi and any MCP client.
+Apple-platform development expertise for your coding assistant: <!--ax:routers-->27<!--/ax--> skill routers over <!--ax:skills-->286<!--/ax--> skills, <!--ax:agents-->43<!--/ax--> agents, <!--ax:commands-->17<!--/ax--> commands, and its command-line tools. It works in Claude Code and the Claude app, and in Codex, Cursor, Pi and any MCP client.
 
 ## Install
 
@@ -35,7 +35,7 @@ Ask your question; your assistant loads the router that matches it, and the rout
 | `axiom-health` | Working with HealthKit, WorkoutKit, health data, workouts, or fitness features on iOS or watchOS. Covers permissions, queries, background delivery, custom workouts, multidevice coordination. |
 | `axiom-integration` | Work crosses into Apple's system surfaces rather than your own UI or data — Siri and Shortcuts, widgets, Live Activities, in-app purchase, localization, privacy prompts, alarms, timers, calendar, reminders, contacts, SharePlay, VoIP and CallKit, accessory pairing, weather, Spotlight indexing, background tasks, Background Assets, push, or push on networks with no internet. |
 | `axiom-location` | Implementing location services, maps, geofencing, or debugging location/MapKit issues. Covers Core Location, CLMonitor, MapKit, annotations, directions. |
-| `axiom-macos` | Building ANY macOS app — windows, menus, sandboxing, distribution, AppKit bridging or modernization (control events, state restoration, concentric corners), or macOS-specific SwiftUI patterns. |
+| `axiom-macos` | Building ANY macOS app — windows, menus, sandboxing, distribution, AppKit bridging or modernization (control events, state restoration, concentric corners), touch input, or macOS-specific SwiftUI patterns. |
 | `axiom-media` | Working with camera, photos, audio, haptics, ShazamKit, on-device music analysis, face grouping and video highlights, screen recording, casting to non-AirPlay routes, SharePlay playback, the user's Apple Music library, lock-screen metadata, or CarPlay app design, templates, and navigation. Covers AVCaptureSession, AVFoundation, Core Haptics, MediaPlayer, MusicKit, NowPlaying, ScreenCaptureKit, DockKit. |
 | `axiom-networking` | Implementing or debugging ANY network connection, API call, or socket in an Apple app. Covers URLSession, Network.framework, NetworkConnection, connection diagnostics. |
 | `axiom-payments` | Accepting ANY real-world payment — Apple Pay, Wallet passes, Tap to Pay, Orders in Wallet. NOT in-app purchase / digital content (use axiom-integration). Covers entitlements, certs, signing, App Review payment rules. |
@@ -78,7 +78,7 @@ Ask your question; your assistant loads the router that matches it, and the rout
 
 ## Agents
 
-<!--ax:agents-->42<!--/ax--> agents run audits and fixes in their own context: memory leaks, concurrency, accessibility, build failures, crash analysis and more. The commands above launch the common ones, and you can ask for any of them by describing the task. See the [agent list](https://charleswiltgen.github.io/Axiom/agents/).
+<!--ax:agents-->43<!--/ax--> agents run audits and fixes in their own context: memory leaks, concurrency, accessibility, build failures, crash analysis and more. The commands above launch the common ones, and you can ask for any of them by describing the task. See the [agent list](https://charleswiltgen.github.io/Axiom/agents/).
 
 ## Hooks
 

@@ -5,7 +5,7 @@ argument-hint: "[area]"
 # scripts/audit-areas.json by scripts/build-audit-areas.ts; do not hand-edit.
 # `argument-hint` above is the real user-facing hint.
 # AXIOM_AUDIT_ARGUMENT_BEGIN
-argument: "area (optional) - Which audit to run: all, build, codable, core-data, energy, memory, modernization, swift-performance, swift-simplify, test-failures, testing, concurrency, liquid-glass, resize, swiftui-architecture, swiftui-layout, swiftui-nav, swiftui-performance, textkit, ux-flow, camera, foundation-models, iap, networking, database-schema, grdb-performance, icloud, storage, swiftdata, accessibility, spritekit, screenshots, security"
+argument: "area (optional) - Which audit to run: all, build, codable, core-data, energy, memory, modernization, swift-performance, swift-simplify, test-failures, testing, concurrency, liquid-glass, resize, swiftui-architecture, swiftui-layout, swiftui-nav, swiftui-performance, textkit, touch, ux-flow, camera, foundation-models, iap, networking, database-schema, grdb-performance, icloud, storage, swiftdata, accessibility, spritekit, screenshots, security"
 # AXIOM_AUDIT_ARGUMENT_END
 disable-model-invocation: true
 ---
@@ -40,6 +40,7 @@ If no area specified → analyze project and suggest relevant audits
 | swiftui-nav | swiftui-nav-auditor | NavigationStack issues, path management, deep linking |
 | swiftui-performance | swiftui-performance-analyzer | Expensive body, formatters, whole-collection dependencies, missing lazy |
 | textkit | textkit-auditor | TextKit issues, text rendering problems |
+| touch | touch-auditor | Mac touch readiness: custom recognizers that never finish, control subclasses overriding mouseDown, tracking loops, hover-only actions, small hit targets |
 | ux-flow | ux-flow-auditor | Dead-end views, dismiss traps, buried CTAs, missing empty/loading/error states, accessibility dead ends |
 | camera | camera-auditor | Deprecated camera APIs, missing interruption handlers, threading violations |
 | foundation-models | foundation-models-auditor | Missing availability checks, concurrent requests on one session, manual JSON parsing, guardrail handling |
@@ -99,6 +100,7 @@ When running multiple audits (either user-requested or from smart suggestions):
    - swiftui-performance → Expensive operations, missing lazy
    - swiftui-layout → GeometryReader misuse, hardcoded breakpoints, identity loss
    - resize → scene-lifecycle gaps, UIScreen.main, fixed-canvas assumptions
+   - touch → stuck custom recognizers, mouseDown overrides on controls, tracking loops (macOS)
    - swift-performance → ARC overhead, allocations
    - foundation-models → Availability checks, error handling, session lifecycle
 
@@ -203,6 +205,7 @@ If no area argument:
    - Find LanguageModelSession / @Generable / FoundationModels imports → suggest foundation-models audit
    - Find GeometryReader / layout patterns → suggest swiftui-layout audit
    - Find UIScreen.main / UIRequiresFullScreen / app-delegate-only lifecycle → suggest resize audit
+   - Find AppKit `override func mouseDown` / `- (void)mouseDown:` / `nextEvent(matching:` / NSGestureRecognizer subclasses → suggest touch audit
    - Find registerMigration / ALTER TABLE / DatabaseMigrator → suggest database-schema audit
    - Find screenshots folder (Screenshots/, screenshots/, marketing/) → suggest screenshots audit
    - Find NavigationStack/sheet/TabView → suggest ux-flow audit

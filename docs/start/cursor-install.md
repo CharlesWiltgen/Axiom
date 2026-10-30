@@ -1,6 +1,6 @@
 # Cursor Plugin
 
-Axiom's native plugin for Cursor IDE/Desktop on macOS packages <!--ax:routers-->27<!--/ax--> skill routers, <!--ax:agents-->42<!--/ax--> agents, <!--ax:commands-->17<!--/ax--> `/axiom-*` commands, and advisory hooks. It also configures Axiom's MCP server, `axiom-mcp`, a separately published npm package that Cursor launches through `npx`.
+Axiom's native plugin for Cursor IDE/Desktop on macOS packages <!--ax:routers-->27<!--/ax--> skill routers, <!--ax:agents-->43<!--/ax--> agents, <!--ax:commands-->17<!--/ax--> `/axiom-*` commands, and advisory hooks. It also configures Axiom's MCP server, `axiom-mcp`, a separately published npm package that Cursor launches through `npx`.
 
 ## Support Target and Prerequisites
 
@@ -8,7 +8,7 @@ Axiom's native plugin for Cursor IDE/Desktop on macOS packages <!--ax:routers-->
 - **Node.js 18 or newer.** The plugin's root `mcp.json` launches `npx -y axiom-mcp`.
 - **Python 3.** Cursor invokes the shipped advisory hook adapters as Python source.
 - **Apple development tools as needed.** Individual Axiom workflows may require Xcode or Apple command-line tools, but this plugin doesn't bundle them.
-- **A Cursor plan that allows named models, to use the agents.** Cursor Free restricts model selection to Auto and refuses subagent delegation with `Named models unavailable. Free plans can only use Auto.` Skills, commands, hooks, and MCP work on Free; the <!--ax:agents-->42<!--/ax--> agents don't run there.
+- **A Cursor plan that allows named models, to use the agents.** Cursor Free restricts model selection to Auto and refuses subagent delegation with `Named models unavailable. Free plans can only use Auto.` Skills, commands, hooks, and MCP work on Free; the <!--ax:agents-->43<!--/ax--> agents don't run there.
 
 The generated plugin contains Markdown, JSON, Python source, and static assets. It ships no compiled or executable binary payload. The npm-resolved MCP runtime is a separate dependency and may need network access on first use.
 
@@ -37,7 +37,7 @@ Cursor imports the local marketplace into its plugin cache, so it doesn't pick u
 Open Cursor's **Customize** panel and inspect the Axiom plugin. Confirm that the panel shows the expected plugin version and discovers:
 
 - <!--ax:routers-->27<!--/ax--> skills
-- <!--ax:agents-->42<!--/ax--> agents
+- <!--ax:agents-->43<!--/ax--> agents
 - <!--ax:commands-->17<!--/ax--> commands in the `/axiom-*` namespace
 - native hooks
 - the `axiom` MCP server
@@ -87,7 +87,7 @@ The released plugin has two agent classes:
 
 `screenshot-validator` is one of the writable agents, so it deliberately runs in the foreground in Cursor.
 
-Agent delegation depends on the Cursor plan. On Cursor Free every delegation fails before the agent starts, so the plugin's agents register and appear in the picker but can't run. Verified on Cursor 3.17.8: the plugin's <!--ax:agents-->42<!--/ax--> agents load, and delegation returns `Named models unavailable. Free plans can only use Auto.` regardless of an agent's `model` field.
+Agent delegation depends on the Cursor plan. On Cursor Free every delegation fails before the agent starts, so the plugin's agents register and appear in the picker but can't run. Verified on Cursor 3.17.8: the plugin's <!--ax:agents-->43<!--/ax--> agents load, and delegation returns `Named models unavailable. Free plans can only use Auto.` regardless of an agent's `model` field.
 
 Cursor doesn't provide Axiom's canonical per-agent tool allowlists. Every generated agent inherits host tool and MCP access that may be broader than its source declaration. Before delegating, review the agent, Cursor's tool approvals, and the MCP allowlist/blocklist. `readonly`, prompts, and advisory hooks reduce accidental scope; they aren't substitutes for an enforced sandbox or user approval. Writable agents can change the shared checkout.
 
@@ -146,7 +146,7 @@ For a local checkout, uninstall Axiom in **Customize**, then open **Browse Marke
 
 - Confirm the Cursor plan allows named models. Cursor Free refuses delegation with `Named models unavailable. Free plans can only use Auto.`
 - Confirm the agent appears in the picker. Registration and delegation fail independently: an agent can load and still be unable to start.
-- You can verify registration without running an agent: the picker should list all <!--ax:agents-->42<!--/ax--> agents.
+- You can verify registration without running an agent: the picker should list all <!--ax:agents-->43<!--/ax--> agents.
 
 ### Hooks don't add context
 

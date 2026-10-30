@@ -7,8 +7,8 @@ Battle-tested skills, agents, and tools for modern Apple OS development — Swif
 Axiom gives AI coding assistants deep Apple OS development expertise — the kind that prevents data loss from bad migrations, catches memory leaks before users complain, and stops you from spending 30 minutes debugging a zombie xcodebuild process.
 
 <!-- AXIOM_STATS_BEGIN — auto-maintained by scripts/set-version.js; do not hand-edit -->
-- **285 skills** covering UI, data, concurrency, performance, networking, accessibility, and more
-- **42 agents** that autonomously scan for issues (memory leaks, concurrency violations, build problems)
+- **286 skills** covering UI, data, concurrency, performance, networking, accessibility, and more
+- **43 agents** that autonomously scan for issues (memory leaks, concurrency violations, build problems)
 - **17 commands** for quick audits and diagnostics
 <!-- AXIOM_STATS_END -->
 - **axbuild** — a built-in build and test runner that saves the full log and gives AI assistants a short summary of errors and failed tests, so nothing is lost to truncated output
@@ -38,7 +38,7 @@ In your browser at claude.ai or in Claude Desktop, open **Customize > Plugins**,
 
 ### Cursor (native plugin)
 
-Axiom's generated Cursor plugin includes <!--ax:routers-->27<!--/ax--> skill routers, <!--ax:agents-->42<!--/ax--> agents, <!--ax:commands-->17<!--/ax--> `/axiom-*` commands, advisory hooks, and automatic discovery of its MCP server configuration. See the [Cursor install and support guide](https://charleswiltgen.github.io/Axiom/start/cursor-install) for the macOS support boundary and local installation steps.
+Axiom's generated Cursor plugin includes <!--ax:routers-->27<!--/ax--> skill routers, <!--ax:agents-->43<!--/ax--> agents, <!--ax:commands-->17<!--/ax--> `/axiom-*` commands, advisory hooks, and automatic discovery of its MCP server configuration. See the [Cursor install and support guide](https://charleswiltgen.github.io/Axiom/start/cursor-install) for the macOS support boundary and local installation steps.
 
 ### MCP (VS Code, Cursor MCP-only, Gemini CLI, and more)
 

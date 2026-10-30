@@ -1,6 +1,6 @@
 # Autonomous Agents
 
-Axiom includes <!--ax:agents-->42<!--/ax--> autonomous agents that automatically detect and diagnose common iOS development issues.
+Axiom includes <!--ax:agents-->43<!--/ax--> autonomous agents that automatically detect and diagnose common iOS development issues.
 
 ## What Are Agents?
 
@@ -80,6 +80,7 @@ Agents are autonomous problem-solvers that:
 - **swiftui-layout-auditor** – Scans SwiftUI layout for anti-patterns and adaptivity gaps (GeometryReader misuse, missing multitasking support, identity loss, near-edge fixed sizing)
 - **swiftui-performance-analyzer** – Detects SwiftUI performance issues and context-dependent problems (expensive operations amplified in scrolling cells, unnecessary rebuilds, missing lazy loading)
 - **swiftui-nav-auditor** – Scans SwiftUI navigation architecture and completeness (orphan destinations, deep link gaps, state restoration, type collisions, modal/stack conflicts)
+- **touch-auditor** – Scans Mac apps for touch readiness on touch-display Macs and Sidecar (custom recognizers that never finish, control subclasses overriding `mouseDown`, tracking loops, uncancelled gestures, hover-only actions, small hit targets); scores TOUCH-NATIVE / EMULATED / AT-RISK
 - **ux-flow-auditor** – Detects UX journey defects and incomplete flows (dead ends, dismiss traps, buried CTAs, missing states, unvalidated entry points, inaccessible paths)
 
 ### Persistence & Storage

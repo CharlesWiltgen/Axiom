@@ -29,7 +29,7 @@ The native Codex plugin includes Axiom's skills, its auditor workflows, and supp
 npx skills add CharlesWiltgen/Axiom -a codex -g
 ```
 
-This installs all <!--ax:skills-->285<!--/ax--> skills globally using [npx skills](https://skills.sh/). The `-g` flag makes skills available across all projects.
+This installs all <!--ax:skills-->286<!--/ax--> skills globally using [npx skills](https://skills.sh/). The `-g` flag makes skills available across all projects.
 
 To install for the current project only (omit `-g`):
 
@@ -161,7 +161,7 @@ The Codex plugin includes the same skill content as the Claude Code plugin, with
 | Feature | Claude Code | Codex |
 |---------|-------------|-------|
 | Skills | Router suites and supporting guides | Same routers and references; auditor procedures are exposed as skills |
-| Agents | <!--ax:agents-->42<!--/ax--> autonomous auditors | All <!--ax:agents-->42<!--/ax-->, converted to skills you invoke by name (`axiom-audit-memory`, `axiom-fix-build`, …) |
+| Agents | <!--ax:agents-->43<!--/ax--> autonomous auditors | All <!--ax:agents-->43<!--/ax-->, converted to skills you invoke by name (`axiom-audit-memory`, `axiom-fix-build`, …) |
 | Commands | <!--ax:commands-->17<!--/ax--> `/axiom:*` commands | Not supported in Codex plugins — use the equivalent agent-skill above |
 | Hooks | Lifecycle hooks (skill routing, Swift write guardrails, version ground truth) | Supported via the native plugin install — set `features.hooks = true` |
 | Installation | `/plugin marketplace add` | `npx skills add`, native `codex plugin`, or manual marketplace |
@@ -184,7 +184,7 @@ The Codex plugin includes the same skill content as the Claude Code plugin, with
 
 ## Also Available
 
-- **[Claude Code](/start/install)** – Full Axiom experience with <!--ax:agents-->42<!--/ax--> autonomous agents and <!--ax:commands-->17<!--/ax--> commands
+- **[Claude Code](/start/install)** – Full Axiom experience with <!--ax:agents-->43<!--/ax--> autonomous agents and <!--ax:commands-->17<!--/ax--> commands
 - **[Claude App](/start/claude-app-install)** – Skills in chat, plus agents and hooks in Cowork
 - **[Cursor Plugin](/start/cursor-install)** – Native skills, agents, commands, and hooks for Cursor on macOS
 - **[Pi Coding Agent](/start/pi-install)** – Native skills for the Pi terminal coding agent

@@ -68,6 +68,7 @@ Grouped to mirror the sidebar exactly — same group names, same group order, sa
 | `swiftui-nav` | NavigationStack issues, path management, deep linking |
 | `swiftui-performance` | Expensive body, formatters, missing lazy containers |
 | `textkit` | TextKit issues, text rendering problems |
+| `touch` | Touch readiness on touch-display Macs and Sidecar: tracking loops, mouseDown overrides, hover-only actions |
 | `ux-flow` | Dead-end views, dismiss traps, missing empty/loading/error states |
 
 ### Integration

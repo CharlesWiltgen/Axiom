@@ -139,6 +139,7 @@ export default withMermaid(defineConfig({
             { text: 'swiftui-layout-auditor', link: '/agents/swiftui-layout-auditor' },
             { text: 'swiftui-performance-analyzer', link: '/agents/swiftui-performance-analyzer' },
             { text: 'swiftui-nav-auditor', link: '/agents/swiftui-nav-auditor' },
+            { text: 'touch-auditor', link: '/agents/touch-auditor' },
             { text: 'ux-flow-auditor', link: '/agents/ux-flow-auditor' }
           ]
         },
@@ -270,6 +271,7 @@ export default withMermaid(defineConfig({
             { text: '/axiom:audit swiftui-nav', link: '/commands/ui-design/audit-swiftui-nav' },
             { text: '/axiom:audit swiftui-performance', link: '/commands/ui-design/audit-swiftui-performance' },
             { text: '/axiom:audit textkit', link: '/commands/ui-design/audit-textkit' },
+            { text: '/axiom:audit touch', link: '/commands/ui-design/audit-touch' },
             { text: '/axiom:audit ux-flow', link: '/commands/ui-design/audit-ux-flow' }
           ]
         },
@@ -571,6 +573,7 @@ export default withMermaid(defineConfig({
             { text: 'ScreenCaptureKit', link: '/skills/macos/screencapturekit' },
             { text: 'Settings', link: '/skills/macos/settings' },
             { text: 'SwiftUI Differences (vs iOS)', link: '/skills/macos/swiftui-differences' },
+            { text: 'Touch', link: '/skills/macos/touch' },
             { text: 'Windows', link: '/skills/macos/windows' }
           ]
         },

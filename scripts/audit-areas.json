@@ -118,6 +118,14 @@
       "docPath": "/commands/ui-design/audit-resize"
     },
     {
+      "area": "touch",
+      "agent": "touch-auditor",
+      "group": "UI & Design",
+      "detects": "Mac touch readiness: custom recognizers that never finish, control subclasses overriding mouseDown, tracking loops, hover-only actions, small hit targets",
+      "docsDetects": "Touch readiness on touch-display Macs and Sidecar: tracking loops, mouseDown overrides, hover-only actions",
+      "docPath": "/commands/ui-design/audit-touch"
+    },
+    {
       "area": "swiftui-architecture",
       "agent": "swiftui-architecture-auditor",
       "group": "UI & Design",

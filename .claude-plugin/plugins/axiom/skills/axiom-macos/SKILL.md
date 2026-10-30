@@ -1,12 +1,20 @@
 ---
 name: axiom-macos
-description: Use when building ANY macOS app — windows, menus, sandboxing, distribution, AppKit bridging or modernization (control events, state restoration, concentric corners), or macOS-specific SwiftUI patterns.
+description: Use when building ANY macOS app — windows, menus, sandboxing, distribution, AppKit bridging or modernization (control events, state restoration, concentric corners), touch input, or macOS-specific SwiftUI patterns.
 license: MIT
 ---
 
 # macOS Development
 
 **You MUST use this skill for ANY macOS-specific development including windows, menus, sandboxing, distribution, AppKit bridging, and macOS SwiftUI differences.**
+
+<!-- AXIOM_AUDITOR_INLINE_BEGIN — auto-maintained by scripts/build-inlined-auditors.ts; do not hand-edit -->
+> **Can't launch Axiom agents?** Where this router sends you to an agent, follow its procedure inline. Over MCP, `axiom_get_agent` returns it; elsewhere, read its file below, which needs only file search and read.
+>
+> Available here: `skills/touch-auditor.md`.
+>
+> For any other agent, over MCP `axiom_get_agent` returns it too; run its xclog, xcsym and xcprof steps with the `axiom_xclog_*`, `axiom_xcsym_*` and `axiom_xcprof_*` tools. Elsewhere, search Axiom's skills for `skills/<agent>.md`; if there is none, do that work yourself with this suite's skills, using any Axiom tool on your `PATH`.
+<!-- AXIOM_AUDITOR_INLINE_END -->
 
 ## Quick Reference
 
@@ -19,7 +27,9 @@ license: MIT
 | Another team's app or app group container access denied without a prompt (`OS27`) | See `skills/sandbox-and-file-access.md` |
 | Developer ID, notarization, Sparkle auto-updates | See `skills/direct-distribution.md` |
 | NSViewRepresentable, NSHostingController, AppKit bridging, @Observable in AppKit, NSHostingMenu, SwiftUI scenes from AppKit | See `skills/appkit-interop.md` |
-| Modernizing AppKit: mouseDown replacement, control events, status-item sessions, state restoration, concentric corners, touch (`OS27`) | See `skills/appkit-modernization.md` |
+| Modernizing AppKit: mouseDown replacement, control events, status-item sessions, state restoration, concentric corners (`OS27`) | See `skills/appkit-modernization.md` |
+| Touch on a touch-display Mac or Sidecar: design rules, tracking loops → gesture recognizers, hit targets, hover, exclusivity, system gestures, non-Apple UI frameworks | See `skills/touch.md` |
+| Automated touch-readiness scan (mouseDown overrides, tracking loops, hover-only controls, custom recognizers) | Launch `touch-auditor` agent or `/axiom:audit touch` |
 | Screen recording, sharing, or capture (ScreenCaptureKit) | See `skills/screencapturekit.md` |
 | SCStream / SCContentFilter / screenshots / file recording API, clip buffering, recording editor (`OS27`) | See `skills/screencapturekit-ref.md` |
 | Bring an iOS app to Mac: Catalyst adoption, Designed for iPad, Mac availability opt-out | See `skills/ios-apps-on-mac.md` |
@@ -73,6 +83,7 @@ digraph macos {
     what -> "skills/direct-distribution.md" [label="distribution/notarization/updates"];
     what -> "skills/appkit-interop.md" [label="AppKit bridging"];
     what -> "skills/appkit-modernization.md" [label="modernize AppKit\n(input/restoration/27 look)"];
+    what -> "skills/touch.md" [label="touch input\n(touch display/Sidecar)"];
     what -> "skills/ios-apps-on-mac.md" [label="iOS app to Mac\n(Catalyst / Designed for iPad)"];
     what -> "skills/screencapturekit.md" [label="screen capture/\nrecording/sharing"];
     what -> "axiom-swiftui" [label="cross-platform SwiftUI"];
@@ -85,6 +96,8 @@ digraph macos {
 ## Resources
 
 **WWDC**: 2021-10062, 2022-10061, 2022-10075, 2023-10148, 2024-10149, 2026-272, 2026-289
+
+**Tech Talks**: 111456, 111468
 
 **Docs**: /security/app-sandbox, /swiftui/windowgroup, /swiftui/table
 

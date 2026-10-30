@@ -1977,6 +1977,16 @@
       "axiom-macos"
     ]
   },
+  "axiom-macos--touch": {
+    "category": "general",
+    "tags": [
+      "appkit",
+      "macbook"
+    ],
+    "related": [
+      "axiom-macos"
+    ]
+  },
   "axiom-macos--windows": {
     "category": "general",
     "tags": [

@@ -102,6 +102,7 @@ Run these only when their framework signals are present in the codebase:
 | `registerMigration` or `DatabaseMigrator` or `ALTER TABLE` | database-schema-auditor |
 | `NSTextLayoutManager` or `TextKit` | textkit-auditor |
 | `UIScreen.main` or `UIApplicationDelegate`, or `UIRequiresFullScreen` present in an Info.plist | resize-auditor |
+| `override func mouseDown`, `nextEvent(matching:` or `- (void)mouseDown:` in a macOS target | touch-auditor |
 | `NavigationStack` or `sheet(` or `TabView` | ux-flow-auditor |
 | `FileManager` or `UserDefaults` or `.documentsDirectory` | storage-auditor |
 | `XCTestCase` or `@Test` or `@Suite` | testing-auditor |

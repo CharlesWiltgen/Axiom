@@ -26,7 +26,7 @@ If you already added Axiom at claude.ai or in Claude Desktop, Claude Code loads 
 npx skills add CharlesWiltgen/Axiom -a codex -g
 ```
 
-This installs all <!--ax:skills-->285<!--/ax--> skills globally using [npx skills](https://skills.sh/). To update later, run `npx skills update`.
+This installs all <!--ax:skills-->286<!--/ax--> skills globally using [npx skills](https://skills.sh/). To update later, run `npx skills update`.
 
 ::: tip Verifying Installation
 Use `/plugins` in Codex to open the plugin browser — Axiom should appear as installed. You can also run `npx skills list -g` to see installed skills.

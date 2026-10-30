@@ -847,6 +847,39 @@ class TestPositiveRouting(unittest.TestCase):
         self.assertNotIn("axiom-macos", routed_skills(
             "Show a connection status item in my iPhone app's nav bar"))
 
+    def test_macos_touch(self):
+        # Each prompt reaches axiom-macos only through the touch vocabulary (no "mac app", no "appkit")
+        for prompt in (
+            "Is my app ready for the touchscreen MacBook Pro?",
+            "Is my app ready for touch-display Macs?",
+            "Is my app ready for the touch-screen MacBook?",
+            "Prepare my app for touchscreen Macs",
+            "My NSSlider subclass stops working with touch",
+            "Can I move two sliders at once with multitouch on Mac?",
+            "My NSPanGestureRecognizer never gets direct touches",
+            "Should I set NSIsTouchNative in my game's Info.plist?",
+            "Test my app with touch over Sidecar",
+            "Sidecar touch input doesn't reach my custom view",
+            "Where do I set exclusiveGestureBehavior?",
+            "My NSView subclass overrides mouseDown",
+            "Does my MacBook app need changes for the touch display?",
+        ):
+            self.assertIn("axiom-macos", routed_skills(prompt), prompt)
+        # Touch on iPhone/iPad, the iOS Simulator on a Mac, camelCase identifiers ending in -ns,
+        # and Kubernetes sidecars or the Unix touch command are not Mac touch concerns
+        for prompt in (
+            "How do I add touch controls to my iPhone game?",
+            "My touch screen gestures conflict with the scroll view on iPad",
+            "My optionsButton doesn't respond to taps on iPhone",
+            "How do I style suggestionsSlider in UIKit?",
+            "My ownsGestureRecognizer helper on iOS never fires",
+            "On my Mac, multitouch pinch in the iPhone simulator doesn't work",
+            "Simulate multi-touch on Mac simulator for my iPad app",
+            "touch a file from the sidecar on startup",
+            "The Kubernetes sidecar container should touch /tmp/healthy for the liveness probe",
+        ):
+            self.assertNotIn("axiom-macos", routed_skills(prompt), prompt)
+
     def test_design(self):
         self.assertIn("axiom-design", routed_skills(
             "How do I apply Liquid Glass and SF Symbol effects?"))

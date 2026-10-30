@@ -1,6 +1,6 @@
 # macOS
 
-Build native macOS apps the supported way: SwiftUI-first, multi-window, keyboard-driven, sandboxed, and ready for Mac App Store or Developer ID distribution. These skills cover scene types, menu bar commands, AppKit interop and modernization, App Sandbox file access, Settings panes, notarized direct distribution, bringing iOS apps to the Mac, and screen capture.
+Build native macOS apps the supported way: SwiftUI-first, multi-window, keyboard-driven, sandboxed, and ready for Mac App Store or Developer ID distribution. These skills cover scene types, menu bar commands, AppKit interop and modernization, touch input, App Sandbox file access, Settings panes, notarized direct distribution, bringing iOS apps to the Mac, and screen capture.
 
 ```mermaid
 flowchart LR
@@ -21,6 +21,7 @@ flowchart LR
         appkit_modernization["appkit-modernization"]:::discipline
         ios_apps_on_mac["ios-apps-on-mac"]:::discipline
         screencapturekit["screencapturekit"]:::discipline
+        touch["touch"]:::discipline
     end
     axiom_macos --> skills
 
@@ -45,6 +46,7 @@ Use macOS skills when you're:
 - Modernizing an existing AppKit app's input handling, state restoration, and macOS 27 look
 - Bringing an iPhone or iPad app to the Mac with Mac Catalyst or as a Designed for iPad app
 - Recording, sharing, or capturing the screen with ScreenCaptureKit
+- Making your app work with touch on a touch-display Mac or a Sidecar iPad
 
 ## Example Prompts
 
@@ -92,13 +94,17 @@ Questions you can ask your assistant that will draw from these skills:
   - *"Should I ship my iPad app as Designed for iPad or build with Mac Catalyst?"*
   - *"Why does my iOS app on Apple Silicon report `isMacCatalystApp` as true?"*
 
-- **[AppKit Modernization](/skills/macos/appkit-modernization)** – Control events, state restoration, status-item sessions, concentric corners, touch on macOS 27
+- **[AppKit Modernization](/skills/macos/appkit-modernization)** – Control events, state restoration, status-item sessions, concentric corners
   - *"What replaces my `mouseDown` override in a modern AppKit app?"*
   - *"How do I restore window state after relaunch on macOS 27?"*
 
 - **[ScreenCaptureKit](/skills/macos/screencapturekit)** – Screen recording, sharing pickers, `SCStream` capture, screenshots
   - *"How do I record a single window to a file with ScreenCaptureKit?"*
   - *"How do I let users pick what to share with SCContentSharingPicker?"*
+
+- **[Touch](/skills/macos/touch)** – Touch on touch-display Macs and Sidecar: design rules, gesture recognizers instead of tracking loops, hit targets, hover, exclusive views
+  - *"Is my AppKit app ready for the touchscreen MacBook Pro?"*
+  - *"How do I add touch to a view that uses a tracking loop?"*
 
 ## Related
 

@@ -1,6 +1,6 @@
 ---
 name: appkit-modernization
-description: Modernizing AppKit apps — replacing mouseDown overrides, control events, status-item expanded interface sessions, graceful termination, state restoration, concentric corners, interactive glass, touch input
+description: Modernizing AppKit apps — replacing mouseDown overrides, control events, status-item expanded interface sessions, graceful termination, state restoration, concentric corners, interactive glass
 ---
 
 # AppKit Modernization
@@ -16,7 +16,6 @@ Use this skill when you're:
 - Showing custom windows from a menu bar status item (expanded interface sessions)
 - Making your app quit gracefully during system restarts and restore its windows on relaunch
 - Adopting the macOS 27 look: concentric corners and interactive Liquid Glass
-- Handling touch input on the Mac (touch scrolling, pull-to-refresh)
 
 ## Example Prompts
 
@@ -48,7 +47,6 @@ Questions you can ask your assistant that will draw from this skill:
 - The automatic Liquid Glass refinements, and interactive glass (`effectIsInteractive`)
 - Concentric corner configuration (`cornerConfiguration`, `NSViewCornerRadius.containerConcentric`)
 - Semantic roles for segmented controls and toolbar item groups
-- The touch-input SDK surface (touch scrolling, `NSRefreshController` pull-to-refresh, including in `WKWebView`)
 
 ## Documentation Scope
 
@@ -56,6 +54,7 @@ This page documents the `appkit-modernization` skill (in the `axiom-macos` suite
 
 ## Related
 
+- [touch](/skills/macos/touch) – Touch input on touch-display Macs and Sidecar, which builds on this skill's input map
 - [appkit-interop](/skills/macos/appkit-interop) – Hosting SwiftUI in AppKit (observation tracking, `NSHostingMenu`, SwiftUI scenes from an app delegate)
 - [windows](/skills/macos/windows) – Scene types, window lifecycle, and document apps
 - [menus-and-commands](/skills/macos/menus-and-commands) – Menu bar and command patterns
