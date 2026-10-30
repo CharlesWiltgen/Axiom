@@ -5,22 +5,25 @@ Complete reference for every tool exposed by Xcode's MCP server. `xcrun mcpbridg
 transport; on Xcode 27 the service behind it can run headless (`xcrun mcp-server`) — see
 `axiom-xcode-mcp (skills/xcode-mcp-setup.md)`.
 
-**Source**: live `tools/list` on the Xcode 27.2 RC (27B48, `serverInfo` 25463), 54 tools,
-captured headless by an unapproved agent with no workspace open. Entries describe that schema.
+**Source**: live `tools/list` on the released Xcode 27.2 (27B52, `serverInfo` 25464), 54 tools,
+captured headless by an unapproved agent with no workspace open — byte-identical to the 27.2 RC
+(27B48, `serverInfo` 25463). Entries describe that schema.
 
 **Earlier builds differ.** The released 27.0 (27A266a), beta 6 and the 27.1 RC (27A9275,
 `serverInfo` 25320) share one 54-tool schema set. 27.2 beta 2 (27B5028f, `serverInfo` 25447.1)
 lists 53 — `DocumentationSearch` is absent from both its unapproved/no-workspace and
 approved/with-workspace captures — and first adds `RenderPreview` destination selection and
-`InvokeDebuggerCommand`'s `p`/`v` guidance. The 27.2 RC adds `RenderPreview` display modes
-and regroups its output, `XcodeMakeDir` `directoryKind`, and `AddInfoPlist` `dictionary`.
+`InvokeDebuggerCommand`'s `p`/`v` guidance. From the 27.2 RC, `RenderPreview` adds display
+modes and regroups its output, `XcodeMakeDir` adds `directoryKind`, and `AddInfoPlist` adds
+`dictionary`.
 Entry notes and the `RenderPreview` table mark build-specific fields. `GetCodeCoverage`,
 announced in the 27.2 beta 2 and RC release notes (181141715), is absent from every capture
-through 27B48; no callable schema was
-verified. Check the live `tools/list` before using a tool or a build-specific parameter.
+through the released 27.2 (27B52), and the 27.2 release notes no longer mention it — it did
+not ship in 27.2. Check the live `tools/list` before using a tool or a build-specific parameter.
 
 **All 54 tools are listed even with no workspace open** (verified on beta 6, the 27.0 SDK and
-the 27.2 RC: `tools/list` returned 54, `DocumentationSearch` included, with no workspace open).
+the 27.2 RC and release: `tools/list` returned 54, `DocumentationSearch` included, with no
+workspace open).
 The server does advertise `capabilities.tools.listChanged: true`, so treat the set as
 dynamic rather than fixed — but do not read a short list as "open a workspace".
 
@@ -183,11 +186,11 @@ Lists files and directories in the Xcode project structure at the specified path
 
 Creates directories in the Xcode project structure. Creates a file system synchronized (buildable) folder by default, or a classic group when requested.
 
-- **Params** (+ `workspaceIdentifier`): `directoryPath`* — Project navigator relative path for the directory to create; `directoryKind` — `folder` (default) or `group` (27.2 RC)
+- **Params** (+ `workspaceIdentifier`): `directoryPath`* — Project navigator relative path for the directory to create; `directoryKind` — `folder` (default) or `group` (27.2)
 
 - **Returns**: `message`*, `success`*, `createdPath`
 
-- **Notes**: `folder` creates a file-system-synchronized (buildable) folder; `group` creates a classic group backed by a directory on disk. The schema types `directoryKind` as a plain string, not an enum, and the server "falls back to whatever the parent supports", so the requested kind is not guaranteed. Builds before the 27.2 RC take only `directoryPath`.
+- **Notes**: `folder` creates a file-system-synchronized (buildable) folder; `group` creates a classic group backed by a directory on disk. The schema types `directoryKind` as a plain string, not an enum, and the server "falls back to whatever the parent supports", so the requested kind is not guaranteed. Builds before the 27.2 RC (27B48) take only `directoryPath`.
 
 ### XcodeMV
 
@@ -438,9 +441,9 @@ group-item control.
 #### Field names by build
 
 A client that reads the earlier field names finds no snapshot path and no override lists in
-the 27.2 RC's output. Read field paths from the live `outputSchema`.
+the output of 27.2 (RC and release). Read field paths from the live `outputSchema`.
 
-| Field | 27.2 RC (27B48) | 27.2 beta 2 (27B5028f) | 27.1 RC (27A9275) and earlier |
+| Field | 27.2 (27B52; RC 27B48) | 27.2 beta 2 (27B5028f) | 27.1 RC (27A9275) and earlier |
 |---|---|---|---|
 | Snapshot path | `snapshot.path` | `previewSnapshotPath` | `previewSnapshotPath` |
 | Canvas controls | `supportedOverrides.canvasControls` | `supportedCanvasControlOverrides` | `supportedCanvasControlOverrides` |
@@ -594,7 +597,7 @@ Add or update an Info.plist key in the project.
 
 - **Returns**: `result`*, `errorDescription`
 
-- **Notes**: Use `dictionary` for a single dictionary value such as App Transport Security settings (`'{"NSAllowsArbitraryLoads": true}'`) and `dictionaryArray` only for an array of dictionaries. `dictionary` is new in the 27.2 RC; earlier enums lack it, and their descriptions pointed App Transport Security at `dictionaryArray`. Check the live enum first; where `dictionary` is absent, don't wrap a dictionary-valued key such as `NSAppTransportSecurity` in `dictionaryArray` — the tool has no single-dictionary type on that build. Not for entitlements — use `AddEntitlement`.
+- **Notes**: Use `dictionary` for a single dictionary value such as App Transport Security settings (`'{"NSAllowsArbitraryLoads": true}'`) and `dictionaryArray` only for an array of dictionaries. `dictionary` is new in 27.2 (from the RC); earlier enums lack it, and their descriptions pointed App Transport Security at `dictionaryArray`. Check the live enum first; where `dictionary` is absent, don't wrap a dictionary-valued key such as `NSAppTransportSecurity` in `dictionaryArray` — the tool has no single-dictionary type on that build. Not for entitlements — use `AddEntitlement`.
 
 ---
 
@@ -608,7 +611,7 @@ Searches Apple Developer Documentation using semantic matching.
 
 - **Returns**: `documents`*
 
-- **Notes**: Listed on the 27.2 RC (27B48) to an unapproved agent with no workspace open, as on beta 6 and the released 27.0, and present in the 27.1 RC capture. Absent on 27.2 beta 2 (27B5028f), including the approved-with-workspace capture. The tool set is dynamic: re-list and check the server/build when it is missing; its absence alone does not establish a workspace or approval requirement. Use `axiom-apple-docs` for bundled guides and SDK-first Apple documentation research when this tool is unavailable.
+- **Notes**: Listed on the released 27.2 (27B52) and its RC (27B48) to an unapproved agent with no workspace open, as on beta 6 and the released 27.0, and present in the 27.1 RC capture. Absent on 27.2 beta 2 (27B5028f), including the approved-with-workspace capture. The tool set is dynamic: re-list and check the server/build when it is missing; its absence alone does not establish a workspace or approval requirement. Use `axiom-apple-docs` for bundled guides and SDK-first Apple documentation research when this tool is unavailable.
 
 ## Resources
 

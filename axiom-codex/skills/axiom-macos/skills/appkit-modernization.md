@@ -1,7 +1,7 @@
 
 # AppKit Modernization
 
-Modernizing an existing AppKit app: replacing mouseDown tracking with modern input APIs, keyboard navigation, graceful termination and state restoration, and the macOS 27 look-and-feel (concentric corners, interactive glass, touch input). Based on WWDC 2026-289 plus the macOS 27 SDK delta.
+Modernizing an existing AppKit app: replacing mouseDown tracking with modern input APIs, keyboard navigation, graceful termination and state restoration, and the macOS 27 look-and-feel (concentric corners, interactive glass). Based on WWDC 2026-289 plus the macOS 27 SDK delta.
 
 ## When to Use This Skill
 
@@ -12,7 +12,7 @@ Use when:
 - A status item shows custom windows or transient UI (expanded interface sessions)
 - The app blocks quit, or loses window state across relaunch (state restoration)
 - Adopting the macOS 27 look: concentric corners, interactive Liquid Glass
-- Handling touch input on the Mac (touch scrolling, pull-to-refresh)
+- Handling touch input on the Mac → `skills/touch.md`
 
 #### Related Skills
 
@@ -62,13 +62,18 @@ button.addTarget(self, action: #selector(trackingEndedOutsideHandler),
 
 ### Hit-Testing Gotcha
 
-Gesture recognizers operate on a view and its subviews, so an overlapping **sibling** view silently swallows clicks. If a control doesn't respond: resize the sibling so it doesn't overlap, or — if it's a deliberate overlay — let events fall through:
+AppKit gathers recognizers from the hit-tested view and its superviews, so an overlapping **sibling** view silently swallows clicks — including a standard control's own recognizers. If a control doesn't respond: resize or reorder the sibling, or — if it's a deliberate overlay — pass hit-testing through for the control's area only:
 
 ```swift
 override func hitTest(_ point: NSPoint) -> NSView? {
-    return nil  // fall through to content underneath
+    if controlFrameInSuperview.contains(point) {
+        return nil  // Let the control beneath receive the event
+    }
+    return super.hitTest(point)
 }
 ```
+
+Returning `nil` unconditionally also disables the overlay's own recognizers.
 
 ## Keyboard Navigation
 
@@ -173,29 +178,15 @@ class LocalWeatherView: NSView {
 
 **Semantic roles** (also new in the 27 SDK): `NSSegmentedControl.role` (`.automatic` / `.tabs` / `.valueSelection`) and `NSToolbarItemGroup.role` declare what a segmented control or toolbar item group means, so the system can style it appropriately.
 
-## Touch and Gesture Additions `OS27` (SDK)
+## Touch Input `OS27`
 
-SDK additions in the 27 AppKit headers (not covered in WWDC 2026-289):
-
-| API | What it is |
-|-----|------------|
-| `NSScreen.touchCapabilities` | Whether the current screen reports touch input |
-| `NSScrollView.isTouchScrollingEnabled` + `minimumNumberOfTouchesForScrolling` / `maximumNumberOfTouchesForScrolling` | Touch-driven scrolling with finger-count thresholds |
-| `NSScrollView.refreshController` (`NSRefreshController`) | Pull-to-refresh for scroll views on the Mac |
-| `NSScrollView.scrollGestureForRelationships` | The scroll gesture, exposed for gesture-relationship setup |
-| `NSView.beginDraggingSession(items:gesture:source:)` | Start a dragging session from a gesture recognizer |
-| `NSView.exclusiveGestureBehavior` | Exclusivity policy between a view's gestures and others |
-| `NSEvent.isTouchSwipeNavigationEnabled` | Class property — the user's touch swipe-navigation preference |
-| `NSGestureRecognizer.isCancellableByScrollGesture` | Whether a scroll gesture can cancel this recognizer |
-| `NSPanGestureRecognizer.minimumNumberOfTouches` / `maximumNumberOfTouches` | Finger-count thresholds for pans |
-
-`WKWebView` (WebKit) hosts the same `NSRefreshController` through its own `refreshController` property on macOS 27 — first-class pull-to-refresh for web content, macOS-only (on iOS you wire it up yourself by attaching a `UIRefreshControl` to `WKWebView.scrollView`).
+The 27 SDK's touch APIs (`NSScreen.touchCapabilities`, touch scrolling, `exclusiveGestureBehavior`, `isCancellableByScrollGesture`, `NSRefreshController`, gesture-started drags) and how to adopt them — tracking-loop migration, hit targets, hover, exclusivity, system gestures — live in `skills/touch.md`.
 
 ## Checklist
 
 - ☑ No `mouseDown` overrides where a dedicated API exists (selection, menus, dragging, text selection)
 - ☑ Control interactions via control events or gesture recognizers, not tracking loops
-- ☑ `hitTest` fall-through (or resized siblings) for overlay views that block clicks
+- ☑ Overlay views pass hit-testing through for the controls beneath them (or siblings are resized)
 - ☑ `autorecalculatesKeyViewLoop` enabled, or the key view loop maintained manually
 - ☑ Status-item custom UI tracked with expanded interface sessions
 - ☑ `preventsApplicationTerminationWhenModal = false` on every sheet that doesn't need intervention
@@ -209,4 +200,4 @@ SDK additions in the 27 AppKit headers (not covered in WWDC 2026-289):
 
 **Docs**: /appkit/nscontrol/events, /appkit/nstextselectionmanager, /appkit/nsstatusitem, /appkit/nswindowrestoration, /appkit/nsviewcornerconfiguration
 
-**Skills**: skills/appkit-interop.md, skills/windows.md, skills/menus-and-commands.md, axiom-uikit (skills/uikit-modernization.md)
+**Skills**: skills/touch.md, skills/appkit-interop.md, skills/windows.md, skills/menus-and-commands.md, axiom-uikit (skills/uikit-modernization.md)

@@ -1,0 +1,6 @@
+interface:
+  display_name: "Audit Touch"
+  short_description: "The user mentions touch support on the Mac, touchscreen MacBook readiness, Sidecar touch, mouseDown or tracking-loop ..."
+  default_prompt: "Use $axiom-audit-touch to audit touch in this project."
+policy:
+  allow_implicit_invocation: false

@@ -1,7 +1,7 @@
 
 # Live Activities (ActivityKit) — Discipline
 
-Live Activities show glanceable, persistent, current-state information about an ongoing event on the Lock Screen, in the Dynamic Island, and in StandBy — plus Apple Watch Smart Stack (one modifier) and, automatically, CarPlay and the Mac menu bar. They are built *in* a widget extension (they share WidgetKit rendering), but the runtime lifecycle is driven by **ActivityKit** from your app and your server.
+Live Activities show glanceable, persistent, current-state information about an ongoing event on the Lock Screen, in the Dynamic Island, and in StandBy — plus Apple Watch Smart Stack (one modifier), automatically CarPlay and the Mac menu bar, and — from Mac apps themselves — the Mac's Dynamic Island. They are built *in* a widget extension (they share WidgetKit rendering), but the runtime lifecycle is driven by **ActivityKit** from your app and your server.
 
 ## Core mental model
 
@@ -19,6 +19,7 @@ The widget extension only *renders* what it receives. It cannot fetch network st
 - Hitting the 4KB limit, authorization failures, or "zombie" activities that won't dismiss
 - Building Dynamic Island presentations or adding interactivity (App Intents)
 - Surfacing a Live Activity on Apple Watch, CarPlay, or the Mac menu bar
+- Starting a Live Activity from a Mac app (Dynamic Island on a Mac with Dynamic Island, menu bar elsewhere)
 
 For static/timeline widgets and Control Center controls, use `skills/extensions-widgets.md` instead. For APNs auth, payload mechanics, and token management, see `skills/push-notifications.md`/`-ref.md`. For AlarmKit (which renders alarms/timers *as* Live Activities), see `skills/alarmkit-ref.md`.
 
@@ -34,6 +35,7 @@ For static/timeline widgets and Control Center controls, use `skills/extensions-
 | Frequent updates (`NSSupportsLiveActivitiesFrequentUpdates`) | iOS 16.2+ |
 | Apple Watch Smart Stack surfacing | watchOS 11 (paired with iOS 18) |
 | AlarmKit-backed alarms/timers | iOS 26+ |
+| Native Mac Live Activities (started by a Mac app) | Announced for macOS 27; not in the macOS 27.2 SDK |
 
 Dynamic Island is hardware-specific (iPhone 14 Pro and later); Live Activities still render on the Lock Screen on every supported device. `NSSupportsLiveActivities` must be `YES` in the app target's Info.plist — without it, nothing starts. visionOS has no Live Activities (no ActivityKit in its SDK); a compatible iPad/iPhone app running there gets a failed request.
 
@@ -144,9 +146,22 @@ Buttons and toggles inside a Live Activity must use `Button(intent:)` / `Toggle(
 ## Other surfaces
 
 - `.supplementalActivityFamilies([.small])` on your `ActivityConfiguration` → Apple Watch Smart Stack (watchOS 11+)
-- CarPlay (iOS 26+) and the Mac menu bar (macOS Sequoia+) surface a paired iPhone's Live Activity **automatically** — no code or modifier (CarPlay Live Activities arrived with the 26 cycle; WWDC25 session 216)
+- CarPlay (iOS 26+) and the Mac menu bar (macOS Tahoe 26+) surface a paired iPhone's Live Activity **automatically** — no code or modifier (CarPlay Live Activities arrived with the 26 cycle; WWDC25 session 216)
+- **Mac apps' own Live Activities** — see below.
 
 Adapt layout with `@Environment(\.activityFamily)` and simplify for Always On Display via `@Environment(\.isLuminanceReduced)`.
+
+### Native Mac Live Activities
+
+From tech talk 111467. Mac apps can start Live Activities themselves, not just mirror an iPhone's. **ActivityKit is marked unavailable on macOS and Mac Catalyst in the macOS 27.2 SDK** — gate on the release that ships it. The API is real; it isn't in the installed SDK yet.
+
+- **Same code.** A universal app's existing Live Activity runs on the Mac unchanged; a Mac-only app adopts the same `ActivityAttributes` / `ActivityConfiguration` / `Activity` API.
+- **Where it shows.** The Dynamic Island along the top edge of a Mac with Dynamic Island; the menu bar on other Macs and displays. It mixes with the system's own (timers, Now Playing, calls).
+- **Views.** The `ActivityConfiguration` content closure (the Lock Screen view on iPhone) is the **expanded menu-bar view** on the Mac. The `dynamicIsland` closure's `compactLeading`/`compactTrailing`/`minimal` and expanded regions work as on iPhone.
+- **Expansion.** An activity expands only when the user clicks or taps it, or when an update carries an alert. Only one is expanded at a time, so alert only for high-priority updates or ones that need a response.
+- **Starting it.** On a local event, at a scheduled time, or by push. It works with the Mac's background tasks and user agents.
+- **Dismissal.** Users can hide or end an activity by swiping or from its context menu, so it can disappear before your `end`.
+
 
 ## Common Mistakes
 
@@ -172,6 +187,8 @@ Adapt layout with `@Environment(\.activityFamily)` and simplify for Always On Di
 
 **WWDC**: 2023-10184, 2023-10194, 2023-10185, 2024-10069, 2024-10068, 2025-230
 
+**Tech Talks**: 111467
+
 **Docs**: /activitykit, /activitykit/activity, /activitykit/activityattributes, /activitykit/activitycontent, /widgetkit/activityconfiguration, /widgetkit/dynamicisland
 
-**Skills**: skills/live-activities-ref.md, skills/extensions-widgets.md (static/timeline widgets, Control Center), skills/push-notifications.md (APNs setup), skills/alarmkit-ref.md (alarms/timers as Live Activities), axiom-watchos (Smart Stack)
+**Skills**: skills/live-activities-ref.md, axiom-macos (skills/touch.md), skills/extensions-widgets.md (static/timeline widgets, Control Center), skills/push-notifications.md (APNs setup), skills/alarmkit-ref.md (alarms/timers as Live Activities), axiom-watchos (Smart Stack)
