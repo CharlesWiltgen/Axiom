@@ -15,7 +15,7 @@ Use this skill when:
 - Running MCP in CI, or on a machine where you don't want Xcode open
 - A tool call is rejected with "This agent isn't approved to use Xcode's tools yet" (Xcode 27 beta 6 and later), or hangs forever with no error (beta 5 and earlier)
 - A client connects but `tools/list` returns empty
-- `DocumentationSearch` is missing on Xcode 27.2 beta 2, or the `GetCodeCoverage` tool named in the release notes is missing from your tool list
+- `DocumentationSearch` is missing on Xcode 27.2 beta 2, or the `GetCodeCoverage` tool named in the 27.2 prerelease notes is missing from your tool list
 - `xcrun mcpbridge` reports "Connection refused"
 - Permission prompts reappear every session
 - Targeting one of multiple running Xcode instances
@@ -42,7 +42,7 @@ Use this skill when:
 - **Approval and the unapproved-agent trap** – Attached-mode dialogs, headless `sudo` grants, time-boxed trust for unsigned agents, and the `Permitted agents` check; rejected calls from beta 6 on versus silent hangs through beta 5
 - **Multi-Xcode targeting** – The auto-detection fallback, plus `MCP_XCODE_PID`, `MCP_XCODE_SESSION_ID`, and `DEVELOPER_DIR`
 - **Troubleshooting decision tree and table** – Hangs, connection failures, empty tool lists, wrong workspace, repeated prompts
-- **Build-specific tool lists** – Why 27.2 beta 2 (27B5028f) lists 53 tools without `DocumentationSearch`, approved or not, while the 27.2 RC (27B48) lists all 54, and why no build through the RC lists `GetCodeCoverage`
+- **Build-specific tool lists** – Why 27.2 beta 2 (27B5028f) lists 53 tools without `DocumentationSearch`, approved or not, while Xcode 27.2 (27B52) and its RC list all 54, and why no build through the 27.2 release lists `GetCodeCoverage`
 - **Letting Xcode launch the agent** – `xcrun agent` (an alias for `xcrun mcpbridge run-agent`) starts an agent with Xcode's resolved config; `xcrun agent skills export` writes Xcode's 10 built-in skill bundles to disk
 - **Extending Xcode's agent** – Per-agent config folders (Claude Agent, Codex, Gemini) for custom models, MCP servers, and skills, plus built-in slash commands and the Agents → Permissions and Plug-ins settings
 
@@ -64,6 +64,6 @@ This page documents the `xcode-mcp-setup` skill in the `axiom-xcode-mcp` suite. 
 ## Related
 
 - [Xcode MCP Tools](/skills/xcode-mcp/xcode-mcp-tools) – Once setup works, this skill covers workspace bootstrap, workflow patterns, and tool gotchas
-- [Xcode MCP Reference](/reference/xcode-mcp-ref) – Parameters and return shapes for the 27.2 RC, plus the fields that differ on earlier builds
+- [Xcode MCP Reference](/reference/xcode-mcp-ref) – Parameters and return shapes for Xcode 27.2, plus the fields that differ on earlier builds
 - [Xcode Debugging](/skills/debugging/xcode-debugging) – Environment diagnostics for problems that aren't MCP-related (Derived Data, zombie xcodebuild processes, simulators)
 - [Device Control](/reference/device-control-ref) – Driving simulators and devices without MCP at all

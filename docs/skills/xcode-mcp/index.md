@@ -52,7 +52,7 @@ Questions you can ask your assistant that will draw from these skills:
 
 - **Setup guides** – Five MCP clients (Claude Code, Cursor, Codex, VS Code, Gemini CLI), in attached or headless mode
 - **Workflow patterns** – Workspace bootstrap, iterative BuildFix and TestFix loops, preview verification
-- **Tool references** – The 54-tool Xcode 27.2 RC schemas, the fields that differ on 27.2 beta 2 and earlier builds, return shapes, and gotchas
+- **Tool references** – The 54-tool Xcode 27.2 schemas, the fields that differ on 27.2 beta 2 and earlier builds, return shapes, and gotchas
 - **Workspace targeting** – Identifier management, and why an identifier is required even with one project open
 - **Troubleshooting** – Hung calls, agent approval, empty tool lists, stale connections
 - **Conflict resolution** – When to use MCP tools, `xcodebuild`, or your assistant's standard file tools
@@ -67,12 +67,12 @@ The `axiom-xcode-mcp` router reads your question and loads one of four specializ
 | `axiom-xcode-mcp` | Router | Routes to the right specialized skill |
 | [`xcode-mcp-setup`](/skills/xcode-mcp/xcode-mcp-setup) | Discipline | Enable, connect, and troubleshoot per client |
 | [`xcode-mcp-tools`](/skills/xcode-mcp/xcode-mcp-tools) | Discipline | Workflow patterns, gotchas, workspace targeting |
-| [`xcode-mcp-ref`](/reference/xcode-mcp-ref) | Reference | Xcode 27.2 RC tool schemas and the fields that differ on other builds |
+| [`xcode-mcp-ref`](/reference/xcode-mcp-ref) | Reference | Xcode 27.2 tool schemas and the fields that differ on other builds |
 | [`axe-ref`](/reference/axe-ref) | Reference | AXe simulator input (`tap`/`type`/`swipe`) |
 
 ## The Xcode MCP Tools
 
-The Xcode 27.2 RC (27B48) and Xcode 27.0 list all 54 tools with no workspace open, including `DocumentationSearch`, and the 27.1 RC lists the same 54. Xcode 27.2 beta 2 (27B5028f) lists 53, without `DocumentationSearch`, whether or not the agent is approved and a workspace is open. On 27.2 builds `RenderPreview` can choose a render destination, and on the RC it also renders interactive previews and returns its results under new field names. The `GetCodeCoverage` tool announced in the 27.2 beta 2 and RC release notes is absent through the RC. Check the live tool list before calling a tool, because a shorter list alone doesn't mean a workspace or approval problem. The full per-tool reference is in [Xcode MCP Reference](/reference/xcode-mcp-ref).
+Xcode 27.2 (27B52, and its RC) and Xcode 27.0 list all 54 tools with no workspace open, including `DocumentationSearch`, and the 27.1 RC lists the same 54. Xcode 27.2 beta 2 (27B5028f) lists 53, without `DocumentationSearch`, whether or not the agent is approved and a workspace is open. On 27.2 builds `RenderPreview` can choose a render destination, and from the 27.2 RC it also renders interactive previews and returns its results under new field names. The `GetCodeCoverage` tool announced in the 27.2 beta 2 and RC release notes isn't in the released 27.2. Check the live tool list before calling a tool, because a shorter list alone doesn't mean a workspace or approval problem. The full per-tool reference is in [Xcode MCP Reference](/reference/xcode-mcp-ref).
 
 | Category | Tools |
 |----------|-------|
