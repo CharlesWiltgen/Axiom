@@ -3,12 +3,12 @@
   "files": [
     {
       "path": ".cursor-plugin/plugin.json",
-      "sha256": "5a52444c6b46478381b4f9a5c04b7257107260f07d678bf78d97e75a8e0ea285",
+      "sha256": "3d2da2fe7e9c5ff74c2fb6f27e642758afe5ca679d2d39da6fb81c43fd39cd72",
       "bytes": 578
     },
     {
       "path": "README.md",
-      "sha256": "7678149fdf94a9f5153e88ec182d7d6d9ef23c98fa7a4a6ff51b92f1da910a95",
+      "sha256": "a9eb3a34e9bf1bfeaf423d47ed0c73268d3f6f6e641bc71ab6e3dae9a27298a1",
       "bytes": 4374
     },
     {
@@ -73,8 +73,8 @@
     },
     {
       "path": "agents/health-check.md",
-      "sha256": "c7902c5a66d5242a01684ed103247067415250ab7421fc76bb2894ded5ce8b81",
-      "bytes": 9870
+      "sha256": "3a2a19bd80bf3068e7b5492425de554bb77d6287cb48844239cc4f6592d88e22",
+      "bytes": 9981
     },
     {
       "path": "agents/iap-auditor.md",
@@ -212,6 +212,11 @@
       "bytes": 23517
     },
     {
+      "path": "agents/touch-auditor.md",
+      "sha256": "0df0316fd49c177756a5f0a1cb03beeafd56dfff1ed98d9f988c4ad88f6b213b",
+      "bytes": 22658
+    },
+    {
       "path": "agents/triage-analyzer.md",
       "sha256": "954001ae6548ab0d8b1886816fe60dfcc98f04f897a5c07e9b6fa9bc5aaf3eaa",
       "bytes": 11890
@@ -233,13 +238,13 @@
     },
     {
       "path": "commands/axiom-ask.md",
-      "sha256": "0bd3cc5a325cb0955894f86b028ed951577ce479373a636190650872aaad0cc8",
-      "bytes": 8376
+      "sha256": "abc762c63c7f932770b99b54543279c6f62a9d97d65cbbb38395b53ae6a1bf18",
+      "bytes": 8438
     },
     {
       "path": "commands/axiom-audit.md",
-      "sha256": "f11462b1812b6fb652b9dd6eede946f439ac2509e79b68572ab5f9534bfe5003",
-      "bytes": 12897
+      "sha256": "990cb9b2d03d4bcd8e6c7e754b4356b1c11e079494dc8ab7825a33ad3efefed5",
+      "bytes": 13323
     },
     {
       "path": "commands/axiom-compare-traces.md",
@@ -323,8 +328,8 @@
     },
     {
       "path": "reports/capability-disposition.json",
-      "sha256": "958fdaab76975ad112fed889075967703298a4b2f47251cfc2838e30913a7b36",
-      "bytes": 33152
+      "sha256": "67f76b5c1bd3a403b335bbf544dfad6a2f939b521e18433bade1941acb321d3f",
+      "bytes": 33701
     },
     {
       "path": "scripts/cursor-hook-adapter.py",
@@ -363,8 +368,8 @@
     },
     {
       "path": "scripts/user-prompt-submit.py",
-      "sha256": "d066d395f7ddae88f24e1a88dd60d1645a945755b97b6ac2c3e09d9c42440452",
-      "bytes": 51906
+      "sha256": "e57e44bc74d1bab9971b2b850e23e72f675349d36abbdbb66628ac19fa5b8f65",
+      "bytes": 52443
     },
     {
       "path": "scripts/version_context.py",
@@ -758,8 +763,8 @@
     },
     {
       "path": "skills/axiom-games/skills/game-input.md",
-      "sha256": "f227758c301006a855bdcf0f0479b5f84cdd8e180f8331308776d5d64e146a1b",
-      "bytes": 19143
+      "sha256": "8d148ebecd05c813de5e2783f933911cfee9221389bc28a010ede17497c49563",
+      "bytes": 24310
     },
     {
       "path": "skills/axiom-games/skills/spritekit-diag.md",
@@ -918,7 +923,7 @@
     },
     {
       "path": "skills/axiom-integration/skills/app-schemas-ref.md",
-      "sha256": "c7ccaf00a43606cd583cfbd2df93b7beb02a12dd6a5c5bd5ba606d51550faac2",
+      "sha256": "5bd58e331ad29dc7cce5e650a808213fb4db21ceb7f24c73523e3fd1fe26cc3f",
       "bytes": 41871
     },
     {
@@ -1003,13 +1008,13 @@
     },
     {
       "path": "skills/axiom-integration/skills/live-activities-ref.md",
-      "sha256": "45b3c5c315a18dc14518af685345e32a53e3e6ea05151f9d7cfc16899ef41f78",
-      "bytes": 10838
+      "sha256": "9a3335af4fe94ff193301c823552b5c82604283cfe9503e647926ce0dcc4d75f",
+      "bytes": 11499
     },
     {
       "path": "skills/axiom-integration/skills/live-activities.md",
-      "sha256": "ecb720de460b79dfea8097b640d6a19bd53575f3940434e252cef262ea4592b9",
-      "bytes": 11516
+      "sha256": "a4b8f391acc874c4e37d9cea964471d1583a402691cf62deddec606eba89b366",
+      "bytes": 13298
     },
     {
       "path": "skills/axiom-integration/skills/local-push-connectivity.md",
@@ -1133,8 +1138,8 @@
     },
     {
       "path": "skills/axiom-macos/SKILL.md",
-      "sha256": "f0393d61cca8440430c9b51281aa382730f682326200b700aee753ed5a89de44",
-      "bytes": 4962
+      "sha256": "0cf7e43db0f343c7792c9a7904db7cc1c8be0e96f02ca52e897b36fa48c280fc",
+      "bytes": 5579
     },
     {
       "path": "skills/axiom-macos/skills/appkit-interop.md",
@@ -1143,8 +1148,8 @@
     },
     {
       "path": "skills/axiom-macos/skills/appkit-modernization.md",
-      "sha256": "b593243ec2be7ce31baff2b2b8d5af986d151905cfb7953f105f0697478836ec",
-      "bytes": 13012
+      "sha256": "593058fcbe9940dcd30f15e6fef592e299ce8f04a05e894c34359ab71d072f93",
+      "bytes": 12168
     },
     {
       "path": "skills/axiom-macos/skills/direct-distribution.md",
@@ -1187,6 +1192,11 @@
       "bytes": 19943
     },
     {
+      "path": "skills/axiom-macos/skills/touch.md",
+      "sha256": "6ff331a9b5b58d5e2e10f5ae833e8748742f7a6bf7e03681bb86e484880aa690",
+      "bytes": 28081
+    },
+    {
       "path": "skills/axiom-macos/skills/windows.md",
       "sha256": "f89f394c453566f77be2d103a98b5a5da193338258f1fd7ebfba5d2a96bfbd8c",
       "bytes": 15190
@@ -1213,8 +1223,8 @@
     },
     {
       "path": "skills/axiom-media/skills/camera-capture-ref.md",
-      "sha256": "b0e0980b2ef4a5cd09695e7d57fe0dd0952426d08299c353c4e6225a8072c316",
-      "bytes": 51707
+      "sha256": "8e613cd411f92585b4ee021bdf47340833bee44b54b7ada64abd68e6b9c7d56b",
+      "bytes": 51733
     },
     {
       "path": "skills/axiom-media/skills/camera-capture.md",
@@ -1223,8 +1233,8 @@
     },
     {
       "path": "skills/axiom-media/skills/carplay-hig.md",
-      "sha256": "b6a76d32f33af6b48260aa6afd1a256a8eb6af2090ac9f822ca6ac3bc0e5b202",
-      "bytes": 30239
+      "sha256": "5a3d705aaef4b9bfbff7a9b25a148c49622c86a0766447e58e5ef35ae14326d7",
+      "bytes": 30416
     },
     {
       "path": "skills/axiom-media/skills/carplay-navigation-ref.md",
@@ -1663,8 +1673,8 @@
     },
     {
       "path": "skills/axiom-swiftui/skills/gestures.md",
-      "sha256": "0f6dea643333c4cae7ed05c27faeed7af22bf98754c24424e7688d742e11b610",
-      "bytes": 25541
+      "sha256": "22ce20a1d28c0a4e92a8add93650b8ef55b3333cd54541e093cbeaa47eb239a7",
+      "bytes": 27098
     },
     {
       "path": "skills/axiom-swiftui/skills/hot-reload.md",
@@ -1673,8 +1683,8 @@
     },
     {
       "path": "skills/axiom-swiftui/skills/iphone-duo.md",
-      "sha256": "a66addb20b640987446c1be4a65fefca20bd34ea03d7f3ff21dea78719493655",
-      "bytes": 44310
+      "sha256": "9cac2908842a0de34051a8a0d127e1c81fbc70bbe18b25a28956a337a85c43da",
+      "bytes": 44323
     },
     {
       "path": "skills/axiom-swiftui/skills/layout-ref.md",
@@ -1768,8 +1778,8 @@
     },
     {
       "path": "skills/axiom-tools/skills/device-control-ref.md",
-      "sha256": "af0de3d7f585236f7e8cdeed4bad849c7bb9b1a8a380c6a7637ae5268534730b",
-      "bytes": 32947
+      "sha256": "fd8b198a04086da7cb17c3c5676e227e3f463ff3a7b399152dec401c270c4108",
+      "bytes": 33590
     },
     {
       "path": "skills/axiom-tools/skills/getting-started.md",
@@ -1923,30 +1933,30 @@
     },
     {
       "path": "skills/axiom-xcode-mcp/skills/xcode-mcp-ref.md",
-      "sha256": "b9a061e902a71c6218d0c038729d0849778a0a26823ae3f50a7f4daffe2a28ca",
-      "bytes": 38536
+      "sha256": "91412db00f7de62a58ff36c5f2bc6dbbcc00fac561075f19f447cacc15c7b2b3",
+      "bytes": 38755
     },
     {
       "path": "skills/axiom-xcode-mcp/skills/xcode-mcp-setup.md",
-      "sha256": "3da2f52780634807bcb824615cc773ed70bfd52656d57aa52a7f3740b809ca24",
-      "bytes": 18277
+      "sha256": "0bd1e5607a61c56a75b13b03419f30fa2cb01450e598379f2e889685346210a5",
+      "bytes": 18282
     },
     {
       "path": "skills/axiom-xcode-mcp/skills/xcode-mcp-tools.md",
-      "sha256": "df6c1913ed22c2d26a07232aeeddc382c149e4ddd676bb538ec4e4d2f6cbde1a",
-      "bytes": 18405
+      "sha256": "f1b29d828f70150626a2221d8f14a8c5649296892a11452ff140ae29816c4ab7",
+      "bytes": 18584
     }
   ],
   "totals": {
-    "files": 387,
-    "bytes": 7988668
+    "files": 389,
+    "bytes": 8051294
   },
-  "excludedMirrors": 30,
+  "excludedMirrors": 31,
   "classes": {
     "routers": 27,
-    "agents": 42,
+    "agents": 43,
     "commands": 17,
-    "releasedReadonlyBackground": 30,
+    "releasedReadonlyBackground": 31,
     "releasedWritableForeground": 12
   },
   "authorityExpansions": [
@@ -2317,6 +2327,15 @@
     },
     {
       "agent": "textkit-auditor",
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inherited": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "agent": "touch-auditor",
       "sourceTools": [
         "Glob",
         "Grep",

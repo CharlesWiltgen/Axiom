@@ -1,11 +1,11 @@
 {
   "routers": 27,
-  "agents": 42,
+  "agents": 43,
   "commands": 17,
-  "excludedMirrors": 30,
+  "excludedMirrors": 31,
   "globalHookEntries": 7,
   "perAgentHooks": 0,
-  "releasedReadonlyBackground": 30,
+  "releasedReadonlyBackground": 31,
   "releasedWritableForeground": 12,
   "authorityExpansions": [
     {
@@ -375,6 +375,15 @@
     },
     {
       "agent": "textkit-auditor",
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inherited": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "agent": "touch-auditor",
       "sourceTools": [
         "Glob",
         "Grep",
@@ -1072,6 +1081,19 @@
     },
     {
       "name": "textkit-auditor",
+      "disposition": "generated-native-subagent",
+      "authority": "readonly",
+      "sourceBackground": true,
+      "releasedBackground": true,
+      "sourceTools": [
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inheritedAuthority": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "name": "touch-auditor",
       "disposition": "generated-native-subagent",
       "authority": "readonly",
       "sourceBackground": true,

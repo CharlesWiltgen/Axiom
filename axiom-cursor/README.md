@@ -1,15 +1,15 @@
 # Axiom for Cursor
 
-A native Cursor plugin for modern Apple platform development, generated from Axiom 27.7.0.
+A native Cursor plugin for modern Apple platform development, generated from Axiom 27.7.1.
 
 ## Included
 
 - 27 skill routers
-- 42 agents
+- 43 agents
 - 17 `/axiom-*` commands
 - Advisory session, shell, and post-write hooks
 - Automatic plugin-root MCP discovery
-- 30 generated mirrors intentionally excluded
+- 31 generated mirrors intentionally excluded
 
 ## Requirements and Support
 
@@ -27,7 +27,7 @@ Clone Axiom to a stable absolute path and check out the revision you intend to t
 
 Cursor imports the local marketplace into its plugin cache; it does not follow later checkout changes automatically. After changing revisions or regenerating `axiom-cursor/`, uninstall Axiom, remove **Axiom Cursor Marketplace**, and repeat the local-repository flow before testing.
 
-Open Cursor's Customize panel and verify Axiom's version plus all 27 skills, 42 agents, 17 commands, hooks, and MCP server before relying on the installation.
+Open Cursor's Customize panel and verify Axiom's version plus all 27 skills, 43 agents, 17 commands, hooks, and MCP server before relying on the installation.
 
 ## Axiom Tools
 
@@ -39,7 +39,7 @@ Console capture, crash symbolication, and profiling use `axiom_xclog_*`, `axiom_
 
 ## Authority and Hooks
 
-The released profile has 30 read-only/background agents and 12 writable/foreground agents. Cursor agents inherit host tool and MCP access that may be broader than their canonical Axiom tool lists. Review the agent, tool approvals, and MCP allowlist before running it; prompt instructions and hooks are not security boundaries. Writable agents run in the foreground and may change the shared checkout.
+The released profile has 31 read-only/background agents and 12 writable/foreground agents. Cursor agents inherit host tool and MCP access that may be broader than their canonical Axiom tool lists. Review the agent, tool approvals, and MCP allowlist before running it; prompt instructions and hooks are not security boundaries. Writable agents run in the foreground and may change the shared checkout.
 
 Hooks add routing or diagnostic context after supported events. They are advisory, fail open, and do not enforce permissions or undo an edit that already happened.
 

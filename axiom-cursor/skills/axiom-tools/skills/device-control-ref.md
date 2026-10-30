@@ -476,9 +476,10 @@ pgrep -l Simulator DeviceHub    # must print NOTHING
 
 Xcode 27 exposes no device-free CarPlay display: neither Device Hub nor `simctl` offers one, and the
 Xcode 26 `defaults write com.apple.iphonesimulator CarPlayExtraOptions -bool YES` key does not exist
-anywhere in the 27 toolchain (verified structurally against 27.1). Device Hub instead carries CarPlay Simulator as a built-in DeviceKit plugin
-(`CarPlaySimulator.devicekitplugin`, its **CarPlay Simulator** menu item), which needs a physical
-iPhone and ignores simulators — see `axiom-media (skills/carplay-hig.md)`.
+anywhere in the 27 toolchain (verified structurally against 27.1). Device Hub instead carries CarPlay Simulator as a
+built-in DeviceKit plugin (`CarPlaySimulator.devicekitplugin`, its **CarPlay Simulator** menu
+item), which needs a physical iPhone, on a USB cable rather than over the network (a 27.2 known
+issue), and ignores simulators — see `axiom-media (skills/carplay-hig.md)`.
 
 Device Hub offers the same toolset for simulators and physical devices, in
 a *compact* window (live screen plus a few essentials) that expands to a *full window* with canvas,
@@ -490,6 +491,14 @@ The **canvas** is a live, interactive screen (click, drag, scroll, trackpad gest
 snap-to-1:1 physical size, *Resize mode* (transform app dimensions freely — see `axiom-uikit` for
 resizability), and *Capture keyboard* (routes Mac keystrokes to the device for key-command and
 hardware testing).
+
+What changes with the Xcode version (Xcode 27.0 and 27.2 release notes):
+
+| Behavior | Xcode |
+|---|---|
+| Simulators older than iOS 18, tvOS 18, watchOS 11 or visionOS 2 ignore keyboard and mouse input | Before 27.2 (27.0 known issue); test input on a newer runtime |
+| Touches on a Sidecar iPad or a touch-display MacBook reach the device as touches, so pinch and rotate can be tested from the canvas | 27.2 |
+| *Secure keyboard entry* (stops other apps intercepting keystrokes bound for the device) cannot be on at the same time as *Capture keyboard* | 27.2 known issue |
 
 ### Inspector panels
 

@@ -594,6 +594,32 @@ var body: some View {
 
 `#if` is a compilation directive, not an expression — it cannot stand in argument position inside a modifier chain. Vary the value, not the gesture.
 
+### Filtering by Input Kind `OS27`
+
+Gestures respond to every input by default — finger, trackpad, Pencil, pointer — and on a touch-display Mac or over Sidecar the same gesture code just works. Filter only for a real need, such as one finger drawing while the pointer selects:
+
+```swift
+@available(anyAppleOS 27, *)
+@available(tvOS, unavailable)
+struct PipingCanvas: View {
+    var body: some View {
+        Canvas { _, _ in }
+            .gesture(
+                DragGesture(minimumDistance: 0, inputKinds: [.directTouch, .pencil])
+                    .onChanged { value in pipe(at: value.location) }
+            )
+            .onTapGesture(inputKinds: .pointer) { location in select(at: location) }
+    }
+
+    func pipe(at point: CGPoint) {}
+    func select(at point: CGPoint) {}
+}
+```
+
+`GestureInputKinds`: `.directTouch`, `.indirectTouch`, `.pencil`, `.pointer`, `.all` (the default). The parameter exists on `TapGesture`, `SpatialTapGesture`, `DragGesture`, `LongPressGesture`, `MagnifyGesture`, `RotateGesture`, `onTapGesture`, and `onLongPressGesture`. On tvOS only `TapGesture` and `onTapGesture` take it; the magnify and rotate variants are not on watchOS. A gesture that only works by touch also needs a pointer path, typically a menu item.
+
+Mac touch design and the AppKit side: axiom-macos (skills/touch.md). That file also covers `directTouchSystemGesturesDisabled(_:)` (macOS 27.2 and Mac Catalyst 27.2 only; Xcode 27.2's macOS SDK can't compile it yet), which keeps three-finger system gestures from taking over a critical interaction.
+
 ---
 
 ## Pattern 8: Pointer and Hover

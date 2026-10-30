@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "27.7.0",
+  "version": "27.7.1",
   "description": "Battle-tested Claude Code skills, agents, and tools for modern xOS (iOS, iPadOS, macOS, watchOS, tvOS) development",
   "author": "Charles Wiltgen",
   "license": "MIT",
@@ -114,7 +114,7 @@
     },
     {
       "name": "axiom-macos",
-      "description": "Use when building ANY macOS app — windows, menus, sandboxing, distribution, AppKit bridging or modernization (control events, state restoration, concentric corners), or macOS-specific SwiftUI patterns."
+      "description": "Use when building ANY macOS app — windows, menus, sandboxing, distribution, AppKit bridging or modernization (control events, state restoration, concentric corners), touch input, or macOS-specific SwiftUI patterns."
     },
     {
       "name": "axiom-watchos",

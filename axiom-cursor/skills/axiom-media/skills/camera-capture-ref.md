@@ -519,7 +519,7 @@ A discovery session for `.front` with the wide-angle or ultra-wide type returns 
 
 `position` can't tell two front cameras apart, and a `.front` camera can face away from the user. `AVCaptureDeviceDirectionCoordinator` (AVKit) reports which cameras face toward and away from the user relative to one view, and calls its handler when that view's display changes — as the device opens or closes, or as the app moves to the outer display while flipped open. It's main-actor; one coordinator per view, so two when you show UI on both displays. (111465 4:06)
 
-**`cannot find … in scope` for `AVCaptureDeviceDirectionCoordinator`, `AVCaptureDeviceDescriptor` or `AVCaptureDeviceDirectionMap` means the wrong Xcode, not a removed API.** Xcode 27.2 beta 2 (`xcodebuild -version` prints `Build version 27B5028f`) lacks all three; Xcode 27.1 (`27A9275`) and 27.2 RC (`27B48`) or later have them, and the snippet below compiles against both. Don't rewrite it around `position`. For any other missing name, check the Xcode build, then for a rename, before calling it dropped.
+**`cannot find … in scope` for `AVCaptureDeviceDirectionCoordinator`, `AVCaptureDeviceDescriptor` or `AVCaptureDeviceDirectionMap` means the wrong Xcode, not a removed API.** Xcode 27.2 beta 2 (`xcodebuild -version` prints `Build version 27B5028f`) lacks all three; Xcode 27.1 (`27A9275`) and 27.2 (RC `27B48`, release `27B52`) or later have them, and the snippet below compiles against 27.1 and 27.2. Don't rewrite it around `position`. For any other missing name, check the Xcode build, then for a rename, before calling it dropped.
 
 ```swift
 // iOS 27.1: report camera direction relative to a view; hand descriptors to your camera actor
