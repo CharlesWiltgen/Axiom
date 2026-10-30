@@ -3,12 +3,12 @@
   "files": [
     {
       "path": ".cursor-plugin/plugin.json",
-      "sha256": "3d2da2fe7e9c5ff74c2fb6f27e642758afe5ca679d2d39da6fb81c43fd39cd72",
+      "sha256": "7b4bc506e89c6b4257c6d4ef4bc6c487c2deb4b3051fb12e9533e78a52b1619a",
       "bytes": 578
     },
     {
       "path": "README.md",
-      "sha256": "a9eb3a34e9bf1bfeaf423d47ed0c73268d3f6f6e641bc71ab6e3dae9a27298a1",
+      "sha256": "a3616df10f64b7a1287405b49625d4ccd2719a9cc3ee921c93146fc5ec7347f0",
       "bytes": 4374
     },
     {
@@ -1008,13 +1008,13 @@
     },
     {
       "path": "skills/axiom-integration/skills/live-activities-ref.md",
-      "sha256": "9a3335af4fe94ff193301c823552b5c82604283cfe9503e647926ce0dcc4d75f",
-      "bytes": 11499
+      "sha256": "c0d6c0f795516328be12cd99b4c5a25481a41afd3b5e18b6159f69dc22dbf2ff",
+      "bytes": 11614
     },
     {
       "path": "skills/axiom-integration/skills/live-activities.md",
-      "sha256": "a4b8f391acc874c4e37d9cea964471d1583a402691cf62deddec606eba89b366",
-      "bytes": 13298
+      "sha256": "54b2361587b40bc480e10745996b80435a410c2efa37d5c59dddb90132f56661",
+      "bytes": 13593
     },
     {
       "path": "skills/axiom-integration/skills/local-push-connectivity.md",
@@ -1193,8 +1193,8 @@
     },
     {
       "path": "skills/axiom-macos/skills/touch.md",
-      "sha256": "6ff331a9b5b58d5e2e10f5ae833e8748742f7a6bf7e03681bb86e484880aa690",
-      "bytes": 28081
+      "sha256": "57879203c82bcea5acedb56c51db8347e9abb5d286060c1d85dfb11a0b792d17",
+      "bytes": 28283
     },
     {
       "path": "skills/axiom-macos/skills/windows.md",
@@ -1949,7 +1949,7 @@
   ],
   "totals": {
     "files": 389,
-    "bytes": 8051294
+    "bytes": 8051906
   },
   "excludedMirrors": 31,
   "classes": {

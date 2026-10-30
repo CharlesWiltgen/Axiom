@@ -153,7 +153,7 @@ Adapt layout with `@Environment(\.activityFamily)` and simplify for Always On Di
 
 ### Native Mac Live Activities
 
-From tech talk 111467. Mac apps can start Live Activities themselves, not just mirror an iPhone's. **ActivityKit is marked unavailable on macOS and Mac Catalyst in the macOS 27.2 SDK** — gate on the release that ships it. The API is real; it isn't in the installed SDK yet.
+From tech talk 111467. Mac apps can start Live Activities themselves, not just mirror an iPhone's. **ActivityKit is marked unavailable on macOS and Mac Catalyst in the macOS 27.2 SDK.** The API is real; it isn't in the installed SDK yet. Until an SDK ships it, keep the code out of Mac builds at compile time with `#if os(iOS) && !targetEnvironment(macCatalyst)` (`os(iOS)` alone is true under Mac Catalyst, where ActivityKit is unavailable too). `#if canImport(ActivityKit)` is true on the Mac and excludes nothing, and `#available` can't lift an `unavailable` marking.
 
 - **Same code.** A universal app's existing Live Activity runs on the Mac unchanged; a Mac-only app adopts the same `ActivityAttributes` / `ActivityConfiguration` / `Activity` API.
 - **Where it shows.** The Dynamic Island along the top edge of a Mac with Dynamic Island; the menu bar on other Macs and displays. It mixes with the system's own (timers, Now Playing, calls).

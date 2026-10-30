@@ -237,7 +237,7 @@ CarPlay (iOS 26+) and the macOS Tahoe 26+ menu bar surface a paired iPhone's Liv
 
 ## Mac apps (native)
 
-Tech talk 111467: Mac apps can start their own Live Activities. ActivityKit is marked unavailable on macOS and Mac Catalyst in the macOS 27.2 SDK, so gate on the shipping release. They appear in the Dynamic Island on a Mac with Dynamic Island and in the menu bar elsewhere. The `ActivityConfiguration` content closure becomes the expanded menu-bar view, and the `dynamicIsland` closures are unchanged. Universal apps need no changes. Updates (`update(_:alertConfiguration:)`), App Intent buttons, and `end(_:dismissalPolicy:)` work as on iOS. Discipline: `skills/live-activities.md` (Native Mac Live Activities).
+Tech talk 111467: Mac apps can start their own Live Activities. ActivityKit is marked unavailable on macOS and Mac Catalyst in the macOS 27.2 SDK; until an SDK ships it, exclude the code from Mac builds with `#if os(iOS) && !targetEnvironment(macCatalyst)` (`canImport` and `#available` don't). They appear in the Dynamic Island on a Mac with Dynamic Island and in the menu bar elsewhere. The `ActivityConfiguration` content closure becomes the expanded menu-bar view, and the `dynamicIsland` closures are unchanged. Universal apps need no changes. Updates (`update(_:alertConfiguration:)`), App Intent buttons, and `end(_:dismissalPolicy:)` work as on iOS. Discipline: `skills/live-activities.md` (Native Mac Live Activities).
 
 ---
 
