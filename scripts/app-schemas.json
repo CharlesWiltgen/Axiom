@@ -1,5 +1,5 @@
 {
-  "xcode": "Xcode 27.2 (27B48)",
+  "xcode": "Xcode 27.2 (27B52)",
   "sdk": "iphoneos 27.2",
   "types": {
     "GeoToolbox.PlaceDescriptor": "iOS 26+, macOS 26+, visionOS 26+, watchOS 26+, tvOS 26+",

@@ -36,7 +36,7 @@ The saved compiler log is the main source of errors; test results and Swift Test
 
 The Claude Code and Codex plugins include axbuild. In Pi, put it on your `PATH`. Cursor and other MCP clients don't include it, so your assistant saves build output to a log file and reads that instead.
 
-axbuild has been tested with Swift 6.4 (6.4.0.34.1, from Xcode 27.0 through 27.2 beta 2) and Swift 6.4.2 (6.4.2.1.9, from the Xcode 27.2 RC, 27B48). With other toolchains, `swift test` runs without automatic Swift Testing event capture and axbuild relies on the log. Xcode 26 hasn't been tested. axbuild is supported on macOS 26 and newer, like the rest of Axiom.
+axbuild has been tested with Swift 6.4 (6.4.0.34.1, from Xcode 27.0 through 27.2 beta 2) and Swift 6.4.2 (6.4.2.1.9, from the Xcode 27.2 RC (27B48) and release (27B52)). With other toolchains, `swift test` runs without automatic Swift Testing event capture and axbuild relies on the log. Xcode 26 hasn't been tested. axbuild is supported on macOS 26 and newer, like the rest of Axiom.
 
 ### Known limitations
 

@@ -87,9 +87,10 @@ Questions you can ask your assistant that will draw from this reference:
 
 ### Device Hub (Xcode 27 GUI)
 - Compact vs full window, the interactive canvas
+- What Xcode 27.2 changes: input to pre-iOS 18 simulators, touch from a Sidecar iPad or touch-display Mac, and the conflict between Secure keyboard entry and Capture keyboard
 - The five-panel inspector and what each panel is for
 - Bundle path, process name, and bundle id per Xcode version, why `killall -9 Simulator` kills nothing on Xcode 27, and confirming the kill with `pgrep` rather than the exit code
-- CarPlay Simulator built into Device Hub (it still needs a physical iPhone), and the `CarPlayExtraOptions` default that does not exist in Xcode 27
+- CarPlay Simulator built into Device Hub (it needs a physical iPhone, and on Xcode 27.2 a USB cable), and the `CarPlayExtraOptions` default that does not exist in Xcode 27
 
 ## Documentation Scope
 

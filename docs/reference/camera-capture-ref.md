@@ -57,7 +57,7 @@ Questions you can ask your assistant that will draw from this reference:
 - Lens aperture, exposure priority modes, and exposure signals (iOS 27+)
 - Continuous autofocus tracking and focus-tracked metadata objects (iOS 27+)
 - Center Stage front camera: dynamic aspect ratio, smart framing monitor, sensor orientation compensation, Center Stage control mode and stabilization (iOS 26+)
-- iPhone Duo front cameras: the virtual front camera and mirroring, plus the individual inner and outer ultra-wide cameras and choosing a camera by direction (iOS 27.1+; build these with Xcode 27.1, or the Xcode 27.2 RC or later, because Xcode 27.2 beta 2 lacks their types)
+- iPhone Duo front cameras: the virtual front camera and mirroring, plus the individual inner and outer ultra-wide cameras and choosing a camera by direction (iOS 27.1+; build these with Xcode 27.1, or with Xcode 27.2 from the RC on, because Xcode 27.2 beta 2 lacks their types)
 - `AVCaptureDevice.RotationCoordinator` setup, properties, and KVO observation (iOS 17+)
 
 ### Photo Capture
