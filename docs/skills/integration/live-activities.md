@@ -21,6 +21,7 @@ Use this skill when you're:
 - Building Dynamic Island presentations or adding interactivity with App Intents
 - Fixing "zombie" activities that won't dismiss, or authorization failures
 - Surfacing a Live Activity on Apple Watch, CarPlay, or the Mac menu bar
+- Starting a Live Activity from a Mac app, which appears in the Dynamic Island on the touch-display MacBook Pro
 
 For static/timeline widgets and Control Center controls, see [extensions-widgets](/skills/integration/extensions-widgets). For APNs setup, see [push-notifications](/skills/integration/push-notifications).
 
@@ -58,6 +59,10 @@ await activity.end(ActivityContent(state: final, staleDate: nil), dismissalPolic
 
 Ship local `update(_:)` first (no entitlement), add per-activity `.token` push when approved, use push-to-start to launch from a push (iOS 18), and broadcast `.channel(id)` when one event has a large audience (iOS 18).
 
+### Live Activities from Mac apps
+
+Mac apps can start their own Live Activities, which appear in the Dynamic Island on a Mac that has one and in the menu bar on other Macs. A universal app's existing Live Activity works unchanged. On the Mac, the `ActivityConfiguration` content view becomes the expanded menu-bar view. Apple announced this in an October 2026 tech talk, but ActivityKit isn't available on macOS in the macOS 27.2 SDK yet.
+
 ### Keep `ContentState` on default Codable
 
 Custom `CodingKeys`/encoder strategies serialize on-device but **silently fail to decode push payloads**.
@@ -77,6 +82,7 @@ Custom `CodingKeys`/encoder strategies serialize on-device but **silently fail t
 - [extensions-widgets](/skills/integration/extensions-widgets) – Static/timeline widgets and Control Center controls (shares the widget extension)
 - [push-notifications](/skills/integration/push-notifications) – APNs auth and payload mechanics for push/broadcast updates
 - [controls-and-live-activities](/skills/watchos/controls-and-live-activities) – The Apple Watch side of Live Activities
+- [touch](/skills/macos/touch) – Designing Mac apps for the touch display that hosts the Mac's Dynamic Island
 
 ## Resources
 

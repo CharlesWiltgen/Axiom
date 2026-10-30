@@ -47,6 +47,7 @@ Comprehensive SwiftUI gesture patterns with composition, state management, and a
 ### Cross-Platform
 - iOS touch gestures
 - macOS mouse and trackpad
+- Filtering gestures by input kind (`inputKinds:` on the 27 releases), for touch-display Macs and Sidecar
 - visionOS spatial gestures
 - Platform-specific threshold tuning
 
@@ -132,6 +133,7 @@ Image("slider")
 - **accessibility-diag** – Making gestures accessible with VoiceOver
 - **swiftui-performance** – Optimizing gesture performance
 - **ui-testing** – Testing gesture interactions
+- **[touch](/skills/macos/touch)** – Touch on touch-display Macs and Sidecar
 
 ## Resources
 

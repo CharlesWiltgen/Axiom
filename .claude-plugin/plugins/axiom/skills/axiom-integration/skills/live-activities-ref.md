@@ -233,7 +233,11 @@ Channel lifecycle is independent of activities — a channel ID stays valid with
 
 ## CarPlay and Mac menu bar (automatic)
 
-CarPlay (iOS 26+) and the macOS Sequoia+ menu bar surface a paired iPhone's Live Activity automatically — no modifier or code.
+CarPlay (iOS 26+) and the macOS Tahoe 26+ menu bar surface a paired iPhone's Live Activity automatically — no modifier or code.
+
+## Mac apps (native)
+
+Tech talk 111467: Mac apps can start their own Live Activities. ActivityKit is marked unavailable on macOS and Mac Catalyst in the macOS 27.2 SDK, so gate on the shipping release. They appear in the Dynamic Island on a Mac with Dynamic Island and in the menu bar elsewhere. The `ActivityConfiguration` content closure becomes the expanded menu-bar view, and the `dynamicIsland` closures are unchanged. Universal apps need no changes. Updates (`update(_:alertConfiguration:)`), App Intent buttons, and `end(_:dismissalPolicy:)` work as on iOS. Discipline: `skills/live-activities.md` (Native Mac Live Activities).
 
 ---
 
@@ -246,6 +250,8 @@ AlarmKit renders alarms/timers *as* Live Activities. `AlarmPresentation` customi
 ## Resources
 
 **WWDC**: 2023-10184, 2023-10194, 2023-10185, 2024-10069, 2024-10068, 2025-230, 2026-223
+
+**Tech Talks**: 111467
 
 **Docs**: /activitykit, /activitykit/activity, /activitykit/activityattributes, /activitykit/activitycontent, /activitykit/activityauthorizationinfo, /widgetkit/activityconfiguration, /widgetkit/dynamicisland, /swiftui/environmentvalues/isdynamicislandlimitedinwidth
 

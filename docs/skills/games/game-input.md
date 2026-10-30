@@ -16,6 +16,7 @@ Use this skill when:
 - Letting players customize the controller Home button action (new in the 27 releases)
 - Reading spatial accessory input on visionOS 27
 - Reading mouse deltas and keyboard state for gameplay (iPad pointer, iPhone Mirroring)
+- Making a Mac game work on a touch-display Mac or a Sidecar iPad
 
 ## Example Prompts
 
@@ -53,8 +54,14 @@ Use this skill when:
 ### Mouse and Keyboard as Game Input
 - `GCMouse` delta-based look/aim, scroll as a direction pad, `GCKeyboard.coalesced` key handlers — same connect/handler pattern as controllers
 
+### Touch on a Touch-Display Mac
+- How AppKit emulates the mouse for games, and why a pointer position built from deltas drifts under touch
+- The extra `GCMouse` that each touch surface appears as, and opting out with `NSIsTouchNative`
+- Touch-only gesture recognizers on the game view, routed to whichever input context is active
+
 ## Related
 
 - [SpriteKit](/skills/games/spritekit) – Touch handling inside SpriteKit scenes; this skill covers on-screen controls and controllers
+- [touch](/skills/macos/touch) – App-level touch on the Mac (tracking loops, hit targets, system gestures) that the game section builds on
 - [Metal Migration](/skills/games/metal-migration) – Porting the rest of the game (rendering, shaders, Game Porting Toolkit)
 - [RealityKit](/skills/games/realitykit) – 3D and spatial games that consume the same controller input

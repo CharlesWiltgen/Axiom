@@ -10,6 +10,7 @@ Guide to player input for games on Apple platforms: on-screen touch controls wit
 - Reading mouse deltas or keyboard state for gameplay (GCMouse/GCKeyboard — iPad pointer, iPhone Mirroring)
 - Letting players customize the controller Home button action `OS27`
 - Reading spatial accessory input `visionOS27`
+- Making a Mac game work on a touch-display Mac or a Sidecar iPad (macOS 27)
 
 **Do NOT use this skill for**
 - Touch handling inside SpriteKit scenes (`touchesBegan` gameplay logic) → `skills/spritekit.md` Section 5
@@ -342,6 +343,73 @@ if let keys = GCKeyboard.coalesced?.keyboardInput {
 - All physical keyboards coalesce into one `GCKeyboard.coalesced` object — one connect notification, one handler set.
 - Use `GCMouse` for pointer-*driven gameplay* (camera look, aiming); use `UIPointerInteraction`/hover for UI chrome — see axiom-uikit (skills/uikit-modernization.md). Under iPhone Mirroring, translated input reaches these APIs like any indirect input; validate on a real Mirroring session (same skill).
 
+## 9. Touch on a Touch-Display Mac `macOS27`
+
+From TN3216. On a Mac with a touch display, or with an iPad connected over Sidecar, existing games get touch with no code: AppKit emulates the mouse from a single finger. Touch is a complement on the Mac, not the main input — players keep one hand on the keyboard, mouse, or controller.
+
+**Where touch fits**: brief, one-handed interactions players expect — inventory, map zoom and scroll, the settings menu. Touch players must get the same information and actions as mouse and controller players, never less.
+
+#### Relying on Emulation
+
+An `LSApplicationCategoryType` of `public.app-category.games` or a game subcategory (`public.app-category.action-games`, …) turns on game-specific emulation:
+
+| Touch | Mouse events, in order |
+|---|---|
+| Tap | `mouseMoved` (last position → tap location), `mouseDown`, `mouseUp` |
+| Drag | `mouseMoved` (to the drag start), `mouseDown`, `mouseDragged`…, `mouseUp` |
+
+- Read the location from each event. A finger can tap two distant points in a row, so a position built by adding up `mouseMoved`/`mouseDragged` deltas drifts away from where the player touched. The `mouseMoved` before each `mouseDown` exists so you can refresh a cached position.
+- Don't override `sendEvent(_:)` or pull events with `nextEvent(matching:until:inMode:dequeue:)` — that interferes with the recognizers that handle a physical mouse.
+- Hover, movement deltas, and other pointer-only behavior (a map that reveals details under a resting pointer) need a touch alternative: touch has no hover and reports no movement between taps.
+
+**`GCMouse` emulation**: by default each touch surface also appears as an extra `GCMouse` — finger down presses the left button, movement calls `mouseMovedHandler` with a delta, lifting releases it. It ignores additional fingers and emulates no other buttons, scrolling, or pinch. Its deltas jump between disconnected touch points, so never derive an absolute position from them.
+
+#### Handling Touch Directly
+
+Set `NSIsTouchNative` to `YES` in the Info.plist. Then the touch surface stops appearing as a `GCMouse`, emulation falls back to AppKit's generic behavior (ignoring the games category and any third-party UI framework), and touch reaches your game view through gesture recognizers. A view that still overrides `mouseDown` keeps getting emulated mouse events. Keep reading `GCMouse` — it now means the physical mouse only.
+
+```swift
+// One-time setup in the game's NSViewController (an NSGestureRecognizerDelegate)
+pan = NSPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))
+pan.buttonMask = 0   // Touch only; the physical mouse stays on GCMouse
+pan.delegate = self
+gameView.addGestureRecognizer(pan)
+
+tap = NSClickGestureRecognizer(target: self, action: #selector(handleTap(_:)))
+tap.buttonMask = 0
+tap.delegate = self
+gameView.addGestureRecognizer(tap)
+
+pinch = NSMagnificationGestureRecognizer(target: self, action: #selector(handlePinch(_:)))
+pinch.delegate = self   // No buttonMask: a trackpad pinch drives it too
+gameView.addGestureRecognizer(pinch)
+
+// Pan and pinch together; a tap waits for both to fail so it can't fire mid-drag
+func gestureRecognizer(_ gestureRecognizer: NSGestureRecognizer,
+                       shouldRecognizeSimultaneouslyWith other: NSGestureRecognizer) -> Bool {
+    (gestureRecognizer === pan || gestureRecognizer === pinch) && (other === pan || other === pinch)
+}
+
+func gestureRecognizer(_ gestureRecognizer: NSGestureRecognizer,
+                       shouldRequireFailureOf other: NSGestureRecognizer) -> Bool {
+    gestureRecognizer === tap && (other === pan || other === pinch)
+}
+
+@objc func handlePan(_ gesture: NSPanGestureRecognizer) {
+    let delta = gesture.translation(in: gameView)
+    let scale = gameView.window?.backingScaleFactor ?? 1
+    gesture.setTranslation(.zero, in: gameView)   // Next callback reports a fresh delta
+    // Points → pixels; y is flipped because this engine's origin is top-left (AppKit's is bottom-left)
+    activeInputHandler.onPan(dx: delta.x * scale, dy: -delta.y * scale)
+}
+```
+
+- Recognizers must allow `.direct` in `allowedTouchTypes`, which is the default on macOS 27.
+- **Route, don't toggle**: install the recognizers once, leave them enabled, convert callbacks to engine input events, and let the active context (gameplay, main menu, mini-map) decide. The mini-map pans on `onPan`; gameplay ignores it because the mouse, keyboard, or controller drives it.
+- Standard AppKit controls (a name field, settings buttons) keep working with touch after `NSIsTouchNative` — as long as you don't attach your own direct-touch recognizers to them.
+
+App-level touch (tracking loops, hit targets, exclusivity, system gestures): axiom-macos (skills/touch.md).
+
 ## Gotchas
 
 | Gotcha | Fix |
@@ -353,12 +421,13 @@ if let keys = GCKeyboard.coalesced?.keyboardInput {
 | Virtual stick feels cramped | Set `colliderShape = .leftSide`/`.rightSide` — never leave a small `.circle` collider on a movement stick |
 | Camera over-rotates on touch | Use `TCTouchpad` with `reportsRelativeValues = true` instead of mapping the right stick directly |
 | On-screen button prompts name the wrong button | Players remap buttons in Settings. When `physicalInputProfile.hasRemappedElements`, resolve prompts with `mappedElementAlias(forPhysicalInputName:)` / `mappedPhysicalInputNames(forElementAlias:)`, and refresh them on every return to foreground — mappings can change while backgrounded |
+| Touch on a Mac moves the camera or cursor erratically | `GCMouse` deltas from touch jump between touch points — set `NSIsTouchNative` and handle touch with recognizers, or read each mouse event's location (Section 9) |
 | `GCControllerHomeButtonSettingsManager` calls fail | Only permitted while a game controller is connected; init is failable — guard it |
 
 ## Resources
 
 **WWDC**: 2026-358
 
-**Docs**: /touchcontroller, /gamecontroller, /gamecontroller/gccontroller, /gamecontroller/gcspatialaccessory
+**Docs**: /touchcontroller, /gamecontroller, /gamecontroller/gccontroller, /gamecontroller/gcspatialaccessory, /technotes/tn3216-supporting-touch-input-for-games-on-macos
 
-**Skills**: skills/spritekit.md, axiom-graphics (skills/metal-migration.md), axiom-graphics (skills/display-performance.md)
+**Skills**: skills/spritekit.md, axiom-macos (skills/touch.md), axiom-graphics (skills/metal-migration.md), axiom-graphics (skills/display-performance.md)
