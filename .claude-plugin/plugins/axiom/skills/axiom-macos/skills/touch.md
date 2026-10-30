@@ -232,7 +232,7 @@ func gestureRecognizer(_ gestureRecognizer: NSGestureRecognizer,
 
 The recognizer's `location(in:)` isn't valid inside either method, so read the event or the touch. For a timeline of clips, hit-test the clip there, store it for the action method, and return `false` when there's none.
 
-When a recognizer shares a view with a `mouseDown` override, the mouse events should wait until the recognizer fails and be dropped if it recognizes. The standard recognizers already do this while their `buttonMask` includes the primary button; a custom `NSGestureRecognizer` subclass, or one whose `buttonMask` excludes the primary button, needs `delaysPrimaryMouseButtonEvents = true`.
+When a recognizer shares a view with a `mouseDown` override, the mouse events should wait until the recognizer fails and be dropped if it recognizes. The standard recognizers already do this while their `buttonMask` includes the primary button; a custom `NSGestureRecognizer` subclass that recognizes the mouse needs `delaysPrimaryMouseButtonEvents = true` (one that can't, such as a two-finger gesture, should fail on `mouseDown` instead of delaying). A touch-only recognizer (`buttonMask = 0`) defaults to not delaying, which is what lets a mouse path beside it run undelayed (Recipe 3).
 
 Prioritize sparingly: a failure requirement (`gestureRecognizer(_:shouldRequireFailureOf:)`) makes the waiting recognizer slower — a single click that waits for a double click feels sluggish. Simultaneous recognition is off by default; enable it per pair with `gestureRecognizer(_:shouldRecognizeSimultaneouslyWith:)`. A custom text engine using `NSTextSelectionManager` can't reference the manager's recognizers directly — require failure against `selectionManager.gesturesForFailureRequirements`.
 
