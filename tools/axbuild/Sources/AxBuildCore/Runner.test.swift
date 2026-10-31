@@ -43,6 +43,14 @@ import Testing
     #expect(missing == [])
   }
 
+  @Test func settledSeesASignalSentBeforeItWithoutWaitingForAHandler() {
+    let previous = signal(SIGUSR1, SIG_IGN)
+    defer { signal(SIGUSR1, previous) }
+    let interruption = InterruptionState(watching: [SIGUSR1])
+    #expect(interruption.signal == 0)
+    kill(getpid(), SIGUSR1)
+    #expect(interruption.settled() == SIGUSR1)
+  }
   @Test func readerDeadlineUsesRemainingSharedBudget() {
     let limits = CollectionLimits(probe: 5, reader: 30, collection: 60, grace: 5, reap: 1)
     #expect(limits.readerDeadline(start: 145, sharedDeadline: 160) == 160)

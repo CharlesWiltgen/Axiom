@@ -17,7 +17,47 @@ struct CollectionLimits: Sendable {
 
 final class InterruptionState: Sendable {
   private let value = OSAllocatedUnfairLock(initialState: Int32(0))
+  private let queue: Int32
+  private let drainFailed = OSAllocatedUnfairLock(initialState: false)
+  private static let fallback = "an interrupt during the build's exit may report as failed"
+  init(watching signals: [Int32] = []) {
+    queue = signals.isEmpty ? -1 : kqueue()
+    let error = errno
+    if !signals.isEmpty, queue < 0 {
+      fputs("axbuild: kqueue failed (errno \(error)); \(Self.fallback)\n", stderr)
+    }
+    for watched in signals where queue >= 0 {
+      var change = kevent(
+        ident: UInt(watched), filter: Int16(EVFILT_SIGNAL), flags: UInt16(EV_ADD), fflags: 0,
+        data: 0, udata: nil)
+      if kevent(queue, &change, 1, nil, 0, nil) < 0 {
+        let error = errno
+        fputs("axbuild: watching signal \(watched) failed (errno \(error)); \(Self.fallback)\n", stderr)
+      }
+    }
+  }
+  deinit { if queue >= 0 { close(queue) } }
   var signal: Int32 { value.withLock { $0 } }
+  // kill() queues EVFILT_SIGNAL before it returns, so this sees every signal sent before the
+  // caller's last observation, however late the dispatch handler runs.
+  func settled() -> Int32 {
+    var event = kevent()
+    var immediately = timespec()
+    while queue >= 0 {
+      let count = kevent(queue, nil, 0, &event, 1, &immediately)
+      let error = errno
+      if count > 0 {
+        record(Int32(event.ident))
+        continue
+      }
+      if count < 0, error == EINTR { continue }
+      if count < 0, !drainFailed.withLock({ reported in defer { reported = true }; return reported }) {
+        fputs("axbuild: reading signals failed (errno \(error)); \(Self.fallback)\n", stderr)
+      }
+      break
+    }
+    return signal
+  }
   func record(_ signal: Int32) { value.withLock { if $0 == 0 { $0 = signal } } }
 }
 
@@ -316,7 +356,6 @@ private func ownedProcess(
     tracked = lineage(root: pid, table: table, known: [:])
   }
   while true {
-    let received = interruption.signal
     let wasRunning = !completed
     if !completed {
       info = siginfo_t()
@@ -337,6 +376,8 @@ private func ownedProcess(
         break
       }
     }
+    // After waitid: a signal received by this check counts against a child running at the top of this pass.
+    let received = interruption.settled()
     if received != 0, forwarded == 0 {
       forwarded = received
       outcome.interruptionSignal = Int(received)
@@ -992,7 +1033,7 @@ public func runCLI() async -> Int32 {
   }
   let environment = ProcessInfo.processInfo.environment
   let cwd = URL(fileURLWithPath: FileManager.default.currentDirectoryPath, isDirectory: true)
-  let interruption = InterruptionState()
+  let interruption = InterruptionState(watching: [SIGINT, SIGTERM, SIGHUP])
   let queue = DispatchQueue(label: "axbuild.signals")
   let sources = [SIGINT, SIGTERM, SIGHUP].map { value in
     signal(value, SIG_IGN)
@@ -1022,7 +1063,8 @@ public func runCLI() async -> Int32 {
     if let path = run.artifacts.eventStream, missing.contains(path) {
       run.artifacts.eventStream = nil
     }
-    run.command.interruptionSignal = interruption.signal == 0 ? nil : Int(interruption.signal)
+    let received = interruption.settled()
+    run.command.interruptionSignal = received == 0 ? nil : Int(received)
   }
   let collectionDeadline = run.execution?.deadline ?? .infinity
   let collectionInterruption = run.execution?.collectionInterruption ?? 0
