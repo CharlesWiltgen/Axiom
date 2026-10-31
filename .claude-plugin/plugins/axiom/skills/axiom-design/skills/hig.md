@@ -283,6 +283,16 @@ If you type a number, leave a comment saying which system value was wrong and wh
 
 For the SwiftUI API (`sectionIndexLabel`, `listSectionIndexVisibility`, and the availability asymmetry between them), see axiom-swiftui (skills/26-ref.md), "Section Index".
 
+### Q: Should this be an alert?
+
+**A:** Usually not. An alert is for critical information people need right away, typically an uncommon destructive action that can't be undone. An undoable delete needs only Undo. A plain do-it-or-cancel confirmation can be a simple alert. An action sheet becomes necessary when there are extra choices beyond confirm/cancel (delete the draft *or* save it). Information with nothing to act on belongs in context. Avoid alerts at launch.
+
+**The rule people miss** In an alert, the destructive style marks only destruction the person *didn't* choose. Confirming the Empty Trash they just picked is a plain button. Action sheets reverse this: every destructive choice is styled and goes at the top.
+
+**The SwiftUI trap** `.alert` adds no Cancel for you, and `.confirmationDialog` does.
+
+For the situation table, wording, button placement, platform differences and the SwiftUI/UIKit/AppKit mapping, see `axiom-design (skills/hig-ref.md)`, "Alerts & Action Sheets".
+
 ---
 
 ## Design Review Checklist

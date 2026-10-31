@@ -16,6 +16,7 @@ Use this reference when you need:
 - Semantic color names and their purposes
 - Text styles, font weights, and Dynamic Type requirements
 - Shape, material, and layout guidance, including Liquid Glass
+- Rules for alerts and action sheets: when to show one, how to word it, and where Cancel and destructive buttons go
 - Touch target sizes and gesture conventions
 - Accessibility requirements for vision, hearing, mobility, and cognition
 - Platform-specific design requirements
@@ -32,6 +33,7 @@ Questions you can ask your assistant that will draw from this reference:
 - "How much text scaling does my app need to support?"
 - "How do tint colors work in iOS?"
 - "Where do Cancel and Done go on a sheet?"
+- "Should my delete confirmation button use the destructive style?"
 
 ## What's Covered
 
@@ -66,6 +68,14 @@ Questions you can ask your assistant that will draw from this reference:
 - Liquid Glass (iOS 26+): regular vs. clear variants
 - Modals and sheets: automatic Liquid Glass adoption, semantic backgrounds
 - Sheet button placement: Cancel/Done pairing rules, platform-specific placements
+
+### Alerts & Action Sheets
+- Alert vs. action sheet vs. menu vs. inline indicator
+- Alert titles, messages, and tone
+- Button titles, default and Cancel buttons, placement
+- Destructive style: the alert rule and the opposite action-sheet rule
+- macOS and visionOS alert differences
+- SwiftUI, UIKit, and AppKit mapping (`alert`, `confirmationDialog`, `dialogSeverity`, `UIAlertController`, `NSAlert`)
 
 ### Layout Principles
 - Visual hierarchy, grouping, and alignment

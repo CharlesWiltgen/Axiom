@@ -713,8 +713,8 @@
     },
     {
       "path": "skills/axiom-design/SKILL.md",
-      "sha256": "12cd89d33d850d67eb31a9f109586eb24d97a4a54af195c1a97145482dabfeff",
-      "bytes": 11401
+      "sha256": "dece5d7a2e415c8977ed669ea4dd3a63f80c41658e9cd35c5aa18643b8a9678e",
+      "bytes": 11900
     },
     {
       "path": "skills/axiom-design/skills/app-composition.md",
@@ -723,13 +723,13 @@
     },
     {
       "path": "skills/axiom-design/skills/hig-ref.md",
-      "sha256": "244d09aa14a479323ea90af7b76b81e974f7a3e9619a9c0990ea9aac3c884461",
-      "bytes": 39682
+      "sha256": "e5a05099ec6c4945e720091531c73c47c18d22dec025296a8e91fc9c0868e3c4",
+      "bytes": 47525
     },
     {
       "path": "skills/axiom-design/skills/hig.md",
-      "sha256": "4ed5a645c62cee6ce9202efa7270a35c84b550e5620b65685e0c2305ae5c42f5",
-      "bytes": 19861
+      "sha256": "54123eb7413e23436baa989eced6c29467829ea0c1a066185e9640a2dd932c0c",
+      "bytes": 20856
     },
     {
       "path": "skills/axiom-design/skills/liquid-glass-ref.md",
@@ -1949,7 +1949,7 @@
   ],
   "totals": {
     "files": 389,
-    "bytes": 8053207
+    "bytes": 8062544
   },
   "excludedMirrors": 31,
   "classes": {

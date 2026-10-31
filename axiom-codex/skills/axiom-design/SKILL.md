@@ -25,6 +25,7 @@ license: MIT
 | Spacing, padding, margins, insets — what value to use | See `skills/hig.md` |
 | Designing for iPhone Duo — poses, controls on the side, keeping UI out of the fold | See axiom-swiftui (skills/iphone-duo.md) |
 | Section index / A–Z index strip / alphabet scrubber — should this list have one | See `skills/hig.md` |
+| Alerts, action sheets, confirmation dialogs — whether to show one, title and button wording, Cancel/destructive placement | See `skills/hig.md` (quick answer) or `skills/hig-ref.md` (Alerts & Action Sheets, full rules) |
 | Semantic colors, custom color patterns, material styles | See `skills/hig-ref.md` |
 | Liquid Glass effects, adoption, migration from blur effects | See `skills/liquid-glass.md` |
 | App-wide Liquid Glass adoption, platform differences | See `skills/liquid-glass-ref.md` |
@@ -46,6 +47,7 @@ digraph design {
     start -> what;
     what -> "skills/hig.md" [label="design decision,\nHIG compliance,\ncolor/background choice"];
     what -> "skills/hig.md" [label="spacing/padding/margin value"];
+    what -> "skills/hig.md" [label="alert vs action sheet\nor confirmation dialog,\nalert wording/buttons"];
     what -> "skills/hig-ref.md" [label="semantic color API,\ncustom color code,\nmaterial style details"];
     what -> "skills/liquid-glass.md" [label="Liquid Glass effects,\nmigrate from blur,\nRegular vs Clear,\nopt-out key"];
     what -> "skills/liquid-glass-ref.md" [label="app-wide Liquid Glass plan,\nplatform differences"];
@@ -58,6 +60,7 @@ digraph design {
 
 1. Design decision / HIG compliance / choosing colors or backgrounds? → `skills/hig.md`
 1a. Need semantic color API, custom color code, or material style details? → `skills/hig-ref.md`
+1b. Alert, action sheet, or confirmation dialog — whether to show one, wording, button roles and placement? → `skills/hig.md`, full rules in `skills/hig-ref.md`
 2. Liquid Glass effects / migrating from blur / Regular vs Clear variant? → `skills/liquid-glass.md`
 2a. Planning app-wide Liquid Glass adoption / platform differences? → `skills/liquid-glass-ref.md`
 2b. Opting out of Liquid Glass / `UIDesignRequiresCompatibility` / backward compatibility? → `skills/liquid-glass.md` (Backward Compatibility)

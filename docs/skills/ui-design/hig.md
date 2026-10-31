@@ -33,6 +33,7 @@ Questions you can ask your assistant that will draw from this skill:
 - "What spacing should I use between these views?"
 - "Should this list have an A–Z index strip down the side?"
 - "Why does my section index overlap the row chevrons?"
+- "Should deleting a file show a confirmation alert?"
 - "Our designer wants an Ultralight font and a custom dark mode toggle. How do I push back?"
 
 ## What This Skill Provides
@@ -63,6 +64,11 @@ Questions you can ask your assistant that will draw from this skill:
 - When an A–Z index strip earns its place on a list
 - The hard rule against pairing an index with trailing row controls
 - Platform differences: watchOS shows the index only during crown scrolling, and macOS and tvOS have none
+
+### Alerts
+- When an alert is warranted, and when an action sheet, inline indicator, or Undo fits better
+- Why a confirming button isn't always destructive-styled, and why action sheets reverse that rule
+- The SwiftUI difference to remember: `.alert` adds no Cancel button, while `.confirmationDialog` does
 
 ### Reviews and Pushback
 - A pre-ship checklist for appearance, typography, accessibility, motion, and localization

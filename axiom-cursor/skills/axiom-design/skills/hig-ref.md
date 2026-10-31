@@ -416,6 +416,110 @@ VStack {
 
 ---
 
+## Alerts & Action Sheets
+
+An alert interrupts with critical information. An action sheet — `.confirmationDialog` in SwiftUI — offers choices about an action the person just started. Both are modal and stop the current task, so ration them.
+
+### Alert, Action Sheet, or Neither
+
+| Situation | Use |
+|---|---|
+| Uncommon destructive action that can't be undone | Alert with a Cancel button |
+| Common destructive action that can be undone (delete an email or file) | No alert; rely on Undo |
+| Several choices about an action the person started (delete the draft or save it) | Action sheet. An alert can only confirm or cancel |
+| Choices the person asked to reveal (iOS, iPadOS) | Menu, not an action sheet |
+| Information with nothing to act on | An indicator in context, such as Mail's offline indicator, not an alert |
+| Problem found at launch (no network) | Avoid an alert at launch. Show cached or placeholder content plus a nonintrusive label |
+| Input needed to resolve the situation (a password) | Alert with a text field (iOS, iPadOS, macOS, visionOS) |
+
+### Alert Content
+
+- Every platform: a title, an optional message, and at most three buttons.
+- The title says what happened, in what context, and why, in two lines at most. Avoid an uninformative title such as "Error" or "Error 329347 occurred".
+- A title that is a full sentence uses sentence case and ending punctuation. A fragment uses title case and no punctuation.
+- Add a message only if it adds something. Use short, complete sentences.
+- Don't explain the buttons. If you must, write "choose" so the wording fits any input method, and name the button by its exact title without quotes.
+- Keep the tone direct and neutral. Don't accuse the person, and don't play down how serious the problem is.
+- iOS/iPadOS: keep the text short enough that the alert doesn't scroll at large text sizes.
+
+### Alert Buttons
+
+- Title each button with one or two words that name the result, ideally a verb tied to the alert text: "Erase", "Replace", "View All". Title case, no ending punctuation.
+- Use "OK" only in a purely informational alert. Avoid "Yes" and "No".
+- A button that cancels is always titled "Cancel". Never make Cancel the default button. A lone default button is "Done", not "Cancel".
+- The most likely button, and always the default, goes on the trailing side of a row or at the top of a stack. Cancel typically goes on the leading side of a row or at the bottom of a stack.
+- **Destructive style marks only destruction the person didn't choose.** When they chose Empty Trash, the Empty Trash button in the confirming alert is *not* destructive-styled, because it carries out their own intent and pressing Return to confirm matters more. A button that destroys something the person never set out to destroy *is* destructive. For example, in a sync-conflict alert the system raised, "Use iCloud Version" discards their local edits.
+- If any button is destructive, include Cancel.
+- To make people read the alert instead of pressing Return out of habit, give it no default button.
+- People also cancel with Esc or Command-Period on a keyboard (iOS, iPadOS, macOS, visionOS), by leaving to the Home Screen (iOS, iPadOS), or with the Menu button on the remote (tvOS).
+
+### Action Sheet Content
+
+- Keep the title to one line. Add a message only when the title and the context aren't enough.
+- **Here the destructive style is the opposite of the alert rule.** Style every destructive choice as destructive and put it at the top, where people notice it. Cancel goes at the bottom (on watchOS, the upper-left corner).
+- iOS/iPadOS: don't let the sheet scroll. watchOS: use at most four buttons, Cancel included.
+- The HIG lists action sheets as unsupported on visionOS.
+- Since OS 26 an action sheet comes from its source element, so attach `.confirmationDialog` to the triggering control. See `axiom-design (skills/liquid-glass-ref.md)`, Action Sheets.
+
+### Platform Notes
+
+- **macOS**: the app icon shows automatically. Add the caution symbol (`exclamationmark.triangle`) only when extra attention is really needed, such as a possible unexpected loss of data, and never for a Save or an Empty Trash whose whole purpose is to overwrite or remove. Alerts that repeat can offer a suppression checkbox. macOS alerts can also carry an accessory view and a Help button.
+- **visionOS**: in the Shared Space the alert sits in front of its window and moves with it. In a Full Space it centers in the field of view. An accessory view is at most 154 pt tall with a 16 pt corner radius.
+- **tvOS, watchOS**: no alert rules beyond the ones above.
+
+### SwiftUI Mapping
+
+From the SDK doc comments:
+- `.alert` adds **no** Cancel of its own. Add `Button("Cancel", role: .cancel)`. An alert with no actions gets a standard "OK".
+- `.confirmationDialog` always includes a dismiss action, and a `.cancel`-role button takes its place. In regular width on iOS it shows as a popover that the person dismisses by tapping outside it.
+- The system may reorder buttons by role and prominence. Set each button's `role`, and don't count on the order you write them in for placement.
+- `.keyboardShortcut(.defaultAction)` influences which button is the default.
+- On iOS, tvOS and watchOS, action labels must be `Text`, and other views are omitted. The message supports only unstyled text.
+
+```swift
+struct DocumentView: View {
+    @State private var confirmingErase = false
+    @State private var resolvingConflict = false
+    @State private var confirmingDiscard = false
+    let fileName: String
+
+    var body: some View {
+        Form { Text(fileName) }
+            // The person chose Erase: the confirming button carries out their intent, so no destructive role
+            .alert("Erase all content?", isPresented: $confirmingErase) {
+                Button("Cancel", role: .cancel) { }
+                Button("Erase") { eraseAll() }
+            } message: {
+                Text("You can't undo this action.")
+            }
+            // The system raised this alert; discarding local edits is destruction the person didn't choose
+            .alert("“\(fileName)” was changed on another device.", isPresented: $resolvingConflict) {
+                Button("Cancel", role: .cancel) { }
+                Button("Use iCloud Version", role: .destructive) { useCloudVersion() }
+            } message: {
+                Text("Your edits on this device conflict with the newer version in iCloud.")
+            }
+            .toolbar {
+                Button("Discard") { confirmingDiscard = true }
+                    // Several choices about an action the person started: an action sheet, which supplies Cancel itself
+                    .confirmationDialog("Discard Changes", isPresented: $confirmingDiscard, titleVisibility: .visible) {
+                        Button("Delete Draft", role: .destructive) { deleteDraft() }
+                        Button("Save Draft") { saveDraft() }
+                    }
+            }
+    }
+
+    func eraseAll() {}
+    func useCloudVersion() {}
+    func deleteDraft() {}
+    func saveDraft() {}
+}
+```
+
+On macOS, `.dialogSeverity(.critical)` draws the caution symbol over the app icon, so use it as sparingly as the symbol. `.dialogIcon(_:)` replaces the icon, and `.dialogSuppressionToggle(isSuppressed:)` adds the suppression checkbox. The UIKit equivalents are `UIAlertController` (`.alert`/`.actionSheet`, `UIAlertAction.Style.destructive`/`.cancel`, `preferredAction` for the default). AppKit's `NSAlert` has `alertStyle = .critical`, `showsSuppressionButton`, `accessoryView` and `showsHelp`. For error alerts (`.alert(error:)`), see `axiom-swiftui (skills/architecture.md)`. For choosing a presentation API, see `axiom-swiftui (skills/presentations.md)`.
+
+---
+
 ## Layout Principles
 
 ### Visual Hierarchy
@@ -1227,6 +1331,6 @@ HStack {
 
 **WWDC**: 2025-356, 2019-808
 
-**Docs**: /design/human-interface-guidelines, /design/human-interface-guidelines/color, /design/human-interface-guidelines/dark-mode, /design/human-interface-guidelines/materials, /design/human-interface-guidelines/typography, /design/human-interface-guidelines/layout, /design/human-interface-guidelines/accessibility, /design/human-interface-guidelines/icons, /design/human-interface-guidelines/apple-pay, /design/human-interface-guidelines/wallet, /design/human-interface-guidelines/tap-to-pay-on-iphone
+**Docs**: /design/human-interface-guidelines, /design/human-interface-guidelines/color, /design/human-interface-guidelines/dark-mode, /design/human-interface-guidelines/materials, /design/human-interface-guidelines/typography, /design/human-interface-guidelines/layout, /design/human-interface-guidelines/accessibility, /design/human-interface-guidelines/icons, /design/human-interface-guidelines/alerts, /design/human-interface-guidelines/action-sheets, /design/human-interface-guidelines/apple-pay, /design/human-interface-guidelines/wallet, /design/human-interface-guidelines/tap-to-pay-on-iphone
 
 **Skills**: axiom-design (skills/hig.md), axiom-design (skills/liquid-glass.md), axiom-design (skills/liquid-glass-ref.md), axiom-swiftui, axiom-accessibility, axiom-swift (skills/tvos.md), axiom-payments
