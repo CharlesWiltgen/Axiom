@@ -344,7 +344,7 @@ Apple's sample instead extends the entity's own query (`extension SongQuery: Int
 |---|---|---|
 | Now Playing (NowPlaying framework) | `MediaContentRepresentable.appEntityIdentifiers = [EntityIdentifier(for: song), EntityIdentifier(for: artist), EntityIdentifier(for: playlist)]`, most specific first | "Play the live version", "add this to my running playlist" |
 | Now Playing (MediaPlayer) | `nowPlayingInfo[MPNowPlayingInfoPropertyAppEntityIdentifiers] = [MPAppEntityIdentifier]`, built with `MPAppEntityIdentifier(entityIdentifier:)` (failable) | Same, for `MPNowPlayingInfoCenter` apps |
-| Onscreen | `.userActivity` for the screen's primary item, `.appEntityIdentifier(_:)` per view, `.appEntityIdentifier(forSelectionType:)` on `List` | "Play the third one" |
+| Onscreen | `.userActivity` for the screen's primary item, `.appEntityIdentifier(_:)` per view, `.appEntityIdentifier(forSelectionType:identifier:)` on `List` | "Play the third one" |
 | Suggestions | `RelevantEntities.shared.updateEntities(_:for: .audio(.nowPlaying))`; `.audio(.workout)`, `.workout(activityType:)`, `.workout(intensityLevel:)` come from the HealthKit overlay | Now Playing / Fitness media pickers; expire after ~4 weeks without a launch |
 | In-app search | `.system.searchInApp` (renamed from `.system.search`) | "Show me running playlists in AppName" in your own search UI |
 | Donations | `IntentDonationManager` — donate **UI** interactions only (Siri ones are already known); excess donations may be ignored | App Selection learns the user's preferred audio app |

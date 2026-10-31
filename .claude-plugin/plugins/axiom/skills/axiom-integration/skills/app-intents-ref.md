@@ -82,6 +82,15 @@ struct LandmarkDetailView: View {
 }
 ```
 
+`.userActivity` marks the one item a detail view shows. For a list, tag each row with `.appEntityIdentifier(_:)` (iOS 18.4+) so Siri can resolve "open the third one"; a `List` with selection takes `.appEntityIdentifier(forSelectionType:identifier:)` instead, whose closure maps a selection value to an `EntityIdentifier?`:
+
+```swift
+List(landmarks) { landmark in
+    LandmarkRow(landmark: landmark)
+        .appEntityIdentifier(EntityIdentifier(for: landmark))
+}
+```
+
 ---
 
 ## Core Concepts
@@ -191,6 +200,19 @@ struct BookAppointmentIntent: AppIntent {
     // Parameter with default value
     @Parameter(title: "Duration", default: 60)
     var duration: Int
+}
+```
+
+#### Optional parameters in update intents
+
+In an intent that edits an existing record, a `nil` optional can mean "clear it" or "not mentioned", and a nil check can't tell them apart. Read the parameter's `valueState` (iOS 18.2+). An `@AppIntent(schema:)` intent's properties get the `IntentParameter` wrapper even without `@Parameter`, so `$property` works there too:
+
+```swift
+switch $recurrence.valueState {
+case .set(let rule?): event.recurrence = rule  // new value
+case .set(nil): event.recurrence = nil         // explicitly cleared
+case .unset: break                             // not part of the request
+@unknown default: break                        // not frozen: omitting this is a Swift 6 error
 }
 ```
 
@@ -443,7 +465,7 @@ struct UnlockVaultIntent: AppIntent {
 
 ### Schema-Adopting Intents: Inherited Policies and Risk-Based Confirmations OS27
 
-A schema-adopting intent becomes a tool in the Siri Toolbox — the *model* decides when to call it and generates its arguments, so prompt injection can attempt to invoke your intent without user intent. The App Intents system adds two guardrails (WWDC 2026-347):
+A schema-adopting intent becomes a tool in the Siri Toolbox — the *model* decides when to call it and generates its arguments, so prompt injection can attempt to invoke your intent without user intent. The App Intents system adds two guardrails:
 
 **Inherited authentication policy.** Schemas carry their own default `authenticationPolicy`, set internally based on each schema's sensitivity and the data it handles. Your intent is automatically assigned the schema's default — no code needed. You can still set the property explicitly; never go weaker than the schema's default. A weaker override is **not** a compiler diagnostic — a plain `swiftc` build accepts `.alwaysAllowed` on any schema — so don't wait for a build error to catch it; the schema-validation machinery carries the `valueLowerThanMinimum` check. Review your intents with lock-screen behavior in mind — Siri runs on the lock screen, so an attacker in physical possession of a locked device can attempt to invoke intents.
 
@@ -1132,7 +1154,7 @@ struct TimezoneQuery: EnumerableEntityQuery {
 
 ### On-Screen Content Tagging
 
-Suggest currently active content (`NSUserActivity.appEntityIdentifier` is iOS 18.2+):
+Tag the active screen so Spotlight suggests its entity for parameters. SwiftUI, lists and selection: Onscreen Entities above. In UIKit, a view takes `view.appEntityIdentifier` (iOS 18.4+); a view controller sets its `NSUserActivity`:
 
 ```swift
 // In your detail view controller
@@ -1146,8 +1168,6 @@ func showEventDetail(_ event: Event) {
     userActivity = activity
 }
 ```
-
-For more details on on-screen content tagging, see the "Exploring New Advances in App Intents" session.
 
 ### Search Beyond Suggestions
 
@@ -1314,13 +1334,13 @@ With automations, your intents are now accessible from:
 
 ## App Schemas (System Schemas for Siri & Apple Intelligence)
 
-**App schemas** are predefined system understandings of common concepts — messages, contacts, photos, calendar events. When your `AppEntity` / `AppIntent` / `AppEnum` conforms to a schema, Siri and Apple Intelligence already know how to reason about it and drive it with natural language — you map the schema's parameters onto your app's logic; the system handles the language. Schemas are grouped into **domains** (messages, mail, photos, calendar, …); a domain is "a contract between your app and Siri" (WWDC 2026-240).
+**App schemas** are predefined system understandings of common concepts — messages, contacts, photos, calendar events. When your `AppEntity` / `AppIntent` / `AppEnum` conforms to a schema, Siri and Apple Intelligence already know how to reason about it and drive it with natural language — you map the schema's parameters onto your app's logic; the system handles the language. Schemas are grouped into **domains** (messages, mail, photos, calendar, …); a domain is "a contract between your app and Siri".
 
 > App schemas debuted in iOS 18 (then *assistant schemas*). The 27 cycle renames the macros, greatly expands the domains, and adds Xcode build-time tooling. The form below is current.
 
 ### Adopting a schema
 
-Conform an entity or intent with the `schema:` form of the macro. Xcode autocompletes every available schema as `.<domain>.<schema>` (e.g. `.photos.asset`, `.messages.sendMessage`):
+Conform an entity or intent with the `schema:` form of the macro. Xcode autocompletes every available schema as `.<domain>.<schema>` (e.g. `.photos.asset`, `.messages.sendMessage`). To scaffold the whole conformance (required properties, query stub, `perform`, every enum case, union types), type a `<domain>_<schema>` code snippet instead (`calendar_event`, `calendar_attendeeStatus`, `system_open`):
 
 ```swift
 // Entity — adopt the photos `asset` schema so Siri understands what it represents
@@ -1359,17 +1379,17 @@ Apple groups the domains in three tiers. It documents the primary domains as mak
 | Shortcuts-specific | Books, Files, Journal, Presentation, Reader, Spreadsheet, Whiteboard, WordProcessor | iOS 18+, macOS 15+, visionOS 2+ |
 | | Browser | iOS 18+, macOS 15+, visionOS 2+, with schemas added in `OS27` |
 
-No domain exists on watchOS or tvOS. Every schema's required members, parameters, return types, enum cases and deprecations, plus the schema build errors and their fixes: `skills/app-schemas-ref.md`. Moving a SiriKit Lists/Notes app to the Notes and Reminders domains: `skills/siri-notes-reminders.md`. Xcode autocompletes the schemas of a domain on `.<domain>.`.
+No domain exists on watchOS or tvOS. Every schema's required members, parameters, return types, enum cases and deprecations, plus the schema build errors and their fixes: `skills/app-schemas-ref.md`. Moving a SiriKit Lists/Notes app to the Notes and Reminders domains: `skills/siri-notes-reminders.md`.
 
 **Audio**: every schema's required members, parameters, enum cases, the `AudioItem` union, `AudioSearch` resolution, and the SiriKit media path that Siri without Apple Intelligence still uses — `skills/siri-audio-ref.md` (approach: `skills/siri-audio.md`).
 
 ### Xcode schema-completeness errors `OS27`
 
-Some Siri flows need more than one schema. Adopt `sendMessage` but not the related `draftMessage` and Xcode **fails the build** with a fix-it that generates a stub adoption of the missing schema — a design hint surfaced at compile time instead of failing silently at runtime (WWDC 2026-240). Fill in the stub: wire your entities, inject dependencies, and mark `perform()` `@MainActor` if it mutates UI.
+Some Siri flows need more than one schema. Adopt `sendMessage` but not the related `draftMessage` and Xcode **fails the build** with a fix-it that generates a stub adoption of the missing schema — a design hint surfaced at compile time instead of failing silently at runtime. Fill in the stub: wire your entities, inject dependencies, and mark `perform()` `@MainActor` if it mutates UI.
 
 ### Cross-app content (on-screen awareness + transfer)
 
-Siri requests often span apps ("email my wife this reply"). Annotate views with their entities (`userActivity` for one primary item; view-level annotations for lists) so Siri can resolve "this message", then adopt `Transferable` with an `IntentValueRepresentation` to export entities to other apps. On import, resolve to an existing entity with `IntentValueQuery`, or create a new one via `IntentValueRepresentation` importing.
+Siri requests often span apps ("email my wife this reply"). Annotate views with their entities (see Onscreen Entities) so Siri can resolve "this message", then adopt `Transferable` with an `IntentValueRepresentation` to export entities to other apps. On import, resolve to an existing entity with `IntentValueQuery`, or create a new one via `IntentValueRepresentation` importing.
 
 ---
 
