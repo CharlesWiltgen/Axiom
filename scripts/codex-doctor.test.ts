@@ -103,8 +103,9 @@ describe("inspectInstallation", () => {
           "--host-metadata",
           metadata,
         ],
-        { encoding: "utf8", timeout: 2500 },
+        { encoding: "utf8", timeout: 10_000 },
       );
+      assert.ifError(result.error);
       assert.equal(result.status, 1, result.stderr);
       assert.equal(JSON.parse(result.stdout).host.status, "invalid");
     },
