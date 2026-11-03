@@ -158,8 +158,9 @@ struct ContentView: View {
                 case .success(let urls):
                     guard let url = urls.first else { return }
 
-                    // Access is already started for URLs from fileImporter
-                    defer { url.stopAccessingSecurityScopedResource() }
+                    // SwiftUI's docs: call start for fileImporter URLs, and balance it with stop
+                    let didStart = url.startAccessingSecurityScopedResource()
+                    defer { if didStart { url.stopAccessingSecurityScopedResource() } }
 
                     // Read the file
                     let data = try? Data(contentsOf: url)
@@ -198,7 +199,7 @@ panel.begin { response in
 
 ### Key Rule
 
-URLs from open panels, save panels, `fileImporter`, and Dock drag-and-drop all come with security-scoped access already started. You MUST call `stopAccessingSecurityScopedResource()` when done. If you need the file again later, create a bookmark before stopping access.
+URLs from `NSOpenPanel`, `NSSavePanel`, and Dock drag-and-drop come with security-scoped access already started; call `stopAccessingSecurityScopedResource()` when done. URLs from SwiftUI's `fileImporter`/`fileExporter` do not say so: Apple's docs tell you to call `startAccessingSecurityScopedResource()` to access or bookmark them, then `stop`. An extra `start` on an already-started URL is harmless (calls are reference-counted), so when in doubt, start and balance with `stop`. If you need the file again later, create a bookmark while access is active.
 
 ---
 
@@ -271,7 +272,11 @@ func resolveBookmark() -> URL? {
         // CRITICAL: Refresh stale bookmarks immediately
         if isStale {
             logger.info("Bookmark is stale, recreating for \(url.path)")
-            saveBookmark(for: url)
+            // Minting a security-scoped bookmark needs active access
+            if url.startAccessingSecurityScopedResource() {
+                defer { url.stopAccessingSecurityScopedResource() }
+                saveBookmark(for: url)
+            }
         }
 
         return url
@@ -306,7 +311,7 @@ func readBookmarkedFile() -> Data? {
 | Source | Access auto-started? | Must call start? | Must call stop? |
 |--------|---------------------|-------------------|-----------------|
 | NSOpenPanel / NSSavePanel | Yes | No | Yes |
-| fileImporter / fileExporter | Yes | No | Yes |
+| fileImporter / fileExporter | Not documented | Yes (SwiftUI's docs say to call it) | Yes |
 | Dock drag-and-drop | Yes | No | Yes |
 | Resolved security-scoped bookmark | No | Yes | Yes |
 
@@ -448,7 +453,8 @@ log stream --predicate "subsystem == 'com.apple.sandbox.reporting'" --level debu
 | Not calling `stopAccessingSecurityScopedResource()` | File access stops working after many open/close cycles | Always use `defer` to balance every `start` with `stop` |
 | Storing bookmarks in UserDefaults | Bookmark data lost or corrupted | Store in dedicated file in app container |
 | Not checking `bookmarkDataIsStale` | Access fails after file is moved/renamed | Check flag and recreate bookmark when stale |
-| Calling `startAccessing` on panel URLs | Wasted call (harmless but confusing) | Panel URLs have access auto-started; just call `stop` |
+| Calling `startAccessing` on `NSOpenPanel`/`NSSavePanel` URLs | Wasted call (harmless) | Those URLs have access auto-started; just call `stop` |
+| Not calling `startAccessing` on `fileImporter` URLs | Reads work right after picking, then fail | SwiftUI's docs say to call `start` for fileImporter URLs; balance it with `stop` |
 | Not calling `startAccessing` on resolved bookmarks | Access denied despite valid bookmark | Resolved bookmarks require explicit `startAccessing` |
 | Hardcoding `~/Library/...` paths | Path denied in sandbox | Use `FileManager.urls(for:in:)` or container paths |
 | Requesting `files.all` unnecessarily | App Review rejection | Use `files.user-selected.read-write` + bookmarks |

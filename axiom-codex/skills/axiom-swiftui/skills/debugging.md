@@ -589,10 +589,10 @@ ZStack {
     Rectangle().fill(.red)
 }
 
-// ✅ RIGHT: Use zIndex to control layer order
+// ✅ RIGHT: Raise the view that must be on top (later views draw above earlier ones)
 ZStack {
-    Rectangle().fill(.blue).zIndex(0)
-    Rectangle().fill(.red).zIndex(1)
+    Rectangle().fill(.blue).zIndex(1)
+    Rectangle().fill(.red)
 }
 
 // ✅ ALSO RIGHT: Hide instead of removing from hierarchy
@@ -1084,7 +1084,7 @@ GeometryReader { geo in ... }.frame(height: 100)
 ZStack { ... }.ignoresSafeArea()
 
 // Fix 4: Modifier order
-Text().cornerRadius(8).padding()  // Corners first
+Text().clipShape(.rect(cornerRadius: 8)).padding()  // Clip first, then pad
 ```
 
 ## Real-World Examples

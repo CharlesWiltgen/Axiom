@@ -99,14 +99,9 @@ The standard pattern for any Settings UI with > ~5 preferences. Each tab is a fo
 struct SettingsView: View {
     var body: some View {
         TabView {
-            GeneralSettings()
-                .tabItem { Label("General", systemImage: "gear") }
-
-            AppearanceSettings()
-                .tabItem { Label("Appearance", systemImage: "paintbrush") }
-
-            AdvancedSettings()
-                .tabItem { Label("Advanced", systemImage: "slider.horizontal.3") }
+            Tab("General", systemImage: "gear") { GeneralSettings() }
+            Tab("Appearance", systemImage: "paintbrush") { AppearanceSettings() }
+            Tab("Advanced", systemImage: "slider.horizontal.3") { AdvancedSettings() }
         }
         .scenePadding()
         .frame(width: 450, height: 280)
@@ -175,13 +170,14 @@ When tabs have legitimately different content sizes, attach the frame to each ta
 
 ```swift
 TabView {
-    GeneralSettings()
-        .frame(width: 450, height: 200)
-        .tabItem { Label("General", systemImage: "gear") }
-
-    LongPreferenceList()
-        .frame(width: 450, height: 500)
-        .tabItem { Label("Library", systemImage: "books.vertical") }
+    Tab("General", systemImage: "gear") {
+        GeneralSettings()
+            .frame(width: 450, height: 200)
+    }
+    Tab("Library", systemImage: "books.vertical") {
+        LongPreferenceList()
+            .frame(width: 450, height: 500)
+    }
 }
 .scenePadding()
 ```
@@ -349,10 +345,10 @@ SettingsView()
 
 ```swift
 // macOS HIG violation; tabs render text-only and look unfinished
-.tabItem { Text("General") }
+Tab("General") { GeneralSettings() }
 ```
 
-**Fix** `.tabItem { Label("General", systemImage: "gear") }`. Pick SF Symbols that match the tab's category.
+**Fix** `Tab("General", systemImage: "gear") { GeneralSettings() }`. Pick SF Symbols that match the tab's category.
 
 ### ❌ String-keyed @AppStorage scattered across files
 
@@ -395,7 +391,7 @@ struct SettingsView: View {
 | Window opens too small | No `.frame()` on SettingsView root |
 | Window resizes weirdly | Frame uses `min` / `max` instead of fixed values |
 | Tab content cramped | Missing `.scenePadding()` |
-| Tabs render without icons | Used `Text` instead of `Label` for `.tabItem` |
+| Tabs render without icons | `Tab` created without `systemImage:` |
 | ⌘, doesn't open Settings | App is sandboxed AND another window is keyWindow with conflicting shortcut |
 | `@AppStorage` doesn't sync to other view | Different key strings (typo) — use central enum |
 | `SettingsLink` causes iOS build failure | `SettingsLink` is macOS-only; needs `#if os(macOS)` |
@@ -410,7 +406,7 @@ Before merging Settings code:
 - [ ] `Settings { }` is wrapped in `#if os(macOS)` (cross-platform apps)
 - [ ] `SettingsView` itself is wrapped in `#if os(macOS)` if it references macOS-only APIs
 - [ ] Root view has `.scenePadding()` AND a `.frame()` constraint
-- [ ] All `Tab` labels use `Label("Title", systemImage: "...")` — never text-only
+- [ ] Every tab is `Tab("Title", systemImage: "...")` — never text-only
 - [ ] `@AppStorage` keys come from a central enum, not inline string literals
 - [ ] `SettingsLink` is wrapped in `#if os(macOS)` (it does not exist on iOS)
 - [ ] iOS code that opens system Settings uses `UIApplication.openSettingsURLString` via `@Environment(\.openURL)` — not `SettingsLink`

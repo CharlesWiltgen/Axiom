@@ -294,12 +294,12 @@ Control toolbar appearance per-bar. The `for:` parameter targets a specific bar 
 ```swift
 ContentView()
     // Show or hide a bar
-    .toolbar(.visible, for: .bottomBar)
-    .toolbar(.hidden, for: .navigationBar)
+    .toolbarVisibility(.visible, for: .bottomBar)
+    .toolbarVisibility(.hidden, for: .navigationBar)
 
     // Background material/color
     .toolbarBackground(.regularMaterial, for: .navigationBar)
-    .toolbarBackground(.visible, for: .navigationBar)
+    .toolbarBackgroundVisibility(.visible, for: .navigationBar)
 
     // Color scheme (e.g., dark toolbar on light app)
     .toolbarColorScheme(.dark, for: .navigationBar)
