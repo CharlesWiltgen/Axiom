@@ -8,6 +8,7 @@ struct CollectionLimits: Sendable {
   var collection: Double = 60
   var grace: Double = 5
   var reap: Double = 1
+  var poll: Double = 0.02
   static let production = CollectionLimits()
   func readerDeadline(start: Double, sharedDeadline: Double) -> Double {
     min(start + reader, sharedDeadline)
@@ -18,9 +19,11 @@ struct CollectionLimits: Sendable {
 final class InterruptionState: Sendable {
   private let value = OSAllocatedUnfairLock(initialState: Int32(0))
   private let queue: Int32
+  let watched: [Int32]
   private let drainFailed = OSAllocatedUnfairLock(initialState: false)
   private static let fallback = "an interrupt during the build's exit may report as failed"
   init(watching signals: [Int32] = []) {
+    watched = signals
     queue = signals.isEmpty ? -1 : kqueue()
     let error = errno
     if !signals.isEmpty, queue < 0 {
@@ -76,7 +79,7 @@ struct ExecutionContext: Sendable {
   var collectionInterruption: Int32 = 0
   var unverifiedArtifacts: Set<String> = []
 }
-private struct ProcessOutcome {
+struct ProcessOutcome {
   var exitCode: Int?
   var signal: Int?
   var interruptionSignal: Int?
@@ -300,7 +303,7 @@ private func groupMembers(_ pid: pid_t) -> [pid_t]? {
   return nil
 }
 
-private func ownedProcess(
+func ownedProcess(
   executable: String, args: [String], cwd: String, environment: [String: String], output: Int32,
   errorOutput: Int32? = nil, interruption: InterruptionState, deadline: Double? = nil,
   operation: String, limits: CollectionLimits
@@ -331,6 +334,27 @@ private func ownedProcess(
         message: "Child \(pid) has no safely owned group; only this waitable child can be signaled",
         path: executable))
   }
+  // Waking on the child's exit or a watched signal, rather than after a blind sleep, keeps an
+  // exit and a later signal from landing in one pass, where the signal would count as an interrupt.
+  let wake = kqueue()
+  defer { if wake >= 0 { close(wake) } }
+  let watches =
+    [kevent(
+      ident: UInt(pid), filter: Int16(EVFILT_PROC), flags: UInt16(EV_ADD | EV_ONESHOT),
+      fflags: NOTE_EXIT, data: 0, udata: nil)]
+    + interruption.watched.map {
+      kevent(
+        ident: UInt($0), filter: Int16(EVFILT_SIGNAL), flags: UInt16(EV_ADD | EV_CLEAR), fflags: 0,
+        data: 0, udata: nil)
+    }
+  if wake < 0 { fputs("axbuild: kqueue failed (errno \(errno)); polling the build instead\n", stderr) }
+  for var watch in watches where wake >= 0 {
+    if kevent(wake, &watch, 1, nil, 0, nil) < 0, errno != ESRCH {
+      let watched = watch.filter == Int16(EVFILT_PROC) ? "build \(pid)" : "signal \(watch.ident)"
+      fputs("axbuild: watching \(watched) failed (errno \(errno)); polling for it instead\n", stderr)
+    }
+  }
+  var waitFailed = false
   var info = siginfo_t()
   var completed = false
   var cleanupStart: Double?
@@ -451,7 +475,16 @@ private func ownedProcess(
         break
       }
     }
-    usleep(20_000)
+    var fired = watches
+    var timeout = timespec(
+      tv_sec: Int(limits.poll), tv_nsec: Int(limits.poll.truncatingRemainder(dividingBy: 1) * 1e9))
+    if wake < 0 || (kevent(wake, nil, 0, &fired, Int32(fired.count), &timeout) < 0 && errno != EINTR) {
+      if wake >= 0, !waitFailed {
+        waitFailed = true
+        fputs("axbuild: waiting on build \(pid) failed (errno \(errno)); polling instead\n", stderr)
+      }
+      usleep(UInt32(limits.poll * 1_000_000))
+    }
   }
   if !held.isEmpty {
     outcome.issues.append(
@@ -747,7 +780,7 @@ func execute(
     originalArgs: invocation.originalArgs, executedArgs: prepared.childArgs, executable: executable,
     cwd: invocation.cwd.path, effectiveCwd: invocation.effectiveCwd.path,
     defaults: prepared.defaults)
-  if interruption.signal == 0 {
+  if interruption.settled() == 0 {
     let outcome = ownedProcess(
       executable: executable, args: prepared.childArgs, cwd: invocation.cwd.path,
       environment: environment, output: fd, interruption: interruption,

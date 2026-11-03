@@ -51,6 +51,57 @@ import Testing
     kill(getpid(), SIGUSR1)
     #expect(interruption.settled() == SIGUSR1)
   }
+  @Test func ownedProcessNoticesTheChildsExitWithoutWaitingOutThePoll() {
+    var limits = CollectionLimits()
+    limits.poll = 5
+    let null = open("/dev/null", O_WRONLY)
+    defer { close(null) }
+    let start = ProcessInfo.processInfo.systemUptime
+    let outcome = ownedProcess(
+      executable: "/bin/sh", args: ["-c", "sleep 0.3; exit 3"], cwd: "/", environment: [:],
+      output: null, interruption: InterruptionState(),
+      operation: "test", limits: limits)
+    let elapsed = ProcessInfo.processInfo.systemUptime - start
+    #expect(outcome.exitCode == 3 && elapsed < limits.poll / 2)
+  }
+  @Test func ownedProcessWakesForAWatchedSignalWithoutWaitingOutThePoll() {
+    let previous = signal(SIGUSR2) { _ in }
+    defer { signal(SIGUSR2, previous) }
+    let interruption = InterruptionState(watching: [SIGUSR2])
+    var limits = CollectionLimits()
+    limits.poll = 5
+    let null = open("/dev/null", O_WRONLY)
+    defer { close(null) }
+    DispatchQueue.global().asyncAfter(deadline: .now() + 0.2) { _ = kill(getpid(), SIGUSR2) }
+    let start = ProcessInfo.processInfo.systemUptime
+    let outcome = ownedProcess(
+      executable: "/bin/sleep", args: ["30"], cwd: "/", environment: [:],
+      output: null, interruption: interruption,
+      operation: "test", limits: limits)
+    let elapsed = ProcessInfo.processInfo.systemUptime - start
+    #expect(
+      outcome.interruptionSignal == Int(SIGUSR2) && outcome.interruptedRunning
+        && elapsed < limits.poll / 2)
+  }
+  @Test func ownedProcessDoesNotCountASignalThatArrivesAfterTheChildExits() {
+    let interruption = InterruptionState(watching: [SIGWINCH])
+    var limits = CollectionLimits()
+    limits.poll = 5
+    let null = open("/dev/null", O_WRONLY)
+    defer { close(null) }
+    let sent = DispatchSemaphore(value: 0)
+    DispatchQueue.global().asyncAfter(deadline: .now() + 1.5) {
+      _ = kill(getpid(), SIGWINCH)
+      sent.signal()
+    }
+    let outcome = ownedProcess(
+      executable: "/bin/sh", args: ["-c", "sleep 0.1; exit 3"], cwd: "/", environment: [:],
+      output: null, interruption: interruption, operation: "test", limits: limits)
+    sent.wait()
+    #expect(
+      [outcome.exitCode, outcome.interruptionSignal, outcome.interruptedRunning ? 1 : 0]
+        == [3, nil, 0])
+  }
   @Test func readerDeadlineUsesRemainingSharedBudget() {
     let limits = CollectionLimits(probe: 5, reader: 30, collection: 60, grace: 5, reap: 1)
     #expect(limits.readerDeadline(start: 145, sharedDeadline: 160) == 160)
