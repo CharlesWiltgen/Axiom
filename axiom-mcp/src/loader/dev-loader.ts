@@ -1,6 +1,7 @@
 import { readdir, readFile, stat, watch } from 'fs/promises';
 import { join } from 'path';
 import { parseSkill, parseCommand, parseAgent, parseReferenceFile, applyAnnotations, filterSkillSections, isGeneratedSubSkill } from './parser.js';
+import { resolveSkillName } from './skill-names.js';
 import type { Skill, Command, Agent, SkillSection, SkillAnnotations } from './parser.js';
 import type { Config, Logger } from '../config.js';
 import type { Loader } from './types.js';
@@ -227,11 +228,18 @@ export class DevLoader implements Loader {
     }
   }
 
+  async getNames(): Promise<{ skills: string[]; agents: string[] }> {
+    if (this.skillsCache.size === 0) await this.loadSkills();
+    if (this.agentsCache.size === 0) await this.loadAgents();
+    return { skills: [...this.skillsCache.keys()], agents: [...this.agentsCache.keys()] };
+  }
+
   async getSkill(name: string): Promise<Skill | undefined> {
     if (this.skillsCache.size === 0) {
       await this.loadSkills();
     }
-    return this.skillsCache.get(name);
+    const resolved = resolveSkillName(name, this.skillsCache);
+    return resolved === undefined ? undefined : this.skillsCache.get(resolved);
   }
 
   async getCommand(name: string): Promise<Command | undefined> {

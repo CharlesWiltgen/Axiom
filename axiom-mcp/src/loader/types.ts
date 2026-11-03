@@ -33,6 +33,11 @@ export interface Loader {
   loadAgents(): Promise<Map<string, Agent>>;
 
   /**
+   * Served skill and agent names, from the caches (never forces a reload)
+   */
+  getNames(): Promise<{ skills: string[]; agents: string[] }>;
+
+  /**
    * Get a specific skill by name
    */
   getSkill(name: string): Promise<Skill | undefined>;

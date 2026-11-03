@@ -6,6 +6,7 @@ import { Loader, type BundleV2 } from './types.js';
 import { SearchIndex, deserializeIndex, search, buildIndex, addSkills, SearchResult } from '../search/index.js';
 import { buildCatalog, CatalogResult } from '../catalog/index.js';
 import { detectXcode, loadAppleDocs } from './xcode-docs.js';
+import { resolveSkillName } from './skill-names.js';
 
 /**
  * Production mode loader - reads from pre-generated bundle.json
@@ -103,9 +104,15 @@ export class ProdLoader implements Loader {
     return this.agentsCache;
   }
 
+  async getNames(): Promise<{ skills: string[]; agents: string[] }> {
+    await this.ensureLoaded();
+    return { skills: [...this.skillsCache.keys()], agents: [...this.agentsCache.keys()] };
+  }
+
   async getSkill(name: string): Promise<Skill | undefined> {
     await this.ensureLoaded();
-    return this.skillsCache.get(name);
+    const resolved = resolveSkillName(name, this.skillsCache);
+    return resolved === undefined ? undefined : this.skillsCache.get(resolved);
   }
 
   async getCommand(name: string): Promise<Command | undefined> {
@@ -122,9 +129,7 @@ export class ProdLoader implements Loader {
     name: string,
     sectionNames?: string[],
   ): Promise<{ skill: Skill; content: string; sections: SkillSection[] } | undefined> {
-    await this.ensureLoaded();
-
-    const skill = this.skillsCache.get(name);
+    const skill = await this.getSkill(name);
     if (!skill) return undefined;
 
     return filterSkillSections(skill, sectionNames);

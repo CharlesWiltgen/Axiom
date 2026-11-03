@@ -360,6 +360,8 @@ export function parseAppleDoc(
   };
 }
 
+export const SUB_SKILL_SEPARATOR = '--';
+
 /**
  * Parse a frontmatter-free suite reference file into a Skill.
  * Used for files in a skill suite's skills/ subdirectory.
@@ -371,7 +373,7 @@ export function parseReferenceFile(
   parentSuite: string,
 ): Skill {
   const baseName = filename.replace(/\.md$/, '');
-  const name = `${parentSuite}--${baseName}`;
+  const name = `${parentSuite}${SUB_SKILL_SEPARATOR}${baseName}`;
 
   const lines = content.split('\n');
   const titleAt = titleIndex(lines, outsideFences(lines));

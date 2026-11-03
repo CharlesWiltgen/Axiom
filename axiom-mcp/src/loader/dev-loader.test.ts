@@ -131,6 +131,24 @@ Generated auditor procedure.
     expect(patterns?.description).toBe('Use these patterns when implementing common test scenarios.');
   });
 
+  it.each([
+    ['a bare basename', 'patterns'],
+    ['a router-relative path', 'skills/patterns.md'],
+  ])('serves a sub-skill requested by %s under its qualified id', async (_label, requested) => {
+    const read = await loader.getSkillSections(requested);
+    expect([read?.skill.name, (await loader.getSkill(requested))?.name]).toEqual([
+      'axiom-test-suite--patterns',
+      'axiom-test-suite--patterns',
+    ]);
+  });
+
+  it('lists served names from the cache without rescanning the plugin', async () => {
+    const rescan = vi.spyOn(loader, 'loadSkills');
+    const { skills } = await loader.getNames();
+    expect([skills.includes('axiom-test-suite--patterns'), rescan.mock.calls.length]).toEqual([true, 0]);
+    rescan.mockRestore();
+  });
+
   it('makes reference files searchable', async () => {
     const results = await loader.searchSkills('patterns testing');
     const names = results.map(r => r.name);
