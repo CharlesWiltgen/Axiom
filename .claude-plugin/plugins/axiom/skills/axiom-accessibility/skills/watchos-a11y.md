@@ -68,11 +68,11 @@ Once text is wrapping three times and icons are crowding, give up on the horizon
 
 ```swift
 struct PlantCardView: View {
-    @Environment(\.sizeCategory) private var sizeCategory
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let plant: Plant
 
     var body: some View {
-        if sizeCategory >= .extraExtraLarge {
+        if dynamicTypeSize >= .xxLarge {
             VerticalPlantView(plant: plant)
         } else {
             HorizontalPlantView(plant: plant)
@@ -81,7 +81,7 @@ struct PlantCardView: View {
 }
 ```
 
-Read `@Environment(\.sizeCategory)` and branch at the threshold where the horizontal layout breaks. Don't try to make a single layout work across the full range — the vertical fallback is the right tool for accessibility sizes.
+Read `@Environment(\.dynamicTypeSize)` and branch at the threshold where the horizontal layout breaks. Don't try to make a single layout work across the full range — the vertical fallback is the right tool for accessibility sizes.
 
 ### Complications and notifications count
 
@@ -100,7 +100,9 @@ A list row with four labels, four images, and two buttons forces VoiceOver to st
 
 ```swift
 // If you're using accessibilityElement(children: .contain) to inspect the row, remove it:
-NavigationLink(destination: PlantDetail(plant: plant)) {
+NavigationLink {
+    PlantDetail(plant: plant)
+} label: {
     PlantRowContents(plant: plant)
 }
 // NavigationLink will combine children into a single accessible element automatically.
@@ -223,12 +225,16 @@ The AssistiveTouch cursor draws around the element's **tappable area**, not its 
 
 ```swift
 // Small visual element; tiny cursor frame; clips the icon
-NavigationLink(destination: SettingsView()) {
+NavigationLink {
+    SettingsView()
+} label: {
     Image(systemName: "ellipsis")
 }
 
 // Generous tappable area; readable cursor
-NavigationLink(destination: SettingsView()) {
+NavigationLink {
+    SettingsView()
+} label: {
     Image(systemName: "ellipsis")
         .frame(width: 44, height: 44)
         .contentShape(Circle())

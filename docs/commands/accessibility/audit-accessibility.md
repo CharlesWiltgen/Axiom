@@ -118,11 +118,11 @@ UIFontMetrics.default.scaledFont(for: customFont)
 ### Color Contrast
 ```swift
 // BAD - Low contrast
-Text("Warning").foregroundColor(.yellow) // on white background
+Text("Warning").foregroundStyle(.yellow) // on white background
 
 // GOOD - High contrast or differentiator
 Text("Warning")
-  .foregroundColor(.orange) // 4.5:1+ contrast
+  .foregroundStyle(.orange) // 4.5:1+ contrast
   .accessibilityShowsLargeContentViewer() // fallback
 ```
 

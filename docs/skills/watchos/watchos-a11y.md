@@ -32,7 +32,7 @@ Questions you can ask your assistant that will draw from this skill:
 ## What This Skill Provides
 
 - **Three assistive technologies** – How VoiceOver, AssistiveTouch, and Double Tap differ in input model and SwiftUI API, and why your design must work with any combination enabled
-- **Three Dynamic Type rules** – Use a text style instead of `Font.system(size:)`; let text wrap rather than capping `lineLimit` at 1; switch to a vertical layout at large sizes by reading `@Environment(\.sizeCategory)`
+- **Three Dynamic Type rules** – Use a text style instead of `Font.system(size:)`; let text wrap rather than capping `lineLimit` at 1; switch to a vertical layout at large sizes by reading `@Environment(\.dynamicTypeSize)`
 - **Complication and notification coverage** – Spoken-form labels for abbreviations, labels on complication images, overrides for SF Symbol default labels, and accessibility on dynamic notifications
 - **VoiceOver patterns** – Let `NavigationLink` combine row children, put context in the label (not just the value), and add an explicit `accessibilityLabel` to symbol-only buttons
 - **Custom adjustable control recipe** – Collapse multi-button steppers into one element with `accessibilityElement()` + `accessibilityLabel` + `accessibilityValue` + `accessibilityAdjustableAction`
