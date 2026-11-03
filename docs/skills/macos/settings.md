@@ -38,7 +38,7 @@ Questions you can ask your assistant that will draw from this skill:
 
 ### Pane Patterns
 - **Single-pane** – A fixed `.frame(width: 450, height: 180)` with `.scenePadding()` for small preference sets
-- **Tabbed** – The standard pattern: `TabView` with `.tabItem { Label("...", systemImage: "...") }`
+- **Tabbed** – The standard pattern: `TabView` with `Tab("...", systemImage: "...") { ... }`
 - **Per-tab sizing** – When tabs legitimately need different sizes, attach a `.frame` to each tab and let the window animate
 - **Cross-platform** – Wrapping the `SettingsView` definition in `#if os(macOS)` when it references macOS-only APIs
 
@@ -65,10 +65,8 @@ A tabbed Settings window that follows the HIG: a fixed `.frame` on the `TabView`
 struct SettingsView: View {
     var body: some View {
         TabView {
-            GeneralSettings()
-                .tabItem { Label("General", systemImage: "gear") }
-            AdvancedSettings()
-                .tabItem { Label("Advanced", systemImage: "slider.horizontal.3") }
+            Tab("General", systemImage: "gear") { GeneralSettings() }
+            Tab("Advanced", systemImage: "slider.horizontal.3") { AdvancedSettings() }
         }
         .scenePadding()
         .frame(width: 450, height: 280)

@@ -40,9 +40,9 @@ Questions you can ask your assistant that will draw from this skill:
 
 ### File Access Patterns
 - A decision tree across container files, `fileImporter`, security-scoped bookmarks, standard folder entitlements, App Groups, and Full Disk Access
-- SwiftUI `.fileImporter`/`.fileExporter` with proper `defer { stopAccessingSecurityScopedResource() }`
+- SwiftUI `.fileImporter`/`.fileExporter`: call `startAccessingSecurityScopedResource()`, as Apple's documentation says, and balance it with a deferred stop
 - AppKit `NSOpenPanel`/`NSSavePanel` with the same balance rule
-- The auto-started access rule: URLs from panels, `fileImporter`, and Dock drag and drop arrive with access already started, so you only need to stop it
+- Which URLs arrive with access already started (`NSOpenPanel`, `NSSavePanel`, Dock drag and drop) and which need an explicit start (`fileImporter` and resolved bookmarks)
 
 ### Security-Scoped Bookmarks
 - The bookmark entitlements (`files.bookmarks.app-scope`, `files.bookmarks.document-scope`) that creating them requires
