@@ -1063,7 +1063,7 @@ struct OrderDetailView: View {
                 .font(.largeTitle)
 
             Text("Ordered on \(order.date.formatted())")
-                .foregroundColor(.secondary)
+                .foregroundStyle(.secondary)
         }
         .userActivity("com.coffeeapp.viewOrder") { activity in
             activity.title = order.coffeeName

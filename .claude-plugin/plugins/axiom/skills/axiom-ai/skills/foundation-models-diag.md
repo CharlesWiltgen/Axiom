@@ -228,7 +228,7 @@ struct AIFeatureView: View {
                     .font(.headline)
                 Text("Available on iPhone 15 Pro and later")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
             }
         }
     }
@@ -1128,14 +1128,14 @@ struct AIFeatureView: View {
             VStack {
                 Image(systemName: "sparkles")
                     .font(.largeTitle)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
 
                 Text("AI-Powered Features")
                     .font(.headline)
 
                 Text("Available on iPhone 15 Pro and later")
                     .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
 
                 // Offer alternative
