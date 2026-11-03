@@ -36,6 +36,34 @@ describe('DynamicToolsHandler', () => {
       expect(result.content[0].text).toContain('nonexistent');
     });
 
+    it('suggests the closest agents when the agent is missing', async () => {
+      const loader = makeMockLoader({
+        getAgent: vi.fn().mockResolvedValue(undefined),
+        getNames: vi.fn().mockResolvedValue({ skills: [], agents: ['concurrency-auditor', 'build-fixer'] }),
+      });
+      const handler = new DynamicToolsHandler(loader, mockLogger);
+
+      const result = await handler.callTool('axiom_get_agent', { agent: 'concurrency-checker' });
+
+      expect(result.content[0].text).toBe('Agent not found: "concurrency-checker".\nClosest agents: concurrency-auditor');
+    });
+
+    it('lists the closest agents before noting that the name is a skill', async () => {
+      const loader = makeMockLoader({
+        getAgent: vi.fn().mockResolvedValue(undefined),
+        getNames: vi.fn().mockResolvedValue({ skills: ['axiom-data--swiftdata'], agents: ['swiftdata-auditor', 'build-fixer'] }),
+      });
+      const handler = new DynamicToolsHandler(loader, mockLogger);
+
+      const result = await handler.callTool('axiom_get_agent', { agent: 'swiftdata' });
+
+      expect(result.content[0].text).toBe([
+        'Agent not found: "swiftdata".',
+        'Closest agents: swiftdata-auditor',
+        'axiom-data--swiftdata is a skill. Read it with axiom_read_skill, skills: [{ name: "axiom-data--swiftdata" }].',
+      ].join('\n'));
+    });
+
     it('returns agent content when found', async () => {
       const loader = makeMockLoader({
         getAgent: vi.fn().mockResolvedValue({
@@ -212,8 +240,8 @@ describe('DynamicToolsHandler', () => {
       const expected = [
         '## axiom-audit-concurrency',
         'Skill not found. Sub-skills are named <suite>--<file>, e.g. axiom-data--sqlitedata.',
-        'Closest skills: axiom-concurrency',
         'Closest agents (read with axiom_get_agent): concurrency-auditor',
+        'Closest skills: axiom-concurrency',
         '',
       ].join('\n');
 
@@ -221,6 +249,23 @@ describe('DynamicToolsHandler', () => {
         handler.callTool('axiom_read_skill', { skills: [{ name: 'axiom-audit-concurrency' }], listSections })));
 
       expect(reads.map((r) => r.content[0].text)).toEqual([expected, expected]);
+    });
+
+    it('lists skills before agents when the name does not ask for an audit', async () => {
+      const loader = makeMockLoader({
+        getNames: vi.fn().mockResolvedValue({ skills: ['axiom-concurrency'], agents: ['concurrency-auditor'] }),
+      });
+      const handler = new DynamicToolsHandler(loader, mockLogger);
+
+      const result = await handler.callTool('axiom_read_skill', { skills: [{ name: 'concurrency-guide' }] });
+
+      expect(result.content[0].text).toBe([
+        '## concurrency-guide',
+        'Skill not found. Sub-skills are named <suite>--<file>, e.g. axiom-data--sqlitedata.',
+        'Closest skills: axiom-concurrency',
+        'Closest agents (read with axiom_get_agent): concurrency-auditor',
+        '',
+      ].join('\n'));
     });
 
     it('names the agent when the request is an agent file, loading names once per call', async () => {
@@ -233,8 +278,8 @@ describe('DynamicToolsHandler', () => {
       });
 
       expect([result.content[0].text, getNames.mock.calls.length]).toEqual([
-        '## skills/concurrency-auditor.md\nconcurrency-auditor is an agent. Read it with axiom_get_agent.\n\n'
-          + '## concurrency-auditor\nconcurrency-auditor is an agent. Read it with axiom_get_agent.\n',
+        '## skills/concurrency-auditor.md\nconcurrency-auditor is an agent. Read it with axiom_get_agent, agent: "concurrency-auditor".\n\n'
+          + '## concurrency-auditor\nconcurrency-auditor is an agent. Read it with axiom_get_agent, agent: "concurrency-auditor".\n',
         1,
       ]);
     });

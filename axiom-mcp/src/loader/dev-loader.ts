@@ -253,7 +253,8 @@ export class DevLoader implements Loader {
     if (this.agentsCache.size === 0) {
       await this.loadAgents();
     }
-    return this.agentsCache.get(name);
+    const resolved = resolveSkillName(name, this.agentsCache);
+    return resolved === undefined ? undefined : this.agentsCache.get(resolved);
   }
 
   async getSkillSections(

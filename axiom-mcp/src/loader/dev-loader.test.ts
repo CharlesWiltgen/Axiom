@@ -81,6 +81,11 @@ Main entry points.
     await writeFile(join(skillDir, 'SKILL.md'), skillFrontmatter, 'utf-8');
     await writeFile(join(refsDir, 'patterns.md'), patternsContent, 'utf-8');
     await writeFile(join(refsDir, 'api-ref.md'), apiRefContent, 'utf-8');
+    await writeFile(
+      join(tmpPlugin, 'agents', 'build-fixer.md'),
+      '---\nname: build-fixer\ndescription: Fixes builds\n---\n\n# Build Fixer\n',
+      'utf-8',
+    );
     // The bundler drops inlined auditor copies (MCP ships each auditor as a
     // first-class agent), so dev mode must drop them identically or dev and prod
     // disagree on the skill set, the catalog counts, and the search corpus.
@@ -140,6 +145,14 @@ Generated auditor procedure.
       'axiom-test-suite--patterns',
       'axiom-test-suite--patterns',
     ]);
+  });
+
+  it.each([
+    ['build-fixer'],
+    ['axiom:build-fixer'],
+    ['agents/build-fixer.md'],
+  ])('serves the agent requested as %s', async (requested) => {
+    expect((await loader.getAgent(requested))?.name).toBe('build-fixer');
   });
 
   it('lists served names from the cache without rescanning the plugin', async () => {

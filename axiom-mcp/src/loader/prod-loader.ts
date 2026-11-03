@@ -122,7 +122,8 @@ export class ProdLoader implements Loader {
 
   async getAgent(name: string): Promise<Agent | undefined> {
     await this.ensureLoaded();
-    return this.agentsCache.get(name);
+    const resolved = resolveSkillName(name, this.agentsCache);
+    return resolved === undefined ? undefined : this.agentsCache.get(resolved);
   }
 
   async getSkillSections(

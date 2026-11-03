@@ -4,7 +4,7 @@ import type { SkillSection } from '../loader/parser.js';
 import { Logger } from '../config.js';
 import { mcpToolFooter } from './mcp-notes.js';
 import { CLI_ONLY_BINARIES } from './binaries.js';
-import { resolveSkillName, suggestNames } from '../loader/skill-names.js';
+import { asksForAudit, resolveSkillName, suggestNames } from '../loader/skill-names.js';
 
 export interface McpTool {
   name: string;
@@ -379,12 +379,16 @@ export class DynamicToolsHandler {
 
   private skillNotFound(name: string, known: { skills: string[]; agents: Set<string> }): string[] {
     const agent = resolveSkillName(name, known.agents);
-    if (agent) return [`## ${name}`, `${agent} is an agent. Read it with axiom_get_agent.`, ''];
+    if (agent) return [`## ${name}`, `${agent} is an agent. Read it with axiom_get_agent, agent: "${agent}".`, ''];
     const skills = suggestNames(name, known.skills, 5);
     const agents = suggestNames(name, known.agents, 3);
-    const lines = [`## ${name}`, 'Skill not found. Sub-skills are named <suite>--<file>, e.g. axiom-data--sqlitedata.'];
-    if (skills.length > 0) lines.push(`Closest skills: ${skills.join(', ')}`);
-    if (agents.length > 0) lines.push(`Closest agents (read with axiom_get_agent): ${agents.join(', ')}`);
+    const skillLine = skills.length > 0 ? [`Closest skills: ${skills.join(', ')}`] : [];
+    const agentLine = agents.length > 0 ? [`Closest agents (read with axiom_get_agent): ${agents.join(', ')}`] : [];
+    const lines = [
+      `## ${name}`,
+      'Skill not found. Sub-skills are named <suite>--<file>, e.g. axiom-data--sqlitedata.',
+      ...(asksForAudit(name) ? [...agentLine, ...skillLine] : [...skillLine, ...agentLine]),
+    ];
     if (skills.length + agents.length === 0) lines[1] += ' Use axiom_search_skills to find it.';
     return [...lines, ''];
   }
@@ -401,7 +405,14 @@ export class DynamicToolsHandler {
 
     const agent = await this.loader.getAgent(args.agent);
     if (!agent) {
-      return { content: [{ type: 'text', text: `Agent not found: "${args.agent}". Use axiom_get_catalog to see available agents.` }] };
+      const known = await this.knownNames();
+      const closest = suggestNames(args.agent, known.agents, 3);
+      const skill = resolveSkillName(args.agent, new Set(known.skills));
+      const lines = [`Agent not found: "${args.agent}".`];
+      if (closest.length > 0) lines.push(`Closest agents: ${closest.join(', ')}`);
+      if (skill) lines.push(`${skill} is a skill. Read it with axiom_read_skill, skills: [{ name: "${skill}" }].`);
+      if (lines.length === 1) lines[0] += ' Use axiom_get_catalog to see available agents.';
+      return { content: [{ type: 'text', text: lines.join('\n') }] };
     }
 
     const lines: string[] = [];

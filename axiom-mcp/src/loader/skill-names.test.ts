@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { resolveSkillName, suggestNames } from './skill-names.js';
+import { asksForAudit, resolveSkillName, suggestNames } from './skill-names.js';
 
 const KNOWN = new Set([
   'axiom-concurrency',
@@ -32,6 +32,18 @@ describe('resolveSkillName', () => {
     ['cross-reference with trailing text', 'axiom-data (skills/cloud-sync.md Part 2)', 'axiom-data--cloud-sync'],
     ['cross-reference listing two files', 'axiom-data (skills/sqlitedata.md, skills/cloud-sync.md)', 'axiom-data--sqlitedata'],
     ['a path under an unknown suite, by basename', 'swiftui/skills/sqlitedata.md', 'axiom-data--sqlitedata'],
+    ['suite:file', 'axiom-concurrency:swift-concurrency', 'axiom-concurrency--swift-concurrency'],
+    ['suite::file', 'axiom-concurrency::swift-concurrency', 'axiom-concurrency--swift-concurrency'],
+    ['suite.file', 'axiom-concurrency.swift-concurrency', 'axiom-concurrency--swift-concurrency'],
+    ['a spaced separator', 'axiom-concurrency -- swift-concurrency', 'axiom-concurrency--swift-concurrency'],
+    ['the plugin namespace before suite:file', 'axiom:axiom-data:sqlitedata', 'axiom-data--sqlitedata'],
+    ['a router file name', 'axiom-data.md', 'axiom-data'],
+    ['a trailing slash', 'skills/sqlitedata.md/', 'axiom-data--sqlitedata'],
+    ['a path with a section anchor', 'skills/sqlitedata.md#Migrations', 'axiom-data--sqlitedata'],
+    ['a cross-reference with a section anchor', 'axiom-data (skills/cloud-sync.md#conflicts)', 'axiom-data--cloud-sync'],
+    ['suite:SKILL.md', 'axiom-data:SKILL.md', 'axiom-data'],
+    ['a doubled plugin-namespace colon', 'axiom::axiom-data', 'axiom-data'],
+    ['a trailing slash after a backticked name', '`axiom-data`/', 'axiom-data'],
   ])('resolves %s', (_label, input, expected) => {
     expect(resolveSkillName(input, KNOWN)).toBe(expected);
   });
@@ -40,6 +52,7 @@ describe('resolveSkillName', () => {
     ['an unknown name', 'database-migration'],
     ['a suite path naming the wrong suite', 'axiom-data/skills/swift-concurrency.md'],
     ['a cross-reference naming the wrong suite', 'axiom-concurrency (skills/sqlitedata.md)'],
+    ['suite:file naming the wrong suite', 'axiom-data:swift-concurrency'],
     ['an empty string', '   '],
   ])('returns undefined for %s', (_label, input) => {
     expect(resolveSkillName(input, KNOWN)).toBeUndefined();
@@ -82,7 +95,27 @@ describe('suggestNames', () => {
     expect(suggestNames('axiom-audit-concurrency', agents, 3)).toEqual(['concurrency-auditor']);
   });
 
+  it.each([
+    ['android', ['axiom-design--color-and-contrast']],
+    ['refactoring', ['axiom-swiftui--26-ref']],
+    ['payload', ['axiom-payments--apple-pay']],
+  ])('does not treat a three-letter token as a prefix of %s', (name, known) => {
+    expect(suggestNames(name, known, 5)).toEqual([]);
+  });
+
   it('returns nothing when no token is shared', () => {
     expect(suggestNames('zzz-qqq', KNOWN, 5)).toEqual([]);
+  });
+});
+
+describe('asksForAudit', () => {
+  it.each([
+    ['axiom-audit-concurrency', true],
+    ['concurrency-auditor', true],
+    ['Audit memory', true],
+    ['auditory-feedback', false],
+    ['axiom-concurrency', false],
+  ])('%s -> %s', (name, expected) => {
+    expect(asksForAudit(name)).toBe(expected);
   });
 });

@@ -26,7 +26,7 @@ describe('ProdLoader skill-name resolution', () => {
       generatedAt: '2026-01-01T00:00:00.000Z',
       skills: Object.fromEntries(names.map((name) => [name, skill(name)])),
       commands: {},
-      agents: {},
+      agents: { 'build-fixer': { name: 'build-fixer', description: 'Fixes builds', content: '# build-fixer\n' } },
     };
     await writeFile(join(dir, 'bundle.json'), JSON.stringify(bundle), 'utf-8');
     loader = new ProdLoader(join(dir, 'bundle.json'), new Logger(config), config);
@@ -48,6 +48,15 @@ describe('ProdLoader skill-name resolution', () => {
   it('serves an axiom://skill/ resource requested by a bare name', async () => {
     const { contents } = await new ResourcesHandler(loader, new Logger(config), []).readResource('axiom://skill/swift-concurrency');
     expect(contents[0].text).toContain('# axiom-concurrency--swift-concurrency');
+  });
+
+  it.each([
+    ['build-fixer'],
+    ['axiom:build-fixer'],
+    ['agents/build-fixer.md'],
+    ['Build-Fixer'],
+  ])('serves the agent requested as %s', async (requested) => {
+    expect((await loader.getAgent(requested))?.name).toBe('build-fixer');
   });
 
   it('still misses a name no skill has', async () => {

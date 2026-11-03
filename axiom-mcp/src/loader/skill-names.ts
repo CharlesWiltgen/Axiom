@@ -3,20 +3,29 @@ import { SUB_SKILL_SEPARATOR } from './parser.js';
 type NameSet = { has(name: string): boolean; keys(): Iterable<string> };
 
 const CROSS_REFERENCE = /^([a-z0-9-]+)\s*\(\s*(skills\/[a-z0-9._-]+?\.md)/;
+const SUITE_QUALIFIED = /^([a-z0-9-]+?)\s*(?:::?|\.|--)\s*([a-z0-9_-]+)(?:\.md)?$/;
 const NOISE_TOKENS = new Set(['axiom', 'skills', 'skill', 'md', 'audit', 'auditor']);
 
 /**
  * Map the names a model actually uses to a served skill id. Sub-skills are
  * served as `<suite>--<file>`, but harnesses that load the native skills see
  * them as `skills/<file>.md` paths, and skill text cites them as
- * `<suite> (skills/<file>.md)` or by bare basename. A bare basename resolves
+ * `<suite> (skills/<file>.md)` or by bare basename. `<suite>:<file>` and
+ * `<suite>.<file>` resolve too. A bare basename resolves
  * only when exactly one suite has it.
  */
 export function resolveSkillName(name: string, known: NameSet): string | undefined {
   if (known.has(name)) return name;
   const unquote = (text: string) => text.trim().replace(/^[`"']+|[`"']+$/g, '').trim();
-  const key = unquote(unquote(name).toLowerCase().replace(/^axiom:/, ''));
+  const key = unquote(unquote(name).toLowerCase().replace(/^axiom::?/, '').replace(/#.*$/, '').replace(/\/+$/, ''));
   if (known.has(key)) return key;
+
+  const qualified = key.match(SUITE_QUALIFIED);
+  if (qualified && qualified[2] === 'skill') return known.has(qualified[1]) ? qualified[1] : undefined;
+  if (qualified && qualified[2] !== 'md' && known.has(qualified[1])) {
+    const id = `${qualified[1]}${SUB_SKILL_SEPARATOR}${qualified[2]}`;
+    return known.has(id) ? id : undefined;
+  }
 
   const crossReference = key.match(CROSS_REFERENCE);
   const path = crossReference ? `${crossReference[1]}/${crossReference[2]}` : key;
@@ -33,6 +42,11 @@ export function resolveSkillName(name: string, known: NameSet): string | undefin
 
   const matches = [...known.keys()].filter((id) => id.endsWith(`${SUB_SKILL_SEPARATOR}${base}`));
   return matches.length === 1 ? matches[0] : undefined;
+}
+
+/** Whether the name asks for an audit, as Codex's `axiom-audit-<x>` skill names do. Scoring ignores these tokens. */
+export function asksForAudit(name: string): boolean {
+  return name.toLowerCase().split(/[^a-z0-9]+/).some((token) => token === 'audit' || token === 'auditor');
 }
 
 function nameTokens(name: string): string[] {
