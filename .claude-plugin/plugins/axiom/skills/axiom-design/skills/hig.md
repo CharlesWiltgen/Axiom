@@ -136,7 +136,7 @@ Which font weight should I use?
 .background(Color.black)
 
 // ✅ CORRECT - Let system decide
-.background(Color(.systemBackground))
+.background(Color(uiColor: .systemBackground))
 ```
 
 ### Q: What's the right background color?
@@ -151,12 +151,12 @@ Which font weight should I use?
 ```swift
 // ✅ Standard list
 List { }
-    .background(Color(.systemBackground))
+    .background(Color(uiColor: .systemBackground))
 
 // ✅ Grouped list (Settings style)
 List { }
     .listStyle(.grouped)
-    .background(Color(.systemGroupedBackground))
+    .background(Color(uiColor: .systemGroupedBackground))
 ```
 
 ### Q: How do I ensure legibility?

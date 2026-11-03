@@ -55,7 +55,7 @@ Standard components from SwiftUI, UIKit, and AppKit automatically adopt Liquid G
 
 ```swift
 // ✅ Standard components get Liquid Glass automatically
-NavigationView {
+NavigationStack {
     List(items) { item in
         Text(item.name)
     }
@@ -203,8 +203,8 @@ Use `.tabViewStyle(.sidebarAdaptable)` (iOS 18+ / macOS 15+ / tvOS 18+ / visionO
 
 ```swift
 TabView {
-    ContentView().tabItem { Label("Home", systemImage: "house") }
-    SearchView().tabItem { Label("Search", systemImage: "magnifyingglass") }
+    Tab("Home", systemImage: "house") { ContentView() }
+    Tab("Search", systemImage: "magnifyingglass") { SearchView() }
 }
 .tabViewStyle(.sidebarAdaptable)
 ```
