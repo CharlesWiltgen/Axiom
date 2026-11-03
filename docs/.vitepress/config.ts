@@ -89,9 +89,9 @@ export default withMermaid(defineConfig({
               items: [
                 { text: 'Claude Code', link: '/start/install' },
                 { text: 'Claude App', link: '/start/claude-app-install' },
+                { text: 'Codex', link: '/start/codex-install' },
                 { text: 'Cursor Plugin', link: '/start/cursor-install' },
                 { text: 'MCP Server', link: '/start/mcp-install' },
-                { text: 'Codex Plugin', link: '/start/codex-install' },
                 { text: 'Pi Coding Agent', link: '/start/pi-install' },
                 { text: 'Xcode Integration', link: '/start/xcode-setup' }
               ]

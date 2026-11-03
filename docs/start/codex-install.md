@@ -1,4 +1,4 @@
-# Codex Plugin
+# Install for Codex
 
 Axiom is available as a native plugin for OpenAI Codex, bringing its Apple-platform development skills into the Codex CLI, web app, and IDE extensions.
 

@@ -73,14 +73,14 @@ check_link() {
     # Normalize path (remove .., ./)
     full_path=$(cd "$(dirname "$full_path")" 2>/dev/null && echo "$(pwd)/$(basename "$full_path")" || echo "$full_path")
 
-    ((CHECKED_LINKS++))
+    ((CHECKED_LINKS+=1))
 
     # Check if file exists
     if [ ! -f "$full_path" ]; then
         echo -e "${RED}✗${NC} Broken link in ${source_file}:${link_line}"
         echo "   Link: ${link_path}"
         echo "   Expected: ${full_path}"
-        ((BROKEN_LINKS++))
+        ((BROKEN_LINKS+=1))
         return 1
     fi
 
@@ -92,15 +92,15 @@ echo "📋 Scanning documentation files..."
 # Find all markdown files and extract links
 while IFS= read -r file; do
     # Extract markdown links: [text](path)
-    # Use perl for better regex support
-    perl -ne 'print "$1\n" if /\[.*?\]\((.*?)\)/' "$file" | while IFS= read -r link; do
+    # Feed the loop with process substitution so counter updates stay in this shell.
+    while IFS= read -r link; do
         # Get line number for this link
         line_num=$(grep -n "](${link})" "$file" 2>/dev/null | head -1 | cut -d: -f1)
 
         if [ -n "$link" ]; then
             check_link "$file" "$link" "${line_num:-0}" || true
         fi
-    done
+    done < <(perl -ne 'print "$1\n" if /\[.*?\]\((.*?)\)/' "$file")
 done < <(find docs .claude-plugin/plugins/axiom -name "*.md" -type f)
 
 echo ""
