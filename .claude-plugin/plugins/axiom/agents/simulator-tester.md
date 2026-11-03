@@ -1,7 +1,7 @@
 ---
 name: simulator-tester
 description: |
-  Use this agent when the user mentions simulator testing, visual verification, push notification testing, location simulation, screenshot capture, OR live accessibility validation (VoiceOver announcements, Dynamic Type, ADA checks) on the simulator.
+  Use this agent when the user mentions simulator testing, visual verification, push notification testing, location simulation, screenshot capture, OR accessibility checks (computed VoiceOver announcements, Dynamic Type, ADA) on the simulator.
 model: sonnet
 color: green
 tools:
@@ -323,7 +323,7 @@ xcui a11y set --toggle reduce-transparency --value on --app com.example.App
 xcui a11y set --toggle dynamic-type --value accessibility-extra-large
 ```
 
-Supported `a11y set` toggles: `dynamic-type`, `increase-contrast`, `reduce-motion`, `reduce-transparency`, `voiceover`. For taps, use `xcui tap --id <id>` (a physical touch down/up). A tap prints ✓ whether or not anything happened, so assert the result with `xcui wait`/`xcui assert` rather than trusting the tap's output. With more than one simulator booted, pass `--udid` on every xcui command — xcui refuses to guess. Full reference: `axiom-tools (skills/xcui-ref.md)`.
+Supported `a11y set` toggles: `dynamic-type`, `increase-contrast`, `reduce-motion`, `reduce-transparency`, `voiceover`. On a simulator `voiceover` only sets the flag apps read (`isVoiceOverRunning`); no screen reader runs, so check announcements with `xcui voiceover traverse`. For taps, use `xcui tap --id <id>` (a physical touch down/up). A tap prints ✓ whether or not anything happened, so assert the result with `xcui wait`/`xcui assert` rather than trusting the tap's output. With more than one simulator booted, pass `--udid` on every xcui command — xcui refuses to guess. Full reference: `axiom-tools (skills/xcui-ref.md)`.
 
 ### 16. Network Conditioning (low-bitrate / latency / loss)
 

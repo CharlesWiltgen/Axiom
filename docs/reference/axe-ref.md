@@ -77,7 +77,7 @@ axe tap --label "Login" --tap-style physical --udid $UDID
 
 **Priority order:** `--id` (most stable), then `--label`, then `-x -y` coordinates as a last resort.
 
-**Pass `--tap-style physical`.** AXe's default tap style left SwiftUI buttons, list rows, menus, and tabs untouched in testing on Xcode 27.1, while AXe still reported `✓ … completed successfully`. `xcui tap` adds the flag for you. Either way, confirm that the tap did something rather than trusting its output.
+**Pass `--tap-style physical`.** AXe's default tap style left SwiftUI buttons, list rows, menus, and tabs untouched in testing on Xcode 27.1, while AXe still reported `✓ … completed successfully`. `xcui tap` adds the flag for you, and `axe touch --down --up` sends the same physical touch. Either way, confirm that the tap did something rather than trusting its output.
 
 ## Documentation Scope
 
