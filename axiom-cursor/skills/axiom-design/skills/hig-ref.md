@@ -71,7 +71,7 @@ Ungrouped: pure white/black in Light/Dark. Grouped: light gray/dark in Light/Dar
 ```swift
 // Standard list → ungrouped backgrounds
 List { Text("Item") }
-    .background(Color(.systemBackground))
+    .background(Color(uiColor: .systemBackground))
 
 // Settings-style list → grouped backgrounds
 List { Section("Section") { Text("Item") } }
@@ -119,7 +119,7 @@ Fill colors are **semi-transparent** to contrast well against variable backgroun
 
 ```swift
 // System fill colors
-Color(.systemFill)
+Color(uiColor: .systemFill)
 Color(.secondarySystemFill)
 Color(.tertiarySystemFill)
 Color(.quaternarySystemFill)

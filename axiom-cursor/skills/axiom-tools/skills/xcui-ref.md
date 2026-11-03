@@ -29,20 +29,20 @@ If it is absent, you have two working options and should say which you took:
   - `increase-contrast` — native `simctl ui increase_contrast`; `--value` is `on`/`off`. Applies live; no relaunch.
   - `reduce-motion` — `defaults write com.apple.Accessibility ReduceMotionEnabled`; needs relaunch, so pass `--app <bundle-id>` to have xcui terminate + relaunch the app.
   - `reduce-transparency` — `defaults write com.apple.Accessibility ReduceTransparencyEnabled`; needs relaunch (pass `--app`).
-  - `voiceover` — `devicectl device settings voiceover --enable|--disable`; `--value` is `on`/`off`. Applies live; no relaunch. The only toggle that leaves the simctl/defaults world — simctl has no VoiceOver setter. Read the state back with `xcrun devicectl device info voiceover -d <udid>`.
+  - `voiceover` — `devicectl device settings voiceover --enable|--disable`; `--value` is `on`/`off`. Applies live; no relaunch. The only toggle that leaves the simctl/defaults world — simctl has no VoiceOver setter. Read the state back with `xcrun devicectl device info voiceover -d <udid>`. On a simulator it sets the flag apps read, not the screen reader: `UIAccessibility.isVoiceOverRunning` turns true and `voiceOverStatusDidChangeNotification` fires, but no screen reader runs: no focus cursor appears, and a single tap activates a `Button` directly (Xcode 27.2, iOS 27.2 simulator).
 - `xcui a11y reset` — clear xcui-set overrides (delete the defaults keys, content_size → large, increase_contrast → disabled).
 - `xcui dialog accept | dismiss [--udid <udid>]` — find the frontmost system alert and tap the right button with a physical touch: `accept` prefers the most-permissive standard grant (`Allow While Using App` › `Allow Once` › `Allow` › `OK` › `Open`), `dismiss` prefers the decline (`Don't Allow` › `Cancel` › `Not Now`). A one-button alert is tapped for either intent. Matching is case- and apostrophe-insensitive (curly `’` = straight `'`). The tap delegates to `axe tap` (by id when present, else by label). Exit `0` handled, `1` no actionable alert.
 - `xcui dialog pregrant <bundle-id> <service>… [--udid <udid>]` — grant permissions ahead of time via `simctl privacy … grant`, so the dialog never appears. Services are `simctl privacy` names (`camera`, `photos`, `location`, `microphone`, `contacts`, …). Prefer this over `accept` when you control the test setup — no alert means nothing to race.
 - `xcui voiceover traverse [--udid <udid>]` — emit the **computed** VoiceOver announcement sequence: walk the a11y tree in focus order (top-to-bottom, leading-to-trailing) and render each focusable element as `label, value, trait` (plus `dimmed` when disabled). Output is a `sequence` JSON array.
 - `xcui voiceover assert --sequence <file> [--udid <udid>]` — compare the live announcement sequence to an expected one; the file may be a bare JSON string array **or** a saved `traverse` report (it round-trips). Reports every differing index (one entry per mismatched position, plus a length-mismatch note when counts differ); exit `1` on any mismatch.
 
-> **VoiceOver scope (honest framing):** `voiceover` renders the *computed* announcement from the accessibility tree — what VoiceOver would say, derived deterministically. It is **not** captured audio/TTS, which the simulator does not expose to scripting. Use it to catch missing labels, wrong trait phrasing, bad focus order, and unannounced state — not to verify the speech synthesizer itself.
+> **VoiceOver scope (honest framing):** `voiceover` renders the *computed* announcement from the accessibility tree — what VoiceOver would say, derived deterministically. It is **not** captured speech; a simulator runs no screen reader. Use it to catch missing labels, wrong trait phrasing, bad focus order, and unannounced state — not to verify the speech synthesizer itself.
 
 > **Turning VoiceOver ON is not the same as `xcui voiceover`.** Two different things, easy to conflate:
-> - `xcui a11y set --toggle voiceover --value on` — actually starts the screen reader on the device.
+> - `xcui a11y set --toggle voiceover --value on` — sets the VoiceOver-on state your code observes (`isVoiceOverRunning`, the status notification). On a simulator no screen reader runs.
 > - `xcui voiceover traverse` / `assert` — **computes** the announcement sequence from the accessibility tree, with VoiceOver *off*. This is the one you want in CI: deterministic, no speech, no focus stealing.
 >
-> You do not need the toggle to run `traverse`. Reach for the toggle when you need the device in a real VoiceOver state — verifying that your app behaves correctly while a screen reader is actually running.
+> You do not need the toggle to run `traverse`. Reach for the toggle to exercise code that branches on `isVoiceOverRunning`, such as a layout or an auto-advancing timer you change for VoiceOver users. Behavior under a running screen reader (focus, gestures, speech) needs a physical device.
 
 > **Still not supported (a11y toggles):** `differentiate-without-color` and `bold-text` have no confirmable simulator mechanism — no native `simctl ui` setter, candidate `defaults` keys not honored by iOS on the sim, and `devicectl device settings` offers only appearance, audio, biometrics, reset, and voiceover. Omitted rather than shipped unverified.
 
@@ -96,10 +96,10 @@ AXe's `tap` takes `--tap-style automatic|simulator|physical`. AXe's default, `au
 | `List` row (`NavigationLink`) | no effect | no effect | pushes |
 | `Button` inside a `List` | no effect | no effect | fires |
 | `Menu` | no effect | no effect | opens |
-| Row of an open `Menu` | no effect | no effect | fires |
+| Row of an open `Menu` | no effect | no effect | fires (so does `axe touch --down --up`) |
 | Tab of a `TabView` (iPhone) | no effect | no effect | selects |
 
-The switch row is AXe's documented behavior for `automatic` ("physical touch for switches/toggles and simulator tap for other targets"); the rest was measured 2026-09-19 with Xcode 27.1 and AXe 1.8.0 on iPhone 17 (iOS 27.0) and iPhone Duo (iOS 27.1) simulators, where AXe printed `✓ … completed successfully` for every no-effect cell. So `xcui tap` adds `--tap-style physical` when you pass no style (pass one to override), and `xcui dialog` taps physically. Calling `axe tap` yourself? Add `--tap-style physical`.
+The switch row is AXe's documented behavior for `automatic` ("physical touch for switches/toggles and simulator tap for other targets"); the rest was measured 2026-09-19 with Xcode 27.1 and AXe 1.8.0 on iPhone 17 (iOS 27.0) and iPhone Duo (iOS 27.1) simulators, where AXe printed `✓ … completed successfully` for every no-effect cell. The `Menu` row holds on Xcode 27.2, and `axe touch --down --up`, a physical touch like `--tap-style physical`, fires it too. So `xcui tap` adds `--tap-style physical` when you pass no style (pass one to override), and `xcui dialog` taps physically. Calling `axe tap` yourself? Add `--tap-style physical`.
 
 **Verify the effect, never the ✓.** A tap that changes nothing prints the same success line as one that works. After any tap that matters, confirm the result with `xcui wait --for-element`, `xcui assert`, or a screenshot.
 

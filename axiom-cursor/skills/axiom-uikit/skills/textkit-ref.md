@@ -755,7 +755,7 @@ multiline.lineHeight = .loose                    // System loose spacing
 ### Selection Binding
 
 ```swift
-@State private var selection: AttributedTextSelection?
+@State private var selection = AttributedTextSelection()
 
 TextEditor(text: $text, selection: $selection)
 ```
@@ -837,50 +837,35 @@ Use `.upstream` when selection should resolve toward the beginning of text at li
 
 ### Custom Formatting Definition
 
-**Constrain which attributes are editable:**
+**Constrain which attributes are editable.** A definition declares its `Scope` (the attributes the editor may change) and composes constraints in `body`; a constraint rewrites an attribute container in `constrain(_:)`:
 
 ```swift
 struct RecipeFormattingDefinition: AttributedTextFormattingDefinition {
-    typealias FormatScope = RecipeAttributeScope
+    struct Scope: AttributeScope {
+        let ingredient: IngredientAttribute
+        let foregroundColor: AttributeScopes.SwiftUIAttributes.ForegroundColorAttribute
+        let adaptiveImageGlyph: AttributeScopes.SwiftUIAttributes.AdaptiveImageGlyphAttribute
+    }
 
-    static let constraints: [any AttributedTextValueConstraint<RecipeFormattingDefinition>] = [
+    var body: some AttributedTextFormattingDefinition<Scope> {
         IngredientsAreGreen()
-    ]
-}
-
-struct RecipeAttributeScope: AttributedScope {
-    var ingredient: IngredientAttribute
-    var foregroundColor: ForegroundColorAttribute
-    var genmoji: GenmojiAttribute
-}
-```
-
-**Apply to TextEditor:**
-```swift
-TextEditor(text: $text)
-    .attributedTextFormattingDefinition(RecipeFormattingDefinition.self)
-```
-
-### Value Constraints
-
-**Control attribute values based on custom logic:**
-
-```swift
-struct IngredientsAreGreen: AttributedTextValueConstraint {
-    typealias Definition = RecipeFormattingDefinition
-    typealias AttributeKey = ForegroundColorAttribute
-
-    func constrain(
-        _ value: inout Color?,
-        in scope: RecipeFormattingDefinition.FormatScope
-    ) {
-        if scope.ingredient != nil {
-            value = .green // Ingredients are always green
-        } else {
-            value = nil // Others use default
-        }
     }
 }
+
+struct IngredientsAreGreen: AttributedTextValueConstraint {
+    typealias Scope = RecipeFormattingDefinition.Scope
+    typealias AttributeKey = AttributeScopes.SwiftUIAttributes.ForegroundColorAttribute
+
+    func constrain(_ container: inout Attributes) {
+        container.foregroundColor = container.ingredient != nil ? .green : nil
+    }
+}
+```
+
+**Apply to TextEditor** (pass an instance; the modifier also takes an `AttributeScope` type or key path when you need no constraints):
+```swift
+TextEditor(text: $text, selection: $selection)
+    .attributedTextFormattingDefinition(RecipeFormattingDefinition())
 ```
 
 **System behavior:**
@@ -897,10 +882,7 @@ struct IngredientAttribute: CodableAttributedStringKey {
 
     static let name = "ingredient"
 }
-
-extension AttributeScopes.RecipeAttributeScope {
-    var ingredient: IngredientAttribute.Type { IngredientAttribute.self }
-}
+// Add it to a scope (RecipeFormattingDefinition.Scope above) to make it editable
 ```
 
 **Attribute behavior:**

@@ -123,7 +123,7 @@ CI order is unchanged at the front: simctl or xcodebuild boots the sim → devic
 | `device settings biometrics [--enable\|--disable]` | works (verified) | enroll / unenroll Face ID / Touch ID |
 | `device simulate biometrics --success\|--failure` | works (verified) | drive a match / no-match |
 | `device settings appearance --mode light\|dark` | works (verified) | force Dark/Light; also `--look-and-feel clear\|tinted`, text size, contrast |
-| `device settings voiceover --enable\|--disable` (also `device info voiceover`) | works (verified) `OS27` | toggle VoiceOver — the one a11y toggle `xcui` omitted for lack of a mechanism |
+| `device settings voiceover --enable\|--disable` (also `device info voiceover`) | works (verified) `OS27` | toggle VoiceOver — the one a11y toggle `xcui` omitted for lack of a mechanism. On a simulator it sets the flag apps read (`isVoiceOverRunning`); no screen reader runs |
 | `device simulate location` | available | inject location |
 | `device simulate statusBar` (`preset`/`override`/`show`/`clear`) | works (verified) | clean status bar for screenshots — see Status bar for screenshots below |
 | `device process sendMemoryWarning` | available | memory-pressure scenarios |

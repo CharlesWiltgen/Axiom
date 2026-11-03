@@ -394,10 +394,8 @@ struct ScriptApp: App {
 #if os(macOS)
 Settings {
     TabView {
-        GeneralSettings()
-            .tabItem { Label("General", systemImage: "gear") }
-        AccountSettings()
-            .tabItem { Label("Account", systemImage: "person") }
+        Tab("General", systemImage: "gear") { GeneralSettings() }
+        Tab("Account", systemImage: "person") { AccountSettings() }
     }
     .scenePadding()
     .frame(width: 450, height: 300)

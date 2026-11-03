@@ -600,13 +600,13 @@ struct OrderConfirmationView: View {
         VStack(spacing: 20) {
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: 60))
-                .foregroundColor(.green)
+                .foregroundStyle(.green)
 
             Text("Order Placed!")
                 .font(.title)
 
             Text("Your coffee will be ready in 10 minutes")
-                .foregroundColor(.secondary)
+                .foregroundStyle(.secondary)
 
             // Promote reorder shortcut
             if showReorderTip {

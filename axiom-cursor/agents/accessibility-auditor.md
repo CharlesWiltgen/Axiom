@@ -87,15 +87,16 @@ Run all 8 existing detection categories. For every grep match, use Read to verif
 **Pattern**: Hardcoded font sizes that won't scale with Dynamic Type
 **Search**: `.font(.system(size:` without `relativeTo:`; `UIFont.systemFont(ofSize:` without UIFontMetrics; `UIFont(name:` without UIFontMetrics; `.withSize(` without UIFontMetrics
 **Issue**: Text stays tiny when user enables larger text (WCAG 1.4.4)
-**Fix**: Use `.font(.body)` or `.font(.system(size: 17, design: .default).relativeTo(.body))`
+**Fix**: Use `.font(.body)`, or `@ScaledMetric(relativeTo: .body) var size = 17` with `.font(.system(size: size))`
 **Note**: Before flagging `.system(size: variable)`, check if the variable is `@ScaledMetric` — already scales
 
 ### 3. Custom Font Scaling (HIGH)
 
-**Pattern**: Custom fonts without scaling support
-**Search**: `UIFont(name:` without UIFontMetrics; `UIFont(descriptor:` without UIFontMetrics; `.custom(` without `relativeTo:`
+**Pattern**: Custom fonts that never scale
+**Search**: `UIFont(name:` without UIFontMetrics; `UIFont(descriptor:` without UIFontMetrics; `.custom(` with `fixedSize:`
 **Issue**: Custom fonts ignore Dynamic Type settings (WCAG 1.4.4)
-**Fix**: UIKit: `UIFontMetrics(forTextStyle: .body).scaledFont(for: customFont)`. SwiftUI: `.custom("FontName", size: X, relativeTo: .body)`
+**Fix**: UIKit: `UIFontMetrics(forTextStyle: .body).scaledFont(for: customFont)`. SwiftUI: `.custom("FontName", size: X, relativeTo: .title2)`
+**Note**: `.custom(_:size:)` without `relativeTo:` already scales, relative to body. Report it LOW, not HIGH, and only when the font plays a different text style's role (a title or caption)
 
 ### 4. Layout Scaling (MEDIUM)
 

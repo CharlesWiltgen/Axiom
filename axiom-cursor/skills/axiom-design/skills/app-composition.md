@@ -813,7 +813,7 @@ struct DetailView: View {
 | State | whole-document value snapshot on every change | the document *is* your `@Observable` model — bind to it directly |
 | Concurrency | snapshot must be `Sendable` | snapshot crosses actors via `sending`; `apply`/`snapshot` run on `@MainActor` |
 
-Reach for the new model when documents are large or slow to load (async + progress), or when you want the document to be your `@Observable` source of truth instead of mirroring a value type into one. Keep `FileDocument` for small, simple value-type documents.
+Reach for the new model when documents are large or slow to load (async + progress), or when you want the document to be your `@Observable` source of truth instead of mirroring a value type into one. `FileDocument` and `ReferenceFileDocument` are soft-deprecated ("Conform your type to Document instead"); keep them only for deployment targets below 27. The editor `DocumentGroup` inits require `Document`, which is `ReadableDocument & WritableDocument`, and its requirements mark parameters and returns `sending`.
 
 ## Pattern
 
@@ -822,27 +822,32 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 @Observable
-final class MarkdownDocument: ReadableDocument, WritableDocument {
+final class MarkdownDocument: Document {   // Document = ReadableDocument & WritableDocument
     var text: String = ""
 
     static let readableContentTypes: [UTType] = [.plainText]
 
     // Decode off the main actor (build a snapshot)…
-    func reader(configuration: ReadConfiguration) -> FileWrapperDocumentReader<String> {
+    func reader(configuration: sending ReadConfiguration) -> sending FileWrapperDocumentReader<String> {
         FileWrapperDocumentReader(configuration) { fileWrapper in
-            String(decoding: fileWrapper.regularFileContents ?? Data(), as: UTF8.self)
+            // Throw rather than default: an empty snapshot would let autosave overwrite the file
+            guard let data = fileWrapper.regularFileContents,
+                  let text = String(data: data, encoding: .utf8) else {
+                throw CocoaError(.fileReadCorruptFile)
+            }
+            return text
         }
     }
     // …then apply it to the model on the main actor.
-    @MainActor func apply(snapshot: String, previous: String?) async throws {
+    @MainActor func apply(snapshot: sending String, previous: sending String?) async throws {
         text = snapshot
     }
 
     // Capture a snapshot on the main actor…
-    @MainActor func snapshot(contentType: UTType) async throws -> String { text }
+    @MainActor func snapshot(contentType: UTType) async throws -> sending String { text }
     // …then serialize it off the main actor.
-    func writer(configuration: WriteConfiguration) -> FileWrapperDocumentWriter<String> {
-        FileWrapperDocumentWriter(configuration) { snapshot in
+    func writer(configuration: sending WriteConfiguration) -> sending FileWrapperDocumentWriter<String> {
+        FileWrapperDocumentWriter(configuration) { snapshot, _ in   // (snapshot, previous FileWrapper?)
             FileWrapper(regularFileWithContents: Data(snapshot.utf8))
         }
     }
@@ -1005,11 +1010,12 @@ struct MainTabView: View {
 
     var body: some View {
         TabView {
-            dependencies.profileFeature.makeMainView()
-                .tabItem { Label("Profile", systemImage: "person") }
-
-            dependencies.settingsFeature.makeMainView()
-                .tabItem { Label("Settings", systemImage: "gear") }
+            Tab("Profile", systemImage: "person") {
+                dependencies.profileFeature.makeMainView()
+            }
+            Tab("Settings", systemImage: "gear") {
+                dependencies.settingsFeature.makeMainView()
+            }
         }
     }
 }

@@ -210,7 +210,7 @@ struct PlayerCover: View {
             NavigationStack {
                 PlayerControls()
                     .ignoresSafeArea()
-                    .toolbar(.hidden, for: .navigationBar)
+                    .toolbarVisibility(.hidden, for: .navigationBar)
                     .containerBackground(.clear, for: .navigation)   // inside the stack, not on it
                     .toolbar {
                         ToolbarItem(placement: .bottomBar) {

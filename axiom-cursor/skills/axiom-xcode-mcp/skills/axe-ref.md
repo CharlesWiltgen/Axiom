@@ -38,7 +38,7 @@ axe tap --label "Login" --tap-style physical --udid $UDID
 axe tap -x 200 -y 400 --tap-style physical --udid $UDID
 ```
 
-**Always pass `--tap-style physical`.** AXe's default style (`automatic`) sends FBSimulator `tapAt` to anything that isn't a switch, and on Xcode 27.1 + AXe 1.8.0 that activated no SwiftUI `Button`, `List` row, `Menu`, `Menu` row, or tab — while printing `✓ … completed successfully`. `physical` (touch down/up) activated all of them (measured 2026-09-19; matrix in `axiom-tools (skills/xcui-ref.md)`). `xcui tap` adds the flag for you.
+**Always pass `--tap-style physical`.** AXe's default style (`automatic`) sends FBSimulator `tapAt` to anything that isn't a switch, and on Xcode 27.1 + AXe 1.8.0 that activated no SwiftUI `Button`, `List` row, `Menu`, `Menu` row, or tab — while printing `✓ … completed successfully`. `physical` (touch down/up) activated all of them (measured 2026-09-19; matrix in `axiom-tools (skills/xcui-ref.md)`). `axe touch --down --up` is the same physical touch and also fires an open `Menu` row. `xcui tap` adds the flag for you.
 
 **Priority order for targeting elements:**
 1. `--id` (accessibilityIdentifier) - most stable
@@ -110,7 +110,7 @@ axe touch -x 200 -y 400 --down --udid $UDID
 # Touch up (finger release)
 axe touch -x 200 -y 400 --up --udid $UDID
 
-# Both in one call (tap)
+# Both in one call: a physical tap, same as tap --tap-style physical
 axe touch -x 200 -y 400 --down --up --udid $UDID
 
 # Long press (hold duration in seconds)

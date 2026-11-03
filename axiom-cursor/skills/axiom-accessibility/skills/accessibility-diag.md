@@ -1,3 +1,7 @@
+## Cursor UI Tool Availability
+
+`xcui` is Axiom's own tool, distributed separately from the Cursor plugin; it has no Axiom MCP wrapper. Before UI automation, check `command -v xcui`. If absent, use a stable Axiom repository checkout and locate `<axiom-checkout>/.claude-plugin/plugins/axiom/tools/xcui`, where `<axiom-checkout>` is that checkout's absolute root. Before using either discovered executable, verify it is executable and run `--help`; substitute that verified absolute path for every `xcui` command, then run `doctor`. Do not use the cached `axiom-cursor/` plugin directory as the checkout root. If xcui remains unavailable, AXe fallback is limited to compatible input verbs: `tap`, `slider`, `type`, `swipe`, `drag`, `touch`, `gesture`, `button`, `key`, `key-sequence`, `key-combo`, and `screenshot`. Then check `command -v axe` before that fallback; add `--tap-style physical` to every `axe tap` and handle `DEVELOPER_DIR` explicitly if AXe reports a SimulatorKit loading error. AXe cannot replace `wait`, `assert`, `a11y`, `dialog`, `voiceover`, `resize`, or `doctor`. If neither tool is available, stop UI automation, explain the checkout setup requirement, and continue only with non-UI simulator and log checks. If AXe exists but the requested workflow requires an xcui-only capability, stop that UI workflow and report the limitation.
+
 
 # Accessibility Diagnostics
 
@@ -96,9 +100,9 @@ Text("Price: $19.99")
 
 UILabel().font = UIFont.systemFont(ofSize: 17)
 
-// ❌ WRONG - Custom font without scaling
+// ❌ WRONG - Custom font at a fixed size, won't scale
 Text("Headline")
-  .font(Font.custom("CustomFont", size: 24))
+  .font(.custom("CustomFont", fixedSize: 24))
 
 // ✅ CORRECT - SwiftUI semantic styles (auto-scales)
 Text("Price: $19.99")
@@ -122,9 +126,9 @@ label.adjustsFontForContentSizeCategory = true
 Text("Price: $19.99")
   .font(.system(size: 17))
 
-// ⚠️ ACCEPTABLE - Custom font without scaling (accessibility violation)
+// ⚠️ ACCEPTABLE - Scales, but relative to body; a headline should track its own style
 Text("Headline")
-  .font(Font.custom("CustomFont", size: 24))
+  .font(.custom("CustomFont", size: 24))
 
 // ✅ GOOD - Custom-named font that scales relative to a text style
 Text("Large Title")
@@ -312,14 +316,14 @@ Text("Info")
 
 // ✅ CORRECT - High contrast (7:1+ passes AAA)
 Text("Warning")
-  .foregroundColor(.orange) // or .red
+  .foregroundStyle(.orange) // or .red
 
 // ✅ CORRECT - System colors adapt to light/dark mode
 Text("Info")
-  .foregroundColor(.primary) // Black in light mode, white in dark
+  .foregroundStyle(.primary) // Black in light mode, white in dark
 
 Text("Secondary")
-  .foregroundColor(.secondary) // Automatic high contrast
+  .foregroundStyle(.secondary) // Automatic high contrast
 ```
 
 #### Differentiate Without Color
@@ -333,7 +337,7 @@ HStack {
   Image(systemName: isAvailable ? "checkmark.circle.fill" : "xmark.circle.fill")
   Text(isAvailable ? "Available" : "Unavailable")
 }
-.foregroundColor(isAvailable ? .green : .red)
+.foregroundStyle(isAvailable ? .green : .red)
 
 // ✅ CORRECT - Respect system preference
 if UIAccessibility.shouldDifferentiateWithoutColor {
@@ -469,7 +473,7 @@ struct CustomButton: View {
 ```swift
 // ✅ CORRECT - Set initial focus
 .focusSection() // Group related controls
-.defaultFocus($focus, .constant(true)) // Set default
+.defaultFocus($focusedField, .email) // Set default
 
 // ✅ CORRECT - Move focus after action
 @FocusState private var focusedField: Field?
@@ -1105,7 +1109,7 @@ Xcode → Open Developer Tool → Accessibility Inspector
 
 ### Enable VoiceOver
 - **Device** Settings → Accessibility → VoiceOver, or triple-click the side button once the Accessibility Shortcut is set to VoiceOver
-- **Simulator** VoiceOver isn't available; use Accessibility Inspector to check labels, traits and order
+- **Simulator** VoiceOver isn't available; use Accessibility Inspector or `xcui voiceover traverse` to check labels, traits and order. `xcui a11y set --toggle voiceover` only sets `isVoiceOverRunning` for code that branches on it; no screen reader runs
 
 ### Navigation Testing
 1. ☐ Swipe right/left - moves logically through UI elements
