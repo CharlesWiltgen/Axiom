@@ -32,6 +32,8 @@ Questions you can ask your assistant that will draw from this reference:
 - "How do I handle authentication in App Intents?"
 - "How do I index my intents for Spotlight search?"
 - "How do I adopt an app schema so Siri can drive my app?"
+- "How do I let Siri act on a row in my list, like 'open the third one'?"
+- "How can my edit intent tell a cleared field from one the person didn't mention?"
 - "How do I write automated tests for my App Intents?"
 - "Why does my App Intents test say the intent doesn't exist?"
 
@@ -39,6 +41,7 @@ Questions you can ask your assistant that will draw from this reference:
 
 ### Core Building Blocks
 - `AppIntent`: `title`, `description`, `isDiscoverable`, `@Parameter`, parameter summaries, `perform()`, errors
+- Optional parameters in update intents: `valueState` (iOS 18.2+)
 - `AppEntity`: display representations, exposed properties, `@ComputedProperty`, `@DeferredProperty`
 - `AppEnum`
 - `EntityQuery` and `EntityStringQuery`; keeping entities separate from your data models
@@ -57,7 +60,9 @@ Questions you can ask your assistant that will draw from this reference:
 - `@AppEntity`, `@AppIntent`, and `@AppEnum(schema:)` macros, which replace the deprecated `@Assistant…` macros
 - System schema domains, grouped by Apple's three tiers: primary domains for Apple Intelligence and Siri (the 27 cycle adds Audio, Calendar, Clock, Maps, Messages, Notes, Phone, and Reminders), single-purpose domains (Visual Intelligence, Assistant), and Shortcuts-specific domains such as Books, Files, and Spreadsheet
 - Xcode schema-completeness build errors with fix-its (iOS 27)
+- Xcode code snippets (`calendar_event`, `system_open`) that scaffold a whole schema conformance
 - Cross-app content: on-screen annotations and `Transferable` export
+- On-screen entities in SwiftUI: `userActivity` for one item, `appEntityIdentifier` (iOS 18.4+) per view or list row
 
 ### Apple Intelligence
 - The Use Model action in Shortcuts (iOS 18.1+)
@@ -152,6 +157,6 @@ This page documents the `app-intents-ref` skill (in the `axiom-integration` suit
 
 ## Resources
 
-**WWDC**: 2026-240, 2026-295, 2026-343, 2026-345, 2026-347, 2025-244, 2025-260, 2025-275
+**WWDC**: 2026-240, 2026-295, 2026-343, 2026-344, 2026-345, 2026-347, 2025-244, 2025-260, 2025-275
 
 **Docs**: /appintents, /appintents/appintent, /appintents/appentity, /appintents/appschema, /appintentstesting

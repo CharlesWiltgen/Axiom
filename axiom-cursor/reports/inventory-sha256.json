@@ -918,8 +918,8 @@
     },
     {
       "path": "skills/axiom-integration/skills/app-intents-ref.md",
-      "sha256": "132aaea68b5d1d433dca66f19d730988925f2e334e4098503264fc052d91b8ae",
-      "bytes": 62946
+      "sha256": "bff28410929d5d335f1377c6f71157a5bfeea78051cec4bd3237f1d2e555e069",
+      "bytes": 62956
     },
     {
       "path": "skills/axiom-integration/skills/app-schemas-ref.md",
@@ -1949,7 +1949,7 @@
   ],
   "totals": {
     "files": 389,
-    "bytes": 8062544
+    "bytes": 8062554
   },
   "excludedMirrors": 31,
   "classes": {

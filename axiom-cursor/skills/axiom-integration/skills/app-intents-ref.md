@@ -1855,7 +1855,7 @@ struct TaskListQuery: EntityQuery, EntityStringQuery {
 
 ## Resources
 
-**WWDC**: 2025-244, 2025-275, 2025-260, 2026-240, 2026-343, 2026-345, 2026-295, 2026-347
+**WWDC**: 2025-244, 2025-275, 2025-260, 2026-240, 2026-343, 2026-344, 2026-345, 2026-295, 2026-347
 
 **Docs**: /appintents, /appintents/appintent, /appintents/appentity, /appintents/appschema, /appintents/adopting-app-intents-to-support-system-experiences, /appintents/apple-intelligence-and-siri-ai, /appintentstesting, /appintentstesting/testing-your-app-intents-code, /Updates/AppIntents
 
