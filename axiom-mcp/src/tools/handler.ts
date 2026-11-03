@@ -4,6 +4,7 @@ import type { SkillSection } from '../loader/parser.js';
 import { Logger } from '../config.js';
 import { mcpToolFooter } from './mcp-notes.js';
 import { CLI_ONLY_BINARIES } from './binaries.js';
+import { resolveSkillName, suggestNames } from '../loader/skill-names.js';
 
 export interface McpTool {
   name: string;
@@ -124,7 +125,7 @@ export class DynamicToolsHandler {
                 items: {
                   type: 'object',
                   properties: {
-                    name: { type: 'string', description: 'Skill name, e.g. "axiom-concurrency".' },
+                    name: { type: 'string', description: 'Skill name, e.g. "axiom-concurrency" or sub-skill "axiom-concurrency--swift-concurrency".' },
                     sections: {
                       type: 'array',
                       items: { type: 'string' },
@@ -293,6 +294,8 @@ export class DynamicToolsHandler {
     const listSections = args.listSections === true;
     const parts: string[] = [];
     const delivered: string[] = [];
+    let names: Promise<{ skills: string[]; agents: Set<string> }> | undefined;
+    const notFound = async (name: string) => this.skillNotFound(name, await (names ??= this.knownNames()));
 
     for (const skillReq of args.skills) {
       if (!skillReq.name || typeof skillReq.name !== 'string') {
@@ -302,7 +305,7 @@ export class DynamicToolsHandler {
       if (listSections) {
         const skill = await this.loader.getSkill(skillReq.name);
         if (!skill) {
-          parts.push(`## ${skillReq.name}\nSkill not found.\n`);
+          parts.push(...await notFound(skillReq.name));
           continue;
         }
         parts.push(`## ${skill.name} — Sections`);
@@ -313,7 +316,7 @@ export class DynamicToolsHandler {
 
       const result = await this.loader.getSkillSections(skillReq.name, skillReq.sections);
       if (!result) {
-        parts.push(`## ${skillReq.name}\nSkill not found.\n`);
+        parts.push(...await notFound(skillReq.name));
         continue;
       }
 
@@ -362,6 +365,28 @@ export class DynamicToolsHandler {
     const footer = mcpToolFooter(delivered.join('\n'), this.binaryToolNames(), CLI_ONLY_BINARIES);
     if (footer) parts.push('---', footer);
     return { content: [{ type: 'text', text: parts.join('\n') }] };
+  }
+
+  private async knownNames(): Promise<{ skills: string[]; agents: Set<string> }> {
+    try {
+      const { skills, agents } = await this.loader.getNames();
+      return { skills, agents: new Set(agents) };
+    } catch (error) {
+      this.logger.warn('Skill-name suggestions unavailable; listing names failed:', error);
+      return { skills: [], agents: new Set() };
+    }
+  }
+
+  private skillNotFound(name: string, known: { skills: string[]; agents: Set<string> }): string[] {
+    const agent = resolveSkillName(name, known.agents);
+    if (agent) return [`## ${name}`, `${agent} is an agent. Read it with axiom_get_agent.`, ''];
+    const skills = suggestNames(name, known.skills, 5);
+    const agents = suggestNames(name, known.agents, 3);
+    const lines = [`## ${name}`, 'Skill not found. Sub-skills are named <suite>--<file>, e.g. axiom-data--sqlitedata.'];
+    if (skills.length > 0) lines.push(`Closest skills: ${skills.join(', ')}`);
+    if (agents.length > 0) lines.push(`Closest agents (read with axiom_get_agent): ${agents.join(', ')}`);
+    if (skills.length + agents.length === 0) lines[1] += ' Use axiom_search_skills to find it.';
+    return [...lines, ''];
   }
 
   private binaryToolNames(): string[] {

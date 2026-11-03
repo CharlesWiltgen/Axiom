@@ -11,6 +11,7 @@ function makeMockLoader(overrides: Partial<Loader> = {}): Loader {
     loadSkills: vi.fn().mockResolvedValue(new Map()),
     loadCommands: vi.fn().mockResolvedValue(new Map()),
     loadAgents: vi.fn().mockResolvedValue(new Map()),
+    getNames: vi.fn().mockResolvedValue({ skills: [], agents: [] }),
     getSkill: vi.fn().mockResolvedValue(undefined),
     getCommand: vi.fn().mockResolvedValue(undefined),
     getAgent: vi.fn().mockResolvedValue(undefined),
@@ -198,6 +199,61 @@ describe('DynamicToolsHandler', () => {
       const result = await handler.callTool('axiom_read_skill', { skills: [{ name: 'nope' }] });
 
       expect(result.content[0].text).toContain('Skill not found');
+    });
+
+    it('suggests closest skills and agents on a miss, for both read paths', async () => {
+      const loader = makeMockLoader({
+        getNames: vi.fn().mockResolvedValue({
+          skills: ['axiom-concurrency', 'axiom-data--sqlitedata'],
+          agents: ['concurrency-auditor', 'build-fixer'],
+        }),
+      });
+      const handler = new DynamicToolsHandler(loader, mockLogger);
+      const expected = [
+        '## axiom-audit-concurrency',
+        'Skill not found. Sub-skills are named <suite>--<file>, e.g. axiom-data--sqlitedata.',
+        'Closest skills: axiom-concurrency',
+        'Closest agents (read with axiom_get_agent): concurrency-auditor',
+        '',
+      ].join('\n');
+
+      const reads = await Promise.all([false, true].map((listSections) =>
+        handler.callTool('axiom_read_skill', { skills: [{ name: 'axiom-audit-concurrency' }], listSections })));
+
+      expect(reads.map((r) => r.content[0].text)).toEqual([expected, expected]);
+    });
+
+    it('names the agent when the request is an agent file, loading names once per call', async () => {
+      const getNames = vi.fn().mockResolvedValue({ skills: [], agents: ['concurrency-auditor'] });
+      const loader = makeMockLoader({ getNames });
+      const handler = new DynamicToolsHandler(loader, mockLogger);
+
+      const result = await handler.callTool('axiom_read_skill', {
+        skills: [{ name: 'skills/concurrency-auditor.md' }, { name: 'concurrency-auditor' }],
+      });
+
+      expect([result.content[0].text, getNames.mock.calls.length]).toEqual([
+        '## skills/concurrency-auditor.md\nconcurrency-auditor is an agent. Read it with axiom_get_agent.\n\n'
+          + '## concurrency-auditor\nconcurrency-auditor is an agent. Read it with axiom_get_agent.\n',
+        1,
+      ]);
+    });
+
+    it('falls back to a plain not-found reply when listing names fails', async () => {
+      const loader = makeMockLoader({ getNames: vi.fn().mockRejectedValue(new Error('agents dir gone')) });
+      const handler = new DynamicToolsHandler(loader, mockLogger);
+
+      const result = await handler.callTool('axiom_read_skill', { skills: [{ name: 'zzz' }] });
+
+      expect(result.content[0].text).toBe('## zzz\nSkill not found. Sub-skills are named <suite>--<file>, e.g. axiom-data--sqlitedata. Use axiom_search_skills to find it.\n');
+    });
+
+    it('points to search when nothing is close', async () => {
+      const handler = new DynamicToolsHandler(makeMockLoader(), mockLogger);
+
+      const result = await handler.callTool('axiom_read_skill', { skills: [{ name: 'zzz' }] });
+
+      expect(result.content[0].text).toContain('## zzz\nSkill not found. Sub-skills are named <suite>--<file>, e.g. axiom-data--sqlitedata. Use axiom_search_skills to find it.\n');
     });
 
     it('returns section TOC when listSections is true', async () => {
