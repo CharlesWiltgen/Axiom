@@ -8,7 +8,7 @@ apple_platforms: iOS, iPadOS, macOS, watchOS, tvOS, visionOS
 
 # Human Interface Guidelines
 
-Quick decision frameworks and checklists for Apple's Human Interface Guidelines (HIG), Apple's design rules for its platforms. Covers backgrounds, color, typography, touch targets, spacing, and how to defend a design decision when a stakeholder pushes back.
+Quick decision frameworks and checklists for Apple's Human Interface Guidelines (HIG), Apple's design rules for its platforms. Covers backgrounds, color, typography, touch targets, spacing, alerts, and how to defend a design decision when a stakeholder pushes back.
 
 ## When to Use
 
