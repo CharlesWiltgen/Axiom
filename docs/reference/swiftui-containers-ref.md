@@ -125,7 +125,7 @@ ScrollView {
 ### Horizontal Carousel
 
 ```swift
-ScrollView(.horizontal, showsIndicators: false) {
+ScrollView(.horizontal) {
     LazyHStack {
         ForEach(items) { item in
             CarouselCard(item: item).frame(width: 280)
@@ -133,6 +133,7 @@ ScrollView(.horizontal, showsIndicators: false) {
     }
     .padding(.horizontal)
 }
+.scrollIndicators(.hidden)
 ```
 
 ### File Browser

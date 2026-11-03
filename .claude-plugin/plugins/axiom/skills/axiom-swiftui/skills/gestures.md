@@ -838,7 +838,7 @@ DragGesture(coordinateSpace: .named("container"))
 ScrollView {
   content
 }
-.coordinateSpace(name: "container")
+.coordinateSpace(.named("container"))
 ```
 
 **Options**:
@@ -929,7 +929,9 @@ Text("Tap me")
 ### Gesture Conflicts with Navigation
 
 ```swift
-NavigationLink(destination: DetailView()) {
+NavigationLink {
+  DetailView()
+} label: {
   ItemRow(item)
     .simultaneousGesture( // Don't block navigation
       LongPressGesture()

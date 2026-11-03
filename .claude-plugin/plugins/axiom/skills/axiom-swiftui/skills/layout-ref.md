@@ -296,7 +296,7 @@ ScrollView {
             scrollOffset = offset
         }
 }
-.coordinateSpace(name: "scroll")
+.coordinateSpace(.named("scroll"))
 ```
 
 ### Comparison with GeometryReader
@@ -863,7 +863,7 @@ ScrollView {
             scrollOffset = offset
         }
 }
-.coordinateSpace(name: "scroll")
+.coordinateSpace(.named("scroll"))
 
 // Typed coordinate space
 extension CoordinateSpaceProtocol where Self == NamedCoordinateSpace {

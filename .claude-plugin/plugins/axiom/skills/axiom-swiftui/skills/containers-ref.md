@@ -81,10 +81,12 @@ ScrollView {
 ScrollView {
     LazyVStack(pinnedViews: [.sectionHeaders]) {
         ForEach(sections) { section in
-            Section(header: SectionHeader(section)) {
+            Section {
                 ForEach(section.items) { item in
                     ItemRow(item: item)
                 }
+            } header: {
+                SectionHeader(section)
             }
         }
     }
@@ -205,7 +207,7 @@ For custom hierarchical layouts outside List.
 ```swift
 List {
     ForEach(canvases) { canvas in
-        Section(header: Text(canvas.name)) {
+        Section(canvas.name) {
             OutlineGroup(canvas.graphics, children: \.children) { graphic in
                 GraphicRow(graphic: graphic)
             }
@@ -267,7 +269,7 @@ ScrollView {
 ### Horizontal Carousel
 
 ```swift
-ScrollView(.horizontal, showsIndicators: false) {
+ScrollView(.horizontal) {
     LazyHStack {
         ForEach(items) { item in
             CarouselCard(item: item).frame(width: 280)
@@ -275,6 +277,7 @@ ScrollView(.horizontal, showsIndicators: false) {
     }
     .padding(.horizontal)
 }
+.scrollIndicators(.hidden)
 ```
 
 ### File Browser
@@ -375,7 +378,7 @@ ScrollView(.horizontal) {
 
 ### scrollPosition
 
-Track topmost visible item. **Requires `.id()` on each item.**
+Track topmost visible item. **Requires `.scrollTargetLayout()` on the layout holding the items**, whose `ForEach` identity supplies the IDs. Write to the binding to scroll to an item.
 
 ```swift
 @State private var position: Item.ID?
@@ -383,9 +386,10 @@ Track topmost visible item. **Requires `.id()` on each item.**
 ScrollView {
     LazyVStack {
         ForEach(items) { item in
-            ItemRow(item: item).id(item.id)
+            ItemRow(item: item)
         }
     }
+    .scrollTargetLayout()
 }
 .scrollPosition(id: $position)
 ```
