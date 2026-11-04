@@ -113,6 +113,7 @@ A tool that looks something up (title or type with Get/Check/Show/List, or a des
 - `.tool` on a Camera or Photos schema intent the macro accepts (MEDIUM/HIGH): a primary domain already reaches Siri, so remove `.tool`. On other primary-domain intents it's a build error.
 - `openAppWhenRun` on a 26+ deployment target (use `supportedModes`).
 - A tool returning only `.result()` where a value would let Siri continue (e.g., an order tool that returns nothing).
+- An App Skill body step after the final tool call ("then offer to …"): it didn't run in any of 10 measured turns (one app, iPadOS 27.3 beta). Move what the person must hear into that tool's dialog.
 
 ## Phase 3: Reason About Completeness
 

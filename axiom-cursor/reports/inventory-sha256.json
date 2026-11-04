@@ -138,8 +138,8 @@
     },
     {
       "path": "agents/siri-ai-auditor.md",
-      "sha256": "0a4381eaaae5d90f0e8f414d8c29bf8b05aa4e267b380616bb93353eaa707700",
-      "bytes": 17318
+      "sha256": "333ed1bc27a41752598eb63a66fd540a88f2a1ca5598fa36bac886588c150ea4",
+      "bytes": 17519
     },
     {
       "path": "agents/spm-conflict-resolver.md",
@@ -923,13 +923,13 @@
     },
     {
       "path": "skills/axiom-integration/skills/app-intents-ref.md",
-      "sha256": "3b5e805c0e85e8746710b977a4b82aa9bd047dd577cf3482ed3fb66cf233ac72",
-      "bytes": 72362
+      "sha256": "0f864ad84b1e19400eb445ca3026e8532eb410051b53a36c1636844a873aa41b",
+      "bytes": 72496
     },
     {
       "path": "skills/axiom-integration/skills/app-intents.md",
-      "sha256": "af7a32e9cb9db151e64e903cf46ed29ac434c76fb17827bd16750606017b8416",
-      "bytes": 13634
+      "sha256": "5d1f5a0a51f6d3a6b2ed8f8d9c00d56abcd421f15cd35241acc10cb2bc17747d",
+      "bytes": 15079
     },
     {
       "path": "skills/axiom-integration/skills/app-schemas-ref.md",
@@ -1073,8 +1073,8 @@
     },
     {
       "path": "skills/axiom-integration/skills/siri-ai.md",
-      "sha256": "43ca1b9992320a2fb81bef51b0210e49a6f332fb2a950e696a305b10abe1fdda",
-      "bytes": 29683
+      "sha256": "58d4c030bb84df1b983892e49f5de1b423a5b8afd23c0ddecd01a0646b9324d0",
+      "bytes": 31931
     },
     {
       "path": "skills/axiom-integration/skills/siri-audio-diag.md",
@@ -1093,8 +1093,8 @@
     },
     {
       "path": "skills/axiom-integration/skills/siri-evaluations-ref.md",
-      "sha256": "50113708450e80e03ec028edd4547f700ad355ead4866c8f76d6420dea17efb6",
-      "bytes": 17153
+      "sha256": "bed5774c4ccdc32ffc4bf8964d56aadca50d2e5cc0c434e197c264f59165418f",
+      "bytes": 18853
     },
     {
       "path": "skills/axiom-integration/skills/siri-notes-reminders.md",
@@ -1969,7 +1969,7 @@
   ],
   "totals": {
     "files": 393,
-    "bytes": 8181549
+    "bytes": 8187277
   },
   "excludedMirrors": 32,
   "classes": {

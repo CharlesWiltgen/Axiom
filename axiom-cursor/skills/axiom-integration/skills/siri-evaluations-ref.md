@@ -29,6 +29,8 @@ NOT for: testing `perform()` logic (AppIntentsTesting, `skills/app-intents-ref.m
 | Target type | **A UI Testing Bundle**, with Swift Testing (supported there from Xcode 27.3, release notes 95593221). XCUIAutomation can then launch the app and navigate before Siri runs, and AppIntentsTesting, which SiriEvaluations re-exports, fails with `transportCancelled` outside one. (Apple's Xcode guide says any Swift Testing target; DocC says UI testing target) |
 | `OnScreen` checks | App in the foreground with the entity visible |
 | Turn time | Up to a minute per turn |
+| Run size | A runner killed mid-run loses the whole evaluation's results, not one scenario: measured in 2 of 31 runs on one iPad (iPadOS 27.3 beta), 70–118 s in, right after the Home press that hands off to Siri (`Test crashed with signal kill`, no crash or jetsam report, no `.xcevalresult`). Keep each `@Test`'s loader small so a kill loses less, and rerun a run that produced no result |
+| Daily limit | Siri enforces a daily request limit (whether per device, per account, or for Siri overall is unknown). On one iPad (27.3 beta) it hit after about 180 evaluation turns (manual requests and killed runs not counted): Siri answered "You have reached your daily request limit and can try this request again later.", the report says `Siri was rate limited during Turn N`, and every later scenario was limited. Discard runs with that line; budget turns for the day, and keep a few for manual checks |
 
 ## Test File
 
@@ -119,7 +121,7 @@ struct CometCalSiriTests {
 - **One stage at a time**: write scenarios, build, then stop and offer to run. A run drives real Siri on the developer's device, which must stay unlocked and untouched.
 - **Writing tests never edits App Intents code.** Failures say what to fix; fixing is a separate step.
 - **Keep it small**: a handful of scenarios per intent, prioritizing primary actions, entity parameters, multi-step flows, and destructive intents (to assert they're *not* called). At least one scenario per App Skill.
-- **Name the app** in utterances ("In CometCal, …") unless the scenario deliberately tests app-less routing. One request per turn; paraphrases are separate scenarios, not extra turns.
+- **Name the app** in utterances ("In CometCal, …") unless the scenario deliberately tests app-less routing. An app-less request may get "I can help you with requests like that in <App> from now on. Is that OK?": test it as two turns, `SiriResponse(.contains("<App>"))` then `UserTurn("Yes")`, with `Calls` in the expectation. Measured once: the yes ran the tool, but later app-less requests in the same evaluation went to Calendar (0 of 3), and a second consent scenario got no question. Use one consent scenario per evaluation, as its first scenario. One request per turn; paraphrases are separate scenarios, not extra turns.
 
 ## Scenarios
 
@@ -181,7 +183,7 @@ Each is 1 or 0 per scenario; the summary card is the mean.
 | `.siriResponseAllPass` | `SiriResponse` |
 | `.skillsLoadedAllPass` | `Loads(.required)` |
 
-- `Loads(.required)` is noisy: on device one skill loaded in 20 of 24 turns of its own requests over 8 runs, with misses clustered in one run. Gate CI on intents; track `.skillsLoadedAllPass` over several runs rather than requiring 1.0 from one.
+- `Loads(.required)` is noisy: on device one skill loaded in 20 of 24 turns of its own requests over 8 runs, with two of the four misses in one run. Gate CI on intents; track `.skillsLoadedAllPass` over several runs rather than requiring 1.0 from one.
 - Gate tests on the `…AllPass` metrics, and only for facets the scenarios constrain. A facet with no expectations is ignored; if no scenario constrains it, its card is missing and `aggregateValue(.mean(of:))` returns **`-1`**, so `== 1.0` fails and `>= 0` passes vacuously.
 - `…PercentagePass` metrics have no summary card: their mean reads `-1`. Don't assert on them.
 - `.intentsPass`, `.foundEntitiesPass`, `.onScreenEntitiesPass`, `.siriResponsePass`, `.skillsLoadedPass` are deprecated renames of the `…AllPass` names.
@@ -219,6 +221,7 @@ struct TitleTrimmedEvaluator: EvaluatorProtocol {
 
 | Pattern | Cause | Action |
 |---|---|---|
+| Siri says the app can't do the task in every scenario ("I can't plan meals in <App>") | Build | Check the installed build has `Metadata.appintents/extract.actionsdata`; a successful build can ship none (`skills/app-intents.md`, Check the Built Metadata). Clean-build and reinstall. Check this before Environment: it looks like a device fault |
 | Every scenario fails the same way, fewer turns completed than written, or Spotlight index empty | Environment | Re-check Prerequisites. Don't edit scenarios or the app |
 | Wrong intent, or a parameter holds extra words ("Comet Watch tomorrow at 3PM") | App metadata | Fix the intent/parameter `title`/`description` (`skills/siri-ai.md`). If a parameter is missing, propose it (optional where possible) and flag it to the developer: it changes the intent's shape |
 | Entity not found | App | Index it (`IndexedEntity`). `EnumerableEntityQuery` entities are found only when the request names the app. Relaunch the app after reinstall |

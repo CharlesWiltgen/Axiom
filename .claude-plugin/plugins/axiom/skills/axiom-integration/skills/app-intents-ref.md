@@ -435,7 +435,7 @@ The same entity is found differently by each system surface. Pick mechanisms by 
 | `EntityStringQuery.entities(matching:)` | The picker's search field (unfiltered input) | — | Not used |
 | `EntityPropertyQuery` | Generated Find/filter actions | — | Not used |
 | `EnumerableEntityQuery.allEntities()` | The full list (small sets) | — | Used, but runs app code, and only when the request names the app |
-| `IndexedEntity` + Core Spotlight index | Generated Find action | Search results, opened by an `OpenIntent` | Preferred: lookup without launching the app, found even when the request doesn't name the app |
+| `IndexedEntity` + Core Spotlight index | Generated Find action | Search results, opened by an `OpenIntent` | Preferred: lookup without launching the app. Apple says it's found even when the request doesn't name the app; measured (one app, 27.3 beta), app-less requests never reached the tool (`skills/siri-ai.md`, When Siri can call it) |
 | `IntentValueQuery` | — | — | Resolves values for schemas and use-case groups (`AudioSearch`, a `maps.place`, Video playback) and Visual Intelligence |
 
 Schema intents have their own rule: each parameter entity needs `IndexedEntity`, `UniqueAppEntity`, `TransientAppEntity`, a default `EntityStringQuery`, or an `IntentValueQuery` (`skills/app-schemas-ref.md`). Siri AI tools: `skills/siri-ai.md` (Entity parameters). Query traps: `skills/app-intents.md` (Queries and Parameters).
