@@ -19,6 +19,7 @@ Apple's own coding-assistant guides ship in Xcode as plain markdown: `$(xcode-se
 | "The value is in `.result(value:)`, Siri can use it" | Not unless the return type declares `ReturnsValue<T>` |
 | "My `LocalizedError` already has a nice message" | Siri and Shortcuts ignore it and show a generic failure |
 | "Renaming this enum case is a refactor" | Saved shortcuts store the raw value. Renaming breaks them silently |
+| "The build succeeded, so my intents shipped" | A successful build can export no App Intents metadata (Check the Built Metadata) |
 
 ## Rules at a Glance
 
@@ -166,6 +167,13 @@ enum CabinClass: String, AppEnum {
 - `LongRunningIntent` (`OS27`) hands the work to a system background task with `performBackgroundTask(options:)`, and its `progress` drives a system Live Activity with no UI code. `.requiresGPU` declares GPU need. The `onCancel:` overload needs `CancellableIntent`.
 - `CancellableIntent` (26.4): `withIntentCancellationHandler { … } onCancel: { reason in }`, where the reason is `.timeout` or `.userCancelled`.
 - `UndoableIntent` (26.0): its `undoManager` is `@MainActor`.
+
+## Check the Built Metadata
+
+A successful build can export no App Intents metadata. The system then has none of the app's intents, and Siri declines every request to the app (observed: "Pantry Planner doesn't support that.", "I can't plan meals in Pantry Planner."). Before testing a build, confirm `MyApp.app/Metadata.appintents/extract.actionsdata` exists (macOS: `Contents/Resources/Metadata.appintents/`). Check for the file, not the folder: it can exist holding only `Skills.skillsc`.
+
+- Missing, with `warning: Metadata extraction skipped, no AppIntents.framework dependency found` in the build log: seen in 1 of 11 Debug builds of one app on Xcode 27.3 beta 1 (27C5020n). Swapping that build's linker dependency file into a good build's extraction step reproduced the skip. In that build `__preview.dylib` linked after `MyApp.debug.dylib`, and both write `MyApp_dependency_info.dat`, but a rebuilt preview dependency file didn't reproduce it, so the trigger is unknown. A clean build restored the metadata. For repeated device test builds, `xcodebuild … ENABLE_DEBUG_DYLIB=NO` drops the preview link, and builds with it kept their metadata; keep the check anyway.
+- A failed build with `no AppIntents metadata have been exported` as an error: the metadata step rejected something. Fix that error first.
 
 ## Resources
 

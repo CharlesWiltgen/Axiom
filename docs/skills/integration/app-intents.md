@@ -29,6 +29,7 @@ Use this skill when you're:
 - "Can I rename this AppEnum case?"
 - "Why can't the next Shortcuts step use the value my intent returns?"
 - "How long can a background intent run?"
+- "After I rebuilt my app, Siri says it can't do anything. Why?"
 
 ## What This Skill Provides
 
@@ -39,6 +40,7 @@ Use this skill when you're:
 - **Entities and enums** – Which properties the system can see, identifiers that survive other devices, and enum values that keep saved shortcuts working
 - **Designing intents** – One intent per task, opening content without `UIApplication`, and localization
 - **Long-running work** – The background time limit, `LongRunningIntent`, cancellation, and undo
+- **Checking the build** – Confirming a successful build actually shipped its App Intents metadata, and what to do when it didn't
 
 ## Related
 

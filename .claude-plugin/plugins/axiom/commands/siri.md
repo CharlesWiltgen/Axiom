@@ -13,7 +13,7 @@ Runs the loop Apple's tooling expects for the Siri AI Developer Preview (Xcode 2
 
 1. **Toolchain.** Confirm `xcrun -f sirimetadataanalyzer` resolves. If it doesn't, the selected developer directory is an Xcode older than 27.3 or the Command Line Tools (`xcode-select -p`): say so and stop (only the source audit in step 2 applies).
 2. **Source audit.** Launch the `siri-ai-auditor` agent (or follow `axiom-integration (skills/siri-ai-auditor.md)` inline). Fix CRITICAL findings before building; a cold-launch dependency crash or a generable-entity error makes later steps meaningless.
-3. **Build.** Build the app scheme (argument, or the app target's scheme) following `axiom-build`'s "Capture Build and Test Diagnostics": run the xcodebuild inventory first and build through axbuild. App Intents metadata errors come from the `ExtractAppIntentsMetadata` phase and halt export (`no AppIntents metadata have been exported`); fix them before step 4, because the analyzer would read the previous build.
+3. **Build.** Build the app scheme (argument, or the app target's scheme) following `axiom-build`'s "Capture Build and Test Diagnostics": run the xcodebuild inventory first and build through axbuild. App Intents metadata errors come from the `ExtractAppIntentsMetadata` phase and halt export (`no AppIntents metadata have been exported`); fix them before step 4, because the analyzer would read the previous build. Then confirm the product contains `Metadata.appintents/extract.actionsdata`: a successful build can ship none (`warning: Metadata extraction skipped` in the log; clean-build, per `axiom-integration (skills/app-intents.md)`, Check the Built Metadata).
 4. **Analyze.** Find the product with `xcodebuild -showBuildSettings -scheme <scheme>` (`BUILT_PRODUCTS_DIR`, `FULL_PRODUCT_NAME`), then run `xcrun sirimetadataanalyzer <App.app> --format json`. Exit `0` = no errors, `2` = errors, `1` = couldn't run. Map each finding to its fix:
 
    | Rule | Fix in `skills/siri-ai.md` |
@@ -23,6 +23,7 @@ Runs the loop Apple's tooling expects for the Siri AI Developer Preview (Xcode 2
    | `SMA203` entity property has no description | Entity Properties (fallback if the entity ships before 27.3) |
    | `SMA601` entity exposes no properties | Entity Properties; `skills/app-intents.md` (visibility) |
    | `SMA701` tool matches a system schema | Schema intents: adopt the schema or make the text app-specific |
+   | Exit `1`, `error: No 'Metadata.appintents/extract.actionsdata' found under '<App>.app'` | The build exported no metadata: step 3's check |
    | anything else | Follow the finding's message; don't invent API to satisfy it |
 
    Run once per shipping language with `--language <code>`. Suppress a finding with `--config` only for behavior the developer chose to keep.
