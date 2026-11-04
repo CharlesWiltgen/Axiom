@@ -12,7 +12,7 @@ license: MIT
 > **Auditors are skills here.** Where this router says "Launch `some-auditor` agent", invoke the
 > matching Codex skill instead — same procedure, no Claude Code agent required.
 >
-> Available: `axiom-audit-iap`, `axiom-scan-security-privacy`.
+> Available: `axiom-audit-iap`, `axiom-audit-siri-ai`, `axiom-scan-security-privacy`.
 >
 > The ones that shell out — builds, tests, simulators, crash symbolication — need shell access to run.
 <!-- AXIOM_AUDITOR_INLINE_END -->
@@ -21,7 +21,10 @@ license: MIT
 
 | Symptom / Task | Reference |
 |----------------|-----------|
-| Siri, App Intents, entity queries (audio apps → `skills/siri-audio.md`) | See `skills/app-intents-ref.md` |
+| App Intents API lookup — a specific type, protocol, or modifier (writing or reviewing intents → `skills/app-intents.md` first; audio apps → `skills/siri-audio.md`) | See `skills/app-intents-ref.md` |
+| Writing or reviewing ANY App Intent, entity, or query — cold-launch `@Dependency` crash, `perform()` running twice, errors Siri shows as generic, results the system can't see, donations, `AppEnum` raw values, stable entity ids, long-running intents | See `skills/app-intents.md` |
+| Siri AI or Apple Intelligence calling custom actions — `@AppIntent(.tool)`, `ToolIntent`, `@AppEntity(.generable)`, property `description:`/`visibility:`, card snippets, `Skills.skillsbundle` App Skills, `sirimetadataanalyzer`, "make my app work with Siri AI" (27.3) | See `skills/siri-ai.md` |
+| Testing how Siri uses the app — SiriEvaluations, `SiriScenario`, `UserTurn`, `Calls`/`Finds`/`Loads` expectations, Siri evaluation reports (27.3) | See `skills/siri-evaluations-ref.md` |
 | Siri playback in an audio app ("play X in MyApp"), `.audio.*` schemas, `AudioSearch`, `INPlayMediaIntent` | See `skills/siri-audio.md` |
 | Audio schema members, parameters, enum cases, build errors; SiriKit media setup and authorization | See `skills/siri-audio-ref.md` |
 | Any schema domain's required parameters, properties, enum cases, return types, deprecated schemas; `Missing required parameter`/`property` and other schema build errors | See `skills/app-schemas-ref.md` |
@@ -79,7 +82,10 @@ digraph integration {
     what [label="Which system feature?" shape=diamond];
 
     start -> what;
-    what -> "skills/app-intents-ref.md" [label="Siri / App Intents"];
+    what -> "skills/app-intents.md" [label="writing or reviewing\nApp Intents"];
+    what -> "skills/app-intents-ref.md" [label="App Intents\nAPI lookup"];
+    what -> "skills/siri-ai.md" [label="Siri AI custom\nactions (27.3)"];
+    what -> "skills/siri-evaluations-ref.md" [label="test how Siri\nuses the app"];
     what -> "skills/siri-audio.md" [label="Siri playback in\nan audio app"];
     what -> "skills/app-schemas-ref.md" [label="schema domain\nshape / build error"];
     what -> "skills/siri-notes-reminders.md" [label="Siri in a notes /\nlist / to-do app"];
@@ -104,10 +110,11 @@ digraph integration {
 }
 ```
 
-1. Siri / App Intents / entity queries? → `skills/app-intents-ref.md`
+1. Siri / App Intents / entity queries? → `skills/app-intents.md` (traps every intent must pass), then `skills/app-intents-ref.md` (API)
 1a. Audio app and Siri — "play X in MyApp", Audio schema domain, `AudioSearch`, SiriKit `INPlayMediaIntent`? → `skills/siri-audio.md`; exact shapes `skills/siri-audio-ref.md`; Siri won't play `skills/siri-audio-diag.md`
 1b. Adopting any `@AppIntent(schema:)`/`@AppEntity(schema:)`/`@AppEnum(schema:)`, or a schema build error? → `skills/app-schemas-ref.md` (every domain's required shape; migrating SiriKit Lists/Notes → 1c)
 1c. Notes/lists/to-do app and Siri, or SiriKit Lists/Notes deprecation warnings? → `skills/siri-notes-reminders.md`
+1d. Siri AI (27.3) calling the app's own actions — `@AppIntent(.tool)` (custom or Shortcuts-specific schema intents), `@AppEntity(.generable)`, property descriptions/visibility, card snippets, App Skills (`Skills.skillsbundle`), `sirimetadataanalyzer`, "make my app work with Siri AI / Apple Intelligence"? → `skills/siri-ai.md`; testing it with SiriEvaluations → `skills/siri-evaluations-ref.md`
 2. App Shortcuts / phrases? → `skills/app-shortcuts-ref.md`
 3. App discoverability / Spotlight strategy? → `skills/app-discoverability.md`, `skills/core-spotlight-ref.md`
 3a. LLM search over your app's index (SpotlightSearchTool, LanguageModelSession tool-calling)? → `skills/core-spotlight-ref.md`
@@ -213,7 +220,16 @@ digraph integration {
 ## Example Invocations
 
 User: "How do I add Siri support?"
-→ Read: `skills/app-intents-ref.md`
+→ Read: `skills/app-intents.md`, then `skills/app-intents-ref.md`; on 27.3+ also `skills/siri-ai.md`
+
+User: "My intent crashes when Siri runs it" / "Why does Siri say something went wrong?"
+→ Read: `skills/app-intents.md`
+
+User: "Make my app work with Siri AI" / "Siri never calls my Add to Cart intent" / "How do I write an App Skill for Siri?"
+→ Read: `skills/siri-ai.md`
+
+User: "Write a Siri evaluation for my app" / "Why did this Siri scenario fail?"
+→ Read: `skills/siri-evaluations-ref.md`
 
 User: "My widget isn't updating"
 → Read: `skills/extensions-widgets.md`

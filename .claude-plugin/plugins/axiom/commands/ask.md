@@ -4,7 +4,7 @@ argument-hint: "[your iOS development question]"
 disable-model-invocation: true
 ---
 
-You are an iOS development assistant with access to 26 specialized Axiom skills and 43 autonomous agents.
+You are an iOS development assistant with access to 26 specialized Axiom skills and 44 autonomous agents.
 
 ## Skills Reference
 
@@ -86,6 +86,7 @@ When user asks to "audit", "review", "scan", or "check" code, launch the appropr
 - **screenshot-validator** — App Store screenshot validation
 - **security-privacy-scanner** — security review
 - **simulator-tester** — simulator testing
+- **siri-ai-auditor** — Siri AI readiness
 - **spm-conflict-resolver** — SPM resolution failures
 - **spritekit-auditor** — the user wants to audit SpriteKit game code for common issues
 - **storage-auditor** — file storage issues

@@ -35,7 +35,7 @@ For static/timeline widgets and Control Center controls, use `skills/extensions-
 | Frequent updates (`NSSupportsLiveActivitiesFrequentUpdates`) | iOS 16.2+ |
 | Apple Watch Smart Stack surfacing | watchOS 11 (paired with iOS 18) |
 | AlarmKit-backed alarms/timers | iOS 26+ |
-| Native Mac Live Activities (started by a Mac app) | Announced for macOS 27; not in the macOS 27.2 SDK |
+| Native Mac Live Activities (started by a Mac app) | macOS 27.3, Mac Catalyst 27.3 (Xcode 27.3 SDK) |
 
 Dynamic Island is hardware-specific (iPhone 14 Pro and later); Live Activities still render on the Lock Screen on every supported device. `NSSupportsLiveActivities` must be `YES` in the app target's Info.plist — without it, nothing starts. visionOS has no Live Activities (no ActivityKit in its SDK); a compatible iPad/iPhone app running there gets a failed request.
 
@@ -153,7 +153,19 @@ Adapt layout with `@Environment(\.activityFamily)` and simplify for Always On Di
 
 ### Native Mac Live Activities
 
-From tech talk 111467. Mac apps can start Live Activities themselves, not just mirror an iPhone's. **ActivityKit is marked unavailable on macOS and Mac Catalyst in the macOS 27.2 SDK.** The API is real; it isn't in the installed SDK yet. Until an SDK ships it, keep the code out of Mac builds at compile time with `#if os(iOS) && !targetEnvironment(macCatalyst)` (`os(iOS)` alone is true under Mac Catalyst, where ActivityKit is unavailable too). `#if canImport(ActivityKit)` is true on the Mac and excludes nothing, and `#available` can't lift an `unavailable` marking.
+From tech talk 111467. Mac apps can start Live Activities themselves, not just mirror an iPhone's. **The Xcode 27.3 SDK ships it**: ActivityKit's current API (`Activity`, `ActivityAttributes`, `ActivityContent`, `ActivityAuthorizationInfo`, push tokens and channels) and WidgetKit's `ActivityConfiguration`, `DynamicIsland` and `ActivityViewContext` are now `macOS 27.3, macCatalyst 27.3`. The deprecated iOS 16.1 `contentState:` API (`request(attributes:contentState:pushType:)`, `update(using:)`, `contentState`) stays unavailable on the Mac. With the 27.2 SDK the whole framework is unavailable there, so keep `#if os(iOS) && !targetEnvironment(macCatalyst)` around the code only while you still build with Xcode 27.2.
+
+Gate shared code with all three platforms. Mac Catalyst needs its own `macCatalyst 27.3` entry, or a Catalyst build with a deployment target below 27.3 fails with "only available in Mac Catalyst 27.3 or newer":
+
+```swift
+@available(iOS 16.2, macOS 27.3, macCatalyst 27.3, *)
+func startDelivery(_ attributes: PizzaDeliveryAttributes,
+                   _ initial: PizzaDeliveryAttributes.ContentState) throws -> Activity<PizzaDeliveryAttributes>? {
+    guard ActivityAuthorizationInfo().areActivitiesEnabled else { return nil }
+    return try Activity.request(attributes: attributes,
+                                content: ActivityContent(state: initial, staleDate: nil))
+}
+```
 
 - **Same code.** A universal app's existing Live Activity runs on the Mac unchanged; a Mac-only app adopts the same `ActivityAttributes` / `ActivityConfiguration` / `Activity` API.
 - **Where it shows.** The Dynamic Island along the top edge of a Mac with Dynamic Island; the menu bar on other Macs and displays. It mixes with the system's own (timers, Now Playing, calls).

@@ -71,6 +71,7 @@ export const AUDITOR_HOMES: Record<string, string> = {
   "networking-auditor": "axiom-networking",
   "resize-auditor": "axiom-uikit",
   "security-privacy-scanner": "axiom-security",
+  "siri-ai-auditor": "axiom-integration",
   "spritekit-auditor": "axiom-games",
   "storage-auditor": "axiom-data",
   "swift-performance-analyzer": "axiom-performance",

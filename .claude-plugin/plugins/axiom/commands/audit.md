@@ -5,7 +5,7 @@ argument-hint: "[area]"
 # scripts/audit-areas.json by scripts/build-audit-areas.ts; do not hand-edit.
 # `argument-hint` above is the real user-facing hint.
 # AXIOM_AUDIT_ARGUMENT_BEGIN
-argument: "area (optional) - Which audit to run: all, build, codable, core-data, energy, memory, modernization, swift-performance, swift-simplify, test-failures, testing, concurrency, liquid-glass, resize, swiftui-architecture, swiftui-layout, swiftui-nav, swiftui-performance, textkit, touch, ux-flow, camera, foundation-models, iap, networking, database-schema, grdb-performance, icloud, storage, swiftdata, accessibility, spritekit, screenshots, security"
+argument: "area (optional) - Which audit to run: all, build, codable, core-data, energy, memory, modernization, swift-performance, swift-simplify, test-failures, testing, concurrency, liquid-glass, resize, swiftui-architecture, swiftui-layout, swiftui-nav, swiftui-performance, textkit, touch, ux-flow, camera, foundation-models, iap, networking, siri-ai, database-schema, grdb-performance, icloud, storage, swiftdata, accessibility, spritekit, screenshots, security"
 # AXIOM_AUDIT_ARGUMENT_END
 disable-model-invocation: true
 ---
@@ -46,6 +46,7 @@ If no area specified → analyze project and suggest relevant audits
 | foundation-models | foundation-models-auditor | Missing availability checks, concurrent requests on one session, manual JSON parsing, guardrail handling |
 | iap | iap-auditor | Missing transaction.finish(), weak receipt validation, missing restore, subscription status tracking, StoreKit test config gaps |
 | networking | networking-auditor | Deprecated APIs (SCNetworkReachability), anti-patterns |
+| siri-ai | siri-ai-auditor | Search tools, tool metadata Siri can't use, invisible entity properties, cold-launch dependency crashes, undeclared results, App Skill file errors |
 | database-schema | database-schema-auditor | Unsafe ALTER TABLE, DROP operations, missing idempotency, FK misuse, transaction safety |
 | grdb-performance | grdb-performance-auditor | Raw SQL string interpolation, missing FK indexes, missing PRAGMA optimize, app-group WAL and suspension defense, INSERT OR REPLACE misused as upsert, observation on WITHOUT ROWID tables |
 | icloud | icloud-auditor | iCloud integration issues, entitlements |

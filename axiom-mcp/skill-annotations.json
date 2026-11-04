@@ -1263,6 +1263,16 @@
       "axiom-integration"
     ]
   },
+  "axiom-integration--app-intents": {
+    "category": "integration",
+    "tags": [
+      "something-went-wrong"
+    ],
+    "related": [
+      "axiom-integration",
+      "axiom-integration--app-intents-ref"
+    ]
+  },
   "axiom-integration--app-intents-ref": {
     "category": "integration",
     "tags": [
@@ -1660,6 +1670,12 @@
       "axiom-integration--shareplay"
     ]
   },
+  "axiom-integration--siri-ai": {
+    "category": "integration",
+    "related": [
+      "axiom-integration"
+    ]
+  },
   "axiom-integration--siri-audio": {
     "category": "integration",
     "tags": [
@@ -1715,6 +1731,15 @@
       "axiom-integration--siri-audio",
       "axiom-integration--siri-audio-diag",
       "axiom-integration--app-schemas-ref"
+    ]
+  },
+  "axiom-integration--siri-evaluations-ref": {
+    "category": "integration",
+    "tags": [
+      "sirievaluations"
+    ],
+    "related": [
+      "axiom-integration"
     ]
   },
   "axiom-integration--siri-notes-reminders": {

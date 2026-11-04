@@ -30,6 +30,7 @@ This routes your question to the right Axiom skill or agent automatically.
 | [**`/axiom:profile`**](./debugging/profile) | Automated performance profiling via xctrace CLI (CPU, memory, leaks, SwiftUI) | Trace recording, export, and analysis summary |
 | [**`/axiom:run-tests`**](./testing/run-tests) | Run XCUITests and parse .xcresult bundles for structured results | Test results with failure analysis and attachment export |
 | [**`/axiom:screenshot`**](./testing/screenshot) | Quick screenshot capture from booted iOS Simulator | Screenshot file path + visual analysis |
+| [**`/axiom:siri`**](./integration/siri) | Siri AI readiness: source audit, build, `sirimetadataanalyzer`, App Skills | Findings mapped to fixes, then SiriEvaluations next steps |
 | [**`/axiom:status`**](./utility/status) | Environment health, zombie processes, Derived Data size, simulator status, project stats | Dashboard with quick health metrics |
 | [**`/axiom:test-simulator`**](./testing/test-simulator) | Automated simulator testing with visual verification (screenshots, location, push, permissions, logs) | Test results with evidence (screenshots, logs) |
 
@@ -86,6 +87,9 @@ Commands output results with `file:line` references and link to relevant skills 
 - `/axiom:console` – Capture simulator console output (print + os_log) as structured JSON
 - `/axiom:profile` – Automated performance profiling via xctrace CLI
 
+### Integration
+- `/axiom:siri` – Siri AI readiness loop: audit, build, analyze metadata, check App Skills
+
 ### Testing
 - `/axiom:run-tests` – Run XCUITests and parse results
 - `/axiom:screenshot` – Quick simulator screenshot
@@ -110,7 +114,7 @@ The `/axiom:audit` command supports these areas:
 - `concurrency` – Swift 6 strict concurrency
 - `energy` – Battery drain, timer abuse, polling
 - `memory` – Memory leak detection
-- `security` / `privacy` — Hardcoded credentials, Privacy Manifests, ATS
+- `security` / `privacy` – Hardcoded credentials, Privacy Manifests, ATS
 - `swift-performance` – ARC and allocation issues
 - `testing` – Flaky tests, missing assertions, Swift Testing migration
 
@@ -124,7 +128,9 @@ The `/axiom:audit` command supports these areas:
 ### Integration
 - `camera` – Camera capture issues, deprecated APIs
 - `foundation-models` – Foundation Models availability, session lifecycle
+- `iap` – Missing `transaction.finish()`, weak receipt validation, missing restore, subscription tracking
 - `networking` – Deprecated networking APIs
+- `siri-ai` – Siri AI readiness: tools, entities, dependencies, results, App Skills
 - `spritekit` – Physics bitmask issues, draw call waste
 
 ### Shipping

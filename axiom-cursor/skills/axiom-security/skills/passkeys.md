@@ -355,6 +355,7 @@ try await manager.consumeOneTimeCode(code)
 
 - `ASVerificationCode` carries the `code` string, `timestamp`, optional `domain`, and `embeddedDomains` — match against the site/app being filled before offering
 - `VerificationError.Code`: `.failed`, `.userPermissionDenied`, and `.appIsNotEnabledCredentialProvider` — the app must be enabled as a credential provider in Settings before codes flow
+- **From 27.3 (iOS, macOS, visionOS):** before a sign-in or password change that will need emailed codes, call `presentAccountsToSetUp(_:reason:anchor:)` with `AccountRecordForSetUp(contactMethod: .email(address), user:, serviceIdentifier:)` and a `SetUpReason` (`.signIn`, `.passwordChange`). If an account's address isn't set up in Mail on the device, the system explains that adding it lets the device receive its codes; it shows nothing when every address is already set up. The returned `Bool` says whether to proceed with the operation. The SwiftUI manager's version drops `anchor:`.
 
 ## Migration Strategy
 

@@ -724,7 +724,7 @@ swift test --maximum-repetitions 10 --repeat-until pass
 
 ### Keep Using XCTest For
 
-- **UI tests** (XCUIApplication)
+- **UI tests on Xcode 27.2 and earlier** (XCUIApplication). From Xcode 27.3, Swift Testing supports UI tests with `XCUIAutomation` (release notes 95593221): `import Testing` and `import XCTest` in a UI Testing Bundle, mark the suite `@MainActor`, and call `XCUIApplication()` from `@Test` functions
 - **Performance tests** (XCTMetric)
 - **Objective-C tests**
 

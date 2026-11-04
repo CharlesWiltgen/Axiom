@@ -213,6 +213,8 @@ let status = manager.status(forExtensionWithIdentifier: "com.example.lookup")  /
 
 Backed by a Live Caller ID Lookup app extension (`LiveCallerIDLookupExtensionContext`, `LiveCallerIDLookupProtocol`). Uses Private Information Retrieval so your server can't see who is being looked up. Register the Live Caller ID configuration on the Identity & Trust page of the CloudKit Console.
 
+**Server changes in iOS 27.3** (release notes): the system pre-uploads a pool of evaluation keys and, when it runs out, sends a fresh one inline with the query; when a query carries an evaluation key, your PIR service must use it directly instead of looking one up by user identifier (187726157). The PIR configuration's shard count must be a power of two (256, 512, 1024, …); the system rejects any other count, and a power-of-two configuration keeps working on earlier releases (191651833).
+
 ## Message filtering — IdentityLookup
 
 ```swift

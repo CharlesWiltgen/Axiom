@@ -96,6 +96,7 @@ Run these only when their framework signals are present in the codebase:
 | `Timer.scheduledTimer` or `CLLocationManager` | energy-auditor |
 | `AVCaptureSession` | camera-auditor |
 | `LanguageModelSession` or `@Generable` | foundation-models-auditor |
+| `@AppIntent(.tool` or `@AppIntent([.tool` or `ToolIntent`, `@Dependency` in a file that also contains `AppIntent`, or a `.skillsbundle` exists | siri-ai-auditor |
 | `import SpriteKit` | spritekit-auditor |
 | `NWConnection` or `NetworkConnection` | networking-auditor |
 | `NSUbiquitousKeyValueStore` or `CKContainer` or `CloudKit` | icloud-auditor |

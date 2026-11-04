@@ -119,7 +119,7 @@ CI order is unchanged at the front: simctl or xcodebuild boots the sim → devic
 | `device info displays` | works (verified) | bounds, pointScale, nativeSize, `framebufferMaskIdentifier` (exact JSON keys) |
 | `device capture screenshot` / `screen-record` | works (verified) | PNG / H.264 `.mp4` capture, sim or device — see Screen capture below |
 | `device orientation set` / `get` (also `rotate`) | works (verified) — **except iPhone Duo**, see Rotating a simulator | rotate a sim headlessly; simctl has no rotate verb |
-| `device motion hinge-angle` | works, read-only | streams the hinge angle (0° closed, 180° open) for 60 s by default; nothing in devicectl or simctl sets it |
+| `device motion hinge-angle` | works, read-only | streams the hinge angle (0° closed, 180° open) for 60 s by default; nothing in devicectl or simctl sets it. From Xcode 27.3 a UI test can set it: `XCUIDevice.shared.hinge?.angle` (radians) — axiom-swiftui (skills/iphone-duo.md) |
 | `device settings biometrics [--enable\|--disable]` | works (verified) | enroll / unenroll Face ID / Touch ID |
 | `device simulate biometrics --success\|--failure` | works (verified) | drive a match / no-match |
 | `device settings appearance --mode light\|dark` | works (verified) | force Dark/Light; also `--look-and-feel clear\|tinted`, text size, contrast |

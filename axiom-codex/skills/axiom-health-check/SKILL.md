@@ -85,6 +85,7 @@ Run these only when their framework signals are present in the codebase:
 | `Timer.scheduledTimer` or `CLLocationManager` | energy-auditor |
 | `AVCaptureSession` | camera-auditor |
 | `LanguageModelSession` or `@Generable` | foundation-models-auditor |
+| `@AppIntent(.tool` or `@AppIntent([.tool` or `ToolIntent`, `@Dependency` in a file that also contains `AppIntent`, or a `.skillsbundle` exists | siri-ai-auditor |
 | `import SpriteKit` | spritekit-auditor |
 | `NWConnection` or `NetworkConnection` | networking-auditor |
 | `NSUbiquitousKeyValueStore` or `CKContainer` or `CloudKit` | icloud-auditor |
@@ -130,6 +131,7 @@ Auditor-to-skill mapping:
 - `resize-auditor` → `axiom-audit-resize` (`../axiom-audit-resize/SKILL.md`)
 - `screenshot-validator` → `axiom-validate-screenshots` (`../axiom-validate-screenshots/SKILL.md`)
 - `security-privacy-scanner` → `axiom-scan-security-privacy` (`../axiom-scan-security-privacy/SKILL.md`)
+- `siri-ai-auditor` → `axiom-audit-siri-ai` (`../axiom-audit-siri-ai/SKILL.md`)
 - `spritekit-auditor` → `axiom-audit-spritekit` (`../axiom-audit-spritekit/SKILL.md`)
 - `storage-auditor` → `axiom-audit-storage` (`../axiom-audit-storage/SKILL.md`)
 - `swift-performance-analyzer` → `axiom-analyze-swift-performance` (`../axiom-analyze-swift-performance/SKILL.md`)

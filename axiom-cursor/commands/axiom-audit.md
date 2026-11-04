@@ -42,6 +42,7 @@ If no area specified → analyze project and suggest relevant audits
 | foundation-models | foundation-models-auditor | Missing availability checks, concurrent requests on one session, manual JSON parsing, guardrail handling |
 | iap | iap-auditor | Missing transaction.finish(), weak receipt validation, missing restore, subscription status tracking, StoreKit test config gaps |
 | networking | networking-auditor | Deprecated APIs (SCNetworkReachability), anti-patterns |
+| siri-ai | siri-ai-auditor | Search tools, tool metadata Siri can't use, invisible entity properties, cold-launch dependency crashes, undeclared results, App Skill file errors |
 | database-schema | database-schema-auditor | Unsafe ALTER TABLE, DROP operations, missing idempotency, FK misuse, transaction safety |
 | grdb-performance | grdb-performance-auditor | Raw SQL string interpolation, missing FK indexes, missing PRAGMA optimize, app-group WAL and suspension defense, INSERT OR REPLACE misused as upsert, observation on WITHOUT ROWID tables |
 | icloud | icloud-auditor | iCloud integration issues, entitlements |

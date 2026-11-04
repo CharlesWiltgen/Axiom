@@ -285,6 +285,30 @@ NavigationSplitView {
 
 Without `.toolbarRole(.editor)`, the items appear in the leftmost visible column — usually wrong for editor apps.
 
+### Separate bars for stacked NavigationStacks — from iOS 27.3
+
+A `NavigationStack` inside a `NavigationSplitView` column lets its toolbar content flow up into the split view's bar, so two stacked stacks in one detail column share one toolbar. `.toolbarContainerBehavior(.local)` makes a container render its children's toolbar content as its own distinct bar. Applied to the split view itself, it applies to each column's stack. The modifier and `.automatic` exist on every platform from 27.3, but `.local` is iOS only (UIKit's equivalent is `UINavigationController.barContainerBehavior = .local`).
+
+```swift
+@available(iOS 27.3, *)
+struct StackedDetail: View {
+    var body: some View {
+        VStack {
+            NavigationStack {
+                Text("Top")
+                    .toolbar { ToolbarItem(placement: .bottomBar) { Button("Undo") {} } }
+            }
+            .toolbarContainerBehavior(.local)
+            NavigationStack {
+                Text("Bottom")
+                    .toolbar { ToolbarItem(placement: .bottomBar) { Button("Favorite") {} } }
+            }
+            .toolbarContainerBehavior(.local)
+        }
+    }
+}
+```
+
 ---
 
 ## Pattern 8: Visibility, Background, Color Scheme

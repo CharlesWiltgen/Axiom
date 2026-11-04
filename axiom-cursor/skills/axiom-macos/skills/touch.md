@@ -40,7 +40,7 @@ AppKit uses gesture recognizers for both mouse and touch from macOS 27 on, and *
 |---|---|---|
 | Standard AppKit controls, tables, collections, split views, tabs, scroll views | Touch-native, no changes | Test it |
 | SwiftUI gestures, Mac Catalyst gestures | Work as-is | Filter by input kind only if you must (below) |
-| `mouseDown` overrides and tracking loops | AppKit emulates the mouse from a single-finger tap or drag; no multi-finger gestures or individual touches | Replace with recognizers, or add a touch-only recognizer beside the loop |
+| `mouseDown` overrides and tracking loops | AppKit emulates the mouse from a single-finger tap or drag (plus long-press, pinch, and rotate when the view overrides the right-mouse/menu/magnify/rotate methods); no individual touches | Replace with recognizers, or add a touch-only recognizer beside the loop |
 | Subclass of `NSButton`, `NSSlider`, or another control that overrides `mouseDown`/`mouseDragged`/`mouseUp` | Falls back to a tracking loop | Control events (Recipe 1) |
 | Container (`NSTableView`, `NSCollectionView`, `NSOutlineView`, `NSBrowser`) starting a drag from `mouseDragged` | Falls back to a tracking loop | The container's dragging data-source/delegate methods |
 | Custom `NSGestureRecognizer` subclass | Fine, if it always reaches a terminal state | Recipe 6 |
@@ -52,7 +52,7 @@ From Apple's "Design for touch on Mac" (tech talk 111456).
 
 **The UI does not change.** Same resolution, window sizes, text and control sizes on a touch Mac as on any other. Don't redesign for touch, and don't branch layout on touch capability.
 
-**The touch target is 36 pt** — the same physical size as 44 pt on iOS — and it's invisible: framework controls got the larger target without changing size, so no relayout is needed. For non-Apple or custom controls, enlarge the hit area, not the control (Recipe 4). Small and mini controls stay valid in dense apps; every touch must still produce a response.
+**Touch target size — Apple's two sources disagree.** Tech talk 111456: 36 pt, the same physical size as 44 pt on iOS, and invisible: framework controls got the larger target without changing size, so no relayout is needed. Xcode 27.3's bundled touch guide: AppKit grows small enabled controls to a **24 × 24 pt** floor per dimension, picks among nearby views within a **16 pt** forgiveness radius, and treats 44 × 44 pt as the HIG convention; thin dividers and splitters get a 10–20 pt touch-only band per side. The two Apple sources disagree, so don't assume a framework control's target is 36 pt. For non-Apple or custom controls, enlarge the hit area, not the control (Recipe 4). Small and mini controls stay valid in dense apps; every touch must still produce a response.
 
 **Control sizes**: medium remains the default in inspectors; toolbars use extra-large by default. Don't use large or extra-large outside the toolbar, except sparingly for a key moment or in content-consumption apps (the TV app's play button). Use `Form` styling for list- and settings-style views — rows measure 36 pt by default.
 
@@ -121,6 +121,21 @@ if let screen = NSScreen.main, screen.touchCapabilities.contains(.multiTouch) {
     // Offer the touch-only affordance
 }
 ```
+
+### Mouse Emulation Rules
+
+From the touch guide bundled with Xcode 27.3 (`macos-touch-gestures`, in Xcode's agent resources). They decide whether existing `mouseDown` code runs for touch at all:
+
+- Emulation applies when the view's class or its view controller overrides `mouseDown:`, `mouseDragged:`, or `mouseUp:` — **even an empty override** — and the view has no recognizer of its own that accepts direct touch. Right-mouse, menu, magnify, and rotate overrides add long-press, pinch, and rotate emulation the same way. Removing an override, even an empty one, changes routing; inside a table or outline view it can change double-click and disclosure behavior, so test single click, double click, and disclosure after deleting one.
+- A tap arrives as mouse-down plus mouse-up **after the finger lifts**, and emulated events arrive after the touch's recognizers finish. A "touch is active" flag set on one path is stale when the other reads it; decide touch-specific behavior from the recognizer or event you are handling.
+- A recognizer that accepts direct touch, **added to the view itself**, turns off that view's tap and drag emulation, so its `mouseDown` stops running for touch.
+- A view controller or other responder above the view that overrides the same mouse methods still gets the touch as mouse events after you remove the view's own. Migrate it too.
+- Scroll-wheel overrides don't trigger emulation, and `NSScrollView` touch scrolling bypasses `scrollWheel(_:)` entirely.
+- On macOS 27 a recognizer created in code accepts direct touch by default. Set `allowedTouchTypes` explicitly on every recognizer, and `[]` on one meant only for the mouse. A touch-only recognizer that never fires usually has (in Objective-C) `NSTouchTypeDirect`, the enum, where `NSTouchTypeMaskDirect` belongs, a view whose `allowedTouchTypes` was cleared, or a delegate implementing only `shouldAttemptToRecognizeWith`.
+- A double-click recognizer added to a container can swallow the first click of the table or child `NSButton` beneath it. Set `delaysPrimaryMouseButtonEvents = false` on it, then test the child, the selection, and the double click.
+- A view with mouse overrides already gets tap, double-tap, and long-press through emulation. That is a working baseline, not a defect; recognizers add touch-down feedback, multi-finger input, and defined relationships with scrolling.
+
+Starting values from the same guide, to retune on a touch display: drag after a **0.325 s** hold on a surface that scrolls, with about 10 pt of movement tolerance (12 pt over selected text); context-menu long press **0.725 s**; hand initial movement more than 60° off a nested scroller's axis to the outer scroller.
 
 ## Recipes
 
@@ -197,7 +212,7 @@ Leave `buttonMask` at its default and a mouse *drag* begins the recognizer inste
 
 ### 4. Enlarge Small Targets for Touch Only
 
-Expand the hit rect to 36 pt per axis on the touch path; the mouse keeps its precision and the layout doesn't change. Most useful for resize grips and grab handles on selected canvas objects.
+Expand the hit rect on the touch path (36 pt per axis per tech talk 111456; Xcode's guide uses a 24 pt floor and treats 44 pt as the HIG convention); the mouse keeps its precision and the layout doesn't change. Most useful for resize grips and grab handles on selected canvas objects.
 
 ```swift
 let minimumTouchTarget: CGFloat = 36
@@ -300,11 +315,26 @@ controlRecognizer.isCancellableByScrollGesture = true
 
 #### Disabling System Gestures
 
-From tech talk 111468 (8:25). **None of these compiles against the macOS 27.2 SDK in Xcode 27.2**, for Mac or Mac Catalyst builds. Take the spellings as given, gate on the release that ships them, and don't invent parameters:
+From tech talk 111468 (8:25). All three ship in the Xcode 27.3 SDK at **macOS 27.3 / Mac Catalyst 27.3**; none compiles with Xcode 27.2.
 
-- AppKit: `NSWindow.disablesDirectTouchSystemGestures` (settable `Bool`)
-- Mac Catalyst: override `UIViewController.prefersDirectTouchSystemGesturesDisabled`
-- SwiftUI: `directTouchSystemGesturesDisabled(_ prefersDisabled: Bool = true)`. The iOS 27.2 SDK's SwiftUI interface declares it `@available(macOS 27.2, macCatalyst 27.2, *)` (unavailable on iOS, tvOS, watchOS, and visionOS), but the macOS 27.2 SDK doesn't include it.
+- AppKit: `NSWindow.disablesDirectTouchSystemGestures` (settable `Bool`, default `false`) — applies while that window is visible
+- Mac Catalyst: override `UIViewController.prefersDirectTouchSystemGesturesDisabled` and call `setNeedsUpdateOfDirectTouchSystemGesturesDisabled()` when it changes; a container forwards the question with `childForDirectTouchSystemGesturesDisabled`. It is a preference the system may not honor.
+- SwiftUI: `directTouchSystemGesturesDisabled(_ prefersDisabled: Bool = true)`, `@available(macOS 27.3, macCatalyst 27.3, *)` and unavailable on iOS, tvOS, watchOS, and visionOS
+
+```swift
+@available(macOS 27.3, *)
+func burnersShown(_ window: NSWindow, _ shown: Bool) {
+    window.disablesDirectTouchSystemGestures = shown
+}
+
+@available(macOS 27.3, *)
+struct StoveControls: View {
+    var burnersOn: Bool
+    var body: some View {
+        Text("Burners").directTouchSystemGesturesDisabled(burnersOn)
+    }
+}
+```
 
 Use them only when an interaction the system gestures block is critical — the talk's game disables them only while the burners are on screen, because three fingers on three sliders would otherwise open Mission Control mid-crisis.
 
@@ -374,7 +404,7 @@ With a deployment target below macOS 27, wrap the 27 APIs in `if #available(macO
 - ☑ Every tracking loop is replaced, or paired with a touch-only recognizer (`buttonMask = 0`)
 - ☑ Every gesture action handles `.cancelled` and reverts
 - ☑ Custom recognizers override every method in each family, plus `reset()` and `location(in:)`
-- ☑ Small targets accept touches within 36 pt; layout unchanged
+- ☑ Small targets accept touches within an enlarged hit area (24–36 pt per Apple's sources); layout unchanged
 - ☑ No essential action is hover-only; hover actions are duplicated in a context menu
 - ☑ Context menus come from `menu`/`menu(for:)`; container drags from the data-source/delegate APIs
 - ☑ No `currentEvent` reads in action methods

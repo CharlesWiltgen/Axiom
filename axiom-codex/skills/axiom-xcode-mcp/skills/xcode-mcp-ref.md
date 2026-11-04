@@ -7,7 +7,7 @@ transport; on Xcode 27 the service behind it can run headless (`xcrun mcp-server
 
 **Source**: live `tools/list` on the released Xcode 27.2 (27B52, `serverInfo` 25464), 54 tools,
 captured headless by an unapproved agent with no workspace open — byte-identical to the 27.2 RC
-(27B48, `serverInfo` 25463). Entries describe that schema.
+(27B48, `serverInfo` 25463). Entries describe that schema. Xcode 27.3 beta 1 (27C5020n, `serverInfo` 25515.6) still lists 54 tools; its changes are marked per entry.
 
 **Earlier builds differ.** The released 27.0 (27A266a), beta 6 and the 27.1 RC (27A9275,
 `serverInfo` 25320) share one 54-tool schema set. 27.2 beta 2 (27B5028f, `serverInfo` 25447.1)
@@ -250,6 +250,8 @@ Get all the Xcode build setting for a specified Xcode project target.
 
 - **Returns**: `buildSettings`*, `targetName`*
 
+- **Xcode 27.3 beta (27C5020n)**: adds `buildSettingNames` — names or `*` patterns (`['PRODUCT_NAME', 'SWIFT_*']`), case-insensitive; omitted returns every setting, an empty list returns none — and a required `notFound` output listing names or patterns that matched nothing. Ask for the settings you need instead of reading the whole dump.
+
 ### UpdateTargetBuildSetting
 
 Updates, appends or deletes the named build setting for the specified Xcode project target.
@@ -418,7 +420,7 @@ Builds and renders a Preview and waits until a snapshot of the resulting UI is a
 
 - **Params** (+ `workspaceIdentifier`): `sourceFilePath`* — The path to the file within the Xcode project organization…; `displayMode` — `static` (default) or `interactive`, from `supportedOverrides.displayModes`; `preferredRenderDestination` — object of optional `identifier`, `platformName`, `deviceModelName`, `systemVersion`; `previewCanvasControlOverrides` — `groupItemIndex`, `timelineIndex`, `toggleState`; `previewDefinitionIndexInFile` — The zero based index of the #Preview macro or PreviewProvider struct definition in the source…; `previewLocalizationOverride` — A locale identifier to preview in (e.g. "fr", "ja"); `previewVariantOverrides` — A dictionary mapping variant group names to variant names for any preview variants that should…; `snapshotDelay` — integer seconds an interactive preview runs before capture; `timeout` — The time in seconds to wait for the rendering of the preview to complete
 
-- **Returns**: `errors`*, `displayName`, `renderedDestination`, `snapshot` (`path`*), `sourceLineNumber`, `supportedOverrides` (`canvasControls`, `displayModes`, `localizations`, `previewVariants`, `renderDestinations`)
+- **Returns**: `errors`*, `displayName`, `renderedDestination`, `snapshot` (`path`*), `sourceLineNumber`, `supportedOverrides` (`canvasControls`, `displayModes`, `localizations`, `previewVariants`, `renderDestinations`); from the Xcode 27.3 beta (27C5020n) also `producibleOutputsByMode` (`displayMode`*, `outputs`*) — the output fields each display mode returns, so you know what a `displayMode` yields before choosing it
 
 - **Notes**: `timeout` defaults to 120s. Take every override value from the `supportedOverrides` of a previous call for the same active scheme (and, except for `preferredRenderDestination`, the same run destination) rather than guessing. Apple's input descriptions name output fields that don't exist — `groupItemIndexes` and `toggleState`; the real fields are `canvasControls.groupItems` and `canvasControls.toggleStates`. Don't call in parallel while passing `previewLocalizationOverride`. `snapshotDelay` applies only to `interactive`, counts against `timeout`, and must be at least 0 and less than `timeout`, or the call fails. `displayName` matches the canvas tab title; `sourceLineNumber` (1-based) separates previews that share a name.
 
@@ -469,6 +471,8 @@ Prepares a runtime for iOS interaction WITHOUT a workspace.
 
 - **Returns**: `deviceIsSimulator`*, `deviceUUID`*, `interactionSessionKey`*, `skillToTrigger`*, `summary`*
 
+- **Xcode 27.3 beta (27C5020n)**: simulator only. The tool description drops physical devices, `deviceIdentifier` no longer accepts an ECID, and `deviceIsSimulator` is gone from the output.
+
 - **Notes**: Cannot build or install — use `DeviceInteractionStartWorkspaceSession` if you need `DeviceInteractionInstallAndRun`. Sessions are expensive; always close with `DeviceInteractionEndSession`.
 
 ### DeviceInteractionStartWorkspaceSession
@@ -478,6 +482,8 @@ Prepares a runtime for iOS interaction WITH a workspace.
 - **Params** (+ `workspaceIdentifier`): `sessionIdentifier`* — Unique human-friendly identifier for this session (e.g. "Verify Login Flow"); `deviceIdentifier` — The UUID/ECID/name/OS version/type of the device to perform interaction
 
 - **Returns**: `deviceIsSimulator`*, `deviceUUID`*, `interactionSessionKey`*, `skillToTrigger`*, `summary`*
+
+- **Xcode 27.3 beta (27C5020n)**: simulator only. The tool description drops physical devices, `deviceIdentifier` no longer accepts an ECID, and `deviceIsSimulator` is gone from the output.
 
 ### DeviceInteractionInstallAndRun
 
@@ -489,7 +495,7 @@ Builds, installs, and starts the current application on the currently targeted d
 
 ### DeviceInteractionSynthesize
 
-Synthesizes device events (tap, swipe, type, etc.) on a physical device or simulator and captures the resulting state.
+Synthesizes device events (tap, swipe, type, etc.) on a physical device or simulator and captures the resulting state. From the Xcode 27.3 beta (27C5020n), the description names only a simulator, and the command list adds setting the hinge angle (in degrees) on foldable devices.
 
 - **Params**: `interactSessionKey`* — Device Interaction session key to work with; `activationBundleId` — Bundle identifier of the app to activate before any interactions; `interactionCommand` — The interaction command to execute (e.g., 't 100 200' for tap)
 

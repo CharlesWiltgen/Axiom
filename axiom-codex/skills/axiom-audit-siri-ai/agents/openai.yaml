@@ -1,0 +1,6 @@
+interface:
+  display_name: "Audit Siri Ai"
+  short_description: "The user mentions Siri AI readiness, tool intents, or App Skills."
+  default_prompt: "Use $axiom-audit-siri-ai to audit siri ai in this project."
+policy:
+  allow_implicit_invocation: false

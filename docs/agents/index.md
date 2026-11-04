@@ -1,6 +1,6 @@
 # Autonomous Agents
 
-Axiom includes <!--ax:agents-->43<!--/ax--> autonomous agents that automatically detect and diagnose common iOS development issues.
+Axiom includes <!--ax:agents-->44<!--/ax--> autonomous agents that automatically detect and diagnose common iOS development issues.
 
 ## What Are Agents?
 
@@ -93,6 +93,7 @@ Agents are autonomous problem-solvers that:
 ### Integration
 - **camera-auditor** – Scans for camera/audio capture issues and architectural gaps (deprecated APIs, missing interruption handlers, main-thread session work, missing runtime-error recovery, concurrent session queues, stuck permission-denied UI, missing audio session deactivation, missing `RotationCoordinator` on iOS 17+, multi-cam without support guards)
 - **foundation-models-auditor** – Scans Foundation Models / Apple Intelligence code for anti-patterns and architectural gaps (missing availability checks, concurrent requests on one session, manual JSON parsing, missing specific error catches, prompt-injection risk, `@Generable` enums without `@frozen`, missing Cancel UX, missing transcript trimming, stale availability cache, partial-output validation gaps); scores PRODUCTION-READY / NEEDS HARDENING / FRAGILE
+- **siri-ai-auditor** – Scans App Intents code and App Skills for Siri AI readiness (search tools, missing tool metadata, entities Siri can't read or find, cold-launch dependency crashes, undeclared results, errors shown as generic, App Skill file errors); scores READY / NEEDS WORK / BLOCKED
 - **networking-auditor** – Scans for deprecated networking APIs, anti-patterns, and completeness gaps (missing transition handling, TLS coverage, connection cleanup, framework selection)
 - **iap-auditor** – Audits IAP code for missing transaction.finish(), weak verification, missing Transaction.updates listener, missing restore, partial subscription state coverage, missing promoted-purchase handler (SK1), subscription status not observed mid-session, missing intro eligibility checks, subscription terms and loot box odds disclosure gaps, and compound rejection-risk combinations; scores IAP health READY/NEEDS WORK/NOT READY
 - **iap-implementation** – Implements complete StoreKit 2 IAP solution with testing-first workflow (.storekit configuration, centralized StoreManager, transaction handling, subscription management, restore purchases)

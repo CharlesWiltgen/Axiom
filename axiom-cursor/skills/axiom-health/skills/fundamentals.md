@@ -133,6 +133,8 @@ Every sample carries a type, a time window, a value, optional metadata, and prov
 
 **New quantity type `OS27`**: `HKQuantityTypeIdentifier.heartRateVariabilityRMSSD` (milliseconds, discrete arithmetic) ships on every platform at 27. HealthKit previously exposed only `.heartRateVariabilitySDNN`, so code and advice written before 27 that says SDNN is the only HRV metric is now out of date.
 
+**From 27.3** (iOS, watchOS, macOS, Mac Catalyst, visionOS; Xcode 27.3 SDK): `HKQuantityTypeIdentifier.hipCircumference` (meters, discrete arithmetic), and the characteristic `HKCharacteristicTypeIdentifier.referenceSex`, read with `try healthStore.referenceSex` (`HKReferenceSex`: `.notSet`, `.female`, `.male`). Reference sex is the sex whose reference ranges apply when classifying a clinical measurement. It is independent of `biologicalSex` and may differ, so use it to pick a reference range and `biologicalSex` to display the profile value. The read throws when read authorization wasn't granted; `.notSet` means the user hasn't provided a value.
+
 ## Canonical Setup Pattern
 
 ```swift

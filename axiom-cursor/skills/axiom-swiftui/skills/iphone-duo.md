@@ -596,7 +596,17 @@ Availability (`isAvailable`) and your on/off switch (`isEnabled`) are separate: 
 
 - **Device Hub** — Xcode 27.1's Device Hub drives an iPhone Duo simulator with open, close, rotate, and fold controls (111461 0:56); Apple's overview notes the Duo simulator in Device Hub requires Xcode 27.1. The device type creates against the **iOS 27.1 runtime**; the 27.0 runtime rejects it (`Incompatible device`). `iPhone Fold` is a different product.
 - **The 27.1 runtime is Duo-only.** Creating iPhone 17, 17 Pro, 17e, or iPad Pro on it fails with the same `Incompatible device` (SimError 403), so keep the 27.0 runtime for every other device (measured with Xcode 27.1).
-- **Poses are Device Hub-only.** No `simctl` or `devicectl` command opens, closes, or folds the simulator. `devicectl device motion hinge-angle` only *reads* the hinge, and `devicectl device orientation set` prints success and changes nothing on the Duo (measured closed; reported open). Check the window size after every pose change: closing from open-landscape has been reported landing in closed-portrait one time and closed-landscape another.
+- **UI tests can set the hinge (Xcode 27.3).** `XCUIDevice.shared.hinge` is an `XCUIHinge` (`nil` without a hinge) whose `angle` is in radians and is settable; setting it can switch displays, and on a physical device opening a closed device this way fails the test (Apple header note). It's in Xcode's XCUIAutomation, not gated by OS version:
+
+  ```swift
+  @MainActor @Test func closedPose() throws {
+      let app = XCUIApplication()
+      app.launch()
+      let hinge = try #require(XCUIDevice.shared.hinge)
+      hinge.angle = 0                    // closed; .pi is fully open
+  }
+  ```
+- **Outside a UI test, poses are Device Hub-only.** No `simctl` or `devicectl` command opens, closes, or folds the simulator. `devicectl device motion hinge-angle` only *reads* the hinge, and `devicectl device orientation set` prints success and changes nothing on the Duo (measured closed; reported open). Check the window size after every pose change: closing from open-landscape has been reported landing in closed-portrait one time and closed-landscape another.
 - **Screenshots default to the inner display**, which is black while the device is closed — for `simctl io … screenshot` and `devicectl device capture` alike. Capture the outer display by name: axiom-tools (skills/device-control-ref.md, Display masks and multi-display devices). A closed inner display is not the only way to get an all-black capture: for up to a few minutes after boot, Duo screenshots and recordings can be black (Apple known issue 187146039), so wait and retry before debugging — axiom-tools (skills/device-control-ref.md, A black capture on a simulator, and what it is not).
 - **Name closed poses by the hinge**, never by "turned left/right". Closed and upright, the hinge is the left edge, the camera and status bar sit top-right, and the vertical bar runs down the trailing edge (`toolbarVerticalEdge == .trailing`, measured). With the hinge along the bottom the camera is top-left and the bar moves to the leading edge; hinge along the top puts the camera bottom-right and the bar trailing (reported). The bar follows the camera's edge.
 - **Synthetic taps** — send a physical touch (`xcui tap` does; bare `axe tap` needs `--tap-style physical`), or the bar's items ignore the tap while it reports ✓: axiom-tools (skills/xcui-ref.md, Tap styles). The bar's overflow (⋯) button did not open under any tap style or a 0.2–1.0 s hold in the closed pose (measured); test overflowed actions in a pose with room for them.

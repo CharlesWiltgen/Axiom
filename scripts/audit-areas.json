@@ -206,6 +206,14 @@
       "docPath": "/commands/integration/audit-networking"
     },
     {
+      "area": "siri-ai",
+      "agent": "siri-ai-auditor",
+      "group": "Integration",
+      "detects": "Search tools, tool metadata Siri can't use, invisible entity properties, cold-launch dependency crashes, undeclared results, App Skill file errors",
+      "docsDetects": "Siri AI readiness: tools, entities, dependencies, results, App Skills",
+      "docPath": "/commands/integration/audit-siri-ai"
+    },
+    {
       "area": "database-schema",
       "agent": "database-schema-auditor",
       "group": "Storage",

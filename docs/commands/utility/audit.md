@@ -78,6 +78,7 @@ Grouped to mirror the sidebar exactly — same group names, same group order, sa
 | `foundation-models` | Availability checks, concurrent requests, guardrail handling |
 | `iap` | Missing `transaction.finish()`, weak receipt validation, missing restore, subscription tracking |
 | `networking` | Deprecated APIs (SCNetworkReachability), anti-patterns |
+| `siri-ai` | Siri AI readiness: tools, entities, dependencies, results, App Skills |
 
 ### Storage
 | Area | What It Checks |

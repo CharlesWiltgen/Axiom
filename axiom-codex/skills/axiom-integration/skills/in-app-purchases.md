@@ -538,7 +538,7 @@ func isEntitled(to productID: String) async -> Bool {
 
 ## Step 6: Implement Subscription Management
 
-> Monthly subscriptions with a 12-month commitment (from 26.4: `PricingTerms`, `.billingPlanType(.monthly)` purchase option, `commitmentInfo`) and group/volume subscription purchasing (WWDC 2026, StoreKit 2 required) are covered in `skills/storekit-ref.md`.
+> Monthly subscriptions with a 12-month commitment (from 26.4: `PricingTerms`, `.billingPlanType(.monthly)` purchase option, `commitmentInfo`) and group/volume subscription purchasing (WWDC 2026; the client API for multi-seat subscriptions with per-seat pricing ships from 27.3: `pricingModel`, `.seats(_:)`, invitation sheets; `PricingTerms.billingPrice`/`billingDisplayPrice`/`billingPeriod`/`commitmentInfo` are deprecated in 27.3; `Transaction.commitmentInfo` is not) are covered in `skills/storekit-ref.md`.
 
 ### Track Subscription Status
 

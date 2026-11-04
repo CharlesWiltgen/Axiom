@@ -1,11 +1,11 @@
 {
   "routers": 27,
-  "agents": 43,
+  "agents": 44,
   "commands": 17,
-  "excludedMirrors": 31,
+  "excludedMirrors": 32,
   "globalHookEntries": 7,
   "perAgentHooks": 0,
-  "releasedReadonlyBackground": 31,
+  "releasedReadonlyBackground": 32,
   "releasedWritableForeground": 12,
   "authorityExpansions": [
     {
@@ -237,6 +237,15 @@
       "agent": "simulator-tester",
       "sourceTools": [
         "Bash",
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inherited": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "agent": "siri-ai-auditor",
+      "sourceTools": [
         "Glob",
         "Grep",
         "Read"
@@ -887,6 +896,19 @@
       "releasedBackground": false,
       "sourceTools": [
         "Bash",
+        "Glob",
+        "Grep",
+        "Read"
+      ],
+      "inheritedAuthority": "Cursor agent inherits its host tool and MCP access."
+    },
+    {
+      "name": "siri-ai-auditor",
+      "disposition": "generated-native-subagent",
+      "authority": "readonly",
+      "sourceBackground": true,
+      "releasedBackground": true,
+      "sourceTools": [
         "Glob",
         "Grep",
         "Read"

@@ -161,7 +161,8 @@ export default withMermaid(defineConfig({
             { text: 'foundation-models-auditor', link: '/agents/foundation-models-auditor' },
             { text: 'iap-auditor', link: '/agents/iap-auditor' },
             { text: 'iap-implementation', link: '/agents/iap-implementation' },
-            { text: 'networking-auditor', link: '/agents/networking-auditor' }
+            { text: 'networking-auditor', link: '/agents/networking-auditor' },
+            { text: 'siri-ai-auditor', link: '/agents/siri-ai-auditor' }
           ]
         },
         {
@@ -281,7 +282,9 @@ export default withMermaid(defineConfig({
             { text: '/axiom:audit camera', link: '/commands/integration/audit-camera' },
             { text: '/axiom:audit foundation-models', link: '/commands/integration/audit-foundation-models' },
             { text: '/axiom:audit iap', link: '/commands/integration/audit-iap' },
-            { text: '/axiom:audit networking', link: '/commands/integration/audit-networking' }
+            { text: '/axiom:audit networking', link: '/commands/integration/audit-networking' },
+            { text: '/axiom:audit siri-ai', link: '/commands/integration/audit-siri-ai' },
+            { text: '/axiom:siri', link: '/commands/integration/siri' }
           ]
         },
         {
@@ -427,6 +430,7 @@ export default withMermaid(defineConfig({
             { text: 'Overview', link: '/skills/integration/' },
             { text: 'AccessorySetupKit', link: '/skills/integration/accessorysetupkit' },
             { text: 'App Discoverability', link: '/skills/integration/app-discoverability' },
+            { text: 'App Intents: Traps That Compile', link: '/skills/integration/app-intents' },
             { text: 'Apple Documentation Access', link: '/skills/integration/apple-docs' },
             { text: 'Apple Docs Research', link: '/skills/integration/apple-docs-research' },
             { text: 'Apple Pay', link: '/skills/integration/apple-pay' },
@@ -465,6 +469,7 @@ export default withMermaid(defineConfig({
             { text: 'SharePlay', link: '/skills/integration/shareplay' },
             { text: 'SharePlay Coordinated Playback', link: '/skills/integration/shareplay-playback' },
             { text: 'ShazamKit', link: '/skills/integration/shazamkit' },
+            { text: 'Siri AI: Custom Actions and Content', link: '/skills/integration/siri-ai' },
             { text: 'Siri for Audio Apps', link: '/skills/integration/siri-audio' },
             { text: 'Siri for Notes, Lists, and Reminders Apps', link: '/skills/integration/siri-notes-reminders' },
             { text: 'Suggested Actions (Apple Intelligence)', link: '/skills/integration/suggested-actions' },
@@ -678,6 +683,7 @@ export default withMermaid(defineConfig({
             { text: 'SharePlay (GroupActivities)', link: '/reference/shareplay-ref' },
             { text: 'ShazamKit', link: '/reference/shazamkit-ref' },
             { text: 'Siri for Audio Apps', link: '/reference/siri-audio-ref' },
+            { text: 'SiriEvaluations', link: '/reference/siri-evaluations-ref' },
             { text: 'StoreKit 2 (In-App Purchases)', link: '/reference/storekit-ref' },
             { text: 'Tap to Pay on iPhone', link: '/reference/tap-to-pay-ref' },
             { text: 'Wallet Extensions', link: '/reference/wallet-extensions-ref' },

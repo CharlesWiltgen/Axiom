@@ -1,6 +1,6 @@
 # Axiom
 
-Apple-platform development expertise for your coding assistant: <!--ax:routers-->27<!--/ax--> skill routers over <!--ax:skills-->286<!--/ax--> skills, <!--ax:agents-->43<!--/ax--> agents, <!--ax:commands-->17<!--/ax--> commands, and its command-line tools. It works in Claude Code and the Claude app, and in Codex, Cursor, Pi and any MCP client.
+Apple-platform development expertise for your coding assistant: <!--ax:routers-->27<!--/ax--> skill routers over <!--ax:skills-->289<!--/ax--> skills, <!--ax:agents-->44<!--/ax--> agents, <!--ax:commands-->18<!--/ax--> commands, and its command-line tools. It works in Claude Code and the Claude app, and in Codex, Cursor, Pi and any MCP client.
 
 ## Install
 
@@ -70,6 +70,7 @@ Ask your question; your assistant loads the router that matches it, and the rout
 | `/axiom:resolve-deps` | Diagnose and resolve Swift Package Manager dependency conflicts (launches spm-conflict-resolver agent) |
 | `/axiom:run-tests` | Run XCUITests and parse results using the test-runner agent |
 | `/axiom:screenshot` | Capture screenshot from a booted iOS Simulator |
+| `/axiom:siri` | Siri AI readiness audit, build, metadata analyzer, App Skills (Xcode 27.3) |
 | `/axiom:status` | Project health dashboard - shows environment status and suggests improvements |
 | `/axiom:test-simulator` | Launch simulator testing agent for test scenarios and visual verification |
 | `/axiom:triage` | Triage a corpus of production crashes/hangs from Sentry or App Store Connect — classify, cluster into families, and flag suspension/idle-runloop false-positives |
@@ -78,7 +79,7 @@ Ask your question; your assistant loads the router that matches it, and the rout
 
 ## Agents
 
-<!--ax:agents-->43<!--/ax--> agents run audits and fixes in their own context: memory leaks, concurrency, accessibility, build failures, crash analysis and more. The commands above launch the common ones, and you can ask for any of them by describing the task. See the [agent list](https://charleswiltgen.github.io/Axiom/agents/).
+<!--ax:agents-->44<!--/ax--> agents run audits and fixes in their own context: memory leaks, concurrency, accessibility, build failures, crash analysis and more. The commands above launch the common ones, and you can ask for any of them by describing the task. See the [agent list](https://charleswiltgen.github.io/Axiom/agents/).
 
 ## Hooks
 

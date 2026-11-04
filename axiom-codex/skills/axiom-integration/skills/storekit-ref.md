@@ -60,7 +60,7 @@ Subscriptions can now be sold to groups (a customer buys multiple seats and shar
 
 - **Requires StoreKit 2**; available for all auto-renewable subscriptions.
 - **On by default** for most new and existing StoreKit 2 subscriptions. If your subscription has Family Sharing enabled, group/organization sales are **opted out by default** so you control how the two options interact.
-- For group purchases, your own in-app UI triggers the StoreKit 2 purchase flow: get the number of seats requested from the customer and pass it into the StoreKit 2 purchase request. **No dedicated purchase-option symbol for the seat count ships as of the Xcode 27.0 SDK** (only the general `.quantity(_:)` option) — check newer SDKs before writing code against this.
+- For group purchases, your own in-app UI triggers the StoreKit 2 purchase flow: get the number of seats requested from the customer and pass it into the StoreKit 2 purchase request. The Xcode 27.3 SDK ships the seat-count option, `.seats(_:)` (the total after purchase), with the rest of the client API — see Multi-Seat Subscriptions and Pricing Models (from 27.3) below. Don't use the general `.quantity(_:)` option for seats.
 - When seat assignments complete (either purchase type), **the App Store assigns a transaction for each member** — your existing `Transaction.updates` / entitlement flow grants access per member. Member transactions surface as `Transaction.OwnershipType.assigned` (`"ASSIGNED"`); seat revocations as `Transaction.revocationType == .assignmentRevocation` (`"ASSIGNMENT_REVOKE"`; `revocationType` is a 26.4 field); the storefront platform for managed distribution appears as `AppStore.Platform.managed`. `assigned` and `AppStore.Platform.managed` ship back-deployed in the 27 SDK; reading `revocationType` / `.assignmentRevocation` requires an iOS 26.4+ deployment target (or an availability guard).
 - By default group purchases use Apple's included seat management (invite-link generation, acceptance tracking, seat lifecycle such as cancellations). Custom invitation flows will be powered by new App Store Server API endpoints (not yet named).
 - App Store Server API **Group management endpoints** let you query all the groups a customer is in and all the members in a group — supported for volume purchasing and for group purchases using the included seat management flows.
@@ -403,7 +403,7 @@ if let offer = transaction.offer {
 
 #### From WWDC 2025-241:8:00
 
-Server-signed payloads can additionally carry `offerType: 5` (retention offer, WWDC 2026) — no client `OfferType` case exists for it as of the 27.0 SDK (`.winBack` = 4 is still the last); see Retention Messaging API below.
+Server-signed payloads can additionally carry `offerType: 5` (retention offer, WWDC 2026). The Xcode 27.3 SDK adds the client value `Transaction.OfferType.retention` (raw value 5), back-deployed (`@backDeployed(before: anyAppleOS 27.3)`, available from iOS 15), so code can name it on older OSes; it compiles only with Xcode 27.3 or later. See Retention Messaging API below.
 
 ### Current Entitlements
 
@@ -868,6 +868,8 @@ The 26.5 SDK introduced monthly subscriptions with a 12-month commitment: custom
 
 `PricingTerms` members: `billingPrice: Decimal`, `billingDisplayPrice: String`, `billingPeriod` (a `SubscriptionPeriod` typealias), `billingPlanType`, `commitmentInfo` (non-optional: `price` / `displayPrice` / `period`), `subscriptionOffers: [SubscriptionOffer]`, and a `subscript(offers:)` filtered by offer type. The session notes billing-plan metadata is only returned when available in the customer's storefront — expect the commitment entry to be absent in storefronts where the plan isn't offered.
 
+**From 27.3, read prices through `pricingModel`.** `billingPrice`, `billingDisplayPrice`, `billingPeriod`, and `commitmentInfo` are `deprecated: 27.3` ("Use pricingModel instead"); they still compile with a warning and remain the only path below 27.3. `billingPlanType` and `subscriptionOffers` are not deprecated. See Multi-Seat Subscriptions below.
+
 ### Merchandising with StoreKit Views
 
 ```swift
@@ -916,6 +918,52 @@ Decoded `JWSTransaction` adds `billingPlanType` (`"MONTHLY"`) and a `commitmentI
 ### Testing Billing Plans
 
 StoreKit Testing in Xcode 26.5 adds a Billing Plan picker to the StoreKit configuration file: select a one-year auto-renewable subscription, choose "Monthly with a 12-month commitment", configure per-plan pricing and offers, then verify `commitmentInfo` in the Transaction inspector.
+
+---
+
+## Multi-Seat Subscriptions and Pricing Models (from 27.3)
+
+The Xcode 27.3 SDK adds multi-seat auto-renewable subscriptions: a subscriber buys a number of seats and invites others to fill them. Pricing is per seat, optionally in volume tiers. The pricing-model types, `supportsMultiSeatPurchase`, and the transaction fields are `anyAppleOS 27.3`. The `.seats(_:)` and `.multiSeatInvitationSheetSuppressed(_:)` purchase options are back-deployed to iOS 15 / macOS 12 on every platform (`@backDeployed(before: 27.3)`; they wrap `.custom(key:value:)`), so they need Xcode 27.3 but no availability gate. The invitation and data-sharing sheets and the consent-eligibility check are `iOS 27.3, macOS 27.3` (not tvOS, watchOS, or visionOS), and `AppStore.presentMultiSeatInvitationSheet(from:subscriptionGroupID:)` / `presentMultiSeatDataSharingConsentSheet(from:subscriptionGroupID:)` take a `UIViewController` and are iOS only.
+
+- **Pricing**: `PricingTerms.pricingModel` is `.singlePrice(SinglePrice)` (`billingInfo`: `price`/`displayPrice`/`period`, plus `commitmentInfo`) or `.seatBased(SeatBasedPricing)` (`priceTiers`, ascending; each `PriceTier` has `minimumSeats`, `maximumSeats` (`nil` = no upper bound), and a per-seat `billingInfo`). One tier means plain per-seat pricing.
+- **Eligibility**: `Product.supportsMultiSeatPurchase` (also on `AdvancedCommerceProduct`) reflects the multi-seat setting you configure in App Store Connect (release note 164581840). Purchasing a product that doesn't allow it fails with `Product.PurchaseError.multiSeatPurchaseDisabled`.
+- **Purchase**: `.seats(_:)` sets the **total** seats after the purchase, not the number to add. A total below the current count fails with `.seatReductionNotAllowed`; the app can't reduce seats. `.multiSeatInvitationSheetSuppressed(true)` skips the invitation sheet the system shows in-line after purchase.
+- **Invitations**: Apple-hosted invitations use `.multiSeatInvitationSheet(isPresented:subscriptionGroupID:onCompletion:)`. The sheet is drawn out of process, so setting `isPresented` to `false` doesn't dismiss it, and the app never learns whom the subscriber invited. `.multiSeatInvitationBehavior(.automatic | .manual)` controls whether StoreKit views show the sheet right after purchase (`.automatic` is the default).
+- **Group data sharing**: `Product.SubscriptionInfo.multiSeatDataSharingConsentEligibility(subscriptionGroupID:)` returns `.eligible` or `.ineligible(reason)` (`.alreadyConsented`, `.noOwnedActiveSubscription`, `.notAppleManaged`). Only the purchaser can consent, and only for Apple-hosted invitations. Ask with `.multiSeatDataSharingConsentSheet(isPresented:subscriptionGroupID:onCompletion:)`; the App Store records the choice and doesn't return it to the app.
+- **Transactions**: `Transaction.multiSeatInfo` (`nil` unless multi-seat) has `invitationManagement` (`.apple` / `.developer`, fixed when the subscription began), `priceTiers` (`quantity`, per-seat `price`), and `revokedSeatQuantity`. `Transaction.additionalTransactionReason == .seatAddition` marks a mid-period seat purchase, so one period can have several transactions. `RenewalInfo.multiSeatInfo` carries `renewalPriceTiers`; `RenewalInfo.renewalQuantity` is the seat count at renewal.
+- **StoreKit views**: `SubscriptionPricingModelGroupSet` (iOS, macOS, Mac Catalyst 27.3 only) groups options by pricing model and `SubscriptionBillingPlanTypeGroupSet` (also tvOS and visionOS; not watchOS) by billing plan; `.preferredSubscriptionPricingTerms(_:)` now also applies to a single `StoreContent`. On macOS, `.manageSubscriptionsSheet(isPresented:)` and `(isPresented:subscriptionGroupID:)` are both new in 27.3.
+
+```swift
+@available(anyAppleOS 27.3, *)
+func perSeatPrice(for product: Product, seats: Int) -> String? {
+    guard let terms = product.subscription?.pricingTerms.first else { return nil }
+    switch terms.pricingModel {
+    case .singlePrice(let single):
+        return single.billingInfo.displayPrice
+    case .seatBased(let seatBased):
+        let tier = seatBased.priceTiers.last {
+            seats >= $0.minimumSeats && seats <= ($0.maximumSeats ?? .max)
+        }
+        return tier?.billingInfo.displayPrice
+    @unknown default:
+        return nil
+    }
+}
+
+#if canImport(UIKit) && !os(watchOS)
+@available(iOS 27.3, tvOS 27.3, visionOS 27.3, *)
+func buySeats(_ product: Product, total: Int, in scene: UIWindowScene) async throws {
+    guard product.supportsMultiSeatPurchase else { return }
+    let result = try await product.purchase(confirmIn: scene, options: [
+        .seats(total),
+        .multiSeatInvitationSheetSuppressed(true),
+    ])
+    if case .success(let verification) = result, case .verified(let transaction) = verification {
+        await transaction.finish()
+    }
+}
+#endif
+```
 
 ---
 
@@ -1483,7 +1531,7 @@ Seat revocations from group/volume purchasing surface as `ASSIGNMENT_REVOKE` —
 
 Retention messages appear in the subscription cancellation flow. The ASC-configuration side (views, message/image rules, retention offers, save-rate guidance) lives in `axiom-shipping (skills/app-store-ref.md)` Part 11; this is the server surface.
 
-**Retention offers in signed payloads** — redeeming a retention offer surfaces as a new `offerType` value of `5` in the signed transaction and renewal info, with the usual offer fields (`offerIdentifier`, `offerDiscountType`, `offerPeriod`) populated as expected. There is no corresponding `Transaction.OfferType` case as of the Xcode 27.0 SDK (`.winBack`, raw value 4, is the last named case) — match the raw value server-side.
+**Retention offers in signed payloads** — redeeming a retention offer surfaces as a new `offerType` value of `5` in the signed transaction and renewal info, with the usual offer fields (`offerIdentifier`, `offerDiscountType`, `offerPeriod`) populated as expected. The Xcode 27.3 SDK adds `Transaction.OfferType.retention` (raw value 5, back-deployed to iOS 15). With an older Xcode (`.winBack`, raw value 4, is the last named case), match the raw value.
 
 **Real-time Retention Messaging** — your server answers a server-to-server HTTP request from the App Store at cancellation time. Requires passing a sandbox performance test before production, and access is granted via an interest form. The Retention Messaging API lives at `https://api.storekit.apple.com/inApps/v1/messaging`:
 

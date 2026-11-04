@@ -11,6 +11,8 @@ The Foundation Models framework provides access to Apple's on-device Large Langu
 
 The 27-cycle on-device model was rebuilt (`OS27`): better at logic and tool calling, fewer guardrail false positives, and an **8,192-token** context window — double the original 4,096. Always read `SystemLanguageModel().contextSize` at runtime instead of hard-coding the limit.
 
+**tvOS from 27.3.** The Xcode 27.3 SDK makes the on-device model available on Apple TV: `SystemLanguageModel` is `tvOS 27.3`, and `LanguageModelSession`, `Generable`, guardrails, `LanguageModelError`, `Attachment`, `DynamicProfile` and `DynamicInstructions` now compile for tvOS (several carry an earlier `tvOS 27.0` annotation but are marked `@available(tvOS, unavailable)` in the 27.2 SDK, so they need Xcode 27.3 regardless; because the annotation says 27.0, the compiler won't demand a 27.3 gate, so add one yourself). Gate with `if #available(tvOS 27.3, *)` and keep checking `availability` at runtime. Private Cloud Compute, custom adapters, the `Evaluations` framework, and the Vision-backed `BarcodeReaderTool`/`OCRTool` stay unavailable on tvOS.
+
 **Private Cloud Compute model (`OS27`, not tvOS).** For work the on-device model can't handle, `PrivateCloudComputeLanguageModel` runs a larger server-hosted model on Apple's Private Cloud Compute — a **32,000-token** context window plus multi-level reasoning, with the same privacy posture (no account, no API keys, no stored prompts). It carries an entitlement and is the first time Foundation Models reaches **watchOS** (`watchOS27`). See [Private Cloud Compute](#private-cloud-compute-os27).
 
 ---
@@ -96,7 +98,7 @@ if caps.contains(.vision) { /* image input OK */ }
 // capabilities: .vision, .guidedGeneration, .reasoning, .toolCalling
 ```
 
-Custom on-device models (via MLX or Core AI) and frontier server models (third-party Swift packages) conform to the same protocol — see [Ecosystem](#ecosystem-os27). `LanguageModelCapabilities` and the generalized initializers are `OS27` (not tvOS).
+Custom on-device models (via MLX or Core AI) and frontier server models (third-party Swift packages) conform to the same protocol — see [Ecosystem](#ecosystem-os27). `LanguageModelCapabilities` and the generalized initializers are `OS27` (tvOS with the 27.3 SDK).
 
 ### Instructions vs Prompts
 
@@ -818,7 +820,7 @@ let response = try await session.respond(
 
 **A single `catch` no longer covers inference.** The 27 SDK deprecated the one-enum `LanguageModelSession.GenerationError` and split its cases across three homes. A migration that only renames the enum silently drops the three that moved out.
 
-**`LanguageModelError`** (iOS/macOS/visionOS/**watchOS** 27; not tvOS) — the unified inference error. Every case carries a typed payload struct with **real diagnostic fields**, not just a string. Migration is therefore *not* a mechanical rename: 26-cycle code that only logged `context.debugDescription` is leaving actionable data on the floor.
+**`LanguageModelError`** (iOS/macOS/visionOS/**watchOS** 27; tvOS with the 27.3 SDK) — the unified inference error. Every case carries a typed payload struct with **real diagnostic fields**, not just a string. Migration is therefore *not* a mechanical rename: 26-cycle code that only logged `context.debugDescription` is leaving actionable data on the floor.
 
 | Case | Payload fields | Meaning / fix |
 |---|---|---|
@@ -1095,7 +1097,7 @@ The model can take **images** in a prompt when its `.vision` capability is prese
 ```swift
 import FoundationModels
 
-// Gate on the .vision capability; multimodal input is OS27 (not tvOS).
+// Gate on the .vision capability; multimodal input is OS27 (tvOS from the 27.3 SDK).
 guard model.capabilities.contains(.vision) else { /* fall back to text-only */ return }
 
 let response = try await session.respond {
@@ -1105,7 +1107,7 @@ let response = try await session.respond {
 }
 ```
 
-Image sources accepted (WWDC 241): `UIImage`/`NSImage`, `CGImage`, Core Image, CoreVideo pixel buffers, and file URLs — verified initializers are `Attachment(_ cgImage:orientation:)`, `Attachment(_ ciImage:orientation:)`, `Attachment(_ pixelBuffer:orientation:)`, and `Attachment(imageURL:orientation:)`. `.label("…")` annotates an attachment. Any size or aspect ratio works; larger images cost more tokens and latency. `Attachment` / `ImageAttachmentContent` are `OS27` (not tvOS).
+Image sources accepted (WWDC 241): `UIImage`/`NSImage`, `CGImage`, Core Image, CoreVideo pixel buffers, and file URLs — verified initializers are `Attachment(_ cgImage:orientation:)`, `Attachment(_ ciImage:orientation:)`, `Attachment(_ pixelBuffer:orientation:)`, and `Attachment(imageURL:orientation:)`. `.label("…")` annotates an attachment. Any size or aspect ratio works; larger images cost more tokens and latency. `Attachment` / `ImageAttachmentContent` are `OS27` (tvOS with the 27.3 SDK).
 
 ### Image references in tool arguments — `ImageReference`
 
@@ -1133,7 +1135,7 @@ struct PlantIdentifierTool: Tool {
 }
 ```
 
-`ImageReference` is `Sendable`, `Equatable`, `Generable`, with `attachmentLabel: String` and `resolve(in: Transcript) -> Transcript.ImageAttachment?`. `resolve` hands back the unwrapped `Transcript.ImageAttachment` directly — not the `Transcript.Attachment` enum — so you call `pixelBuffer()` straight on the result. `Transcript.ImageAttachment.pixelBuffer(resolution:pixelFormat:)` throws a `CVReadOnlyPixelBuffer`. The WWDC 237 slide writes `Transcript(history)`, but the framework init is labeled — `Transcript(entries:)` is the source-correct form (compile-verified). `ImageReference` is `OS27` **including watchOS 27** (not tvOS).
+`ImageReference` is `Sendable`, `Equatable`, `Generable`, with `attachmentLabel: String` and `resolve(in: Transcript) -> Transcript.ImageAttachment?`. `resolve` hands back the unwrapped `Transcript.ImageAttachment` directly — not the `Transcript.Attachment` enum — so you call `pixelBuffer()` straight on the result. `Transcript.ImageAttachment.pixelBuffer(resolution:pixelFormat:)` throws a `CVReadOnlyPixelBuffer`. The WWDC 237 slide writes `Transcript(history)`, but the framework init is labeled — `Transcript(entries:)` is the source-correct form (compile-verified). `ImageReference` is `OS27` **including watchOS 27**, and tvOS with the 27.3 SDK.
 
 ---
 
@@ -1188,7 +1190,7 @@ print(response.usage.output.reasoningTokenCount)   // tokens spent reasoning
 print(session.usage.totalTokenCount)               // running total for the session
 ```
 
-`ReasoningLevel` is `.light`, `.moderate`, `.deep`, or `.custom(String)`. Reasoning is most impactful with Private Cloud Compute, though the rebuilt on-device model also reasons better in 27. `ContextOptions` and `Usage` are `OS27` (not tvOS).
+`ReasoningLevel` is `.light`, `.moderate`, `.deep`, or `.custom(String)`. Reasoning is most impactful with Private Cloud Compute, though the rebuilt on-device model also reasons better in 27. `ContextOptions` and `Usage` are `OS27`, including tvOS with the 27.3 SDK.
 
 ---
 
@@ -1221,7 +1223,7 @@ struct CraftProfile: LanguageModelSession.DynamicProfile {
 let session = LanguageModelSession(profile: CraftProfile())
 ```
 
-Built with `@DynamicProfileBuilder`; `if`/`switch` are backed by `ConditionalDynamicProfile`. `OS27` (not tvOS).
+Built with `@DynamicProfileBuilder`; `if`/`switch` are backed by `ConditionalDynamicProfile`. `OS27`; tvOS from the 27.3 SDK.
 
 #### Profile modifiers
 
@@ -1257,7 +1259,7 @@ struct ModeModifier: LanguageModelSession.DynamicProfileModifier {
 }
 ```
 
-`SessionPropertyValues` is `Observable`; built-in entries include `\.history` (`ArraySlice<Transcript.Entry>`). Define your own with `@SessionPropertyEntry`. `DynamicProfileModifier`, `@SessionProperty`, `SessionPropertyValues` are all `OS27` (not tvOS).
+`SessionPropertyValues` is `Observable`; built-in entries include `\.history` (`ArraySlice<Transcript.Entry>`). Define your own with `@SessionPropertyEntry`. `DynamicProfileModifier`, `@SessionProperty`, `SessionPropertyValues` are all `OS27`; tvOS from the 27.3 SDK.
 
 ---
 
@@ -1278,7 +1280,42 @@ struct TripInstructions: DynamicInstructions {
 let session = LanguageModelSession(dynamicInstructions: TripInstructions(trip: trip))
 ```
 
-Built with `@DynamicInstructionsBuilder`: a body may mix `Instructions`, `Tool` values, and nested `DynamicInstructions`; `if`/`switch` are backed by `ConditionalDynamicInstructions`, and `_DynamicInstructionsForEach` drives an instruction/tool set off a collection. `LanguageModelSession(model:dynamicInstructions:history:)` constructs the session; `model:` defaults to `SystemLanguageModel.default`. `OS27` — the `dynamicInstructions:` session init is not available on watchOS/tvOS (the `DynamicInstructions` protocol itself is watchOS-available; only the session convenience init is excluded).
+Built with `@DynamicInstructionsBuilder`: a body may mix `Instructions`, `Tool` values, and nested `DynamicInstructions`; `if`/`switch` are backed by `ConditionalDynamicInstructions`, and `_DynamicInstructionsForEach` drives an instruction/tool set off a collection. `LanguageModelSession(model:dynamicInstructions:history:)` constructs the session; `model:` defaults to `SystemLanguageModel.default`. `OS27` — the `dynamicInstructions:` session init without `model:` is not available on watchOS, where `SystemLanguageModel` doesn't exist (the `DynamicInstructions` protocol itself is watchOS-available; pass a custom `model:`). It works on tvOS with the 27.3 SDK.
+
+#### Xcode 27.3 SDK additions
+
+These first appear in the Xcode 27.3 SDK, though most carry 27.0 or 27.2 annotations; code that uses them doesn't build with Xcode 27.2.
+
+- **`Group { … }`** (`DynamicInstructionsGroup`, annotated 27.2) gathers instructions and tools under one lifecycle, so a single modifier applies to all of them.
+- **`.onActivate` / `.onDeactivate` on `DynamicInstructions`** (annotated 27.2) run when the instructions enter or leave the session's resolved configuration. `DynamicProfile` already had them.
+- **`@SessionState` / `@SessionBinding`** (annotated 27.0) hold mutable state for the session's lifetime. The owner declares `@SessionState`; a child `Tool` or `DynamicInstructions` takes a `SessionBinding<Value>` from `$state` in its initializer. Both setters are `nonmutating`, so a `Tool`'s `call` can write through the binding.
+- **`.onDataEntry`** on a `DynamicProfile` (27.3, all platforms) observes `Transcript.DataEntry` values the model produces. Only models that accept the entry's content type (`supportsDataEntryType(_:)`) produce them.
+- **`@Guide(key:description:)`** and `@Guide(key:description:_:)` overloads add a `key:` label. Apple documents no semantics for them yet.
+
+```swift
+struct TripPlanner: DynamicInstructions {
+    @SessionState var budget = 500
+    var body: some DynamicInstructions {
+        Group {
+            Instructions("Plan the trip within budget.")
+            SpendTool(budget: $budget)
+        }
+        .onActivate { print("planner active") }
+    }
+}
+
+struct SpendTool: Tool {
+    let name = "spend"
+    let description = "Spends part of the trip budget."
+    @SessionBinding var budget: Int
+    init(budget: SessionBinding<Int>) { _budget = budget }
+    @Generable struct Arguments { var amount: Int }
+    func call(arguments: Arguments) async throws -> String {
+        budget -= arguments.amount
+        return "Remaining budget: \(budget)"
+    }
+}
+```
 
 **Choosing between them**: `DynamicProfile` models a *state machine* (named branches, one active `Profile`, transitions preserve history) — use it when the app has discrete modes. `DynamicInstructions` *recomputes* the instruction/tool set each request from whatever the app state currently is — use it when instructions track continuously-changing context (location, time, a live document).
 
@@ -1306,7 +1343,7 @@ public protocol LanguageModelExecutor: Sendable {
 }
 ```
 
-The executor streams results by sending events into the channel — `LanguageModelExecutorGenerationChannel` is an `AsyncSequence` whose events are `.Response` (`appendText` / `replaceTextSegment` / `updateMetadata` / `updateUsage`), `.Reasoning`, and `.ToolCalls`. Declare `capabilities` honestly: the framework gates guided generation, tool calling, vision, and reasoning on what the executor advertises. `LanguageModel`, `LanguageModelExecutor`, and the channel are `OS27` **including watchOS 27** (not tvOS). For the open-source MLX/Core AI providers and third-party server packages, see the Ecosystem section.
+The executor streams results by sending events into the channel — `LanguageModelExecutorGenerationChannel` is an `AsyncSequence` whose events are `.Response` (`appendText` / `replaceTextSegment` / `updateMetadata` / `updateUsage`), `.Reasoning`, and `.ToolCalls`. Declare `capabilities` honestly: the framework gates guided generation, tool calling, vision, and reasoning on what the executor advertises. `LanguageModel`, `LanguageModelExecutor`, and the channel are `OS27` **including watchOS 27**, and tvOS with the 27.3 SDK. For the open-source MLX/Core AI providers and third-party server packages, see the Ecosystem section.
 
 ---
 
@@ -1490,7 +1527,7 @@ Playgrounds can also access types defined in your app (like @Generable structs).
 - **`LanguageModel`** (protocol) — backs any session; `SystemLanguageModel` + `PrivateCloudComputeLanguageModel` conform. `var capabilities: LanguageModelCapabilities`. Session inits are generic over `model: some LanguageModel`.
 - **`LanguageModelCapabilities`** — `.contains(.vision | .guidedGeneration | .reasoning | .toolCalling)`
 - **`PrivateCloudComputeLanguageModel`** — `init()`, `availability` (`.available`/`.unavailable(.deviceNotEligible|.systemNotReady)`), `isAvailable`, `quotaUsage`, `contextSize` (async, 32 000), `Error` (`.networkFailure`/`.quotaLimitReached`/`.serviceUnavailable`). Entitlement-gated. Not tvOS.
-- **`Attachment<ImageAttachmentContent>`** — image prompt input: `init(_ cgImage:/ciImage:/pixelBuffer:orientation:)`, `init(imageURL:orientation:)`, `.label(_:)`. Not tvOS.
+- **`Attachment<ImageAttachmentContent>`** — image prompt input: `init(_ cgImage:/ciImage:/pixelBuffer:orientation:)`, `init(imageURL:orientation:)`, `.label(_:)`. tvOS with the 27.3 SDK.
 - **`ContextOptions(includeSchemaInPrompt:reasoningLevel:)`** — param on `respond`/`streamResponse`; `ReasoningLevel` = `.light`/`.moderate`/`.deep`/`.custom(String)`.
 - **`session.usage` / `response.usage`** — `Usage` → `input.totalTokenCount`/`input.cachedTokenCount`, `output.totalTokenCount`/`output.reasoningTokenCount`, `totalTokenCount`.
 - **`LanguageModelSession.DynamicProfile`** — `Profile { Instructions {…}; <Tools> }`, `LanguageModelSession(profile:)`; modifiers `.model`/`.reasoningLevel`/`.temperature`/`.samplingMode`/`.maximumResponseTokens`/`.toolCallingMode`/`.historyTransform`/`.transcriptErrorHandlingPolicy`/`.onPrompt`/`.onResponse`/`.onToolCall`/`.onToolOutput`/`.onActivate`/`.onDeactivate` (`.toolCalling`→`.toolCallingMode`, `.inputFilter`→`.historyTransform` renamed). Custom modifiers via `DynamicProfileModifier`; app state via `@SessionProperty(\.…)` over `SessionPropertyValues` (`@SessionPropertyEntry`).
