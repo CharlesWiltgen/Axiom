@@ -42,9 +42,10 @@ Questions you can ask your assistant that will draw from this reference:
 ### Core Building Blocks
 - `AppIntent`: `title`, `description`, `isDiscoverable`, `@Parameter`, parameter summaries, `perform()`, errors
 - Optional parameters in update intents: `valueState` (iOS 18.2+)
-- `AppEntity`: display representations, exposed properties, `@ComputedProperty`, `@DeferredProperty`
+- `AppEntity`: display representations, exposed properties, `@ComputedProperty`, `@DeferredProperty`, and the property `description:` and `visibility:` arguments (iOS 27.3)
 - `AppEnum`
 - `EntityQuery` and `EntityStringQuery`; keeping entities separate from your data models
+- Bulk deletes with `DeleteIntent.target` and `EntityCollection` (iOS 27.3)
 
 ### Execution and Interaction
 - Intent modes: `supportedModes` (iOS 26+), which replaces the deprecated `openAppWhenRun`, and `continueInForeground`
@@ -58,7 +59,7 @@ Questions you can ask your assistant that will draw from this reference:
 
 ### App Schemas
 - `@AppEntity`, `@AppIntent`, and `@AppEnum(schema:)` macros, which replace the deprecated `@Assistant…` macros
-- System schema domains, grouped by Apple's three tiers: primary domains for Apple Intelligence and Siri (the 27 cycle adds Audio, Calendar, Clock, Maps, Messages, Notes, Phone, and Reminders), single-purpose domains (Visual Intelligence, Assistant), and Shortcuts-specific domains such as Books, Files, and Spreadsheet
+- System schema domains, grouped by Apple's three tiers: primary domains for Apple Intelligence and Siri (the 27 cycle adds Audio, Calendar, Clock, Maps, Messages, Notes, Phone, and Reminders, and 27.3 adds Video), single-purpose domains (Visual Intelligence, Assistant), and Shortcuts-specific domains such as Books, Files, and Spreadsheet
 - Xcode schema-completeness build errors with fix-its (iOS 27)
 - Xcode code snippets (`calendar_event`, `system_open`) that scaffold a whole schema conformance
 - Cross-app content: on-screen annotations and `Transferable` export
@@ -84,7 +85,7 @@ Questions you can ask your assistant that will draw from this reference:
 - Which entity properties a test can read
 - Spotlight (`spotlightQuery`), on-screen annotations (`viewAnnotations`), and `Transferable` round trips
 - Error reference: wrong bundle type, stale intent metadata, misspelled parameters, the 30-second timeout
-- Running the tests with Swift Testing instead of XCTest
+- Running the tests with Swift Testing instead of XCTest, which UI test targets allow from Xcode 27.3
 
 ### Debugging
 - Testing by hand in Shortcuts and Siri
@@ -148,6 +149,8 @@ This page documents the `app-intents-ref` skill (in the `axiom-integration` suit
 
 ## Related
 
+- [app-intents](/skills/integration/app-intents) – The traps that compile but fail at run time, for every intent built from this reference
+- [siri-ai](/skills/integration/siri-ai) – Turns the intents and entities defined here into tools and values that Siri AI can use (iOS 27.3)
 - [app-shortcuts-ref](/reference/app-shortcuts-ref) – Wraps the intents defined here in App Shortcuts so they work in Siri and Spotlight with no user setup
 - [core-spotlight-ref](/reference/core-spotlight-ref) – Indexes the entities your intents operate on, so they appear in Spotlight search
 - [ui-testing](/skills/ui-design/ui-testing) – Where AppIntentsTesting tests live: they must run from a UI test target

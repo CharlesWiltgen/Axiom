@@ -16,13 +16,17 @@ Comprehensive guide to App Intents framework for exposing app functionality to S
 - Adding Action button support (Apple Watch Ultra)
 - Debugging intent resolution or parameter validation failures
 - Testing intents — AppIntentsTesting `OS27`, then by hand in Shortcuts and Siri
+- Siri AI calling the app's own actions (27.3: `@AppIntent(.tool)`, generable entities, App Skills) — see `skills/siri-ai.md`
 - Implementing entity queries for app content
 
 ## Related Skills
 
+- **app-intents** — The traps that compile but fail at run time (cold-launch dependencies, `perform()` re-runs, errors, results, donations, ids)
 - **app-shortcuts-ref** — App Shortcuts for instant Siri/Spotlight availability without user setup
 - **core-spotlight-ref** — Core Spotlight and NSUserActivity integration for content indexing
 - **app-discoverability** — Strategic guide for making apps surface system-wide across all APIs
+- **siri-ai** — Tool intents, generable entities, card snippets, and App Skills for Siri AI (27.3)
+- **siri-evaluations-ref** — SiriEvaluations: scripted Siri conversations graded against expected intents and entities (27.3)
 
 ## System Experiences Supported
 
@@ -110,8 +114,10 @@ struct OrderSoupIntent: AppIntent {
     var quantity: Int?
 
     func perform() async throws -> some IntentResult {
-        guard let quantity = quantity, quantity < 10 else {
-            throw $quantity.needsValueError("Please specify how many soups")
+        guard let quantity else {
+            // Asks for the value, then runs perform() again from the top:
+            // nothing above this line may have side effects.
+            throw $quantity.needsValueError("How many soups?")
         }
 
         try await OrderService.shared.order(soup: soup, quantity: quantity)
@@ -124,13 +130,18 @@ struct OrderSoupIntent: AppIntent {
 ```swift
 struct SoupEntity: AppEntity {
     var id: String
+
+    @Property(title: "Name")          // only @Property members are visible to the system
     var name: String
-    var price: Decimal
+
+    @Property(title: "Price")
+    var price: Double                 // @Property needs an intent value type; Decimal isn't one
 
     static let typeDisplayRepresentation: TypeDisplayRepresentation = "Soup"
 
     var displayRepresentation: DisplayRepresentation {
-        DisplayRepresentation(title: "\(name)", subtitle: "$\(price)")
+        DisplayRepresentation(title: "\(name)",
+                              subtitle: "\(price, format: .currency(code: "USD"))")
     }
 
     static let defaultQuery = SoupQuery()
@@ -140,9 +151,11 @@ struct SoupEntity: AppEntity {
 **3. AppEnum** — Enumeration types for parameters
 ```swift
 enum SoupSize: String, AppEnum {
-    case small
-    case medium
-    case large
+    // Raw values are stored in saved shortcuts: spell them out, never rename, only append.
+    // A case missing from caseDisplayRepresentations is a runtime crash.
+    case small = "small"
+    case medium = "medium"
+    case large = "large"
 
     static let typeDisplayRepresentation: TypeDisplayRepresentation = "Size"
     static let caseDisplayRepresentations: [SoupSize: DisplayRepresentation] = [
@@ -192,9 +205,11 @@ struct BookAppointmentIntent: AppIntent {
     @Parameter(title: "Preferred Date")
     var preferredDate: Date?
 
-    // Parameter with requestValueDialog for disambiguation
+    // requestValueDialog asks for a missing value;
+    // requestDisambiguationDialog asks the person to choose among several matches
     @Parameter(title: "Location",
-               requestValueDialog: "Which location would you like to visit?")
+               requestValueDialog: "Which location would you like to visit?",
+               requestDisambiguationDialog: "Which of these locations?")
     var location: LocationEntity
 
     // Parameter with default value
@@ -216,7 +231,9 @@ case .unset: break                             // not part of the request
 }
 ```
 
-### Parameter Summary (Siri Phrasing)
+### Parameter Summary
+
+The summary is the sentence the Shortcuts editor shows, with each parameter as an editable field. It isn't Siri's phrasing: Siri uses App Shortcut phrases and, for Siri AI tools, the intent's title and descriptions (`skills/siri-ai.md`). Parameters in the trailing block appear after the ones the string names, so don't repeat them there.
 
 ```swift
 struct OrderIntent: AppIntent {
@@ -227,34 +244,29 @@ struct OrderIntent: AppIntent {
     var quantity: Int
 
     static var parameterSummary: some ParameterSummary {
-        Summary("Order \(\.$quantity) \(\.$item)") {
-            \.$quantity
-            \.$item
-        }
+        Summary("Order \(\.$quantity) \(\.$item)")
     }
 }
-// Siri: "Order 2 lattes"
+// Shortcuts editor: "Order [2] [Latte]"
 ```
 
 ### The perform() Method
 
 ```swift
-func perform() async throws -> some IntentResult {
+func perform() async throws -> some IntentResult & ReturnsValue<OrderEntity> & ProvidesDialog {
     // 1. Validate parameters
     guard quantity > 0 && quantity < 100 else {
-        throw ValidationError.invalidQuantity
+        throw OrderError.invalidQuantity   // CustomLocalizedStringResourceConvertible (Error Handling, below)
     }
 
-    // 2. Execute action
+    // 2. Execute action (keep irreversible work last: perform() runs again
+    //    from the top after a needsValueError or restartPerform)
     let order = try await orderService.placeOrder(
         item: item,
         quantity: quantity
     )
 
-    // 3. Donate for learning (optional)
-    await donation()
-
-    // 4. Return result
+    // 3. Return a typed value a next step (or Siri) can use
     return .result(
         value: order,
         dialog: "Your order for \(quantity) \(item.name) has been placed"
@@ -262,11 +274,14 @@ func perform() async throws -> some IntentResult {
 }
 ```
 
+Don't donate from `perform()`: the system already donates intents that Siri, Shortcuts, and other system features run, so donating there double-counts. Donate when the person does the same thing in your app's own UI, after it succeeds: `try await IntentDonationManager.shared.donate(intent: intent)`.
+
 ### Error Handling
 
 ```swift
 enum OrderError: Error, CustomLocalizedStringResourceConvertible {
     case outOfStock(itemName: String)
+    case invalidQuantity
     case paymentFailed
     case networkError
 
@@ -274,6 +289,8 @@ enum OrderError: Error, CustomLocalizedStringResourceConvertible {
         switch self {
         case .outOfStock(let name):
             return "Sorry, \(name) is out of stock"
+        case .invalidQuantity:
+            return "Order between 1 and 99"
         case .paymentFailed:
             return "Payment failed. Please check your payment method"
         case .networkError:
@@ -298,13 +315,18 @@ func perform() async throws -> some IntentResult {
 
 ```swift
 struct BookEntity: AppEntity {
-    // REQUIRED: Unique, persistent identifier
+    // REQUIRED: Unique identifier, stable across launches and devices
+    // (never a row id, array index, or Photos localIdentifier)
     var id: UUID
 
-    // App data properties
+    // Only @Property members are visible to Shortcuts, Spotlight, and Siri
+    @Property(title: "Title")
     var title: String
+
+    @Property(title: "Author")
     var author: String
-    var coverImageURL: URL?
+
+    var coverImageURL: URL?   // used for the display image only
 
     // REQUIRED: Type display name
     static let typeDisplayRepresentation: TypeDisplayRepresentation = "Book"
@@ -344,6 +366,8 @@ struct TaskEntity: AppEntity {
     // Properties exposed to system for filtering/sorting
 }
 ```
+
+From 27.3, `@Property`, `@ComputedProperty`, and `@DeferredProperty` take `title:`, `description:`, `authenticationPolicy:`, and `visibility:` (`.default` or `.internal`, which hides the property from Siri and Shortcuts), and an entity can declare `static let authenticationPolicy` as the minimum for all its properties. Siri AI reads every exposed property's title and description. These arguments don't build on an entity that ships before 27.3 until the deployment target is 27.3. Details and fallbacks: `skills/siri-ai.md` (Entity Properties).
 
 ### Computed and Deferred Properties
 
@@ -400,6 +424,43 @@ extension BookQuery: EntityStringQuery {
 }
 ```
 
+### Which Surface Uses Which Lookup
+
+The same entity is found differently by each system surface. Pick mechanisms by the surfaces you target:
+
+| Mechanism | Shortcuts | Spotlight | Siri AI tools (27.3) |
+|---|---|---|---|
+| `entities(for:)` | Resolves saved ids | Resolves ids from results | Resolves ids Siri already has. Required for every non-transient entity a tool uses |
+| `suggestedEntities()` | The parameter picker's list (default `[]`, an empty picker) | Spotlight on Mac shows and filters them | Not used |
+| `EntityStringQuery.entities(matching:)` | The picker's search field (unfiltered input) | — | Not used |
+| `EntityPropertyQuery` | Generated Find/filter actions | — | Not used |
+| `EnumerableEntityQuery.allEntities()` | The full list (small sets) | — | Used, but runs app code, and only when the request names the app |
+| `IndexedEntity` + Core Spotlight index | Generated Find action | Search results, opened by an `OpenIntent` | Preferred: lookup without launching the app, found even when the request doesn't name the app |
+| `IntentValueQuery` | — | — | Resolves values for schemas and use-case groups (`AudioSearch`, a `maps.place`, Video playback) and Visual Intelligence |
+
+Schema intents have their own rule: each parameter entity needs `IndexedEntity`, `UniqueAppEntity`, `TransientAppEntity`, a default `EntityStringQuery`, or an `IntentValueQuery` (`skills/app-schemas-ref.md`). Siri AI tools: `skills/siri-ai.md` (Entity parameters). Query traps: `skills/app-intents.md` (Queries and Parameters).
+
+### Bulk Deletes: `DeleteIntent.target`
+
+From 27.3 a `DeleteIntent` can declare `target` instead of `entities`, as `[Entity]`, `Set<Entity>`, or `EntityCollection<Entity>` (any `AppEntityCollectionValue`). Implement one of the two, not both. `EntityCollection` delivers identifiers without resolving each entity, which saves time and memory when someone deletes many at once:
+
+```swift
+@available(anyAppleOS 27.3, *)
+struct DeleteNotesIntent: DeleteIntent {
+    static let title: LocalizedStringResource = "Delete Notes"
+
+    @Parameter(title: "Notes")
+    var target: EntityCollection<NoteEntity>
+
+    func perform() async throws -> some IntentResult {
+        try await NoteStore.shared.delete(target.identifiers)
+        return .result()
+    }
+}
+```
+
+With an `EntityCollection` target, `entities` returns an empty array: read `target.identifiers`, or call `target.resolvedEntities()`. With an array or set target, `entities` returns its elements (unordered for a set). Schema delete intents (`.reminders.deleteReminders`, `.files.deleteFiles` …) still require the parameter named `entities` (`skills/app-schemas-ref.md`).
+
 ### Separating Entities from Models
 
 #### ❌ DON'T: Modify core data models
@@ -418,6 +479,7 @@ struct Book: AppEntity { // Bad - couples model to intents
 struct Book {
     var id: UUID
     var title: String
+    var authorName: String
     var isbn: String
     var pages: Int
     // ... lots of internal properties
@@ -426,14 +488,14 @@ struct Book {
 // Separate entity for intents
 struct BookEntity: AppEntity {
     var id: UUID
-    var title: String
-    var author: String
+    @Property(title: "Title") var title: String
+    @Property(title: "Author") var author: String
 
     // Convert from model
     init(from book: Book) {
         self.id = book.id
         self.title = book.title
-        self.author = book.author.name
+        self.author = book.authorName
     }
 }
 ```
@@ -625,15 +687,18 @@ let options = [
     IntentChoiceOption.cancel                                   // a static var, NOT a function
 ]
 
-let choice = try await requestChoice(
-    between: options,
-    dialog: IntentDialog("Please select an option")
-)
-
-// IntentChoiceOption is Equatable (not Identifiable) — compare by value, not `.id`.
-if choice == options[0] {        // Option 1 selected
-} else if choice == options[1] { // Option 2 selected
-} else {                         // Cancelled
+do {
+    let choice = try await requestChoice(
+        between: options,
+        dialog: IntentDialog("Please select an option")
+    )
+    // IntentChoiceOption is Equatable (not Identifiable) — compare by value, not `.id`.
+    if choice == options[0] {        // Option 1 selected
+    } else if choice == options[1] { // Option 2 selected
+    }
+} catch {
+    // Choosing `.cancel` throws; it is never returned. Clean up here, then rethrow.
+    throw error
 }
 ```
 
@@ -658,12 +723,12 @@ func perform() async throws -> some IntentResult {
 Return interactive snippets with follow-up action buttons:
 
 ```swift
-func perform() async throws -> some IntentResult {
+func perform() async throws -> some IntentResult & ReturnsValue<LandmarkEntity> & OpensIntent & ShowsSnippetIntent {
     let landmark = await findNearestLandmark()
 
-    let openIntent = OpenLandmarkIntent()
+    var openIntent = OpenLandmarkIntent()
     openIntent.landmark = landmark
-    let snippetIntent = LandmarkSnippetIntent()
+    var snippetIntent = LandmarkSnippetIntent()
     snippetIntent.landmark = landmark
 
     return .result(
@@ -687,14 +752,32 @@ struct LandmarkSnippetIntent: SnippetIntent {
             Text(landmark.description).font(.body)
 
             HStack {
-                Button("Add to Favorites") { /* action */ }
-                Button("Search Tickets") { /* action */ }
+                // Snippet controls must run intents: a plain closure Button compiles but does nothing
+                Button(intent: AddFavoriteLandmarkIntent(landmark: landmark)) { Text("Add to Favorites") }
+                Button(intent: SearchTicketsIntent(landmark: landmark)) { Text("Search Tickets") }
             }
         }
         .padding())
     }
 }
+
+struct AddFavoriteLandmarkIntent: AppIntent {
+    static let title: LocalizedStringResource = "Add Landmark to Favorites"
+    @Parameter var landmark: LandmarkEntity
+
+    init() {}
+    init(landmark: LandmarkEntity) { self.landmark = landmark }
+
+    func perform() async throws -> some IntentResult {
+        try await FavoritesStore.shared.add(landmark.id)
+        return .result()   // the system then re-runs the snippet's perform() to refresh it
+    }
+}
 ```
+
+- The snippet intent's `perform()` must be read-only and safe to re-run; the system re-runs it after each control intent.
+- Never point a button at the snippet intent itself. Call the static `LandmarkSnippetIntent.reload()` only for updates that don't come from a tap.
+- `SnippetIntent` is iOS 26+. A pre-26 fallback must be a separate intent: one opaque result type can't return both kinds.
 
 ---
 
@@ -1171,8 +1254,8 @@ func showEventDetail(_ event: Event) {
 
 ### Search Beyond Suggestions
 
-**Basic filtering** (automatic):
-If you provide suggestions, Spotlight automatically filters them as user types.
+**Basic filtering**:
+Spotlight on Mac filters the suggestions it shows as the person types. The Shortcuts picker does not filter `suggestedEntities()` by substring, and Siri AI tools don't use suggestions at all (`skills/siri-ai.md`).
 
 **Deep search** (requires implementation):
 For searching beyond suggestions:
@@ -1200,6 +1283,7 @@ struct EventEntity: AppEntity, IndexedEntity {
 ```swift
 // Background intent - runs without opening app
 struct CreateEventIntent: AppIntent {
+    static let title: LocalizedStringResource = "Create Event"
     static let supportedModes: IntentModes = .background  // iOS 26+ (was `openAppWhenRun = false`)
 
     @Parameter(title: "Title")
@@ -1208,7 +1292,7 @@ struct CreateEventIntent: AppIntent {
     @Parameter(title: "Start Date")
     var startDate: Date
 
-    func perform() async throws -> some IntentResult {
+    func perform() async throws -> some IntentResult & ReturnsValue<EventEntity> {
         let event = try await EventService.shared.createEvent(
             title: title,
             startDate: startDate
@@ -1216,7 +1300,7 @@ struct CreateEventIntent: AppIntent {
 
         // Optionally open app to view created event
         let entity = EventEntity(from: event)
-        let openIntent = OpenEventIntent()
+        var openIntent = OpenEventIntent()
         openIntent.event = entity
 
         return .result(
@@ -1228,6 +1312,7 @@ struct CreateEventIntent: AppIntent {
 
 // Foreground intent - opens app to specific event
 struct OpenEventIntent: AppIntent {
+    static let title: LocalizedStringResource = "Open Event"
     static let supportedModes: IntentModes = .foreground  // iOS 26+ (was `openAppWhenRun = true`)
 
     @Parameter(title: "Event")
@@ -1250,7 +1335,7 @@ struct OpenEventIntent: AppIntent {
 
 ### Predictable Intent Protocol
 
-Enable Spotlight suggestions based on usage patterns:
+Words the suggestions that donations produce. It donates nothing itself; the suggestions come from `IntentDonationManager` donations of in-app actions and from runs by Siri and Shortcuts (`skills/app-intents.md`, Donations):
 
 ```swift
 struct OrderCoffeeIntent: AppIntent, PredictableIntent {
@@ -1274,7 +1359,7 @@ struct OrderCoffeeIntent: AppIntent, PredictableIntent {
 }
 ```
 
-Spotlight learns when/how user runs this intent and surfaces suggestions proactively.
+Without donations there's nothing to suggest, however the prediction is worded.
 
 ---
 
@@ -1374,18 +1459,21 @@ Apple groups the domains in three tiers. It documents the primary domains as mak
 | Primary — Apple Intelligence and Siri | Audio, Calendar, Clock, Maps, Messages, Notes, Phone, Reminders | `OS27` |
 | | Camera | iOS 18+, macOS 15+, visionOS 2+ |
 | | Mail, Photos, System (in-app search) | iOS 18+, macOS 15+, visionOS 2+, with schemas added in `OS27` |
+| | Video (play, trailers, watch list) | iOS 27.3+, tvOS 27.3+, visionOS 27.3+; not macOS |
 | Single-purpose | Visual Intelligence (camera search results) | iOS 26+, macOS 27+; not visionOS |
 | | Assistant (side-button launch of a voice app, Japan) | iOS 26.2+; not macOS/visionOS |
 | Shortcuts-specific | Books, Files, Journal, Presentation, Reader, Spreadsheet, Whiteboard, WordProcessor | iOS 18+, macOS 15+, visionOS 2+ |
 | | Browser | iOS 18+, macOS 15+, visionOS 2+, with schemas added in `OS27` |
 
-No domain exists on watchOS or tvOS. Every schema's required members, parameters, return types, enum cases and deprecations, plus the schema build errors and their fixes: `skills/app-schemas-ref.md`. Moving a SiriKit Lists/Notes app to the Notes and Reminders domains: `skills/siri-notes-reminders.md`.
+No domain exists on watchOS; Video, from 27.3, is the only one on tvOS. Every schema's required members, parameters, return types, enum cases and deprecations, plus the schema build errors and their fixes: `skills/app-schemas-ref.md`. Moving a SiriKit Lists/Notes app to the Notes and Reminders domains: `skills/siri-notes-reminders.md`.
 
 **Audio**: every schema's required members, parameters, enum cases, the `AudioItem` union, `AudioSearch` resolution, and the SiriKit media path that Siri without Apple Intelligence still uses — `skills/siri-audio-ref.md` (approach: `skills/siri-audio.md`).
 
-### Xcode schema-completeness errors `OS27`
+### Use-case groups `OS27`
 
-Some Siri flows need more than one schema. Adopt `sendMessage` but not the related `draftMessage` and Xcode **fails the build** with a fix-it that generates a stub adoption of the missing schema — a design hint surfaced at compile time instead of failing silently at runtime. Fill in the stub: wire your entities, inject dependencies, and mark `perform()` `@MainActor` if it mutates UI.
+Some Siri flows need several schemas, called a use-case group: Message Sending (`sendMessage` + `draftMessage`), Mail Composing, Replying, and Forwarding (with `saveDraft`, `updateDraft`, `sendDraft`), Cancel Alarm (`dismissAlarm` + `updateAlarm`), Start Navigation (with a `maps.place` `IntentValueQuery`), Play Audio, Play Video (`playContent` + an `IntentValueQuery`), and Install Application. Adopt part of a group and the build **warns**, with a fix-it stub: `App Intents use case 'Message Sending' is missing the schema 'messages.draftMessage'`. The build still succeeds (measured on Xcode 27.3 beta 27C5020n), but Apple says to adopt the whole group to reach Siri AI, so treat the warning as required work. Fill in the stub: wire your entities, inject dependencies, and mark `perform()` `@MainActor` if it mutates UI.
+
+Extra members beyond a schema: an extra intent `@Parameter` must be optional (`Intent parameters not defined by AppSchemaIntent 'calendar.createEvent' must be optional`, a halting error). An extra entity property can be non-optional, but it's exported only with `@Property`; schema-defined properties get it implicitly. Apple says Apple Intelligence reads only schema-defined members and extras serve Shortcuts.
 
 ### Cross-app content (on-screen awareness + transfer)
 
@@ -1396,6 +1484,8 @@ Siri requests often span apps ("email my wife this reply"). Annotate views with 
 ## Testing & Debugging
 
 ### AppIntentsTesting `OS27`
+
+For Siri's own behavior (which tool it picks, how it fills parameters, which skills load), use SiriEvaluations (27.3), which builds on this framework: `skills/siri-evaluations-ref.md`.
 
 Runs intents out of process through the same App Intents stack as Siri and Shortcuts: real parameter resolution, real entity queries. Intents are looked up by bundle ID and Swift type name (`"CreateEventIntent"`, not the title), so the test target doesn't link the app. Test in this order: intent behavior here, then system surfaces (Spotlight, annotations, Transferable), then a manual Shortcuts/Siri pass.
 
@@ -1497,7 +1587,7 @@ Apple's docs have two errors. The article's `definitions.intent[…]` is `intent
 
 #### Swift Testing
 
-UI Testing Bundles alias `Testing` away: `TESTING_FRAMEWORK_MODULE_ALIAS_FLAGS` (`-module-alias Testing=_Testing_Unavailable`) makes `import Testing` fail. Setting it to empty on the UI test target (`TESTING_FRAMEWORK_MODULE_ALIAS_FLAGS =`) lets Swift Testing run AppIntentsTesting and `XCUIApplication` there. The override is undocumented and Apple's samples use XCTest.
+Xcode 27.3 supports UI tests written with Swift Testing and `XCUIAutomation` (release notes 95593221), so a UI Testing Bundle can `import Testing` with no override. Through Xcode 27.2 the UI-test product type aliases it away: `TESTING_FRAMEWORK_MODULE_ALIAS_FLAGS` (`-module-alias Testing=_Testing_Unavailable`) fails the build with `Unable to resolve module dependency: '_Testing_Unavailable'`. On 27.2 and earlier, set `TESTING_FRAMEWORK_MODULE_ALIAS_FLAGS =` (empty) on the UI test target; that override is undocumented.
 
 ```swift
 import AppIntentsTesting
@@ -1562,44 +1652,40 @@ struct MyIntent: AppIntent {
 
 #### Issue 2: Parameter not resolving
 ```swift
-// ❌ Problem: Missing defaultQuery
-struct ProductEntity: AppEntity {
-    var id: String
-    // Missing defaultQuery
-}
+// ❌ Problem: the saved id came from another device (or a reinstall)
+//    and entities(for:) finds nothing for it
+var id: UUID = UUID()               // regenerated per launch or per device
 
-// ✅ Solution: Add query
-struct ProductEntity: AppEntity {
-    var id: String
-    static let defaultQuery = ProductQuery()
-}
+// ✅ Solution: an id stored with the data, stable across launches and devices
+var id: UUID { model.id }           // persisted server or database id
 ```
 
 #### Issue 3: Intent crashes in background
 ```swift
-// ❌ Problem: Accessing MainActor from background
+// ❌ Problem: opening a URL with UIApplication from perform()
 func perform() async throws -> some IntentResult {
-    UIApplication.shared.open(url) // Crash! MainActor only
+    UIApplication.shared.open(url) // main-actor only, and absent when perform() runs in an extension
     return .result()
 }
 
-// ✅ Solution: hop to MainActor (or declare a `.foreground` mode in `supportedModes`)
-func perform() async throws -> some IntentResult {
-    await MainActor.run {
-        UIApplication.shared.open(url)
-    }
-    return .result()
+// ✅ Solution: hand the URL to the system
+func perform() async throws -> some IntentResult & OpensIntent {
+    .result(opensIntent: OpenURLIntent(url))
 }
 ```
 
+For other main-actor work, hop explicitly with `await MainActor.run { … }`. Don't mark the intent type `@MainActor`: `perform()` isn't main-actor isolated, and the conformance fails (`#ConformanceIsolation`).
+
 #### Issue 4: Entity query returns empty results
 ```swift
-// ❌ Problem: entities(for:) not implemented
+// ❌ Problem: no suggestedEntities(); the default returns [], so the Shortcuts picker is empty
 struct BookQuery: EntityQuery {
-    // Missing entities(for:) implementation
+    func entities(for identifiers: [UUID]) async throws -> [BookEntity] {
+        try await BookService.shared.fetchBooks(ids: identifiers)
+    }
 }
 
-// ✅ Solution: Implement required methods
+// ✅ Solution: provide suggestions (Siri AI tools don't use them; index the entities for Siri)
 struct BookQuery: EntityQuery {
     func entities(for identifiers: [UUID]) async throws -> [BookEntity] {
         return try await BookService.shared.fetchBooks(ids: identifiers)
@@ -1644,7 +1730,7 @@ static var parameterSummary: some ParameterSummary {
 static var parameterSummary: some ParameterSummary {
     Summary("Send \(\.$message) to \(\.$contact)")
 }
-// Siri: "Send 'Hello' to John"
+// Shortcuts editor: "Send [Hello] to [John]"
 ```
 
 ### 3. Error Messages
@@ -1728,16 +1814,16 @@ struct StartWorkoutIntent: AppIntent {
         }
 
         return .result(
-            dialog: "Starting \(workoutType.displayName) workout"
+            dialog: "Starting \(workoutType) workout"   // interpolate the AppEnum itself: it's localized
         )
     }
 }
 
 enum WorkoutType: String, AppEnum {
-    case running
-    case cycling
-    case swimming
-    case yoga
+    case running = "running"
+    case cycling = "cycling"
+    case swimming = "swimming"
+    case yoga = "yoga"
 
     static let typeDisplayRepresentation: TypeDisplayRepresentation = "Workout Type"
     static let caseDisplayRepresentations: [WorkoutType: DisplayRepresentation] = [
@@ -1746,15 +1832,6 @@ enum WorkoutType: String, AppEnum {
         .swimming: "Swimming",
         .yoga: "Yoga"
     ]
-
-    var displayName: String {
-        switch self {
-        case .running: return "running"
-        case .cycling: return "cycling"
-        case .swimming: return "swimming"
-        case .yoga: return "yoga"
-        }
-    }
 }
 ```
 
@@ -1782,7 +1859,7 @@ struct AddTaskIntent: AppIntent {
         }
     }
 
-    func perform() async throws -> some IntentResult {
+    func perform() async throws -> some IntentResult & ReturnsValue<TaskEntity> & ProvidesDialog {
         let task = try await TaskService.shared.createTask(
             title: title,
             list: list?.id,
@@ -1798,8 +1875,8 @@ struct AddTaskIntent: AppIntent {
 
 struct TaskListEntity: AppEntity {
     var id: UUID
-    var name: String
-    var color: String
+    @Property(title: "Name") var name: String
+    @Property(title: "Color") var color: String
 
     static let typeDisplayRepresentation: TypeDisplayRepresentation = "List"
 
@@ -1842,10 +1919,11 @@ struct TaskListQuery: EntityQuery, EntityStringQuery {
 - ☐ Entity queries return reasonable suggestion counts (< 20)
 - ☐ Intents marked `isDiscoverable` appear in Shortcuts
 - ☐ Destructive actions request confirmation
-- ☐ Background intents don't access MainActor
+- ☐ Main-actor work in `perform()` hops with `await MainActor.run`; URLs open via `OpenURLIntent`, not `UIApplication`
 - ☐ Foreground intents declare `.foreground` in `supportedModes` (iOS 26+; `openAppWhenRun = true` is the deprecated pre-26 equivalent)
 - ☐ Entity `displayRepresentation` shows meaningful info
 - ☐ Each intent covered by an AppIntentsTesting test in a UI Testing Bundle `OS27`
+- ☐ Siri AI (27.3): chosen intents are tools with full metadata, every exposed entity property is described, `sirimetadataanalyzer` exits 0, SiriEvaluations scenarios pass (`skills/siri-ai.md`, `skills/siri-evaluations-ref.md`)
 - ☐ Tested with Siri voice commands
 - ☐ Tested in Shortcuts app
 - ☐ Tested with different parameter combinations
@@ -1859,7 +1937,7 @@ struct TaskListQuery: EntityQuery, EntityStringQuery {
 
 **Docs**: /appintents, /appintents/appintent, /appintents/appentity, /appintents/appschema, /appintents/adopting-app-intents-to-support-system-experiences, /appintents/apple-intelligence-and-siri-ai, /appintentstesting, /appintentstesting/testing-your-app-intents-code, /Updates/AppIntents
 
-**Skills**: skills/app-shortcuts-ref.md, skills/core-spotlight-ref.md, skills/app-discoverability.md, skills/siri-audio-ref.md, axiom-security (skills/agentic-security.md)
+**Skills**: skills/app-intents.md, skills/siri-ai.md, skills/siri-evaluations-ref.md, skills/app-shortcuts-ref.md, skills/core-spotlight-ref.md, skills/app-discoverability.md, skills/siri-audio-ref.md, axiom-security (skills/agentic-security.md)
 
 ---
 
