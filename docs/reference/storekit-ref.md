@@ -58,8 +58,9 @@ Questions you can ask your assistant that will draw from this reference:
 - `RenewalInfo` for upcoming renewals, expiration reasons and price-increase consent
 - `SubscriptionStatus` for current state, including `status(transactionID:)` and `Status.all`
 - Grace period detection
-- Offer types (introductory, promotional, offer code, win-back), plus retention offers, which appear only as a server-side `offerType` 5 with no client `OfferType` case
+- Offer types (introductory, promotional, offer code, win-back), plus retention offers (`offerType` 5, with a client `OfferType.retention` value from the Xcode 27.3 SDK)
 - Monthly subscriptions with a 12-month commitment (`PricingTerms`, billing plans, from 26.4)
+- Multi-seat subscriptions with per-seat and volume-tier pricing (`pricingModel`, the `seats(_:)` purchase option, invitation and data-sharing sheets, from 27.3)
 
 ### StoreKit Views
 - `ProductView` and `StoreView` (iOS 17+)

@@ -35,7 +35,7 @@ let model = SystemLanguageModel(adapter: myAdapter, guardrails: .permissiveConte
 ```
 
 - `SystemLanguageModel.Guardrails` exposes exactly two values: **`.default`** and **`.permissiveContentTransformations`**. There is no public initializer — you cannot author a custom guardrail policy, only choose between these two.
-- Availability: **iOS 26.0+, macOS 26.0+, visionOS 26.0+**. Guardrails are **not available on tvOS or watchOS**.
+- Availability: **iOS 26.0+, macOS 26.0+, visionOS 26.0+**, and tvOS with the Xcode 27.3 SDK (where the on-device model arrives at tvOS 27.3). Guardrails are **not available on watchOS**.
 - A violation throws `LanguageModelError.guardrailViolation` (`OS27`; the 26-cycle spelling `LanguageModelSession.GenerationError.guardrailViolation(Context)` is deprecated). Distinct from `LanguageModelError.refusal`, which is the model declining rather than a guardrail tripping — handle both or you leave a dead end.
 
 ### ⚠️ Permissive mode is string-only

@@ -31,13 +31,14 @@ Questions you can ask your assistant that will draw from this skill:
 
 ## What This Skill Provides
 
-- Apple's touch design rules for the Mac: the invisible 36-point touch target, the trackpad-to-touch gesture map, which hover actions to keep, expanding controls, display regions, and the reserved system gestures
+- Apple's touch design rules for the Mac: an enlarged invisible touch target (Apple's sources give 24–36 points), the trackpad-to-touch gesture map, which hover actions to keep, expanding controls, display regions, and the reserved system gestures
 - How touch reaches your code, and what each kind of input handling does with it
 - The macOS 27 behavior changes: exclusive views, stuck-recognizer diagnostics, `currentEvent` in action methods, and the control-subclass fallback to tracking loops
 - Recipes: control events, replacing a tracking loop, adding a touch-only recognizer beside one, enlarging hit targets, filtering recognizers, writing a custom recognizer that always finishes, simultaneous controls, scroll-view interplay, and context menus and drag
 - Mouse emulation for non-Apple UI frameworks and the `NSIsTouchNative` opt-out
 - Testing with Sidecar, a checklist, and the macOS 27 touch SDK surface
-- APIs from Apple's tech talks that aren't in the macOS 27.2 SDK yet, such as the system-gesture opt-outs, marked as such
+- The system-gesture opt-outs for AppKit, Mac Catalyst, and SwiftUI, which need the Xcode 27.3 SDK (macOS 27.3, Mac Catalyst 27.3)
+- Mouse-emulation rules from the touch guide bundled with Xcode 27.3: when an existing `mouseDown` still runs for touch, and the pitfalls of removing an override
 
 ## Documentation Scope
 

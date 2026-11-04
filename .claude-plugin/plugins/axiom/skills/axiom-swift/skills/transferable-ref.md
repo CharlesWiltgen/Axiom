@@ -340,6 +340,22 @@ Text(profile.name)
     }
 ```
 
+**Keeping the item's identity — from 27.3 (iOS, macOS, visionOS):** when the item is `Transferable & Identifiable` (with a `Sendable` ID), new `draggable(_:)`, `draggable(_:preview:)`, `draggable(_:containerNamespace:)`, and `draggable(_:containerNamespace:preview:)` overloads store its ID in the drag session. Drop destinations in the same app read it with `DropSession.LocalSession.draggedItemIDs(for:)`, and an enclosing `dragContainer(for:in:_:)` uses it to identify the item. They need the Xcode 27.3 SDK. With a deployment target below 27.3, an existing `draggable(item)` call still compiles, against the older overload (checked at iOS 26.0), so it doesn't record the ID; call it inside `if #available(iOS 27.3, macOS 27.3, *)` to get the new one. The `containerNamespace:` forms need the same gate.
+
+```swift
+@available(iOS 27.3, macOS 27.3, *)
+struct Shelf: View {
+    let books: [Book]
+    @Namespace private var shelf
+    var body: some View {
+        ForEach(books) { book in
+            Text(book.title)
+                .draggable(book, containerNamespace: shelf)
+        }
+    }
+}
+```
+
 **Accepting drops:**
 
 ```swift
