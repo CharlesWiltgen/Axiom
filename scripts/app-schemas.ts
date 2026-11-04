@@ -96,7 +96,7 @@ const TIER_TEXT: Record<Tier, string> = { primary: "Primary", single: "Single-pu
 const DOMAIN_TIERS: Record<string, Tier> = {
   audio: "primary", calendar: "primary", camera: "primary", clock: "primary", mail: "primary",
   maps: "primary", messages: "primary", notes: "primary", phone: "primary", photos: "primary",
-  reminders: "primary", system: "primary",
+  reminders: "primary", system: "primary", video: "primary",
   assistant: "single", visualIntelligence: "single",
   books: "shortcuts", browser: "shortcuts", files: "shortcuts", journal: "shortcuts",
   presentation: "shortcuts", reader: "shortcuts", spreadsheet: "shortcuts", whiteboard: "shortcuts",

@@ -1,6 +1,6 @@
 {
-  "xcode": "Xcode 27.2 (27B52)",
-  "sdk": "iphoneos 27.2",
+  "xcode": "Xcode 27.3 (27C5020n)",
+  "sdk": "iphoneos 27.3",
   "types": {
     "GeoToolbox.PlaceDescriptor": "iOS 26+, macOS 26+, visionOS 26+, watchOS 26+, tvOS 26+",
     "LinkPresentation.LinkMetadata": "iOS 26.4+, macOS 26.4+, visionOS 26.4+, watchOS 26.4+, tvOS 26.4+",
@@ -1886,7 +1886,10 @@
               "optional": false
             }
           ],
-          "returns": ".maps.navigationSession"
+          "returns": ".maps.navigationSession",
+          "warnings": [
+            "App Intents use case 'Start Navigation' is missing the schema 'maps.placeIntentValueQuery'. Fix-it: `extension .maps.place: IntentValueQuery { func values(for input: [GeoToolbox.PlaceDescriptor]) async throws -> [.maps.place] }`"
+          ]
         },
         {
           "name": "stopNavigation",
@@ -3663,6 +3666,470 @@
       "enums": [],
       "unions": {},
       "singleCase": {}
+    },
+    {
+      "name": "video",
+      "tier": "primary",
+      "intents": [
+        {
+          "name": "addToWatchList",
+          "available": "iOS 27.3+, tvOS 27.3+, visionOS 27.3+; not macOS",
+          "parameters": [
+            {
+              "name": "content",
+              "type": "WatchListContent",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "playContent",
+          "available": "iOS 27.3+, tvOS 27.3+, visionOS 27.3+; not macOS",
+          "parameters": [
+            {
+              "name": "content",
+              "type": "VideoContent",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "playTrailer",
+          "available": "iOS 27.3+, tvOS 27.3+, visionOS 27.3+; not macOS",
+          "parameters": [
+            {
+              "name": "content",
+              "type": "TrailerContent",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "removeFromWatchList",
+          "available": "iOS 27.3+, tvOS 27.3+, visionOS 27.3+; not macOS",
+          "parameters": [
+            {
+              "name": "content",
+              "type": "WatchListContent",
+              "optional": false
+            }
+          ]
+        }
+      ],
+      "entities": [
+        {
+          "name": "contentCreator",
+          "available": "iOS 27.3+, tvOS 27.3+, visionOS 27.3+; not macOS",
+          "properties": [
+            {
+              "name": "channelName",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "images",
+              "type": "[.video.image]",
+              "optional": false
+            },
+            {
+              "name": "name",
+              "type": "String",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "freeformVideo",
+          "available": "iOS 27.3+, tvOS 27.3+, visionOS 27.3+; not macOS",
+          "properties": [
+            {
+              "name": "collaborators",
+              "type": "[.video.contentCreator]",
+              "optional": false
+            },
+            {
+              "name": "contentType",
+              "type": ".video.videoContentType",
+              "optional": false
+            },
+            {
+              "name": "creator",
+              "type": ".video.contentCreator",
+              "optional": true
+            },
+            {
+              "name": "description",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "duration",
+              "type": "Duration",
+              "optional": true
+            },
+            {
+              "name": "images",
+              "type": "[.video.image]",
+              "optional": false
+            },
+            {
+              "name": "isExplicitContent",
+              "type": "Bool",
+              "optional": false
+            },
+            {
+              "name": "releaseDate",
+              "type": "Date",
+              "optional": true
+            },
+            {
+              "name": "tags",
+              "type": "[String]",
+              "optional": false
+            },
+            {
+              "name": "title",
+              "type": "String",
+              "optional": false
+            },
+            {
+              "name": "url",
+              "type": "URL",
+              "optional": true
+            },
+            {
+              "name": "viewCount",
+              "type": "Int",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "image",
+          "available": "iOS 27.3+, tvOS 27.3+, visionOS 27.3+; not macOS",
+          "properties": [
+            {
+              "name": "height",
+              "type": "Int",
+              "optional": true
+            },
+            {
+              "name": "type",
+              "type": ".video.imageType",
+              "optional": false
+            },
+            {
+              "name": "url",
+              "type": "URL",
+              "optional": false
+            },
+            {
+              "name": "width",
+              "type": "Int",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "movie",
+          "available": "iOS 27.3+, tvOS 27.3+, visionOS 27.3+; not macOS",
+          "properties": [
+            {
+              "name": "castAndCrew",
+              "type": "[.video.person]",
+              "optional": false
+            },
+            {
+              "name": "description",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "duration",
+              "type": "Duration",
+              "optional": true
+            },
+            {
+              "name": "genres",
+              "type": "[String]",
+              "optional": false
+            },
+            {
+              "name": "images",
+              "type": "[.video.image]",
+              "optional": false
+            },
+            {
+              "name": "releaseDate",
+              "type": "Date",
+              "optional": true
+            },
+            {
+              "name": "title",
+              "type": "String",
+              "optional": false
+            },
+            {
+              "name": "trailers",
+              "type": "[URL]",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "person",
+          "available": "iOS 27.3+, tvOS 27.3+, visionOS 27.3+; not macOS",
+          "properties": [
+            {
+              "name": "characterNames",
+              "type": "[String]",
+              "optional": false
+            },
+            {
+              "name": "description",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "image",
+              "type": ".video.image",
+              "optional": true
+            },
+            {
+              "name": "name",
+              "type": "String",
+              "optional": false
+            },
+            {
+              "name": "roles",
+              "type": "[.video.personRole]",
+              "optional": false
+            },
+            {
+              "name": "url",
+              "type": "URL",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "tvEpisode",
+          "available": "iOS 27.3+, tvOS 27.3+, visionOS 27.3+; not macOS",
+          "properties": [
+            {
+              "name": "castAndCrew",
+              "type": "[.video.person]",
+              "optional": false
+            },
+            {
+              "name": "description",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "duration",
+              "type": "Duration",
+              "optional": true
+            },
+            {
+              "name": "episodeNumber",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "images",
+              "type": "[.video.image]",
+              "optional": false
+            },
+            {
+              "name": "premiereDate",
+              "type": "Date",
+              "optional": true
+            },
+            {
+              "name": "seasonNumber",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "title",
+              "type": "String",
+              "optional": false
+            },
+            {
+              "name": "trailers",
+              "type": "[URL]",
+              "optional": false
+            },
+            {
+              "name": "tvSeason",
+              "type": ".video.tvSeason",
+              "optional": true
+            },
+            {
+              "name": "tvShow",
+              "type": ".video.tvShow",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "tvSeason",
+          "available": "iOS 27.3+, tvOS 27.3+, visionOS 27.3+; not macOS",
+          "properties": [
+            {
+              "name": "castAndCrew",
+              "type": "[.video.person]",
+              "optional": false
+            },
+            {
+              "name": "description",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "images",
+              "type": "[.video.image]",
+              "optional": false
+            },
+            {
+              "name": "premiereDate",
+              "type": "Date",
+              "optional": true
+            },
+            {
+              "name": "seasonNumber",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "title",
+              "type": "String",
+              "optional": false
+            },
+            {
+              "name": "trailers",
+              "type": "[URL]",
+              "optional": false
+            },
+            {
+              "name": "tvShow",
+              "type": ".video.tvShow",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "tvShow",
+          "available": "iOS 27.3+, tvOS 27.3+, visionOS 27.3+; not macOS",
+          "properties": [
+            {
+              "name": "castAndCrew",
+              "type": "[.video.person]",
+              "optional": false
+            },
+            {
+              "name": "description",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "finaleDate",
+              "type": "Date",
+              "optional": true
+            },
+            {
+              "name": "genres",
+              "type": "[String]",
+              "optional": false
+            },
+            {
+              "name": "images",
+              "type": "[.video.image]",
+              "optional": false
+            },
+            {
+              "name": "premiereDate",
+              "type": "Date",
+              "optional": true
+            },
+            {
+              "name": "seasonCount",
+              "type": "Int",
+              "optional": true
+            },
+            {
+              "name": "title",
+              "type": "String",
+              "optional": false
+            },
+            {
+              "name": "trailers",
+              "type": "[URL]",
+              "optional": false
+            }
+          ]
+        }
+      ],
+      "enums": [
+        {
+          "name": "imageType",
+          "available": "iOS 27.3+, tvOS 27.3+, visionOS 27.3+; not macOS",
+          "cases": [
+            "headshot",
+            "hero",
+            "logo",
+            "standardPoster",
+            "widePoster"
+          ]
+        },
+        {
+          "name": "personRole",
+          "available": "iOS 27.3+, tvOS 27.3+, visionOS 27.3+; not macOS",
+          "cases": [
+            "actor",
+            "creator",
+            "director",
+            "executiveProducer",
+            "other",
+            "producer",
+            "writer"
+          ]
+        },
+        {
+          "name": "videoContentType",
+          "available": "iOS 27.3+, tvOS 27.3+, visionOS 27.3+; not macOS",
+          "cases": [
+            "live",
+            "longForm",
+            "shortForm"
+          ]
+        }
+      ],
+      "unions": {
+        "TrailerContent": [
+          ".video.movie",
+          ".video.tvShow",
+          ".video.tvSeason"
+        ],
+        "VideoContent": [
+          ".video.movie",
+          ".video.tvShow",
+          ".video.tvSeason",
+          ".video.tvEpisode",
+          ".video.freeformVideo"
+        ],
+        "WatchListContent": [
+          ".video.movie",
+          ".video.tvShow",
+          ".video.freeformVideo"
+        ]
+      },
+      "singleCase": {
+        "TrailerContent": "yes",
+        "VideoContent": "yes",
+        "WatchListContent": "yes"
+      }
     },
     {
       "name": "assistant",

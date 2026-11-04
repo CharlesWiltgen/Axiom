@@ -4,7 +4,7 @@ What the build enforces for every App Intents system schema (`@AppIntent(schema:
 
 ## Reading the Tables
 
-- **Every listed member is required.** The build fails without it, and extra parameters, properties and cases are allowed. `?` is the type you must declare, not permission to leave the member out: `dueDate: DateComponents?` must be declared, as optional. A required member declared non-optional fails with `to be optional` (Xcode 27.1: `must be optional`), and the reverse fails too (27.1: `must not be optional`). The build reports nothing about members that are not required, so none appear here.
+- **Every listed member is required.** The build fails without it. Extra members are allowed, with limits (measured on 27C5020n): an extra intent parameter must be optional (`Intent parameters not defined by AppSchemaIntent 'x' must be optional`), and an extra entity property is exported only if you mark it `@Property`. `?` is the type you must declare, not permission to leave the member out: `dueDate: DateComponents?` must be declared, as optional. A required member declared non-optional fails with `to be optional` (Xcode 27.1: `must be optional`), and the reverse fails too (27.1: `must not be optional`). The build reports nothing about members that are not required, so none appear here.
 - **Types are spelled the way you write them.** `.notes.folder` means your own type that adopts `@AppEntity(schema: .notes.folder)`. `AppEntity` means any entity type of yours: the build accepted one that adopts no schema.
 - **Unions.** A capitalized name that is not a Swift type, such as `AudioItem`, is a `@UnionValue` enum of your own; Xcode 27.1's build messages call it `AudioItemCases`, and 27.2 spells out `a @UnionValue with cases limited to the types …`. You choose the enum's name and its case names. Each case's payload type comes from the union's row. In the last column, `yes` means the build accepted the union cut to only its first case and to only its last, and rejected it cut to one wrong case. `no` means a cut failed. `unverified` means the wrong case also built, so the cuts prove nothing. Middle cases were not tested alone. Every entity a union wraps must also be resolvable (below).
 - **Adopting a schema means adopting what it names.** `createReminder` takes `.reminders.list`, `.reminders.section` and `.reminders.locationTrigger`, so each needs a type of yours adopting that schema, with that schema's own required members, down to the enums they use.
@@ -20,9 +20,9 @@ What the build enforces for every App Intents system schema (`@AppIntent(schema:
 - **"needs `static let …`"** is a static member the build demands by value.
 - **Every entity** also needs `id`, `displayRepresentation` and `static let defaultQuery`. **Every enum** needs `caseDisplayRepresentations` covering its cases. Never declare `typeDisplayRepresentation` on a schema type, because the macro supplies it.
 - **Tiers** follow Apple's grouping. Apple documents Primary domains for Apple Intelligence and Siri, Shortcuts-specific domains for the Shortcuts app, and Single-purpose domains each for one system feature (the Japan side-button assistant, visual intelligence).
-- **Platforms.** No domain exists on watchOS or tvOS. A domain's Platforms value applies to each of its rows unless the row is tagged. A row's tag is the newest release among the row itself and every type it names, schema or not, unless the build also accepts an older type for that member: `.photos.asset` and Journal's `createEntry`, `updateEntry` and `entry` list `location: GeoToolbox.PlaceDescriptor?`, which is iOS 26, but `location: CLPlacemark?` builds from an iOS 18 deployment target (measured at 18.0, 26.0 and 27.2), so those rows keep their iOS 18 availability and code below iOS 26 declares `CLPlacemark?`. For a deployment target below a row's release, gate every schema type, union and query with `@available` for that release, and exclude watchOS and tvOS: for 27, `@available(anyAppleOS 27, *) @available(watchOS, unavailable) @available(tvOS, unavailable)`. Without the exclusions, any target that also builds for watchOS or tvOS fails with `'reminders' is unavailable in watchOS` (or that domain's name).
+- **Platforms.** No domain exists on watchOS, and Video (27.3) is the only one on tvOS. A domain's Platforms value applies to each of its rows unless the row is tagged. A row's tag is the newest release among the row itself and every type it names, schema or not, unless the build also accepts an older type for that member: `.photos.asset` and Journal's `createEntry`, `updateEntry` and `entry` list `location: GeoToolbox.PlaceDescriptor?`, which is iOS 26, but `location: CLPlacemark?` builds from an iOS 18 deployment target (measured at 18.0, 26.0 and 27.2), so those rows keep their iOS 18 availability and code below iOS 26 declares `CLPlacemark?`. For a deployment target below a row's release, gate every schema type, union and query with `@available` for that release, and exclude watchOS and tvOS: for 27, `@available(anyAppleOS 27, *) @available(watchOS, unavailable) @available(tvOS, unavailable)`. Without the exclusions, any target that also builds for watchOS or tvOS fails with `'reminders' is unavailable in watchOS` (or that domain's name).
 - **"deprecated in 27; use `.x.y`"** is the SDK's own deprecation. The replacements are themselves `OS27`. On a 27 deployment target, adopt the replacement. Below that, keep the deprecated schema for older releases and gate the replacement with `@available`.
-- **Build warnings** under a domain are use-case checks. The build succeeds without them, but the named use case is incomplete. Each carries Xcode's fix-it. On Xcode 27.2, Maps' `App Intents use case 'Start Navigation' is missing the schema 'maps.placeIntentValueQuery'` printed in a control build that also had schema errors and not in the clean build of the same Maps code, so the 27.2 census, which reads the clean build, lists none.
+- **Build warnings** under a domain are use-case checks. The build succeeds without them, but the named use case is incomplete. Each carries Xcode's fix-it. Only the census's own control code is shown here; leaving out another member of a group (Message Sending, Mail Composing/Replying/Forwarding, Cancel Alarm) gives the same kind of warning, measured on 27C5020n. On Xcode 27.2 the Maps warning printed only in a control build that also had schema errors; from 27.3 it prints in the clean build.
 
 ## Build Errors
 
@@ -42,7 +42,7 @@ All of these come from the `ExtractAppIntentsMetadata` phase, which runs only af
 | `type 'X' does not conform to protocol 'OpenIntent'` (or `DeleteIntent`, `FileEntity`, …), a Swift error | Add that protocol's members (above) |
 
 <!-- generated by node scripts/app-schemas.ts from scripts/app-schemas.json; edit those, not the text below -->
-Census: Xcode 27.2 (27B52), iphoneos 27.2 SDK. A control build adopting every schema exactly as listed produced no errors.
+Census: Xcode 27.3 (27C5020n), iphoneos 27.3 SDK. A control build adopting every schema exactly as listed produced no errors.
 
 ## Audio
 
@@ -230,6 +230,10 @@ Enums with no required cases: `amenity`, `incident`, `navigationPreferences`, `o
 |---|---|---|
 | `MapsLocation` | `.maps.place, .maps.currentLocation` | yes |
 
+Build warnings (the build still succeeds):
+
+- `startNavigation`: App Intents use case 'Start Navigation' is missing the schema 'maps.placeIntentValueQuery'. Fix-it: `extension .maps.place: IntentValueQuery { func values(for input: [GeoToolbox.PlaceDescriptor]) async throws -> [.maps.place] }`
+
 ## Messages
 
 **Tier**: Primary. **Platforms**: OS27
@@ -375,6 +379,40 @@ Enums with no required cases: `albumType`, `assetType`, `filterType`, `rotationD
 | `open` (OpenIntent) | `target: AppEntity` | — |
 | `search` (ShowInAppSearchResultsIntent) (iOS 18+, macOS 15+, visionOS 2+), deprecated in 27; use `.system.searchInApp` | `criteria: StringSearchCriteria` | — |
 | `searchInApp` (ShowInAppSearchResultsIntent) | `criteria: StringSearchCriteria` | — |
+
+## Video
+
+**Tier**: Primary. **Platforms**: iOS 27.3+, tvOS 27.3+, visionOS 27.3+; not macOS
+
+| Intent | Required parameters | Returns |
+|---|---|---|
+| `addToWatchList` | `content: WatchListContent` | — |
+| `playContent` | `content: VideoContent` | — |
+| `playTrailer` | `content: TrailerContent` | — |
+| `removeFromWatchList` | `content: WatchListContent` | — |
+
+| Entity | Required properties |
+|---|---|
+| `contentCreator` | `channelName: String?, images: [.video.image], name: String` |
+| `freeformVideo` | `collaborators: [.video.contentCreator], contentType: .video.videoContentType, creator: .video.contentCreator?, description: String?, duration: Duration?, images: [.video.image], isExplicitContent: Bool, releaseDate: Date?, tags: [String], title: String, url: URL?, viewCount: Int?` |
+| `image` | `height: Int?, type: .video.imageType, url: URL, width: Int?` |
+| `movie` | `castAndCrew: [.video.person], description: String?, duration: Duration?, genres: [String], images: [.video.image], releaseDate: Date?, title: String, trailers: [URL]` |
+| `person` | `characterNames: [String], description: String?, image: .video.image?, name: String, roles: [.video.personRole], url: URL?` |
+| `tvEpisode` | `castAndCrew: [.video.person], description: String?, duration: Duration?, episodeNumber: String?, images: [.video.image], premiereDate: Date?, seasonNumber: String?, title: String, trailers: [URL], tvSeason: .video.tvSeason?, tvShow: .video.tvShow` |
+| `tvSeason` | `castAndCrew: [.video.person], description: String?, images: [.video.image], premiereDate: Date?, seasonNumber: String?, title: String, trailers: [URL], tvShow: .video.tvShow` |
+| `tvShow` | `castAndCrew: [.video.person], description: String?, finaleDate: Date?, genres: [String], images: [.video.image], premiereDate: Date?, seasonCount: Int?, title: String, trailers: [URL]` |
+
+| Enum | Required cases |
+|---|---|
+| `imageType` | `headshot, hero, logo, standardPoster, widePoster` |
+| `personRole` | `actor, creator, director, executiveProducer, other, producer, writer` |
+| `videoContentType` | `live, longForm, shortForm` |
+
+| Union (`@UnionValue`) | Cases | Builds with only its first case, and with only its last |
+|---|---|---|
+| `TrailerContent` | `.video.movie, .video.tvShow, .video.tvSeason` | yes |
+| `VideoContent` | `.video.movie, .video.tvShow, .video.tvSeason, .video.tvEpisode, .video.freeformVideo` | yes |
+| `WatchListContent` | `.video.movie, .video.tvShow, .video.freeformVideo` | yes |
 
 ## Assistant
 
