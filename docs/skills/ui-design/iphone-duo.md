@@ -33,7 +33,7 @@ Use this skill when:
 - **Vertical bars** – which bars move to the side, item order, overflow priorities, and when to turn the behavior off
 - **The fold and the inner camera** – rules for keeping controls clear of both without hiding them, and for spacing and sizing custom grids around the fold
 - **27.1 APIs** – vertical-bar overrides, reserved regions, arrangements, the hinge, and the camera accessory, with iOS 27.1 availability and `@available` gating; the camera-direction types build with Xcode 27.1 or the Xcode 27.2 RC and release but are missing from Xcode 27.2 beta 2
-- **Simulator testing** – which runtime carries the Duo device type, why only Xcode's Device Hub can change poses, and how to capture each display
+- **Simulator testing** – which runtime carries the Duo device type, changing poses from Device Hub or (Xcode 27.3) a UI test that sets the hinge angle, and how to capture each display
 - **Bar metrics** – the vertical bar's measured width, and why a symbol's point size in the bar doesn't match the same symbol elsewhere
 
 ## Documentation Scope

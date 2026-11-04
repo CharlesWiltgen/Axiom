@@ -71,7 +71,7 @@ This page documents the `xctest-automation` skill (in the `axiom-testing` suite)
 
 - [ui-recording](/skills/testing/ui-recording) – record UI tests in Xcode 26 instead of writing them from scratch
 - [ui-testing](/skills/ui-design/ui-testing) – accessibility-first testing, multi-device configurations, and network conditioning
-- [swift-testing](/skills/testing/swift-testing) – Swift Testing for unit tests (keep XCUITest for UI tests)
+- [swift-testing](/skills/testing/swift-testing) – Swift Testing for unit tests, and for UI tests from Xcode 27.3
 
 ## Resources
 

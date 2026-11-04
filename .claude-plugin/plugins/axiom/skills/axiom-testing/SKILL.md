@@ -33,6 +33,7 @@ license: MIT
 | Writing UI tests, XCUITest | See `skills/ui-testing.md` |
 | Driving VoiceOver from a UI test, asserting spoken output (`OS27`) | See `skills/ui-testing.md` Pattern 7 |
 | Testing App Intents through the system, AppIntentsTesting (`OS27`) | See `skills/ui-testing.md` Pattern 8, then axiom-integration (`skills/app-intents-ref.md`) |
+| Testing how Siri AI uses the app's intents — SiriEvaluations, scripted Siri scenarios (27.3) | Use axiom-integration (`skills/siri-evaluations-ref.md`) |
 | Condition-based waiting patterns | See `skills/ui-testing.md` |
 | Recording UI Automation (Xcode 26) | See `skills/ui-testing.md` |
 | Network conditioning, multi-factor testing | See `skills/ui-testing.md` |
@@ -81,8 +82,8 @@ digraph testing {
 | Need | Use |
 |------|-----|
 | Unit tests (logic, models) | Swift Testing |
-| UI tests (tap, swipe, assert screens) | XCUITest (XCTest) |
-| App Intents run through the system (AppIntentsTesting) | UI Testing Bundle with XCTest. Swift Testing works there only with an undocumented build-setting override |
+| UI tests (tap, swipe, assert screens) | XCUIAutomation, from XCTest or (Xcode 27.3+) Swift Testing |
+| App Intents run through the system (AppIntentsTesting, SiriEvaluations) | UI Testing Bundle. Swift Testing is supported there from Xcode 27.3; through 27.2 only with an undocumented build-setting override |
 | Tests without simulator | Package/Framework (either framework) |
 | Parameterized tests | Swift Testing |
 | Performance measurements | XCTest (XCTMetric) |

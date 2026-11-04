@@ -65,7 +65,7 @@ This page documents the `ui-recording` skill (in the `axiom-testing` suite).
 
 - [xctest-automation](/skills/testing/xctest-automation) – XCUITest patterns for element queries, waiting strategies, and CI/CD integration
 - [ui-testing](/skills/ui-design/ui-testing) – condition-based waiting, accessibility-first testing, and network conditioning for UI tests
-- [swift-testing](/skills/testing/swift-testing) – the Swift Testing framework for unit tests (UI tests stay on XCUITest)
+- [swift-testing](/skills/testing/swift-testing) – the Swift Testing framework for unit tests, and for UI tests from Xcode 27.3
 
 ## Resources
 
