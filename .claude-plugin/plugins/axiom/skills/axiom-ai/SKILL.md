@@ -41,6 +41,7 @@ Use this router when:
 | Cloud Claude integration (Anthropic SDK, Messages API, Claude Agent SDK) | **See `claude-api` skill** (external) → includes automated Opus 4.6 → 4.7 migration |
 | Speech-to-text / transcription (SpeechAnalyzer, SpeechTranscriber, DictationTranscriber, mic → transcript) | **See skills/speech.md** (`OS27` input providers, Swift 6 mic-tap isolation, the ~2-analyzer cap on iOS/visionOS; none on macOS) |
 | Turnkey Apple Intelligence UI — suggested actions for a messaging conversation (`OS27`) | **See skills/suggested-actions.md** → drop-in `SuggestedActionsView`, entitlement-gated |
+| Siri AI calling the app's actions — `ToolIntent`/`@AppIntent(.tool)`, `@AppEntity(.generable)`, App Skills, SiriEvaluations (27.3) | **Use axiom-integration** → axiom-integration (skills/siri-ai.md), axiom-integration (skills/siri-evaluations-ref.md) (App Intents, not Foundation Models `Tool`) |
 | System AI features (Writing Tools, Genmoji) | No custom code needed — these are system-provided |
 
 **Key boundary: Foundation Models vs ML (custom models)**

@@ -23,6 +23,8 @@ flowchart LR
         background_processing["background-processing"]:::discipline
         push_notifications["push-notifications"]:::discipline
         shazamkit["ShazamKit"]:::discipline
+        app_intents["app-intents"]:::discipline
+        siri_ai["siri-ai"]:::discipline
         siri_audio["siri-audio"]:::discipline
         siri_notes_reminders["siri-notes-reminders"]:::discipline
         core_location["core-location"]:::discipline
@@ -35,6 +37,7 @@ flowchart LR
     subgraph skills_r["References"]
         app_intents_ref["app-intents-ref"]:::reference
         siri_audio_ref["siri-audio-ref"]:::reference
+        siri_evaluations_ref["siri-evaluations-ref"]:::reference
         app_schemas_ref["app-schemas-ref"]:::reference
         storekit_ref["StoreKit reference"]:::reference
         avfoundation_ref["avfoundation-ref"]:::reference
@@ -96,6 +99,33 @@ Audio recognition and custom audio matching:
 **When to use** Adding song recognition, building audio-synced experiences, creating custom audio catalogs, managing Shazam library
 
 **Requirements** iOS 15+ (SHSession), iOS 17+ (SHManagedSession, SHLibrary)
+
+---
+
+### [App Intents: Traps That Compile](./app-intents)
+
+App Intents code that builds cleanly and then fails when the system runs it:
+- **Cold launches** – `@Dependency` values that don't exist yet when Siri starts your app
+- **Re-running `perform()`** – Why an intent can charge twice, and where confirmations go
+- **Results and errors** – Values the system can't see and errors Siri shows as generic
+- **Saved shortcuts** – Entity identifiers and enum values that must never change
+
+**When to use** Writing or reviewing any App Intent, or before adding Siri AI support
+
+---
+
+### [Siri AI: Custom Actions and Content](./siri-ai)
+
+Bringing your app's own actions and content to Siri AI, the Apple Intelligence version of Siri (27.3 developer preview):
+- **Tool intents** – `@AppIntent(.tool)` lets Siri call any intent, not only ones that fit a schema domain
+- **Generable entities** – Values Siri writes itself from a request, like a flight search or a study plan
+- **Entity properties** – Descriptions Siri reads, and properties hidden from it
+- **App Skills** – Task guidance in a `Skills.skillsbundle`, checked at build time
+- **Testing** – `sirimetadataanalyzer`, and SiriEvaluations through [siri-evaluations-ref](/reference/siri-evaluations-ref)
+
+**When to use** Making an app work with Siri AI, or debugging a tool Siri doesn't call or fills in wrongly
+
+**Requirements** iOS, iPadOS, macOS, or visionOS 27.3+ on a device with Apple Intelligence
 
 ---
 
