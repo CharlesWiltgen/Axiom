@@ -32,6 +32,15 @@ Every discipline skill is TDD-tested against real developer pressure scenarios. 
 
 Then search for "axiom" in the `/plugin` menu and install.
 
+### Codex (native plugin)
+
+```bash
+codex plugin marketplace add CharlesWiltgen/Axiom
+codex plugin add axiom@axiom-marketplace
+```
+
+Axiom's generated Cursor plugin includes 27 skill routers, 43 agents, 17 `/axiom-*` commands, advisory hooks, and automatic discovery of its MCP server configuration. See the [Cursor install and support guide](https://charleswiltgen.github.io/Axiom/start/cursor-install) for the macOS support boundary and local installation steps.
+
 ### Claude app (browser and desktop)
 
 In your browser at claude.ai or in Claude Desktop, open **Customize > Plugins**, select **Add > Add marketplace** and enter `CharlesWiltgen/Axiom`, then add the **axiom** plugin. Chat loads the skills, Cowork adds the agents and hooks, and Claude Code picks the plugin up from your account. See the [Claude app guide](https://charleswiltgen.github.io/Axiom/start/claude-app-install).
