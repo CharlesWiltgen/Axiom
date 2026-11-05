@@ -39,7 +39,7 @@ codex plugin marketplace add CharlesWiltgen/Axiom
 codex plugin add axiom@axiom-marketplace
 ```
 
-Axiom's generated Cursor plugin includes 27 skill routers, 43 agents, 17 `/axiom-*` commands, advisory hooks, and automatic discovery of its MCP server configuration. See the [Cursor install and support guide](https://charleswiltgen.github.io/Axiom/start/cursor-install) for the macOS support boundary and local installation steps.
+Axiom's generated Codex plugin includes skills, auditor workflows, bundled command-line helpers, lifecycle hooks, and MCP server configuration. See the [Codex install guide](https://charleswiltgen.github.io/Axiom/start/codex-install) for installation steps, enabling hooks, verifying the installation, and the skills-only alternative.
 
 ### Claude app (browser and desktop)
 
