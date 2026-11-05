@@ -1073,8 +1073,8 @@
     },
     {
       "path": "skills/axiom-integration/skills/siri-ai.md",
-      "sha256": "58d4c030bb84df1b983892e49f5de1b423a5b8afd23c0ddecd01a0646b9324d0",
-      "bytes": 31931
+      "sha256": "07687de30eb4984e2e5d9e30c87858939d0ab55d9cc9585eb5ca0f0dbd8e0ecc",
+      "bytes": 32951
     },
     {
       "path": "skills/axiom-integration/skills/siri-audio-diag.md",
@@ -1093,8 +1093,8 @@
     },
     {
       "path": "skills/axiom-integration/skills/siri-evaluations-ref.md",
-      "sha256": "bed5774c4ccdc32ffc4bf8964d56aadca50d2e5cc0c434e197c264f59165418f",
-      "bytes": 18853
+      "sha256": "f16577983fe4c18330bc3549f803e5b4949d100b1eca037fda89181da359d885",
+      "bytes": 19979
     },
     {
       "path": "skills/axiom-integration/skills/siri-notes-reminders.md",
@@ -1663,8 +1663,8 @@
     },
     {
       "path": "skills/axiom-swiftui/skills/26-ref.md",
-      "sha256": "d9f7e57e1dfb9b01beb42d3494625dbd5ada4930d41585aa8a6aa03e130352d0",
-      "bytes": 54920
+      "sha256": "7891bb81496a34d88b5661f46e78db4ab4bb8c8db682ed5979dfc6b3a2a46e70",
+      "bytes": 55260
     },
     {
       "path": "skills/axiom-swiftui/skills/animation-ref.md",
@@ -1969,7 +1969,7 @@
   ],
   "totals": {
     "files": 393,
-    "bytes": 8187277
+    "bytes": 8189763
   },
   "excludedMirrors": 32,
   "classes": {
