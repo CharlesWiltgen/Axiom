@@ -1,12 +1,12 @@
 # Axiom for Cursor
 
-A native Cursor plugin for modern Apple platform development, generated from Axiom 27.7.3.
+A native Cursor plugin for modern Apple platform development, generated from Axiom 27.8.0.
 
 ## Included
 
 - 27 skill routers
 - 44 agents
-- 17 `/axiom-*` commands
+- 18 `/axiom-*` commands
 - Advisory session, shell, and post-write hooks
 - Automatic plugin-root MCP discovery
 - 32 generated mirrors intentionally excluded
@@ -27,7 +27,7 @@ Clone Axiom to a stable absolute path and check out the revision you intend to t
 
 Cursor imports the local marketplace into its plugin cache; it does not follow later checkout changes automatically. After changing revisions or regenerating `axiom-cursor/`, uninstall Axiom, remove **Axiom Cursor Marketplace**, and repeat the local-repository flow before testing.
 
-Open Cursor's Customize panel and verify Axiom's version plus all 27 skills, 44 agents, 17 commands, hooks, and MCP server before relying on the installation.
+Open Cursor's Customize panel and verify Axiom's version plus all 27 skills, 44 agents, 18 commands, hooks, and MCP server before relying on the installation.
 
 ## Axiom Tools
 

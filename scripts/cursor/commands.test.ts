@@ -284,7 +284,7 @@ test("keeps argument-bearing command metadata in YAML frontmatter", () => {
   const argumentBearing = source.commands.filter((entry) =>
     entry.frontmatter["argument-hint"] !== undefined || entry.frontmatter.argument !== undefined,
   );
-  assert.equal(argumentBearing.length, 5);
+  assert.equal(argumentBearing.length, 6);
   for (const entry of argumentBearing) {
     const file = transformCommand(entry);
     const parsed = matter(file.content);

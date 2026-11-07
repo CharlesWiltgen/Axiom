@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "27.7.3",
+  "version": "27.8.0",
   "description": "Battle-tested Claude Code skills, agents, and tools for modern xOS (iOS, iPadOS, macOS, watchOS, tvOS) development",
   "author": "Charles Wiltgen",
   "license": "MIT",
@@ -21,7 +21,8 @@
     "./commands/test-simulator.md",
     "./commands/triage.md",
     "./commands/console.md",
-    "./commands/ui.md"
+    "./commands/ui.md",
+    "./commands/siri.md"
   ],
   "skills": [
     {

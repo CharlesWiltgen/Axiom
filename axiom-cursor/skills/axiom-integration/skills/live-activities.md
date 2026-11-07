@@ -173,6 +173,7 @@ func startDelivery(_ attributes: PizzaDeliveryAttributes,
 - **Expansion.** An activity expands only when the user clicks or taps it, or when an update carries an alert. Only one is expanded at a time, so alert only for high-priority updates or ones that need a response.
 - **Starting it.** On a local event, at a scheduled time, or by push. It works with the Mac's background tasks and user agents.
 - **Dismissal.** Users can hide or end an activity by swiping or from its context menu, so it can disappear before your `end`.
+- **Sandboxed apps can't start one on the macOS 27.3 beta.** The app sandbox profile doesn't allow the lookup of `com.apple.sessionservices`, the Live Activities service, so in a sandboxed app (every Mac App Store app) `areActivitiesEnabled` is `false` and `Activity.request` throws, while the same app unsandboxed works. The `guard` above then returns `nil` with no error, so log that case. To test on this beta, add `com.apple.security.temporary-exception.mach-lookup.global-name` = `[com.apple.sessionservices]` to a development build only; don't ship a temporary exception to work around a beta bug. Recheck on each new macOS build. Mac Catalyst apps are sandboxed by default too (untested).
 
 
 ## Common Mistakes

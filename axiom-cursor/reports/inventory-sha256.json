@@ -3,12 +3,12 @@
   "files": [
     {
       "path": ".cursor-plugin/plugin.json",
-      "sha256": "c692dc19c3c9e4d742bf168ec35f3772078f49434218033687b270812b930b49",
+      "sha256": "c42b9fdd6003e641c40598948f535ca5b78cff7e5dd8c12ad275c426e1b6d522",
       "bytes": 578
     },
     {
       "path": "README.md",
-      "sha256": "7a917c3fbf1e8f783a2a1a86447c24caca7bfb01ef061b0915cf343c22246064",
+      "sha256": "b177ebed57d779ec58e54e86d5ce4d661fa9ad70475139b53955e01a14d3aee6",
       "bytes": 4374
     },
     {
@@ -138,8 +138,8 @@
     },
     {
       "path": "agents/siri-ai-auditor.md",
-      "sha256": "333ed1bc27a41752598eb63a66fd540a88f2a1ca5598fa36bac886588c150ea4",
-      "bytes": 17519
+      "sha256": "04e3452f0888f1d3da1435390783ada1d541fb194ea5c6420d3b32092ad5baba",
+      "bytes": 18189
     },
     {
       "path": "agents/spm-conflict-resolver.md",
@@ -268,8 +268,8 @@
     },
     {
       "path": "commands/axiom-health-check.md",
-      "sha256": "2b3301d762caf972bedea3ec0838a6da720477372915ab505eb7943db5a4589d",
-      "bytes": 5851
+      "sha256": "d0c91bbeb6e6c95525ba54f62d9583fe59227e244b735c33f1dd64ef054da376",
+      "bytes": 5795
     },
     {
       "path": "commands/axiom-modernize.md",
@@ -302,6 +302,11 @@
       "bytes": 2198
     },
     {
+      "path": "commands/axiom-siri.md",
+      "sha256": "9b459f6d3b356548a856195330e319319696de8cae743af9fbfcd0d488456258",
+      "bytes": 4795
+    },
+    {
       "path": "commands/axiom-status.md",
       "sha256": "2808802b075a3d5f79ce53d6f0a01dc3688b3139967129b7cb89e132b5a61cc6",
       "bytes": 3860
@@ -313,8 +318,8 @@
     },
     {
       "path": "commands/axiom-triage.md",
-      "sha256": "0e074f34b4201c34d126c7c18e3cb00d5529152445c0d1a9c0b8791daf657215",
-      "bytes": 1617
+      "sha256": "820fd01b88a881ee31c0dc47908f867cfe708322d46af2a912d1ae184d1837d0",
+      "bytes": 1534
     },
     {
       "path": "commands/axiom-ui.md",
@@ -333,8 +338,8 @@
     },
     {
       "path": "reports/capability-disposition.json",
-      "sha256": "385cd5b38768c7b2e349e2bcb2dc5a4f43a52582b390e3ca378a7218fb55d46b",
-      "bytes": 34254
+      "sha256": "3ac6225d58d9b6b39302ee2b8763f621475dbc0a4955b63150379ce9e6dc3fb9",
+      "bytes": 34383
     },
     {
       "path": "scripts/cursor-hook-adapter.py",
@@ -373,8 +378,8 @@
     },
     {
       "path": "scripts/user-prompt-submit.py",
-      "sha256": "e57e44bc74d1bab9971b2b850e23e72f675349d36abbdbb66628ac19fa5b8f65",
-      "bytes": 52443
+      "sha256": "5e9cb3371189d6ebab9dbfd7563796252ba31f2bd3115fddbba22ceef2547ff6",
+      "bytes": 52533
     },
     {
       "path": "scripts/version_context.py",
@@ -488,8 +493,8 @@
     },
     {
       "path": "skills/axiom-ai/skills/foundation-models-ref.md",
-      "sha256": "82ab0bd4cbb25d73c7836f10eb9ae3c6c08895b44e223bd754f7e7d8cddccd64",
-      "bytes": 67082
+      "sha256": "6cabb3d0516524b8ab05f15532334782fe50cfc515105b92ac96a223324db51a",
+      "bytes": 67706
     },
     {
       "path": "skills/axiom-ai/skills/foundation-models.md",
@@ -898,8 +903,8 @@
     },
     {
       "path": "skills/axiom-integration/SKILL.md",
-      "sha256": "d079b67a1f9e022f745ba43540c6c47b0dc9bef8c71aaa50e25d6f30a2ac5453",
-      "bytes": 21423
+      "sha256": "e79f855fb54f853be7fe2b467862227aff5f6e1f29e34f9728e4d1e51eb4be8a",
+      "bytes": 21660
     },
     {
       "path": "skills/axiom-integration/skills/accessorysetupkit-ref.md",
@@ -928,13 +933,13 @@
     },
     {
       "path": "skills/axiom-integration/skills/app-intents.md",
-      "sha256": "5d1f5a0a51f6d3a6b2ed8f8d9c00d56abcd421f15cd35241acc10cb2bc17747d",
-      "bytes": 15079
+      "sha256": "ff2bc17b5e9ea1f6ec3f022c0b0043802729989aaaba4ef8b718fb4ab8ed4c55",
+      "bytes": 16214
     },
     {
       "path": "skills/axiom-integration/skills/app-schemas-ref.md",
-      "sha256": "a87e97900e091a69e7deb68f6f186c6aaa670557859fdeb42b67f9572be9a281",
-      "bytes": 44957
+      "sha256": "41293689633f4394988359e730495e65e146f1e6d87ec01c3b614add3833cc4e",
+      "bytes": 45092
     },
     {
       "path": "skills/axiom-integration/skills/app-shortcuts-ref.md",
@@ -1018,13 +1023,13 @@
     },
     {
       "path": "skills/axiom-integration/skills/live-activities-ref.md",
-      "sha256": "9423585479770272b5971c22347b073e8e9c41c034df4102cc8b1d07999e002f",
-      "bytes": 11730
+      "sha256": "83a8295bc4e96926c3d611f891bffc990764647ac52d65a3ddf46dbba17cf95a",
+      "bytes": 11906
     },
     {
       "path": "skills/axiom-integration/skills/live-activities.md",
-      "sha256": "33f5db109ea76490e98c9c47951505d7deb2eb27c4d5d886d7d53a3cd5fd07a8",
-      "bytes": 14421
+      "sha256": "774836666ecf97be8ac9477b4d0baaa485a2a4fa1a7bc6338becdc4d4c7b5077",
+      "bytes": 15117
     },
     {
       "path": "skills/axiom-integration/skills/local-push-connectivity.md",
@@ -1073,8 +1078,8 @@
     },
     {
       "path": "skills/axiom-integration/skills/siri-ai.md",
-      "sha256": "07687de30eb4984e2e5d9e30c87858939d0ab55d9cc9585eb5ca0f0dbd8e0ecc",
-      "bytes": 32951
+      "sha256": "952aa09406eca3feab4de10f6d3a3c36fed29134233bce714dbd14186af3a36a",
+      "bytes": 33136
     },
     {
       "path": "skills/axiom-integration/skills/siri-audio-diag.md",
@@ -1093,8 +1098,8 @@
     },
     {
       "path": "skills/axiom-integration/skills/siri-evaluations-ref.md",
-      "sha256": "f16577983fe4c18330bc3549f803e5b4949d100b1eca037fda89181da359d885",
-      "bytes": 19979
+      "sha256": "57aaf08ab7320165eb11c5e7bf920cef314160d1de86752725b6c365952aaef8",
+      "bytes": 19806
     },
     {
       "path": "skills/axiom-integration/skills/siri-notes-reminders.md",
@@ -1873,8 +1878,8 @@
     },
     {
       "path": "skills/axiom-uikit/skills/uikit-modernization.md",
-      "sha256": "181f13c383b74c1895cd2a4fbf50884e878f1e8612135f33b5e8192b382563eb",
-      "bytes": 29649
+      "sha256": "4b5060f208ef30ad8241067ab57cb78b344645ede955e491d65233fe2eaf1871",
+      "bytes": 29688
     },
     {
       "path": "skills/axiom-vision/SKILL.md",
@@ -1968,14 +1973,14 @@
     }
   ],
   "totals": {
-    "files": 393,
-    "bytes": 8189763
+    "files": 394,
+    "bytes": 8198362
   },
   "excludedMirrors": 32,
   "classes": {
     "routers": 27,
     "agents": 44,
-    "commands": 17,
+    "commands": 18,
     "releasedReadonlyBackground": 32,
     "releasedWritableForeground": 12
   },

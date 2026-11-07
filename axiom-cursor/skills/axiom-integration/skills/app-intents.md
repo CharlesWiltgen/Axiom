@@ -18,7 +18,7 @@ Apple's own coding-assistant guides ship in Xcode as plain markdown: `$(xcode-se
 | "It works when I tap the button, so it works from Siri" | The button ran on the main actor in a running app. Siri runs `perform()` off the main actor, maybe in an extension, maybe twice |
 | "The value is in `.result(value:)`, Siri can use it" | Not unless the return type declares `ReturnsValue<T>` |
 | "My `LocalizedError` already has a nice message" | Siri and Shortcuts ignore it and show a generic failure |
-| "Renaming this enum case is a refactor" | Saved shortcuts store the raw value. Renaming breaks them silently |
+| "Renaming this enum case is a refactor" | Saved shortcuts store the raw value. Renaming a case with an implicit raw value, or editing any raw value, breaks them silently |
 | "The build succeeded, so my intents shipped" | A successful build can export no App Intents metadata (Check the Built Metadata) |
 
 ## Rules at a Glance
@@ -27,10 +27,11 @@ Apple's own coding-assistant guides ship in Xcode as plain markdown: `$(xcode-se
 |---|---|
 | Register every `@Dependency` in `App.init()` | Siri launches the app cold; an unregistered one is an uncatchable `fatalError` |
 | `@Dependency` only on intents and queries, and `Sendable` | On an `AppEntity`/`AppEnum` it compiles and is never populated |
-| `perform()` isn't `@MainActor`: hop explicitly | Never mark the intent *type* `@MainActor` (`#ConformanceIsolation`) |
+| `perform()` has no actor isolation: hop explicitly, or mark the *method* `@MainActor` | Never mark the intent *type* `@MainActor` (`#ConformanceIsolation`) |
 | Irreversible work last; confirm first | `needsValueError` and `restartPerform` re-run `perform()` from the top, with no rollback |
 | Declare results: `some IntentResult & ReturnsValue<T>` | An undeclared `.result(value:)` compiles, but its type isn't exported (measured) |
 | Throw `CustomLocalizedStringResourceConvertible` or `AppIntentError` | A `LocalizedError` is shown as a generic failure |
+| No catch-all around `perform()` | It swallows or rewraps `needsValueError`, `restartPerform`, and confirmation cancels |
 | Donate in-app actions after they succeed, never in `perform()` | In-app taps aren't donated for you; the system already donates what it runs |
 | Only `@Property`-family members are visible to the system | A plain `var` is invisible to Shortcuts, Spotlight, and Siri |
 | Entity ids stable across launches *and devices*, ≤4,096 characters | No `UUID()` at launch, row ids, array indexes, or Photos `localIdentifier` |
@@ -54,7 +55,7 @@ struct NotesApp: App {
 }
 ```
 
-- An unregistered dependency traps inside the wrapper's getter. `try` can't catch it. If one may be absent, use the `@Dependency(default:)` initializer.
+- An unregistered dependency traps inside the wrapper's getter. `try` can't catch it. Registering in `App.init()` costs nothing up front: `add(dependency:)` takes an autoclosure, so the value is built on first use. `@Dependency(default:)` is only for a service that may genuinely be absent; never use it to skip registration, and never let the default build a second instance of a store the app also uses, or the intent writes to a copy the app never sees.
 - `@Dependency` is resolved on `AppIntent` and `DynamicOptionsProvider`, so on `EntityQuery`. On an `AppEntity` or `AppEnum` it compiles and is never prepared. Move data access into the query.
 - The value must be `Sendable`. An `@Observable final class` store isn't; make it `@MainActor @Observable final class` or an `actor`, or the intent fails to compile with `Stored property '_store' … contains non-Sendable type`.
 - An extension that vends intents registers in its own one-time setup.
@@ -73,11 +74,11 @@ try await payments.charge(amount)
 try await payments.send(amount, to: recipient)
 ```
 
-- `needsValueError` and `AppIntentError.restartPerform` re-enter `perform()` from the top without rolling anything back. Make anything before them idempotent. `try await $param.requestValue(_:)` asks inline without restarting (the overload you `throw` is deprecated).
+- `needsValueError` and `AppIntentError.restartPerform` re-enter `perform()` from the top without rolling anything back. Make anything before them idempotent. `try await $param.requestValue(_:)` asks inline without restarting (the non-async `requestValue(_:)` that returns an error to throw is deprecated).
 - The intent's `requestConfirmation(…)` throws on cancel, in the same pass. Put it right before the destructive step, and never wrap it in `try?`, which makes cancel act like confirm. `requestChoice` throws when the person picks `.cancel` too. The parameter form `$param.requestConfirmation(for:dialog:)` returns a `Bool` instead: branch on it.
-- **Don't wrap `perform()` in a catch-all.** A `do { … } catch { }` that swallows or rewraps errors also swallows `needsValueError`, `restartPerform`, and confirmation and choice cancels. Catch specific errors, and rethrow the rest.
+- **Don't wrap `perform()` in a catch-all.** A `do { … } catch { }` that swallows or rewraps errors also swallows `needsValueError`, `restartPerform`, and confirmation and choice cancels. Catch specific errors, and rethrow the rest. The smallest fix for your own `LocalizedError` type is to add `CustomLocalizedStringResourceConvertible` to it; convert errors from lower layers by catching their types by name.
 - **Foreground continuation**: `continueInForeground` throws where the app can't come forward, such as voice-only Siri. Check `systemContext.currentMode.canContinueInForeground` first, and give a voice result otherwise.
-- `perform()` has no actor isolation. Hop with `await MainActor.run { }`, call `@MainActor` methods with `await`, or mark the *method* `@MainActor func perform()` when most of it is UI work. Marking the intent type `@MainActor` fails to compile.
+- `perform()` has no actor isolation. Hop with `await MainActor.run { }`, call `@MainActor` methods with `await`, or mark the *method* `@MainActor func perform()` when most of it is UI work. A background run may have no scene, so update the model, not view state, and keep heavy work off the main actor. Marking the intent type `@MainActor` fails to compile; don't apply Xcode's `@preconcurrency` fix-it, which makes it compile by pinning the whole intent, construction and parameter resolution included, to the main actor.
 - Pin the process only when you must: `allowedExecutionTargets` (`OS27`) set to `.main` defeats extension execution and adds launch latency. It applies to `EntityQuery` too.
 
 ## Results and Errors
@@ -90,7 +91,7 @@ func perform() async throws -> some IntentResult { .result(value: order) }
 func perform() async throws -> some IntentResult & ReturnsValue<OrderEntity> { .result(value: order) }
 ```
 
-Measured on Xcode 27.3 (27C5020n): the undeclared form exports no `outputType` in `Metadata.appintents/extract.actionsdata`; `ReturnsValue<Int>` does. Declare only the markers you use (`ReturnsValue`, `ProvidesDialog`, `OpensIntent`, `ShowsSnippetView`, `ShowsSnippetIntent`).
+Measured on Xcode 27.3: the undeclared form exports no `outputType` in `Metadata.appintents/extract.actionsdata`; `ReturnsValue<Int>` does. Declare only the markers you use (`ReturnsValue`, `ProvidesDialog`, `OpensIntent`, `ShowsSnippetView`, `ShowsSnippetIntent`), and every `.result(value:)` needs `ReturnsValue<T>` whatever else the signature declares: `some IntentResult & ProvidesDialog` returning `.result(value:dialog:)` compiles too.
 
 ```swift
 // ❌ LocalizedError: Siri and Shortcuts show a generic failure
@@ -113,9 +114,10 @@ enum CartError: Error, CustomLocalizedStringResourceConvertible {
 
 ```swift
 // ✅ After the person does it in your UI and it succeeded
-func userTappedPlay(_ playlist: PlaylistEntity) async {
+// PlayPlaylistIntent needs an init(playlist:): @Parameter gives it no memberwise initializer
+func userTappedPlay(_ playlist: PlaylistEntity) async throws {
     await player.play(playlist)
-    try? await IntentDonationManager.shared.donate(intent: PlayPlaylistIntent(playlist: playlist))
+    _ = try await IntentDonationManager.shared.donate(intent: PlayPlaylistIntent(playlist: playlist))
 }
 ```
 
@@ -133,7 +135,7 @@ func userTappedPlay(_ playlist: PlaylistEntity) async {
 
 ```swift
 enum CabinClass: String, AppEnum {
-    // ✅ Saved shortcuts store "economy", not a position: spell values out, never rename, only append
+    // ✅ Saved shortcuts store "economy": spell values out, never rename, only append (an implicit Int raw value is a position)
     case economy = "economy"
     case business = "business"
 
@@ -170,9 +172,9 @@ enum CabinClass: String, AppEnum {
 
 ## Check the Built Metadata
 
-A successful build can export no App Intents metadata. The system then has none of the app's intents, and Siri declines every request to the app (observed: "Pantry Planner doesn't support that.", "I can't plan meals in Pantry Planner."). Before testing a build, confirm `MyApp.app/Metadata.appintents/extract.actionsdata` exists (macOS: `Contents/Resources/Metadata.appintents/`). Check for the file, not the folder: it can exist holding only `Skills.skillsc`.
+A successful build can export no App Intents metadata. The system then has none of the app's intents, and Siri declines every request to the app (observed: "Pantry Planner doesn't support that.", "I can't plan meals in Pantry Planner."). Before testing a build, confirm `MyApp.app/Metadata.appintents/extract.actionsdata` exists (macOS: `Contents/Resources/Metadata.appintents/`). Check for the file, not the folder: it can exist holding only `Skills.skillsc`. Then confirm the file names each new intent type, and its `outputType` when it returns a value.
 
-- Missing, with `warning: Metadata extraction skipped, no AppIntents.framework dependency found` in the build log: seen in 1 of 11 Debug builds of one app on Xcode 27.3 beta 1 (27C5020n). Swapping that build's linker dependency file into a good build's extraction step reproduced the skip. In that build `__preview.dylib` linked after `MyApp.debug.dylib`, and both write `MyApp_dependency_info.dat`, but a rebuilt preview dependency file didn't reproduce it, so the trigger is unknown. A clean build restored the metadata. For repeated device test builds, `xcodebuild … ENABLE_DEBUG_DYLIB=NO` drops the preview link, and builds with it kept their metadata; keep the check anyway.
+- Missing, with `warning: Metadata extraction skipped, no AppIntents.framework dependency found` in the build log: an occasional incremental Debug build on Xcode 27.3 beta, trigger unknown. A clean build restores the metadata. For repeated device test builds, `xcodebuild … ENABLE_DEBUG_DYLIB=NO` (which drops the SwiftUI preview dylib's link step) kept the metadata in testing; keep the check anyway.
 - A failed build with `no AppIntents metadata have been exported` as an error: the metadata step rejected something. Fix that error first.
 
 ## Resources
