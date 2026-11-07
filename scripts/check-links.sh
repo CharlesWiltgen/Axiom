@@ -3,6 +3,8 @@
 
 set -e
 
+cd "$(dirname "$0")/.."
+
 echo "════════════════════════════════════════"
 echo "  Broken Link Checker"
 echo "════════════════════════════════════════"
@@ -73,14 +75,14 @@ check_link() {
     # Normalize path (remove .., ./)
     full_path=$(cd "$(dirname "$full_path")" 2>/dev/null && echo "$(pwd)/$(basename "$full_path")" || echo "$full_path")
 
-    ((CHECKED_LINKS++))
+    CHECKED_LINKS=$((CHECKED_LINKS + 1))
 
     # Check if file exists
     if [ ! -f "$full_path" ]; then
         echo -e "${RED}✗${NC} Broken link in ${source_file}:${link_line}"
         echo "   Link: ${link_path}"
         echo "   Expected: ${full_path}"
-        ((BROKEN_LINKS++))
+        BROKEN_LINKS=$((BROKEN_LINKS + 1))
         return 1
     fi
 
@@ -92,15 +94,15 @@ echo "📋 Scanning documentation files..."
 # Find all markdown files and extract links
 while IFS= read -r file; do
     # Extract markdown links: [text](path)
-    # Use perl for better regex support
-    perl -ne 'print "$1\n" if /\[.*?\]\((.*?)\)/' "$file" | while IFS= read -r link; do
+    # Process substitution, not a pipe: a piped loop runs in a subshell and loses the counters
+    while IFS= read -r link; do
         # Get line number for this link
-        line_num=$(grep -n "](${link})" "$file" 2>/dev/null | head -1 | cut -d: -f1)
+        line_num=$(grep -nF -- "](${link}" "$file" 2>/dev/null | head -1 | cut -d: -f1)
 
         if [ -n "$link" ]; then
             check_link "$file" "$link" "${line_num:-0}" || true
         fi
-    done
+    done < <(perl -ne 'if (/^\s*(```|~~~)/) { $f = !$f; next } next if $f; print "$1\n" while /\[[^\]]*\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g' "$file")
 done < <(find docs .claude-plugin/plugins/axiom -name "*.md" -type f)
 
 echo ""
@@ -108,7 +110,10 @@ echo "════════════════════════�
 echo "  Link Check Summary"
 echo "════════════════════════════════════════"
 
-if [ $BROKEN_LINKS -eq 0 ]; then
+if [ $CHECKED_LINKS -eq 0 ]; then
+    echo -e "${RED}✗ No links checked; run from inside the repository${NC}"
+    exit 1
+elif [ $BROKEN_LINKS -eq 0 ]; then
     echo -e "${GREEN}✓ All $CHECKED_LINKS links are valid!${NC}"
     exit 0
 else

@@ -32,6 +32,21 @@ Every discipline skill is TDD-tested against real developer pressure scenarios. 
 
 Then search for "axiom" in the `/plugin` menu and install.
 
+### Codex
+
+```
+npx skills add CharlesWiltgen/Axiom -a codex -g
+```
+
+That installs the skills. For the full Codex plugin, which adds bundled helpers, an installation check, and Axiom's lifecycle hooks, add Axiom as a native plugin instead:
+
+```
+codex plugin marketplace add CharlesWiltgen/Axiom
+codex plugin add axiom@axiom-marketplace
+```
+
+The hooks stay off until you set `features.hooks = true` in `~/.codex/config.toml` and approve Codex's trust prompt. See the [Codex install guide](https://charleswiltgen.github.io/Axiom/start/codex-install).
+
 ### Claude app (browser and desktop)
 
 In your browser at claude.ai or in Claude Desktop, open **Customize > Plugins**, select **Add > Add marketplace** and enter `CharlesWiltgen/Axiom`, then add the **axiom** plugin. Chat loads the skills, Cowork adds the agents and hooks, and Claude Code picks the plugin up from your account. See the [Claude app guide](https://charleswiltgen.github.io/Axiom/start/claude-app-install).
