@@ -29,7 +29,8 @@ Questions you can ask your assistant that will draw from this reference:
 ## What's Covered
 
 ### Setup
-- Device, Siri, Apple Intelligence, and signing requirements
+- Device, Siri, Apple Intelligence, and signing requirements, including running on a Mac
+- Siri's daily request limit, and runs that end before producing results
 - Test target deployment target, imports, and test target type
 
 ### Writing Scenarios
@@ -47,7 +48,7 @@ Questions you can ask your assistant that will draw from this reference:
 
 ## Documentation Scope
 
-This page documents the `siri-evaluations-ref` skill (in the `axiom-integration` suite). Its code samples compile against the iOS 27.3 beta SDK.
+This page documents the `siri-evaluations-ref` skill (in the `axiom-integration` suite). Its code samples are checked against the iOS 27.3 beta SDK.
 
 - For making the app work with Siri AI in the first place, see [siri-ai](/skills/integration/siri-ai)
 

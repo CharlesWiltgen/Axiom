@@ -3,12 +3,12 @@ name: live-activities
 description: ActivityKit Live Activities, Dynamic Island, and push/broadcast updates with correct lifecycle and 4KB-limit patterns
 skill_type: skill
 version: 1.0
-apple_platforms: iOS 16.1+ (push-to-start & broadcast iOS 18+, Smart Stack watchOS 11)
+apple_platforms: iOS 16.1+ (push-to-start & broadcast iOS 18+, Smart Stack watchOS 11), macOS 27.3+ and Mac Catalyst 27.3+ (Live Activities started by Mac apps)
 ---
 
 # Live Activities
 
-Live Activities show glanceable, persistent, current-state information about an ongoing event on the Lock Screen, in the Dynamic Island, in StandBy, on Apple Watch Smart Stack (with one modifier), and automatically in CarPlay and the Mac menu bar. They render in a widget extension but the lifecycle is driven by **ActivityKit** from your app and your server. visionOS has no Live Activities, even for compatible iPhone and iPad apps.
+Live Activities show glanceable, persistent, current-state information about an ongoing event on the Lock Screen, in the Dynamic Island, in StandBy, on Apple Watch Smart Stack (with one modifier), and, from a paired iPhone, automatically in CarPlay and the Mac menu bar. They render in a widget extension but the lifecycle is driven by **ActivityKit** from your app and your server. visionOS has no Live Activities, even for compatible iPhone and iPad apps.
 
 Two skills in the **axiom-integration** suite: `skills/live-activities.md` (discipline) and `skills/live-activities-ref.md` (API reference).
 
@@ -61,7 +61,7 @@ Ship local `update(_:)` first (no entitlement), add per-activity `.token` push w
 
 ### Live Activities from Mac apps
 
-Mac apps can start their own Live Activities, which appear in the Dynamic Island on a Mac that has one and in the menu bar on other Macs. A universal app's existing Live Activity works unchanged. On the Mac, the `ActivityConfiguration` content view becomes the expanded menu-bar view. It needs the Xcode 27.3 SDK, which makes ActivityKit available from macOS 27.3 and Mac Catalyst 27.3.
+Mac apps can start their own Live Activities, which appear in the Dynamic Island on a Mac that has one and in the menu bar on other Macs. A universal app's existing Live Activity works unchanged. On the Mac, the `ActivityConfiguration` content view becomes the expanded menu-bar view. It needs the Xcode 27.3 SDK, which makes ActivityKit available from macOS 27.3 and Mac Catalyst 27.3. On the macOS 27.3 beta, a sandboxed app, which includes every Mac App Store app, can't start one; the skill covers a development-only workaround for testing during the beta.
 
 ### Keep `ContentState` on default Codable
 

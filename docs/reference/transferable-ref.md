@@ -26,6 +26,7 @@ Questions you can ask your assistant that will draw from this reference:
 - "How do I add copy and paste support for my custom type?"
 - "How do file promises work when dragging to Finder?"
 - "Why does my drop target stop working when the window resizes mid-drag?"
+- "How does a drop destination find out which of my items was dragged?" (iOS 27.3)
 
 ## What's Covered
 
@@ -36,7 +37,7 @@ Questions you can ask your assistant that will draw from this reference:
 - `ProxyRepresentation` – Fallback representations, and why declaration order matters
 - **Export controls** – Combining representations, conditional export, visibility, suggested file names
 - `ShareLink` and `SharePreview` – SwiftUI sharing with custom previews
-- **Drag and drop** – `.draggable`, `.dropDestination`, custom drag previews, multiple item types
+- **Drag and drop** – `.draggable`, `.dropDestination`, custom drag previews, multiple item types, and the `Identifiable` `draggable(_:containerNamespace:)` overloads with `DropSession.LocalSession.draggedItemIDs(for:)` that keep an item's identity (iOS, macOS, and visionOS 27.3)
 - **Clipboard** – `.copyable`, `.pasteDestination`, `.cuttable`, `PasteButton`, and their platform differences
 - **UTType declarations** – System types, custom types, Info.plist entries, `UTType.markdown` and `UTType(identifier:allowUndeclared:)` (iOS 27)
 - **UIKit bridging** – `NSItemProvider.loadTransferable`, `UIActivityViewController`

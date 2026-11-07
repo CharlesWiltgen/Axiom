@@ -32,6 +32,7 @@ Use this skill when:
 - "How do I put a filter button under my large title with `largeSubtitleView`?"
 - "Why does `largeSubtitleTextAttributes` have no effect?"
 - "How do I center my navigation bar title in UIKit?"
+- "How do I give a navigation controller nested in a split view its own bar?" (iOS 27.3)
 - "What goes in UIApplicationSceneManifest for a single-window app?"
 - "What should I clean up in sceneDidDisconnect?"
 - "How do I open a new window from UIKit code?"
@@ -47,7 +48,7 @@ Use this skill when:
 - **Info.plist configuration** – the `UIApplicationSceneManifest` structure, the launch-screen key validated at upload on the 27 SDK (TN3208), and destinations-vs-device-checks
 - **Scene lifecycle edges** – `sceneDidDisconnect` teardown semantics, `UISceneSessionActivationRequest` window opening, drag-to-create-window (drag items carrying an `NSUserActivity`, gated on `NSUserActivityTypes`), per-window undo scoping, per-scene `NSUserActivity` restoration, external-display scene roles, and the `displayGamut`/`legibilityWeight`/`activeAppearance` traits
 - A **don't/do table** for replacing `UIScreen.main`, `screen.scale`, `screen.bounds`, idiom, and orientation with scene/trait/size-class equivalents
-- The new iOS 27 additive APIs — `prominentTabIdentifier`, `UITabBarControllerSidebar.preferredPlacement`, `navigationBarMinimization`, `UIMenuElement.preferredImageVisibility`, `deviceMotionBody`/`headingBody`
+- The new iOS 27 additive APIs — `prominentTabIdentifier`, `UITabBarControllerSidebar.preferredPlacement`, `navigationBarMinimization`, `UIMenuElement.preferredImageVisibility`, `deviceMotionBody`/`headingBody`, and from iOS 27.3 `UINavigationController.barContainerBehavior` and the `concealed` flag on `UIPasteboard` writes
 - **iPhone Mirroring compatibility** – the always-portrait orientation trap, indirect trackpad/mouse input reaching custom gesture recognizers (`UIApplicationSupportsIndirectInputEvents`, scroll-type masks), companion Face ID approval on the Mac (iOS 18), and cross-device drag and drop
 - **Orientation as a preference** – lock is a request, not a guarantee, and on iPad `requestGeometryUpdate` is refused outright under the windowing model (the error handler is the only signal)
 - **Desktop-class input** – `UIPointerInteraction` pointer effects, `UIHoverGestureRecognizer`, `UIKeyCommand` with `discoverabilityTitle` for the hold-⌘ shortcut HUD, and Scribble (`UIScribbleInteraction` / `UIIndirectScribbleInteraction`) for Pencil handwriting

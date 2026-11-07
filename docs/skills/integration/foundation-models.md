@@ -21,6 +21,7 @@ Use this skill when:
 - Streaming responses to UI
 - Using the Private Cloud Compute model or sending images into a prompt (iOS 27)
 - Setting reasoning levels, reading token usage, or using Dynamic Profiles (iOS 27)
+- Running the on-device model on Apple TV (tvOS 27.3)
 
 ## Anti-Patterns Prevented
 

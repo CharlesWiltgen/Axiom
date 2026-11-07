@@ -38,6 +38,7 @@ Questions you can ask your assistant that will draw from this reference:
 - "Should I use xcui or the Xcode MCP device-interaction tools?"
 - "Which devicectl JSON keys are deprecated, and what replaced them?"
 - "How do I tell whether a device has Developer Mode enabled from the command line?"
+- "Can I set iPhone Duo's hinge angle from a script or a UI test?"
 
 ## What's Covered
 
@@ -61,6 +62,7 @@ Questions you can ask your assistant that will draw from this reference:
 - devicectl-vs-simctl division of labor (interaction vs lifecycle)
 - Verified simulator-capable subcommand matrix
 - Face ID / Touch ID as a CI primitive; the `CoreDeviceError 1001` "device-only" signal
+- Reading iPhone Duo's hinge angle with `device motion hinge-angle`, which nothing on the command line can set; from Xcode 27.3 a UI test sets it with `XCUIDevice.shared.hinge`
 
 ### Rotating a simulator
 - `devicectl device orientation set` / `get`, and why `simctl` can't do it

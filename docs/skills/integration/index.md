@@ -116,7 +116,7 @@ App Intents code that builds cleanly and then fails when the system runs it:
 
 ### [Siri AI: Custom Actions and Content](./siri-ai)
 
-Bringing your app's own actions and content to Siri AI, the Apple Intelligence version of Siri (27.3 developer preview):
+Bringing your app's own actions and content to Siri AI, the Apple Intelligence version of Siri (the 27.3 Siri AI Developer Preview):
 - **Tool intents** – `@AppIntent(.tool)` lets Siri call any intent, not only ones that fit a schema domain
 - **Generable entities** – Values Siri writes itself from a request, like a flight search or a study plan
 - **Entity properties** – Descriptions Siri reads, and properties hidden from it
@@ -140,6 +140,8 @@ Making "play X in MyApp" work with every kind of Siri:
 
 **When to use** Adding Siri playback, liking, or add-to-playlist to a music, podcast, audiobook, or radio app, or debugging Siri requests that don't play
 
+**Requirements** iOS 27+ (Audio schemas), iOS 14+ (in-app SiriKit media)
+
 ---
 
 ### [Siri for Notes, Lists, and Reminders Apps](./siri-notes-reminders)
@@ -151,7 +153,7 @@ Moving a notes, list, or to-do app off the SiriKit Lists and Notes intents that 
 
 **When to use** Seeing SiriKit Lists or Notes deprecation warnings, or adding "create a reminder" or "add to my note" to your app
 
-**Requirements** iOS 27+ (Audio schemas), iOS 14+ (in-app SiriKit media)
+**Requirements** iOS, macOS, or visionOS 27+ (Notes and Reminders schemas); iOS and watchOS (SiriKit Lists and Notes, deprecated)
 
 ---
 

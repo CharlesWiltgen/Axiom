@@ -85,7 +85,7 @@ Questions you can ask your assistant that will draw from this reference:
 - Platform availability, including where each API is unavailable
 
 ### Data Detection (27 Cycle)
-- `.dataDetection(_:options:)` – makes links, phone numbers, addresses, dates, and money in a view's text tappable (iOS, watchOS, and visionOS 27, and macOS with the Xcode 27.3 SDK; not Mac Catalyst or tvOS)
+- `.dataDetection(_:options:)` – makes links, phone numbers, addresses, dates, and money in a view's text tappable (iOS, watchOS, and visionOS 27, and macOS 27.3 when built with the Xcode 27.3 SDK; not Mac Catalyst or tvOS)
 - `DataDetector.MatchType` options from the DataDetection framework (iOS 26+), and `String.dataDetectorMatches(_:options:)` for detection without UI
 
 ### Performance Improvements

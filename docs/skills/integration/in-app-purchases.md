@@ -149,7 +149,7 @@ This page documents the `in-app-purchases` skill (in the `axiom-integration` sui
 
 ## Related
 
-- [storekit-ref](/reference/storekit-ref) – Complete StoreKit 2 API reference, including commitment billing plans and offer details
+- [storekit-ref](/reference/storekit-ref) – Complete StoreKit 2 API reference, including commitment billing plans, multi-seat subscriptions with per-seat pricing (iOS 27.3), and offer details
 - [iap-auditor](/agents/iap-auditor) – Scans existing purchase code for missing `finish()` calls, verification, and restore
 - [swift-concurrency](/skills/concurrency/swift-concurrency) – Async patterns for purchase flows
 

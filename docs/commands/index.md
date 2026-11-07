@@ -1,6 +1,6 @@
 # Commands
 
-Quick automated scans to identify issues in your codebase. Type `/command-name` in Claude Code to run.
+Quick automated scans and workflows for your codebase. Run one by typing its name: `/axiom:audit` in Claude Code, or `/axiom-audit` in Cursor and Pi.
 
 ## Start Here
 
@@ -23,16 +23,21 @@ This routes your question to the right Axiom skill or agent automatically.
 | [**`/axiom:ask`**](./utility/ask) | Natural language entry point to all Axiom skills | Triggers the right skill or agent |
 | [**`/axiom:audit`**](./utility/audit) | Unified audit command - smart selector or direct area targeting | Suggestions or specific audit execution |
 | [**`/axiom:analyze-crash`**](./debugging/analyze-crash) | Parse and analyze crash logs (.ips, .crash) to identify root cause | Crash pattern categorization and actionable diagnostics |
+| [**`/axiom:compare-traces`**](./debugging/compare-traces) | Two Instruments `.trace` recordings, diffed with `xcprof compare` | Function-level CPU-share deltas, with an exit code for CI gating |
 | [**`/axiom:console`**](./debugging/console) | Simulator console output — print(), os_log(), Logger — as structured JSON | Guided capture with bounded defaults |
 | [**`/axiom:fix-build`**](./build/fix-build) | Xcode build failures, environment issues, zombie processes, Derived Data, SPM cache, simulator state | Automatic diagnostics and fixes with verification |
 | [**`/axiom:health-check`**](./health-check) | Auto-detect relevant auditors, run in parallel, deduplicate findings | Prioritized report with executive summary + per-domain details |
+| [**`/axiom:modernize`**](./debugging/modernize) | Legacy iOS patterns: `ObservableObject`, `@StateObject`, deprecated SwiftUI APIs | A migration path for each finding |
 | [**`/axiom:optimize-build`**](./build/optimize-build) | Build performance bottlenecks, compilation settings, build phase scripts, type checking issues | Optimization recommendations with time savings estimates |
 | [**`/axiom:profile`**](./debugging/profile) | Automated performance profiling via xctrace CLI (CPU, memory, leaks, SwiftUI) | Trace recording, export, and analysis summary |
+| [**`/axiom:resolve-deps`**](./build/resolve-deps) | Swift Package Manager resolution failures, version conflicts, and the link errors they cause | An explanation of the conflict and how to resolve it |
 | [**`/axiom:run-tests`**](./testing/run-tests) | Run XCUITests and parse .xcresult bundles for structured results | Test results with failure analysis and attachment export |
 | [**`/axiom:screenshot`**](./testing/screenshot) | Quick screenshot capture from booted iOS Simulator | Screenshot file path + visual analysis |
 | [**`/axiom:siri`**](./integration/siri) | Siri AI readiness: source audit, build, `sirimetadataanalyzer`, App Skills | Findings mapped to fixes, then SiriEvaluations next steps |
 | [**`/axiom:status`**](./utility/status) | Environment health, zombie processes, Derived Data size, simulator status, project stats | Dashboard with quick health metrics |
 | [**`/axiom:test-simulator`**](./testing/test-simulator) | Automated simulator testing with visual verification (screenshots, location, push, permissions, logs) | Test results with evidence (screenshots, logs) |
+| [**`/axiom:triage`**](./debugging/triage) | Production crashes and hangs from Sentry or App Store Connect | Crash families ranked by impact, with false positives flagged |
+| [**`/axiom:ui`**](./testing/ui) | Drive and validate the simulator UI and accessibility with `xcui` | Accessibility-tree assertions that pass or fail with an exit code |
 
 ## Usage
 
@@ -81,11 +86,15 @@ Commands output results with `file:line` references and link to relevant skills 
 ### Build & Environment
 - `/axiom:fix-build` – Automatic build failure diagnosis and fixes
 - `/axiom:optimize-build` – Build performance optimization
+- `/axiom:resolve-deps` – Swift Package Manager conflicts and link errors
 
 ### Debugging
 - `/axiom:analyze-crash` – Parse and analyze crash logs
+- `/axiom:compare-traces` – Diff two performance traces for regressions
 - `/axiom:console` – Capture simulator console output (print + os_log) as structured JSON
+- `/axiom:modernize` – Migrate legacy iOS patterns to modern equivalents
 - `/axiom:profile` – Automated performance profiling via xctrace CLI
+- `/axiom:triage` – Rank production crashes and hangs from Sentry or App Store Connect
 
 ### Integration
 - `/axiom:siri` – Siri AI readiness loop: audit, build, analyze metadata, check App Skills
@@ -94,19 +103,25 @@ Commands output results with `file:line` references and link to relevant skills 
 - `/axiom:run-tests` – Run XCUITests and parse results
 - `/axiom:screenshot` – Quick simulator screenshot
 - `/axiom:test-simulator` – Full simulator testing capabilities
+- `/axiom:ui` – Drive and validate the simulator UI and accessibility
 
 ## Audit Areas
 
 The `/axiom:audit` command supports these areas:
 
+### Build
+- `build` – Build time optimization opportunities
+
 ### UI & Design
 - `accessibility` – VoiceOver, Dynamic Type, WCAG compliance
 - `liquid-glass` – Liquid Glass adoption opportunities
+- `resize` – Scene-lifecycle gaps, `UIScreen.main`, fixed-canvas rendering, iPhone Mirroring input
 - `swiftui-architecture` – SwiftUI architecture and testability
 - `swiftui-layout` – GeometryReader misuse, deprecated screen APIs, hardcoded breakpoints
 - `swiftui-nav` – Navigation architecture
 - `swiftui-performance` – SwiftUI performance anti-patterns
 - `textkit` – TextKit 1 vs 2 modernization
+- `touch` – Touch readiness on touch-display Macs and Sidecar
 - `ux-flow` – Dead ends, dismiss traps, missing states
 
 ### Code Quality
@@ -116,11 +131,14 @@ The `/axiom:audit` command supports these areas:
 - `memory` – Memory leak detection
 - `security` / `privacy` – Hardcoded credentials, Privacy Manifests, ATS
 - `swift-performance` – ARC and allocation issues
+- `swift-simplify` – Behavior-preserving Swift clarity cleanups
+- `test-failures` – Why a specific test fails or flakes
 - `testing` – Flaky tests, missing assertions, Swift Testing migration
 
 ### Persistence & Storage
 - `core-data` – Core Data safety and migrations
 - `database-schema` – Unsafe ALTER TABLE, DROP operations, migration safety
+- `grdb-performance` – GRDB query performance, app-group WAL setup, stale observations
 - `icloud` – iCloud sync reliability
 - `storage` – File storage safety
 - `swiftdata` – SwiftData models, relationships, N+1 patterns

@@ -27,6 +27,7 @@ Questions you can ask your assistant that will draw from this skill:
 - "Where should I store my `HKHealthStore` instance in a SwiftUI app?"
 - "Why is my UI freezing after a HealthKit query completes?"
 - "Can HealthKit give me RMSSD heart rate variability, or only SDNN?"
+- "Should I use `biologicalSex` or `referenceSex` to pick a clinical reference range?"
 
 ## What This Skill Provides
 
@@ -46,6 +47,7 @@ Questions you can ask your assistant that will draw from this skill:
 - Why `HKQuantitySample` became abstract in iOS 13, and when to cast to the cumulative or discrete subclass
 - The aggregation styles that govern statistics queries (cumulative, discrete arithmetic, temporally weighted, equivalent continuous level)
 - The `heartRateVariabilityRMSSD` quantity type (OS 27, every platform), HealthKit's second heart rate variability metric alongside SDNN
+- The `hipCircumference` quantity type and the `referenceSex` characteristic (the 27.3 releases), and how reference sex differs from biological sex
 
 ### Platform Availability and Threading
 - Which platforms have a full HealthKit store (iOS, iPadOS 17+, watchOS, visionOS) and which only compile against it (macOS, Mac Catalyst, iPadOS 16 and earlier)

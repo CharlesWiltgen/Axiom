@@ -23,7 +23,7 @@ Use this reference when:
 - Recording ProRes with Pro Video Storage (iOS 27+)
 - Setting lens aperture, shutter, or ISO priority modes, or tuning exposure signals (iOS 27+)
 - Enabling continuous autofocus tracking, low-light video noise reduction, or cinematic video metadata capture (iOS 27+)
-- Choosing a camera by direction on iPhone Duo (iOS 27.1+)
+- Choosing a camera by direction on iPhone Duo (iOS 27.1+; also tvOS and visionOS 27.3)
 
 ## Example Prompts
 

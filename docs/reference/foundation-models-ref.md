@@ -18,6 +18,7 @@ Use this reference when you're:
 - Choosing a `SystemLanguageModel` use case, such as content tagging
 - Managing the context window or handling generation errors
 - Moving to the Private Cloud Compute model, image input, or reasoning in the 27 releases
+- Running the on-device model on Apple TV (tvOS 27.3)
 
 ## Example Prompts
 
@@ -34,6 +35,8 @@ Questions you can ask your assistant that will draw from this reference:
 - "How do I send an image into a Foundation Models prompt?"
 - "How do I set a reasoning level and read token usage on a response?"
 - "How do I use the built-in barcode, OCR, or Spotlight search tools?"
+- "Can I use Foundation Models on Apple TV?"
+- "How does a tool keep state across turns with `@SessionState` and `@SessionBinding`?"
 
 ## What's Covered
 
@@ -84,6 +87,13 @@ Questions you can ask your assistant that will draw from this reference:
 - `GenerationOptions.ToolCallingMode`
 - Built-in system tools: `BarcodeReaderTool`, `OCRTool`, `SpotlightSearchTool` (local RAG)
 - `@Generable(name:)` explicit schema name
+- tvOS 27.3: the on-device model, sessions, `@Generable`, guardrails, image input and Dynamic Profiles on Apple TV (not Private Cloud Compute, custom adapters, or the barcode and OCR tools)
+
+### Xcode 27.3 SDK Additions
+- `Group { … }` (`DynamicInstructionsGroup`) and `.onActivate` / `.onDeactivate` on `DynamicInstructions`
+- `@SessionState` / `@SessionBinding` session-lifetime state, and the Swift 6 `Sendable` workaround for tools that store a binding
+- `.onDataEntry` on a `DynamicProfile` (`Transcript.DataEntry`, `supportsDataEntryType(_:)`)
+- `@Guide(key:description:)` overloads
 
 ### Also Covered
 - Feedback to Apple with `logFeedbackAttachment`

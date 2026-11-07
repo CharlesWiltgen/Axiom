@@ -18,6 +18,7 @@ Use this skill when you're:
 - Adopting `ToolbarSpacer` for visual breaks (iOS 26, macOS 26)
 - Adding a navigation subtitle or custom content under the large title (iOS 26)
 - Controlling overflow and bar minimization (OS 27)
+- Giving each of two stacked `NavigationStack`s its own bar inside a split view (iOS 27.3)
 - Migrating from the deprecated `.navigationBarLeading` and `.navigationBarTrailing`
 - Debugging missing, misplaced, or flickering toolbar items
 - Reviewing toolbar code before shipping
@@ -39,6 +40,7 @@ Questions you can ask your assistant that will draw from this skill:
 - "How do I wire up EditButton and editMode for my List?"
 - "How do I show an unread count under my navigation title?" (iOS 26)
 - "Why is my `.largeSubtitle` content centered instead of aligned with the title?"
+- "Two `NavigationStack`s in my split view's detail column share one toolbar. How do I give each its own?" (iOS 27.3)
 
 ## What This Skill Provides
 
@@ -56,6 +58,7 @@ Questions you can ask your assistant that will draw from this skill:
 - `ToolbarSpacer(.fixed)` and `ToolbarSpacer(.flexible)` for visual breaks (iOS 26, macOS 26)
 - Customizable toolbars with `.toolbar(id:)`, a per-item `id:`, and `customizationBehavior`
 - `.toolbarRole(.editor)` for three-column `NavigationSplitView` layouts
+- `.toolbarContainerBehavior(.local)` for separate bars on stacked `NavigationStack`s inside a split view (iOS 27.3; `.local` is iOS only)
 - Toolbar visibility, background material, and color scheme per bar
 - The macOS `windowToolbarStyle`, set on the scene rather than the view
 - Search in the toolbar with `.searchable`, never a `TextField` item

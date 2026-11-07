@@ -42,10 +42,10 @@ Questions you can ask your assistant that will draw from this reference:
 ### Core Building Blocks
 - `AppIntent`: `title`, `description`, `isDiscoverable`, `@Parameter`, parameter summaries, `perform()`, errors
 - Optional parameters in update intents: `valueState` (iOS 18.2+)
-- `AppEntity`: display representations, exposed properties, `@ComputedProperty`, `@DeferredProperty`, and the property `description:` and `visibility:` arguments (iOS 27.3)
+- `AppEntity`: display representations, exposed properties, `@ComputedProperty`, `@DeferredProperty`, and the property `description:` and `visibility:` arguments (27.3)
 - `AppEnum`
 - `EntityQuery` and `EntityStringQuery`; keeping entities separate from your data models
-- Bulk deletes with `DeleteIntent.target` and `EntityCollection` (iOS 27.3)
+- Bulk deletes with `DeleteIntent.target` and `EntityCollection` (27.3)
 
 ### Execution and Interaction
 - Intent modes: `supportedModes` (iOS 26+), which replaces the deprecated `openAppWhenRun`, and `continueInForeground`
@@ -150,7 +150,8 @@ This page documents the `app-intents-ref` skill (in the `axiom-integration` suit
 ## Related
 
 - [app-intents](/skills/integration/app-intents) – The traps that compile but fail at run time, for every intent built from this reference
-- [siri-ai](/skills/integration/siri-ai) – Turns the intents and entities defined here into tools and values that Siri AI can use (iOS 27.3)
+- [siri-ai](/skills/integration/siri-ai) – Turns the intents and entities defined here into tools and values that Siri AI can use (27.3)
+- [siri-evaluations-ref](/reference/siri-evaluations-ref) – Tests Siri's own choices of intents and entities, building on the AppIntentsTesting matchers covered here
 - [app-shortcuts-ref](/reference/app-shortcuts-ref) – Wraps the intents defined here in App Shortcuts so they work in Siri and Spotlight with no user setup
 - [core-spotlight-ref](/reference/core-spotlight-ref) – Indexes the entities your intents operate on, so they appear in Spotlight search
 - [ui-testing](/skills/ui-design/ui-testing) – Where AppIntentsTesting tests live: they must run from a UI test target

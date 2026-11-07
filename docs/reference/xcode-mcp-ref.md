@@ -5,7 +5,7 @@ description: Tool parameters, return shapes, and build-specific behavior for Xco
 
 # Xcode MCP Tool Reference
 
-Reference for Xcode's Model Context Protocol server, which lets an AI assistant drive Xcode directly. Covers the 54 tools of Xcode 27.2 (27B52, server version 25464, the same schemas as the 27.2 RC), plus the fields that differ on the 53-tool 27.2 beta 2 (27B5028f) and on Xcode 27.0 and the 27.1 RC (27A9275).
+Reference for Xcode's Model Context Protocol server, which lets an AI assistant drive Xcode directly. Covers the 54 tools of Xcode 27.2 (27B52, server version 25464, the same schemas as the 27.2 RC), plus the fields that differ on the 53-tool 27.2 beta 2 (27B5028f) and on Xcode 27.0 and the 27.1 RC (27A9275). It also marks what Xcode 27.3 beta 1 (27C5020n) changes, which still lists 54 tools.
 
 ## When to Use This Reference
 
@@ -17,6 +17,7 @@ Use this reference when:
 - Choosing between near-equivalent tools (`XcodeUpdate` vs `XcodeWrite`, `RunAllTests` vs `RunSomeTests`, `GetBuildLog` vs `XcodeRefreshCodeIssuesInFile`)
 - Bootstrapping a headless session — opening, creating, or listing workspaces
 - Wondering why a tool you expected is missing from `tools/list`
+- Checking what changes in the Xcode 27.3 beta, such as build-setting filters and simulator-only device interaction
 
 ## Example Prompts
 
@@ -33,6 +34,8 @@ Use this reference when:
 - "Does XcodeMakeDir create a group or a folder?"
 - "Why is GetCodeCoverage in the 27.2 prerelease notes but missing from my tool list?"
 - "Which LLDB commands does InvokeDebuggerCommand recommend for inspecting variables?"
+- "How do I fetch just a few build settings with GetTargetBuildSettings instead of the whole dump?"
+- "Can the device-interaction tools still drive a physical device on Xcode 27.3?"
 
 ## What's Covered
 
@@ -43,7 +46,7 @@ Use this reference when:
 `XcodeRead`, `XcodeWrite`, `XcodeUpdate`, `XcodeGlob`, `XcodeGrep`, `XcodeLS`, `XcodeMakeDir`, `XcodeMV`, `XcodeRM`
 
 ### Build
-`BuildProject`, `GetBuildLog`, `XcodeRefreshCodeIssuesInFile`, `GetTargetBuildSettings`, `UpdateTargetBuildSetting`, `GetFileCompilerFlags`, `UpdateFileCompilerFlags`
+`BuildProject`, `GetBuildLog`, `XcodeRefreshCodeIssuesInFile`, `GetTargetBuildSettings` (with `buildSettingNames` and `notFound` on the Xcode 27.3 beta), `UpdateTargetBuildSetting`, `GetFileCompilerFlags`, `UpdateFileCompilerFlags`
 
 ### Run & debug
 `RunProject`, `StopProject`, `GetConsoleOutput`, `InvokeDebuggerCommand`, `RunCodeSnippet`
@@ -55,10 +58,10 @@ Use this reference when:
 `XcodeListSchemes`, `XcodeSwitchScheme`, `XcodeListRunDestinations`, `XcodeSwitchRunDestination`
 
 ### Previews
-`RenderPreview`, `displayMode`, `snapshotDelay`, `preferredRenderDestination`, `snapshot.path`, `supportedOverrides`, `renderedDestination.identifier`, `groupItems`, field names by build
+`RenderPreview`, `displayMode`, `snapshotDelay`, `preferredRenderDestination`, `snapshot.path`, `supportedOverrides`, `renderedDestination.identifier`, `groupItems`, `producibleOutputsByMode` (Xcode 27.3 beta), field names by build
 
 ### Device interaction
-`DeviceInteractionStartSession`, `DeviceInteractionStartWorkspaceSession`, `DeviceInteractionInstallAndRun`, `DeviceInteractionSynthesize`, `DeviceInteractionEndSession`
+`DeviceInteractionStartSession`, `DeviceInteractionStartWorkspaceSession`, `DeviceInteractionInstallAndRun`, `DeviceInteractionSynthesize`, `DeviceInteractionEndSession`, and the Xcode 27.3 beta's move to simulator-only sessions and a hinge-angle command for foldable devices
 
 ### Crash & field diagnostics
 `GetTopCrashIssues`, `GetCrashIssueLogs`, `GetTopFieldPerformanceIssues`, `GetFieldPerformanceIssueLogs`

@@ -28,6 +28,7 @@ Use this skill when:
 - "How do I record a non-fatal warning or cancel a test mid-run?" (iOS 27)
 - "How do I rerun a flaky test until it fails?" (Xcode 27)
 - "How do I make cross-framework XCTest/Swift Testing assertion warnings hard failures?" (Xcode 27)
+- "Can I write UI tests with Swift Testing?" (Xcode 27.3)
 
 ## What This Skill Provides
 
@@ -76,7 +77,7 @@ import Testing
 | `XCTUnwrap(x)` | `try #require(x)` |
 | `class Tests: XCTestCase` | `@Suite struct Tests` |
 
-**Keep XCTest for**: UI tests, performance tests, Objective-C.
+**Keep XCTest for**: UI tests on Xcode 27.2 and earlier, performance tests, Objective-C. From Xcode 27.3, Swift Testing can drive `XCUIApplication` in a UI Testing Bundle.
 
 ### Parameterized Tests
 

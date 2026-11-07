@@ -8,9 +8,9 @@ apple_platforms: iOS 27.3+, iPadOS 27.3+, macOS 27.3+, visionOS 27.3+ (Siri AI D
 
 # Siri AI: Custom Actions and Content
 
-This skill helps your assistant connect your app's own actions and content to Siri AI, the Apple Intelligence version of Siri. Starting with the 27.3 betas, Siri AI can call any App Intent you mark as a tool, not only the ones that fit one of Apple's schema domains. It can also fill in values from what a person says, read the properties of your app's entities, show your content in branded cards, and follow task guidance you ship with the app as App Skills. Apple calls this the Siri AI Developer Preview. It works in development builds and for internal TestFlight testers, but not yet in App Store builds.
+This skill helps your assistant connect your app's own actions and content to Siri AI, the Apple Intelligence version of Siri. In the Siri AI Developer Preview, which starts with the 27.3 betas, Siri can call any App Intent you mark as a tool, not only ones that fit Apple's schema domains, and can also fill in values from what a person says, read your entities' properties, show your content in branded cards, and follow task guidance you ship as App Skills.
 
-Part of the **axiom-integration** suite (`skills/siri-ai.md`).
+The preview works in development builds and for internal TestFlight testers, but not yet in App Store builds.
 
 ## When to Use
 
@@ -39,14 +39,15 @@ Use this skill when you're:
 - **Schema intents** – Which schema intents accept `.tool`, measured for every schema intent on the 27.3 beta, since the boundary doesn't follow Apple's domain tiers exactly
 - **Generable entities** – Values Siri writes itself, what they may contain, and the build error that stops all App Intents metadata from exporting
 - **Entity properties** – Descriptions, per-property and entity-wide authentication, and `visibility: .internal`, plus a fallback for apps that ship before 27.3
-- **Card snippets** – Branded cards for entities, and the `.compact` card family that Apple documents but the beta doesn't include yet
+- **Card snippets** – Branded cards for entities, what is safe to show on them, and the `.compact` card family that Apple documents but the beta doesn't include yet
 - **App Skills** – The `Skills.skillsbundle` layout, `SKILL.md` rules, and the exact build diagnostics, including the silent failure when the bundle isn't in Copy Bundle Resources
 - **Siri Metadata Analyzer** – Running `sirimetadataanalyzer`, its exit codes, and the findings Apple names
+- **Verification ladder** – The testing order from AppIntentsTesting and Shortcuts through SiriEvaluations to requests by hand on a device
 - **Errata** – Where the beta disagrees with Apple's documentation
 
 ## Documentation Scope
 
-This page documents the `siri-ai` skill (in the `axiom-integration` suite). Its code samples compile against the iOS, macOS, and visionOS 27.3 beta SDKs.
+This page documents the `siri-ai` skill (in the `axiom-integration` suite). Its code samples are checked against the iOS 27.3 beta SDK.
 
 - For writing and running SiriEvaluations tests, see [siri-evaluations-ref](/reference/siri-evaluations-ref)
 - For each schema's required parameters and properties, see [app-schemas-ref](/reference/app-schemas-ref)

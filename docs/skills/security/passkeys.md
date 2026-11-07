@@ -23,6 +23,7 @@ Use this skill when:
 - "How do I support both passkeys and passwords during migration?"
 - "How do I set up associated domains for passkeys?"
 - "I keep getting `ASAuthorizationError.canceled`. What's going wrong?"
+- "My password manager fills emailed codes. How do I prompt the user to add that email account to Mail first?" (iOS 27.3)
 
 ## What This Skill Provides
 
@@ -33,7 +34,7 @@ Use this skill when:
 - Cross-device sign-in by QR code, with Bluetooth as the proximity check
 - Associated domains setup, including the apple-app-site-association file
 - A three-phase migration from password-only accounts, plus Passwords app integration
-- Delivered verification codes for credential-provider apps (new in the 27 releases; not on watchOS or tvOS), which offer one-time codes delivered to the device for AutoFill
+- Delivered verification codes for credential-provider apps (new in the 27 releases; not on watchOS or tvOS), which offer one-time codes delivered to the device for AutoFill, plus `presentAccountsToSetUp(_:reason:anchor:)` (iOS, macOS, and visionOS 27.3), which asks the user to add an email account to Mail before a sign-in or password change that will send codes to it
 - Anti-patterns: `performRequests` for the primary sign-in, a username field without the `.username` content type, `userVerification` set to `"required"`, creating passkeys from an extension, and passkey-only requests that lock out password users
 - Pressure scenarios for common shortcuts: "our users aren't ready for passkeys" and "ship passwords now, add passkeys later"
 

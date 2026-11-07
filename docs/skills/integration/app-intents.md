@@ -38,6 +38,7 @@ Use this skill when you're:
 - **Results and errors** – Declaring results so the system can use them, and throwing errors Siri and Shortcuts can show
 - **Donations** – Telling the system about actions people take in your app, and why not to donate from inside an intent
 - **Entities and enums** – Which properties the system can see, identifiers that survive other devices, and enum values that keep saved shortcuts working
+- **Queries and parameters** – Batch lookups, empty Shortcuts pickers, and queries that read an intent's other parameters
 - **Designing intents** – One intent per task, opening content without `UIApplication`, and localization
 - **Long-running work** – The background time limit, `LongRunningIntent`, cancellation, and undo
 - **Checking the build** – Confirming a successful build actually shipped its App Intents metadata, and what to do when it didn't
@@ -47,6 +48,7 @@ Use this skill when you're:
 - [app-intents-ref](/reference/app-intents-ref) – The App Intents API reference this skill's rules apply to
 - [siri-ai](/skills/integration/siri-ai) – Making intents callable by Siri AI, which depends on every rule here
 - [app-schemas-ref](/reference/app-schemas-ref) – Required shapes for intents that adopt Apple's schema domains
+- [siri-ai-auditor](/agents/siri-ai-auditor) – Scans your App Intents code for these traps before Siri AI runs it
 
 ## Resources
 

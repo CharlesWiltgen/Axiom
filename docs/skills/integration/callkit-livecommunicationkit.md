@@ -30,6 +30,7 @@ Use this skill when you're:
 - "How do I make an outgoing call with CallKit?"
 - "How do I block spam callers?"
 - "What's LiveCommunicationKit for?"
+- "What do I need to change on my Live Caller ID Lookup server for iOS 27.3?"
 
 ## Key Concepts
 
@@ -51,7 +52,7 @@ It's not a replacement — it expands the model to watchOS 10.4+ and visionOS 1.
 
 ### Caller ID: bulk vs real-time
 
-`CXCallDirectoryProvider` supplies a bulk, offline, ascending-ordered list to identify/block — no runtime lookups. Live Caller ID Lookup (iOS 18+, `LiveCallerIDLookupManager`) does real-time identification via Private Information Retrieval so your server never learns who's calling whom.
+`CXCallDirectoryProvider` supplies a bulk, offline, ascending-ordered list to identify/block — no runtime lookups. Live Caller ID Lookup (iOS 18+, `LiveCallerIDLookupManager`) does real-time identification via Private Information Retrieval so your server never learns who's calling whom. From iOS 27.3 your PIR service must use an evaluation key that arrives with the query, and the shard count must be a power of two.
 
 ## Common Mistakes
 
