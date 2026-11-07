@@ -237,6 +237,7 @@ const CODEX_COMMAND_MAP: Record<string, string | null> = {
   // Claude-Code-only surfaces today.
   console: null,
   'compare-traces': null,
+  siri: null,
 };
 
 // Routers tell the reader to "Launch `build-fixer` agent or `/axiom:fix-build`".

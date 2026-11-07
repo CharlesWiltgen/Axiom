@@ -32,7 +32,7 @@ NOT for: schema-domain adoption (`skills/app-schemas-ref.md`, `skills/app-intent
 | "Add a Search Products tool so Siri can find things" | Siri finds entities itself, through Spotlight (`IndexedEntity`) and `EnumerableEntityQuery`. Write tools that **act on** an entity parameter. Search/find tools duplicate Siri and compete with it |
 | "`.tool` on every intent and we're done" | The model chooses and fills tools mainly from `title`, `description`, and each parameter's `title`/`description`. A tool titled "Run" with no description is effectively invisible. Fix the metadata in the same change |
 | "Make the checkout intent a tool, it's what people want" | Apple's two sources disagree on intents that spend money or start something the person must start explicitly. DocC's `ToolIntent` page says they make poor tools; Apple's Xcode guide says make purchases and bookings tools and keep their confirmation. Ask the developer; if it becomes a tool, `requestConfirmation` before the irreversible step is mandatory |
-| "This tool only works on the cart screen" | Tools are always callable whenever Siri can reach the app. A tool must work whenever it's called or throw an error that tells the person what to do |
+| "This tool only works on the cart screen" | Tools are always callable whenever Siri can reach the app. Make it work from any state (load what it needs from storage); if it can't, don't make it a tool. Throw errors that tell the person what to do for real failures, not for a precondition the tool always has |
 | "I'll write a model-only description" | No such API exists. Shortcuts, Spotlight, and Siri read the same text |
 | "Put `@available(iOS 27.3, …)` on the existing intent" | That removes it from Shortcuts, Spotlight, and App Shortcuts on earlier releases. Gate the conformance in an extension instead |
 | "Add `.tool` to my `.messages.sendMessage` intent too" | A primary-domain schema already reaches Siri. Never add `.tool` to one; the macro rejects most, but accepting it on a few Camera and Photos intents doesn't mean they need it |
@@ -41,14 +41,14 @@ NOT for: schema-domain adoption (`skills/app-schemas-ref.md`, `skills/app-intent
 | "The analyzer is clean, so Siri works" | It checks metadata shape only. Test requests with SiriEvaluations and on a device |
 | "Simulator is fine for this" | Siri AI, App Skills, and SiriEvaluations need a physical Apple Intelligence device |
 | "A 'Show Album Details' tool returning a snippet view gives us a card" | That card appears only after that one tool runs. For a card Siri shows whenever it presents the entity, adopt `SnippetRepresentableEntity` with a `CardSnippet` (Card Snippets, below) |
-| "One skill description that says what it does is enough" | Siri decides from a skill's description whether to load it. Name the requests in the person's words (measured on one app, 3 runs each: 11/12 direct requests loaded vs 8/12 for a summary, 0/12 for "Meal planning."), and add a "Not for …" boundary when skills overlap |
+| "One skill description that says what it does is enough" | Siri decides from a skill's description whether to load it. Name the requests in the person's words (in a one-app test, a summary loaded less often and a bare label like "Meal planning." never loaded for a direct request), and add a "Not for …" boundary when skills overlap |
 
 ## Adoption Order
 
 1. **Find or create the intents.** Survey the model layer for the actions people would ask for and the data they act on. Check that entity identifiers are stable across launches; an `id` from `UUID()` at launch breaks every saved reference. Include read-only tools that return data ("what's planned for dinner?").
 2. **Adopt a schema where one fits.** An action that matches a primary-domain schema (Audio, Calendar, Camera, Clock, Mail, Maps, Messages, Notes, Phone, Photos, Reminders, System, Video) uses `@AppIntent(schema:)` without `.tool` (`skills/app-schemas-ref.md`).
 3. **Make each tool clear from its own metadata**, return useful values, throw useful errors (below).
-4. **Add `.tool`.**
+4. **Add `.tool`** to the intents that pass Don't make a tool and the payments rule (Tool Intents), not to every intent.
 5. **Make plain-value parameters generable** (below).
 6. **Describe every exposed property** of every entity a tool takes or returns.
 7. **Build, run `sirimetadataanalyzer`, fix, repeat** until it exits 0.
@@ -65,7 +65,7 @@ Keep `perform()` thin and make it persist: Siri can run a tool while the app isn
 struct AddToCart: AppIntent {
     static let title: LocalizedStringResource = "Add to Cart"
     static let description = IntentDescription("Adds a product to the shopping cart.",
-                                               searchKeywords: ["basket", "buy"])
+                                               searchKeywords: ["basket", "add"])
 
     @Parameter(title: "Item", description: "The product to add")
     var item: ProductEntity
@@ -80,15 +80,15 @@ struct AddToCart: AppIntent {
 ```
 
 - The macro adds `ToolIntent` (which refines `AppIntent` and adds no requirements). `struct X: AppIntent, ToolIntent` is equivalent. Traits: `.tool` or `[.tool]`, written inline; a trait in a variable, a duplicate trait, or `@AppIntent([])` with no schema is a build error.
-- **When Siri can call it**: the request names the app, the app is in the foreground, a Live Activity from the app is running, an entity from the app was retrieved from search, or the person continues a Siri conversation that mentioned the app. Measured on one iPad (27.3 beta), a request that didn't name the app never reached its tool (0 of 18), even with an `IndexedEntity` recipe: Siri used Calendar or Reminders, or asked "I can help you with requests like that in Pantry Planner from now on. Is that OK?" Answering yes ran the tool (once), but later app-less requests in the same evaluation went to Calendar again (`skills/siri-evaluations-ref.md`, Name the app). Tell people to name the app; don't promise app-less requests.
+- **When Siri can call it**: the request names the app, the app is in the foreground, a Live Activity from the app is running, an entity from the app was retrieved from search, or the person continues a Siri conversation that mentioned the app. In testing on one iPad, a request that didn't name the app never reached its tool, even with an `IndexedEntity`: Siri used a built-in app such as Calendar, or asked "I can help you with requests like that in <App> from now on. Is that OK?" Answering yes ran the tool that once, but later app-less requests went to the built-in app again (`skills/siri-evaluations-ref.md`, Name the app). Tell people to name the app; don't promise app-less requests.
 - **Metadata the model reads**: the intent's `title` and `description` (say what it does and what it affects; tell similar intents apart), each parameter's `title` and `description` (meaning and format: "Duration in minutes"; omit when the title says it all, like "Quantity"), and `IntentDescription(searchKeywords:)` for words people use that the text doesn't. A mode parameter is an `AppEnum` with every case described; split the tool if the modes take different parameters.
-- **No dialog from a read step.** A tool Siri uses to look something up before acting ("Get Meal Plan" before "Plan Meal") should return a value only, not `ProvidesDialog`: Siri speaks a returned dialog as its answer and ends the turn. Measured on one iPad, iPadOS 27.3 beta, one app: when the App Skill had Siri check first, the reply was the check's dialog ("nothing is planned for Dinner on Friday.") and Plan Meal never ran (0 of 7), and rewording the skill didn't help; value-only, 5 of 5 planned. Requests that didn't trigger the check planned either way. Keep dialogs for tools that finish the request: Siri read Plan Meal's dialog verbatim after "From <App>:" (8 of 8); without one it worded its own reply (10 of 12) or said nothing (2 of 12). A value-only read tool answered direct questions in every completed turn ("Pad Thai is planned for lunch on Monday." 8 of 8, once with "in Pantry Planner" added; "Nothing is currently planned for dinner on Sunday." 8 of 8). Don't rely on a skill step *after* the action: "then offer to add the ingredients" never ran (10 planning turns, skill loaded in 8, with or without the acting tool's dialog). Put what the person must hear in the finishing tool's dialog.
+- **No dialog from a read step.** A tool Siri uses to look something up before acting ("Get Meal Plan" before "Plan Meal") should return a value only, not `ProvidesDialog`: Siri speaks a returned dialog as its answer and ends the turn. In testing on one app on one iPad, when an App Skill had Siri check first, the check's dialog ("nothing is planned for Dinner on Friday.") became the reply and Plan Meal never ran; rewording the skill didn't help, and making the read tool value-only fixed it. A value-only read tool still answered direct questions in full sentences ("Pad Thai is planned for lunch on Monday."). Keep dialogs for tools that finish the request: Siri reads that dialog verbatim after "From <App>:", and without one it words its own reply or says nothing. Don't rely on a skill step *after* the action ("then offer to add the ingredients" never ran). Put what the person must hear in the finishing tool's dialog.
 - **Output the model reads**: return a value a next step can use, and declare it: `some IntentResult & ReturnsValue<OrderEntity>`. A bare `some IntentResult` that returns `.result(value:)` compiles, but the value's type isn't exported to the App Intents metadata (measured), so the system can't see it; throw errors whose message says what went wrong and what fixes it. Only errors conforming to `CustomLocalizedStringResourceConvertible` carry a message.
-- **Entity parameters**: the entity's query needs `entities(for:)`. For Siri to find candidates from what the person said, prefer `IndexedEntity` (Spotlight lookup without launching the app; Apple says it's found even when the request doesn't name the app; measured (one app, 27.3 beta), app-less requests never got as far as the tool, so routing failed before any lookup: When Siri can call it, above); use `EnumerableEntityQuery` for small sets that can't be indexed. For privacy, Siri sends a query to the app only when the request names the app, so `EnumerableEntityQuery` entities aren't found otherwise. For tools, Siri doesn't use `suggestedEntities()`, `EntityStringQuery`, or `EntityPropertyQuery` (which surface uses which: `skills/app-intents-ref.md`, Which Surface Uses Which Lookup). Make `displayRepresentation` specific (title plus a distinguishing subtitle), never an internal ID.
-- **macOS known issue (27.3 beta, 191273925)**: Siri on macOS can't find a third-party app's Spotlight-donated entities unless they conform to a schema. Test entity lookup on iOS until it's fixed. Measured (one app, one Mac, macOS 27.3 beta): with a non-schema `IndexedEntity` that also has an `EnumerableEntityQuery`, Siri called the tool with the right entity in 12 of 18 app-named plan requests; the other 6 refused without a call, cause unknown, and which lookup Siri used is unknown.
+- **Entity parameters**: the entity's query needs `entities(for:)`. For Siri to find candidates from what the person said, prefer `IndexedEntity` (Spotlight lookup without launching the app; Apple says it's found even when the request doesn't name the app, but in testing app-less requests never reached the tool, so routing failed before any lookup: When Siri can call it, above); use `EnumerableEntityQuery` for small sets that can't be indexed. For privacy, Siri sends a query to the app only when the request names the app, so `EnumerableEntityQuery` entities aren't found otherwise. For tools, Siri doesn't use `suggestedEntities()`, `EntityStringQuery`, or `EntityPropertyQuery` (which surface uses which: `skills/app-intents-ref.md`, Which Surface Uses Which Lookup). Make `displayRepresentation` specific (title plus a distinguishing subtitle), never an internal ID.
+- **macOS known issue (27.3 beta, 191273925)**: Siri on macOS can't find a third-party app's Spotlight-donated entities unless they conform to a schema. Test entity lookup on iOS until it's fixed. On one Mac, a non-schema `IndexedEntity` that also had an `EnumerableEntityQuery` still reached the tool with the right entity in most app-named requests; don't work around the issue with a search tool.
 - **Context Siri also uses**: annotate onscreen views with their entities so "this one" resolves, give entities a `Transferable` representation so they can move to another app, and donate intents when people perform them, which Siri uses to tell intents apart (`skills/app-intents-ref.md` Onscreen Entities, Cross-app content; `skills/core-spotlight-ref.md`).
-- **Don't make a tool** of an intent that only works while the app runs or on one screen, of a `WidgetConfigurationIntent` with no `perform()`, of an intent that's only useful as one step inside a shortcut (DocC), or of an intent that duplicates a built-in Siri feature (timers, messages, music, HomeKit) unless its text says what's app-specific. Good candidates are actions a person can ask for in one sentence, with parameters Siri can fill from it ("add two packs of AA batteries to my cart").
-- **Payments and other explicit-start actions**: see the Red Flags row; the answer is the developer's; if it becomes a tool, a confirmation before the irreversible step is required.
+- **Don't make a tool** of a search or find intent (a free-text query, or criteria whose job is to locate entities; Siri finds entities itself, Red Flags), of an intent that only works while the app runs or on one screen, of a `WidgetConfigurationIntent` with no `perform()`, of an intent that's only useful as one step inside a shortcut (DocC), or of an intent that duplicates a built-in Siri feature (timers, messages, music, HomeKit) unless its text says what's app-specific. Good candidates are actions a person can ask for in one sentence, with parameters Siri can fill from it ("add two packs of AA batteries to my cart").
+- **Payments and other explicit-start actions**: see the Red Flags row. Whether one becomes a tool is the developer's call; the confirmation is not. For any tool that spends, books, sends, or deletes, call `requestConfirmation` in `perform()` before the effect, even one that can be undone later. A dialog or App Skill text is not a confirmation. Siri can run tools on a locked device, so also set the intent's `authenticationPolicy` (`skills/app-intents-ref.md`, Authentication Policies).
 - **Identity is a contract**: adding `.tool` doesn't change identity, but renaming the type, adding, removing, or renaming a parameter, changing an `id` scheme, or renumbering an `AppEnum` breaks saved shortcuts and donations. Flag such a change to the developer; never make it as a side effect, and make a new parameter optional where possible.
 
 ### Schema intents
@@ -99,7 +99,7 @@ Add `.tool` only to an intent in a **Shortcuts-specific** domain (Books, Browser
 error: 'ToolIntent' can't be adopted by an intent that conforms to '.messages.sendMessage' because the schema is in a primary domain (from macro 'AppIntent')
 ```
 
-What the macro accepts on 27C5020n, `.tool` on every schema intent (a record of the compiler, not of how Siri routes):
+What the macro accepts in the 27.3 SDK, `.tool` on every schema intent (a record of the compiler, not of how Siri routes):
 
 | Domain | `.tool` |
 |---|---|
@@ -171,7 +171,7 @@ struct BankAccount: AppEntity {
     var nickname: String
 
     @Property(title: "Balance", description: "The current balance, including pending transactions.",
-              authenticationPolicy: .requiresLocalDeviceAuthentication)
+              authenticationPolicy: .requiresLocalDeviceAuthentication)   // preview: may show without unlock (190573761)
     var balance: IntentCurrencyAmount
 
     @Property(title: "Routing Number", visibility: .internal)    // app and its extensions only
@@ -183,7 +183,7 @@ struct BankAccount: AppEntity {
 - The model reads `displayRepresentation` and every exposed property's title and description, for every entity it sees, not only generable ones. Expose what tells entities apart, what people ask about, and what a next step needs. Describe units, time zones, and formats. Use an `AppEnum` for fixed value sets.
 - **Entity-level `authenticationPolicy`** (27.3) applies to the entity and every property; a property that passes `nil` gets it. The SDK doc comment calls it "the minimum policy for each of the entity's properties": a property's own policy can be stricter, and "a weaker one is raised to this policy" (untested on device). The default is `.alwaysAllowed`. A property policy covers Siri's responses only; if the intent *result* is sensitive, set the policy on the intent.
 - **`visibility: .internal`** hides a property from Siri, Shortcuts, and the model while the app, widgets, and controls keep it. Don't combine it with `indexingKey:`/`customIndexingKey:`, which make the property discoverable in Spotlight.
-- **On a schema entity it isn't enough for schema-defined properties.** `@Property(visibility: .internal)` on `.photos.asset`'s `location` exports `isDiscoverable: false`, but the schema still maps it to the Spotlight `place` key (measured on 27C5020n), which is the combination above. For sensitive data in a schema property, don't put it there: return `nil`, or a coarser value such as a city.
+- **On a schema entity it isn't enough for schema-defined properties.** `@Property(visibility: .internal)` on `.photos.asset`'s `location` exports `isDiscoverable: false`, but the schema still maps it to the Spotlight `place` key (measured), which is the combination above. For sensitive data in a schema property, don't put it there: return `nil`, or a coarser value such as a city.
 - **Known issue (27.3 beta, 190573761)**: Siri AI might show an entity whose entity- or property-level `authenticationPolicy` requires unlock without asking for the unlock. During the preview, keep data that must never show on a locked device out of exposed properties (`visibility: .internal`) rather than relying on the policy alone.
 - **Shipping before 27.3**: these arguments need 27.3, and a stored property can't be gated, so on an entity that isn't itself 27.3-only they fail with `'init(title:description:authenticationPolicy:visibility:)' is only available in iOS 27.3 or newer` until the deployment target is 27.3. Until then, make the title carry the meaning, put formats in the tool parameter's description, and **don't expose a sensitive property you can't hide yet**.
 
@@ -201,6 +201,7 @@ extension ProductEntity: SnippetRepresentableEntity {
 ```
 
 - Siri shows the card in responses and conversation transcripts; families you don't list fall back to `displayRepresentation`.
+- The card is the app's own view, so it can show any value the app can read, including `visibility: .internal` properties and ones behind an `authenticationPolicy`, and Siri keeps it in transcripts. Show only what the entity exposes to Siri.
 - The system renders the view and archives a snapshot, possibly while the app isn't running. Prepare all data before returning the view; anything that loads asynchronously afterward doesn't appear.
 - **Beta 1 has only `CardSnippetFamily.standard`.** Apple's docs show `[.compact, .standard]`, and `CardSnippetSize.small` is deprecated with `renamed: "CardSnippetFamily.compact"`, but `.compact` isn't in the 27.3 SDK on any platform: `type 'CardSnippetFamily' has no member 'compact'`. `CardSnippetSize` (`.small`/`.medium`) and `CardSnippetContext` claim 27.0 availability but first appear in the 27.3 SDK; `CardSnippetSize` is already deprecated, so don't adopt it.
 
@@ -208,7 +209,7 @@ extension ProductEntity: SnippetRepresentableEntity {
 
 A `Skills.skillsbundle` in the app target holds one `SKILL.md` per skill. Siri reads a skill's `description` to decide whether it applies, then reads the body. A skill explains a kind of task (what "clean up" means in this app, the user's vocabulary) and how to combine tools for it. It can't force a sequence; Siri doesn't run the listed tools deterministically.
 
-**Write one when** a task needs context the tools can't carry, takes several tools in a particular order, the same request could mean different tasks, Siri should ask instead of guessing, or there's something it must never do. Otherwise good metadata is enough; one skill per kind of task, not per tool.
+**Write one when** a task needs context the tools can't carry, takes several tools in a particular order, the same request could mean different tasks, Siri should ask instead of guessing, or there's something it must never do (enforce that in the tool too, since the skill may not load). Otherwise good metadata is enough; one skill per kind of task, not per tool.
 
 ```
 Skills.skillsbundle/
@@ -238,12 +239,12 @@ This skill works only if Get Meal Plan returns a value with no dialog (Tool Inte
 | Bundle | File ▸ New ▸ File from Template ▸ Skills Bundle, name `Skills`, app target. One `.skillsbundle` per target. It must be in **Copy Bundle Resources**; a bundle outside a build phase is silently not compiled |
 | Layout | `Skills/` required; one folder per skill containing `SKILL.md`. Only `SKILL.md` ships — `references/`, scripts, and other files are ignored |
 | `name` | Required; 1–64 of `a-z`, `0-9`, `-`; no leading/trailing hyphen, no `--`; must equal the folder name; keep it stable across versions |
-| `description` | Required, one line, ≤1,024 characters. Name the requests in the user's words, specific enough to beat the app's other skills, with boundaries ("Not for …"). A summary loaded less often in one test (8/12 vs 11/12), and a label like "Meal planning." lost every direct request (below) |
+| `description` | Required, one line, ≤1,024 characters. Name the requests in the user's words, specific enough to beat the app's other skills, with boundaries ("Not for …"). In one test, a summary loaded less often, and a bare label like "Meal planning." lost every direct request (below) |
 | Other frontmatter | Only `name` and `description` are read (an Agent Skills subset); `license`, `allowed-tools`, `metadata`… are ignored. Apple says they warn; on beta 1 `license:` drew no warning |
 | Body | Free-form markdown, ≤10,000 characters. Refer to tools by title in natural language ("the Plan Meal tool"), never Swift type names. Order the steps, say how to choose, when to ask, what not to do. Steps after the final tool call didn't run (Tool Intents, No dialog from a read step). Don't restate intent metadata |
 | Uniqueness | Names must be unique across the app, its extensions, and embedded frameworks; on a clash one is kept arbitrarily and the build doesn't warn |
 
-**Any skills error ships no skills at all**, not just the broken one. The build checks format only; a vague description or Swift type names in the body pass silently. Measured on 27C5020n:
+**Any skills error ships no skills at all**, not just the broken one. The build checks format only; a vague description or Swift type names in the body pass silently. Diagnostics from the 27.3 build:
 
 | Problem | Diagnostic |
 |---|---|
@@ -254,19 +255,11 @@ This skill works only if Get Meal Plan returns a value with no dialog (Tool Inte
 | Extra top-level folder | `warning: Unexpected directory in 'Skills.skillsbundle': 'Extra'` |
 | Extra file beside `SKILL.md` | No diagnostic; not shipped |
 
-Skills don't load every time: on an iPad, meal-planning loaded in 20 of 24 turns over 8 runs (one run missed two of its three) and shopping-list in 8 of 8, and Siri still called the right tool from metadata when a skill didn't load. Treat a skill as context, never as the only way a task works.
+Skills don't load every time; on an iPad, Siri still called the right tool from metadata when a skill didn't load. Treat a skill as context, never as the only way a task works.
 
-The description decides whether the skill loads. Measured on one app on an iPad (27.3 beta), changing only meal-planning's description, 3 runs each:
+The description decides whether the skill loads. In a one-app test that changed only the description, requests in the user's words plus a "Not for …" boundary loaded most reliably, a summary of what the skill does loaded less often, and a bare label ("Meal planning.") never loaded for a direct request. No version loaded for a neighboring skill's request. On the iPad, in every app-named turn Siri called the right tool regardless, so a weak description cost the skill's guidance, not the action. The "Not for …" clause wasn't tested there; keep it for skills whose requests overlap.
 
-| Description | Direct requests loaded | Indirect request | Neighbor's request (shouldn't load) |
-|---|---|---|---|
-| Requests in the user's words + "Not for …" | 11/12 | 6/6 | 0/6 |
-| Summary of what it does | 8/12 | 6/6 | 0/6 |
-| "Meal planning." | 0/12 | 6/6 | 0/6 |
-
-On the iPad, in every turn that named the app, Siri called the right tool regardless (72 of 72), so here a weak description cost the skill's guidance, not the action. This pair never confused the skills even without a boundary, so the "Not for …" clause is unmeasured here; keep it for skills whose requests overlap.
-
-After building, check for `Skills.skillsc` in `MyApp.app/Metadata.appintents/` (macOS: `Contents/Resources/Metadata.appintents/`). A successful build with no `.skillsc` means the bundle isn't in Copy Bundle Resources. Check for `extract.actionsdata` there too: a successful build can ship no App Intents metadata, and then Siri declines every request to the app (`skills/app-intents.md`, Check the Built Metadata). Test on a device: try each request the description names, rephrase it, and cover each skill with a `Loads(.required)` evaluation. Test the Mac separately; iPad results didn't carry over. Same app on one Mac, macOS 27.3 beta 1: app-named requests got "I can help you with requests like that in <App> from now on. Is that OK?" instead of a tool call until the first "Yes" (2 asks, none after; Siri named the app by its bundle name, not its display name). Then Plan Meal ran in 12 of 18 app-named plan requests (the rest: "I can't do that in <App>" 5, "<App> isn't supported" 1; iPad: right tool in 72 of 72 app-named turns). The skill loaded in 1 of 15 (iPad 20 of 24). An empty-slot question never called the read tool (0 of 7, Siri replied it found nothing; iPad called it every time), though asking right after a successful plan did (3 of 3).
+After building, check for `Skills.skillsc` in `MyApp.app/Metadata.appintents/` (macOS: `Contents/Resources/Metadata.appintents/`). A successful build with no `.skillsc` means the bundle isn't in Copy Bundle Resources. Check for `extract.actionsdata` there too: a successful build can ship no App Intents metadata, and then Siri declines every request to the app (`skills/app-intents.md`, Check the Built Metadata). Test on a device: try each request the description names, rephrase it, and cover each skill with a `Loads(.required)` evaluation. Test the Mac separately; iPad results didn't carry over. With the same app on a Mac, app-named requests got "I can help you with requests like that in <App> from now on. Is that OK?" instead of a tool call until the first "Yes" (Siri named the app by its bundle name, not its display name). After that the acting tool ran for most app-named requests, but some were refused ("I can't do that in <App>"), the skill rarely loaded, and a question about an empty slot was answered without calling the read tool.
 
 ## Siri Metadata Analyzer
 
@@ -282,6 +275,7 @@ xcrun sirimetadataanalyzer path/to/MyApp.app --format json   # or Metadata.appin
 
 ## Verification Ladder
 
+0. Source scan: `/axiom:audit siri-ai`, or `/axiom:siri` for the whole build-and-analyze loop.
 1. AppIntentsTesting: `perform()` behavior (`skills/app-intents-ref.md`).
 2. Shortcuts: intents appear under the app, parameter summaries read naturally.
 3. Spotlight on a device: entities are indexed and open the right scene.
@@ -289,7 +283,7 @@ xcrun sirimetadataanalyzer path/to/MyApp.app --format json   # or Metadata.appin
 5. SiriEvaluations scenarios, run several times (`skills/siri-evaluations-ref.md`).
 6. By hand on a device: foreground and background, with and without naming the app, onscreen references ("this one"), cross-app ("send it to my partner"), voice-only (AirPods), every shipping language.
 
-## Apple Docs Errata (27.3 beta 1, 27C5020n)
+## Apple Docs Errata (27.3 beta 1)
 
 | Source says | Measured |
 |---|---|

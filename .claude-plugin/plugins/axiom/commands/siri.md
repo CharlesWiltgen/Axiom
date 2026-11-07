@@ -11,14 +11,14 @@ Runs the loop Apple's tooling expects for the Siri AI Developer Preview (Xcode 2
 
 ## Steps
 
-1. **Toolchain.** Confirm `xcrun -f sirimetadataanalyzer` resolves. If it doesn't, the selected developer directory is an Xcode older than 27.3 or the Command Line Tools (`xcode-select -p`): say so and stop (only the source audit in step 2 applies).
+1. **Toolchain.** Confirm `xcrun -f sirimetadataanalyzer` resolves. If it doesn't, the selected developer directory is an Xcode older than 27.3 or the Command Line Tools (`xcode-select -p`): say so, run only the source audit in step 2, and stop. If an Xcode 27.3 or newer is installed, offer to select it (`DEVELOPER_DIR` or `xcode-select`), with the user's OK.
 2. **Source audit.** Launch the `siri-ai-auditor` agent (or follow `axiom-integration (skills/siri-ai-auditor.md)` inline). Fix CRITICAL findings before building; a cold-launch dependency crash or a generable-entity error makes later steps meaningless.
-3. **Build.** Build the app scheme (argument, or the app target's scheme) following `axiom-build`'s "Capture Build and Test Diagnostics": run the xcodebuild inventory first and build through axbuild. App Intents metadata errors come from the `ExtractAppIntentsMetadata` phase and halt export (`no AppIntents metadata have been exported`); fix them before step 4, because the analyzer would read the previous build. Then confirm the product contains `Metadata.appintents/extract.actionsdata`: a successful build can ship none (`warning: Metadata extraction skipped` in the log; clean-build, per `axiom-integration (skills/app-intents.md)`, Check the Built Metadata).
-4. **Analyze.** Find the product with `xcodebuild -showBuildSettings -scheme <scheme>` (`BUILT_PRODUCTS_DIR`, `FULL_PRODUCT_NAME`), then run `xcrun sirimetadataanalyzer <App.app> --format json`. Exit `0` = no errors, `2` = errors, `1` = couldn't run. Map each finding to its fix:
+3. **Build.** Build the app scheme (argument, or the app target's scheme) following `axiom-build`'s "Capture Build and Test Diagnostics": run the xcodebuild inventory first and build through axbuild. App Intents metadata errors come from the `ExtractAppIntentsMetadata` phase and halt export (`no AppIntents metadata have been exported`); fix them before step 4, because the analyzer would read the previous build. Find the product with `xcodebuild -showBuildSettings` using the same `-workspace`/`-project`, `-scheme`, `-configuration` and `-destination` as the build (`BUILT_PRODUCTS_DIR`, `FULL_PRODUCT_NAME`), and confirm the `.app` is newer than the build's start: DerivedData can hold an older product for another configuration or destination, and the analyzer would read it without complaint. Then confirm the product contains `Metadata.appintents/extract.actionsdata`: a successful build can ship none (`warning: Metadata extraction skipped` in the log; clean-build, per `axiom-integration (skills/app-intents.md)`, Check the Built Metadata).
+4. **Analyze.** Run `xcrun sirimetadataanalyzer <App.app from step 3> --format json`. Exit `0` = no errors, `2` = errors, `1` = couldn't run. Map each finding to its fix:
 
    | Rule | Fix in `skills/siri-ai.md` |
    |---|---|
-   | `SMA109` no intent is a tool | Tool Intents; Adoption Order. Ignore it for primary-domain schema intents, which Siri already handles (`.tool` on them is a build error) |
+   | `SMA109` no intent is a tool | Tool Intents; Adoption Order. Ignore it for primary-domain schema intents, which Siri already handles (never add `.tool` to them; the macro rejects most) |
    | `SMA202` parameter has no description | Tool Intents (metadata); skip when the title says it all |
    | `SMA203` entity property has no description | Entity Properties (fallback if the entity ships before 27.3) |
    | `SMA601` entity exposes no properties | Entity Properties; `skills/app-intents.md` (visibility) |
@@ -35,7 +35,7 @@ Runs the loop Apple's tooling expects for the Siri AI Developer Preview (Xcode 2
 
 - Auditor readiness score and CRITICAL/HIGH findings fixed or open
 - Build result, and any metadata-export errors
-- Analyzer summary line (`N intents (T tools), E entities`) and findings by rule
+- Analyzer counts (`summary.actionCount`, `toolCount`, `entityCount` in the JSON) and findings by rule
 - Skills compiled: yes / no / none in project
 - What's left before device testing
 

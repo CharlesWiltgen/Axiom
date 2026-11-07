@@ -1672,8 +1672,18 @@
   },
   "axiom-integration--siri-ai": {
     "category": "integration",
+    "tags": [
+      "toolintent",
+      "generableentity",
+      "app-skills",
+      "skillsbundle",
+      "sirimetadataanalyzer",
+      "apple-intelligence"
+    ],
     "related": [
-      "axiom-integration"
+      "axiom-integration",
+      "axiom-integration--app-intents",
+      "axiom-integration--siri-evaluations-ref"
     ]
   },
   "axiom-integration--siri-audio": {
