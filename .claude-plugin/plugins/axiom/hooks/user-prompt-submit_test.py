@@ -400,6 +400,17 @@ class TestPositiveRouting(unittest.TestCase):
         self.assertNotIn("axiom-integration", routed_skills(
             "entity.playAudio(resource) is silent in RealityKit"))
 
+    def test_integration_siri_ai_api_tokens_without_the_word_siri(self):
+        for prompt in (
+            "Write a SiriEvaluations scenario for my meal planner",
+            "My SiriScenario fails its Calls expectation",
+            "sirimetadataanalyzer reports SMA202 on my app",
+            "My Skills.skillsbundle doesn't load",
+            "Should this intent adopt ToolIntent?",
+            "Make FlightSearch a GenerableEntity",
+        ):
+            self.assertIn("axiom-integration", routed_skills(prompt), prompt)
+
     def test_integration_sirikit_lists_and_notes(self):
         self.assertIn("axiom-integration", routed_skills(
             "INAddTasksIntent is deprecated in iOS 27, what replaces it?"))
