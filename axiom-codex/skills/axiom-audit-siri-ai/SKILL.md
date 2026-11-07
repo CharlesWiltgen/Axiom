@@ -21,7 +21,7 @@ Skip: `*Tests.swift`, `*Previews.swift`, `*/Pods/*`, `*/Carthage/*`, `*/.build/*
 Glob: **/*.swift, **/project.pbxproj, **/project.xcproj, **/project.yml, **/Project.swift, **/*.skillsbundle/Skills/*/SKILL.md, **/*.xcconfig
 Grep:
   - `import\s+AppIntents`                                  — files in scope
-  - `:\s*[^{]*\bAppIntent\b|@AppIntent\(`                  — intents
+  - `:\s*[^{]*\b(AppIntent|WidgetConfigurationIntent|OpenIntent|AudioPlaybackIntent|SnippetIntent|ShowInAppSearchResultsIntent|DeleteIntent|ForegroundContinuableIntent)\b|@AppIntent\(` — intents
   - `@AppIntent\(\s*\[?\.tool|:\s*[^{]*\bToolIntent\b`     — tool intents
   - `@AppIntent\([^)]*schema:`                             — schema intents
   - `:\s*[^{]*\b(AppEntity|IndexedEntity|TransientAppEntity|UniqueAppEntity|FileEntity|SyncableEntity)\b|@AppEntity\(` — entities
@@ -47,13 +47,13 @@ Severity/confidence after each title. Each finding needs a file:line you read.
 A tool whose job is to find the app's entities: title or type name with Search/Find/Lookup/Query, or a free-text `String` query parameter. Criteria parameters returning `[SomeEntity]` with neither signal are MEDIUM/MEDIUM: a read tool like "List trips this week" is legitimate (Phase 3, Read-only tools). Siri finds entities itself through Spotlight (`IndexedEntity`) and `EnumerableEntityQuery`, then passes them to tools that act on them; a search tool duplicates and competes with that. Fix: make the entities findable and write tools that take the entity as a parameter. Not an issue: `.system.searchInApp` / `ShowInAppSearchResultsIntent`, which opens the app's own search UI.
 
 ### 2. Tool Metadata Missing (HIGH/HIGH)
-A tool with no `static let description` / `static var description`, or a parameter whose `@Parameter` has no `description:` where the title alone doesn't give the meaning and format. Siri's model chooses and fills tools from this text. `title: "Quantity"` on an `Int` is fine without a description. Not an issue: a schema tool intent (`@AppIntent(.tool, schema:)`), whose schema supplies the title and description.
+A tool with no `static let description` / `static var description`, or a parameter whose `@Parameter` has no `description:` where the title alone doesn't give the meaning and format. Siri's model chooses and fills tools from this text. `title: "Quantity"` on an `Int` is fine without a description. For a schema tool intent (`@AppIntent(.tool, schema:)`), the schema defines its parameters; check only the intent's own description and any parameters the app adds.
 
 ### 3. Entity Siri Can't Read (HIGH/HIGH)
 An entity a tool takes or returns with no `@Property`, `@ComputedProperty`, or `@DeferredProperty` member: plain `var`s are invisible to the system (`sirimetadataanalyzer` reports `SMA601` after a build). **Exception: `@AppEntity(schema:)` types** get `@Property` implicitly for the schema's own members (measured), so plain `var`s matching the schema are exposed; only *extra* plain members on a schema entity are invisible. Also MEDIUM/MEDIUM: exposed properties with no `description:` when the target is 27.3+ or the entity is 27.3-only.
 
 ### 4. Tool Entity Siri Can't Find (HIGH/MEDIUM)
-An entity used as a tool parameter whose type isn't `IndexedEntity` (with indexing in place) and whose query isn't `EnumerableEntityQuery`. Siri doesn't use `suggestedEntities()`, `EntityStringQuery`, or `EntityPropertyQuery` for tools, and queries the app only when the request names it. Confirm by reading the query type, and for `IndexedEntity` confirm `indexAppEntities` runs. Not an issue: `UniqueAppEntity` (its query is enumerable), or an entity Siri only receives from another tool's result or an onscreen annotation, since `entities(for:)` resolves identifiers Siri already has.
+An entity used as a tool parameter whose type isn't `IndexedEntity` (with indexing in place) and whose query isn't `EnumerableEntityQuery`. Siri doesn't use `suggestedEntities()`, `EntityStringQuery`, or `EntityPropertyQuery` for tools, and queries the app only when the request names it. Confirm by reading the query type, and for `IndexedEntity` confirm `indexAppEntities` runs. Not an issue: a `TransientAppEntity` or generable entity (`@AppEntity(.generable)` / `GenerableEntity`), whose value the model writes with no query; `UniqueAppEntity` (its query is enumerable); or an entity Siri only receives from another tool's result or an onscreen annotation, since `entities(for:)` resolves identifiers Siri already has.
 
 ### 5. Dependency Not Registered for a Cold Launch (CRITICAL/HIGH)
 `@Dependency` used, and `AppDependencyManager.shared.add(` either absent or only inside a `View`, `.onAppear`, `.task`, a button action, or lazily. Siri launches the app without UI; the first access is an uncatchable `fatalError`. Fix: register in `App.init()` (or the extension's setup). Not an issue: `@Dependency(default:)`.
@@ -95,29 +95,29 @@ For each `Skills/<dir>/SKILL.md`:
 - `description` missing, multi-line, or over 1,024 characters.
 - Body empty (MEDIUM: warning) or over 10,000 characters.
 - Body names Swift types (`\b[A-Z]\w*(Intent|Entity|Query)\b`) instead of tools by title (MEDIUM/HIGH).
-- Two or more skills and a description with no boundary ("Not for …") (LOW/MEDIUM).
+- Two skills whose requests overlap and a description with no boundary ("Not for …") (LOW/MEDIUM).
 - Files other than `SKILL.md` in the skill folder (LOW/HIGH): ignored, don't ship.
-- Bundle not in the app target's resources: search `project.pbxproj` for `Skills.skillsbundle in Resources` or a synchronized root group containing it (HIGH/MEDIUM: silently compiled into nothing). For XcodeGen (`project.yml`), Tuist (`Project.swift`), or a `project.xcproj` you can't read, check the generator's resources/sources entry, or report "bundle membership unverified" instead of a finding.
+- Bundle not in the app target's resources: search `project.pbxproj` for `.skillsbundle in Resources` or a synchronized root group containing it, or search a `project.xcproj` (JSON5 text) for the bundle in the app target's resources (HIGH/MEDIUM: silently compiled into nothing). For XcodeGen (`project.yml`) or Tuist (`Project.swift`), check the generator's resources/sources entry, or report "bundle membership unverified" instead of a finding.
 
 ### 17. Version and Platform Gating (HIGH/MEDIUM)
-- Deployment target below 27.3 and a tool/generable type with **no** gating at all. `@available(… 27.3 …)` on a *new* tool or generable type is correct; don't flag it. Read the target-level setting, not the project-level default, when they differ.
+- Deployment target below 27.3 and a tool/generable type with **no** gating at all: a compile error, since `ToolIntent`, `GenerableEntity` and the `.tool`/`.generable` traits are 27.3 API. Report it as the build failure it is. `@available(… 27.3 …)` on a *new* tool or generable type is correct; don't flag it. Read the target-level setting, not the project-level default, when they differ.
 - Deployment target below 27.3 and `@available(iOS 27.3, …)` on an intent also listed in an `AppShortcutsProvider` or used by widgets: it disappears from those surfaces on earlier releases (prefer `extension X: ToolIntent {}` under `@available`).
 - A watchOS or tvOS target compiling the same files without `#if !os(watchOS) && !os(tvOS)` around tool conformances.
 - `description:`/`visibility:` property arguments on an entity that ships before 27.3 with a lower deployment target (build error).
 
 ### 18. Read Tool That Speaks (MEDIUM/MEDIUM)
-A tool that looks something up (title or type with Get/Check/Show/List, or a description saying it "returns"), whose `perform()` returns `ProvidesDialog`, when an App Skill body or another tool's description tells Siri to call it before acting. Siri speaks a returned dialog as its answer and ends the turn, so the acting tool never runs (measured on one iPad, iPadOS 27.3 beta: when an App Skill told Siri to check first, 0 of 7 "plan X" turns planned with the dialog, 5 of 5 without). Fix: return the value only (`ReturnsValue<T>`); keep dialogs for tools that finish the request.
+A tool that looks something up (title or type with Get/Check/Show/List, or a description saying it "returns"), whose `perform()` returns `ProvidesDialog`, when an App Skill body tells Siri to call it before acting. Siri speaks a returned dialog as its answer and ends the turn, so the acting tool never runs (in testing on one app and device, rewording the skill didn't help and value-only fixed it). Fix: return the value only (`ReturnsValue<T>`); keep dialogs for tools that finish the request.
 
 ### 19. Smaller Items (LOW unless noted)
 - `.tool` on a Camera or Photos schema intent the macro accepts (MEDIUM/HIGH): a primary domain already reaches Siri, so remove `.tool`. On other primary-domain intents it's a build error.
 - `openAppWhenRun` on a 26+ deployment target (use `supportedModes`).
 - A tool returning only `.result()` where a value would let Siri continue (e.g., an order tool that returns nothing).
-- An App Skill body step after the final tool call ("then offer to …"): it didn't run in any of 10 measured turns (one app, iPadOS 27.3 beta). Move what the person must hear into that tool's dialog.
+- An App Skill body step after the final tool call ("then offer to …"): it never ran in testing (one app and device). Move what the person must hear into that tool's dialog.
 
 ## Phase 3: Reason About Completeness
 
 Read the tools as Siri would, and report gaps a grep can't prove:
-- **Coverage**: actions people would ask Siri for that exist in the app's model or UI but aren't intents/tools. Schema intents already reach Siri through their schema; never suggest making a primary-domain schema intent (Messages, Mail, Calendar, …) a tool — that's a build error. For purchases and other explicit-start actions, note Apple's sources disagree and recommend asking the developer.
+- **Coverage**: actions people would ask Siri for that exist in the app's model or UI but aren't intents/tools. Schema intents already reach Siri through their schema; never suggest making a primary-domain schema intent (Messages, Mail, Calendar, …) a tool; the macro rejects most of them, and the rest don't need it. For purchases and other explicit-start actions, note Apple's sources disagree and recommend asking the developer.
 - **Tool state dependence**: a tool that only works on one screen or while the app is running.
 - **Disambiguation**: two tools whose titles/descriptions overlap ("Add" vs "Add Product").
 - **Mode parameters**: an `action` enum switching between different operations (prefer separate tools; acceptable only for closely related actions with every case described).
@@ -135,7 +135,7 @@ Combine findings that compound: e.g., search tool + entities not indexed (Siri h
 |---|---|
 | Tools | T of N intents |
 | Tools with full metadata | M of T |
-| Tool entity types Siri can find | F of E |
+| Tool entity types Siri can find | F of E (excluding generable/transient entities) |
 | Tool entity types with exposed, described properties | P of E |
 | Dependency registration | App.init / lazy / view / none needed |
 | Result typing | all declared / some undeclared |
@@ -143,8 +143,8 @@ Combine findings that compound: e.g., search tool + entities not indexed (Siri h
 | App Skills | K skills, valid / errors (ships none) / none |
 | **Readiness** | **READY / NEEDS WORK / BLOCKED** |
 
-- **READY**: no CRITICAL/HIGH findings; every tool has metadata; every tool entity is findable and readable.
-- **NEEDS WORK**: HIGH or MEDIUM findings, no CRITICAL.
+- **READY**: no CRITICAL/HIGH findings; at least one tool (or every intent is a primary-domain schema intent Siri already handles); every tool has metadata; every tool entity is findable and readable. MEDIUM and LOW findings may remain.
+- **NEEDS WORK**: any HIGH finding and no CRITICAL, or App Intents with no tools and no primary-domain schema intents.
 - **BLOCKED**: any CRITICAL finding (cold-launch crash, generable build failure, irreversible work before a re-run, a skills build error). BLOCKED wins over NEEDS WORK.
 
 Close by telling the user to build and run `xcrun sirimetadataanalyzer <App.app> --format json`, then test with SiriEvaluations on a device.

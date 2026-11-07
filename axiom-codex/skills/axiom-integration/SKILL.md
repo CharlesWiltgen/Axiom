@@ -137,6 +137,7 @@ digraph integration {
 13. Push notifications? → `skills/push-notifications.md`, `skills/push-notifications-diag.md`, `skills/push-notifications-ref.md`
 13a. Push/calls on networks without internet, or PTT over an MCX cellular slice? → `skills/local-push-connectivity.md`
 14. Want IAP audit? → `axiom-audit-iap`
+14a. Want a Siri AI readiness audit, or the full build-and-analyze loop? → `axiom-audit-siri-ai`
 15. Want full IAP implementation? → `axiom-implement-iap`
 16. Camera / photos / audio / haptics / ShazamKit? → **Use `axiom-media` instead**
 
@@ -278,3 +279,6 @@ User: "My VoIP app gets killed" / "How do I handle CallKit incoming calls?" / "H
 
 User: "Review my in-app purchase implementation"
 → Launch: `iap-auditor` agent
+
+User: "Is my app ready for Siri AI?" / "Audit my tool intents"
+→ Launch: `siri-ai-auditor` agent

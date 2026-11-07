@@ -1288,11 +1288,13 @@ These first appear in the Xcode 27.3 SDK, though most carry 27.0 or 27.2 annotat
 
 - **`Group { … }`** (`DynamicInstructionsGroup`, annotated 27.2) gathers instructions and tools under one lifecycle, so a single modifier applies to all of them.
 - **`.onActivate` / `.onDeactivate` on `DynamicInstructions`** (annotated 27.2) run when the instructions enter or leave the session's resolved configuration. `DynamicProfile` already had them.
-- **`@SessionState` / `@SessionBinding`** (annotated 27.0) hold mutable state for the session's lifetime. The owner declares `@SessionState`; a child `Tool` or `DynamicInstructions` takes a `SessionBinding<Value>` from `$state` in its initializer. Both setters are `nonmutating`, so a `Tool`'s `call` can write through the binding.
+- **`@SessionState` / `@SessionBinding`** (annotated 27.0) hold mutable state for the session's lifetime. The owner declares `@SessionState`; a child `Tool` or `DynamicInstructions` takes a `SessionBinding<Value>` from `$state` in its initializer. Both setters are `nonmutating`, so a `Tool`'s `call` can write through the binding, and the writes persist across turns. **`SessionBinding` isn't `Sendable` in the 27.3 SDK, but `Tool` is**, so a `Tool` that stores one fails in Swift 6 mode: `stored property '_budget' of 'Sendable'-conforming struct 'SpendTool' has non-Sendable type 'LanguageModelSession.SessionBinding<Int>'`. Until the SDK adds the conformance, use `@preconcurrency import FoundationModels`, which turns that error into a warning. Don't mark the tool `@unchecked Sendable`, which silences the check for every property the tool has.
 - **`.onDataEntry`** on a `DynamicProfile` (27.3, all platforms) observes `Transcript.DataEntry` values the model produces. Only models that accept the entry's content type (`supportsDataEntryType(_:)`) produce them.
 - **`@Guide(key:description:)`** and `@Guide(key:description:_:)` overloads add a `key:` label. Apple documents no semantics for them yet.
 
 ```swift
+@preconcurrency import FoundationModels   // SessionBinding isn't Sendable yet; Swift 6 mode needs this
+
 struct TripPlanner: DynamicInstructions {
     @SessionState var budget = 500
     var body: some DynamicInstructions {
