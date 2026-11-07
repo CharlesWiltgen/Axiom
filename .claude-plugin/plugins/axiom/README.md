@@ -63,7 +63,7 @@ Ask your question; your assistant loads the router that matches it, and the rout
 | `/axiom:compare-traces` | Diff two performance traces for regressions with xcprof compare |
 | `/axiom:console` | Capture iOS simulator console output (print + os_log) with xclog |
 | `/axiom:fix-build` | Diagnose and fix Xcode build failures (launches build-fixer agent) |
-| `/axiom:health-check` | Run a comprehensive health check — auto-detects relevant auditors, runs them in parallel, produces a unified report |
+| `/axiom:health-check` | Run a project-wide health check across every relevant auditor |
 | `/axiom:modernize` | Migrate legacy iOS patterns to modern equivalents (launches modernization-helper agent) |
 | `/axiom:optimize-build` | Scan Xcode project for build performance optimizations (launches build-optimizer agent) |
 | `/axiom:profile` | Run automated performance profiling via xcprof (launches performance-profiler agent) |
@@ -73,7 +73,7 @@ Ask your question; your assistant loads the router that matches it, and the rout
 | `/axiom:siri` | Siri AI readiness audit, build, metadata analyzer, App Skills (Xcode 27.3) |
 | `/axiom:status` | Project health dashboard - shows environment status and suggests improvements |
 | `/axiom:test-simulator` | Launch simulator testing agent for test scenarios and visual verification |
-| `/axiom:triage` | Triage a corpus of production crashes/hangs from Sentry or App Store Connect — classify, cluster into families, and flag suspension/idle-runloop false-positives |
+| `/axiom:triage` | Triage a corpus of production crashes or hangs from Sentry or App Store Connect |
 | `/axiom:ui` | Drive and validate the iOS simulator UI and accessibility with xcui |
 <!-- AXIOM_README_COMMANDS_END -->
 

@@ -1,6 +1,6 @@
 ---
 name: triage
-description: Triage a corpus of production crashes/hangs from Sentry or App Store Connect — classify, cluster into families, and flag suspension/idle-runloop false-positives
+description: Triage a corpus of production crashes or hangs from Sentry or App Store Connect
 argument-hint: "[sentry|asc]"
 disable-model-invocation: true
 ---

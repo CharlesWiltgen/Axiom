@@ -1,5 +1,5 @@
 ---
-description: Run a comprehensive health check — auto-detects relevant auditors, runs them in parallel, produces a unified report
+description: Run a project-wide health check across every relevant auditor
 argument-hint: "[diff] [compiler] [skip <auditor>] [freeform emphasis]"
 disable-model-invocation: true
 ---
