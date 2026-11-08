@@ -1,9 +1,9 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
 import { computeBundleStats, generateBundle, copyToolBinaries } from './bundle.js';
 import { isGeneratedSubSkill } from '../loader/parser.js';
 import type { BundleV2 } from '../loader/types.js';
 import { makeSkill, makeAgent } from '../test-helpers.js';
-import { mkdtemp, rm, mkdir, writeFile, readFile, stat } from 'fs/promises';
+import { mkdtemp, rm, mkdir, writeFile, readFile, stat, symlink } from 'fs/promises';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
 import { tmpdir } from 'os';
@@ -287,5 +287,54 @@ describe('packaged xcproject CLI', () => {
   it('exposes the native inspector through the npm bin mapping', async () => {
     const manifest = JSON.parse(await readFile(fileURLToPath(new URL('../../package.json', import.meta.url)), 'utf8'));
     expect(manifest.bin.xcproject).toBe('./dist/bin/xcproject');
+  });
+});
+
+describe('generateBundle fails on a source it cannot parse', () => {
+  // Skipping one used to ship a bundle without that skill, command, or agent, with
+  // exit 0 (prepublishOnly runs build:bundle without the pre-deploy count check).
+  let tmpDir: string;
+  beforeEach(async () => {
+    tmpDir = await mkdtemp(join(tmpdir(), 'axiom-bundle-broken-'));
+    await mkdir(join(tmpDir, 'skills', 'axiom-ok', 'skills'), { recursive: true });
+    await mkdir(join(tmpDir, 'commands'), { recursive: true });
+    await mkdir(join(tmpDir, 'agents'), { recursive: true });
+    await writeFile(join(tmpDir, 'skills', 'axiom-ok', 'SKILL.md'), '---\nname: axiom-ok\ndescription: Use when OK.\n---\n\n# OK\n');
+  });
+  afterEach(async () => { await rm(tmpDir, { recursive: true, force: true }); });
+
+  // Distinct text per case: gray-matter caches by input string before parsing, so a
+  // second parse of identical broken text returns the cached result without throwing.
+  const broken = (label: string) => `---\nname: broken-${label}\ndescription: "unterminated\n---\n\n# Broken\n`;
+
+  it.each([
+    ['a suite SKILL.md', ['skills', 'axiom-broken', 'SKILL.md']],
+    ['a command', ['commands', 'broken.md']],
+    ['an agent', ['agents', 'broken.md']],
+  ])('rejects with SkillSourceError naming %s whose frontmatter does not parse', async (_label, parts) => {
+    await mkdir(join(tmpDir, ...parts.slice(0, -1)), { recursive: true });
+    await writeFile(join(tmpDir, ...parts), broken(parts.join('-')));
+    await expect(generateBundle(tmpDir)).rejects.toMatchObject({ name: 'SkillSourceError', path: join(tmpDir, ...parts) });
+  });
+
+  it('rejects every time, not only the first, when the same broken source is bundled twice', async () => {
+    await mkdir(join(tmpDir, 'skills', 'axiom-broken'), { recursive: true });
+    await writeFile(join(tmpDir, 'skills', 'axiom-broken', 'SKILL.md'), broken('twice'));
+    const outcomes = [];
+    for (const _ of [1, 2]) outcomes.push(await generateBundle(tmpDir).then(() => 'bundled', (e: Error) => e.name));
+    expect(outcomes).toEqual(['SkillSourceError', 'SkillSourceError']);
+  });
+
+  it('skips dot-prefixed files: editor lock links and macOS AppleDouble copies', async () => {
+    await writeFile(join(tmpDir, 'skills', 'axiom-ok', 'skills', '._guide.md'), Buffer.from([0, 5, 22, 7, 0, 2]));
+    await symlink('user@host.123:1700000000', join(tmpDir, 'skills', 'axiom-ok', 'skills', '.#guide.md'));
+    await symlink('user@host.123:1700000000', join(tmpDir, 'commands', '.#fix.md'));
+    await writeFile(join(tmpDir, 'agents', '._auditor.md'), Buffer.from([0, 5, 22, 7]));
+    const bundle = await generateBundle(tmpDir);
+    expect([Object.keys(bundle.skills), Object.keys(bundle.commands), Object.keys(bundle.agents)]).toEqual([['axiom-ok'], [], []]);
+  });
+
+  it('still bundles a plugin whose sources all parse', async () => {
+    expect(Object.keys((await generateBundle(tmpDir)).skills)).toEqual(['axiom-ok']);
   });
 });

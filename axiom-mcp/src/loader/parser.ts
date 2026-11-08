@@ -211,7 +211,7 @@ const SKILL_TYPE_OVERRIDES: Record<string, SkillType> = {
  * Infer skill type from name conventions, with explicit overrides for edge cases.
  * Content is optionally checked for suite routers (SKILL.md files that reference skills/*.md).
  */
-function inferSkillType(name: string, content?: string, isReferenceFile?: boolean): SkillType {
+export function inferSkillType(name: string, content?: string, isReferenceFile?: boolean): SkillType {
   if (SKILL_TYPE_OVERRIDES[name]) return SKILL_TYPE_OVERRIDES[name];
   if (name === 'axiom-using-axiom') return 'meta';
   if (name.endsWith('-ref')) return 'reference';
@@ -231,7 +231,8 @@ function inferSkillType(name: string, content?: string, isReferenceFile?: boolea
  * MCP annotations (category, tags, related) are merged externally via applyAnnotations().
  */
 export function parseSkill(content: string, filename: string): Skill {
-  const parsed = matter(content);
+  // Options bypass gray-matter's cache, which returns a second parse of broken input without throwing.
+  const parsed = matter(content, {});
   const data = parsed.data;
   const name = data.name || extractNameFromFilename(filename);
 
@@ -281,7 +282,8 @@ export function applyAnnotations(skill: Skill, annotations: SkillAnnotations): S
  * Parse a command markdown file
  */
 export function parseCommand(content: string, filename: string): Command {
-  const parsed = matter(content);
+  // Options bypass gray-matter's cache, which returns a second parse of broken input without throwing.
+  const parsed = matter(content, {});
   const data = parsed.data;
 
   return {
@@ -296,7 +298,8 @@ export function parseCommand(content: string, filename: string): Command {
  * Parse an agent markdown file
  */
 export function parseAgent(content: string, filename: string): Agent {
-  const parsed = matter(content);
+  // Options bypass gray-matter's cache, which returns a second parse of broken input without throwing.
+  const parsed = matter(content, {});
   const data = parsed.data;
 
   return {

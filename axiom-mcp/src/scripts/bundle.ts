@@ -17,18 +17,23 @@ import { fileURLToPath } from 'url';
 import { parseSkill, parseCommand, parseAgent, parseReferenceFile, applyAnnotations, isGeneratedSubSkill } from '../loader/parser.js';
 import type { Skill, SkillAnnotations } from '../loader/parser.js';
 import type { BundleV2 } from '../loader/types.js';
+import { SkillSourceError, isMissingFile, readExistingAnnotations, readSource } from './generate-annotations.js';
 import { buildIndex, serializeIndex } from '../search/index.js';
 import { buildCatalog } from '../catalog/index.js';
 import { MCP_PACKAGED_BINARIES } from '../tools/binaries.js';
 
 async function loadAnnotations(): Promise<SkillAnnotations> {
+  const { entries, content } = await readExistingAnnotations(join(process.cwd(), 'skill-annotations.json'));
+  if (content === null) console.warn('Warning: skill-annotations.json not found, using defaults');
+  return entries;
+}
+
+/** Parses one plugin source; a parse failure stops the build rather than shipping without it. */
+function parseSource<T>(path: string, parse: () => T): T {
   try {
-    const annotationsPath = join(process.cwd(), 'skill-annotations.json');
-    const content = await readFile(annotationsPath, 'utf-8');
-    return JSON.parse(content) as SkillAnnotations;
-  } catch {
-    console.warn('Warning: skill-annotations.json not found, using defaults');
-    return {};
+    return parse();
+  } catch (error) {
+    throw new SkillSourceError(path, `doesn't parse (${(error as Error).message})`, { cause: error });
   }
 }
 
@@ -52,43 +57,38 @@ export async function generateBundle(pluginPath: string): Promise<BundleV2> {
   async function loadSkillsFromDir(dir: string): Promise<void> {
     const entries = await readdir(dir);
     for (const entry of entries) {
+      if (entry.startsWith('.')) continue;   // editor locks, AppleDouble copies, .DS_Store
       const entryPath = join(dir, entry);
       const entryStat = await stat(entryPath);
 
       if (entryStat.isDirectory()) {
         const skillFile = join(entryPath, 'SKILL.md');
-        let skillLoaded = false;
-        try {
-          const content = await readFile(skillFile, 'utf-8');
-          const skill = applyAnnotations(parseSkill(content, entry), annotations);
-          bundle.skills[skill.name] = skill;
-          skillLoaded = true;
-        } catch {
-          // No SKILL.md in this directory
-        }
+        const content = await readSource(skillFile);
         // Load reference files from skills/ subdirectory (suite pattern)
-        if (skillLoaded) {
+        if (content !== null) {
+          const skill = applyAnnotations(parseSource(skillFile, () => parseSkill(content, entry)), annotations);
+          bundle.skills[skill.name] = skill;
           const refsDir = join(entryPath, 'skills');
+          let refEntries: string[] = [];
           try {
-            const refEntries = await readdir(refsDir);
-            for (const refFile of refEntries) {
-              if (!refFile.endsWith('.md')) continue;
-              try {
-                const refContent = await readFile(join(refsDir, refFile), 'utf-8');
-                // Bundling the inlined copies would double-count and trip the
-                // pre-deploy mcp-fidelity check. See isGeneratedSubSkill in loader/parser.ts.
-                if (isGeneratedSubSkill(refContent)) continue;
-                const refSkill = applyAnnotations(
-                  parseReferenceFile(refContent, refFile, entry),
-                  annotations,
-                );
-                bundle.skills[refSkill.name] = refSkill;
-              } catch {
-                console.warn(`Warning: Failed to parse reference ${entry}/skills/${refFile}`);
-              }
-            }
-          } catch {
-            // No skills/ directory
+            refEntries = await readdir(refsDir);
+          } catch (error) {
+            if (!isMissingFile(error)) throw new SkillSourceError(refsDir, `can't be listed (${(error as Error).message})`, { cause: error });
+          }
+          for (const refFile of refEntries) {
+            // Dot files are editor locks and macOS AppleDouble copies, never sources.
+            if (refFile.startsWith('.') || !refFile.endsWith('.md')) continue;
+            const refPath = join(refsDir, refFile);
+            const refContent = await readSource(refPath, { mustExist: true });
+            if (refContent === null) continue;
+            // Bundling the inlined copies would double-count and trip the
+            // pre-deploy mcp-fidelity check. See isGeneratedSubSkill in loader/parser.ts.
+            if (isGeneratedSubSkill(refContent)) continue;
+            const refSkill = applyAnnotations(
+              parseSource(refPath, () => parseReferenceFile(refContent, refFile, entry)),
+              annotations,
+            );
+            bundle.skills[refSkill.name] = refSkill;
           }
         }
         // Recurse into subdirectories (e.g., axiom-ai/coreml/)
@@ -111,32 +111,28 @@ export async function generateBundle(pluginPath: string): Promise<BundleV2> {
 
   // Load commands
   const commandsDir = join(pluginPath, 'commands');
-  const commandFiles = (await readdir(commandsDir)).filter(f => f.endsWith('.md'));
+  const commandFiles = (await readdir(commandsDir)).filter(f => !f.startsWith('.') && f.endsWith('.md'));
   console.log(`Found ${commandFiles.length} command files`);
 
   for (const file of commandFiles) {
-    try {
-      const content = await readFile(join(commandsDir, file), 'utf-8');
-      const command = parseCommand(content, file);
-      bundle.commands[command.name] = command;
-    } catch (err) {
-      console.warn(`Warning: Failed to parse command ${file}, skipping: ${(err as Error).message?.slice(0, 100)}`);
-    }
+    const path = join(commandsDir, file);
+    const content = await readSource(path, { mustExist: true });
+    if (content === null) continue;
+    const command = parseSource(path, () => parseCommand(content, file));
+    bundle.commands[command.name] = command;
   }
 
   // Load agents
   const agentsDir = join(pluginPath, 'agents');
-  const agentFiles = (await readdir(agentsDir)).filter(f => f.endsWith('.md'));
+  const agentFiles = (await readdir(agentsDir)).filter(f => !f.startsWith('.') && f.endsWith('.md'));
   console.log(`Found ${agentFiles.length} agent files`);
 
   for (const file of agentFiles) {
-    try {
-      const content = await readFile(join(agentsDir, file), 'utf-8');
-      const agent = parseAgent(content, file);
-      bundle.agents[agent.name] = agent;
-    } catch (err) {
-      console.warn(`Warning: Failed to parse agent ${file}, skipping: ${(err as Error).message?.slice(0, 100)}`);
-    }
+    const path = join(agentsDir, file);
+    const content = await readSource(path, { mustExist: true });
+    if (content === null) continue;
+    const agent = parseSource(path, () => parseAgent(content, file));
+    bundle.agents[agent.name] = agent;
   }
 
   // Build search index

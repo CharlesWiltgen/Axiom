@@ -13,11 +13,13 @@
  *   npm run build && node dist/scripts/generate-annotations.js [plugin-path]
  */
 
-import { readdir, readFile, writeFile, stat } from 'fs/promises';
-import { join } from 'path';
+import { readdir, readFile, rename, rm, writeFile, stat } from 'fs/promises';
+import { basename, dirname, join } from 'path';
+import { randomBytes } from 'crypto';
 import { fileURLToPath } from 'url';
 import matter from 'gray-matter';
-import { isGeneratedSubSkill, outsideFences, referenceDescription } from '../loader/parser.js';
+import { inferSkillType, isGeneratedSubSkill, outsideFences, referenceDescription } from '../loader/parser.js';
+import type { SkillType } from '../loader/parser.js';
 
 // --- Types ---
 
@@ -27,11 +29,99 @@ interface AnnotationEntry {
   related?: string[];
 }
 
+/** The curated annotations file exists but can't be used, so nothing may overwrite it. */
+export class AnnotationsFileError extends Error {
+  override readonly name = 'AnnotationsFileError';
+  constructor(readonly path: string, reason: string, options?: { cause?: unknown }) {
+    super(`${path}: ${reason}. Its curated annotations would be lost, so nothing was written; fix or restore the file (git checkout -- ${basename(path)}) and rerun.`, options);
+  }
+}
+
+/** A plugin source file exists but can't be read or parsed, so the build must stop. */
+export class SkillSourceError extends Error {
+  override readonly name = 'SkillSourceError';
+  constructor(readonly path: string, reason: string, options?: { cause?: unknown }) {
+    super(`${path}: ${reason}. Skipping it would drop it from the annotations and the bundle; fix it and rerun.`, options);
+  }
+}
+
+export function isMissingFile(error: unknown): boolean {
+  return (error as NodeJS.ErrnoException | undefined)?.code === 'ENOENT';
+}
+
+/** The file's text, or null when it doesn't exist; any other failure throws SkillSourceError. */
+export async function readSource(path: string, options: { mustExist?: boolean } = {}): Promise<string | null> {
+  try {
+    return await readFile(path, 'utf-8');
+  } catch (error) {
+    if (isMissingFile(error) && !options.mustExist) return null;
+    throw new SkillSourceError(path, `can't be read (${(error as Error).message})`, { cause: error });
+  }
+}
+
+function invalidEntryReason(value: unknown): string | null {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return 'is not an object';
+  const entry = value as Record<string, unknown>;
+  if (entry.category !== undefined && typeof entry.category !== 'string') return 'has a non-string category';
+  for (const field of ['tags', 'related'] as const) {
+    const list = entry[field];
+    if (list !== undefined && !(Array.isArray(list) && list.every((item) => typeof item === 'string'))) {
+      return `has ${field} that isn't an array of strings`;
+    }
+  }
+  return null;
+}
+
+/**
+ * Curated annotations to preserve: none when the file doesn't exist, otherwise its
+ * entries. Any other failure throws, because treating an unreadable or corrupt file
+ * as empty replaces every curated entry with heuristic output (Axiom-dfd).
+ */
+export async function readExistingAnnotations(
+  path: string,
+): Promise<{ entries: Record<string, AnnotationEntry>; content: string | null }> {
+  let content: string;
+  try {
+    content = await readFile(path, 'utf-8');
+  } catch (error) {
+    if (isMissingFile(error)) return { entries: {}, content: null };
+    throw new AnnotationsFileError(path, `can't be read (${(error as Error).message})`, { cause: error });
+  }
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(content.replace(/^\uFEFF/, ''));
+  } catch (error) {
+    throw new AnnotationsFileError(path, `isn't valid JSON (${(error as Error).message})`, { cause: error });
+  }
+  if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new AnnotationsFileError(path, 'is not a JSON object of annotation entries');
+  }
+  for (const [key, value] of Object.entries(parsed)) {
+    const reason = invalidEntryReason(value);
+    if (reason) throw new AnnotationsFileError(path, `entry "${key}" ${reason}`);
+  }
+  return { entries: parsed as Record<string, AnnotationEntry>, content };
+}
+
+/** Writes through a temporary file and a rename, so an interrupted write can't leave a truncated file. */
+export async function writeAnnotationsAtomically(path: string, content: string): Promise<void> {
+  const temporary = join(dirname(path), `.${basename(path)}.${randomBytes(6).toString('hex')}.tmp`);
+  try {
+    await writeFile(temporary, content, 'utf-8');
+    await rename(temporary, path);
+  } catch (error) {
+    await rm(temporary, { force: true }).catch((cleanupError: Error) => {
+      console.warn(`Warning: couldn't remove ${temporary}: ${cleanupError.message}`);
+    });
+    throw error;
+  }
+}
+
 interface SkillInfo {
   name: string;
   description: string;
   content: string;
-  skillType: string;
+  skillType: SkillType;
   parentSuite?: string;  // For reference files within suites
 }
 
@@ -157,23 +247,6 @@ export function inferCategoryFromName(name: string): string {
   if (name.includes('intent') || name.includes('shortcut') || name.includes('widget') || name.includes('extension') || name.includes('storekit') || name.includes('iap') || name.includes('localization') || name.includes('spotlight') || name.includes('privacy') || name.includes('deep-link') || name.includes('app-store') || name.includes('background-process') || name.includes('shipping') || name.includes('push-notif') || name.includes('timer-pattern') || name.includes('eventkit') || name.includes('contacts') || name.includes('alarmkit') || name.includes('live-activit') || name.includes('accessorysetupkit') || name.includes('weatherkit') || name.includes('callkit') || name.includes('app-clip')) return 'System Integration';
   if (name.includes('docs-research') || name.includes('getting-started')) return 'General';
   return 'General';
-}
-
-// --- Skill type inference (name-based only; parser.ts inferSkillType also detects routers from content) ---
-
-const SKILL_TYPE_OVERRIDES: Record<string, string> = {
-  'axiom-apple-docs': 'router',
-  'axiom-getting-started': 'discipline',
-  'axiom-sqlitedata-migration': 'reference',
-};
-
-function inferSkillType(name: string): string {
-  if (SKILL_TYPE_OVERRIDES[name]) return SKILL_TYPE_OVERRIDES[name];
-  if (name.match(/^axiom-ios-/)) return 'router';
-  if (name === 'axiom-using-axiom') return 'meta';
-  if (name.endsWith('-ref')) return 'reference';
-  if (name.endsWith('-diag')) return 'diagnostic';
-  return 'discipline';
 }
 
 // --- Tag extraction ---
@@ -403,6 +476,73 @@ export function findRelatedSkills(
   return Array.from(combined).sort().slice(0, 6);
 }
 
+/**
+ * Every skill and sub-skill under `skillsDir`. A directory with no SKILL.md, or a
+ * suite with no skills/ folder, is skipped; any other read or parse failure throws,
+ * because a skipped source looks deleted and the prune step drops its curated
+ * annotations (Axiom-dfd).
+ */
+export async function loadSkillSources(skillsDir: string): Promise<Map<string, SkillInfo>> {
+  const skills = new Map<string, SkillInfo>();
+
+  async function loadSkillsFromDir(dir: string): Promise<void> {
+    const entries = await readdir(dir);
+    for (const entry of entries) {
+      if (entry.startsWith('.')) continue;   // editor locks, AppleDouble copies, .DS_Store
+      const entryPath = join(dir, entry);
+      const entryStat = await stat(entryPath);
+      if (!entryStat.isDirectory()) continue;
+
+      const skillFile = join(entryPath, 'SKILL.md');
+      const raw = await readSource(skillFile);
+      if (raw !== null) {
+        let parsed: matter.GrayMatterFile<string>;
+        try {
+          parsed = matter(raw, {});   // options bypass gray-matter's cache, which keeps broken input from throwing twice
+        } catch (error) {
+          throw new SkillSourceError(skillFile, `frontmatter doesn't parse (${(error as Error).message})`, { cause: error });
+        }
+        const name = parsed.data.name || entry;
+        const description = parsed.data.description || '';
+        skills.set(name, { name, description, content: parsed.content, skillType: inferSkillType(name, parsed.content) });
+
+        // Load reference files from skills/ subdirectory (mirrors dev-loader.ts)
+        const refsDir = join(entryPath, 'skills');
+        let refEntries: string[] = [];
+        try {
+          refEntries = await readdir(refsDir);
+        } catch (error) {
+          if (!isMissingFile(error)) throw new SkillSourceError(refsDir, `can't be listed (${(error as Error).message})`, { cause: error });
+        }
+        for (const refFile of refEntries) {
+          // Dot files are editor locks and macOS AppleDouble copies, never sources.
+          if (refFile.startsWith('.') || !refFile.endsWith('.md')) continue;
+          const refPath = join(refsDir, refFile);
+          const refContent = await readSource(refPath, { mustExist: true });
+          if (refContent === null) continue;
+          // The bundler drops these, so annotating them only produces entries
+          // that bundle.ts then reports as orphaned.
+          if (isGeneratedSubSkill(refContent)) continue;
+          const refName = `${entry}--${refFile.replace(/\.md$/, '')}`;
+          skills.set(refName, {
+            name: refName,
+            description: referenceDescription(refContent),
+            content: refContent,
+            skillType: inferSkillType(refName, refContent, true),
+            parentSuite: entry,
+          });
+        }
+      }
+
+      // Recurse into subdirectories
+      await loadSkillsFromDir(entryPath);
+    }
+  }
+
+  await loadSkillsFromDir(skillsDir);
+  return skills;
+}
+
 // --- Main ---
 
 async function main() {
@@ -417,64 +557,7 @@ async function main() {
   console.log();
 
   // 1. Read all skill frontmatters and content
-  const skills = new Map<string, SkillInfo>();
-
-  async function loadSkillsFromDir(dir: string): Promise<void> {
-    const entries = await readdir(dir);
-    for (const entry of entries) {
-      const entryPath = join(dir, entry);
-      const entryStat = await stat(entryPath);
-      if (!entryStat.isDirectory()) continue;
-
-      const skillFile = join(entryPath, 'SKILL.md');
-      let suiteLoaded = false;
-      try {
-        const raw = await readFile(skillFile, 'utf-8');
-        const parsed = matter(raw);
-        const name = parsed.data.name || entry;
-        const description = parsed.data.description || '';
-        const skillType = inferSkillType(name);
-
-        skills.set(name, { name, description, content: parsed.content, skillType });
-        suiteLoaded = true;
-      } catch {
-        // No SKILL.md or parse error, skip
-      }
-
-      // Load reference files from skills/ subdirectory (mirrors dev-loader.ts)
-      if (suiteLoaded) {
-        const refsDir = join(entryPath, 'skills');
-        try {
-          const refEntries = await readdir(refsDir);
-          for (const refFile of refEntries) {
-            if (!refFile.endsWith('.md')) continue;
-            try {
-              const refContent = await readFile(join(refsDir, refFile), 'utf-8');
-              // The bundler drops these, so annotating them only produces entries
-              // that bundle.ts then reports as orphaned.
-              if (isGeneratedSubSkill(refContent)) continue;
-              const baseName = refFile.replace(/\.md$/, '');
-              const refName = `${entry}--${baseName}`;
-
-              const description = referenceDescription(refContent);
-
-              const skillType = inferSkillType(refName);
-              skills.set(refName, { name: refName, description, content: refContent, skillType, parentSuite: entry });
-            } catch {
-              // Parse error on reference file, skip
-            }
-          }
-        } catch {
-          // No skills/ directory — not a suite
-        }
-      }
-
-      // Recurse into subdirectories
-      await loadSkillsFromDir(entryPath);
-    }
-  }
-
-  await loadSkillsFromDir(skillsDir);
+  const skills = await loadSkillSources(skillsDir);
 
   const routerCount = Array.from(skills.values()).filter(s => s.skillType === 'router').length;
   const metaCount = Array.from(skills.values()).filter(s => s.skillType === 'meta').length;
@@ -482,14 +565,10 @@ async function main() {
   console.log(`Found ${skills.size} skills (${routerCount} routers, ${metaCount} meta, ${targetCount} targets)`);
 
   // 2. Load existing annotations
-  let existing: Record<string, AnnotationEntry> = {};
-  try {
-    const content = await readFile(annotationsPath, 'utf-8');
-    existing = JSON.parse(content);
-    console.log(`Loaded ${Object.keys(existing).length} existing annotations`);
-  } catch {
-    console.log('No existing annotations found, starting fresh');
-  }
+  const { entries: existing, content: existingContent } = await readExistingAnnotations(annotationsPath);
+  console.log(existingContent === null
+    ? 'No existing annotations found, starting fresh'
+    : `Loaded ${Object.keys(existing).length} existing annotations`);
 
   // 3. Generate annotations for unannotated non-router, non-meta skills
   const allNames = new Set(skills.keys());
@@ -531,10 +610,12 @@ async function main() {
     generated++;
   }
 
-  // 4. Prune entries for skills that no longer exist
+  // 4. Prune entries for skills that no longer exist, and for routers and meta
+  // skills: search and the catalog skip them, so an entry for one is never used.
   let pruned = 0;
   for (const key of Object.keys(annotations)) {
-    if (!allNames.has(key)) {
+    const type = skills.get(key)?.skillType;
+    if (!allNames.has(key) || type === 'router' || type === 'meta') {
       delete annotations[key];
       pruned++;
     }
@@ -567,13 +648,8 @@ async function main() {
   // newer mtime it can prove is git-clean (staleness.ts:75-88), so an
   // unconditional rewrite would report a stale bundle over identical bytes.
   const serialized = JSON.stringify(sorted, null, 2) + '\n';
-  let unchanged = false;
-  try {
-    unchanged = (await readFile(annotationsPath, 'utf-8')) === serialized;
-  } catch {
-    // No existing file — fall through and write.
-  }
-  if (!unchanged) await writeFile(annotationsPath, serialized, 'utf-8');
+  const unchanged = existingContent === serialized;
+  if (!unchanged) await writeAnnotationsAtomically(annotationsPath, serialized);
 
   console.log();
   console.log('Results:');

@@ -7,6 +7,7 @@ import { CLI_ONLY_BINARIES, MCP_TOOL_NAMES } from './tools/binaries.js';
 import type { Loader } from './loader/types.js';
 import { Logger, type Config } from './config.js';
 import { detectXcode, loadAppleDocs } from './loader/xcode-docs.js';
+import { loadSkillSources } from './scripts/generate-annotations.js';
 
 // The README listed resource ids that never existed (axiom://skill/xcode-debugging) and a
 // project tree missing most of tools/, because nothing compared it with the server. These
@@ -115,5 +116,15 @@ describe('skill-annotations.json', () => {
       ...Object.entries(annotations).flatMap(([id, a]) => (a.related ?? []).filter((r) => !skillIdExists(r)).map((r) => `${id} → ${r}`)),
     ];
     expect({ checked: keys.length > 0, missing }).toEqual({ checked: true, missing: [] });
+  });
+
+  // Search and the catalog skip routers and meta skills, so an entry for one is
+  // never used; the 26 that existed were heuristic output from a misclassification.
+  it('carries no entry for a router or meta skill', async () => {
+    const annotations = JSON.parse(readFileSync(join(repo, 'axiom-mcp/skill-annotations.json'), 'utf8')) as Record<string, unknown>;
+    const skills = await loadSkillSources(join(repo, '.claude-plugin/plugins/axiom/skills'));
+    const routerOrMeta = [...skills.values()].filter((s) => s.skillType === 'router' || s.skillType === 'meta').map((s) => s.name);
+    expect({ checked: routerOrMeta.length > 0, annotated: routerOrMeta.filter((name) => name in annotations) })
+      .toEqual({ checked: true, annotated: [] });
   });
 });
