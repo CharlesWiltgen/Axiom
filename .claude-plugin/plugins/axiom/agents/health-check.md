@@ -96,11 +96,13 @@ Run these only when their framework signals are present in the codebase:
 | `Timer.scheduledTimer` or `CLLocationManager` | energy-auditor |
 | `AVCaptureSession` | camera-auditor |
 | `LanguageModelSession` or `@Generable` | foundation-models-auditor |
+| `import StoreKit` or `Product.products(for:` or `Transaction.updates` | iap-auditor |
 | `@AppIntent(.tool` or `@AppIntent([.tool` or `ToolIntent`, `@Dependency` in a file that also contains `AppIntent`, or a `.skillsbundle` exists | siri-ai-auditor |
 | `import SpriteKit` | spritekit-auditor |
 | `NWConnection` or `NetworkConnection` | networking-auditor |
 | `NSUbiquitousKeyValueStore` or `CKContainer` or `CloudKit` | icloud-auditor |
 | `registerMigration` or `DatabaseMigrator` or `ALTER TABLE` | database-schema-auditor |
+| `import GRDB` or `DatabaseQueue` or `DatabasePool` | grdb-performance-auditor |
 | `NSTextLayoutManager` or `TextKit` | textkit-auditor |
 | `UIScreen.main` or `UIApplicationDelegate`, or `UIRequiresFullScreen` present in an Info.plist | resize-auditor |
 | `override func mouseDown`, `nextEvent(matching:` or `- (void)mouseDown:` in a macOS target | touch-auditor |

@@ -107,10 +107,12 @@ Grouped to mirror the sidebar exactly — same group names, same group order, sa
 <!-- AXIOM_AUDIT_DOCS_END -->
 ## Priority Levels
 
-1. **CRITICAL** – `core-data`, `swiftdata`, `database-schema`, `storage`, `icloud` (data corruption/loss risk)
-2. **HIGH** – `concurrency`, `memory`, `energy`, `networking`, `security`, `testing`, `test-failures`, `grdb-performance` (crashes, App Store rejection)
-3. **MEDIUM** – `swiftui-architecture`, `ux-flow`, `swiftui-performance`, `swiftui-layout`, `swift-performance`, `foundation-models` (architecture, performance, UX)
-4. **LOW** – `accessibility`, `liquid-glass`, `codable`, `modernization`, `camera`, `screenshots`, `swift-simplify` (enhancement opportunities)
+<!-- AXIOM_AUDIT_DOCS_PRIORITY_BEGIN — generated from scripts/audit-areas.json -->
+1. **CRITICAL** – `core-data`, `database-schema`, `grdb-performance`, `icloud`, `storage`, `swiftdata` (data corruption/loss risk)
+2. **HIGH** – `concurrency`, `energy`, `iap`, `memory`, `networking`, `security`, `siri-ai`, `testing` (production crashes, App Store rejection)
+3. **MEDIUM** – `foundation-models`, `resize`, `spritekit`, `swift-performance`, `swiftui-architecture`, `swiftui-layout`, `swiftui-nav`, `swiftui-performance`, `textkit`, `touch`, `ux-flow` (architecture, performance, UX)
+4. **LOW** – `accessibility`, `build`, `camera`, `codable`, `liquid-glass`, `modernization`, `screenshots`, `swift-simplify`, `test-failures` (enhancement opportunities, on-demand diagnostics)
+<!-- AXIOM_AUDIT_DOCS_PRIORITY_END -->
 
 ## Batch Patterns
 
@@ -131,6 +133,7 @@ Grouped to mirror the sidebar exactly — same group names, same group order, sa
 /axiom:audit swiftdata
 /axiom:audit database-schema
 /axiom:audit core-data
+/axiom:audit grdb-performance
 /axiom:audit storage
 
 # Battery optimization

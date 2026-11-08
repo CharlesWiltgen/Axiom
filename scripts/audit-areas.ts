@@ -29,7 +29,21 @@ export interface AuditArea {
   docsDetects: string;
   /** Sidebar link target, e.g. `/commands/storage/audit-swiftdata`. */
   docPath: string;
+  /** Batch-execution tier, rendered into the priority lists of the command and docs page. */
+  priority: Priority;
+  /** Model-facing reason in the command's priority list ("Schema safety, thread violations"). */
+  priorityNote: string;
 }
+
+/** Tiers in the order a batch runs them. */
+export const PRIORITY_TIERS = [
+  { key: "critical", label: "CRITICAL", why: "data corruption/loss risk" },
+  { key: "high", label: "HIGH", why: "production crashes, App Store rejection" },
+  { key: "medium", label: "MEDIUM", why: "architecture, performance, UX" },
+  { key: "low", label: "LOW", why: "enhancement opportunities, on-demand diagnostics" },
+] as const;
+
+export type Priority = (typeof PRIORITY_TIERS)[number]["key"];
 
 export interface AuditRegistry {
   groupOrder: string[];
@@ -41,6 +55,8 @@ export const MARKERS = {
   argument: "AXIOM_AUDIT_ARGUMENT",
   bodyTable: "AXIOM_AUDIT_TABLE",
   docsTable: "AXIOM_AUDIT_DOCS",
+  priority: "AXIOM_AUDIT_PRIORITY",
+  docsPriority: "AXIOM_AUDIT_DOCS_PRIORITY",
   sidebar: "AXIOM_AUDIT_SIDEBAR",
 } as const;
 
@@ -80,10 +96,16 @@ export function validateRegistry(registry: AuditRegistry): string[] {
       "detects",
       "docsDetects",
       "docPath",
+      "priorityNote",
     ] as const) {
       if (!a[field] || a[field].trim() === "") {
         errors.push(`area '${a.area || "(unnamed)"}' has empty '${field}'`);
       }
+    }
+    if (!PRIORITY_TIERS.some((t) => t.key === a.priority)) {
+      errors.push(
+        `area '${a.area || "(unnamed)"}' has priority '${a.priority}' — must be one of ${PRIORITY_TIERS.map((t) => t.key).join(", ")}`,
+      );
     }
     if (!groups.has(a.group)) {
       errors.push(`area '${a.area}' has group '${a.group}' which is not in groupOrder`);
@@ -127,6 +149,120 @@ export function renderBodyTable(registry: AuditRegistry): string {
     lines.push(`| ${a.area} | ${a.agent} | ${a.detects} |`);
   }
   return lines.join("\n");
+}
+
+/**
+ * Registry auditors that /axiom:health-check deliberately does not run, each
+ * with the reason. Every other registry agent must appear in health-check.md.
+ */
+export const HEALTH_CHECK_EXEMPT: Record<string, string> = {
+  "build-optimizer": "needs a build to measure, which a source scan doesn't run",
+  "swift-simplifier": "proposes refactors rather than finding defects",
+  "test-failure-analyzer": "diagnoses one known failing test, so it has nothing to scan for",
+};
+
+/** Problems with health-check.md's auditor coverage against the registry. */
+export function validateHealthCheckCoverage(
+  registry: AuditRegistry,
+  healthCheckText: string,
+  exempt: Record<string, string> = HEALTH_CHECK_EXEMPT,
+): string[] {
+  // Only Phase 1 selects auditors; a name elsewhere (Related, Guidelines) isn't a run.
+  // Same boundary as scripts/codex-auditors.js.
+  const start = healthCheckText.indexOf("## Phase 1:");
+  const end = healthCheckText.indexOf("\n## Phase 2:", start);
+  if (start < 0 || end < 0) return ["health-check.md has no '## Phase 1:' … '## Phase 2:' section to check"];
+  const phase1 = healthCheckText.slice(start, end);
+  const runs = (agent: string) => new RegExp(`(^|[^a-z-])${agent}([^a-z-]|$)`, "m").test(phase1);
+  const errors: string[] = [];
+  for (const a of registry.areas) {
+    if (!runs(a.agent) && !(a.agent in exempt)) {
+      errors.push(`health-check never runs ${a.agent} (area '${a.area}'); add a signal row or exempt it with a reason`);
+    }
+  }
+  for (const agent of Object.keys(exempt)) {
+    if (runs(agent)) errors.push(`${agent} is exempted from health-check coverage but health-check runs it; drop the exemption`);
+  }
+  return errors;
+}
+
+/** Areas /axiom:audit's project analysis deliberately never suggests, with the reason. */
+export const SUGGESTION_EXEMPT: Record<string, string> = {
+  "test-failures": "diagnoses one known failing test, so a project scan has nothing to suggest it for",
+};
+
+/** Problems with audit.md's "Project Analysis" suggestions against the registry. */
+export function validateSuggestionCoverage(
+  registry: AuditRegistry,
+  auditCommandText: string,
+  exempt: Record<string, string> = SUGGESTION_EXEMPT,
+): string[] {
+  const start = auditCommandText.indexOf("## Project Analysis");
+  if (start < 0) return ["commands/audit.md has no '## Project Analysis' section to check"];
+  const next = auditCommandText.indexOf("\n## ", start + 1);
+  const section = auditCommandText.slice(start, next < 0 ? undefined : next);
+  const suggests = (area: string) => new RegExp(`suggest[^\\n]*(^|[^a-z-])${area}([^a-z-]|$)`, "m").test(section);
+  const errors: string[] = [];
+  for (const { area } of registry.areas) {
+    if (!suggests(area) && !(area in exempt)) {
+      errors.push(`project analysis never suggests the '${area}' audit; add a trigger line or exempt it with a reason`);
+    }
+  }
+  for (const area of Object.keys(exempt)) {
+    if (suggests(area)) errors.push(`'${area}' is exempted from suggestion coverage but project analysis suggests it; drop the exemption`);
+  }
+  return errors;
+}
+
+/** Repo-relative files that hold generated regions. */
+export const AUDIT_COMMAND_FILE = ".claude-plugin/plugins/axiom/commands/audit.md";
+export const AUDIT_DOCS_FILE = "docs/commands/utility/audit.md";
+
+export interface GeneratedRegion {
+  file: string;
+  marker: string;
+  style: "html" | "hash";
+  content: string;
+  label: string;
+}
+
+/**
+ * Every generated region, rendered. The one list both the generator and
+ * pre-deploy's staleness check read; each used to keep its own, and the two
+ * priority regions reached the generator but not the check (Axiom-3dll).
+ */
+export function generatedRegions(registry: AuditRegistry): GeneratedRegion[] {
+  return [
+    { file: AUDIT_COMMAND_FILE, marker: MARKERS.argument, style: "hash", content: renderArgumentList(registry), label: "commands/audit.md argument: line" },
+    { file: AUDIT_COMMAND_FILE, marker: MARKERS.bodyTable, style: "html", content: renderBodyTable(registry), label: "commands/audit.md body table" },
+    { file: AUDIT_COMMAND_FILE, marker: MARKERS.priority, style: "html", content: renderPriorityOrder(registry), label: "commands/audit.md priority order" },
+    { file: AUDIT_DOCS_FILE, marker: MARKERS.docsTable, style: "html", content: renderDocsTables(registry), label: "docs/commands/utility/audit.md grouped tables" },
+    { file: AUDIT_DOCS_FILE, marker: MARKERS.docsPriority, style: "html", content: renderPriorityLevels(registry), label: "docs/commands/utility/audit.md priority levels" },
+  ];
+}
+
+/** Non-empty tiers in severity order, each with its areas alphabetical. */
+function tiersWithAreas(registry: AuditRegistry) {
+  return PRIORITY_TIERS.map((tier) => ({
+    tier,
+    areas: registry.areas.filter((a) => a.priority === tier.key).sort((a, b) => a.area.localeCompare(b.area)),
+  })).filter(({ areas }) => areas.length > 0);
+}
+
+/** The command's batch priority list (model-facing notes). */
+export function renderPriorityOrder(registry: AuditRegistry): string {
+  return tiersWithAreas(registry)
+    .map(({ tier, areas }, i) =>
+      [`${i + 1}. **${tier.label} audits** (${tier.why}):`, ...areas.map((a) => `   - ${a.area} → ${a.priorityNote}`)].join("\n"),
+    )
+    .join("\n\n");
+}
+
+/** The docs page's priority levels (human-facing, names only). */
+export function renderPriorityLevels(registry: AuditRegistry): string {
+  return tiersWithAreas(registry)
+    .map(({ tier, areas }, i) => `${i + 1}. **${tier.label}** – ${areas.map((a) => `\`${a.area}\``).join(", ")} (${tier.why})`)
+    .join("\n");
 }
 
 /** Surface 3 — the grouped docs tables (human-facing prose). */

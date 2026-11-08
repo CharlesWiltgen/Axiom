@@ -1,5 +1,5 @@
 {
-  "//": "Canonical registry of /axiom:audit areas. Edit here, then run `npm run build:audit-areas`. Four surfaces are generated from this file: the argument list and body table in commands/audit.md (for-LLM), the docs page table (for-humans), and the VitePress sidebar. `detects` is model-facing routing text; `docsDetects` is human prose — they differ on purpose per the docs-are-human / source-is-for-LLM split.",
+  "//": "Canonical registry of /axiom:audit areas. Edit here, then run `npm run build:audit-areas`. Generated from this file: the argument list, body table and priority order in commands/audit.md (for-LLM), the docs page table and priority levels (for-humans), and the VitePress sidebar check. Every area needs a `priority` tier (critical, high, medium, low) and a model-facing `priorityNote`. `detects` is model-facing routing text; `docsDetects` is human prose — they differ on purpose per the docs-are-human / source-is-for-LLM split.",
   "groupOrder": [
     "Build",
     "Debugging",
@@ -19,7 +19,9 @@
       "group": "Build",
       "detects": "Build time optimization opportunities",
       "docsDetects": "Build time optimization opportunities",
-      "docPath": "/commands/build/audit-build"
+      "docPath": "/commands/build/audit-build",
+      "priority": "low",
+      "priorityNote": "Build time optimization opportunities"
     },
     {
       "area": "codable",
@@ -27,7 +29,9 @@
       "group": "Debugging",
       "detects": "JSON serialization issues, Sendable violations",
       "docsDetects": "Manual JSON building, error swallowing, Sendable violations",
-      "docPath": "/commands/debugging/audit-codable"
+      "docPath": "/commands/debugging/audit-codable",
+      "priority": "low",
+      "priorityNote": "JSON best practices"
     },
     {
       "area": "core-data",
@@ -35,7 +39,9 @@
       "group": "Debugging",
       "detects": "Thread safety, schema migrations, N+1 queries",
       "docsDetects": "Thread safety, schema migrations, N+1 queries",
-      "docPath": "/commands/debugging/audit-core-data"
+      "docPath": "/commands/debugging/audit-core-data",
+      "priority": "critical",
+      "priorityNote": "Schema safety, thread violations"
     },
     {
       "area": "energy",
@@ -43,7 +49,9 @@
       "group": "Debugging",
       "detects": "Timer abuse, polling patterns, continuous location, animation leaks, background mode misuse",
       "docsDetects": "Timer abuse, polling patterns, continuous location, animation leaks",
-      "docPath": "/commands/debugging/audit-energy"
+      "docPath": "/commands/debugging/audit-energy",
+      "priority": "high",
+      "priorityNote": "Timer abuse, polling, continuous location"
     },
     {
       "area": "memory",
@@ -51,7 +59,9 @@
       "group": "Debugging",
       "detects": "Retain cycles, leaks, Timer/observer patterns",
       "docsDetects": "Retain cycles, Timer/observer leaks, closure captures",
-      "docPath": "/commands/debugging/audit-memory"
+      "docPath": "/commands/debugging/audit-memory",
+      "priority": "high",
+      "priorityNote": "Retain cycles, leaks"
     },
     {
       "area": "modernization",
@@ -59,7 +69,9 @@
       "group": "Debugging",
       "detects": "ObservableObject→@Observable, @StateObject→@State, deprecated APIs",
       "docsDetects": "ObservableObject→@Observable, @StateObject→@State, deprecated APIs",
-      "docPath": "/commands/debugging/audit-modernization"
+      "docPath": "/commands/debugging/audit-modernization",
+      "priority": "low",
+      "priorityNote": "Legacy API migration"
     },
     {
       "area": "swift-performance",
@@ -67,7 +79,9 @@
       "group": "Debugging",
       "detects": "ARC issues, allocation patterns, generic specialization",
       "docsDetects": "ARC issues, allocation patterns, generic specialization",
-      "docPath": "/commands/debugging/audit-swift-performance"
+      "docPath": "/commands/debugging/audit-swift-performance",
+      "priority": "medium",
+      "priorityNote": "ARC overhead, allocations"
     },
     {
       "area": "swift-simplify",
@@ -75,7 +89,9 @@
       "group": "Debugging",
       "detects": "Behavior-preserving Swift simplifications — guard/optional cleanups, if/switch expressions, collection idioms, redundant boilerplate, dead availability guards",
       "docsDetects": "Behavior-preserving Swift clarity — guard/optional cleanups, if/switch expressions, collection idioms, boilerplate",
-      "docPath": "/commands/debugging/audit-swift-simplify"
+      "docPath": "/commands/debugging/audit-swift-simplify",
+      "priority": "low",
+      "priorityNote": "Behavior-preserving Swift clarity simplifications"
     },
     {
       "area": "test-failures",
@@ -83,7 +99,9 @@
       "group": "Testing",
       "detects": "Root-cause diagnosis for a failing or intermittent test — missing await confirmation, @MainActor gaps, shared suite state, missing .serialized",
       "docsDetects": "Why a specific test fails or flakes — missing `await confirmation`, `@MainActor` gaps, shared suite state",
-      "docPath": "/commands/testing/audit-test-failures"
+      "docPath": "/commands/testing/audit-test-failures",
+      "priority": "low",
+      "priorityNote": "Root cause of one known failing or intermittent test (run on demand)"
     },
     {
       "area": "testing",
@@ -91,7 +109,9 @@
       "group": "Testing",
       "detects": "Flaky tests, slow tests, Swift Testing migration, test quality",
       "docsDetects": "Flaky tests, slow tests, Swift Testing migration",
-      "docPath": "/commands/testing/audit-testing"
+      "docPath": "/commands/testing/audit-testing",
+      "priority": "high",
+      "priorityNote": "Flaky tests, slow CI"
     },
     {
       "area": "concurrency",
@@ -99,7 +119,9 @@
       "group": "Concurrency",
       "detects": "Swift 6 data races, unsafe Task captures, actor isolation",
       "docsDetects": "Swift 6 data races, unsafe Task captures, actor isolation",
-      "docPath": "/commands/concurrency/audit-concurrency"
+      "docPath": "/commands/concurrency/audit-concurrency",
+      "priority": "high",
+      "priorityNote": "Swift 6 data races"
     },
     {
       "area": "liquid-glass",
@@ -107,7 +129,9 @@
       "group": "UI & Design",
       "detects": "iOS 26 adoption opportunities, toolbar improvements",
       "docsDetects": "iOS 26 adoption opportunities, toolbar improvements",
-      "docPath": "/commands/ui-design/audit-liquid-glass"
+      "docPath": "/commands/ui-design/audit-liquid-glass",
+      "priority": "low",
+      "priorityNote": "iOS 26 adoption"
     },
     {
       "area": "resize",
@@ -115,7 +139,9 @@
       "group": "UI & Design",
       "detects": "Scene-lifecycle gaps, UIScreen.main, UIRequiresFullScreen, orientation-derived layout, fixed-canvas rendering, Mirroring input",
       "docsDetects": "Scene-lifecycle gaps, UIScreen.main, fixed-canvas rendering, iPhone Mirroring input",
-      "docPath": "/commands/ui-design/audit-resize"
+      "docPath": "/commands/ui-design/audit-resize",
+      "priority": "medium",
+      "priorityNote": "scene-lifecycle gaps, UIScreen.main, fixed-canvas assumptions"
     },
     {
       "area": "touch",
@@ -123,7 +149,9 @@
       "group": "UI & Design",
       "detects": "Mac touch readiness: custom recognizers that never finish, control subclasses overriding mouseDown, tracking loops, hover-only actions, small hit targets",
       "docsDetects": "Touch readiness on touch-display Macs and Sidecar: tracking loops, mouseDown overrides, hover-only actions",
-      "docPath": "/commands/ui-design/audit-touch"
+      "docPath": "/commands/ui-design/audit-touch",
+      "priority": "medium",
+      "priorityNote": "stuck custom recognizers, mouseDown overrides on controls, tracking loops (macOS)"
     },
     {
       "area": "swiftui-architecture",
@@ -131,7 +159,9 @@
       "group": "UI & Design",
       "detects": "Logic in view, MVVM/TCA patterns, boundary violations",
       "docsDetects": "Logic in views, MVVM/TCA boundary violations",
-      "docPath": "/commands/ui-design/audit-swiftui-architecture"
+      "docPath": "/commands/ui-design/audit-swiftui-architecture",
+      "priority": "medium",
+      "priorityNote": "Logic in views, testability"
     },
     {
       "area": "swiftui-layout",
@@ -139,7 +169,9 @@
       "group": "UI & Design",
       "detects": "GeometryReader misuse, deprecated screen APIs, hardcoded breakpoints, identity loss",
       "docsDetects": "GeometryReader misuse, deprecated screen APIs, hardcoded breakpoints",
-      "docPath": "/commands/ui-design/audit-swiftui-layout"
+      "docPath": "/commands/ui-design/audit-swiftui-layout",
+      "priority": "medium",
+      "priorityNote": "GeometryReader misuse, hardcoded breakpoints, identity loss"
     },
     {
       "area": "swiftui-nav",
@@ -147,7 +179,9 @@
       "group": "UI & Design",
       "detects": "NavigationStack issues, path management, deep linking",
       "docsDetects": "NavigationStack issues, path management, deep linking",
-      "docPath": "/commands/ui-design/audit-swiftui-nav"
+      "docPath": "/commands/ui-design/audit-swiftui-nav",
+      "priority": "medium",
+      "priorityNote": "NavigationStack paths, deep linking, state restoration"
     },
     {
       "area": "swiftui-performance",
@@ -155,7 +189,9 @@
       "group": "UI & Design",
       "detects": "Expensive body, formatters, whole-collection dependencies, missing lazy",
       "docsDetects": "Expensive body, formatters, missing lazy containers",
-      "docPath": "/commands/ui-design/audit-swiftui-performance"
+      "docPath": "/commands/ui-design/audit-swiftui-performance",
+      "priority": "medium",
+      "priorityNote": "Expensive operations, missing lazy"
     },
     {
       "area": "textkit",
@@ -163,7 +199,9 @@
       "group": "UI & Design",
       "detects": "TextKit issues, text rendering problems",
       "docsDetects": "TextKit issues, text rendering problems",
-      "docPath": "/commands/ui-design/audit-textkit"
+      "docPath": "/commands/ui-design/audit-textkit",
+      "priority": "medium",
+      "priorityNote": "TextKit 1 fallback, text rendering, Writing Tools"
     },
     {
       "area": "ux-flow",
@@ -171,7 +209,9 @@
       "group": "UI & Design",
       "detects": "Dead-end views, dismiss traps, buried CTAs, missing empty/loading/error states, accessibility dead ends",
       "docsDetects": "Dead-end views, dismiss traps, missing empty/loading/error states",
-      "docPath": "/commands/ui-design/audit-ux-flow"
+      "docPath": "/commands/ui-design/audit-ux-flow",
+      "priority": "medium",
+      "priorityNote": "Dead ends, dismiss traps, missing states, UX defects"
     },
     {
       "area": "camera",
@@ -179,7 +219,9 @@
       "group": "Integration",
       "detects": "Deprecated camera APIs, missing interruption handlers, threading violations",
       "docsDetects": "Deprecated camera APIs, missing interruption handlers",
-      "docPath": "/commands/integration/audit-camera"
+      "docPath": "/commands/integration/audit-camera",
+      "priority": "low",
+      "priorityNote": "Deprecated capture APIs"
     },
     {
       "area": "foundation-models",
@@ -187,7 +229,9 @@
       "group": "Integration",
       "detects": "Missing availability checks, concurrent requests on one session, manual JSON parsing, guardrail handling",
       "docsDetects": "Availability checks, concurrent requests, guardrail handling",
-      "docPath": "/commands/integration/audit-foundation-models"
+      "docPath": "/commands/integration/audit-foundation-models",
+      "priority": "medium",
+      "priorityNote": "Availability checks, error handling, session lifecycle"
     },
     {
       "area": "iap",
@@ -195,7 +239,9 @@
       "group": "Integration",
       "detects": "Missing transaction.finish(), weak receipt validation, missing restore, subscription status tracking, StoreKit test config gaps",
       "docsDetects": "Missing `transaction.finish()`, weak receipt validation, missing restore, subscription tracking",
-      "docPath": "/commands/integration/audit-iap"
+      "docPath": "/commands/integration/audit-iap",
+      "priority": "high",
+      "priorityNote": "Unfinished transactions, missing restore, receipt validation"
     },
     {
       "area": "networking",
@@ -203,7 +249,9 @@
       "group": "Integration",
       "detects": "Deprecated APIs (SCNetworkReachability), anti-patterns",
       "docsDetects": "Deprecated APIs (SCNetworkReachability), anti-patterns",
-      "docPath": "/commands/integration/audit-networking"
+      "docPath": "/commands/integration/audit-networking",
+      "priority": "high",
+      "priorityNote": "Deprecated APIs, ANR risk"
     },
     {
       "area": "siri-ai",
@@ -211,7 +259,9 @@
       "group": "Integration",
       "detects": "Search tools, tool metadata Siri can't use, invisible entity properties, cold-launch dependency crashes, undeclared results, App Skill file errors",
       "docsDetects": "Siri AI readiness: tools, entities, dependencies, results, App Skills",
-      "docPath": "/commands/integration/audit-siri-ai"
+      "docPath": "/commands/integration/audit-siri-ai",
+      "priority": "high",
+      "priorityNote": "Cold-launch dependency crashes, tools Siri can't find or use"
     },
     {
       "area": "database-schema",
@@ -219,7 +269,9 @@
       "group": "Storage",
       "detects": "Unsafe ALTER TABLE, DROP operations, missing idempotency, FK misuse, transaction safety",
       "docsDetects": "Unsafe ALTER TABLE, DROP operations, FK integrity",
-      "docPath": "/commands/storage/audit-database-schema"
+      "docPath": "/commands/storage/audit-database-schema",
+      "priority": "critical",
+      "priorityNote": "Unsafe ALTER TABLE, DROP operations, FK integrity"
     },
     {
       "area": "grdb-performance",
@@ -227,7 +279,9 @@
       "group": "Storage",
       "detects": "Raw SQL string interpolation, missing FK indexes, missing PRAGMA optimize, app-group WAL and suspension defense, INSERT OR REPLACE misused as upsert, observation on WITHOUT ROWID tables",
       "docsDetects": "SQL string interpolation, missing FK indexes, `PRAGMA optimize`, app-group WAL and suspension defense, silent observation staleness",
-      "docPath": "/commands/storage/audit-grdb-performance"
+      "docPath": "/commands/storage/audit-grdb-performance",
+      "priority": "critical",
+      "priorityNote": "Upserts that silently delete child rows or reset columns, app-group WAL and suspension, raw SQL interpolation"
     },
     {
       "area": "icloud",
@@ -235,7 +289,9 @@
       "group": "Storage",
       "detects": "iCloud integration issues, entitlements",
       "docsDetects": "iCloud entitlements, file coordination, CloudKit errors",
-      "docPath": "/commands/storage/audit-icloud"
+      "docPath": "/commands/storage/audit-icloud",
+      "priority": "critical",
+      "priorityNote": "NSFileCoordinator violations"
     },
     {
       "area": "storage",
@@ -243,7 +299,9 @@
       "group": "Storage",
       "detects": "File protection, storage strategies, data management",
       "docsDetects": "File protection, backup exclusions, storage strategies",
-      "docPath": "/commands/storage/audit-storage"
+      "docPath": "/commands/storage/audit-storage",
+      "priority": "critical",
+      "priorityNote": "Files in wrong locations"
     },
     {
       "area": "swiftdata",
@@ -251,7 +309,9 @@
       "group": "Storage",
       "detects": "@Model correctness, missing VersionedSchema models, relationship defaults, migration timing, N+1",
       "docsDetects": "@Model correctness, VersionedSchema, relationship defaults",
-      "docPath": "/commands/storage/audit-swiftdata"
+      "docPath": "/commands/storage/audit-swiftdata",
+      "priority": "critical",
+      "priorityNote": "@Model correctness, migration safety, relationship defaults"
     },
     {
       "area": "accessibility",
@@ -259,7 +319,9 @@
       "group": "Accessibility",
       "detects": "VoiceOver labels, Dynamic Type, color contrast, WCAG compliance",
       "docsDetects": "VoiceOver, Dynamic Type, WCAG compliance",
-      "docPath": "/commands/accessibility/audit-accessibility"
+      "docPath": "/commands/accessibility/audit-accessibility",
+      "priority": "low",
+      "priorityNote": "WCAG compliance, VoiceOver"
     },
     {
       "area": "spritekit",
@@ -267,7 +329,9 @@
       "group": "Games",
       "detects": "Physics bitmask issues, draw call waste, node accumulation, action leaks",
       "docsDetects": "Physics bitmask issues, draw call waste, action leaks",
-      "docPath": "/commands/games/audit-spritekit"
+      "docPath": "/commands/games/audit-spritekit",
+      "priority": "medium",
+      "priorityNote": "Physics bitmasks, draw calls, node and action leaks"
     },
     {
       "area": "screenshots",
@@ -275,7 +339,9 @@
       "group": "Shipping",
       "detects": "Placeholder text, wrong dimensions, debug indicators, broken UI, competitor references",
       "docsDetects": "Placeholder text, wrong dimensions, debug indicators",
-      "docPath": "/commands/shipping/audit-screenshots"
+      "docPath": "/commands/shipping/audit-screenshots",
+      "priority": "low",
+      "priorityNote": "App Store screenshot compliance"
     },
     {
       "area": "security",
@@ -283,7 +349,9 @@
       "group": "Shipping",
       "detects": "API keys in code, insecure storage, Privacy Manifests, ATS violations",
       "docsDetects": "API keys in code, insecure storage, Privacy Manifests, ATS violations",
-      "docPath": "/commands/shipping/audit-security"
+      "docPath": "/commands/shipping/audit-security",
+      "priority": "high",
+      "priorityNote": "Hardcoded credentials, Privacy Manifests, ATS"
     }
   ]
 }

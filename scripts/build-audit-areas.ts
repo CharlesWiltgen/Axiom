@@ -4,12 +4,13 @@
  *   npm run build:audit-areas            # write
  *   npm run build:audit-areas -- --check # verify only, non-zero on drift
  *
- * Three regions, each delimited by BEGIN/END markers so the surrounding
+ * Five regions, each delimited by BEGIN/END markers so the surrounding
  * hand-authored prose is untouched:
  *
  *   commands/audit.md          `argument:` line  (hash markers, in frontmatter)
  *   commands/audit.md          body table        (html markers)
- *   docs/commands/utility/audit.md  grouped tables (html markers)
+ *   commands/audit.md          priority order    (html markers)
+ *   docs/commands/utility/audit.md  grouped tables and priority levels (html markers)
  *
  * The docs sidebar is NOT generated: each of its groups interleaves audit
  * entries with unrelated commands, so the audit rows are not a spliceable
@@ -28,17 +29,13 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
-  MARKERS,
-  renderArgumentList,
-  renderBodyTable,
-  renderDocsTables,
+  generatedRegions,
   spliceRegion,
   validateRegistry,
   type AuditRegistry,
 } from "./audit-areas.ts";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const PLUGIN = path.join(root, ".claude-plugin/plugins/axiom");
 
 const check = process.argv.includes("--check");
 
@@ -52,37 +49,7 @@ if (registryErrors.length > 0) {
   process.exit(1);
 }
 
-interface Target {
-  file: string;
-  marker: string;
-  style: "html" | "line" | "hash";
-  render: () => string;
-  label: string;
-}
-
-const targets: Target[] = [
-  {
-    file: path.join(PLUGIN, "commands/audit.md"),
-    marker: MARKERS.argument,
-    style: "hash",
-    render: () => renderArgumentList(registry),
-    label: "commands/audit.md argument: line",
-  },
-  {
-    file: path.join(PLUGIN, "commands/audit.md"),
-    marker: MARKERS.bodyTable,
-    style: "html",
-    render: () => renderBodyTable(registry),
-    label: "commands/audit.md body table",
-  },
-  {
-    file: path.join(root, "docs/commands/utility/audit.md"),
-    marker: MARKERS.docsTable,
-    style: "html",
-    render: () => renderDocsTables(registry),
-    label: "docs/commands/utility/audit.md grouped tables",
-  },
-];
+const targets = generatedRegions(registry).map((r) => ({ ...r, file: path.join(root, r.file) }));
 
 let written = 0;
 let unchanged = 0;
@@ -106,7 +73,7 @@ for (const [file, fileTargets] of byFile) {
   let content = original;
 
   for (const t of fileTargets) {
-    const next = spliceRegion(content, t.marker, t.render(), t.style);
+    const next = spliceRegion(content, t.marker, t.content, t.style);
     if (next === null) {
       errors.push(
         `${t.label}: markers ${t.marker}_BEGIN / ${t.marker}_END not found or malformed`,
@@ -142,7 +109,7 @@ if (check) {
     process.exit(1);
   }
   console.log(
-    `audit areas: ${registry.areas.length} areas across ${registry.groupOrder.length} groups; all 3 surfaces up to date`,
+    `audit areas: ${registry.areas.length} areas across ${registry.groupOrder.length} groups; all ${targets.length} regions up to date`,
   );
 } else {
   console.log(

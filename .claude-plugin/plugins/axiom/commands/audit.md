@@ -80,50 +80,60 @@ If $ARGUMENTS is a filename (contains `.swift`, `.m`, etc.) rather than an audit
 When running multiple audits (either user-requested or from smart suggestions):
 
 **Priority Order:**
+<!-- AXIOM_AUDIT_PRIORITY_BEGIN — generated from scripts/audit-areas.json -->
 1. **CRITICAL audits** (data corruption/loss risk):
    - core-data → Schema safety, thread violations
-   - swiftdata → @Model correctness, migration safety, relationship defaults
    - database-schema → Unsafe ALTER TABLE, DROP operations, FK integrity
-   - storage → Files in wrong locations
+   - grdb-performance → Upserts that silently delete child rows or reset columns, app-group WAL and suspension, raw SQL interpolation
    - icloud → NSFileCoordinator violations
+   - storage → Files in wrong locations
+   - swiftdata → @Model correctness, migration safety, relationship defaults
 
 2. **HIGH audits** (production crashes, App Store rejection):
    - concurrency → Swift 6 data races
-   - memory → Retain cycles, leaks
    - energy → Timer abuse, polling, continuous location
+   - iap → Unfinished transactions, missing restore, receipt validation
+   - memory → Retain cycles, leaks
    - networking → Deprecated APIs, ANR risk
    - security → Hardcoded credentials, Privacy Manifests, ATS
+   - siri-ai → Cold-launch dependency crashes, tools Siri can't find or use
    - testing → Flaky tests, slow CI
 
 3. **MEDIUM audits** (architecture, performance, UX):
-   - swiftui-architecture → Logic in views, testability
-   - ux-flow → Dead ends, dismiss traps, missing states, UX defects
-   - swiftui-performance → Expensive operations, missing lazy
-   - swiftui-layout → GeometryReader misuse, hardcoded breakpoints, identity loss
-   - resize → scene-lifecycle gaps, UIScreen.main, fixed-canvas assumptions
-   - touch → stuck custom recognizers, mouseDown overrides on controls, tracking loops (macOS)
-   - swift-performance → ARC overhead, allocations
    - foundation-models → Availability checks, error handling, session lifecycle
+   - resize → scene-lifecycle gaps, UIScreen.main, fixed-canvas assumptions
+   - spritekit → Physics bitmasks, draw calls, node and action leaks
+   - swift-performance → ARC overhead, allocations
+   - swiftui-architecture → Logic in views, testability
+   - swiftui-layout → GeometryReader misuse, hardcoded breakpoints, identity loss
+   - swiftui-nav → NavigationStack paths, deep linking, state restoration
+   - swiftui-performance → Expensive operations, missing lazy
+   - textkit → TextKit 1 fallback, text rendering, Writing Tools
+   - touch → stuck custom recognizers, mouseDown overrides on controls, tracking loops (macOS)
+   - ux-flow → Dead ends, dismiss traps, missing states, UX defects
 
-4. **LOW audits** (enhancement opportunities):
+4. **LOW audits** (enhancement opportunities, on-demand diagnostics):
    - accessibility → WCAG compliance, VoiceOver
-   - liquid-glass → iOS 26 adoption
-   - codable → JSON best practices
-   - modernization → Legacy API migration
-   - swift-simplify → Behavior-preserving Swift clarity simplifications
+   - build → Build time optimization opportunities
    - camera → Deprecated capture APIs
+   - codable → JSON best practices
+   - liquid-glass → iOS 26 adoption
+   - modernization → Legacy API migration
    - screenshots → App Store screenshot compliance
+   - swift-simplify → Behavior-preserving Swift clarity simplifications
+   - test-failures → Root cause of one known failing or intermittent test (run on demand)
+<!-- AXIOM_AUDIT_PRIORITY_END -->
 
 **Batch Recommendations:**
 - For pre-release: Run CRITICAL + HIGH audits
 - For architecture review: Run swiftui-architecture + swiftui-nav + swiftui-layout + swiftui-performance
 - For UX review: Run ux-flow + swiftui-nav + accessibility
 - For performance tuning: Run swift-performance + swiftui-performance + memory + energy
-- For App Store prep: Run accessibility + networking + storage + security + screenshots
+- For App Store prep: Run accessibility + networking + storage + security + iap + screenshots
 - For CI reliability: Run testing + concurrency + memory
 - For battery optimization: Run energy + memory + networking
-- For data layer review: Run swiftdata + database-schema + core-data + storage
-- For AI integration: Run foundation-models + concurrency
+- For data layer review: Run swiftdata + database-schema + core-data + grdb-performance + storage
+- For AI integration: Run foundation-models + siri-ai + concurrency
 
 **Note:** Agents have built-in output limits (>50 issues → top 10 shown) to prevent overwhelming output on large codebases.
 
@@ -190,6 +200,8 @@ If no area argument:
    - Check for .xcodeproj/.xcworkspace → suggest build audit
    - Find SwiftUI files (*.swift with "import SwiftUI") → suggest swiftui-performance, swiftui-architecture
    - Find Swift files → suggest swift-simplify audit
+   - Find Swift files → suggest swift-performance audit
+   - Find Codable / JSONDecoder / JSONEncoder → suggest codable audit
    - Find .xcdatamodeld → suggest core-data audit
    - Check deployment target in .xcodeproj → suggest modernization audit
    - Find CloudKit entitlements → suggest icloud audit
@@ -210,6 +222,15 @@ If no area argument:
    - Find registerMigration / ALTER TABLE / DatabaseMigrator → suggest database-schema audit
    - Find screenshots folder (Screenshots/, screenshots/, marketing/) → suggest screenshots audit
    - Find NavigationStack/sheet/TabView → suggest ux-flow audit
+   - Find NavigationStack paths or deep-link handling (`.onOpenURL`, `NavigationPath`) → suggest swiftui-nav audit
+   - Find `import StoreKit` / `Product.products(for:` / `Transaction.updates` → suggest iap audit
+   - Find `ToolIntent` / `@AppIntent(.tool` / a `.skillsbundle` → suggest siri-ai audit
+   - Find `import GRDB` / `DatabaseQueue` / `DatabasePool` → suggest grdb-performance audit
+   - Find NSTextLayoutManager / TextKit usage → suggest textkit audit
+   - Find NWConnection / NetworkConnection / URLSession → suggest networking audit
+   - Find FileManager / UserDefaults / `.documentsDirectory` → suggest storage audit
+   - Find `.glassEffect(` / UIVisualEffectView / NSVisualEffectView → suggest liquid-glass audit
+   - Find any UI code (SwiftUI, UIKit, or AppKit views) → suggest accessibility audit
 
 2. Present findings and ask: "Based on your project, I suggest these audits: [list]. Which would you like to run?"
 
