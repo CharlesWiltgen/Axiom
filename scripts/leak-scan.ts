@@ -229,8 +229,10 @@ function walk(dir: string, root: string, out: string[]): void {
   let entries: fs.Dirent[];
   try {
     entries = fs.readdirSync(dir, { withFileTypes: true });
-  } catch {
-    return;
+  } catch (error) {
+    // A surface that isn't built yet ships nothing; an unreadable one hides what ships.
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return;
+    throw new LeakScanReadError(path.relative(root, dir) || ".", error);
   }
   for (const entry of entries) {
     const full = path.join(dir, entry.name);
@@ -256,18 +258,34 @@ function gitText(root: string, args: string[]): string | null {
   }
 }
 
-function gitBuffer(root: string, args: string[]): Buffer | null {
+/**
+ * Tracked paths, or null outside a git checkout (tests scan a temp root). Inside
+ * one, an index that can't be listed fails the scan: a disk walk instead would add
+ * untracked files and skip tracked ones under SKIP_DIRS.
+ */
+function trackedFiles(root: string): Set<string> | null {
+  if (!fs.existsSync(path.join(root, ".git"))) return null;
+  const ls = gitText(root, ["ls-files"]);
+  if (ls === null) throw new LeakScanReadError("the git index", new Error("git ls-files failed"));
+  return new Set(ls.split("\n").filter(Boolean));
+}
+
+/**
+ * The staged blob of a tracked file, or null for a file that ships from disk (the
+ * published dist/ files are not in the index). A tracked file whose blob can't be
+ * read fails the scan rather than falling back to a disk copy that may differ.
+ */
+function stagedBlob(root: string, rel: string, tracked: Set<string> | null): Buffer | null {
+  if (tracked && !tracked.has(rel)) return null;
   try {
-    // stderr is discarded on purpose: asking git for the staged blob of a file
-    // that ships from disk rather than the index (the published dist/ files) is
-    // an expected miss, not something to print on every gate run.
-    return execFileSync("git", ["-c", "core.quotepath=false", ...args], {
+    return execFileSync("git", ["-c", "core.quotepath=false", "show", `:${rel}`], {
       cwd: root,
-      maxBuffer: 64 * 1024 * 1024,
-      stdio: ["ignore", "pipe", "ignore"],
+      maxBuffer: 256 * 1024 * 1024,
+      stdio: ["ignore", "pipe", "pipe"],
     });
-  } catch {
-    return null;
+  } catch (error) {
+    if (!tracked) return null;   // no index to read
+    throw new LeakScanReadError(rel, error);
   }
 }
 
@@ -280,9 +298,7 @@ export const MIN_PLAUSIBLE_FILES = 200;
  * is gitignored yet rendered into the published site). Falls back to a filesystem
  * walk when git is unavailable, which is how tests scan a temp root.
  */
-export function shippedFiles(root: string): string[] {
-  const ls = gitText(root, ["ls-files"]);
-  const tracked = ls ? new Set(ls.split("\n").filter(Boolean)) : null;
+export function shippedFiles(root: string, tracked: Set<string> | null = trackedFiles(root)): string[] {
   const found: string[] = [];
   for (const surface of SURFACES) {
     if (surface.trackedOnly && tracked) {
@@ -302,13 +318,27 @@ export function shippedFiles(root: string): string[] {
  * stage a leaking revision, restore the clean one on disk, and a working-tree
  * scan reports clean while the commit ships the leak.
  */
-function readShipped(root: string, rel: string): Buffer | null {
-  const staged = gitBuffer(root, ["show", `:${rel}`]);
+function readShipped(root: string, rel: string, tracked: Set<string> | null): Buffer | null {
+  const staged = stagedBlob(root, rel, tracked);
   if (staged && staged.length > 0) return staged;
   try {
     return fs.readFileSync(path.join(root, rel));
-  } catch {
-    return null;
+  } catch (error) {
+    // Only a file that no longer exists ships nothing. Any other failure means the
+    // gate can't see content that may ship, so it must not report it clean.
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
+    throw new LeakScanReadError(rel, error);
+  }
+}
+
+/** A shipped file the scanner could not read; the scan fails rather than pass unseen content. */
+export class LeakScanReadError extends Error {
+  override readonly name = "LeakScanReadError";
+  readonly rel: string;
+  constructor(rel: string, cause: unknown) {
+    const reason = ((cause as Error).message ?? String(cause)).split("\n")[0];
+    super(`leak-scan: can't read ${rel} (${reason}), so the scan can't vouch for what ships; fix it and rerun.`, { cause });
+    this.rel = rel;
   }
 }
 
@@ -392,8 +422,13 @@ export function scanText(rel: string, text: string, rules: LeakRule[] = RULES): 
   return findings;
 }
 
-export function scanFile(root: string, rel: string, rules: LeakRule[] = RULES): LeakFinding[] {
-  const buf = readShipped(root, rel);
+export function scanFile(
+  root: string,
+  rel: string,
+  rules: LeakRule[] = RULES,
+  tracked: Set<string> | null = trackedFiles(root),
+): LeakFinding[] {
+  const buf = readShipped(root, rel, tracked);
   if (!buf) return [];
   if (isBinary(buf)) {
     // Pack the printable runs into one blob so a rule that spans a run boundary
@@ -404,7 +439,8 @@ export function scanFile(root: string, rel: string, rules: LeakRule[] = RULES): 
 }
 
 export function scanRepo(root: string, rules: LeakRule[] = RULES): LeakFinding[] {
-  return shippedFiles(root).flatMap((rel) => scanFile(root, rel, rules));
+  const tracked = trackedFiles(root);
+  return shippedFiles(root, tracked).flatMap((rel) => scanFile(root, rel, rules, tracked));
 }
 
 export function report(findings: LeakFinding[], scannedFiles: number): string {
@@ -430,14 +466,23 @@ if (process.argv[1]?.endsWith("leak-scan.ts")) {
   // the wrong cause. Every other script here uses import.meta.dirname or
   // fileURLToPath; this was the only site with the lossy idiom.
   const root = path.resolve(import.meta.dirname, "..");
-  const files = shippedFiles(root);
+  let files: string[];
+  let findings: LeakFinding[];
+  try {
+    files = shippedFiles(root);
+    findings = files.length < MIN_PLAUSIBLE_FILES ? [] : scanRepo(root);
+  } catch (error) {
+    if (!(error instanceof LeakScanReadError)) throw error;
+    // No `  ✗` prefix: the pre-commit hook reads that as a finding, and this is a scan failure.
+    console.error(error.message);
+    process.exit(1);
+  }
   if (files.length < MIN_PLAUSIBLE_FILES) {
     console.error(
       `  ✗ only ${files.length} shipped files found — the scan is broken, not clean`,
     );
     process.exit(1);
   }
-  const findings = scanRepo(root);
   console.log(report(findings, files.length));
   process.exit(findings.some((f) => f.severity === "error") ? 1 : 0);
 }

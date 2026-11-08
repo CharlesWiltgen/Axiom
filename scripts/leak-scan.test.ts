@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { execFileSync } from "node:child_process";
-import { type LeakRule, ROOT_FILES, RULES, SELF_EXEMPT, SURFACES, isObviousPlaceholderUuid, scanRepo, shippedFiles } from "./leak-scan.ts";
+import { type LeakRule, ROOT_FILES, RULES, SELF_EXEMPT, SURFACES, isObviousPlaceholderUuid, scanFile, scanRepo, shippedFiles } from "./leak-scan.ts";
 
 /**
  * The engine is tested with its own rules, not the shipped list. Two reasons: a
@@ -88,6 +88,51 @@ test("flags an owner's project name in shipped content, with its line", () => {
   assert.equal(findings[0]!.rule, "project-name");
   assert.equal(findings[0]!.severity, "error");
   assert.equal(findings[0]!.line, 4, "line numbers must point at the offending line");
+});
+
+// An unreadable file used to scan as "no findings", so the gate passed content it
+// never read. Only a file that no longer exists may scan as clean.
+test("a shipped file it cannot read fails the scan instead of passing as clean", { skip: process.getuid?.() === 0 }, () => {
+  const { root, file } = fixture(SKILL, "Screenshotted from the ZetaGadget build.\n");
+  fs.chmodSync(file, 0o000);
+  try {
+    assert.throws(() => scanFile(root, SKILL, TEST_RULES), { name: "LeakScanReadError" });
+  } finally {
+    fs.chmodSync(file, 0o644);
+  }
+});
+
+test("an unreadable shipped directory fails the scan instead of contributing no files", { skip: process.getuid?.() === 0 }, () => {
+  const { root } = fixture("axiom-mcp/dist/index.js", "export {};\n");
+  const dist = path.join(root, "axiom-mcp", "dist");
+  fs.chmodSync(dist, 0o000);
+  try {
+    assert.throws(() => shippedFiles(root), { name: "LeakScanReadError" });
+  } finally {
+    fs.chmodSync(dist, 0o755);
+  }
+});
+
+test("a checkout whose git index can't be listed fails the scan instead of walking the disk", () => {
+  const { root } = fixture(SKILL, "ok\n");
+  fs.mkdirSync(path.join(root, ".git"));   // present but not a repository: ls-files fails
+  assert.throws(() => shippedFiles(root), { name: "LeakScanReadError" });
+});
+
+test("a tracked file whose staged blob can't be read fails the scan instead of scanning the disk copy", () => {
+  const { root, file } = fixture(SKILL, "Screenshotted from the ZetaGadget build.\n");
+  const git = (...args: string[]) => execFileSync("git", args, { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+  git("init", "-q");
+  git("add", SKILL);
+  const blob = git("rev-parse", `:${SKILL}`);
+  fs.rmSync(path.join(root, ".git", "objects", blob.slice(0, 2), blob.slice(2)));
+  fs.writeFileSync(file, "clean on disk\n");   // the copy a fallback would scan
+  assert.throws(() => scan(root), { name: "LeakScanReadError" });
+});
+
+test("a shipped file that no longer exists scans as clean", () => {
+  const { root } = fixture(SKILL, "ok\n");
+  assert.deepEqual(scanFile(root, "gone/SKILL.md", TEST_RULES), []);
 });
 
 test("flags personal home paths but not the placeholders the corpus uses", () => {

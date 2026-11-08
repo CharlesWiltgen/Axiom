@@ -4,7 +4,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { generateAskMd, manifestUpdates, readAgentsFromDisk, renderPluginReadmeTables } from "./manifest.ts";
+import { generateAskMd, manifestCommandsFromDisk, manifestUpdates, readAgentsFromDisk, renderPluginReadmeTables } from "./manifest.ts";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const pluginDir = path.join(root, ".claude-plugin/plugins/axiom");
@@ -123,4 +123,25 @@ test("manifestUpdates queues the plugin README only when its generated tables ch
   assert.deepEqual(readmeUpdates(), []);
   fs.writeFileSync(readmePath, current.replace("Testing.", "stale"));
   assert.deepEqual(readmeUpdates(), [current]);
+});
+
+// Axiom-k05u: commands[] was hand-maintained, and a command file missing from it
+// passed every gate while the Cursor build silently dropped it (/axiom:siri).
+test("manifestCommandsFromDisk keeps the committed order, appends new commands, and drops missing ones", () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "axiom-commands-"));
+  try {
+    fs.mkdirSync(path.join(dir, "commands", "test-fixtures"), { recursive: true });
+    for (const f of ["audit.md", "ask.md", "siri.md", "notes.txt"]) fs.writeFileSync(path.join(dir, "commands", f), "x");
+    assert.deepEqual(
+      manifestCommandsFromDisk(dir, ["./commands/audit.md", "./commands/gone.md", "./commands/ask.md"]),
+      ["./commands/audit.md", "./commands/ask.md", "./commands/siri.md"],
+    );
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("the committed commands[] matches the command files on disk", () => {
+  const manifest = committedManifest();
+  assert.deepEqual(manifest.commands, manifestCommandsFromDisk(path.join(root, ".claude-plugin/plugins/axiom"), manifest.commands));
 });

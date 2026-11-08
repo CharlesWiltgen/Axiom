@@ -13,7 +13,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { execFileSync, execSync } from "node:child_process";
-import { MIN_PLAUSIBLE_FILES, scanRepo, shippedFiles } from "./leak-scan.ts";
+import { type LeakFinding, MIN_PLAUSIBLE_FILES, scanRepo, shippedFiles } from "./leak-scan.ts";
 import { execSyncFailureOutput, isExecSyncTimeout, runHookSuites } from "./hook-suites.ts";
 import { VERSION_CORE } from "./version-regex.js";
 import {
@@ -70,11 +70,12 @@ import {
   AGENT_FRONTMATTER_KEYS,
 } from "./audit-parity.ts";
 import {
-  MARKERS,
-  renderArgumentList,
-  renderBodyTable,
-  renderDocsTables,
+  AUDIT_COMMAND_FILE,
+  AUDIT_DOCS_FILE,
+  generatedRegions,
   spliceRegion,
+  validateHealthCheckCoverage,
+  validateSuggestionCoverage,
   validateRegistry,
   validateSidebarAgainstRegistry,
   type AuditRegistry,
@@ -103,6 +104,8 @@ import { classifyNpmFailure, npmErrorCode, npmInstallEnvironment, runNpmDryRun }
 import { findDashViolations } from "./docs-dashes.ts";
 import { findMissingSidebarTargets, findMissingTools, findUnreachablePages, findNonLiteralSidebarLinks, findPluginReadmeDrift, lintDocPage, nestedFenceViolations, sidebarLinkTargets, TOOL_ROSTER_SURFACES } from "./docs-lint.ts";
 import { findIgnoredAuthoredFiles, resolvePluginBin } from "./plugin-layout.ts";
+import { manifestCommandsFromDisk } from "./manifest.ts";
+import { examinedGuard, trackedFilesIn } from "./examined.ts";
 import { renderCursorDistribution } from "./cursor/render.ts";
 import { compareCursorPaths } from "./cursor/compare.ts";
 import { validateCursorInventory } from "./cursor/inventory.ts";
@@ -123,6 +126,34 @@ function error(check: string, msg: string): void {
 function warn(check: string, msg: string): void {
   totalWarnings++;
   warnings.push(`  ⚠ [${check}] ${msg}`);
+}
+
+/** Errors and returns false when a check examined fewer items than its floor (scripts/examined.ts). */
+const requireExamined = examinedGuard(error);
+
+let trackedListing: string[] | undefined;
+/** Tracked files that exist on disk, read once; empty (floors fall back to 1) outside a git checkout. */
+function trackedFiles(): string[] {
+  if (trackedListing === undefined) {
+    const listed = trackedFilesIn(root);
+    if (listed === null) error("tracked-files", "git ls-files failed, so the walk floors fall back to 1; run pre-deploy inside a git checkout");
+    trackedListing = listed ?? [];
+  }
+  return trackedListing;
+}
+function trackedCount(pattern: RegExp): number {
+  return trackedFiles().filter((f) => pattern.test(f)).length;
+}
+/** `git ls-files -z <args>` as paths, or [] with a `check` error when git can't run here. */
+function gitListing(check: string, args: string[]): string[] {
+  try {
+    return execFileSync("git", ["ls-files", "-z", ...args], { cwd: root, encoding: "utf8", maxBuffer: 64 * 1024 * 1024, stdio: ["ignore", "pipe", "pipe"] })
+      .split("\0")
+      .filter(Boolean);
+  } catch (e) {
+    error(check, `git ls-files failed (${(e as Error).message.split("\n")[0]}), so this check couldn't list what ships`);
+    return [];
+  }
 }
 
 function heading(title: string): void {
@@ -226,6 +257,7 @@ try {
     if (dir === ".") break;
   }
   const listing = execFileSync("git", ["ls-files", "-z", "--format=%(objectsize)%x09%(path)", "--", pluginRel, ...above], {
+    maxBuffer: 64 * 1024 * 1024,
     cwd: root,
     stdio: "pipe",
     encoding: "utf8",
@@ -365,7 +397,10 @@ heading("3b. Always-On Footprint");
   // listing checked above is only ~10% of it on Claude Code; agent descriptions
   // dominate. Harnesses running small-context non-Anthropic models pay this
   // total, and Claude Code's listing budget does not govern them.
-  for (const f of measureFootprints(root)) {
+  const footprints = measureFootprints(root);
+  // A harness whose sources are missing measures 0 chars and would pass every ceiling.
+  for (const f of footprints) requireExamined("footprint", `${f.harness} always-on characters`, f.total);
+  for (const f of footprints) {
     const ceiling = FOOTPRINT_CEILINGS[f.harness];
     const tokens = Math.round(f.total / CHARS_PER_TOKEN).toLocaleString();
     if (ceiling === undefined) {
@@ -433,6 +468,7 @@ heading("3c. Release Surface Sync");
 heading("4. Manifest ↔ Filesystem Sync");
 if (claudeCode) {
   const skillsDir = path.join(pluginDir, "skills");
+  let missingManifestSkills = 0;
   for (const skill of claudeCode.skills || []) {
     const skillPath = path.join(skillsDir, skill.name, "SKILL.md");
     if (!fs.existsSync(skillPath)) {
@@ -440,12 +476,15 @@ if (claudeCode) {
         "manifest-sync",
         `Manifest skill "${skill.name}" has no SKILL.md at ${skill.name}/SKILL.md`,
       );
+      missingManifestSkills++;
     }
   }
-  console.log(
-    `  ✓ ${(claudeCode.skills ?? []).length} manifest skills checked against filesystem`,
-  );
+  if (requireExamined("manifest-sync", "manifest skills", (claudeCode.skills ?? []).length) && missingManifestSkills === 0)
+    console.log(
+      `  ✓ ${(claudeCode.skills ?? []).length} manifest skills checked against filesystem`,
+    );
 
+  let missingManifestCommands = 0;
   for (const cmdPath of claudeCode.commands || []) {
     const resolved = path.join(pluginDir, cmdPath);
     if (!fs.existsSync(resolved)) {
@@ -453,11 +492,27 @@ if (claudeCode) {
         "manifest-sync",
         `Manifest command path "${cmdPath}" does not exist`,
       );
+      missingManifestCommands++;
     }
   }
-  console.log(
-    `  ✓ ${(claudeCode.commands ?? []).length} manifest commands checked against filesystem`,
-  );
+  // Both directions: a command file on disk but absent from commands[] passed the
+  // existence loop above, and the Cursor build silently dropped it (Axiom-k05u).
+  const committedCommands: string[] = claudeCode.commands ?? [];
+  const expectedCommands = manifestCommandsFromDisk(pluginDir, committedCommands);
+  const commandsInSync = JSON.stringify(committedCommands) === JSON.stringify(expectedCommands);
+  if (!commandsInSync) {
+    const unlisted = expectedCommands.filter((c) => !committedCommands.includes(c));
+    error(
+      "manifest-sync",
+      `claude-code.json commands[] doesn't match commands/*.md` +
+        (unlisted.length ? ` (unlisted: ${unlisted.join(", ")})` : "") +
+        `; run node scripts/build-manifest.js`,
+    );
+  }
+  if (requireExamined("manifest-sync", "manifest commands", committedCommands.length) && commandsInSync && missingManifestCommands === 0)
+    console.log(
+      `  ✓ ${(claudeCode.commands ?? []).length} manifest commands checked against filesystem, both directions`,
+    );
 
   // Existence is not parity. `skills[]` is generated from each SKILL.md's
   // frontmatter by set-version.js, and before this check the only thing that
@@ -515,7 +570,7 @@ if (claudeCode) {
       .filter(Boolean)
       .join("; ");
     error("manifest-drift", `${detail} — regenerate with \`npm run build:manifest\``);
-  } else {
+  } else if (requireExamined("manifest-drift", "manifest skills", committedSkills.length)) {
     console.log(
       `  ✓ ${committedSkills.length} manifest descriptions match SKILL.md frontmatter`,
     );
@@ -523,6 +578,8 @@ if (claudeCode) {
 }
 
 heading("5. Skill Integrity");
+// The ✓ below means this section found nothing wrong, not just that it ran.
+const errorsBeforeSection5 = totalErrors;
 
 const allSkillNames = new Set<string>();
 // Child sub-skill basename → path(s) it appears at. Keys are the child-skill
@@ -615,9 +672,10 @@ function checkSkillsIn(dir: string): void {
 }
 
 checkSkillsIn(path.join(pluginDir, "skills"));
-console.log(
-  `  ✓ ${skillFilesChecked} skill files checked (frontmatter, duplicates, emptiness)`,
-);
+if (requireExamined("skill-integrity", "SKILL.md files", skillFilesChecked, trackedCount(/^\.claude-plugin\/plugins\/axiom\/skills\/.+\/SKILL\.md$/)) && totalErrors === errorsBeforeSection5)
+  console.log(
+    `  ✓ ${skillFilesChecked} skill files checked (frontmatter, duplicates, emptiness)`,
+  );
 
 // Guard the /skill resolver's flat namespace (allSkillNames ∪ childOccurrences,
 // §10): a child basename in two suites, or one equal to a top-level skill name,
@@ -641,13 +699,15 @@ for (const c of skillNameCollisions) {
     );
   }
 }
-if (skillNameCollisions.length === 0) {
+if (requireExamined("skill-namespace", "child sub-skill basenames", childOccurrences.size) && skillNameCollisions.length === 0) {
   console.log(
     `  ✓ /skill namespace unambiguous (${childOccurrences.size} child basenames, none duplicated or shadowing a top-level skill)`,
   );
 }
 
 heading("6. Agent Integrity");
+// The ✓ below means this section found nothing wrong, not just that it ran.
+const errorsBeforeSection6 = totalErrors;
 
 const agentsDir = path.join(pluginDir, "agents");
 let agentFilesChecked = 0;
@@ -705,12 +765,13 @@ if (fs.existsSync(agentsDir)) {
       }
     }
   }
-  console.log(
-    `  ✓ ${agentFilesChecked} agent files checked` +
-      (agentsExemptFromRouting.size
-        ? ` (${agentsExemptFromRouting.size} routing-exempt)`
-        : ""),
-  );
+  if (requireExamined("agent-integrity", "agent files", agentFilesChecked, trackedCount(/^\.claude-plugin\/plugins\/axiom\/agents\/[^/]+\.md$/)) && totalErrors === errorsBeforeSection6)
+    console.log(
+      `  ✓ ${agentFilesChecked} agent files checked` +
+        (agentsExemptFromRouting.size
+          ? ` (${agentsExemptFromRouting.size} routing-exempt)`
+          : ""),
+    );
 
   for (const k of seenAgentKeys) {
     if (!AGENT_FRONTMATTER_KEYS.has(k)) {
@@ -722,7 +783,12 @@ if (fs.existsSync(agentsDir)) {
   }
 }
 
+// A missing agents/ records the shortfall too, as section 7 does for commands.
+if (!fs.existsSync(agentsDir)) requireExamined("agent-integrity", "agent files", 0, trackedCount(/^\.claude-plugin\/plugins\/axiom\/agents\/[^/]+\.md$/));
+
 heading("7. Command Integrity");
+// The ✓ below means this section found nothing wrong, not just that it ran.
+const errorsBeforeSection7 = totalErrors;
 
 const commandsDir = path.join(pluginDir, "commands");
 let commandFilesChecked = 0;
@@ -742,8 +808,9 @@ if (fs.existsSync(commandsDir)) {
       }
     }
   }
-  console.log(`  ✓ ${commandFilesChecked} command files checked`);
 }
+if (requireExamined("command-integrity", "command files", commandFilesChecked, trackedCount(/^\.claude-plugin\/plugins\/axiom\/commands\/[^/]+\.md$/)) && totalErrors === errorsBeforeSection7)
+  console.log(`  ✓ ${commandFilesChecked} command files checked`);
 
 heading("8. Version Consistency");
 
@@ -899,6 +966,8 @@ if (fs.existsSync(metadataPath)) {
   } else {
     console.log(`  ✓ Command count matches: ${metaCommands}`);
   }
+} else {
+  error("metadata", "hooks/metadata.txt is missing, so the skill, agent and command counts weren't checked");
 }
 
 heading("10. Skill Invocation Cross-References");
@@ -952,7 +1021,7 @@ for (const dir of invocationScanDirs) {
   walk(dir);
 }
 
-if (brokenRefs === 0) {
+if (requireExamined("skill-invocations", "/skill invocations", crossRefChecked) && brokenRefs === 0) {
   console.log(
     `  ✓ ${crossRefChecked} /skill invocations validated across skills, agents, and commands`,
   );
@@ -979,11 +1048,17 @@ for (const agentName of allAgentNames) {
   }
 }
 
-if (unreachableAgents === 0) {
+// Every floor is evaluated, so each shortfall is reported, not just the first.
+const reachabilityChecked = [
+  requireExamined("agent-routing", "router skills", routerSkillNames.length),
+  // The tracked-agents floor is section 6's; repeating it would report one shortfall twice.
+  requireExamined("agent-routing", "agents", allAgentNames.size),
+].every(Boolean);
+if (reachabilityChecked && unreachableAgents === 0) {
   console.log(
     `  ✓ ${allAgentNames.size - agentsExemptFromRouting.size} agents reachable via routers (${agentsExemptFromRouting.size} exempt)`,
   );
-} else {
+} else if (unreachableAgents > 0) {
   console.log(
     `  ⚠ ${unreachableAgents} agent(s) not reachable via any router`,
   );
@@ -1003,12 +1078,14 @@ try {
     stdio: "pipe",
     encoding: "utf8",
   });
-  const summary =
-    refOut
-      .split("\n")
-      .map((l) => l.trim())
-      .find((l) => l.startsWith("✓")) ?? "all cross-references valid";
-  console.log(`  ✓ ${summary.replace(/^✓\s*/, "")}`);
+  // No fallback text: a summary that isn't in the output would report a pass
+  // nobody measured.
+  const summary = refOut
+    .split("\n")
+    .map((l) => l.trim())
+    .find((l) => l.startsWith("✓"));
+  if (summary) console.log(`  ✓ ${summary.replace(/^✓\s*/, "")}`);
+  else error("cross-refs", `check-cross-refs.js exited 0 without its ✓ summary line:\n${refOut.trim()}`);
 } catch (e: unknown) {
   const err = e as Error & { status?: number; stderr?: string; stdout?: string };
   const detail = (
@@ -1019,7 +1096,7 @@ try {
   ).trim();
   error(
     "cross-refs",
-    `check-cross-refs.js reported broken cross-references:\n${detail}`,
+    `check-cross-refs.js failed (broken references, or it couldn't vouch for its scan):\n${detail}`,
   );
 }
 
@@ -1153,6 +1230,7 @@ heading("12a. Stale Skill Name References");
 // Scan all skill content for ios-* references (v2.x names that should be axiom-*)
 const staleIosPattern = /\bios-(build|ui|data|concurrency|performance|networking|integration|accessibility|ai|vision|testing|games|graphics|ml)\b/g;
 let staleRefCount = 0;
+let staleScanFiles = 0;
 
 function scanForStaleRefs(dir: string): void {
   if (!fs.existsSync(dir)) return;
@@ -1161,6 +1239,7 @@ function scanForStaleRefs(dir: string): void {
     if (entry.isDirectory()) {
       scanForStaleRefs(full);
     } else if (entry.name.endsWith(".md")) {
+      staleScanFiles++;
       const content = fs.readFileSync(full, "utf8");
       const relPath = path.relative(pluginDir, full);
 
@@ -1185,8 +1264,11 @@ function scanForStaleRefs(dir: string): void {
 scanForStaleRefs(path.join(pluginDir, "skills"));
 scanForStaleRefs(path.join(pluginDir, "agents"));
 
-if (staleRefCount === 0) {
-  console.log("  ✓ No stale ios-* references found in skill/agent content");
+if (
+  requireExamined("stale-refs", "skill and agent files", staleScanFiles, trackedCount(/^\.claude-plugin\/plugins\/axiom\/(skills|agents)\/.+\.md$/)) &&
+  staleRefCount === 0
+) {
+  console.log(`  ✓ No stale ios-* references found in ${staleScanFiles} skill/agent files`);
 }
 
 // ── 12b. MCP Bundle Staleness ──
@@ -1354,12 +1436,10 @@ if (!fs.existsSync(auditCmdPath)) {
       parityErrors.push(`audit-areas.json: ${msg}`);
     }
 
-    const generated: Array<[string, string, string, "html" | "hash", string]> = [
-      [auditCmdPath, cmdContent, MARKERS.argument, "hash", renderArgumentList(auditRegistry)],
-      [auditCmdPath, cmdContent, MARKERS.bodyTable, "html", renderBodyTable(auditRegistry)],
-      [auditDocPath, docContent, MARKERS.docsTable, "html", renderDocsTables(auditRegistry)],
-    ];
-    for (const [file, content, marker, style, rendered] of generated) {
+    const contentByFile: Record<string, string> = { [AUDIT_COMMAND_FILE]: cmdContent, [AUDIT_DOCS_FILE]: docContent };
+    for (const { file: relFile, marker, style, content: rendered } of generatedRegions(auditRegistry)) {
+      const file = path.join(root, relFile);
+      const content = contentByFile[relFile] ?? fs.readFileSync(file, "utf8");
       const spliced = spliceRegion(content, marker, rendered, style);
       const rel = path.relative(root, file);
       if (spliced === null) {
@@ -1369,6 +1449,15 @@ if (!fs.existsSync(auditCmdPath)) {
           `${rel} region ${marker} is stale relative to scripts/audit-areas.json — run \`npm run build:audit-areas\``,
         );
       }
+    }
+  }
+  if (auditRegistry) {
+    const healthCheckPath = path.join(pluginDir, "agents/health-check.md");
+    for (const msg of validateHealthCheckCoverage(auditRegistry, fs.readFileSync(healthCheckPath, "utf8"))) {
+      parityErrors.push(`agents/health-check.md: ${msg}`);
+    }
+    for (const msg of validateSuggestionCoverage(auditRegistry, cmdContent)) {
+      parityErrors.push(`commands/audit.md: ${msg}`);
     }
   }
   for (const msg of parityErrors) error("audit-parity", msg);
@@ -1516,7 +1605,7 @@ if (!fs.existsSync(auditCmdPath)) {
   ) {
     console.log(
       `  ✓ ${frontmatter.length} audit areas generated from scripts/audit-areas.json into ` +
-        `frontmatter + body table + docs page; sidebar checked against it ` +
+        `${auditRegistry ? generatedRegions(auditRegistry).length : 0} regions; health-check and project-analysis coverage checked; sidebar checked against it ` +
         `(${sidebarGroups.length} groups; ${bodyRows.length} agent refs resolve; ` +
         `${inlineSections.length} prose sections + ${bodyRows.length} agent descriptions verified; ` +
         `${advertisingAgents} agents advertise a command, ${advertisedExempt.length} exempt)`,
@@ -1856,11 +1945,13 @@ const argsGoFiles = fs.existsSync(toolsRoot)
       .filter((p: string) => fs.existsSync(p))
   : [];
 
-if (argsGoFiles.length < 2) {
+// Floor from git: a renamed tools/ or a broken walk otherwise reads as "nothing to compare".
+const trackedArgsGo = trackedCount(/^tools\/[^/]+\/args\.go$/);
+if (argsGoFiles.length < 2 && trackedArgsGo < 2) {
   console.log(
     `  ✓ args.go parity: ${argsGoFiles.length} cop${argsGoFiles.length === 1 ? "y" : "ies"} — nothing to compare`,
   );
-} else {
+} else if (requireExamined("args-go-parity", "args.go copies", argsGoFiles.length, trackedArgsGo)) {
   const argsGoByContent = new Map<string, string[]>();
   for (const p of argsGoFiles) {
     // latin1 maps each byte 1:1 to a char (no lossy UTF-8 decode), so the
@@ -2002,9 +2093,14 @@ if (fs.existsSync(goToolsRoot) && fs.statSync(goToolsRoot).isDirectory()) {
     );
   }
 
-  if (goInputs.length === 0) {
+  // Floor from git: every Go module whose binary ships must have been compared.
+  const tracked = new Set(trackedFiles());
+  const shippedGoCommands = [...tracked]
+    .filter((f) => /^tools\/[^/]+\/go\.mod$/.test(f))
+    .filter((f) => tracked.has(`.claude-plugin/plugins/axiom/tools/${f.split("/")[1]}`)).length;
+  if (goInputs.length === 0 && shippedGoCommands === 0) {
     console.log("  ✓ no Go command modules under tools/ — nothing to compare");
-  } else {
+  } else if (requireExamined("go-binary-staleness", "Go command modules", goInputs.length, shippedGoCommands)) {
     const goVerdicts = resolveGoBinaryStaleness(goInputs, gitStatus.dirty, gitStatus.gitAvailable);
     let goProblems = 0;
     for (const verdict of goVerdicts) {
@@ -2071,8 +2167,9 @@ if (mcpUnusedInList.length) {
 if (mcpMissingBinaries.length) {
   error("mcp-binary-coverage", `MCP_PACKAGED_BINARIES entries missing from committed plugins/axiom/tools/: ${mcpMissingBinaries.join(", ")}`);
 }
-if (!mcpMissingFromList.length && !mcpUnusedInList.length && !mcpMissingBinaries.length) {
-  console.log(`  ✓ MCP tool binaries consistent (${[...mcpListed].join(", ") || "none"}) — list ↔ tool refs ↔ plugins/axiom/tools/`);
+const mcpCoverageExamined = requireExamined("mcp-binary-coverage", "tool binary references in axiom-mcp/src/tools", mcpReferenced.size);
+if (mcpCoverageExamined && !mcpMissingFromList.length && !mcpUnusedInList.length && !mcpMissingBinaries.length) {
+  console.log(`  ✓ MCP tool binaries consistent (${[...mcpListed].join(", ")}) — list ↔ tool refs ↔ plugins/axiom/tools/`);
 }
 
 // ── 12s. Private Data in Shipped Content ──
@@ -2085,16 +2182,19 @@ heading("12s. Private Data in Shipped Content");
 // layout. No gate saw any of it, because the pre-commit hooks match file names
 // and directories only. Rules, allowances, and one test per rule live in
 // scripts/leak-scan.ts; "ships" means tracked.
-const leakFiles = shippedFiles(root);
-const leakFindings = scanRepo(root);
+let leakFiles: string[] = [];
+let leakFindings: LeakFinding[] = [];
+let leakScanFailed = false;
+try {
+  leakFiles = shippedFiles(root);
+  leakFindings = scanRepo(root);
+} catch (e) {
+  leakScanFailed = true;
+  error("private-data", (e as Error).message);
+}
 const leakErrors = leakFindings.filter((f) => f.severity === "error");
 const leakWarns = leakFindings.filter((f) => f.severity === "warn");
-if (leakFiles.length < MIN_PLAUSIBLE_FILES) {
-  error(
-    "private-data",
-    `only ${leakFiles.length} shipped files found — the scan is broken, not clean`,
-  );
-}
+const leakScanExamined = !leakScanFailed && requireExamined("private-data", "shipped files", leakFiles.length, MIN_PLAUSIBLE_FILES);
 for (const f of leakErrors) {
   error(
     "private-data",
@@ -2112,7 +2212,7 @@ for (const f of leakWarns) {
     `${f.path}${f.line > 0 ? `:${f.line}` : ""} [${f.rule}] ${f.match} — ${f.hint}`,
   );
 }
-if (!leakErrors.length) {
+if (leakScanExamined && !leakErrors.length) {
   console.log(
     `  ✓ ${leakFiles.length} shipped files carry no private data` +
       (leakWarns.length
@@ -2140,6 +2240,7 @@ heading("12i. Docs Dash Convention");
 // em-dash — so an ASCII hyphen in the separator position passed silently and six
 // violations shipped on a docs page, straight through this check. Do not re-inline them.
 const dashViolations: string[] = [];
+let dashPagesScanned = 0;
 function scanDocsDashes(dir: string): void {
   if (!fs.existsSync(dir)) return;
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -2149,6 +2250,7 @@ function scanDocsDashes(dir: string): void {
     if (entry.isDirectory()) {
       scanDocsDashes(full);
     } else if (entry.name.endsWith(".md")) {
+      dashPagesScanned++;
       for (const lineNo of findDashViolations(fs.readFileSync(full, "utf8"))) {
         dashViolations.push(`${path.relative(root, full)}:${lineNo}`);
       }
@@ -2156,8 +2258,11 @@ function scanDocsDashes(dir: string): void {
   }
 }
 scanDocsDashes(path.join(root, "docs"));
-if (dashViolations.length === 0) {
-  console.log("  ✓ Docs use en-dash \" – \" for list-led inline-heading separators");
+if (
+  requireExamined("docs-dash", "docs pages", dashPagesScanned, trackedCount(/^docs\/(?!\.vitepress\/).*\.md$/)) &&
+  dashViolations.length === 0
+) {
+  console.log(`  ✓ ${dashPagesScanned} docs pages use en-dash " – " for list-led inline-heading separators`);
 } else {
   const CAP = 25;
   for (const v of dashViolations.slice(0, CAP)) {
@@ -2188,23 +2293,30 @@ heading("12u. Docs Page Hygiene");
     if (!fs.existsSync(dir)) continue;
     for (const f of fs.readdirSync(dir)) if (f.endsWith(".md")) subSkills.set(f.slice(0, -3), [...(subSkills.get(f.slice(0, -3)) ?? []), suite]);
   }
+  // Counted, so a missing docs/ or an empty walk can't read as a clean pass (Axiom-ayow).
+  let pagesLinted = 0;
   const walk = (dir: string): void => {
     if (!fs.existsSync(dir)) return;
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
       if (entry.name === ".vitepress") continue;
       const full = path.join(dir, entry.name);
       if (entry.isDirectory()) walk(full);
-      else if (entry.name.endsWith(".md"))
+      else if (entry.name.endsWith(".md")) {
+        pagesLinted++;
         for (const f of lintDocPage(fs.readFileSync(full, "utf8"), routers, path.relative(root, full), subSkills))
           hygiene.push(`${path.relative(root, full)}:${f.line} [${f.rule}] ${f.message}`);
+      }
     }
   };
   walk(path.join(root, "docs"));
+  // Floor from git, independent of the walk: a partial walk lints fewer pages than ship.
+  const shippedDocsPages = trackedCount(/^docs\/(?!\.vitepress\/).*\.md$/);
+  const hygieneExamined = requireExamined("docs-hygiene", "docs pages", pagesLinted, shippedDocsPages);
   // The two READMEs that ship in packages get the prose rules too; they have no scope section.
   for (const readme of [".claude-plugin/plugins/axiom/README.md", "axiom-mcp/README.md"])
     for (const f of lintDocPage(fs.readFileSync(path.join(root, readme), "utf8")))
       hygiene.push(`${readme}:${f.line} [${f.rule}] ${f.message}`);
-  if (hygiene.length === 0) console.log("  ✓ Docs pages and package READMEs pass the hygiene rules (assistant naming, scope line, link ownership, dashes)");
+  if (hygieneExamined && hygiene.length === 0) console.log(`  ✓ ${pagesLinted} docs pages and the package READMEs pass the hygiene rules (assistant naming, scope line, link ownership, dashes)`);
   else {
     const CAP = 25;
     for (const v of hygiene.slice(0, CAP)) error("docs-hygiene", v);
@@ -2216,8 +2328,9 @@ heading("12w. Plugin README Accuracy");
 {
   const skillsDir = path.join(pluginDir, "skills");
   const routers = new Set(fs.readdirSync(skillsDir).filter((d) => fs.existsSync(path.join(skillsDir, d, "SKILL.md"))));
-  const commands = new Set(fs.readdirSync(path.join(pluginDir, "commands")).filter((f) => f.endsWith(".md")).map((f) => f.slice(0, -3)));
-  const tools = new Set(fs.readdirSync(path.join(pluginDir, "tools")).filter((f) => !f.startsWith(".")));
+  const listDir = (dir: string) => (fs.existsSync(dir) ? fs.readdirSync(dir) : []);   // missing → the floors below report it
+  const commands = new Set(listDir(path.join(pluginDir, "commands")).filter((f) => f.endsWith(".md")).map((f) => f.slice(0, -3)));
+  const tools = new Set(listDir(path.join(pluginDir, "tools")).filter((f) => !f.startsWith(".")));
   // Package directories and marketplace names are axiom-* tokens that are not skills.
   const otherNames = new Set([
     ...fs.readdirSync(root).filter((d) => d.startsWith("axiom-")),
@@ -2227,7 +2340,13 @@ heading("12w. Plugin README Accuracy");
   ]);
   const drift = findPluginReadmeDrift(fs.readFileSync(path.join(pluginDir, "README.md"), "utf8"), routers, commands, { tools, otherNames });
   for (const d of drift) error("plugin-readme", `.claude-plugin/plugins/axiom/README.md: ${d}`);
-  if (drift.length === 0) console.log(`  ✓ plugin README names all ${routers.size} routers, ${commands.size} commands and ${tools.size} tools, and nothing retired`);
+  // Every floor is evaluated, so each shortfall is reported, not just the first.
+  const readmeSetsExamined = [
+    requireExamined("plugin-readme", "routers", routers.size, trackedCount(/^\.claude-plugin\/plugins\/axiom\/skills\/[^/]+\/SKILL\.md$/)),
+    requireExamined("plugin-readme", "commands", commands.size, trackedCount(/^\.claude-plugin\/plugins\/axiom\/commands\/[^/]+\.md$/)),
+    requireExamined("plugin-readme", "tools", tools.size, trackedCount(/^\.claude-plugin\/plugins\/axiom\/tools\/[^/.][^/]*$/)),
+  ].every(Boolean);
+  if (readmeSetsExamined && drift.length === 0) console.log(`  ✓ plugin README names all ${routers.size} routers, ${commands.size} commands and ${tools.size} tools, and nothing retired`);
 }
 
 heading("12x. Tool Roster Coverage");
@@ -2239,7 +2358,8 @@ heading("12x. Tool Roster Coverage");
     for (const t of missing) error("tool-roster", `${rel} never names ${t}; list it, or say why it is unavailable there`);
     gaps += missing.length;
   }
-  if (gaps === 0) console.log(`  ✓ ${TOOL_ROSTER_SURFACES.length} roster surfaces name all ${tools.size} tools`);
+  const rosterExamined = requireExamined("tool-roster", "tools", tools.size, trackedCount(/^\.claude-plugin\/plugins\/axiom\/tools\/[^/.][^/]*$/));
+  if (rosterExamined && gaps === 0) console.log(`  ✓ ${TOOL_ROSTER_SURFACES.length} roster surfaces name all ${tools.size} tools`);
 }
 
 heading("12v. Docs Sidebar Targets");
@@ -2249,16 +2369,15 @@ heading("12v. Docs Sidebar Targets");
   // Pages git will ship, tracked or new, matched with exact case: existsSync ignores case on
   // macOS and finds ignored files, so /Start/Install or an ignored page would pass here and 404.
   const pages = new Set(
-    execFileSync("git", ["ls-files", "-z", "--cached", "--others", "--exclude-standard", "--", "docs"], { cwd: root, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 })
-      .split("\0")
-      .filter(Boolean),
+    gitListing("docs-sidebar", ["--cached", "--others", "--exclude-standard", "--", "docs"]),
   );
-  if (sidebarLinkTargets(configText).length === 0) error("docs-sidebar", "docs/.vitepress/config.ts: found no sidebar or nav links, so nothing was checked");
+  const sidebarLinkCount = sidebarLinkTargets(configText).length;
   const missing = findMissingSidebarTargets(configText, (p) => pages.has(p));
   for (const link of missing) error("docs-sidebar", `docs/.vitepress/config.ts links ${link}, but git ships no page for it (exact case)`);
   const nonLiteral = findNonLiteralSidebarLinks(configText);
   for (const link of nonLiteral) error("docs-sidebar", `docs/.vitepress/config.ts has \`${link}\`; write sidebar links as quoted absolute paths ('/start/install') so this check can resolve them`);
-  if (missing.length + nonLiteral.length === 0) console.log("  ✓ every sidebar and nav link in docs/.vitepress/config.ts has a page git ships");
+  if (requireExamined("docs-sidebar", "sidebar and nav links in docs/.vitepress/config.ts", sidebarLinkCount) && missing.length + nonLiteral.length === 0)
+    console.log(`  ✓ every sidebar and nav link in docs/.vitepress/config.ts (${sidebarLinkCount}) has a page git ships`);
 }
 
 heading("12v-bis. Unreachable Docs Pages");
@@ -2267,9 +2386,7 @@ heading("12v-bis. Unreachable Docs Pages");
 // ships must be reachable from the home page, the sidebar and nav, or a site URL that a
 // shipped manifest or the repo README names (the Codex manifest's privacy and terms pages).
 {
-  const shipped = execFileSync("git", ["ls-files", "-z", "--cached", "--others", "--exclude-standard"], { cwd: root, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 })
-    .split("\0")
-    .filter(Boolean);
+  const shipped = gitListing("docs-unreachable", ["--cached", "--others", "--exclude-standard"]);
   const pages = new Map(
     shipped
       // A tracked file deleted from the working tree is still in the index, and will not ship.
@@ -2282,7 +2399,8 @@ heading("12v-bis. Unreachable Docs Pages");
   const roots = [...sidebarLinkTargets(fs.readFileSync(path.join(root, "docs/.vitepress/config.ts"), "utf8")), ...siteUrls];
   const unreachable = findUnreachablePages(pages, roots);
   for (const page of unreachable) error("docs-unreachable", `${page}: no sidebar entry, manifest URL, or link from a reachable page leads here; link it, or delete it`);
-  if (unreachable.length === 0) console.log(`  ✓ all ${pages.size} docs pages are reachable from the home page, sidebar, or a shipped manifest`);
+  if (pages.size === 0) error("docs-unreachable", "found no shipped docs pages, so reachability wasn't checked");
+  else if (unreachable.length === 0) console.log(`  ✓ all ${pages.size} docs pages are reachable from the home page, sidebar, or a shipped manifest`);
 }
 
 heading("12y. Nested Code Fences");
@@ -2292,23 +2410,29 @@ heading("12y. Nested Code Fences");
 // parsed wrong this way, three of them docs pages (Axiom-w4d0).
 {
   const nested: string[] = [];
+  let filesScanned = 0;
   const walk = (dir: string): void => {
     if (!fs.existsSync(dir)) return;
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
       if (entry.name === ".vitepress" || entry.name === "node_modules") continue;
       const full = path.join(dir, entry.name);
       if (entry.isDirectory()) walk(full);
-      else if (entry.name.endsWith(".md"))
+      else if (entry.name.endsWith(".md")) {
+        filesScanned++;
         for (const line of nestedFenceViolations(fs.readFileSync(full, "utf8")))
           nested.push(`${path.relative(root, full)}:${line}`);
+      }
     }
   };
   walk(pluginDir);
+  const pluginFiles = filesScanned;
   walk(path.join(root, "docs"));
+  const docsFiles = filesScanned - pluginFiles;
   for (const readme of ["README.md", "axiom-mcp/README.md", "axiom-pi/README.md", "tools/README.md"])
     for (const line of nestedFenceViolations(fs.readFileSync(path.join(root, readme), "utf8")))
       nested.push(`${readme}:${line}`);
-  if (nested.length === 0) console.log("  ✓ No code fence quotes another of the same width");
+  if (pluginFiles === 0 || docsFiles === 0) error("nested-fence", `scanned ${pluginFiles} plugin and ${docsFiles} docs markdown files; each must be non-zero`);
+  else if (nested.length === 0) console.log(`  ✓ No code fence quotes another of the same width (${pluginFiles} plugin + ${docsFiles} docs files + 4 READMEs)`);
   else for (const v of nested) error("nested-fence", `${v}: a fenced block opens inside one no wider, or a fence is never closed; widen the outer fence (\`\`\`\` around \`\`\`) or close it`);
 }
 
@@ -2366,7 +2490,7 @@ if (!fs.existsSync(statsPath)) {
     }
   }
 
-  if (!docDrift) {
+  if (requireExamined("doc-count-markers", "doc count markers", markerCount) && !docDrift) {
     console.log(`  ✓ ${markerCount} doc count markers across ${DOC_STAT_FILES.length} pages match stats.json`);
   }
 }
@@ -2506,7 +2630,7 @@ heading("12l. Codex Hooks Fidelity");
         "codex-hooks",
         `event coverage drift — expected [${expectedEvents.join(", ")}], emitted [${emittedEvents.join(", ")}]. Run: npm run build:codex`,
       );
-    } else {
+    } else if (requireExamined("codex-hooks", "source hook events", expectedEvents.length)) {
       console.log(`  ✓ Codex hook events match source minus exclusions (${emittedEvents.join(", ")})`);
     }
 
@@ -2588,8 +2712,9 @@ heading("12l. Codex Hooks Fidelity");
         }
       }
     }
-    if (schemaOk) {
-      console.log("  ✓ Emitted hooks pass schema + portability invariants (PLUGIN_ROOT, stdin tool_input, valid matchers)");
+    const emittedHookCommands = Object.values(emitted.hooks ?? {}).flat().flatMap((g) => g.hooks ?? []).length;
+    if (requireExamined("codex-hooks", "emitted hook commands", emittedHookCommands) && schemaOk) {
+      console.log(`  ✓ ${emittedHookCommands} emitted hooks pass schema + portability invariants (PLUGIN_ROOT, stdin tool_input, valid matchers)`);
     }
 
     // (3) Script copy fidelity. Every referenced script must be present in the
@@ -2624,7 +2749,7 @@ heading("12l. Codex Hooks Fidelity");
         copyOk = false;
       }
     }
-    if (copyOk) {
+    if (requireExamined("codex-hooks", "copied hook scripts", copiedChecked) && copyOk) {
       console.log(`  ✓ ${copiedChecked} hook scripts copied byte-identical; ${CODEX_EXCLUDED_HOOK_SCRIPTS.size} excluded script(s) absent`);
     }
   }
@@ -2751,7 +2876,8 @@ heading("12n. xcsym Noise-Rule Contract Parity");
   );
 
   if (!fs.existsSync(noiseGoPath) || !fs.existsSync(triageSkillPath)) {
-    console.log("  ⊘ xcsym triage sources not present — skipped");
+    // Both are committed; a missing one is a rename this check didn't follow.
+    error("triage-noise", "tools/xcsym/triage_noise.go or production-triage.md is missing, so noise-class parity wasn't checked; update the paths here");
   } else {
     const goSrc = fs.readFileSync(noiseGoPath, "utf8");
     const skillSrc = fs.readFileSync(triageSkillPath, "utf8");
@@ -2792,7 +2918,7 @@ heading("12n. xcsym Noise-Rule Contract Parity");
           mismatches++;
         }
       }
-      if (mismatches === 0) {
+      if (requireExamined("triage-noise", "xcsym noise classes", goRules.size) && mismatches === 0) {
         console.log(`  ✓ ${goRules.size} xcsym noise classes match the production-triage.md table (class + deprioritize_safety)`);
       }
     }
@@ -2800,7 +2926,7 @@ heading("12n. xcsym Noise-Rule Contract Parity");
     // Standing notes: the skill states them as **Standing note for `x`:** "…";
     // the agent inlines them as > **`x`:** "…". Compare the quoted body.
     if (!fs.existsSync(triageAgentPath)) {
-      console.log("  ⊘ triage-analyzer.md not present — standing-note parity skipped");
+      error("triage-notes", "agents/triage-analyzer.md is missing, so standing-note parity wasn't checked; update the path here");
     } else {
       const agentSrc = fs.readFileSync(triageAgentPath, "utf8");
       const quoted = (src: string, re: RegExp): string | undefined =>
@@ -2845,8 +2971,11 @@ heading("12n. xcsym Noise-Rule Contract Parity");
 heading("12o. Codex Pointer Resolution");
 {
   const codexSkills = path.join(root, "axiom-codex/skills");
+  const trackedCodexMd = trackedCount(/^axiom-codex\/skills\/.+\.md$/);
   if (!fs.existsSync(codexSkills)) {
-    console.log("  ⊘ axiom-codex not built — skipped");
+    // The Codex variant is committed, so a missing tree is broken, not unbuilt.
+    if (trackedCodexMd > 0) error("codex-pointers", "axiom-codex/skills is tracked but missing, so pointers weren't checked");
+    else console.log("  ⊘ axiom-codex not built — skipped");
   } else {
     const suiteDirs = new Set(fs.readdirSync(codexSkills));
     const mdFiles: string[] = [];
@@ -2919,7 +3048,7 @@ heading("12o. Codex Pointer Resolution");
           `${count} Codex pointer(s) target "${target}", which the build never emitted — withhold the pointer or ship the target`,
         );
       }
-    } else {
+    } else if (requireExamined("codex-pointers", "emitted Codex markdown files", mdFiles.length, trackedCodexMd)) {
       console.log(
         `  ✓ ${subPointers} sub-skill pointers + ${namePointers} skill-name references resolve across ${mdFiles.length} emitted Codex files`,
       );
@@ -2951,7 +3080,7 @@ heading("12q. Command Invocation Policy");
   };
 
   if (!fs.existsSync(cmdDir)) {
-    console.log("  ⊘ commands/ not found — skipped");
+    error("command-policy", "commands/ not found, so the invocation policy wasn't checked");
   } else {
     for (const f of fs.readdirSync(cmdDir).filter((f) => f.endsWith(".md")).sort()) {
       if (hasKey(path.join(cmdDir, f))) {
@@ -2965,7 +3094,7 @@ heading("12q. Command Invocation Policy");
       error("command-policy", "scripts/templates/ask.md.template lacks disable-model-invocation: true — the next version bump would regenerate ask.md without it");
       missing++;
     }
-    if (missing === 0) {
+    if (requireExamined("command-policy", "commands", checked + missing, trackedCount(/^\.claude-plugin\/plugins\/axiom\/commands\/[^/]+\.md$/)) && missing === 0) {
       console.log(`  ✓ all ${checked} commands are user-invoked only (template included)`);
     }
   }
@@ -3189,7 +3318,15 @@ heading("12p. Codex Invocation Policy");
   );
 
   if (!fs.existsSync(codexSkills) || agentSkillNames.size === 0) {
-    console.log("  ⊘ axiom-codex not built — skipped");
+    // The Codex variant is committed, so a missing tree is broken, not unbuilt.
+    if (trackedCount(/^axiom-codex\/skills\//) > 0)
+      error(
+        "codex-policy",
+        agentSkillNames.size === 0
+          ? "no source agents were found to expect as Codex agent-skills, so the policy wasn't checked"
+          : "axiom-codex/skills is tracked but missing, so the policy wasn't checked",
+      );
+    else console.log("  ⊘ axiom-codex not built — skipped");
   } else {
     let explicitOnly = 0;
     let discoverable = 0;
@@ -3224,11 +3361,13 @@ heading("12p. Codex Invocation Policy");
     // end the sentence, emitting "Use when the user has a crash log (." as the string
     // Codex routes on. An unbalanced trailing "(" is that bug's fingerprint.
     let truncated = 0;
+    let descriptionsChecked = 0;
     for (const dir of fs.readdirSync(codexSkills)) {
       const skillPath = path.join(codexSkills, dir, "SKILL.md");
       if (!fs.existsSync(skillPath)) continue;
       const desc = fs.readFileSync(skillPath, "utf8").match(/^description: (.*)$/m)?.[1];
       if (!desc) continue;
+      descriptionsChecked++;
       const opens = (desc.match(/\(/g) ?? []).length;
       const closes = (desc.match(/\)/g) ?? []).length;
       if (opens > closes) {
@@ -3244,9 +3383,11 @@ heading("12p. Codex Invocation Policy");
     // The Claude Code plugin still carries it (there it is the supported mechanism);
     // this check is scoped to the emitted Codex tree only.
     let rejectedKey = 0;
+    let frontmattersChecked = 0;
     for (const dir of fs.readdirSync(codexSkills)) {
       const skillPath = path.join(codexSkills, dir, "SKILL.md");
       if (!fs.existsSync(skillPath)) continue;
+      frontmattersChecked++;
       const fm = fs.readFileSync(skillPath, "utf8").split("---")[1] ?? "";
       if (/disable-model-invocation/.test(fm)) {
         error("codex-policy", `${dir} carries disable-model-invocation in frontmatter — Codex's plugin validator rejects it ("must be false"); explicit-invoke-only belongs in openai.yaml's policy block`);
@@ -3254,7 +3395,14 @@ heading("12p. Codex Invocation Policy");
       }
     }
 
-    if (violations === 0 && truncated === 0 && rejectedKey === 0) {
+    // Every floor is evaluated, so each shortfall is reported, not just the first.
+    const codexPolicyExamined = [
+      requireExamined("codex-policy", "agent-skill policies", explicitOnly + violations, agentSkillNames.size),
+      // Routers and agent-skills both carry a SKILL.md, so the floor is every emitted one.
+      requireExamined("codex-policy", "emitted descriptions", descriptionsChecked, trackedCount(/^axiom-codex\/skills\/[^/]+\/SKILL\.md$/)),
+      requireExamined("codex-policy", "emitted frontmatters", frontmattersChecked, trackedCount(/^axiom-codex\/skills\/[^/]+\/SKILL\.md$/)),
+    ].every(Boolean);
+    if (codexPolicyExamined && violations === 0 && truncated === 0 && rejectedKey === 0) {
       console.log(`  ✓ ${explicitOnly} agent-skills explicit-invoke-only with a $-named default_prompt; ${discoverable} routers left discoverable`);
       console.log(`  ✓ no emitted description truncated at a file-extension period`);
       console.log(`  ✓ no emitted skill carries the frontmatter key Codex's validator rejects`);
@@ -3351,7 +3499,8 @@ heading("11z. Codex Plugin Validator (upstream)");
   }
 
   if (!fs.existsSync(codexDir)) {
-    console.log("  ⊘ axiom-codex not built — skipped");
+    if (trackedCount(/^axiom-codex\//) > 0) error("codex-validator", "axiom-codex is tracked but missing, so Codex's validator wasn't run");
+    else console.log("  ⊘ axiom-codex not built — skipped");
   } else if (!validator) {
     console.log("  ⊘ Codex's validate_plugin.py not found locally — skipped (12p still asserts the known rule)");
   } else if (!hasYaml) {

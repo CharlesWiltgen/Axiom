@@ -215,6 +215,25 @@ function generateAgentsSection(agents: ListingSkill[]): string {
 // `claudeCode.agents` therefore always yielded [], so /axiom:ask shipped
 // claiming "0 autonomous agents" with an empty Agents Reference — the
 // natural-language entry point could not route to any of them.
+/**
+ * The manifest's `commands[]`: every top-level `commands/*.md`, in the committed
+ * order, with new files appended alphabetically. Hand-maintained, it let a command
+ * file go unlisted through every gate, and the Cursor build, which reads this
+ * array, silently dropped it (Axiom-k05u).
+ */
+export function manifestCommandsFromDisk(pluginDir: string, committed: string[]): string[] {
+  const commandsDir = path.join(pluginDir, "commands");
+  if (!fs.existsSync(commandsDir)) return [];   // callers' floors report the missing directory
+  const onDisk = fs
+    .readdirSync(commandsDir, { withFileTypes: true })
+    .filter((e) => e.isFile() && e.name.endsWith(".md"))
+    .map((e) => `./commands/${e.name}`);
+  const present = new Set(onDisk);
+  const kept = committed.filter((c, i) => present.has(c) && committed.indexOf(c) === i);
+  const added = onDisk.filter((c) => !kept.includes(c)).sort();
+  return [...kept, ...added];
+}
+
 export function readAgentsFromDisk(agentsDir: string): ListingSkill[] {
   if (!fs.existsSync(agentsDir)) return [];
   return fs
@@ -310,13 +329,14 @@ export function renderPluginReadmeTables(readme: string, pluginDir: string): str
  * Version is left untouched: stamping belongs to the caller.
  */
 export function manifestUpdates(
-  claudeCode: { skills?: ListingSkill[] },
+  claudeCode: { skills?: ListingSkill[]; commands?: string[] },
   pluginDir: string,
 ): ManifestUpdate[] {
   claudeCode.skills = manifestSkillsFromDisk(
     pluginDir,
     (claudeCode.skills ?? []).map((s) => s.name),
   );
+  claudeCode.commands = manifestCommandsFromDisk(pluginDir, claudeCode.commands ?? []);
 
   // Queue the README only when its tables changed: --tag treats every queued path as an
   // expected dirty file, and the README's prose is hand-written.

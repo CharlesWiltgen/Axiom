@@ -6,7 +6,8 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const root = path.join(__dirname, '..');
-const skillsRoot = path.join(root, '.claude-plugin/plugins/axiom/skills');
+// An optional argument points the check at another skills tree (tests use it).
+const skillsRoot = process.argv[2] ? path.resolve(process.argv[2]) : path.join(root, '.claude-plugin/plugins/axiom/skills');
 const manifestPath = path.join(root, '.claude-plugin/plugins/axiom/claude-code.json');
 
 const NON_SUITE_AXIOM_TOKENS = new Set(['axiom-mcp', 'axiom-marketplace']);
@@ -100,7 +101,13 @@ const SUITE_REF = /(?:[`*_]+)?\baxiom-([a-z0-9-]+)(?:[`*_]+)?(?:\s*\(([^)]*)\)|\
 const CHILD_PATH = /\bskills\/([a-z0-9-]+)\.md/g;
 const FRONTMATTER = /^---\n[\s\S]*?\n---\n/;
 
+// Counted, so an empty walk or a regex that stopped matching fails instead of
+// reporting a clean tree (Axiom-ayow).
+let filesScanned = 0;
+let refsChecked = 0;
+
 for (const file of walkSkillFiles(skillsRoot)) {
+  filesScanned++;
   const rel = path.relative(skillsRoot, file);
   const fileSuite = rel.split(path.sep)[0];
   const raw = fs.readFileSync(file, 'utf8');
@@ -134,7 +141,13 @@ for (const file of walkSkillFiles(skillsRoot)) {
         const childList = hasParens
           ? [...parens.matchAll(CHILD_PATH)].map(cm => cm[1])
           : [slashChild];
+        if (childList.length === 0) {
+          refsChecked++;
+          report(file, lineNum, 'error', `malformed child ref "(${parens})" names no skills/*.md file`, null);
+          continue;
+        }
         for (const child of childList) {
+          refsChecked++;
           if (!children?.has(child)) {
             const owners = childToSuites.get(child);
             const hint = owners?.length ? `${owners[0]} has it` : null;
@@ -149,6 +162,7 @@ for (const file of walkSkillFiles(skillsRoot)) {
     for (const m of line.matchAll(CHILD_PATH)) {
       if (structuredRanges.some(([s, e]) => m.index >= s && m.index < e)) continue;
       const child = m[1];
+      refsChecked++;
       const suiteChildren = validChildren.get(fileSuite);
       if (!suiteChildren?.has(child)) {
         report(file, lineNum, 'error', `sibling "skills/${child}.md" not in ${fileSuite}`, suggestChild(child));
@@ -172,7 +186,18 @@ if (errors.length) {
   console.log(`\n${errors.length} broken cross-reference${errors.length === 1 ? '' : 's'}.`);
   process.exit(1);
 }
+// Every suite SKILL.md and every skills/*.md listed independently above must have
+// been walked; a walk that drops sub-skills otherwise passes on what's left.
+const expectedFiles = [...validChildren.values()].reduce((n, c) => n + c.size, 0) +
+  fs.readdirSync(skillsRoot).filter(d => fs.existsSync(path.join(skillsRoot, d, 'SKILL.md'))).length;
+if (filesScanned === 0 || refsChecked === 0 || filesScanned < expectedFiles) {
+  const reason = filesScanned === 0 ? `no skill files under ${skillsRoot}`
+    : filesScanned < expectedFiles ? `scanned ${filesScanned} skill files but ${expectedFiles} exist`
+    : `no \`skills/*.md\` references found in ${filesScanned} skill files`;
+  console.log(`✖ ${reason}; the check can't vouch for anything.`);
+  process.exit(1);
+}
 if (unmanifested.length) {
   console.log(`ℹ ${unmanifested.length} suite${unmanifested.length === 1 ? '' : 's'} present on disk but not in claude-code.json: ${unmanifested.join(', ')}`);
 }
-console.log(`✓ ${[...walkSkillFiles(skillsRoot)].length} skill files scanned, ${validSuites.size} suites, all cross-references valid.`);
+console.log(`✓ ${filesScanned} skill files scanned, ${refsChecked} references checked, ${validSuites.size} suites, all cross-references valid.`);

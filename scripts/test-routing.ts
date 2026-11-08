@@ -208,6 +208,11 @@ function main(): void {
   }
 
   console.log("");
+  // An empty or fully commented-out fixture file used to print "0/0 passed ✓".
+  if (scenarios.length === 0) {
+    console.log("  ✗ no routing scenarios loaded, so nothing was checked\n");
+    process.exit(1);
+  }
   console.log(`  ${passed}/${scenarios.length} passed`);
   if (warned > 0) console.log(`  ${warned} warning(s) — soft assertion(s) unmet`);
   if (failed > 0) {
