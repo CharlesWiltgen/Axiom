@@ -3,12 +3,12 @@
   "files": [
     {
       "path": ".cursor-plugin/plugin.json",
-      "sha256": "c42b9fdd6003e641c40598948f535ca5b78cff7e5dd8c12ad275c426e1b6d522",
+      "sha256": "fd9338d5651695fcf2e1882b390ae8db31aaf0118243bda47719a1258583672f",
       "bytes": 578
     },
     {
       "path": "README.md",
-      "sha256": "b177ebed57d779ec58e54e86d5ce4d661fa9ad70475139b53955e01a14d3aee6",
+      "sha256": "b4c6d4cd3f5d03348ca6f0f5e5fe60fe9e203ace313642d7318d2f6f627ba678",
       "bytes": 4374
     },
     {
@@ -73,8 +73,8 @@
     },
     {
       "path": "agents/health-check.md",
-      "sha256": "d973629fc2cbfe74ed79e2543159e128fa1aca004cbd253e7d8c0af917ea53cf",
-      "bytes": 10146
+      "sha256": "e7fc34a525a75376b0cca3e41c203bbb058eeb562a69ce9fc709bc825e6cae08",
+      "bytes": 10316
     },
     {
       "path": "agents/iap-auditor.md",
@@ -138,8 +138,8 @@
     },
     {
       "path": "agents/siri-ai-auditor.md",
-      "sha256": "04e3452f0888f1d3da1435390783ada1d541fb194ea5c6420d3b32092ad5baba",
-      "bytes": 18189
+      "sha256": "3f4cf450377e13b4ca5d1e8efbf4d92b5800e66429cc5c6149b27934f5e223d2",
+      "bytes": 19913
     },
     {
       "path": "agents/spm-conflict-resolver.md",
@@ -248,8 +248,8 @@
     },
     {
       "path": "commands/axiom-audit.md",
-      "sha256": "016f9ac5c8b0445ce1b93a7e96330bded62d796f9a5a0b502f9f137b236cb267",
-      "bytes": 13502
+      "sha256": "ff52939a03bb98b5f0465bd36361049e987d332060e4fd8f9e08b6194c0cc291",
+      "bytes": 15283
     },
     {
       "path": "commands/axiom-compare-traces.md",
@@ -303,8 +303,8 @@
     },
     {
       "path": "commands/axiom-siri.md",
-      "sha256": "9b459f6d3b356548a856195330e319319696de8cae743af9fbfcd0d488456258",
-      "bytes": 4795
+      "sha256": "d5b0aabd9dc78d85b21242fcb0f61fa95937752fb3ed9ae6570c10431ae5213e",
+      "bytes": 5215
     },
     {
       "path": "commands/axiom-status.md",
@@ -363,8 +363,8 @@
     },
     {
       "path": "scripts/project_detect.py",
-      "sha256": "8f769c81f241cbbae0efc92df32d82ac19cfaa7d40cf256f3875aa30aac8a0ae",
-      "bytes": 13646
+      "sha256": "8b5637b00a567607d5efbf1d7210aaf947c6fe444d8232f6dc58570a2b39e8d4",
+      "bytes": 14846
     },
     {
       "path": "scripts/subagent-start.py",
@@ -928,13 +928,13 @@
     },
     {
       "path": "skills/axiom-integration/skills/app-intents-ref.md",
-      "sha256": "0f864ad84b1e19400eb445ca3026e8532eb410051b53a36c1636844a873aa41b",
-      "bytes": 72496
+      "sha256": "6abc0b9153ad0671e3a8a351ded45dbd0d3de4cd1e3f633014491751b9f90738",
+      "bytes": 81611
     },
     {
       "path": "skills/axiom-integration/skills/app-intents.md",
-      "sha256": "ff2bc17b5e9ea1f6ec3f022c0b0043802729989aaaba4ef8b718fb4ab8ed4c55",
-      "bytes": 16214
+      "sha256": "c66eb17f70f8f9ef24a7a6e38fa753bf67ed8db683ba8b7fa04ab18837adc50f",
+      "bytes": 16802
     },
     {
       "path": "skills/axiom-integration/skills/app-schemas-ref.md",
@@ -1974,7 +1974,7 @@
   ],
   "totals": {
     "files": 394,
-    "bytes": 8198362
+    "bytes": 8213360
   },
   "excludedMirrors": 32,
   "classes": {
