@@ -36,26 +36,36 @@ Questions you can ask your assistant that will draw from this reference:
 - "How can my edit intent tell a cleared field from one the person didn't mention?"
 - "How do I write automated tests for my App Intents?"
 - "Why does my App Intents test say the intent doesn't exist?"
+- "How do I give my intent access to my app's database?"
+- "How do I keep an intent running longer than 30 seconds in the background?"
+- "How can my entity query read another parameter of the intent?"
 
 ## What's Covered
 
 ### Core Building Blocks
 - `AppIntent`: `title`, `description`, `isDiscoverable`, `@Parameter`, parameter summaries, `perform()`, errors
+- Dependencies: `@Dependency`, `AppDependencyManager`, `@Dependency(default:)`
+- Undo: `UndoableIntent` (iOS 26+)
 - Optional parameters in update intents: `valueState` (iOS 18.2+)
 - `AppEntity`: display representations, exposed properties, `@ComputedProperty`, `@DeferredProperty`, and the property `description:` and `visibility:` arguments (27.3)
 - `AppEnum`
 - `EntityQuery` and `EntityStringQuery`; keeping entities separate from your data models
+- `IntentParameterDependency` for queries that read the intent's other parameters
+- Cross-device identity: `SyncableEntity` and `SyncableEntityIdentifier` (iOS 27+)
 - Bulk deletes with `DeleteIntent.target` and `EntityCollection` (27.3)
 
 ### Execution and Interaction
 - Intent modes: `supportedModes` (iOS 26+), which replaces the deprecated `openAppWhenRun`, and `continueInForeground`
+- Long-running work: `LongRunningIntent`, `performBackgroundTask`, `LongRunningTaskOptions` (iOS 27+)
+- Cancellation: `CancellableIntent`, `IntentCancellationReason` (iOS 26.4+)
+- Execution targets: `allowedExecutionTargets`, `IntentExecutionTargets` (iOS 27+)
 - Confirmation dialogs and multiple choice (`requestChoice`, iOS 26+)
 - Interactive snippets (`SnippetIntent`, iOS 26+)
 - `AppIntentsPackage` for intents in Swift packages
 
 ### Authentication and Security
 - `IntentAuthenticationPolicy` (iOS 16+)
-- Schema-inherited policies and risk-based confirmations (iOS 27)
+- Schema-inherited policies and risk-based confirmations (iOS 27+)
 
 ### App Schemas
 - `@AppEntity`, `@AppIntent`, and `@AppEnum(schema:)` macros, which replace the deprecated `@Assistant…` macros
