@@ -142,6 +142,74 @@ describe("isAppleProject / resolveContextDecision", () => {
     }
   };
 
+  it("matches markers regardless of case (Axiom-8fz)", () => {
+    // macOS volumes are case-insensitive by default, so these are real projects.
+    for (const name of ["podfile", "PODFILE", "App.SWIFT", "App.XCODEPROJ", "Work.XcWorkspace", "MyApp.SwiftPM", "Demo.PLAYGROUND"]) {
+      withHome((home) => {
+        const proj = path.join(home, "Projects", "App");
+        fs.mkdirSync(proj, { recursive: true });
+        fs.writeFileSync(path.join(proj, name), "");
+        expect(isAppleProject(proj), name).toBe(true);
+      });
+    }
+  });
+
+  it("does not treat ~/Library tool state as a project marker (Axiom-nza)", () => {
+    withHome((home) => {
+      const library = path.join(home, "Library");
+      fs.mkdirSync(path.join(library, "org.swift.swiftpm", "configuration"), { recursive: true });
+      const opened = path.join(library, "Application Support", "SomeTool");
+      fs.mkdirSync(opened, { recursive: true });
+      expect(isAppleProject(opened)).toBe(false);
+      expect(isAppleProject(library)).toBe(false);
+    });
+  });
+
+  it("does not treat tool state in a ~/Library child as a project marker", () => {
+    // SwiftPM also writes ~/Library/Caches/org.swift.swiftpm.
+    withHome((home) => {
+      const caches = path.join(home, "Library", "Caches");
+      fs.mkdirSync(path.join(caches, "org.swift.swiftpm"), { recursive: true });
+      const opened = path.join(caches, "SomeTool");
+      fs.mkdirSync(opened);
+      expect(isAppleProject(opened)).toBe(false);
+      expect(isAppleProject(caches)).toBe(false);
+    });
+  });
+
+  it("still detects a project inside a ~/Library child", () => {
+    withHome((home) => {
+      const project = path.join(home, "Library", "Caches", "Proj");
+      fs.mkdirSync(project, { recursive: true });
+      fs.writeFileSync(path.join(project, "Package.swift"), "");
+      expect(isAppleProject(project)).toBe(true);
+    });
+  });
+
+  it("still detects a project under ~/Library when $HOME is a dotfiles repo", () => {
+    // Regression guard: the dotfiles branch scans from the child of ~ the walk
+    // came through, which under ~/Library is a no-evidence root.
+    withHome((home) => {
+      fs.mkdirSync(path.join(home, ".git"));
+      const app = path.join(home, "Library", "Mobile Documents", "com~apple~CloudDocs", "Dev", "MyApp");
+      fs.mkdirSync(path.join(app, "ios", "MyApp.xcodeproj"), { recursive: true });
+      expect(isAppleProject(app)).toBe(true);
+    });
+  });
+
+  it("still detects an app playground in iCloud Drive under ~/Library", () => {
+    withHome((home) => {
+      const library = path.join(home, "Library");
+      fs.mkdirSync(path.join(library, "org.swift.swiftpm"), { recursive: true });
+      const documents = path.join(library, "Mobile Documents", "iCloud~com~apple~Playgrounds", "Documents");
+      const playground = path.join(documents, "MyApp.swiftpm");
+      fs.mkdirSync(playground, { recursive: true });
+      fs.writeFileSync(path.join(playground, "Package.swift"), "");
+      expect(isAppleProject(documents)).toBe(true);
+      expect(isAppleProject(playground)).toBe(true);
+    });
+  });
+
   it("does not treat SwiftPM's ~/.swiftpm tool dir as a project marker", () => {
     withHome((home) => {
       fs.mkdirSync(path.join(home, ".swiftpm"));
@@ -522,6 +590,24 @@ describe("project detection parity with project_detect.py", () => {
       const underHome = dir("home", "scratch", "pyproj");
       const playgrounds = dir("playgrounds");
       fs.mkdirSync(path.join(playgrounds, "MyApp.swiftpm"));
+      const libraryHome = dir("library-home");
+      dir("library-home", "Library", "org.swift.swiftpm", "configuration");
+      const underLibrary = dir("library-home", "Library", "Application Support", "SomeTool");
+      const icloudPlaygrounds = dir("library-home", "Library", "Mobile Documents", "iCloud~com~apple~Playgrounds", "Documents");
+      file("library-home", "Library", "Mobile Documents", "iCloud~com~apple~Playgrounds", "Documents", "MyApp.swiftpm", "Package.swift");
+      dir("library-home", "Library", "Caches", "org.swift.swiftpm");
+      const underCaches = dir("library-home", "Library", "Caches", "SomeTool");
+      const dotfilesHome = dir("dotfiles-home");
+      fs.mkdirSync(path.join(dotfilesHome, ".git"));
+      const dotfilesApp = dir("dotfiles-home", "Library", "Mobile Documents", "com~apple~CloudDocs", "Dev", "MyApp");
+      dir("dotfiles-home", "Library", "Mobile Documents", "com~apple~CloudDocs", "Dev", "MyApp", "ios", "MyApp.xcodeproj");
+      const looseInLibrary = dir("library-home", "Library", "LooseApp");
+      file("library-home", "Library", "LooseApp", "Package.swift");
+      const dotfilesTmp = path.join(dotfilesHome, "tmp");
+      const dotfilesTmpApp = dir("dotfiles-home", "tmp", "work", "MyApp");
+      dir("dotfiles-home", "tmp", "work", "MyApp", "ios", "MyApp.xcodeproj");
+      const lowercasePodfile = dir("lowercase-podfile");
+      file("lowercase-podfile", "podfile");
 
       expectParity(
         [
@@ -537,8 +623,15 @@ describe("project detection parity with project_detect.py", () => {
           { name: "the temp root itself", cwd: os.tmpdir(), home: null, tmpdir: null },
           { name: "missing path (fail-open)", cwd: path.join(scratch, "nope"), home: null, tmpdir: null },
           { name: "repo rooted at a temp root", cwd: tempRepo, home: null, tmpdir: tempRepo },
+          { name: "tool dir under ~/Library", cwd: underLibrary, home: libraryHome, tmpdir: null },
+          { name: "iCloud playgrounds under ~/Library", cwd: icloudPlaygrounds, home: libraryHome, tmpdir: null },
+          { name: "lowercase podfile", cwd: lowercasePodfile, home: null, tmpdir: null },
+          { name: "tool dir under ~/Library/Caches", cwd: underCaches, home: libraryHome, tmpdir: null },
+          { name: "project under ~/Library with a dotfiles home", cwd: dotfilesApp, home: dotfilesHome, tmpdir: null },
+          { name: "loose project directly in a ~/Library child (accepted trade)", cwd: looseInLibrary, home: libraryHome, tmpdir: null },
+          { name: "project under TMPDIR=$HOME/tmp with a dotfiles home", cwd: dotfilesTmpApp, home: dotfilesHome, tmpdir: dotfilesTmp },
         ],
-        [false, true, true, false, false, false, true, true, false, false, true, true],
+        [false, true, true, false, false, false, true, true, false, false, true, true, false, true, true, false, true, false, true],
       );
     } finally {
       fs.rmSync(scratch, { recursive: true, force: true });

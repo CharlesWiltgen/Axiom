@@ -59,6 +59,21 @@ class TestDirHasMarker(unittest.TestCase):
             os.mkdir(os.path.join(d, "MyApp.swiftpm"))
             self.assertTrue(pd._dir_has_marker(d))
 
+    def test_markers_match_regardless_of_case(self):
+        # Axiom-8fz: macOS volumes are case-insensitive by default, so a hand-typed
+        # `podfile` or an uppercase extension is a real project that exact-case
+        # matching read as non-Apple.
+        for name in ("podfile", "PODFILE", "App.SWIFT", "App.XCODEPROJ",
+                     "Work.XcWorkspace", "MyApp.SwiftPM", "Demo.PLAYGROUND"):
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as d:
+                touch(os.path.join(d, name))
+                self.assertTrue(pd._dir_has_marker(d))
+
+    def test_hidden_marker_stays_hidden_in_any_case(self):
+        with tempfile.TemporaryDirectory() as d:
+            os.mkdir(os.path.join(d, ".SWIFTPM"))
+            self.assertFalse(pd._dir_has_marker(d))
+
 
 class TestDownwardHasMarker(unittest.TestCase):
     def test_finds_marker_at_root(self):
@@ -272,6 +287,96 @@ class TestIsAppleProject(unittest.TestCase):
             touch(os.path.join(opened, "main.py"))
             with mock.patch.dict(os.environ, {"HOME": home}):
                 self.assertFalse(pd.is_apple_project(opened))
+
+    def test_library_tool_state_is_not_project_evidence(self):
+        # Axiom-nza: SwiftPM keeps user-level state in ~/Library/org.swift.swiftpm,
+        # which ends with the ".swiftpm" marker suffix and is not hidden, so a
+        # session opened at or under ~/Library read as an Apple project.
+        with tempfile.TemporaryDirectory() as d:
+            home = os.path.join(d, "home")
+            library = os.path.join(home, "Library")
+            os.makedirs(os.path.join(library, "org.swift.swiftpm", "configuration"))
+            opened = os.path.join(library, "Application Support", "SomeTool")
+            os.makedirs(opened)
+            with mock.patch.dict(os.environ, {"HOME": home}):
+                self.assertFalse(pd.is_apple_project(opened))
+                self.assertFalse(pd.is_apple_project(library))
+
+    def test_tool_state_in_a_library_child_is_not_project_evidence(self):
+        # Axiom-nza, one level down: SwiftPM also writes
+        # ~/Library/Caches/org.swift.swiftpm, so ~/Library's own children are
+        # neutralized too.
+        with tempfile.TemporaryDirectory() as d:
+            home = os.path.join(d, "home")
+            caches = os.path.join(home, "Library", "Caches")
+            os.makedirs(os.path.join(caches, "org.swift.swiftpm"))
+            opened = os.path.join(caches, "SomeTool")
+            os.makedirs(opened)
+            with mock.patch.dict(os.environ, {"HOME": home}):
+                self.assertFalse(pd.is_apple_project(opened))
+                self.assertFalse(pd.is_apple_project(caches))
+
+    def test_project_inside_a_library_child_is_still_detected(self):
+        with tempfile.TemporaryDirectory() as d:
+            home = os.path.join(d, "home")
+            project = os.path.join(home, "Library", "Caches", "Proj")
+            touch(os.path.join(project, "Package.swift"))
+            with mock.patch.dict(os.environ, {"HOME": home}):
+                self.assertTrue(pd.is_apple_project(project))
+
+    def test_loose_project_directly_in_a_library_child_is_not_detected(self):
+        # Accepted trade, pinned: a non-git project placed directly in a ~/Library
+        # child has the same shape as ~/Library/Caches/org.swift.swiftpm, so no
+        # rule short of a tool-name denylist separates them. Same trade as a
+        # marker at a temp root; AXIOM_SESSION_CONTEXT=always is the override.
+        with tempfile.TemporaryDirectory() as d:
+            home = os.path.join(d, "home")
+            loose = os.path.join(home, "Library", "LooseApp")
+            touch(os.path.join(loose, "Package.swift"))
+            with mock.patch.dict(os.environ, {"HOME": home}):
+                self.assertFalse(pd.is_apple_project(loose))
+
+    def test_dotfiles_home_detects_a_project_under_a_home_temp_root(self):
+        # The dotfiles branch keeps the start when the branch of ~ it came
+        # through is a no-evidence root, which also covers TMPDIR=$HOME/tmp.
+        with tempfile.TemporaryDirectory() as d:
+            home = os.path.join(d, "home")
+            os.makedirs(os.path.join(home, ".git"))
+            tmp = os.path.join(home, "tmp")
+            app = os.path.join(tmp, "work", "MyApp")
+            os.makedirs(os.path.join(app, "ios", "MyApp.xcodeproj"))
+            with mock.patch.dict(os.environ, {"HOME": home, "TMPDIR": tmp}):
+                self.assertTrue(pd.is_apple_project(app))
+
+    def test_dotfiles_home_still_detects_a_project_under_library(self):
+        # Regression guard: with $HOME as a git repo, the dotfiles branch scans
+        # from the child of ~ the walk came through. Under ~/Library that child is
+        # ~/Library, a no-evidence root, so refusing it silently disabled Axiom for
+        # a project in iCloud Drive whose markers sit in a subdirectory.
+        with tempfile.TemporaryDirectory() as d:
+            home = os.path.join(d, "home")
+            os.makedirs(os.path.join(home, ".git"))
+            app = os.path.join(home, "Library", "Mobile Documents",
+                               "com~apple~CloudDocs", "Dev", "MyApp")
+            os.makedirs(os.path.join(app, "ios", "MyApp.xcodeproj"))
+            with mock.patch.dict(os.environ, {"HOME": home}):
+                self.assertTrue(pd.is_apple_project(app))
+
+    def test_playground_under_library_is_still_detected(self):
+        # Over-correction guard: Swift Playgrounds keeps app playgrounds in iCloud
+        # Drive, under ~/Library/Mobile Documents. Only ~/Library itself is
+        # neutralized, so their own markers still count.
+        with tempfile.TemporaryDirectory() as d:
+            home = os.path.join(d, "home")
+            library = os.path.join(home, "Library")
+            os.makedirs(os.path.join(library, "org.swift.swiftpm"))
+            documents = os.path.join(library, "Mobile Documents",
+                                     "iCloud~com~apple~Playgrounds", "Documents")
+            playground = os.path.join(documents, "MyApp.swiftpm")
+            touch(os.path.join(playground, "Package.swift"))
+            with mock.patch.dict(os.environ, {"HOME": home}):
+                self.assertTrue(pd.is_apple_project(documents))
+                self.assertTrue(pd.is_apple_project(playground))
 
     def test_home_containment_does_not_inject(self):
         # GH #52 defect 1: a home directory is not a project. "Contains an Apple

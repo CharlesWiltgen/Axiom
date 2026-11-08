@@ -21,8 +21,10 @@ import tempfile
 
 # Presence of any of these in a directory marks it an Apple project. ".swift"
 # covers Package.swift and Project.swift, so only Podfile needs an exact name.
+# Lowercase, because names are compared lowercased: macOS volumes are
+# case-insensitive by default, so `podfile` and `App.SWIFT` are real projects.
 APPLE_MARKER_SUFFIXES = (".xcodeproj", ".xcworkspace", ".swiftpm", ".playground", ".swift")
-APPLE_MARKER_NAMES = frozenset({"Podfile"})
+APPLE_MARKER_NAMES = frozenset({"podfile"})
 
 # Skipped in the downward scan — large, never an Apple marker source. Pruning
 # these keeps the scan fast AND keeps a big tree from tripping the MAX_ENTRIES
@@ -107,7 +109,8 @@ def _is_marker(name: str) -> bool:
     """
     if name.startswith("."):
         return False
-    return name in APPLE_MARKER_NAMES or name.endswith(APPLE_MARKER_SUFFIXES)
+    lowered = name.lower()
+    return lowered in APPLE_MARKER_NAMES or lowered.endswith(APPLE_MARKER_SUFFIXES)
 
 
 def _dir_has_marker(path: str) -> bool:
@@ -181,7 +184,8 @@ def _is_vacuous_scan_root(path: str, home: str | None, is_repo_root: bool) -> bo
     Depth, not a denylist: anything at or within one level of the filesystem root
     qualifies, so no list of special paths needs maintaining. Direct markers are
     checked before this and still win, so a project that genuinely sits at one of
-    these paths is unaffected.
+    these paths is unaffected — except at a temp root or a ~/Library entry, whose
+    markers is_apple_project never counts.
     """
     if home is not None and path == home:
         return True
@@ -220,6 +224,20 @@ def is_apple_project(start: str) -> bool:
         home = os.environ.get("HOME")
         home = os.path.abspath(home) if home else None
         temp_roots = _system_temp_roots()
+        # ~/Library and its children are the same class as the temp roots: macOS's
+        # designated place for tool state, and SwiftPM writes
+        # ~/Library/org.swift.swiftpm and ~/Library/Caches/org.swift.swiftpm, both
+        # ending with a marker suffix (Axiom-nza). Deeper levels still count, so an
+        # app playground in iCloud Drive (~/Library/Mobile Documents/.../Documents)
+        # is detected.
+        libraries: tuple[str, ...] = ()
+        if home is not None:
+            library = os.path.join(home, "Library")
+            libraries = (library, os.path.realpath(library))
+
+        def is_no_evidence(path: str) -> bool:
+            return path in temp_roots or path in libraries or os.path.dirname(path) in libraries
+
         scan_root = cur
         found_repo_root = False
         prev = None
@@ -230,7 +248,7 @@ def is_apple_project(start: str) -> bool:
             # NOT bounded by that cap — a git root is found however deep we were
             # opened, so a real Apple repo opened many directories deep is never
             # misread as non-Apple (the cap used to short-circuit this — GH #45).
-            if levels <= UPWARD_MAX_LEVELS and cur not in temp_roots and _dir_has_marker(cur):
+            if levels <= UPWARD_MAX_LEVELS and not is_no_evidence(cur) and _dir_has_marker(cur):
                 return True
             if os.path.exists(os.path.join(cur, ".git")):  # file (worktree) or dir
                 # A .git at $HOME (dotfiles repo) must NOT widen the scan root:
@@ -241,11 +259,13 @@ def is_apple_project(start: str) -> bool:
                 if home is None or cur != home:
                     scan_root = cur            # repo root → scan repo-wide
                     found_repo_root = True
-                elif prev is not None:
+                elif prev is not None and not is_no_evidence(prev):
                     # $HOME is the repo root (dotfiles). Scanning all of ~ is the
                     # GH #52 bug; scanning from a deep cwd misses a marker that
                     # sits up-and-over (App/ios/ when opened in App/Sources/x).
-                    # The branch of ~ we actually came through is both.
+                    # The branch of ~ we actually came through is both — unless
+                    # that branch is ~/Library, which is refused below, so keep
+                    # the start instead.
                     scan_root = prev
                 break
             parent = os.path.dirname(cur)
@@ -256,12 +276,12 @@ def is_apple_project(start: str) -> bool:
             prev = cur
             levels += 1
             cur = parent
-        # A temp root that is ALSO a repo root keeps the repo-boundary exemption:
+        # A temp root or ~/Library entry that is ALSO a repo root keeps the repo-boundary exemption:
         # a devcontainer/CI exporting TMPDIR to the workspace, or a clone into
         # /tmp, is a real project, and refusing it here would be the cardinal sin
-        # that exemption exists to prevent. A temp root that is not a repo root is
+        # that exemption exists to prevent. One that is not a repo root is
         # still refused, so a stray marker at the shared root stays non-evidence.
-        if (scan_root in temp_roots and not found_repo_root) or _is_vacuous_scan_root(
+        if (is_no_evidence(scan_root) and not found_repo_root) or _is_vacuous_scan_root(
             scan_root, home, found_repo_root
         ):
             return False

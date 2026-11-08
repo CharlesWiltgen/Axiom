@@ -82,8 +82,10 @@ ${versionGroundTruth(formatDate(opts.now), opts.toolchain)}${toolContextBlock(op
 // Cardinal sin is a false negative (a real Apple project read as non-Apple →
 // Axiom silently off), so every path fails OPEN (inject) on doubt or error.
 
+// Lowercase, because names are compared lowercased: macOS volumes are
+// case-insensitive by default, so `podfile` and `App.SWIFT` are real projects.
 const APPLE_MARKER_SUFFIXES = [".xcodeproj", ".xcworkspace", ".swiftpm", ".playground", ".swift"];
-const APPLE_MARKER_NAMES = new Set(["Podfile"]);
+const APPLE_MARKER_NAMES = new Set(["podfile"]);
 const PRUNE_DIRS = new Set([
   "node_modules", ".git", "build", ".build", "Pods", "DerivedData", "dist",
   "target", ".venv", "venv", "vendor", "Carthage", ".gradle", "__pycache__", "out",
@@ -182,7 +184,8 @@ export function systemTempRoots(): Set<string> {
  */
 function isMarker(name: string): boolean {
   if (name.startsWith(".")) return false;
-  return APPLE_MARKER_NAMES.has(name) || APPLE_MARKER_SUFFIXES.some((s) => name.endsWith(s));
+  const lowered = name.toLowerCase();
+  return APPLE_MARKER_NAMES.has(lowered) || APPLE_MARKER_SUFFIXES.some((s) => lowered.endsWith(s));
 }
 
 function isPermissionError(error: unknown): boolean {
@@ -241,7 +244,8 @@ function downwardHasMarker(root: string): boolean {
  * fails open — regardless of what the session is about. $HOME is what GH #52
  * reported; `/`, `/Users`, `/tmp`, and `/Volumes` are the same defect one level
  * up. Depth, not a denylist, so no list of special paths needs maintaining.
- * Direct markers are checked before this and still win.
+ * Direct markers are checked before this and still win, except at a temp root
+ * or a ~/Library entry, whose markers isAppleProject never counts.
  */
 export function isVacuousScanRoot(dir: string, home: string | null, isRepoRoot: boolean): boolean {
   if (home !== null && dir === home) return true;
@@ -264,12 +268,29 @@ export function isAppleProject(start: string): boolean {
     if (!fs.existsSync(cur) || !fs.statSync(cur).isDirectory()) return true;
     const home = process.env.HOME ? path.resolve(process.env.HOME) : null;
     const tempRoots = systemTempRoots();
+    // ~/Library and its children are the same class as the temp roots: macOS's
+    // designated place for tool state, and SwiftPM writes ~/Library/org.swift.swiftpm
+    // and ~/Library/Caches/org.swift.swiftpm, both ending with a marker suffix
+    // (Axiom-nza). Deeper levels still count, so an app playground in iCloud Drive
+    // (~/Library/Mobile Documents/.../Documents) is detected.
+    const libraries = new Set<string>();
+    if (home !== null) {
+      const library = path.join(home, "Library");
+      libraries.add(library);
+      try {
+        libraries.add(fs.realpathSync(library));
+      } catch {
+        // No ~/Library (not macOS, or a scrubbed HOME) — the joined form covers it.
+      }
+    }
+    const isNoEvidence = (dir: string): boolean =>
+      tempRoots.has(dir) || libraries.has(dir) || libraries.has(path.dirname(dir));
     let scanRoot = cur;
     let foundRepoRoot = false;
     let prev: string | null = null;
     let levels = 0;
     for (;;) {
-      if (levels <= UPWARD_MAX_LEVELS && !tempRoots.has(cur) && dirHasMarker(cur)) return true;
+      if (levels <= UPWARD_MAX_LEVELS && !isNoEvidence(cur) && dirHasMarker(cur)) return true;
       if (fs.existsSync(path.join(cur, ".git"))) {
         // A .git at $HOME (dotfiles repo) must NOT widen the scan root: that hands
         // the whole home directory to the vacuous-root check, which refuses —
@@ -278,10 +299,11 @@ export function isAppleProject(start: string): boolean {
         if (home === null || cur !== home) {
           scanRoot = cur;
           foundRepoRoot = true;
-        } else if (prev !== null) {
+        } else if (prev !== null && !isNoEvidence(prev)) {
           // $HOME is the repo root (dotfiles). Scanning all of ~ is the GH #52
           // bug; scanning from a deep cwd misses a marker sitting up-and-over.
-          // The branch of ~ we came through is both.
+          // The branch of ~ we came through is both — unless that branch is
+          // ~/Library, which is refused below, so keep the start instead.
           scanRoot = prev;
         }
         break;
@@ -293,11 +315,11 @@ export function isAppleProject(start: string): boolean {
       levels++;
       cur = parent;
     }
-    // A temp root that is ALSO a repo root keeps the repo-boundary exemption — a
-    // devcontainer/CI exporting TMPDIR to the workspace, or a clone into /tmp, is
-    // a real project. A temp root that is not a repo root is still refused, so a
-    // stray marker at the shared root stays non-evidence.
-    if ((tempRoots.has(scanRoot) && !foundRepoRoot) || isVacuousScanRoot(scanRoot, home, foundRepoRoot)) {
+    // A temp root or ~/Library entry that is ALSO a repo root keeps the repo-boundary
+    // exemption — a devcontainer/CI exporting TMPDIR to the workspace, or a clone
+    // into /tmp, is a real project. One that is not a repo root is still refused,
+    // so a stray marker at the shared root stays non-evidence.
+    if ((isNoEvidence(scanRoot) && !foundRepoRoot) || isVacuousScanRoot(scanRoot, home, foundRepoRoot)) {
       return false;
     }
     return downwardHasMarker(scanRoot);
