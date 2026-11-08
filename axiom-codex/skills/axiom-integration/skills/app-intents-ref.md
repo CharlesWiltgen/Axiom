@@ -307,6 +307,59 @@ func perform() async throws -> some IntentResult {
 }
 ```
 
+### Dependencies
+
+```swift
+@main
+struct OrdersApp: App {
+    init() {
+        // App.init() runs on every launch, including a cold launch by Siri.
+        let store = OrderStore.shared   // read a @MainActor store outside the @Sendable autoclosure
+        AppDependencyManager.shared.add(dependency: store)
+        AppDependencyManager.shared.add(key: "archive", dependency: ArchiveService())
+    }
+    var body: some Scene { WindowGroup { ContentView() } }
+}
+
+struct PlaceOrderIntent: AppIntent {
+    static let title: LocalizedStringResource = "Place Order"
+    @Dependency private var store: OrderStore
+    @Dependency(key: "archive") private var archive: ArchiveService
+
+    func perform() async throws -> some IntentResult {
+        try await store.placeOrder()
+        return .result()
+    }
+}
+```
+
+- `@Dependency` is `AppDependency<Value>` (`Value: Sendable`), resolved on `AppIntent`, `EntityQuery` and other `DynamicOptionsProvider`s, and `IntentValueQuery`. On an `AppEntity` or `AppEnum`, `@Dependency` doesn't resolve (`unknown attribute 'Dependency'`); spelled `@AppDependency` it compiles and is never populated.
+- `add(key:dependency:)` takes an `@autoclosure` (not evaluated at registration) or an `@Sendable () async throws -> Value` closure. `key:` tells apart two registrations of one type.
+- Referencing a `@MainActor` type's `static let shared` inside the autoclosure warns in Swift 6 (`main actor-isolated static property 'shared' can not be referenced from a Sendable closure`); read it into a local first, as above.
+- An unregistered dependency traps on first access, uncatchably. `@Dependency(default:)` (autoclosure or async throwing closure) is only for a service that may be absent: `skills/app-intents.md`, Dependencies.
+
+### Undo (26.0+)
+
+```swift
+struct ArchiveNoteIntent: UndoableIntent {
+    static let title: LocalizedStringResource = "Archive Note"
+    @Parameter var note: NoteEntity
+    @Dependency private var notes: NoteStore   // @MainActor final class
+
+    func perform() async throws -> some IntentResult {
+        let id = note.id
+        await MainActor.run {
+            notes.archive(id)
+            undoManager?.registerUndo(withTarget: notes) { $0.unarchive(id) }
+        }
+        return .result()
+    }
+}
+```
+
+- `UndoableIntent` refines `SystemIntent`; its `undoManager` is `@MainActor` and `nil` when no suitable one exists. Works from the app or an App Intents extension.
+- Only register undo actions. The app's own menus and UI call `undo()`/`redo()`; an intent never does.
+
 ---
 
 ## AppEntity: Representing App Content
@@ -344,6 +397,41 @@ struct BookEntity: AppEntity {
     static let defaultQuery = BookQuery()
 }
 ```
+
+### Cross-Device Identity: SyncableEntity `OS27`
+
+`SyncableEntity` tells the system an entity can be referred to consistently across devices; Siri uses it to move a conversation from one device to another. An `id` that's already the same everywhere (a server `UUID`) needs no other change. For separate local and stable ids, make the `id` a `SyncableEntityIdentifier`:
+
+```swift
+struct PhotoEntity: AppEntity, SyncableEntity {
+    var id: SyncableEntityIdentifier<String, String>   // <LocalID, StableID>
+    @Property(title: "Title") var title: String
+    static let typeDisplayRepresentation: TypeDisplayRepresentation = "Photo"
+    static let defaultQuery = PhotoQuery()
+    var displayRepresentation: DisplayRepresentation { DisplayRepresentation(title: "\(title)") }
+
+    init(localID: String, cloudID: String, title: String) {
+        id = SyncableEntityIdentifier(local: localID, stable: cloudID)
+        self.title = title
+    }
+}
+
+struct PhotoQuery: EntityQuery {
+    func entities(for identifiers: [SyncableEntityIdentifier<String, String>]) async throws -> [PhotoEntity] {
+        var found: [PhotoEntity] = []
+        for id in identifiers {
+            if let local = id.local, let photo = try await PhotoLibrary.photo(localID: local) {
+                found.append(photo)
+            } else if let stable = id.stable, let photo = try await PhotoLibrary.photo(cloudID: stable) {
+                found.append(photo)
+            }
+        }
+        return found
+    }
+}
+```
+
+`local` is `nil` when the framework resolves the entity on another device; `stable` can be `nil` for on-device operations. Refer to the entity by `local` in your own code, and resolve whichever one is present. When both ids are the same value, `SyncableEntityIdentifier(id:)`.
 
 ### Exposing Properties
 
@@ -423,6 +511,28 @@ extension BookQuery: EntityStringQuery {
     }
 }
 ```
+
+#### Reading another parameter: IntentParameterDependency
+
+A query can't read the intent's other parameters directly. List the ones it needs:
+
+```swift
+struct SizeQuery: EntityQuery {
+    @IntentParameterDependency<OrderCoffeeIntent>(\.$drink)
+    var order
+
+    func entities(for identifiers: [SizeEntity.ID]) async throws -> [SizeEntity] {
+        SizeEntity.all.filter { identifiers.contains($0.id) }
+    }
+
+    func suggestedEntities() async throws -> [SizeEntity] {
+        guard let order else { return SizeEntity.all }   // nil until drink has a value
+        return SizeEntity.all.filter { $0.drinkIDs.contains(order.drink.id) }
+    }
+}
+```
+
+The wrapped value is an `IntentProjection<OrderCoffeeIntent>?`, `nil` until a listed parameter has a value; it reads values by key path (`order.drink`). Read only the key paths you listed: reading another is a `fatalError`, so don't force-unwrap around it.
 
 ### Which Surface Uses Which Lookup
 
@@ -556,8 +666,8 @@ struct GetCrowdStatusIntent: AppIntent {
             do {
                 try await continueInForeground(alwaysConfirm: false)
                 await navigator.navigateToCrowdStatus(landmark)
-            } catch {
-                // Opening app was denied
+            } catch let error as AppIntentError where error == AppIntentError.Unrecoverable.notAllowed {
+                // Can't come forward: answer from the background. Other errors propagate.
             }
         }
 
@@ -589,7 +699,8 @@ struct GetCrowdStatusIntent: AppIntent {
 Request foreground transition at runtime when using `.foreground(.dynamic)`:
 
 ```swift
-// Normal transition
+// Normal transition. Throws AppIntentError.Unrecoverable.notAllowed where the app
+// can't come forward; check systemContext.currentMode.canContinueInForeground first
 try await continueInForeground(alwaysConfirm: false)
 
 // Transition after an error
@@ -598,6 +709,71 @@ throw needsToContinueInForegroundError(
     alwaysConfirm: true
 )
 ```
+
+### Long-Running Work `OS27`
+
+A background intent gets about 30 seconds on iOS, iPadOS, tvOS, visionOS, and watchOS; macOS has no limit. `LongRunningIntent` extends it:
+
+```swift
+struct ExportLibraryIntent: LongRunningIntent, CancellableIntent {
+    static let title: LocalizedStringResource = "Export Library"
+    @Dependency private var library: LibraryStore
+
+    func perform() async throws -> some IntentResult & ReturnsValue<String> {
+        let path = try await performBackgroundTask {
+            progress.totalUnitCount = 100
+            progress.localizedDescription = "Exporting library"
+            for chunk in 0..<100 {
+                try Task.checkCancellation()
+                try await library.exportChunk(chunk)
+                progress.completedUnitCount = Int64(chunk + 1)
+            }
+            return try await library.finishExport()
+        } onCancel: { reason in
+            // .timeout or .userCancelled; clean up quickly
+        }
+        return .result(value: path)
+    }
+}
+```
+
+- `LongRunningIntent` refines `ProgressReportingIntent`. Update `progress` regularly: if it stalls, the system can withdraw the extra time and end the task. The system shows the progress in a Live Activity, with no UI code.
+- `performBackgroundTask(options:operation:)` starts its own system background task (don't start another), outlives the surface that started it, and throws if the system can't run it; `options: .requiresGPU` declares GPU use. The `onCancel:` overload needs `CancellableIntent` and replaces `withIntentCancellationHandler`.
+
+### Cancellation (26.4+)
+
+```swift
+struct SyncIntent: AppIntent, CancellableIntent {
+    static let title: LocalizedStringResource = "Sync"
+    @Dependency private var sync: SyncService
+
+    func perform() async throws -> some IntentResult {
+        try await withIntentCancellationHandler {
+            try await sync.run()
+        } onCancel: { reason in
+            if reason == .timeout { /* no progress reported in time */ }
+        }
+        return .result()
+    }
+}
+```
+
+Gate with `@available(iOS 26.4, macOS 26.4, watchOS 26.4, tvOS 26.4, visionOS 26.4, *)`; `anyAppleOS 26.4` needs Xcode 27. Reasons are `.timeout` (no progress within the ~30 s limit) and `.userCancelled` (the cancel control in Siri, a Live Activity, or Shortcuts). The handler gets a little extra time to save state and release resources; errors from the operation are rethrown. Without needing the reason, Swift's `withTaskCancellationHandler` also sees the cancel; the extra cleanup time is documented only for `withIntentCancellationHandler`.
+
+### Execution Targets `OS27`
+
+When intents live in a package or framework shared by the app and its extensions, the system may run an intent or query in any of them. Restrict it:
+
+```swift
+struct OpenTabIntent: AppIntent {
+    static let title: LocalizedStringResource = "Open Tab"
+    static let allowedExecutionTargets: IntentExecutionTargets = [.main]
+
+    func perform() async throws -> some IntentResult { .result() }
+}
+```
+
+Options: `.default` (any target), `.main`, `.appIntentsExtension`, `.widgetKitExtension`. `EntityQuery` and `IntentValueQuery` have the same `allowedExecutionTargets`. Pinning to `.main` defeats extension execution and adds launch latency, so pin only what needs the app's process.
 
 ### Background Execution — iOS 18 (pre-`supportedModes`)
 
@@ -1441,8 +1617,8 @@ struct SendMessageIntent {
     @Parameter var recipient: ContactEntity
     @Parameter var content: String
 
-    @MainActor func perform() async throws -> some IntentResult & ReturnsValue<MessageEntity> {
-        let sent = UnicornChat.shared.send(content, to: recipient)
+    func perform() async throws -> some IntentResult & ReturnsValue<MessageEntity> {
+        let sent = await UnicornChat.shared.send(content, to: recipient)
         return .result(value: sent)   // return the new entity to the system
     }
 }
@@ -1471,7 +1647,7 @@ No domain exists on watchOS; Video, from 27.3, is the only one on tvOS. Every sc
 
 ### Use-case groups `OS27`
 
-Some Siri flows need several schemas, called a use-case group: Message Sending (`sendMessage` + `draftMessage`), Mail Composing, Replying, and Forwarding (with `saveDraft`, `updateDraft`, `sendDraft`), Cancel Alarm (`dismissAlarm` + `updateAlarm`), Start Navigation (with a `maps.place` `IntentValueQuery`), Play Audio, Play Video (`playContent` + an `IntentValueQuery`), and Install Application. Adopt part of a group and the build **warns**, with a fix-it stub: `App Intents use case 'Message Sending' is missing the schema 'messages.draftMessage'`. The build still succeeds (measured on Xcode 27.3 beta 27C5020n), but Apple says to adopt the whole group to reach Siri AI, so treat the warning as required work. Fill in the stub: wire your entities, inject dependencies, and mark `perform()` `@MainActor` if it mutates UI.
+Some Siri flows need several schemas, called a use-case group: Message Sending (`sendMessage` + `draftMessage`), Mail Composing, Replying, and Forwarding (with `saveDraft`, `updateDraft`, `sendDraft`), Cancel Alarm (`dismissAlarm` + `updateAlarm`), Start Navigation (with a `maps.place` `IntentValueQuery`), Play Audio, Play Video (`playContent` + an `IntentValueQuery`), and Install Application. Adopt part of a group and the build **warns**, with a fix-it stub: `App Intents use case 'Message Sending' is missing the schema 'messages.draftMessage'`. The build still succeeds (measured on Xcode 27.3 beta 27C5020n), but Apple says to adopt the whole group to reach Siri AI, so treat the warning as required work. Fill in the stub: wire your entities and inject dependencies. `perform()` has no actor isolation: `await` main-actor calls, and mark it `@MainActor` only when most of it is UI work. A Siri run may have no scene, so update the model, not view state (`skills/app-intents.md`).
 
 Extra members beyond a schema: an extra intent `@Parameter` must be optional (`Intent parameters not defined by AppSchemaIntent 'calendar.createEvent' must be optional`, a halting error). An extra entity property can be non-optional, but it's exported only with `@Property`; schema-defined properties get it implicitly. Apple says Apple Intelligence reads only schema-defined members and extras serve Shortcuts.
 
@@ -1674,7 +1850,7 @@ func perform() async throws -> some IntentResult & OpensIntent {
 }
 ```
 
-For other main-actor work, hop explicitly with `await MainActor.run { … }`. Don't mark the intent type `@MainActor`: `perform()` isn't main-actor isolated, and the conformance fails (`#ConformanceIsolation`).
+For other main-actor work, hop explicitly with `await MainActor.run { … }`, or mark the method `@MainActor` when most of it is UI work. Don't mark the intent type `@MainActor`: `perform()` isn't main-actor isolated, and the conformance fails (`#ConformanceIsolation`).
 
 #### Issue 4: Entity query returns empty results
 ```swift
@@ -1919,7 +2095,7 @@ struct TaskListQuery: EntityQuery, EntityStringQuery {
 - ☐ Entity queries return reasonable suggestion counts (< 20)
 - ☐ Intents marked `isDiscoverable` appear in Shortcuts
 - ☐ Destructive actions request confirmation
-- ☐ Main-actor work in `perform()` hops with `await MainActor.run`; URLs open via `OpenURLIntent`, not `UIApplication`
+- ☐ `perform()` reaches the main actor through `await` (`MainActor.run` or a `@MainActor` call), or is a `@MainActor` method when most of it is UI work, never a `@MainActor` intent type; URLs open via `OpenURLIntent`, not `UIApplication`
 - ☐ Foreground intents declare `.foreground` in `supportedModes` (iOS 26+; `openAppWhenRun = true` is the deprecated pre-26 equivalent)
 - ☐ Entity `displayRepresentation` shows meaningful info
 - ☐ Each intent covered by an AppIntentsTesting test in a UI Testing Bundle `OS27`

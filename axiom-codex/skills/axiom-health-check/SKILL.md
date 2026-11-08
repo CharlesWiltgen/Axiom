@@ -85,11 +85,13 @@ Run these only when their framework signals are present in the codebase:
 | `Timer.scheduledTimer` or `CLLocationManager` | energy-auditor |
 | `AVCaptureSession` | camera-auditor |
 | `LanguageModelSession` or `@Generable` | foundation-models-auditor |
+| `import StoreKit` or `Product.products(for:` or `Transaction.updates` | iap-auditor |
 | `@AppIntent(.tool` or `@AppIntent([.tool` or `ToolIntent`, `@Dependency` in a file that also contains `AppIntent`, or a `.skillsbundle` exists | siri-ai-auditor |
 | `import SpriteKit` | spritekit-auditor |
 | `NWConnection` or `NetworkConnection` | networking-auditor |
 | `NSUbiquitousKeyValueStore` or `CKContainer` or `CloudKit` | icloud-auditor |
 | `registerMigration` or `DatabaseMigrator` or `ALTER TABLE` | database-schema-auditor |
+| `import GRDB` or `DatabaseQueue` or `DatabasePool` | grdb-performance-auditor |
 | `NSTextLayoutManager` or `TextKit` | textkit-auditor |
 | `UIScreen.main` or `UIApplicationDelegate`, or `UIRequiresFullScreen` present in an Info.plist | resize-auditor |
 | `override func mouseDown`, `nextEvent(matching:` or `- (void)mouseDown:` in a macOS target | touch-auditor |
@@ -123,6 +125,8 @@ Auditor-to-skill mapping:
 - `database-schema-auditor` → `axiom-audit-database-schema` (`../axiom-audit-database-schema/SKILL.md`)
 - `energy-auditor` → `axiom-audit-energy` (`../axiom-audit-energy/SKILL.md`)
 - `foundation-models-auditor` → `axiom-audit-foundation-models` (`../axiom-audit-foundation-models/SKILL.md`)
+- `grdb-performance-auditor` → `axiom-audit-grdb-performance` (`../axiom-audit-grdb-performance/SKILL.md`)
+- `iap-auditor` → `axiom-audit-iap` (`../axiom-audit-iap/SKILL.md`)
 - `icloud-auditor` → `axiom-audit-icloud` (`../axiom-audit-icloud/SKILL.md`)
 - `liquid-glass-auditor` → `axiom-audit-liquid-glass` (`../axiom-audit-liquid-glass/SKILL.md`)
 - `memory-auditor` → `axiom-audit-memory` (`../axiom-audit-memory/SKILL.md`)

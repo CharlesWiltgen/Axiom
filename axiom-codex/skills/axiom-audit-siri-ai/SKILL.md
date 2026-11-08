@@ -28,7 +28,7 @@ Grep:
   - `@AppEntity\(\s*\[?\.generable|GenerableEntity`        — generable entities
   - `:\s*[^{]*\bAppEnum\b|@AppEnum\(`                      — enums
   - `EntityQuery|EntityStringQuery|EnumerableEntityQuery|IndexedEntityQuery|EntityPropertyQuery` — queries
-  - `@Dependency|AppDependencyManager`                     — dependencies
+  - `@Dependency|@AppDependency|AppDependencyManager`      — dependencies
   - `indexAppEntities|IndexedEntity`                       — Spotlight indexing
   - `IPHONEOS_DEPLOYMENT_TARGET|MACOSX_DEPLOYMENT_TARGET|XROS_DEPLOYMENT_TARGET|WATCHOS_DEPLOYMENT_TARGET|TVOS_DEPLOYMENT_TARGET|SUPPORTED_PLATFORMS` — targets
 ```
@@ -59,7 +59,7 @@ An entity used as a tool parameter whose type isn't `IndexedEntity` (with indexi
 `@Dependency` used, and `AppDependencyManager.shared.add(` either absent or only inside a `View`, `.onAppear`, `.task`, a button action, or lazily. Siri launches the app without UI; the first access is an uncatchable `fatalError`. Fix: register in `App.init()` (or the extension's setup). Not an issue: `@Dependency(default:)`.
 
 ### 6. Dependency on an Entity or Enum (HIGH/HIGH)
-`@Dependency` declared in a type conforming to `AppEntity` or `AppEnum`. It compiles and is never populated. Move it to the query or intent.
+`@AppDependency` declared in a type conforming to `AppEntity` or `AppEnum`: it compiles and is never populated. (`@Dependency` there doesn't resolve, `unknown attribute 'Dependency'`, so it surfaces as a build error.) Move it to the query or intent.
 
 ### 7. Undeclared Result Value (HIGH/HIGH)
 `perform()` declared `-> some IntentResult` (with no `ReturnsValue`) that returns `.result(value:`. The value's type isn't exported to the App Intents metadata (measured on Xcode 27.3), so Siri and a next Shortcuts step can't use it. Fix: `some IntentResult & ReturnsValue<T>`.
@@ -108,7 +108,10 @@ For each `Skills/<dir>/SKILL.md`:
 ### 18. Read Tool That Speaks (MEDIUM/MEDIUM)
 A tool that looks something up (title or type with Get/Check/Show/List, or a description saying it "returns"), whose `perform()` returns `ProvidesDialog`, when an App Skill body tells Siri to call it before acting. Siri speaks a returned dialog as its answer and ends the turn, so the acting tool never runs (in testing on one app and device, rewording the skill didn't help and value-only fixed it). Fix: return the value only (`ReturnsValue<T>`); keep dialogs for tools that finish the request.
 
-### 19. Smaller Items (LOW unless noted)
+### 19. Tool in a Built-in App's Domain (MEDIUM/MEDIUM)
+A tool for a request that a built-in app or Siri feature takes as-is when it doesn't name the app: "create a meeting tomorrow at 3", "brief me on today's meetings", "set a timer for 10 minutes", "text Sam I'm running late". Not an issue when the request needs an app-specific object ("add a note to the lasagna recipe", "message my driver"), or for a primary-domain schema intent, which isn't a tool (Phase 3, Coverage). A search tool here is Pattern 1; add this routing caveat to it. In testing on 27.3 (one iPad), a request that didn't name the app never reached the app's tool, even with an `IndexedEntity`: Siri used a built-in app such as Calendar, or asked "I can help you with requests like that in <App> from now on. Is that OK?"; a yes ran the tool once, and later app-less requests went to the built-in app again. Apple says indexed entities are found without the app name, so report this as tested behavior, not documented behavior, and never say that indexing more content makes app-less requests reach the tool. Fix: if a primary-domain schema fits the action, adopt it without `.tool` (`sirimetadataanalyzer` reports `SMA701` for a tool that matches one); otherwise make the description say what's app-specific, unless it already does. Put the app name in user-facing examples of the request, such as onboarding, tips, and help (App Shortcut phrases already need `\(.applicationName)`). Confirm with the evaluation pair in `/axiom:siri` (Claude Code only) step 7.
+
+### 20. Smaller Items (LOW unless noted)
 - `.tool` on a Camera or Photos schema intent the macro accepts (MEDIUM/HIGH): a primary domain already reaches Siri, so remove `.tool`. On other primary-domain intents it's a build error.
 - `openAppWhenRun` on a 26+ deployment target (use `supportedModes`).
 - A tool returning only `.result()` where a value would let Siri continue (e.g., an order tool that returns nothing).
@@ -147,7 +150,7 @@ Combine findings that compound: e.g., search tool + entities not indexed (Siri h
 - **NEEDS WORK**: any HIGH finding and no CRITICAL, or App Intents with no tools and no primary-domain schema intents.
 - **BLOCKED**: any CRITICAL finding (cold-launch crash, generable build failure, irreversible work before a re-run, a skills build error). BLOCKED wins over NEEDS WORK.
 
-Close by telling the user to build and run `xcrun sirimetadataanalyzer <App.app> --format json`, then test with SiriEvaluations on a device.
+Close by telling the user to build and run `xcrun sirimetadataanalyzer <App.app> --format json`, then test with SiriEvaluations on a device, including the app-named and app-less pair (`/axiom:siri` (Claude Code only) step 7) for each tool Pattern 19 flagged.
 
 ## Output Format
 
