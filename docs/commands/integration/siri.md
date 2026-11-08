@@ -18,7 +18,7 @@ Pass a scheme name to build that scheme; without one, the command uses the app t
 3. **Analyzes the metadata** – Runs Xcode's `sirimetadataanalyzer` on the built app, once per shipping language, and maps each finding to the guidance that fixes it
 4. **Checks App Skills** – Confirms your `Skills.skillsbundle` compiled into the app
 5. **Repeats** – Rebuilds and re-analyzes until only deliberate findings remain
-6. **Sets up testing** – Offers to write SiriEvaluations scenarios, which run on a physical Apple Intelligence device; it asks before using one
+6. **Sets up testing** – Offers to write SiriEvaluations scenarios, which run on a physical Apple Intelligence device; it asks before using one. For each tool the audit flags as overlapping a built-in app, it writes the request both with and without your app's name, so you can see whether Siri reaches your tool when the name is left out
 
 ## When to Use
 

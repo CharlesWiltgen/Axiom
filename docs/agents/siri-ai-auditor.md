@@ -10,8 +10,10 @@ Scans your App Intents code and App Skills to check whether Siri AI can find, ch
 - Finds results the system can't see, errors Siri shows as "something went wrong", irreversible work that can repeat when an intent re-runs, donations made from inside an intent, and URL opening that fails in an extension
 - Checks entity identifiers and enum values that saved shortcuts depend on, and sensitive properties that stay discoverable in Spotlight
 - Validates `Skills.skillsbundle` files, where one error means the app ships no skills at all
+- Flags tools for requests a built-in app already handles, such as creating a meeting or setting a timer. In testing, those requests went to the built-in app unless they named the app, even when its content was indexed. The auditor suggests adopting the matching schema or making the tool's description app-specific, and showing users example requests that include your app's name
+- Finds look-up tools that speak their answer, which ends Siri's turn before an App Skill's acting tool can run
 - Checks availability gating for apps that still support earlier OS releases or build for watchOS and tvOS
-- Reasons about what a pattern search can't prove: actions people would ask Siri for that aren't tools yet, tools that overlap, tools that work only on one screen, and look-up tools whose spoken answer ends Siri's turn before the acting tool runs
+- Reasons about what a pattern search can't prove: actions people would ask Siri for that aren't tools yet, tools that overlap, and tools that work only on one screen
 - Scores readiness as READY, NEEDS WORK, or BLOCKED, and tells you how to confirm the result with `sirimetadataanalyzer` and SiriEvaluations
 
 ## How to Use
