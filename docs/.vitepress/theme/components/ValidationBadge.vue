@@ -7,7 +7,7 @@
         {{ formatDate(validation.date) }} &middot; {{ validation.pressureScenarios }} pressure {{ validation.pressureScenarios === 1 ? 'scenario' : 'scenarios' }} passed
       </span>
     </span>
-    <a :href="withBase('/guide/quality')" class="badge-link">What's this?</a>
+    <a :href="withBase('/start/quality')" class="badge-link">What's this?</a>
   </div>
 </template>
 
